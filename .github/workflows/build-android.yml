@@ -19,10 +19,10 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK and Gradle 8.7
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jdk
+          sudo apt-get install -y openjdk-17-jdk unzip curl
           mkdir -p "$ANDROID_HOME/cmdline-tools"
           cd "$ANDROID_HOME/cmdline-tools"
           curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
@@ -31,19 +31,25 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
+          # 🔧 Install Gradle 8.7 (stable for Cordova)
+          wget https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+          sudo mv gradle-8.7 /opt/gradle
+          export PATH=$PATH:/opt/gradle/bin
+          gradle -v
+
       - name: Create and prepare project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
           echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
-
-          # 🔧 Fix XmlParser bug
           sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
 
       - name: Build APK
         run: |
           cd GEL_Cleaner
+          export PATH=$PATH:/opt/gradle/bin
           cordova build android --debug
 
       - name: Upload APK artifact

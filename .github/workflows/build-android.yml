@@ -1,0 +1,38 @@
+name: Build Android APK (Cordova)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Add Android platform
+        run: |
+          cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
+          cd GEL_Cleaner
+          cordova platform add android@12
+          echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
+
+      - name: Build APK
+        run: |
+          cd GEL_Cleaner
+          cordova build android --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEL_Cleaner_debug.apk
+          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk

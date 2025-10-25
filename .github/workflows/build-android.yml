@@ -19,12 +19,15 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Add Android platform
+      - name: Create and prepare project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
           echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
+
+          # 🔧 Fix XmlParser bug
+          sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
 
       - name: Build APK
         run: |

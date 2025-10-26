@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -42,7 +41,8 @@ jobs:
         run: npm install -g cordova
 
       - name: Clean previous build folder
-        run: rm -rf GEL_Cleaner
+        run: |
+          rm -rf GEL_Cleaner
 
       - name: Create Cordova project
         run: |
@@ -50,7 +50,7 @@ jobs:
           cd GEL_Cleaner
           cordova platform add android@12
           mkdir -p www/img
-          wget -O www/img/GEL_logo.png https://raw.githubusercontent.com/gdiolitsis/assets/main/GEL_logo.png
+          cp ../img/GEL_logo.png www/img/
           echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>GEL Cleaner</title><style>body{background:#111;color:gold;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;text-align:center;}img{width:120px;margin-bottom:20px;}h1{font-size:26px;margin:0;}p{color:#aaa;margin-top:10px;}</style></head><body><img src="img/GEL_logo.png" alt="GEL Logo"/><h1>GEL Android Cleaner</h1><p>Device is ready. Dark-Gold Edition v1.0</p></body></html>' > www/index.html
 
       - name: Patch Gradle wrapper issue

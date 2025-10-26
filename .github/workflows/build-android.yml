@@ -17,6 +17,13 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
+      - name: Downgrade Gradle to 8.5 (stable for Cordova)
+        run: |
+          sudo rm -rf /usr/share/gradle
+          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          sudo unzip -d /usr/share gradle-8.5-bin.zip
+          echo 'export PATH=/usr/share/gradle-8.5/bin:$PATH' >> $GITHUB_ENV
+
       - name: Clean old project if exists
         run: |
           rm -rf GEL_Cleaner || true

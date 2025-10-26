@@ -17,16 +17,16 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Downgrade Gradle to 8.5 (stable for Cordova)
+      - name: Install Gradle 8.5 (manual local path)
         run: |
-          sudo rm -rf /usr/share/gradle
           wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          sudo unzip -d /usr/share gradle-8.5-bin.zip
-          echo 'export PATH=/usr/share/gradle-8.5/bin:$PATH' >> $GITHUB_ENV
+          unzip -q gradle-8.5-bin.zip
+          echo "GRADLE_HOME=$PWD/gradle-8.5" >> $GITHUB_ENV
+          echo "$PWD/gradle-8.5/bin" >> $GITHUB_PATH
+          gradle -v
 
       - name: Clean old project if exists
-        run: |
-          rm -rf GEL_Cleaner || true
+        run: rm -rf GEL_Cleaner || true
 
       - name: Create Cordova project
         run: |
@@ -39,10 +39,11 @@ jobs:
           cp -r ../app/www/js www/js
           cp -r ../app/www/img www/img
 
-      - name: Build APK
+      - name: Build APK using Gradle 8.5
         run: |
           cd GEL_Cleaner
-          npx cordova build android
+          export PATH=$GRADLE_HOME/bin:$PATH
+          npx cordova build android --verbose
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

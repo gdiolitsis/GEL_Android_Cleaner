@@ -1,70 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GEL Android Cleaner</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: linear-gradient(180deg, #0b0b0b 0%, #202020 100%);
-      color: #f5d76e;
+      background: #0e0e0e;
+      color: #ffcc33;
       font-family: "Segoe UI", Arial, sans-serif;
+      text-align: center;
+      height: 100vh;
+      margin: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center;
     }
-
     img {
-      width: 150px;
-      height: 150px;
-      margin-bottom: 25px;
-      animation: pulse 3s infinite ease-in-out;
+      width: 130px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #ffcc33;
+      animation: glow 3s infinite ease-in-out;
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.08); opacity: 0.9; }
-      100% { transform: scale(1); opacity: 1; }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px #ffcc33; }
+      50% { box-shadow: 0 0 40px #ffd84d; }
     }
-
     h1 {
-      font-size: 1.8em;
-      font-weight: 700;
-      margin: 0;
+      margin-top: 20px;
       color: #ffcc33;
-      text-shadow: 0 0 10px #ffcc33;
+      font-size: 26px;
     }
-
-    p {
-      color: #ccc;
-      margin-top: 10px;
-      font-size: 1em;
+    button {
+      margin: 10px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ffcc33;
+      color: #0e0e0e;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
     }
-
-    footer {
-      position: absolute;
-      bottom: 15px;
-      font-size: 0.8em;
-      color: #777;
+    button:hover {
+      background-color: #ffd84d;
+    }
+    #status {
+      margin-top: 20px;
+      color: #bbb;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <img src="img/GEL_logo.png" alt="GEL Logo">
+  <img src="img/GEL_logo.png" alt="GEL Logo"/>
   <h1>GEL Android Cleaner</h1>
-  <p>Powered by GDiolitsis Engine Lab (GEL)</p>
 
-  <footer>© 2025 GDiolitsis Engine Lab — All Rights Reserved ⚡</footer>
+  <button onclick="simpleClean()">🧹 Simple Clean</button>
+  <button onclick="deepClean()">🚿 Deep Clean</button>
+  <button onclick="killApps()">🔪 APK Killer</button>
+
+  <p id="status">Initializing...</p>
 
   <script>
-    document.addEventListener('deviceready', function() {
-      console.log('Device is ready — GEL Engine Initialized.');
+    document.addEventListener("deviceready", function() {
+      document.getElementById("status").innerText = "Device ready. Dark-Gold Edition v1.2";
     }, false);
+
+    function simpleClean() {
+      document.getElementById("status").innerText = "🧹 Running Simple Clean...";
+      try {
+        window.cache.clear(
+          () => document.getElementById("status").innerText = "✅ Cache cleared!",
+          err => document.getElementById("status").innerText = "❌ Error: " + err
+        );
+      } catch (e) {
+        document.getElementById("status").innerText = "⚠️ Cache plugin not available.";
+      }
+    }
+
+    function deepClean() {
+      document.getElementById("status").innerText = "🚿 Deep Cleaning app data...";
+      try {
+        window.AppDataCleaner.clean(
+          () => document.getElementById("status").innerText = "✅ Deep Clean completed!",
+          e => document.getElementById("status").innerText = "❌ Error: " + e
+        );
+      } catch (e) {
+        document.getElementById("status").innerText = "⚠️ Deep Clean plugin not available.";
+      }
+    }
+
+    function killApps() {
+      document.getElementById("status").innerText = "🔪 Killing background apps...";
+      try {
+        window.plugins.appMinimize.minimize();
+        document.getElementById("status").innerText = "✅ Non-system apps killed!";
+      } catch (e) {
+        document.getElementById("status").innerText = "⚠️ Killer plugin not available.";
+      }
+    }
   </script>
 </body>
 </html>

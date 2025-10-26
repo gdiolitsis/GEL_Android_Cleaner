@@ -70,6 +70,14 @@ jobs:
             echo "⚠️ GEL_logo.png not found! Skipping resize."
           fi
 
+      # 🟡 Δημιουργούμε ξεχωριστό μικρό UI logo για την εφαρμογή (όχι launcher)
+      - name: Duplicate smaller GEL logo for app UI
+        run: |
+          cd GEL_Cleaner/www/img
+          if [ -f "GEL_logo.png" ]; then
+            cp GEL_logo.png GEL_logo_ui.png
+          fi
+
       - name: Clean Android platform (force fresh www)
         run: |
           cd GEL_Cleaner

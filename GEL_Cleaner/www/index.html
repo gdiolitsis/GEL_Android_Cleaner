@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.1</title>
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.2</title>
 
-  <!-- ✅ Correct paths for Cordova build -->
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/gel.js"></script>
 
   <style>
     body {
@@ -35,6 +33,12 @@
       width: 110px;
       margin-top: 25px;
       filter: drop-shadow(0 0 8px #d4af37);
+      animation: pulseGold 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGold {
+      0%, 100% { filter: drop-shadow(0 0 8px #d4af37); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 18px #ffd700); transform: scale(1.05); }
     }
 
     .btn-grid {
@@ -62,6 +66,27 @@
       box-shadow: 0 0 10px #d4af37;
     }
 
+    .donate {
+      margin-top: 25px;
+      font-size: 14px;
+    }
+
+    .donate a {
+      color: #ffd700;
+      text-decoration: none;
+      font-weight: bold;
+      border: 1px solid #d4af37;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: #222;
+      box-shadow: 0 0 8px #d4af37;
+    }
+
+    .donate a:hover {
+      background: #333;
+      color: #fff;
+    }
+
     footer {
       margin-top: 40px;
       font-size: 13px;
@@ -71,10 +96,9 @@
 </head>
 
 <body>
-  <!-- ✅ Correct path for Cordova -->
   <img src="img/GEL_logo.png" alt="GEL Logo">
   <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.1</b></p>
+  <p>Device is ready. <b>Dark-Gold Edition v3.2</b></p>
 
   <div class="btn-grid">
     <button onclick="cleanCache()">🧠 Clean Cache</button>
@@ -85,8 +109,15 @@
     <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
 
+  <div class="donate">
+    💛 Support the Project →
+    <a href="https://www.paypal.me/gdiolitsis" target="_blank">Donate via PayPal</a>
+  </div>
+
   <footer>
     GDiolitsis Engine Lab (GEL) — Author & Developer
   </footer>
+
+  <script src="js/gel.js"></script>
 </body>
 </html>

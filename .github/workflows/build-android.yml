@@ -11,32 +11,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Cordova
-        run: npm install -g cordova
-
-      - name: Set up Android SDK and Gradle 8.7
+      - name: Set up environment
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jdk unzip curl
-          mkdir -p "$ANDROID_HOME/cmdline-tools"
-          cd "$ANDROID_HOME/cmdline-tools"
-          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-          unzip -q tools.zip -d latest
-          rm tools.zip
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+          sudo apt-get install -y openjdk-17-jdk unzip curl wget
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-          # 🔧 Install Gradle 8.7 (stable for Cordova)
+      - name: Install Gradle 8.7 manually
+        run: |
           wget https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle-8.7-bin.zip
           sudo mv gradle-8.7 /opt/gradle
-          export PATH=$PATH:/opt/gradle/bin
+          echo "/opt/gradle/bin" >> $GITHUB_PATH
           gradle -v
+
+      - name: Install Android SDK tools
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          cd $ANDROID_HOME/cmdline-tools
+          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+          unzip -q tools.zip -d latest
+          rm tools.zip
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+
+      - name: Install Cordova
+        run: npm install -g cordova
 
       - name: Create and prepare project
         run: |
@@ -46,10 +48,11 @@ jobs:
           echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
           sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
 
-      - name: Build APK
+      - name: Build APK (force Gradle 8.7)
         run: |
           cd GEL_Cleaner
-          export PATH=$PATH:/opt/gradle/bin
+          export PATH=/opt/gradle/bin:$PATH
+          ./platforms/android/gradlew wrapper --gradle-version 8.7
           cordova build android --debug
 
       - name: Upload APK artifact

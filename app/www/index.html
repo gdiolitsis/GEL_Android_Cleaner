@@ -3,101 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.1</title>
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.2</title>
 
+  <!-- ✅ Correct paths for Cordova build -->
   <link rel="stylesheet" href="css/style.css">
   <script src="js/gel.js"></script>
-
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
-      color: #ffd700;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-top: 20px;
-      text-shadow: 0 0 10px #d4af37;
-    }
-
-    p {
-      font-size: 16px;
-      margin: 10px 0 25px;
-      color: #e0c46c;
-    }
-
-    img {
-      width: 110px;
-      margin-top: 25px;
-      filter: drop-shadow(0 0 8px #d4af37);
-    }
-
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-
-    button {
-      background: #2a2a2a;
-      color: #ffd700;
-      border: 1px solid #d4af37;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      background: #3b3b3b;
-      box-shadow: 0 0 10px #d4af37;
-    }
-
-    hr {
-      border: 0;
-      height: 1px;
-      background: linear-gradient(to right, transparent, #d4af37, transparent);
-      margin: 35px auto 20px;
-      width: 80%;
-    }
-
-    .donate {
-      background: #1e1e1e;
-      color: #fff;
-      border: 1px solid #d4af37;
-      border-radius: 12px;
-      padding: 10px 25px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .donate:hover {
-      background: #3a3a3a;
-      color: #ffd700;
-      box-shadow: 0 0 12px #d4af37;
-    }
-
-    footer {
-      margin-top: 30px;
-      font-size: 13px;
-      color: #999;
-    }
-  </style>
 </head>
 
 <body>
   <img src="img/GEL_logo.png" alt="GEL Logo">
   <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.1</b></p>
+  <p>Device is ready. <b>Dark-Gold Edition v3.2</b></p>
 
   <div class="btn-grid">
     <button onclick="cleanCache()">🧠 Clean Cache</button>
@@ -108,11 +24,11 @@
     <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
 
-  <hr>
-
-  <button class="donate" onclick="window.open('https://www.paypal.me/gdiolitsis','_blank')">
-    💛 Support Development via PayPal
-  </button>
+  <!-- 💙 PayPal Donation Section -->
+  <div class="donation-box">
+    <p>Support development of GEL Android Cleaner 💛</p>
+    <a href="https://www.paypal.me/gdiolitsis" target="_blank">Donate via PayPal</a>
+  </div>
 
   <footer>
     GDiolitsis Engine Lab (GEL) — Author & Developer

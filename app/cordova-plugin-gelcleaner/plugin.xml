@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-plugin-gelcleaner" version="1.0.0"
+        xmlns="http://apache.org/cordova/ns/plugins"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+  <name>GEL Cleaner</name>
+  <description>Native cache/temp/RAM cleaner for GEL</description>
+  <license>MIT</license>
+
+  <!-- JS bridge -->
+  <js-module src="www/GelCleaner.js" name="GelCleaner">
+    <clobbers target="GelCleaner"/>
+  </js-module>
+
+  <platform name="android">
+    <config-file target="AndroidManifest.xml" parent="/*">
+      <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    </config-file>
+
+    <source-file src="src/android/GelCleaner.java"
+                 target-dir="app/src/main/java/com/gel/cleaner"/>
+  </platform>
+</plugin>

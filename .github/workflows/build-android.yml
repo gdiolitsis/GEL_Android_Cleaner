@@ -1,47 +1,25 @@
 name: Build Android APK (Cordova)
-
 on:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up environment
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jdk unzip wget curl
-          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
-          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-
-      - name: Install Gradle 8.5 (stable)
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
-          sudo mv gradle-8.5 /opt/gradle
-          echo "/opt/gradle/bin" >> $GITHUB_PATH
-          gradle -v
-
-      - name: Install Android SDK tools
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
-          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-          unzip -q tools.zip -d latest
-          rm tools.zip
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Clean previous build folder
-        run: rm -rf GEL_Cleaner || true
+      - name: Clean old project if exists
+        run: |
+          rm -rf GEL_Cleaner || true
 
       - name: Create Cordova project
         run: |
@@ -49,33 +27,18 @@ jobs:
           cd GEL_Cleaner
           cordova platform add android@12
           mkdir -p www/img
-          cp ../app/www/img/GEL_logo.png www/img/GEL_logo.png
           cp ../app/www/index.html www/index.html
           cp -r ../app/www/css www/css
           cp -r ../app/www/js www/js
-          sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
-
-      - name: Patch Gradle wrapper issue
-        run: |
-          cd GEL_Cleaner/platforms/android
-          mkdir -p gradle/wrapper
-          cat > gradle/wrapper/gradle-wrapper.properties <<EOF
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-          cd ../..
+          cp -r ../app/www/img www/img
 
       - name: Build APK
         run: |
           cd GEL_Cleaner
-          export PATH=/opt/gradle/bin:$PATH
-          cordova build android --release --no-update-notifier
+          npx cordova build android
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Cleaner_release.apk
-          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/release/app-release.apk
+          name: GEL_Android_Cleaner_APK
+          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk

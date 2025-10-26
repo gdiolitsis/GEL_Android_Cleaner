@@ -48,12 +48,23 @@ jobs:
           echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
           sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
 
-      - name: Build with Gradle 8.7
+      - name: Patch Gradle wrapper issue
         run: |
           cd GEL_Cleaner/platforms/android
-          export PATH=/opt/gradle/bin:$PATH
-          gradle wrapper --gradle-version 8.7
+          mkdir -p gradle/wrapper
+          cat > gradle/wrapper/gradle-wrapper.properties <<EOF
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
           cd ../..
+
+      - name: Build with Gradle 8.7
+        run: |
+          cd GEL_Cleaner
+          export PATH=/opt/gradle/bin:$PATH
           cordova build android --debug --no-update-notifier
 
       - name: Upload APK artifact

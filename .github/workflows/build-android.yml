@@ -55,7 +55,14 @@ jobs:
           cp -r ../app/www/js www/js || true
           cp -r ../app/www/img/* www/img/ || true
 
-      # 🔧 ΜΟΝΟ αυτό το extra βήμα προστέθηκε πριν το build
+      # 🔧 ΝΕΟ: σβήνουμε τα default λογότυπα του Cordova από το www
+      - name: Remove default Cordova logos
+        run: |
+          cd GEL_Cleaner
+          rm -f www/logo.png || true
+          rm -f www/img/logo.png || true
+
+      # Παραμένει όπως το έχεις
       - name: Clean Android platform (force fresh www)
         run: |
           cd GEL_Cleaner

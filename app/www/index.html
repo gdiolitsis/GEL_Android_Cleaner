@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.2</title>
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.3</title>
 
   <!-- ✅ Correct paths for Cordova build -->
   <link rel="stylesheet" href="css/style.css">
@@ -11,9 +11,11 @@
 </head>
 
 <body>
-  <img src="img/GEL_logo.png" alt="GEL Logo">
+  <!-- ✅ Μικρό UI logo -->
+  <img src="img/GEL_logo_ui.png" alt="GEL Logo" style="width:110px; margin-top:25px; filter:drop-shadow(0 0 8px #d4af37);">
+
   <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.2</b></p>
+  <p>Device is ready. <b>Dark-Gold Edition v3.3</b></p>
 
   <div class="btn-grid">
     <button onclick="cleanCache()">🧠 Clean Cache</button>
@@ -24,13 +26,17 @@
     <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
 
-  <!-- 💙 PayPal Donation Section -->
-  <div class="donation-box">
-    <p>Support development of GEL Android Cleaner 💛</p>
-    <a href="https://www.paypal.me/gdiolitsis" target="_blank">Donate via PayPal</a>
+  <!-- 💛 Donation section moved lower -->
+  <div class="donation-box" style="margin-top:50px;">
+    <p style="font-size:14px; color:#e6d08a;">Support development of GEL Android Cleaner</p>
+    <a href="https://www.paypal.me/gdiolitsis" target="_blank"
+       style="display:inline-block; padding:10px 20px; border:1px solid #d4af37; border-radius:8px;
+              background:#2a2a2a; color:#ffd700; text-decoration:none; transition:0.3s;">
+      💰 Donate via PayPal
+    </a>
   </div>
 
-  <footer>
+  <footer style="margin-top:40px; font-size:13px; color:#999;">
     GDiolitsis Engine Lab (GEL) — Author & Developer
   </footer>
 </body>

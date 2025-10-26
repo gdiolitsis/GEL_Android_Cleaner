@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover" />
+  <meta charset="utf-8">
   <title>GEL Android Cleaner</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div class="wrap">
-    <img class="logo" src="img/GEL_logo.png" alt="GEL Logo" />
+  <div class="container">
+    <img src="img/GEL_logo.png" alt="GEL Logo" class="logo">
     <h1>GEL Android Cleaner</h1>
-    <p class="sub">No-root cleaning toolkit</p>
+    <p id="status">Device is ready. Dark-Gold Edition v1.0</p>
 
-    <div class="actions">
-      <button id="btnQuick">🧹 Quick Clean</button>
-      <button id="btnDeep">🧨 Deep Clean (Power)</button>
-      <button id="btnKill">⛔ Kill Background Apps</button>
+    <div class="button-grid">
+      <button class="clean-btn" data-action="Cache">🧠 Clean Cache</button>
+      <button class="clean-btn" data-action="RAM">⚡ Boost RAM</button>
+      <button class="clean-btn" data-action="Junk Files">🗑️ Remove Junk</button>
+      <button class="clean-btn" data-action="Temp Files">🔥 Clear Temp</button>
+      <button class="clean-btn" data-action="Battery">🔋 Optimize Battery</button>
+      <button class="clean-btn" data-action="Processes">🚀 Kill Processes</button>
     </div>
-
-    <div id="out" class="out"></div>
   </div>
 
-  <script src="cordova.js"></script>
   <script src="js/gel.js"></script>
 </body>
 </html>

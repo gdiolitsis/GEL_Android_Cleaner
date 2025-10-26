@@ -40,6 +40,10 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
+      - name: Clean previous build folder
+        run: |
+          rm -rf GEL_Cleaner
+
       - name: Create Cordova project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"

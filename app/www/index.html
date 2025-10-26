@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.2</title>
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.1</title>
 
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/gel.js"></script>
 
   <style>
     body {
@@ -33,12 +34,6 @@
       width: 110px;
       margin-top: 25px;
       filter: drop-shadow(0 0 8px #d4af37);
-      animation: pulseGold 3s ease-in-out infinite;
-    }
-
-    @keyframes pulseGold {
-      0%, 100% { filter: drop-shadow(0 0 8px #d4af37); transform: scale(1); }
-      50% { filter: drop-shadow(0 0 18px #ffd700); transform: scale(1.05); }
     }
 
     .btn-grid {
@@ -66,29 +61,33 @@
       box-shadow: 0 0 10px #d4af37;
     }
 
+    hr {
+      border: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+      margin: 35px auto 20px;
+      width: 80%;
+    }
+
     .donate {
-      margin-top: 25px;
-      font-size: 14px;
-    }
-
-    .donate a {
-      color: #ffd700;
-      text-decoration: none;
-      font-weight: bold;
-      border: 1px solid #d4af37;
-      padding: 6px 14px;
-      border-radius: 8px;
-      background: #222;
-      box-shadow: 0 0 8px #d4af37;
-    }
-
-    .donate a:hover {
-      background: #333;
+      background: #1e1e1e;
       color: #fff;
+      border: 1px solid #d4af37;
+      border-radius: 12px;
+      padding: 10px 25px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .donate:hover {
+      background: #3a3a3a;
+      color: #ffd700;
+      box-shadow: 0 0 12px #d4af37;
     }
 
     footer {
-      margin-top: 40px;
+      margin-top: 30px;
       font-size: 13px;
       color: #999;
     }
@@ -98,7 +97,7 @@
 <body>
   <img src="img/GEL_logo.png" alt="GEL Logo">
   <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.2</b></p>
+  <p>Device is ready. <b>Dark-Gold Edition v3.1</b></p>
 
   <div class="btn-grid">
     <button onclick="cleanCache()">🧠 Clean Cache</button>
@@ -109,15 +108,14 @@
     <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
 
-  <div class="donate">
-    💛 Support the Project →
-    <a href="https://www.paypal.me/gdiolitsis" target="_blank">Donate via PayPal</a>
-  </div>
+  <hr>
+
+  <button class="donate" onclick="window.open('https://www.paypal.me/gdiolitsis','_blank')">
+    💛 Support Development via PayPal
+  </button>
 
   <footer>
     GDiolitsis Engine Lab (GEL) — Author & Developer
   </footer>
-
-  <script src="js/gel.js"></script>
 </body>
 </html>

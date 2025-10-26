@@ -1,23 +1,42 @@
 name: Build Android APK (Cordova)
+
 on:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install Cordova
-        run: npm install -g cordova
+      - name: Install Java JDK 17
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y openjdk-17-jdk
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
 
-      - name: Install Gradle 8.5 (manual local path)
+      - name: Install Android SDK Build Tools 33.0.2
+        run: |
+          sudo apt-get install -y wget unzip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+          unzip -q tools.zip -d latest
+          rm tools.zip
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+      - name: Install Gradle 8.5
         run: |
           wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
@@ -25,7 +44,10 @@ jobs:
           echo "$PWD/gradle-8.5/bin" >> $GITHUB_PATH
           gradle -v
 
-      - name: Clean old project if exists
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Clean previous build
         run: rm -rf GEL_Cleaner || true
 
       - name: Create Cordova project
@@ -39,11 +61,11 @@ jobs:
           cp -r ../app/www/js www/js
           cp -r ../app/www/img www/img
 
-      - name: Build APK using Gradle 8.5
+      - name: Build APK (Gradle 8.5)
         run: |
           cd GEL_Cleaner
           export PATH=$GRADLE_HOME/bin:$PATH
-          npx cordova build android --verbose
+          cordova build android --debug --no-update-notifier
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

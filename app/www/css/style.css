@@ -1,22 +1,16 @@
 /* =========================================================
-   GEL Android Cleaner — Dark-Gold Edition v3
+   GEL Android Cleaner — Dark-Gold Edition v3.2
    Author: GDiolitsis Engine Lab (GEL)
    ========================================================= */
 
 body {
   font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
+  background: linear-gradient(180deg, #0b0b0b, #1a1a1a);
   color: #ffd700;
   text-align: center;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-}
-
-img {
-  width: 110px;
-  margin-top: 25px;
-  filter: drop-shadow(0 0 8px #d4af37);
 }
 
 h1 {
@@ -31,6 +25,12 @@ p {
   color: #e0c46c;
 }
 
+img {
+  width: 120px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 8px #d4af37);
+}
+
 .btn-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -41,36 +41,52 @@ p {
 }
 
 button {
-  background: #2a2a2a;
+  background: #222;
   color: #ffd700;
   border: 1px solid #d4af37;
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 12px;
   font-size: 15px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+  transition: all 0.25s ease;
 }
 
 button:hover {
   background: #3b3b3b;
-  box-shadow: 0 0 15px #d4af37;
+  box-shadow: 0 0 10px #d4af37;
   transform: scale(1.05);
 }
 
+/* PayPal Donation Section */
+.donation-box {
+  margin-top: 50px;
+}
+
+.donation-box p {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.donation-box a {
+  background: #003087;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0, 48, 135, 0.4);
+  transition: all 0.3s ease;
+}
+
+.donation-box a:hover {
+  background: #005eb8;
+  box-shadow: 0 0 15px rgba(0, 94, 184, 0.7);
+}
+
+/* Footer */
 footer {
   margin-top: 40px;
   font-size: 13px;
-  color: #999;
-  text-shadow: 0 0 4px #555;
-}
-
-/* Smooth fade-in effect */
-body, h1, p, button, footer, img {
-  animation: fadeIn 1s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  color: #888;
 }

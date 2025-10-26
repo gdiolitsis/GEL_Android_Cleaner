@@ -1,25 +1,91 @@
-<!doctype html>
-<html lang="el">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEL Android Cleaner</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.1</title>
+
+  <!-- ✅ Correct paths for Cordova build -->
+  <link rel="stylesheet" href="app/www/css/style.css">
+  <script src="app/www/js/gel.js"></script>
+
   <style>
-    :root{--bg:#0f1113;--fg:#e6d08a;--muted:#9aa0a6}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--fg);height:100vh;display:flex;align-items:center;justify-content:center}
-    .container{display:flex;flex-direction:column;align-items:center;padding:28px;text-align:center}
-    .logo{width:160px;height:160px;background:#fff url('img/GEL_logo.png') center/contain no-repeat;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
-    h1{margin:18px 0 6px;font-size:20px;letter-spacing:0.5px}
-    p{color:var(--muted);margin:0;font-size:14px}
-    .btn{margin-top:18px;padding:10px 18px;border-radius:8px;background:#2d2f31;color:#fff;text-decoration:none}
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
+      color: #ffd700;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-top: 20px;
+      text-shadow: 0 0 10px #d4af37;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 10px 0 25px;
+      color: #e0c46c;
+    }
+
+    img {
+      width: 110px;
+      margin-top: 25px;
+      filter: drop-shadow(0 0 8px #d4af37);
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+
+    button {
+      background: #2a2a2a;
+      color: #ffd700;
+      border: 1px solid #d4af37;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #3b3b3b;
+      box-shadow: 0 0 10px #d4af37;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #999;
+    }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <div class="logo" aria-hidden="true"></div>
-    <h1>GEL Android Cleaner</h1>
-    <p>Έκδοση 1.0 — Minimal interface</p>
-    <a class="btn" href="#" onclick="alert('Αυτή είναι δοκιμαστική έκδοση');return false">Δοκιμή</a>
+  <img src="app/www/img/GEL_logo.png" alt="GEL Logo">
+  <h1>GEL Android Cleaner</h1>
+  <p>Device is ready. <b>Dark-Gold Edition v3.1</b></p>
+
+  <div class="btn-grid">
+    <button onclick="cleanCache()">🧠 Clean Cache</button>
+    <button onclick="boostRAM()">⚡ Boost RAM</button>
+    <button onclick="removeJunk()">🗑️ Remove Junk</button>
+    <button onclick="clearTemp()">🔥 Clear Temp</button>
+    <button onclick="optimizeBattery()">🔋 Optimize Battery</button>
+    <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
+
+  <footer>
+    GDiolitsis Engine Lab (GEL) — Author & Developer
+  </footer>
 </body>
 </html>

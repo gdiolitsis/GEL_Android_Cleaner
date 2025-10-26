@@ -23,35 +23,12 @@ jobs:
           echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
 
-      - name: Install Android SDK Build Tools 33.0.2
-        run: |
-          sudo apt-get install -y wget unzip
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-          unzip -q tools.zip -d latest
-          rm tools.zip
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-
-      - name: Install Gradle 8.5
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
-          echo "GRADLE_HOME=$PWD/gradle-8.5" >> $GITHUB_ENV
-          echo "$PWD/gradle-8.5/bin" >> $GITHUB_PATH
-          gradle -v
-
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Clean previous build
-        run: rm -rf GEL_Cleaner || true
-
       - name: Create Cordova project
         run: |
+          rm -rf GEL_Cleaner || true
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
@@ -61,14 +38,15 @@ jobs:
           cp -r ../app/www/js www/js
           cp -r ../app/www/img www/img
 
-      - name: Build APK (Gradle 8.5)
+      - name: Build APK
         run: |
           cd GEL_Cleaner
-          export PATH=$GRADLE_HOME/bin:$PATH
           cordova build android --debug --no-update-notifier
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Android_Cleaner_APK
-          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/*.apk
+            GEL_Cleaner/platforms/android/app/build/outputs/apk/release/*.apk

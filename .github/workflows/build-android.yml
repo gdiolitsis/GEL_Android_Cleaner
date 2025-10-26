@@ -38,7 +38,7 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
       - name: Install Cordova
-        run: npm install -g cordova@12.0.1
+        run: npm install -g cordova@12.0.0
 
       - name: Clean previous build folder
         run: |

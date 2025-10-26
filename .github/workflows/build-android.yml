@@ -41,18 +41,112 @@ jobs:
         run: npm install -g cordova
 
       - name: Clean previous build folder
-        run: |
-          rm -rf GEL_Cleaner
+        run: rm -rf GEL_Cleaner
 
       - name: Create Cordova project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
-          echo '<widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name></widget>' > config.xml
+          cordova plugin add cordova-plugin-cache-clear
+          cordova plugin add cordova-plugin-appdata-cleaner
+          cordova plugin add cordova-plugin-appminimize
+          echo '<widget id="com.gel.cleaner" version="1.2.0" xmlns="http://www.w3.org/ns/widgets"><name>GEL Cleaner</name><content src="index.html"/></widget>' > config.xml
           sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
-          # Δημιουργία χρυσής αρχικής σελίδας
-          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>GEL Cleaner</title><style>body{background:#111;color:gold;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}h1{font-size:28px;}p{color:#aaa;}</style></head><body><h1>⚡ GEL Android Cleaner</h1><p>Device is ready. Dark-Gold Edition v1.0</p></body></html>' > www/index.html
+          mkdir -p www/img
+          # Προσθήκη λογότυπου από το δικό σου repo
+          wget -O www/img/GEL_logo.png https://raw.githubusercontent.com/gdiolitsis/GEL_Android_Cleaner/main/www/img/GEL_logo.png
+          # Δημιουργία αρχικής σελίδας
+          cat > www/index.html <<'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEL Android Cleaner</title>
+  <style>
+    body {
+      background: #0e0e0e;
+      color: #ffcc33;
+      font-family: "Segoe UI", Arial, sans-serif;
+      text-align: center;
+      padding-top: 20%;
+    }
+    img {
+      width: 120px;
+      margin-bottom: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px #ffcc33;
+    }
+    h1 { color: #ffcc33; margin-bottom: 10px; }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ffcc33;
+      color: #0e0e0e;
+      font-weight: bold;
+    }
+    #status {
+      margin-top: 20px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <img src="img/GEL_logo.png" alt="GEL Logo"/>
+  <h1>GEL Android Cleaner</h1>
+  <button onclick="simpleClean()">🧹 Simple Clean</button>
+  <button onclick="deepClean()">🚿 Deep Clean</button>
+  <button onclick="killApps()">🔪 APK Killer</button>
+  <p id="status">Waiting for device...</p>
+
+  <script>
+    document.addEventListener("deviceready", function() {
+      document.getElementById("status").innerText = "Device ready. Dark-Gold Edition v1.2";
+    }, false);
+
+    function simpleClean() {
+      document.getElementById("status").innerText = "🧹 Running Simple Clean...";
+      try {
+        window.cache.clear(function(){
+          document.getElementById("status").innerText = "✅ Cache cleared!";
+        }, function(err){
+          document.getElementById("status").innerText = "❌ Error: " + err;
+        });
+      } catch(e) {
+        document.getElementById("status").innerText = "⚠️ Cache plugin not available.";
+      }
+    }
+
+    function deepClean() {
+      document.getElementById("status").innerText = "🚿 Deep Cleaning app data...";
+      try {
+        window.AppDataCleaner.clean(function(){
+          document.getElementById("status").innerText = "✅ Deep Clean completed!";
+        }, function(e){
+          document.getElementById("status").innerText = "❌ Error: " + e;
+        });
+      } catch(e) {
+        document.getElementById("status").innerText = "⚠️ Deep Clean plugin not available.";
+      }
+    }
+
+    function killApps() {
+      document.getElementById("status").innerText = "🔪 Killing background apps...";
+      try {
+        window.plugins.appMinimize.minimize();
+        document.getElementById("status").innerText = "✅ Non-system apps killed!";
+      } catch(e) {
+        document.getElementById("status").innerText = "⚠️ Killer plugin not available.";
+      }
+    }
+  </script>
+</body>
+</html>
+EOF
 
       - name: Patch Gradle wrapper issue
         run: |

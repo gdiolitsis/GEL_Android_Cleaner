@@ -53,7 +53,14 @@ jobs:
           cp ../app/www/index.html www/index.html || true
           cp -r ../app/www/css www/css || true
           cp -r ../app/www/js www/js || true
-          cp -r ../app/www/img www/img || true
+          cp -r ../app/www/img/* www/img/ || true
+
+      # 🔧 ΜΟΝΟ αυτό το extra βήμα προστέθηκε πριν το build
+      - name: Clean Android platform (force fresh www)
+        run: |
+          cd GEL_Cleaner
+          rm -rf platforms/android plugins
+          cordova platform add android@12
 
       - name: Build with Gradle 8.5
         run: |

@@ -3,19 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.3</title>
+  <title>GEL Android Cleaner — Dark-Gold Edition v3.4</title>
 
-  <!-- ✅ Correct paths for Cordova build -->
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
+      color: #ffd700;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-top: 20px;
+      color: #ffd700;
+      text-shadow: 0 0 15px #d4af37;
+    }
+
+    p {
+      font-size: 16px;
+      color: #e0c46c;
+      margin-bottom: 25px;
+    }
+
+    img {
+      width: 110px;
+      margin-top: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #d4af37;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+
+    button {
+      background: transparent;
+      color: #ffd700;
+      border: 1px solid #d4af37;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(212,175,55,0.2);
+    }
+
+    button:hover {
+      background: #2a2a2a;
+      box-shadow: 0 0 15px #d4af37;
+    }
+
+    /* 💛 Donation section */
+    .donation-box {
+      margin-top: 55px;
+    }
+
+    .donation-box p {
+      font-size: 14px;
+      color: #e6d08a;
+      margin-bottom: 10px;
+    }
+
+    .donation-btn {
+      display: inline-block;
+      padding: 10px 22px;
+      border: 1px solid #d4af37;
+      border-radius: 8px;
+      background: #000;
+      color: #ffd700;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 0 15px #d4af37;
+      transition: 0.3s;
+    }
+
+    .donation-btn:hover {
+      background: #2a2a2a;
+      box-shadow: 0 0 20px #ffd700;
+    }
+
+    footer {
+      margin-top: 45px;
+      font-size: 13px;
+      color: #999;
+    }
+  </style>
+
   <script src="js/gel.js"></script>
 </head>
 
 <body>
-  <!-- ✅ Μικρό UI logo -->
-  <img src="img/GEL_logo_ui.png" alt="GEL Logo" style="width:110px; margin-top:25px; filter:drop-shadow(0 0 8px #d4af37);">
+  <img src="img/GEL_logo_ui.png" alt="GEL Logo">
 
   <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.3</b></p>
+  <p>Device is ready. <b>Dark-Gold Edition v3.4</b></p>
 
   <div class="btn-grid">
     <button onclick="cleanCache()">🧠 Clean Cache</button>
@@ -26,17 +115,14 @@
     <button onclick="killProcesses()">🚀 Kill Processes</button>
   </div>
 
-  <!-- 💛 Donation section moved lower -->
-  <div class="donation-box" style="margin-top:50px;">
-    <p style="font-size:14px; color:#e6d08a;">Support development of GEL Android Cleaner</p>
-    <a href="https://www.paypal.me/gdiolitsis" target="_blank"
-       style="display:inline-block; padding:10px 20px; border:1px solid #d4af37; border-radius:8px;
-              background:#2a2a2a; color:#ffd700; text-decoration:none; transition:0.3s;">
+  <div class="donation-box">
+    <p>Support development of GEL Android Cleaner</p>
+    <a href="https://www.paypal.me/gdiolitsis" target="_blank" class="donation-btn">
       💰 Donate via PayPal
     </a>
   </div>
 
-  <footer style="margin-top:40px; font-size:13px; color:#999;">
+  <footer>
     GDiolitsis Engine Lab (GEL) — Author & Developer
   </footer>
 </body>

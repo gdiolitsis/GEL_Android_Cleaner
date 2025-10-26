@@ -55,19 +55,33 @@ jobs:
           cp -r ../app/www/js www/js || true
           cp -r ../app/www/img/* www/img/ || true
 
-      # 🔧 ΝΕΟ: σβήνουμε τα default λογότυπα του Cordova από το www
+      # 🔧 Σβήνουμε πιθανά default Cordova logos στο www
       - name: Remove default Cordova logos
         run: |
           cd GEL_Cleaner
           rm -f www/logo.png || true
           rm -f www/img/logo.png || true
 
-      # Παραμένει όπως το έχεις
+      # 🔧 Φρέσκο android platform ώστε να πάρει καθαρά τα www assets
       - name: Clean Android platform (force fresh www)
         run: |
           cd GEL_Cleaner
           rm -rf platforms/android plugins
           cordova platform add android@12
+
+      # 🟡 ΑΝΤΙΚΑΤΑΣΤΑΣΗ launcher icons στα mipmap-* με το δικό σου GEL_logo.png
+      - name: Replace Android launcher icons with GEL_logo
+        run: |
+          cd GEL_Cleaner
+          if [ -f "www/img/GEL_logo.png" ]; then
+            for d in platforms/android/app/src/main/res/mipmap-*; do
+              rm -f "$d/ic_launcher.png" "$d/ic_launcher_round.png" || true
+              cp www/img/GEL_logo.png "$d/ic_launcher.png" || true
+              cp www/img/GEL_logo.png "$d/ic_launcher_round.png" || true
+            done
+          else
+            echo "GEL_logo.png not found under www/img/. Skipping icon replace."
+          fi
 
       - name: Build with Gradle 8.5
         run: |

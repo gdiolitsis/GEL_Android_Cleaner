@@ -1,4 +1,4 @@
-name: Build Signed Android APK (Cordova)
+name: Build Android APK (Cordova)
 
 on:
   workflow_dispatch:
@@ -7,35 +7,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      KEYSTORE_FILE: my-release-key.keystore
-      KEY_ALIAS: gelkey
-      KEY_PASSWORD: android
-      STORE_PASSWORD: android
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Android SDK
+      - name: Set up environment
         run: |
-          sudo mkdir -p $ANDROID_HOME/cmdline-tools
+          sudo apt-get update -y
+          sudo apt-get install -y openjdk-17-jdk unzip wget curl
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+
+      - name: Install Gradle 8.5 (stable)
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          sudo mv gradle-8.5 /opt/gradle
+          echo "/opt/gradle/bin" >> $GITHUB_PATH
+          gradle -v
+
+      - name: Install Android SDK tools
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
           cd $ANDROID_HOME/cmdline-tools
-          curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-          sudo unzip -q tools.zip -d latest
+          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+          unzip -q tools.zip -d latest
           rm tools.zip
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
@@ -43,37 +40,42 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Clean previous build
+      - name: Clean previous build folder
         run: rm -rf GEL_Cleaner || true
 
-      - name: Create Cordova project and copy assets
+      - name: Create Cordova project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
-          mkdir -p www/img www/css www/js
-          cp ../app/www/index.html www/index.html
-          cp -r ../app/www/css/* www/css/ || true
-          cp -r ../app/www/js/*  www/js/  || true
+          mkdir -p www/img
           cp ../app/www/img/GEL_logo.png www/img/GEL_logo.png
+          cp ../app/www/index.html www/index.html
+          cp -r ../app/www/css www/css
+          cp -r ../app/www/js www/js
+          sed -i '1i import groovy.xml.XmlParser' platforms/android/CordovaLib/cordova.gradle
 
-      - name: Generate keystore
+      - name: Patch Gradle wrapper issue
+        run: |
+          cd GEL_Cleaner/platforms/android
+          mkdir -p gradle/wrapper
+          cat > gradle/wrapper/gradle-wrapper.properties <<EOF
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+          cd ../..
+
+      - name: Build APK
         run: |
           cd GEL_Cleaner
-          keytool -genkeypair -v -keystore $KEYSTORE_FILE -alias $KEY_ALIAS -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass $STORE_PASSWORD -keypass $KEY_PASSWORD -dname "CN=GDiolitsis, OU=GEL, O=EngineLab, L=Athens, S=Attica, C=GR"
-
-      - name: Build Signed Release APK
-        run: |
-          cd GEL_Cleaner
+          export PATH=/opt/gradle/bin:$PATH
           cordova build android --release --no-update-notifier
-          BUILD_TOOLS=$(ls $ANDROID_HOME/build-tools | sort -V | tail -n 1)
-          zipalign -v -p 4 platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk app-release-aligned.apk
-          apksigner sign --ks $KEYSTORE_FILE --ks-pass pass:$STORE_PASSWORD --key-pass pass:$KEY_PASSWORD \
-            --out app-release-signed.apk app-release-aligned.apk
 
-      - name: Upload signed APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_release.apk
-          path: GEL_Cleaner/app-release-signed.apk
+          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/release/app-release.apk

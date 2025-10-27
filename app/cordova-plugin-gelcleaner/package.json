@@ -1,18 +1,24 @@
 {
   "name": "cordova-plugin-gelcleaner",
   "version": "1.0.0",
-  "description": "GEL Android Cleaner Native Plugin",
+  "description": "GDiolitsis Engine Lab - GEL Android Cleaner Native Plugin",
   "cordova": {
     "id": "cordova-plugin-gelcleaner",
     "platforms": ["android"]
   },
   "keywords": [
     "cordova",
-    "cleaner",
+    "gel",
     "android",
-    "memory",
+    "cleaner",
     "cache",
     "ram"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=10.0.0"
+    }
   ],
   "author": "GDiolitsis Engine Lab (GEL)",
   "license": "MIT"

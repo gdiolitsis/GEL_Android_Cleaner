@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GEL Android Cleaner</title>
-<link rel="stylesheet" href="css/style.css">
 <style>
   body {
     background-color: #000;
@@ -14,9 +13,27 @@
     margin: 0;
     padding: 0;
   }
+  .lang-switch {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+  }
+  .lang-switch button {
+    background: transparent;
+    border: 1px solid gold;
+    color: #FFD700;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .lang-switch button:hover {
+    background-color: #FFD700;
+    color: #000;
+  }
   img.logo {
     width: 120px;
-    margin-top: 40px;
+    margin-top: 50px;
     filter: drop-shadow(0 0 10px gold);
   }
   h1 {
@@ -31,7 +48,7 @@
   .buttons {
     margin-top: 30px;
   }
-  button {
+  button.action {
     display: inline-block;
     width: 160px;
     margin: 10px;
@@ -43,7 +60,7 @@
     font-size: 1em;
     box-shadow: 0 0 8px #FFD700;
   }
-  button:hover {
+  button.action:hover {
     background-color: #FFD700;
     color: #000;
   }
@@ -54,8 +71,10 @@
     color: #fff;
     font-weight: bold;
     padding: 12px 20px;
-    margin-top: 20px;
+    margin-top: 25px;
     box-shadow: 0 0 10px #FFD700;
+    display: inline-block;
+    text-decoration: none;
   }
   .paypal:hover {
     background-color: #FFD700;
@@ -65,32 +84,97 @@
 </head>
 <body>
 
-<img src="img/GEL_logo.png" alt="GEL Logo" class="logo">
-
-<h1>GEL Android Cleaner</h1>
-<p>Device is ready. <strong>Dark-Gold Edition v3.4</strong></p>
-
-<div class="buttons">
-  <button onclick="cleanCache()">🧠 Clean Cache</button>
-  <button onclick="boostRAM()">⚡ Boost RAM</button><br>
-  <button onclick="removeJunk()">🗑️ Remove Junk</button>
-  <button onclick="clearTemp()">🔥 Clear Temp</button><br>
-  <button onclick="optimizeBattery()">🔋 Optimize Battery</button>
-  <button onclick="killProcesses()">🚀 Kill Processes</button>
+<div class="lang-switch">
+  <button onclick="setLanguage('en')">EN</button>
+  <button onclick="setLanguage('gr')">GR</button>
 </div>
 
-<p style="margin-top:30px;">Support development of GEL Android Cleaner</p>
-<a class="paypal" href="https://www.paypal.com/donate/?hosted_button_id=4DJT8TDE7SH4E" target="_blank">💰 Donate via PayPal</a>
+<img src="img/GEL_logo.png" alt="GEL Logo" class="logo">
+
+<h1 id="title">GEL Android Cleaner</h1>
+<p id="subtitle">Device is ready. <strong>Dark-Gold Edition v3.4</strong></p>
+
+<div class="buttons">
+  <button class="action" id="btn1" onclick="cleanCache()">🧠 Clean Cache</button>
+  <button class="action" id="btn2" onclick="boostRAM()">⚡ Boost RAM</button><br>
+  <button class="action" id="btn3" onclick="removeJunk()">🗑️ Remove Junk</button>
+  <button class="action" id="btn4" onclick="clearTemp()">🔥 Clear Temp</button><br>
+  <button class="action" id="btn5" onclick="optimizeBattery()">🔋 Optimize Battery</button>
+  <button class="action" id="btn6" onclick="killProcesses()">🚀 Kill Processes</button>
+</div>
+
+<p style="margin-top:30px;" id="supportText">Support development of GEL Android Cleaner</p>
+<a class="paypal" href="https://www.paypal.com/donate/?hosted_button_id=4DJT8TDE7SH4E" target="_blank" id="paypalBtn">💰 Donate via PayPal</a>
 
 <p style="margin-top:40px; color:#ccc;">GDiolitsis Engine Lab (GEL) — Author & Developer</p>
 
 <script>
-function cleanCache(){alert("🧠 Cache cleaned successfully!");}
-function boostRAM(){alert("⚡ RAM boosted!");}
-function removeJunk(){alert("🗑️ Junk files removed!");}
-function clearTemp(){alert("🔥 Temporary files cleared!");}
-function optimizeBattery(){alert("🔋 Battery optimized!");}
-function killProcesses(){alert("🚀 Background processes terminated!");}
+const langText = {
+  en: {
+    title: "GEL Android Cleaner",
+    subtitle: "Device is ready. Dark-Gold Edition v3.4",
+    btn1: "🧠 Clean Cache",
+    btn2: "⚡ Boost RAM",
+    btn3: "🗑️ Remove Junk",
+    btn4: "🔥 Clear Temp",
+    btn5: "🔋 Optimize Battery",
+    btn6: "🚀 Kill Processes",
+    support: "Support development of GEL Android Cleaner",
+    paypal: "💰 Donate via PayPal",
+    alerts: {
+      cache: "🧠 Cache cleaned successfully!",
+      ram: "⚡ RAM boosted!",
+      junk: "🗑️ Junk files removed!",
+      temp: "🔥 Temporary files cleared!",
+      battery: "🔋 Battery optimized!",
+      kill: "🚀 Background processes terminated!"
+    }
+  },
+  gr: {
+    title: "GEL Καθαριστής Android",
+    subtitle: "Η συσκευή είναι έτοιμη. Dark-Gold Έκδοση v3.4",
+    btn1: "🧠 Καθαρισμός Cache",
+    btn2: "⚡ Ενίσχυση RAM",
+    btn3: "🗑️ Διαγραφή Αχρήστων",
+    btn4: "🔥 Εκκαθάριση Temp",
+    btn5: "🔋 Βελτιστοποίηση Μπαταρίας",
+    btn6: "🚀 Τερματισμός Διεργασιών",
+    support: "Στηρίξτε την ανάπτυξη του GEL Android Cleaner",
+    paypal: "💰 Δωρεά μέσω PayPal",
+    alerts: {
+      cache: "🧠 Ο καθαρισμός Cache ολοκληρώθηκε!",
+      ram: "⚡ Η RAM ενισχύθηκε!",
+      junk: "🗑️ Τα άχρηστα αρχεία διαγράφηκαν!",
+      temp: "🔥 Τα προσωρινά αρχεία εκκαθαρίστηκαν!",
+      battery: "🔋 Η μπαταρία βελτιστοποιήθηκε!",
+      kill: "🚀 Οι διεργασίες τερματίστηκαν!"
+    }
+  }
+};
+
+function setLanguage(lang) {
+  const t = langText[lang];
+  document.getElementById('title').innerText = t.title;
+  document.getElementById('subtitle').innerText = t.subtitle;
+  document.getElementById('btn1').innerText = t.btn1;
+  document.getElementById('btn2').innerText = t.btn2;
+  document.getElementById('btn3').innerText = t.btn3;
+  document.getElementById('btn4').innerText = t.btn4;
+  document.getElementById('btn5').innerText = t.btn5;
+  document.getElementById('btn6').innerText = t.btn6;
+  document.getElementById('supportText').innerText = t.support;
+  document.getElementById('paypalBtn').innerText = t.paypal;
+  activeLang = lang;
+}
+
+let activeLang = 'en';
+
+function cleanCache(){alert(langText[activeLang].alerts.cache);}
+function boostRAM(){alert(langText[activeLang].alerts.ram);}
+function removeJunk(){alert(langText[activeLang].alerts.junk);}
+function clearTemp(){alert(langText[activeLang].alerts.temp);}
+function optimizeBattery(){alert(langText[activeLang].alerts.battery);}
+function killProcesses(){alert(langText[activeLang].alerts.kill);}
 </script>
 
 </body>

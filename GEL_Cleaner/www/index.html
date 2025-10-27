@@ -117,15 +117,25 @@
   <script type="text/javascript" src="js/GelCleaner.js"></script>
 
   <script>
+    document.addEventListener("deviceready", function() {
+      console.log("✅ Device is ready");
+
+      // InAppBrowser safe call
+      window.openPayPal = function() {
+        if (window.cordova && cordova.InAppBrowser) {
+          cordova.InAppBrowser.open('https://www.paypal.me/gdiolitsis', '_system', 'location=yes');
+        } else {
+          window.open('https://www.paypal.me/gdiolitsis', '_blank');
+        }
+      };
+    }, false);
+
     function onSuccess(msg) {
       alert("✅ " + msg);
     }
+
     function onError(err) {
       alert("❌ " + err);
-    }
-
-    function openPayPal() {
-      window.open("https://www.paypal.me/gdiolitsis", "_system");
     }
 
     function setLanguage(lang) {

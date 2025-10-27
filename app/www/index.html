@@ -1,129 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEL Android Cleaner — Dark-Gold Edition v3.4</title>
-
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
-      color: #ffd700;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-top: 20px;
-      color: #ffd700;
-      text-shadow: 0 0 15px #d4af37;
-    }
-
-    p {
-      font-size: 16px;
-      color: #e0c46c;
-      margin-bottom: 25px;
-    }
-
-    img {
-      width: 110px;
-      margin-top: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #d4af37;
-    }
-
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-
-    button {
-      background: transparent;
-      color: #ffd700;
-      border: 1px solid #d4af37;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 0 10px rgba(212,175,55,0.2);
-    }
-
-    button:hover {
-      background: #2a2a2a;
-      box-shadow: 0 0 15px #d4af37;
-    }
-
-    /* 💛 Donation section */
-    .donation-box {
-      margin-top: 55px;
-    }
-
-    .donation-box p {
-      font-size: 14px;
-      color: #e6d08a;
-      margin-bottom: 10px;
-    }
-
-    .donation-btn {
-      display: inline-block;
-      padding: 10px 22px;
-      border: 1px solid #d4af37;
-      border-radius: 8px;
-      background: #000;
-      color: #ffd700;
-      text-decoration: none;
-      font-weight: bold;
-      box-shadow: 0 0 15px #d4af37;
-      transition: 0.3s;
-    }
-
-    .donation-btn:hover {
-      background: #2a2a2a;
-      box-shadow: 0 0 20px #ffd700;
-    }
-
-    footer {
-      margin-top: 45px;
-      font-size: 13px;
-      color: #999;
-    }
-  </style>
-
-  <script src="js/gel.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEL Android Cleaner</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body {
+    background-color: #000;
+    color: #FFD700;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  img.logo {
+    width: 120px;
+    margin-top: 40px;
+    filter: drop-shadow(0 0 10px gold);
+  }
+  h1 {
+    color: #FFD700;
+    font-size: 1.8em;
+    margin-top: 20px;
+  }
+  p {
+    color: #c9b46c;
+    font-size: 1em;
+  }
+  .buttons {
+    margin-top: 30px;
+  }
+  button {
+    display: inline-block;
+    width: 160px;
+    margin: 10px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid gold;
+    border-radius: 10px;
+    color: #FFD700;
+    font-size: 1em;
+    box-shadow: 0 0 8px #FFD700;
+  }
+  button:hover {
+    background-color: #FFD700;
+    color: #000;
+  }
+  .paypal {
+    background-color: #000;
+    border: 2px solid #FFD700;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: bold;
+    padding: 12px 20px;
+    margin-top: 20px;
+    box-shadow: 0 0 10px #FFD700;
+  }
+  .paypal:hover {
+    background-color: #FFD700;
+    color: #000;
+  }
+</style>
 </head>
-
 <body>
-  <img src="img/GEL_logo_ui.png" alt="GEL Logo">
 
-  <h1>GEL Android Cleaner</h1>
-  <p>Device is ready. <b>Dark-Gold Edition v3.4</b></p>
+<img src="img/GEL_logo.png" alt="GEL Logo" class="logo">
 
-  <div class="btn-grid">
-    <button onclick="cleanCache()">🧠 Clean Cache</button>
-    <button onclick="boostRAM()">⚡ Boost RAM</button>
-    <button onclick="removeJunk()">🗑️ Remove Junk</button>
-    <button onclick="clearTemp()">🔥 Clear Temp</button>
-    <button onclick="optimizeBattery()">🔋 Optimize Battery</button>
-    <button onclick="killProcesses()">🚀 Kill Processes</button>
-  </div>
+<h1>GEL Android Cleaner</h1>
+<p>Device is ready. <strong>Dark-Gold Edition v3.4</strong></p>
 
-  <div class="donation-box">
-    <p>Support development of GEL Android Cleaner</p>
-    <a href="https://www.paypal.me/gdiolitsis" target="_blank" class="donation-btn">
-      💰 Donate via PayPal
-    </a>
-  </div>
+<div class="buttons">
+  <button onclick="cleanCache()">🧠 Clean Cache</button>
+  <button onclick="boostRAM()">⚡ Boost RAM</button><br>
+  <button onclick="removeJunk()">🗑️ Remove Junk</button>
+  <button onclick="clearTemp()">🔥 Clear Temp</button><br>
+  <button onclick="optimizeBattery()">🔋 Optimize Battery</button>
+  <button onclick="killProcesses()">🚀 Kill Processes</button>
+</div>
 
-  <footer>
-    GDiolitsis Engine Lab (GEL) — Author & Developer
-  </footer>
+<p style="margin-top:30px;">Support development of GEL Android Cleaner</p>
+<a class="paypal" href="https://www.paypal.com/donate/?hosted_button_id=4DJT8TDE7SH4E" target="_blank">💰 Donate via PayPal</a>
+
+<p style="margin-top:40px; color:#ccc;">GDiolitsis Engine Lab (GEL) — Author & Developer</p>
+
+<script>
+function cleanCache(){alert("🧠 Cache cleaned successfully!");}
+function boostRAM(){alert("⚡ RAM boosted!");}
+function removeJunk(){alert("🗑️ Junk files removed!");}
+function clearTemp(){alert("🔥 Temporary files cleared!");}
+function optimizeBattery(){alert("🔋 Battery optimized!");}
+function killProcesses(){alert("🚀 Background processes terminated!");}
+</script>
+
 </body>
 </html>

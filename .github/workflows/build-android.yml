@@ -56,6 +56,22 @@ jobs:
           cp ../app/config.xml config.xml || true
           cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner || true
 
+      # 🔧 ΜΟΝΟ αυτό προστέθηκε: φέρνει το plugin στη σωστή δομή αν το Java είναι σε άλλο path
+      - name: Normalize GEL plugin layout (fix GelCleaner.java path)
+        run: |
+          cd GEL_Cleaner/cordova-plugin-gelcleaner
+          echo "== BEFORE =="
+          find . -maxdepth 6 -type f | sort
+          mkdir -p src/android/com/gdiolitsis/gelcleaner
+          if [ -f src/android/GelCleaner.java ] && [ ! -f src/android/com/gdiolitsis/gelcleaner/GelCleaner.java ]; then
+            mv src/android/GelCleaner.java src/android/com/gdiolitsis/gelcleaner/GelCleaner.java
+          fi
+          sed -i 's#src/android/GelCleaner.java#src/android/com/gdiolitsis/gelcleaner/GelCleaner.java#g' plugin.xml
+          sed -i 's#src\\android\\GelCleaner.java#src/android/com/gdiolitsis/gelcleaner/GelCleaner.java#g' plugin.xml
+          echo "== AFTER =="
+          find . -maxdepth 6 -type f | sort
+          test -f src/android/com/gdiolitsis/gelcleaner/GelCleaner.java
+
       - name: Install GEL Cleaner Plugin
         run: |
           cd GEL_Cleaner

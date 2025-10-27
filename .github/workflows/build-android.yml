@@ -56,11 +56,10 @@ jobs:
           cp ../app/config.xml config.xml || true
           cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner || true
 
-      - name: Install GEL Cleaner + dependencies
+      - name: Install GEL Cleaner Plugin
         run: |
           cd GEL_Cleaner
           cordova plugin add ./cordova-plugin-gelcleaner
-          cordova plugin add cordova-plugin-inappbrowser
 
       - name: Remove default Cordova logos
         run: |
@@ -92,50 +91,14 @@ jobs:
             done
           fi
 
-      # ---------- DEBUG BUILD (όπως πριν) ----------
-      - name: Build with Gradle 8.5 (debug)
+      - name: Build with Gradle 8.5
         run: |
           cd GEL_Cleaner
           export PATH=/opt/gradle/bin:$PATH
           cordova build android --debug --no-update-notifier
 
-      - name: Upload APK artifact (debug)
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_debug.apk
           path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-      # ---------- OPTIONAL SIGNED RELEASE ----------
-      - name: Restore keystore from secrets (optional)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD && secrets.ANDROID_KEY_ALIAS && secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $HOME/forestrock-release.keystore
-          ls -l $HOME/forestrock-release.keystore
-
-      - name: Build release (optional)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD && secrets.ANDROID_KEY_ALIAS && secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: |
-          cd GEL_Cleaner
-          export PATH=/opt/gradle/bin:$PATH
-          cordova build android --release --no-update-notifier
-
-      - name: Sign + zipalign (optional)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD && secrets.ANDROID_KEY_ALIAS && secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: |
-          ANDROID_HOME=/usr/local/lib/android/sdk
-          cd GEL_Cleaner/platforms/android/app/build/outputs/apk/release
-          $ANDROID_HOME/build-tools/33.0.2/zipalign -f 4 app-release-unsigned.apk app-release-aligned.apk
-          $ANDROID_HOME/build-tools/33.0.2/apksigner sign \
-            --ks $HOME/forestrock-release.keystore \
-            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
-            --key-pass pass:"${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" \
-            --out GEL_Android_Cleaner-release-signed.apk \
-            app-release-aligned.apk
-
-      - name: Upload APK artifact (release signed) - optional
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD && secrets.ANDROID_KEY_ALIAS && secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: GEL_Android_Cleaner_release_signed.apk
-          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/release/GEL_Android_Cleaner-release-signed.apk

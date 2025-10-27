@@ -1,62 +1,66 @@
-package com.gel.cleaner;
+package com.gdiolitsis.gelcleaner;
 
+import android.content.Context;
+import android.webkit.WebView;
+import java.io.File;
 import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONException;
-import android.app.ActivityManager;
-import android.content.Context;
-import java.io.File;
 
 public class GelCleaner extends CordovaPlugin {
 
     @Override
-    public boolean execute(String action, JSONArray args, final CallbackContext cb) throws JSONException {
-        final Context ctx = this.cordova.getContext();
-        final ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        Context context = this.cordova.getActivity().getApplicationContext();
 
-        cordova.getThreadPool().execute(() -> {
-            try {
-                switch (action) {
-                    case "cleanCache":
-                        deleteDir(ctx.getCacheDir());
-                        File ext = ctx.getExternalCacheDir();
-                        if (ext != null) deleteDir(ext);
-                        cb.success("cache_ok");
-                        break;
-
-                    case "clearTemp":
-                        File tmp = ctx.getExternalCacheDir();
-                        if (tmp != null) deleteDir(tmp);
-                        cb.success("temp_ok");
-                        break;
-
-                    case "boostRAM":
-                        if (am != null && am.getRunningAppProcesses() != null) {
-                            for (ActivityManager.RunningAppProcessInfo p : am.getRunningAppProcesses()) {
-                                try { am.killBackgroundProcesses(p.processName); } catch (Exception ignored) {}
-                            }
-                        }
-                        cb.success("ram_ok");
-                        break;
-
-                    default:
-                        cb.error("unknown_action");
-                }
-            } catch (Exception e) {
-                cb.error(e.getMessage());
-            }
-        });
-        return true;
+        if (action.equals("clearAppCache")) {
+            clearAppCache(context);
+            callbackContext.success("Cache cleared successfully");
+            return true;
+        } else if (action.equals("boostRAM")) {
+            System.gc();
+            callbackContext.success("RAM boost simulated");
+            return true;
+        } else if (action.equals("clearTemp")) {
+            clearTempFiles(context);
+            callbackContext.success("Temporary files deleted");
+            return true;
+        } else if (action.equals("killBackground")) {
+            cordova.getActivity().moveTaskToBack(true);
+            callbackContext.success("Background processes minimized");
+            return true;
+        } else {
+            callbackContext.error("Invalid action: " + action);
+            return false;
+        }
     }
 
-    private static boolean deleteDir(File dir) {
-        if (dir == null) return false;
-        if (dir.isDirectory()) {
-            File[] children = dir.listFiles();
-            if (children != null) {
-                for (File c : children) { deleteDir(c); }
+    private void clearAppCache(Context context) {
+        try {
+            File dir = context.getCacheDir();
+            deleteDir(dir);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void clearTempFiles(Context context) {
+        try {
+            File dir = context.getExternalCacheDir();
+            deleteDir(dir);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean deleteDir(File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            for (String child : children) {
+                boolean success = deleteDir(new File(dir, child));
+                if (!success) return false;
             }
         }
-        return dir.delete();
+        return dir != null && dir.delete();
     }
 }

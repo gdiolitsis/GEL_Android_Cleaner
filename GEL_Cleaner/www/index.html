@@ -4,102 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GEL Android Cleaner</title>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background-color: #000;
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      color: gold;
-      text-shadow: 0 0 12px #d4af37;
-      margin-top: 15px;
-    }
-    .edition {
-      color: #d4af37;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    button {
-      background: transparent;
-      border: 2px solid #d4af37;
-      color: white;
-      border-radius: 15px;
-      font-size: 18px;
-      margin: 8px;
-      padding: 12px 25px;
-      width: 70%;
-      transition: 0.3s;
-    }
-    button:hover {
-      background-color: #d4af37;
-      color: black;
-      box-shadow: 0 0 20px #d4af37;
-    }
-
-    /* ✨ Neon PayPal Styling */
-    .paypal {
-      background-color: black;
-      color: white;
-      border: 2px solid #d4af37;
-      font-weight: bold;
-      width: 75%;
-      font-size: 19px;
-      margin-top: 25px;
-      border-radius: 20px;
-      box-shadow: 0 0 20px #d4af37, 0 0 30px #d4af37 inset;
-      animation: pulse 2s infinite;
-      transition: all 0.4s ease-in-out;
-    }
-    .paypal span {
-      color: #ffcc00;
-      font-size: 22px;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
-      50% { box-shadow: 0 0 30px #ffeb80, 0 0 40px #ffeb80 inset; }
-      100% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
-    }
-
-    /* ⚡ Neon Logo Effect */
-    .logo {
-      width: 140px;
-      margin-top: 10px;
-      border-radius: 50%;
-      box-shadow: 0 0 25px #d4af37;
-      animation: glow 3s ease-in-out infinite alternate;
-    }
-    @keyframes glow {
-      from { box-shadow: 0 0 20px #d4af37, 0 0 40px #d4af37; }
-      to { box-shadow: 0 0 50px #ffec80, 0 0 80px #ffec80; }
-    }
-
-    .flags img {
-      width: 32px;
-      height: 22px;
-      margin: 0 5px;
-      cursor: pointer;
-    }
-    footer {
-      color: gray;
-      margin-top: 30px;
-      font-size: 14px;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
+  <!-- 🌍 Language Flags -->
   <div class="flags">
     <img src="img/flag_en.png" alt="English" onclick="setLanguage('en')" />
     <img src="img/flag_gr.png" alt="Ελληνικά" onclick="setLanguage('gr')" />
   </div>
 
+  <!-- ⚡ Logo -->
   <img src="img/GEL_logo.png" alt="GEL Logo" class="logo" />
+
   <h1 id="title">GEL Android Cleaner</h1>
   <p id="status">Device is ready. <span class="edition">Dark-Gold Edition v4.0</span></p>
 
+  <!-- 🧹 Control Buttons -->
   <button onclick="GELCleaner.clearAppCache(onSuccess, onError)" id="btnCache">🧠 Clean Cache</button><br />
   <button onclick="GELCleaner.boostRAM(onSuccess, onError)" id="btnRAM">⚡ Boost RAM</button><br />
   <button onclick="GELCleaner.clearTemp(onSuccess, onError)" id="btnTemp">🔥 Clear Temp</button><br />
@@ -107,12 +28,14 @@
   <button onclick="GELCleaner.optimizeBattery(onSuccess, onError)" id="btnBattery">🔋 Optimize Battery</button><br />
   <button onclick="GELCleaner.killBackground(onSuccess, onError)" id="btnKill">🚀 Kill Processes</button><br />
 
+  <!-- 💰 PayPal -->
   <button class="paypal" onclick="openPayPal()">
     <span>💰</span> Donate via PayPal
   </button>
 
   <footer>GDiolitsis Engine Lab (GEL) — Author & Developer</footer>
 
+  <!-- 📜 Cordova & JS -->
   <script type="text/javascript" src="cordova.js"></script>
   <script type="text/javascript" src="js/GelCleaner.js"></script>
 
@@ -120,7 +43,7 @@
     document.addEventListener("deviceready", function() {
       console.log("✅ Device is ready");
 
-      // InAppBrowser safe call
+      // 🔗 Safe InAppBrowser open
       window.openPayPal = function() {
         if (window.cordova && cordova.InAppBrowser) {
           cordova.InAppBrowser.open('https://www.paypal.me/gdiolitsis', '_system', 'location=yes');
@@ -130,14 +53,11 @@
       };
     }, false);
 
-    function onSuccess(msg) {
-      alert("✅ " + msg);
-    }
+    // ✅ Success / Error feedback
+    function onSuccess(msg) { alert("✅ " + msg); }
+    function onError(err) { alert("❌ " + err); }
 
-    function onError(err) {
-      alert("❌ " + err);
-    }
-
+    // 🌐 Language Switch
     function setLanguage(lang) {
       if (lang === "gr") {
         document.getElementById("title").innerText = "Καθαριστής Android GEL";

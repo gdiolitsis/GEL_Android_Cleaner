@@ -1,24 +1,24 @@
-var exec = require("cordova/exec");
+var exec = require('cordova/exec');
 
 var GELCleaner = {
   clearAppCache: function (success, error) {
-    exec(success, error, "GELCleaner", "clearAppCache", []);
+    exec(success, error, 'GELCleaner', 'clearAppCache', []);
   },
   boostRAM: function (success, error) {
-    exec(success, error, "GELCleaner", "boostRAM", []);
+    exec(success, error, 'GELCleaner', 'boostRAM', []);
   },
   clearTemp: function (success, error) {
-    exec(success, error, "GELCleaner", "clearTemp", []);
+    exec(success, error, 'GELCleaner', 'clearTemp', []);
   },
   removeJunk: function (success, error) {
-    exec(success, error, "GELCleaner", "removeJunk", []);
+    exec(success, error, 'GELCleaner', 'removeJunk', []);
   },
   optimizeBattery: function (success, error) {
-    exec(success, error, "GELCleaner", "optimizeBattery", []);
+    exec(success, error, 'GELCleaner', 'optimizeBattery', []);
   },
   killBackground: function (success, error) {
-    exec(success, error, "GELCleaner", "killBackground", []);
-  },
+    exec(success, error, 'GELCleaner', 'killBackground', []);
+  }
 };
 
 module.exports = GELCleaner;

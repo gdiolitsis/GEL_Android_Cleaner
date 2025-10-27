@@ -6,96 +6,116 @@
   <title>GEL Android Cleaner</title>
   <style>
     body {
+      font-family: "Poppins", sans-serif;
       background-color: #000;
-      color: #d4af37;
-      font-family: "Segoe UI", sans-serif;
+      color: #fff;
       text-align: center;
-      padding-top: 60px;
+      margin: 0;
+      padding: 0;
     }
     h1 {
-      font-size: 1.8em;
-      margin-bottom: 10px;
-      color: #d4af37;
+      color: gold;
       text-shadow: 0 0 12px #d4af37;
+      margin-top: 15px;
     }
-    .logo {
-      width: 130px;
-      margin: 0 auto 20px;
-      display: block;
-      filter: drop-shadow(0 0 12px #d4af37);
-    }
-    .version {
-      color: #aaa;
-      font-size: 0.9em;
-      margin-bottom: 25px;
+    .edition {
+      color: #d4af37;
+      font-weight: bold;
+      margin-bottom: 20px;
     }
     button {
-      background: none;
-      border: 1px solid #d4af37;
-      color: #d4af37;
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-size: 1em;
+      background: transparent;
+      border: 2px solid #d4af37;
+      color: white;
+      border-radius: 15px;
+      font-size: 18px;
       margin: 10px;
-      min-width: 200px;
-      transition: all 0.2s ease;
+      padding: 12px 25px;
+      width: 70%;
+      transition: 0.3s;
     }
     button:hover {
-      background: #d4af37;
-      color: #000;
+      background-color: #d4af37;
+      color: black;
+      box-shadow: 0 0 20px #d4af37;
     }
-    .lang-switch {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-    .lang-switch button {
+    .paypal {
+      background-color: #ffcc00;
+      color: black;
       border: none;
-      background: transparent;
-      font-size: 1.6em;
-      margin-left: 8px;
+      font-weight: bold;
+      width: 75%;
+      font-size: 19px;
+      margin-top: 25px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px #d4af37;
+    }
+    .flags img {
+      width: 32px;
+      height: 22px;
+      margin: 0 5px;
       cursor: pointer;
-      filter: drop-shadow(0 0 6px #d4af37);
     }
     footer {
-      margin-top: 40px;
-      color: #888;
-      font-size: 0.9em;
-    }
-    .donate {
+      color: gray;
       margin-top: 30px;
-      border: 1px solid #d4af37;
-      color: #000;
-      background: #d4af37;
-      border-radius: 20px;
-      padding: 10px 25px;
-      font-weight: bold;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div class="lang-switch">
-    <button id="btnEN">🇬🇧</button>
-    <button id="btnGR">🇬🇷</button>
+  <div class="flags">
+    <img src="img/flag_en.png" alt="English" onclick="setLanguage('en')" />
+    <img src="img/flag_gr.png" alt="Ελληνικά" onclick="setLanguage('gr')" />
   </div>
 
-  <img src="img/gel_logo.png" alt="GEL Logo" class="logo" />
-  <h1>GEL Android Cleaner</h1>
-  <div class="version">Device is ready. <b>Dark-Gold Edition v3.5</b></div>
+  <img src="img/GEL_logo.png" alt="GEL Logo" width="120" style="margin-top:10px;" />
+  <h1 id="title">GEL Android Cleaner</h1>
+  <p id="status">Device is ready. <span class="edition">Dark-Gold Edition v3.7</span></p>
 
-  <button id="btnCache">🧹 Clean Cache</button><br />
-  <button id="btnRAM">⚡ Boost RAM</button><br />
-  <button id="btnBackground">🚀 Terminate Background</button><br />
+  <button onclick="GELCleaner.clearAppCache(onSuccess, onError)" id="btnCache">🧠 Clean Cache</button><br />
+  <button onclick="GELCleaner.boostRAM(onSuccess, onError)" id="btnRAM">⚡ Boost RAM</button><br />
+  <button onclick="GELCleaner.clearTemp(onSuccess, onError)" id="btnTemp">🔥 Clear Temp</button><br />
+  <button onclick="GELCleaner.killBackground(onSuccess, onError)" id="btnKill">🚀 Terminate Background</button><br />
 
-  <a href="https://www.paypal.me/gdiolitsis" target="_blank">
-    <button class="donate">💰 Donate via PayPal</button>
-  </a>
+  <button class="paypal" onclick="openPayPal()">💰 Donate via PayPal</button>
 
-  <footer>
-    GDiolitsis Engine Lab (GEL) — Author & Developer
-  </footer>
+  <footer>GDiolitsis Engine Lab (GEL) — Author & Developer</footer>
 
-  <script src="cordova.js"></script>
-  <script src="app.js"></script>
+  <script type="text/javascript" src="cordova.js"></script>
+  <script type="text/javascript" src="js/GelCleaner.js"></script>
+
+  <script>
+    function onSuccess(msg) {
+      alert("✅ " + msg);
+    }
+    function onError(err) {
+      alert("❌ " + err);
+    }
+
+    function openPayPal() {
+      window.open("https://www.paypal.me/gdiolitsis", "_system");
+    }
+
+    function setLanguage(lang) {
+      if (lang === "gr") {
+        document.getElementById("title").innerText = "Καθαριστής Android GEL";
+        document.getElementById("status").innerHTML = "Η συσκευή είναι έτοιμη. <span class='edition'>Dark-Gold Edition v3.7</span>";
+        document.getElementById("btnCache").innerText = "🧠 Καθάρισε Cache";
+        document.getElementById("btnRAM").innerText = "⚡ Ενίσχυση RAM";
+        document.getElementById("btnTemp").innerText = "🔥 Εκκαθάριση Προσωρινών";
+        document.getElementById("btnKill").innerText = "🚀 Τερματισμός Εφαρμογών";
+        document.querySelector(".paypal").innerText = "💰 Δωρεά μέσω PayPal";
+      } else {
+        document.getElementById("title").innerText = "GEL Android Cleaner";
+        document.getElementById("status").innerHTML = "Device is ready. <span class='edition'>Dark-Gold Edition v3.7</span>";
+        document.getElementById("btnCache").innerText = "🧠 Clean Cache";
+        document.getElementById("btnRAM").innerText = "⚡ Boost RAM";
+        document.getElementById("btnTemp").innerText = "🔥 Clear Temp";
+        document.getElementById("btnKill").innerText = "🚀 Terminate Background";
+        document.querySelector(".paypal").innerText = "💰 Donate via PayPal";
+      }
+    }
+  </script>
 </body>
 </html>

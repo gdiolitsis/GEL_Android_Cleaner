@@ -1,92 +1,128 @@
-/* =========================================================
-   GEL Android Cleaner — Dark-Gold Edition v3.2
-   Author: GDiolitsis Engine Lab (GEL)
-   ========================================================= */
-
+/* 🌙 GEL Android Cleaner — Dark-Gold Edition v4.2 (Premium Top Bar) */
 body {
-  font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(180deg, #0b0b0b, #1a1a1a);
-  color: #ffd700;
+  font-family: "Poppins", sans-serif;
+  background-color: #000;
+  color: #fff;
   text-align: center;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
 }
 
 h1 {
-  font-size: 28px;
-  margin-top: 20px;
-  text-shadow: 0 0 10px #d4af37;
+  color: gold;
+  text-shadow: 0 0 12px #d4af37;
+  margin-top: 15px;
 }
 
-p {
-  font-size: 16px;
-  margin: 10px 0 25px;
-  color: #e0c46c;
-}
-
-img {
-  width: 120px;
-  margin-top: 25px;
-  filter: drop-shadow(0 0 8px #d4af37);
-}
-
-.btn-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 10px;
+.edition {
+  color: #d4af37;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
 button {
-  background: #222;
-  color: #ffd700;
-  border: 1px solid #d4af37;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.25s ease;
+  background: transparent;
+  border: 2px solid #d4af37;
+  color: white;
+  border-radius: 15px;
+  font-size: 18px;
+  margin: 8px;
+  padding: 12px 25px;
+  width: 70%;
+  transition: 0.3s;
 }
 
 button:hover {
-  background: #3b3b3b;
-  box-shadow: 0 0 10px #d4af37;
-  transform: scale(1.05);
+  background-color: #d4af37;
+  color: black;
+  box-shadow: 0 0 20px #d4af37;
 }
 
-/* PayPal Donation Section */
-.donation-box {
-  margin-top: 50px;
-}
-
-.donation-box p {
-  color: #aaa;
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-
-.donation-box a {
-  background: #003087;
+/* ✨ Neon PayPal Styling */
+.paypal {
+  background-color: black;
   color: white;
-  padding: 10px 22px;
-  border-radius: 8px;
-  text-decoration: none;
+  border: 2px solid #d4af37;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(0, 48, 135, 0.4);
-  transition: all 0.3s ease;
+  width: 75%;
+  font-size: 19px;
+  margin-top: 25px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px #d4af37, 0 0 30px #d4af37 inset;
+  animation: pulse 2s infinite;
+  transition: all 0.4s ease-in-out;
+}
+.paypal span {
+  color: #ffcc00;
+  font-size: 22px;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
+  50% { box-shadow: 0 0 30px #ffeb80, 0 0 40px #ffeb80 inset; }
+  100% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
 }
 
-.donation-box a:hover {
-  background: #005eb8;
-  box-shadow: 0 0 15px rgba(0, 94, 184, 0.7);
+/* ⚡ Neon Logo Effect */
+.logo {
+  width: 140px;
+  margin-top: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 25px #d4af37;
+  animation: glow 3s ease-in-out infinite alternate;
+}
+@keyframes glow {
+  from { box-shadow: 0 0 20px #d4af37, 0 0 40px #d4af37; }
+  to { box-shadow: 0 0 50px #ffec80, 0 0 80px #ffec80; }
+}
+
+/* 🇬🇷🇬🇧 Language Flags — top-right neon gold */
+.flags {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ✨ Floating Neon Flags */
+.flags img {
+  width: 42px;
+  height: 28px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px #d4af37;
+  transition: 0.3s;
+  cursor: pointer;
+  animation: float 3s ease-in-out infinite;
+}
+
+.flags img:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 20px #ffeb80;
+}
+
+/* 💫 Golden underline under flags */
+.flags::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  box-shadow: 0 0 10px #d4af37;
+  border-radius: 2px;
+}
+
+/* Smooth floating motion */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
 }
 
 /* Footer */
 footer {
-  margin-top: 40px;
-  font-size: 13px;
-  color: #888;
+  color: gray;
+  margin-top: 30px;
+  font-size: 14px;
 }

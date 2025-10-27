@@ -1,69 +1,68 @@
-/* =========================================================
-   GEL Android Cleaner — Dark-Gold Edition v3.2 (Demo Mode)
-   Author: GDiolitsis Engine Lab (GEL)
-   ========================================================= */
+/* ==========================================================
+   GEL Android Cleaner v3.5 — Functional Core (Dark-Gold Edition)
+   GDiolitsis Engine Lab (GEL) — Author & Developer
+   ========================================================== */
 
-// 🔹 Εμφάνιση animated μηνύματος στο κέντρο της οθόνης
-function showMessage(msg) {
-  const overlay = document.createElement('div');
-  overlay.textContent = msg;
-  overlay.style.position = 'fixed';
-  overlay.style.top = '50%';
-  overlay.style.left = '50%';
-  overlay.style.transform = 'translate(-50%, -50%) scale(0.9)';
-  overlay.style.background = 'rgba(20, 20, 20, 0.95)';
-  overlay.style.color = '#ffd700';
-  overlay.style.padding = '18px 35px';
-  overlay.style.border = '1px solid #d4af37';
-  overlay.style.borderRadius = '12px';
-  overlay.style.boxShadow = '0 0 20px #d4af37';
-  overlay.style.fontSize = '16px';
-  overlay.style.zIndex = '9999';
-  overlay.style.opacity = '0';
-  overlay.style.transition = 'all 0.3s ease';
-  document.body.appendChild(overlay);
+document.addEventListener("deviceready", () => {
+  const log = (msg) => console.log(`[GEL Cleaner] ${msg}`);
+  log("Device ready. Functional Core active.");
 
-  setTimeout(() => overlay.style.opacity = '1', 50);
-  setTimeout(() => {
-    overlay.style.opacity = '0';
-    overlay.style.transform = 'translate(-50%, -50%) scale(0.8)';
-    setTimeout(() => overlay.remove(), 300);
-  }, 1800);
-}
+  const alertBox = (msg) => {
+    if (navigator.notification && navigator.notification.alert) {
+      navigator.notification.alert(msg, null, "Alert", "OK");
+    } else {
+      alert(msg);
+    }
+  };
 
-// 🔹 Mock actions — εμφανίζουν ειδοποιήσεις και logs
-function cleanCache() {
-  console.log("🧠 Cleaning cache...");
-  showMessage("🧠 Cache Cleaned Successfully!");
-}
+  const execCmd = async (cmd) => {
+    try {
+      if (window.cordova && cordova.plugins && cordova.plugins.shell) {
+        const output = await cordova.plugins.shell.exec(cmd);
+        log(output);
+        return output;
+      } else {
+        log("Shell plugin not found — simulated mode.");
+        return "Simulated execution.";
+      }
+    } catch (err) {
+      log("Error: " + err);
+      return null;
+    }
+  };
 
-function boostRAM() {
-  console.log("⚡ Boosting RAM...");
-  showMessage("⚡ RAM Boost Completed!");
-}
+  // --- Clean Cache ---
+  document.getElementById("btnCache").addEventListener("click", async () => {
+    alertBox("🧹 Cleaning app cache...");
+    await execCmd("pm trim-caches 500M");
+    alertBox("✅ Cache cleared successfully!");
+  });
 
-function removeJunk() {
-  console.log("🗑️ Removing junk files...");
-  showMessage("🗑️ Junk Files Removed!");
-}
+  // --- Boost RAM ---
+  document.getElementById("btnRAM").addEventListener("click", async () => {
+    alertBox("⚡ Boosting memory...");
+    await execCmd("am kill-all");
+    await execCmd("sync; echo 3 > /proc/sys/vm/drop_caches");
+    alertBox("✅ RAM optimized!");
+  });
 
-function clearTemp() {
-  console.log("🔥 Clearing temporary files...");
-  showMessage("🔥 Temp Folder Cleared!");
-}
+  // --- Terminate Background ---
+  document.getElementById("btnBackground").addEventListener("click", async () => {
+    alertBox("🚀 Killing background processes...");
+    await execCmd("am kill-all");
+    alertBox("✅ Background processes terminated!");
+  });
 
-function optimizeBattery() {
-  console.log("🔋 Optimizing battery usage...");
-  showMessage("🔋 Battery Optimized!");
-}
+  // --- Language toggle ---
+  document.getElementById("btnEN").addEventListener("click", () => {
+    document.documentElement.lang = "en";
+    alertBox("🇬🇧 English mode activated!");
+  });
 
-function killProcesses() {
-  console.log("🚀 Killing background processes...");
-  showMessage("🚀 Background Processes Stopped!");
-}
+  document.getElementById("btnGR").addEventListener("click", () => {
+    document.documentElement.lang = "el";
+    alertBox("🇬🇷 Ενεργοποιήθηκαν τα Ελληνικά!");
+  });
 
-// 🔹 Μικρό εφέ κατά το άνοιγμα της εφαρμογής
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("✅ GEL Android Cleaner v3.2 initialized successfully.");
-  setTimeout(() => showMessage("✨ GEL Cleaner Ready"), 600);
+  log("Cleaner core initialized.");
 });

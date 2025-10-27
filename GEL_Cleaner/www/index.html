@@ -29,7 +29,7 @@
       color: white;
       border-radius: 15px;
       font-size: 18px;
-      margin: 10px;
+      margin: 8px;
       padding: 12px 25px;
       width: 70%;
       transition: 0.3s;
@@ -39,17 +39,44 @@
       color: black;
       box-shadow: 0 0 20px #d4af37;
     }
+
+    /* ✨ Neon PayPal Styling */
     .paypal {
-      background-color: #ffcc00;
-      color: black;
-      border: none;
+      background-color: black;
+      color: white;
+      border: 2px solid #d4af37;
       font-weight: bold;
       width: 75%;
       font-size: 19px;
       margin-top: 25px;
       border-radius: 20px;
-      box-shadow: 0 0 15px #d4af37;
+      box-shadow: 0 0 20px #d4af37, 0 0 30px #d4af37 inset;
+      animation: pulse 2s infinite;
+      transition: all 0.4s ease-in-out;
     }
+    .paypal span {
+      color: #ffcc00;
+      font-size: 22px;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
+      50% { box-shadow: 0 0 30px #ffeb80, 0 0 40px #ffeb80 inset; }
+      100% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
+    }
+
+    /* ⚡ Neon Logo Effect */
+    .logo {
+      width: 140px;
+      margin-top: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 25px #d4af37;
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      from { box-shadow: 0 0 20px #d4af37, 0 0 40px #d4af37; }
+      to { box-shadow: 0 0 50px #ffec80, 0 0 80px #ffec80; }
+    }
+
     .flags img {
       width: 32px;
       height: 22px;
@@ -69,16 +96,20 @@
     <img src="img/flag_gr.png" alt="Ελληνικά" onclick="setLanguage('gr')" />
   </div>
 
-  <img src="img/GEL_logo.png" alt="GEL Logo" width="120" style="margin-top:10px;" />
+  <img src="img/GEL_logo.png" alt="GEL Logo" class="logo" />
   <h1 id="title">GEL Android Cleaner</h1>
-  <p id="status">Device is ready. <span class="edition">Dark-Gold Edition v3.7</span></p>
+  <p id="status">Device is ready. <span class="edition">Dark-Gold Edition v4.0</span></p>
 
   <button onclick="GELCleaner.clearAppCache(onSuccess, onError)" id="btnCache">🧠 Clean Cache</button><br />
   <button onclick="GELCleaner.boostRAM(onSuccess, onError)" id="btnRAM">⚡ Boost RAM</button><br />
   <button onclick="GELCleaner.clearTemp(onSuccess, onError)" id="btnTemp">🔥 Clear Temp</button><br />
-  <button onclick="GELCleaner.killBackground(onSuccess, onError)" id="btnKill">🚀 Terminate Background</button><br />
+  <button onclick="GELCleaner.removeJunk(onSuccess, onError)" id="btnJunk">🗑️ Remove Junk</button><br />
+  <button onclick="GELCleaner.optimizeBattery(onSuccess, onError)" id="btnBattery">🔋 Optimize Battery</button><br />
+  <button onclick="GELCleaner.killBackground(onSuccess, onError)" id="btnKill">🚀 Kill Processes</button><br />
 
-  <button class="paypal" onclick="openPayPal()">💰 Donate via PayPal</button>
+  <button class="paypal" onclick="openPayPal()">
+    <span>💰</span> Donate via PayPal
+  </button>
 
   <footer>GDiolitsis Engine Lab (GEL) — Author & Developer</footer>
 
@@ -100,20 +131,24 @@
     function setLanguage(lang) {
       if (lang === "gr") {
         document.getElementById("title").innerText = "Καθαριστής Android GEL";
-        document.getElementById("status").innerHTML = "Η συσκευή είναι έτοιμη. <span class='edition'>Dark-Gold Edition v3.7</span>";
+        document.getElementById("status").innerHTML = "Η συσκευή είναι έτοιμη. <span class='edition'>Dark-Gold Edition v4.0</span>";
         document.getElementById("btnCache").innerText = "🧠 Καθάρισε Cache";
         document.getElementById("btnRAM").innerText = "⚡ Ενίσχυση RAM";
-        document.getElementById("btnTemp").innerText = "🔥 Εκκαθάριση Προσωρινών";
+        document.getElementById("btnTemp").innerText = "🔥 Εκκαθάριση Temp";
+        document.getElementById("btnJunk").innerText = "🗑️ Αφαίρεση Junk";
+        document.getElementById("btnBattery").innerText = "🔋 Βελτιστοποίηση Μπαταρίας";
         document.getElementById("btnKill").innerText = "🚀 Τερματισμός Εφαρμογών";
-        document.querySelector(".paypal").innerText = "💰 Δωρεά μέσω PayPal";
+        document.querySelector(".paypal").innerHTML = "<span>💰</span> Δωρεά μέσω PayPal";
       } else {
         document.getElementById("title").innerText = "GEL Android Cleaner";
-        document.getElementById("status").innerHTML = "Device is ready. <span class='edition'>Dark-Gold Edition v3.7</span>";
+        document.getElementById("status").innerHTML = "Device is ready. <span class='edition'>Dark-Gold Edition v4.0</span>";
         document.getElementById("btnCache").innerText = "🧠 Clean Cache";
         document.getElementById("btnRAM").innerText = "⚡ Boost RAM";
         document.getElementById("btnTemp").innerText = "🔥 Clear Temp";
-        document.getElementById("btnKill").innerText = "🚀 Terminate Background";
-        document.querySelector(".paypal").innerText = "💰 Donate via PayPal";
+        document.getElementById("btnJunk").innerText = "🗑️ Remove Junk";
+        document.getElementById("btnBattery").innerText = "🔋 Optimize Battery";
+        document.getElementById("btnKill").innerText = "🚀 Kill Processes";
+        document.querySelector(".paypal").innerHTML = "<span>💰</span> Donate via PayPal";
       }
     }
   </script>

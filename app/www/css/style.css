@@ -1,6 +1,6 @@
 /* =======================================
    GDiolitsis Engine Lab (GEL)
-   Dark-Gold Edition v4.1 — Polished UI
+   Dark-Gold Edition v4.1.1 — Safe Fade
    ======================================= */
 
 body {
@@ -11,6 +11,8 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  opacity: 1;
+  transition: opacity 1s ease-in-out;
 }
 
 /* ⚡ Title */
@@ -117,11 +119,7 @@ footer {
   padding-bottom: 10px;
 }
 
-/* ✨ Smooth Fade-In on Load */
-body {
-  opacity: 0;
-  animation: fadeIn 1s ease-in-out forwards;
-}
-@keyframes fadeIn {
-  to { opacity: 1; }
+/* ✅ Safe Fade Loader */
+body.loaded {
+  opacity: 1;
 }

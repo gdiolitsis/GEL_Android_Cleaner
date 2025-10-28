@@ -1,6 +1,6 @@
 /* =======================================
    GDiolitsis Engine Lab (GEL)
-   Dark-Gold Edition UI v4.0
+   Dark-Gold Edition v4.1 — Polished UI
    ======================================= */
 
 body {
@@ -10,19 +10,22 @@ body {
   text-align: center;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 /* ⚡ Title */
 h1 {
   color: gold;
   text-shadow: 0 0 12px #d4af37;
-  margin-top: 15px;
+  margin-top: 20px;
+  letter-spacing: 1px;
 }
 
 .edition {
   color: #d4af37;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  text-shadow: 0 0 8px #d4af37;
 }
 
 /* 🏳️ Language Flags */
@@ -31,37 +34,38 @@ h1 {
   top: 10px;
   right: 15px;
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  z-index: 100;
 }
 .flags img {
-  width: 32px;
-  height: 22px;
+  width: 34px;
+  height: 24px;
   border-radius: 3px;
   cursor: pointer;
-  box-shadow: 0 0 8px #d4af37;
-  transition: 0.3s;
+  transition: all 0.3s ease-in-out;
+  filter: drop-shadow(0 0 6px #d4af37);
 }
 .flags img:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 15px #ffeb80;
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 12px #ffeb80);
 }
 
 /* ⚙️ Logo */
 .logo {
-  width: 140px;
-  margin-top: 35px;
+  width: 150px;
+  margin-top: 45px;
   border-radius: 50%;
   box-shadow: 0 0 25px #d4af37;
-  animation: glow 3s ease-in-out infinite alternate;
+  animation: logoGlow 3s ease-in-out infinite alternate;
 }
-@keyframes glow {
-  from { box-shadow: 0 0 20px #d4af37, 0 0 40px #d4af37; }
-  to { box-shadow: 0 0 50px #ffec80, 0 0 80px #ffec80; }
+@keyframes logoGlow {
+  from { box-shadow: 0 0 25px #d4af37, 0 0 45px #d4af37; }
+  to { box-shadow: 0 0 60px #ffec80, 0 0 90px #ffec80; }
 }
 
 /* 🔘 Buttons */
 button {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.5);
   border: 2px solid #d4af37;
   color: white;
   border-radius: 15px;
@@ -69,13 +73,14 @@ button {
   margin: 8px;
   padding: 12px 25px;
   width: 75%;
-  transition: 0.3s;
-  box-shadow: 0 0 10px #d4af37 inset;
+  transition: all 0.3s ease-in-out;
+  box-shadow: inset 0 0 8px #d4af37;
 }
 button:hover {
   background-color: #d4af37;
   color: black;
-  box-shadow: 0 0 20px #d4af37;
+  box-shadow: 0 0 20px #ffeb80;
+  transform: translateY(-2px);
 }
 
 /* 💰 PayPal Button */
@@ -86,10 +91,10 @@ button:hover {
   font-weight: bold;
   width: 80%;
   font-size: 19px;
-  margin-top: 25px;
-  border-radius: 20px;
-  box-shadow: 0 0 20px #d4af37, 0 0 30px #d4af37 inset;
-  animation: pulse 2s infinite;
+  margin-top: 30px;
+  border-radius: 25px;
+  box-shadow: 0 0 25px #d4af37, inset 0 0 25px #d4af37;
+  animation: pulse 2.5s infinite;
   transition: all 0.4s ease-in-out;
 }
 .paypal span {
@@ -97,14 +102,26 @@ button:hover {
   font-size: 22px;
 }
 @keyframes pulse {
-  0% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
-  50% { box-shadow: 0 0 30px #ffeb80, 0 0 40px #ffeb80 inset; }
-  100% { box-shadow: 0 0 15px #d4af37, 0 0 25px #d4af37 inset; }
+  0% { box-shadow: 0 0 15px #d4af37, inset 0 0 20px #d4af37; }
+  50% { box-shadow: 0 0 40px #ffeb80, inset 0 0 40px #ffeb80; }
+  100% { box-shadow: 0 0 15px #d4af37, inset 0 0 20px #d4af37; }
 }
 
 /* 🦶 Footer */
 footer {
   color: gray;
-  margin-top: 35px;
+  margin-top: 40px;
   font-size: 14px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 4px #333;
+  padding-bottom: 10px;
+}
+
+/* ✨ Smooth Fade-In on Load */
+body {
+  opacity: 0;
+  animation: fadeIn 1s ease-in-out forwards;
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
 }

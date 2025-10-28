@@ -53,6 +53,11 @@
       };
     }, false);
 
+    // ✅ Smooth fade loader fix
+    window.addEventListener("load", function() {
+      document.body.classList.add("loaded");
+    });
+
     // ✅ Success / Error feedback
     function onSuccess(msg) { alert("✅ " + msg); }
     function onError(err) { alert("❌ " + err); }

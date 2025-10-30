@@ -121,5 +121,5 @@ footer {
 
 /* ✅ Safe Fade Loader */
 body.loaded {
-  opacity: 1;
+  opacity: ;
 }

@@ -1,68 +1,87 @@
-/* ==========================================================
-   GEL Android Cleaner v3.5 — Functional Core (Dark-Gold Edition)
-   GDiolitsis Engine Lab (GEL) — Author & Developer
-   ========================================================== */
 
-document.addEventListener("deviceready", () => {
-  const log = (msg) => console.log(`[GEL Cleaner] ${msg}`);
-  log("Device ready. Functional Core active.");
+(function () {
+  function exec(action, ok, err) {
+    if (!window.cordova || !cordova.exec) {
+      console.warn("Cordova not ready — mock exec:", action);
+      if (ok) ok("mock");
+      return;
+    }
+    cordova.exec(ok, err, "GELCleaner", action, []);
+  }
 
-  const alertBox = (msg) => {
-    if (navigator.notification && navigator.notification.alert) {
-      navigator.notification.alert(msg, null, "Alert", "OK");
-    } else {
-      alert(msg);
+  // ---------- ACCESSIBILITY HELP MODAL ----------
+  function makeModal() {
+    if (document.getElementById("gel-help-modal")) return;
+
+    const html = `
+      <div id="gel-help-modal">
+        <div class="gel-help-box">
+          <h2>Enable Accessibility</h2>
+          <p>To clean cache automatically, please enable Accessibility:</p>
+          <ol>
+            <li>Press <b>Open Settings</b></li>
+            <li>Find <b>GEL Cleaner</b></li>
+            <li>Turn it <b>ON</b></li>
+          </ol>
+          <button id="gel-open-acc">Open Settings</button>
+          <button id="gel-close">Close</button>
+        </div>
+      </div>
+    `;
+
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    document.body.appendChild(div);
+
+    document.getElementById("gel-open-acc").onclick = () => {
+      window.GELCleaner.openAccessibilitySettings();
+    };
+    document.getElementById("gel-close").onclick = () => {
+      document.getElementById("gel-help-modal").remove();
+    };
+  }
+
+  function showHelpOnce() {
+    if (!localStorage.getItem("gel_help_shown")) {
+      localStorage.setItem("gel_help_shown", "1");
+      makeModal();
+    }
+  }
+
+  // ---------- PUBLIC API ----------
+  window.GELCleaner = {
+    clearAppCache: function (ok, err) {
+      showHelpOnce();
+      exec("clearAllCache", ok, err);
+    },
+
+    boostRAM: function (ok, err) {
+      alert("RAM boost is suggestion-only in normal mode.");
+      if (ok) ok("RAM suggestion");
+    },
+
+    clearTemp: function (ok, err) {
+      alert("Temp cleanup will run in next build step.");
+      if (ok) ok("Temp");
+    },
+
+    removeJunk: function (ok, err) {
+      alert("Junk scan is preview-only for now.");
+      if (ok) ok("Junk");
+    },
+
+    optimizeBattery: function (ok, err) {
+      alert("Battery tips shown.");
+      if (ok) ok("Battery");
+    },
+
+    killBackground: function (ok, err) {
+      alert("Background kill is limited on modern Android.");
+      if (ok) ok("Kill");
+    },
+
+    openAccessibilitySettings: function (ok, err) {
+      exec("openAccessibilitySettings", ok, err);
     }
   };
-
-  const execCmd = async (cmd) => {
-    try {
-      if (window.cordova && cordova.plugins && cordova.plugins.shell) {
-        const output = await cordova.plugins.shell.exec(cmd);
-        log(output);
-        return output;
-      } else {
-        log("Shell plugin not found — simulated mode.");
-        return "Simulated execution.";
-      }
-    } catch (err) {
-      log("Error: " + err);
-      return null;
-    }
-  };
-
-  // --- Clean Cache ---
-  document.getElementById("btnCache").addEventListener("click", async () => {
-    alertBox("🧹 Cleaning app cache...");
-    await execCmd("pm trim-caches 500M");
-    alertBox("✅ Cache cleared successfully!");
-  });
-
-  // --- Boost RAM ---
-  document.getElementById("btnRAM").addEventListener("click", async () => {
-    alertBox("⚡ Boosting memory...");
-    await execCmd("am kill-all");
-    await execCmd("sync; echo 3 > /proc/sys/vm/drop_caches");
-    alertBox("✅ RAM optimized!");
-  });
-
-  // --- Terminate Background ---
-  document.getElementById("btnBackground").addEventListener("click", async () => {
-    alertBox("🚀 Killing background processes...");
-    await execCmd("am kill-all");
-    alertBox("✅ Background processes terminated!");
-  });
-
-  // --- Language toggle ---
-  document.getElementById("btnEN").addEventListener("click", () => {
-    document.documentElement.lang = "en";
-    alertBox("🇬🇧 English mode activated!");
-  });
-
-  document.getElementById("btnGR").addEventListener("click", () => {
-    document.documentElement.lang = "el";
-    alertBox("🇬🇷 Ενεργοποιήθηκαν τα Ελληνικά!");
-  });
-
-  log("Cleaner core initialized.");
-});
+})();

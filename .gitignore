@@ -1,0 +1,4 @@
+
+# ==== GEL AUTO IGNORE ====
+backups/
+*.bak

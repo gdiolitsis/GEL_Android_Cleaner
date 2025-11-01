@@ -128,3 +128,16 @@ body, h1, h2, h3, p, button, span, div, textarea {
   color: #ffffff !important;
 }
 
+
+/* Bolder button outline */
+button {
+  border: 2.5px solid #d4af37 !important;
+}
+
+/* Group titles */
+.group-title {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 18px 0 6px 0;
+  color: #ffffff !important;
+}

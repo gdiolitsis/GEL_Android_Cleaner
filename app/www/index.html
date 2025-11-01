@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GEL Cleaner</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>GEL Cleaner</h1>
+  <div id="app">
+    <h1>GEL Cleaner — Pro</h1>
+
+    <div class="grid">
+      <button class="card gold" id="btnFullAccess">📂 Full Storage Access</button>
+      <button class="card" id="btnCpu">🔥 CPU Info</button>
+      <button class="card" id="btnRam">⚡ Clean RAM</button>
+    </div>
+
+    <h2 class="mode-title">Cleaning Modes</h2>
+    <div class="grid">
+      <button class="card safe" id="btnCleanSafe">🧹 Safe Clean</button>
+      <button class="card aggro" id="btnCleanAggro">🧨 Aggressive Clean</button>
+    </div>
+
+    <pre id="log" class="log"></pre>
+  </div>
+
+  <script src="gelcleaner.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

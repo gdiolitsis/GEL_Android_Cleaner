@@ -1,132 +1,124 @@
 :root {
-  --bg: #0e0e0f;
-  --panel: #181819;
-  --text: #f0f0f0;
+  --bg: #000;
+  --panel: #111;
   --gold: #d4af37;
-  --error: #e25c4d;
-  --safe: #2ecc71;
-  --line: #2c2c2c;
+  --gold-soft: #c59f2f;
+  --fg: #fff;
+  --border: #444;
 }
 
-* { box-sizing: border-box; }
-html,body {
+* {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
   background: var(--bg);
-  color: var(--text);
+  color: var(--fg);
+  font-family: "Inter", system-ui, Arial, sans-serif;
 }
 
+/* ✅ TOP BAR */
+#topbar {
+  width: 100%;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.flag {
+  width: 32px;
+  height: 22px;
+  margin-left: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gold);
+}
+
+/* ✅ HEADER */
 header {
   text-align: center;
-  padding: 12px 0 6px;
+  padding-top: 4px;
+  padding-bottom: 12px;
 }
+
 .logo {
-  width: 52px;
-  opacity: 0.92;
+  width: 160px;
+  margin-top: 12px;
 }
+
 h1 {
-  font-size: 22px;
   color: var(--gold);
-  margin: 6px 0;
+  font-size: 24px;
+  margin: 10px 0 6px;
 }
 
-#topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 14px;
-  border-bottom: 1px solid var(--line);
+.sub {
+  font-size: 14px;
+  color: #ccc;
 }
 
-#topbar button {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 15px;
-}
-
-.donate {
-  border-color: var(--gold);
-}
-
-main {
-  max-width: 550px;
-  margin: 0 auto;
-  padding: 18px;
-}
-
-section { margin-bottom: 20px; }
-section h2 {
-  font-size: 16px;
-  margin-bottom: 10px;
+/* ✅ TITLES */
+h2 {
   color: var(--gold);
+  font-size: 18px;
+  margin-bottom: 4px;
 }
 
+/* ✅ GRID BUTTONS */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  padding: 4px 0 18px;
 }
 
-.grid button {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px 12px;
-  font-size: 15px;
-  color: var(--text);
+button {
+  background: linear-gradient(to bottom, #111, #000);
+  border-radius: 18px;
+  border: 1px solid var(--gold);
+  padding: 14px 10px;
+  color: var(--gold);
+  font-size: 16px;
+  font-weight: 600;
   text-align: center;
-  min-height: 64px;
+  cursor: pointer;
 }
 
-.grid button:hover {
-  border-color: var(--gold);
+button:hover {
+  border-color: var(--gold-soft);
+  color: #fff;
 }
 
-.safe { border-color: var(--safe); }
-.aggro { border-color: var(--error); }
-
-#log {
-  border: 1px solid var(--line);
-  background: #0b0b0b;
-  min-height: 120px;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 13px;
+/* ✅ LOG AREA */
+.log {
+  background: #080808;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 140px;
+  padding: 10px;
   white-space: pre-wrap;
-}
-
-footer {
-  text-align: center;
   font-size: 13px;
-  color: #aaa;
-  padding: 20px 0 14px;
-}
-.version {
-  display: block;
-  opacity: 0.7;
+  margin-bottom: 20px;
 }
 
-/* =========================
-   DONATE
-========================= */
-.donate-section{
-  margin:25px 0;
-  display:flex;
-  justify-content:center;
+/* ✅ DONATE */
+.donate-wrap {
+  text-align: center;
+  padding: 12px 0 30px;
 }
-.donate-big{
-  background:var(--gold);
-  color:#000;
-  font-weight:700;
-  padding:16px 22px;
-  font-size:17px;
-  border-radius:14px;
-  border:none;
-  width:90%;
-  cursor:pointer;
+
+.donate {
+  width: 90%;
+  margin: 0 auto;
+  background: var(--gold);
+  border: none;
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
 }
-.donate-big:hover{
-  opacity:0.85;
+
+.donate:hover {
+  background: var(--gold-soft);
 }

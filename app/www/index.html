@@ -8,68 +8,71 @@
 </head>
 
 <body>
-  <header>
-    <img src="logo.png" class="logo" />
-    <h1>GEL Cleaner — Pro</h1>
-  </header>
 
+  <!-- ✅ TOP BAR -->
   <nav id="topbar">
-    <div class="left"></div>
     <div class="langs">
-      <button data-lang="gr">🇬🇷</button>
-      <button data-lang="en">🇺🇸</button>
+      <img src="flag_gr.png" class="flag" data-lang="gr" />
+      <img src="flag_en.png" class="flag" data-lang="en" />
     </div>
-    <button id="donate" class="donate">💛 Donate</button>
   </nav>
 
+  <!-- ✅ HEADER -->
+  <header>
+    <img src="GEL_logo.png" class="logo" />
+    <h1>GEL Android Cleaner</h1>
+    <p class="sub">Device is ready • Dark-Gold Edition v4.0</p>
+  </header>
+
+  <!-- ✅ MAIN -->
   <main id="app">
 
-    <!-- SYSTEM ACTIONS -->
+    <!-- ✅ SYSTEM -->
     <section>
       <h2>System Access</h2>
       <div class="grid">
-        <button id="btnFullAccess">📂 Full Storage Access</button>
+        <button id="btnFullAccess">📂 Full Access</button>
         <button id="btnCpu">🔥 CPU Info</button>
         <button id="btnCpuLive">📈 CPU Live</button>
         <button id="btnRam">⚡ Clean RAM</button>
       </div>
     </section>
 
-    <!-- CLEANING -->
+    <!-- ✅ Cleaning -->
     <section>
       <h2>Cleaning Modes</h2>
       <div class="grid">
-        <button id="btnCleanSafe" class="safe">🧹 Safe Clean</button>
-        <button id="btnCleanAggro" class="aggro">🧨 Aggressive Clean</button>
+        <button id="btnCleanSafe">🧹 Safe Clean</button>
+        <button id="btnCleanAggro">🧨 Aggressive</button>
       </div>
     </section>
 
-    <!-- TARGET -->
+    <!-- ✅ Target -->
     <section>
       <h2>Targeted Cleaners</h2>
       <div class="grid">
-        <button id="btnMedia">🖼 Media Junk</button>
-        <button id="btnBrowser">🌐 Browser Cache</button>
+        <button id="btnCleanMedia">🖼 Media Junk</button>
+        <button id="btnCleanBrowser">🌐 Browser Cache</button>
+        <button id="btnCleanTemp">🔥 Temp</button>
+        <button id="btnCleanBattery">🔋 Battery Boost</button>
+        <button id="btnCleanApps">🚀 Kill Apps</button>
       </div>
     </section>
 
+    <!-- ✅ Logs -->
     <section>
       <h2>Log</h2>
-      <pre id="log"></pre>
+      <pre id="log" class="log"></pre>
     </section>
 
-  <section class="donate-section">
-
-    <button id="donateBig" class="donate-big">Keep this app free 💛</button>
-
-  </section>
+    <!-- ✅ Donate -->
+    <div class="donate-wrap">
+      <button id="donate" class="donate">
+        💰 Donate — Keep this app free 💛
+      </button>
+    </div>
 
   </main>
-
-  <footer>
-    <span>© 2025 GDiolitsis Engine Lab (GEL)</span>
-    <span class="version">v1.0</span>
-  </footer>
 
   <script src="gelcleaner.js"></script>
   <script src="app.js"></script>

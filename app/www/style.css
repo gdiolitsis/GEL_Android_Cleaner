@@ -122,3 +122,9 @@ button:hover {
 .donate:hover {
   background: var(--gold-soft);
 }
+
+/* GEL Force White Text */
+body, h1, h2, h3, p, button, span, div, textarea {
+  color: #ffffff !important;
+}
+

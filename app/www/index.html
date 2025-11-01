@@ -1,46 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8"/>
-    <title>GEL Cleaner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body { font-family: system-ui, Arial; margin: 24px; }
-      h1 { margin-bottom: 8px; }
-      .btn { padding: 12px 16px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; margin-right: 8px; }
-      #log { margin-top: 16px; white-space: pre-wrap; background:#f6f6f6; padding:12px; border-radius:10px; }
-    </style>
-  </head>
-  <body>
-    <h1>GEL Cleaner — Native Bridge Test</h1>
-    <button id="btnPing" class="btn">Ping</button>
-    <button id="btnClear" class="btn">Clear Cache</button>
-    <div id="log">Waiting for device…</div>
-
-    <script src="cordova.js"></script>
-    <script>
-      function log(msg){
-        document.getElementById("log").textContent = msg;
-      }
-
-      document.addEventListener("deviceready", function(){
-        log("Device ready. Try Ping / Clear Cache.");
-
-        document.getElementById("btnPing").onclick = function(){
-          GelCleaner.ping(
-            res => log("Ping → " + res),
-            err => log("Ping ERR → " + err)
-          );
-        };
-
-        document.getElementById("btnClear").onclick = function(){
-          GelCleaner.clearCache(
-            res => log("Clear → " + res),
-            err => log("Clear ERR → " + err)
-          );
-        };
-
-      }, false);
-    </script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <title>GEL Cleaner</title>
+</head>
+<body>
+  <h1>GEL Cleaner</h1>
+</body>
 </html>

@@ -12,7 +12,8 @@
 
     <div class="grid">
       <button class="card gold" id="btnFullAccess">📂 Full Storage Access</button>
-      <button class="card" id="btnCpu">🔥 CPU Info</button>
+      <button class="card" id="btnCpu">🔥 CPU Info (once)</button>
+      <button class="card" id="btnCpuLive">📈 CPU Live</button>
       <button class="card" id="btnRam">⚡ Clean RAM</button>
     </div>
 
@@ -21,6 +22,27 @@
       <button class="card safe" id="btnCleanSafe">🧹 Safe Clean</button>
       <button class="card aggro" id="btnCleanAggro">🧨 Aggressive Clean</button>
     </div>
+
+    <h2 class="mode-title">Targeted Cleaners</h2>
+    <div class="grid">
+      <button class="card" id="btnCleanMedia">🖼 Media Junk</button>
+      <button class="card" id="btnCleanBrowser">🌐 Browser Caches</button>
+      <div class="card span2">
+        <div class="row">
+          <input id="pkgInput" class="input" placeholder="com.app.package" />
+          <button class="mini" id="btnCleanApp">Per-App Clean</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="bar">
+        <div id="progressBar" class="bar-fill" style="width:0%"></div>
+      </div>
+      <div id="status" class="status">Idle</div>
+    </div>
+
+    <canvas id="cpuCanvas" width="520" height="90" class="canvas"></canvas>
 
     <pre id="log" class="log"></pre>
   </div>

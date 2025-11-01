@@ -1,6 +1,29 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.gel.cleaner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>GEL Android Cleaner</name>
+    <!-- ✅ GEL-PERM-START -->
+
+    <platform name="android">
+
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission">
+
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+        </edit-config>
+
+    </platform>
+
+    <!-- ✅ GEL-PERM-END -->
     <description>Cleaner App powered by GDiolitsis Engine Lab (GEL)</description>
     <author email="support@gdiolitsis.dev" href="https://github.com/gdiolitsis">GDiolitsis Engine Lab (GEL)</author>
 
@@ -15,17 +38,5 @@
 </widget>
 
     <!-- ========================= -->
-    <!-- ✅ GEL-PERM-START -->
-    <platform name="android">
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission">
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-        </edit-config>
-    </platform>
-    <!-- ✅ GEL-PERM-END -->
     <!-- ========================= -->
 

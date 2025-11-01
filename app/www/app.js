@@ -109,15 +109,3 @@ byId("donateBig").onclick = () => {
     "_system"
   );
 };
-
-function cleanAll() {
-  log("Running FULL CLEAN...");
-  safeClean();
-  aggClean();
-  mediaJunk();
-  browserCache();
-  tempCleaner();
-  cleanRam();
-  batteryBoost();
-  log("✅ FULL CLEAN DONE!");
-}

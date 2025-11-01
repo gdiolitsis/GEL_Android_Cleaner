@@ -99,3 +99,13 @@ document.addEventListener("deviceready", () => {
 });
 
 function byId(id){ return document.getElementById(id); }
+
+// =======================
+// DONATE BTN
+// =======================
+byId("donateBig").onclick = () => {
+  window.open(
+    "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com",
+    "_system"
+  );
+};

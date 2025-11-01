@@ -3,49 +3,73 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GEL Cleaner</title>
+  <title>GEL Cleaner — Pro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div id="app">
+  <header>
+    <img src="logo.png" class="logo" />
     <h1>GEL Cleaner — Pro</h1>
+  </header>
 
-    <div class="grid">
-      <button class="card gold" id="btnFullAccess">📂 Full Storage Access</button>
-      <button class="card" id="btnCpu">🔥 CPU Info (once)</button>
-      <button class="card" id="btnCpuLive">📈 CPU Live</button>
-      <button class="card" id="btnRam">⚡ Clean RAM</button>
+  <nav id="topbar">
+    <div class="left"></div>
+    <div class="langs">
+      <button data-lang="gr">🇬🇷</button>
+      <button data-lang="en">🇺🇸</button>
     </div>
+    <button id="donate" class="donate">💛 Donate</button>
+  </nav>
 
-    <h2 class="mode-title">Cleaning Modes</h2>
-    <div class="grid">
-      <button class="card safe" id="btnCleanSafe">🧹 Safe Clean</button>
-      <button class="card aggro" id="btnCleanAggro">🧨 Aggressive Clean</button>
-    </div>
+  <main id="app">
 
-    <h2 class="mode-title">Targeted Cleaners</h2>
-    <div class="grid">
-      <button class="card" id="btnCleanMedia">🖼 Media Junk</button>
-      <button class="card" id="btnCleanBrowser">🌐 Browser Caches</button>
-      <div class="card span2">
-        <div class="row">
-          <input id="pkgInput" class="input" placeholder="com.app.package" />
-          <button class="mini" id="btnCleanApp">Per-App Clean</button>
-        </div>
+    <!-- SYSTEM ACTIONS -->
+    <section>
+      <h2>System Access</h2>
+      <div class="grid">
+        <button id="btnFullAccess">📂 Full Storage Access</button>
+        <button id="btnCpu">🔥 CPU Info</button>
+        <button id="btnCpuLive">📈 CPU Live</button>
+        <button id="btnRam">⚡ Clean RAM</button>
       </div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <div class="bar">
-        <div id="progressBar" class="bar-fill" style="width:0%"></div>
+    <!-- CLEANING -->
+    <section>
+      <h2>Cleaning Modes</h2>
+      <div class="grid">
+        <button id="btnCleanSafe" class="safe">🧹 Safe Clean</button>
+        <button id="btnCleanAggro" class="aggro">🧨 Aggressive Clean</button>
       </div>
-      <div id="status" class="status">Idle</div>
-    </div>
+    </section>
 
-    <canvas id="cpuCanvas" width="520" height="90" class="canvas"></canvas>
+    <!-- TARGET -->
+    <section>
+      <h2>Targeted Cleaners</h2>
+      <div class="grid">
+        <button id="btnMedia">🖼 Media Junk</button>
+        <button id="btnBrowser">🌐 Browser Cache</button>
+      </div>
+    </section>
 
-    <pre id="log" class="log"></pre>
-  </div>
+    <section>
+      <h2>Log</h2>
+      <pre id="log"></pre>
+    </section>
+
+  <section class="donate-section">
+
+    <button id="donateBig" class="donate-big">Keep this app free 💛</button>
+
+  </section>
+
+  </main>
+
+  <footer>
+    <span>© 2025 GDiolitsis Engine Lab (GEL)</span>
+    <span class="version">v1.0</span>
+  </footer>
 
   <script src="gelcleaner.js"></script>
   <script src="app.js"></script>

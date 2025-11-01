@@ -1,91 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GEL Android Cleaner</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>GEL Cleaner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { font-family: system-ui, Arial; margin: 24px; }
+      h1 { margin-bottom: 8px; }
+      .btn { padding: 12px 16px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; margin-right: 8px; }
+      #log { margin-top: 16px; white-space: pre-wrap; background:#f6f6f6; padding:12px; border-radius:10px; }
+    </style>
+  </head>
+  <body>
+    <h1>GEL Cleaner — Native Bridge Test</h1>
+    <button id="btnPing" class="btn">Ping</button>
+    <button id="btnClear" class="btn">Clear Cache</button>
+    <div id="log">Waiting for device…</div>
 
-<body>
-  <!-- 🌍 Language Flags -->
-  <div class="flags">
-    <img src="img/flag_en.png" alt="English" onclick="setLanguage('en')" />
-    <img src="img/flag_gr.png" alt="Ελληνικά" onclick="setLanguage('gr')" />
-  </div>
-
-  <!-- ⚡ Logo -->
-  <img src="img/GEL_logo.png" alt="GEL Logo" class="logo" />
-
-  <h1 id="title">GEL Android Cleaner</h1>
-  <p id="status">Device is ready. <span class="edition">Dark-Gold Edition v4.0</span></p>
-
-  <!-- 🧹 Control Buttons -->
-  <button onclick="GELCleaner.clearAppCache(onSuccess, onError)" id="btnCache">🧠 Clean Cache</button><br />
-  <button onclick="GELCleaner.boostRAM(onSuccess, onError)" id="btnRAM">⚡ Boost RAM</button><br />
-  <button onclick="GELCleaner.clearTemp(onSuccess, onError)" id="btnTemp">🔥 Clear Temp</button><br />
-  <button onclick="GELCleaner.removeJunk(onSuccess, onError)" id="btnJunk">🗑️ Remove Junk</button><br />
-  <button onclick="GELCleaner.optimizeBattery(onSuccess, onError)" id="btnBattery">🔋 Optimize Battery</button><br />
-  <button onclick="GELCleaner.killBackground(onSuccess, onError)" id="btnKill">🚀 Kill Processes</button><br />
-
-  <!-- 💰 PayPal -->
-  <button class="paypal" onclick="openPayPal()">
-    <span>💰</span> Donate via PayPal
-  </button>
-
-  <footer>GDiolitsis Engine Lab (GEL) — Author & Developer</footer>
-
-  <!-- 📜 Cordova & JS -->
-  <script type="text/javascript" src="cordova.js"></script>
-  <script type="text/javascript" src="js/GelCleaner.js"></script>
-
-  <script>
-    document.addEventListener("deviceready", function() {
-      console.log("✅ Device is ready");
-
-      // 🔗 Safe InAppBrowser open
-      window.openPayPal = function() {
-        if (window.cordova && cordova.InAppBrowser) {
-          cordova.InAppBrowser.open('https://www.paypal.me/gdiolitsis', '_system', 'location=yes');
-        } else {
-          window.open('https://www.paypal.me/gdiolitsis', '_blank');
-        }
-      };
-    }, false);
-
-    // ✅ Smooth fade loader fix
-    window.addEventListener("load", function() {
-      document.body.classList.add("loaded");
-    });
-
-    // ✅ Success / Error feedback
-    function onSuccess(msg) { alert("✅ " + msg); }
-    function onError(err) { alert("❌ " + err); }
-
-    // 🌐 Language Switch
-    function setLanguage(lang) {
-      if (lang === "gr") {
-        document.getElementById("title").innerText = "Καθαριστής Android GEL";
-        document.getElementById("status").innerHTML = "Η συσκευή είναι έτοιμη. <span class='edition'>Dark-Gold Edition v4.0</span>";
-        document.getElementById("btnCache").innerText = "🧠 Καθάρισε Cache";
-        document.getElementById("btnRAM").innerText = "⚡ Ενίσχυση RAM";
-        document.getElementById("btnTemp").innerText = "🔥 Εκκαθάριση Temp";
-        document.getElementById("btnJunk").innerText = "🗑️ Αφαίρεση Junk";
-        document.getElementById("btnBattery").innerText = "🔋 Βελτιστοποίηση Μπαταρίας";
-        document.getElementById("btnKill").innerText = "🚀 Τερματισμός Εφαρμογών";
-        document.querySelector(".paypal").innerHTML = "<span>💰</span> Δωρεά μέσω PayPal";
-      } else {
-        document.getElementById("title").innerText = "GEL Android Cleaner";
-        document.getElementById("status").innerHTML = "Device is ready. <span class='edition'>Dark-Gold Edition v4.0</span>";
-        document.getElementById("btnCache").innerText = "🧠 Clean Cache";
-        document.getElementById("btnRAM").innerText = "⚡ Boost RAM";
-        document.getElementById("btnTemp").innerText = "🔥 Clear Temp";
-        document.getElementById("btnJunk").innerText = "🗑️ Remove Junk";
-        document.getElementById("btnBattery").innerText = "🔋 Optimize Battery";
-        document.getElementById("btnKill").innerText = "🚀 Kill Processes";
-        document.querySelector(".paypal").innerHTML = "<span>💰</span> Donate via PayPal";
+    <script src="cordova.js"></script>
+    <script>
+      function log(msg){
+        document.getElementById("log").textContent = msg;
       }
-    }
-  </script>
-</body>
+
+      document.addEventListener("deviceready", function(){
+        log("Device ready. Try Ping / Clear Cache.");
+
+        document.getElementById("btnPing").onclick = function(){
+          GelCleaner.ping(
+            res => log("Ping → " + res),
+            err => log("Ping ERR → " + err)
+          );
+        };
+
+        document.getElementById("btnClear").onclick = function(){
+          GelCleaner.clearCache(
+            res => log("Clear → " + res),
+            err => log("Clear ERR → " + err)
+          );
+        };
+
+      }, false);
+    </script>
+  </body>
 </html>

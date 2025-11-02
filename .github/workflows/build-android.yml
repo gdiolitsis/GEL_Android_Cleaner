@@ -56,7 +56,7 @@ jobs:
           cp ../app/config.xml config.xml || true
           cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner || true
 
-      - name: Normalize GEL plugin layout (fix GelCleaner.java path)
+      - name: Normalize GEL plugin layout
         run: |
           cd GEL_Cleaner/cordova-plugin-gelcleaner
           mkdir -p src/android/com/gdiolitsis/gelcleaner
@@ -71,42 +71,17 @@ jobs:
           cd GEL_Cleaner
           cordova plugin add ./cordova-plugin-gelcleaner
 
-      - name: Remove default Cordova logos
-        run: |
-          cd GEL_Cleaner
-          rm -f www/logo.png || true
-          rm -f www/img/logo.png || true
-
-      - name: Resize GEL logo
-        run: |
-          cd GEL_Cleaner/www/img
-          if [ -f "GEL_logo.png" ]; then
-            convert GEL_logo.png -resize 512x512\> GEL_logo_512.png
-          fi
-
       - name: Clean Android platform
         run: |
           cd GEL_Cleaner
           rm -rf platforms/android plugins
           cordova platform add android@12
 
-      # ✅ ✅ FIX: remove bad auto-generated config.xml & rebuild from root
-      - name: Replace broken res/xml/config
+      # ✅ ✅ FIX — force overwrite broken platform config
+      - name: Force replace platform config.xml
         run: |
           cd GEL_Cleaner
-          rm -f platforms/android/app/src/main/res/xml/config.xml || true
-          cordova prepare
-
-      - name: Replace Android launcher icons with GEL logo
-        run: |
-          cd GEL_Cleaner
-          if [ -f "www/img/GEL_logo_512.png" ]; then
-            for d in platforms/android/app/src/main/res/mipmap-*; do
-              rm -f "$d/ic_launcher.png" "$d/ic_launcher_round.png" "$d/ic_launcher.xml" || true
-              cp www/img/GEL_logo_512.png "$d/ic_launcher.png" || true
-              cp www/img/GEL_logo_512.png "$d/ic_launcher_round.png" || true
-            done
-          fi
+          cp config.xml platforms/android/app/src/main/res/xml/config.xml || true
 
       - name: Build with Gradle 8.5
         run: |

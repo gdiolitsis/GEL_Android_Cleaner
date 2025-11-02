@@ -1,0 +1,5 @@
+platforms/
+plugins/android.json
+build/
+.gradle/
+.cordova/

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin id="cordova-plugin-gelcleaner"
+        version="1.0.1"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <name>GELCleaner</name>
+    <description>GDiolitsis Engine Lab (GEL) — Android Cleaner Plugin</description>
+    <license>MIT</license>
+    <keywords>gel, cleaner, android, cache, ram, battery</keywords>
+
+    <!-- JS module binding -->
+    <js-module src="www/GelCleaner.js" name="GELCleaner">
+        <clobbers target="GELCleaner" />
+    </js-module>
+
+    <platform name="android">
+        <!-- ✅ Σωστό path για το GelCleaner.java -->
+        <source-file src="src/android/com/gdiolitsis/gelcleaner/GelCleaner.java"
+                     target-dir="app/src/main/java/com/gdiolitsis/gelcleaner" />
+
+        <!-- ✅ Δήλωση feature στο config.xml -->
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="GELCleaner">
+                <param name="android-package" value="com.gdiolitsis.gelcleaner.GelCleaner" />
+            </feature>
+        </config-file>
+
+        <!-- ✅ Νέες άδειες στο AndroidManifest -->
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        </config-file>
+    </platform>
+</plugin>

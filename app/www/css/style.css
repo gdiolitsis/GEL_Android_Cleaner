@@ -1,0 +1,16 @@
+body {
+    background: #111;
+    color: gold;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding-top: 40px;
+}
+button {
+    background: gold;
+    color: #111;
+    border: none;
+    padding: 12px 28px;
+    font-size: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+}

@@ -56,7 +56,7 @@ jobs:
           cp ../app/config.xml config.xml || true
           cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner || true
 
-      # 🔧 ΜΟΝΟ αυτό προστέθηκε: φέρνει το plugin στη σωστή δομή αν το Java είναι σε άλλο path
+      # 🔧 Normalize GEL plugin layout
       - name: Normalize GEL plugin layout (fix GelCleaner.java path)
         run: |
           cd GEL_Cleaner/cordova-plugin-gelcleaner
@@ -96,6 +96,11 @@ jobs:
           rm -rf platforms/android plugins
           cordova platform add android@12
 
+      # ✅ ✅ ✅  ONLY CHANGE ADDED
+      - name: Remove bad config.xml inside android res
+        run: |
+          rm -f GEL_Cleaner/platforms/android/app/src/main/res/xml/config.xml || true
+
       - name: Replace Android launcher icons with GEL logo
         run: |
           cd GEL_Cleaner
@@ -106,11 +111,6 @@ jobs:
               cp www/img/GEL_logo_512.png "$d/ic_launcher_round.png" || true
             done
           fi
-
-      # ✅ ✅ ✅ (ADDED — only change requested)
-      - name: Cleanup android/res/xml
-        run: |
-          rm -rf GEL_Cleaner/platforms/android/app/src/main/res/xml/* || true
 
       - name: Build with Gradle 8.5
         run: |

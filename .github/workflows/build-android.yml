@@ -107,6 +107,11 @@ jobs:
             done
           fi
 
+      # ✅ ✅ ✅ (ADDED — only change requested)
+      - name: Cleanup android/res/xml
+        run: |
+          rm -rf GEL_Cleaner/platforms/android/app/src/main/res/xml/* || true
+
       - name: Build with Gradle 8.5
         run: |
           cd GEL_Cleaner

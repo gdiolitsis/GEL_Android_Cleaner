@@ -56,21 +56,15 @@ jobs:
           cp ../app/config.xml config.xml || true
           cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner || true
 
-      # 🔧 Normalize GEL plugin layout
       - name: Normalize GEL plugin layout (fix GelCleaner.java path)
         run: |
           cd GEL_Cleaner/cordova-plugin-gelcleaner
-          echo "== BEFORE =="
-          find . -maxdepth 6 -type f | sort
           mkdir -p src/android/com/gdiolitsis/gelcleaner
           if [ -f src/android/GelCleaner.java ] && [ ! -f src/android/com/gdiolitsis/gelcleaner/GelCleaner.java ]; then
             mv src/android/GelCleaner.java src/android/com/gdiolitsis/gelcleaner/GelCleaner.java
           fi
           sed -i 's#src/android/GelCleaner.java#src/android/com/gdiolitsis/gelcleaner/GelCleaner.java#g' plugin.xml
           sed -i 's#src\\android\\GelCleaner.java#src/android/com/gdiolitsis/gelcleaner/GelCleaner.java#g' plugin.xml
-          echo "== AFTER =="
-          find . -maxdepth 6 -type f | sort
-          test -f src/android/com/gdiolitsis/gelcleaner/GelCleaner.java
 
       - name: Install GEL Cleaner Plugin
         run: |
@@ -83,23 +77,25 @@ jobs:
           rm -f www/logo.png || true
           rm -f www/img/logo.png || true
 
-      - name: Resize GEL logo for launcher icon
+      - name: Resize GEL logo
         run: |
           cd GEL_Cleaner/www/img
           if [ -f "GEL_logo.png" ]; then
             convert GEL_logo.png -resize 512x512\> GEL_logo_512.png
           fi
 
-      - name: Clean Android platform (force fresh www)
+      - name: Clean Android platform
         run: |
           cd GEL_Cleaner
           rm -rf platforms/android plugins
           cordova platform add android@12
 
-      # ✅ ✅ ✅  ONLY CHANGE ADDED
-      - name: Remove bad config.xml inside android res
+      # ✅ ✅ FIX: remove bad auto-generated config.xml & rebuild from root
+      - name: Replace broken res/xml/config
         run: |
-          rm -f GEL_Cleaner/platforms/android/app/src/main/res/xml/config.xml || true
+          cd GEL_Cleaner
+          rm -f platforms/android/app/src/main/res/xml/config.xml || true
+          cordova prepare
 
       - name: Replace Android launcher icons with GEL logo
         run: |

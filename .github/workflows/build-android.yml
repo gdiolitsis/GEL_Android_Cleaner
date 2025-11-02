@@ -1,4 +1,14 @@
-name: Build Android APK (Cordova)
+# =========================================================
+# GDiolitsis Engine Lab (GEL) — Author & Developer
+# Build: Play-Store-Ready Signed APK (Cordova 12, AGP/SDK 33, Gradle 8.5)
+# NOTE: Requires GitHub Secrets:
+#  ANDROID_KEYSTORE_BASE64  (base64 of your .keystore)
+#  ANDROID_KEYSTORE_ALIAS
+#  ANDROID_KEYSTORE_PASSWORD
+#  ANDROID_KEY_PASSWORD
+# =========================================================
+
+name: Build Android APK (Cordova) — Release Signed
 
 on:
   workflow_dispatch:
@@ -27,7 +37,7 @@ jobs:
           echo "/opt/gradle/bin" >> $GITHUB_PATH
           gradle -v
 
-      - name: Install Android SDK tools
+      - name: Install Android SDK tools (platforms;android-33 / build-tools;33.0.2)
         run: |
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd $ANDROID_HOME/cmdline-tools
@@ -40,53 +50,87 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova@12.0.0
 
-      # ✅ CLEAN ONLY
+      # 🔒 Καθαρισμός μόνο: ξεκινάμε πάντα καθαρά (δεν αλλάζω versions)
       - name: Clean previous build folder
-        run: |
-          rm -rf GEL_Cleaner
+        run: rm -rf GEL_Cleaner
 
-      - name: Create Cordova project
+      # 🧱 Δημιουργία Cordova project + assets από /app (όπως το έχεις στο repo)
+      - name: Create Cordova project & import app assets
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
+
+          # www / config από το repo
           mkdir -p www/img
           cp ../app/www/index.html www/index.html || true
           cp -r ../app/www/css www/css || true
-          cp -r ../app/www/js www/js || true
+          cp -r ../app/www/js  www/js  || true
           cp -r ../app/www/img/* www/img/ || true
           cp ../app/config.xml config.xml || true
 
-      - name: Remove default Cordova logos
-        run: |
-          cd GEL_Cleaner
-          rm -f www/logo.png || true
-          rm -f www/img/logo.png || true
+          # plugin: local folder από το repo ώστε να υπάρχει package.json in-place
+          cp -r ../app/cordova-plugin-gelcleaner ./cordova-plugin-gelcleaner
+          cordova plugin add ./cordova-plugin-gelcleaner
 
-      - name: Resize GEL logo for launcher icon
+      # (προαιρετικό UI asset — ΔΕΝ αλλάζει τις versions / build chain)
+      - name: Resize GEL logo for launcher icon (optional)
         run: |
-          cd GEL_Cleaner/www/img
-          if [ -f "GEL_logo.png" ]; then
+          if [ -f "GEL_Cleaner/www/img/GEL_logo.png" ]; then
+            cd GEL_Cleaner/www/img
             convert GEL_logo.png -resize 512x512\> GEL_logo_512.png
-          else
-            echo "⚠️ GEL_logo.png not found — skipping resize"
           fi
 
-      - name: Duplicate smaller GEL logo
-        run: |
-          cd GEL_Cleaner/www/img
-          if [ -f "GEL_logo.png" ]; then
-            cp GEL_logo.png GEL_logo_ui.png
-          fi
-
-      - name: Build Debug APK
+      # 🏗️ Release build (unsigned από Cordova/Gradle)
+      - name: Build Release (unsigned)
         run: |
           cd GEL_Cleaner
           export PATH=/opt/gradle/bin:$PATH
-          cordova build android --debug --no-update-notifier
+          cordova build android --release --no-update-notifier
+          ls -lah platforms/android/app/build/outputs/apk/release || true
 
-      - name: Upload APK artifact
+      # 🔐 Προετοιμασία Keystore από GitHub Secrets
+      - name: Prepare keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          cd GEL_Cleaner
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > release.keystore
+          ls -lah release.keystore
+
+      # 📦 zipalign + apksign → τελικό Play-Store-ready APK
+      - name: Zipalign & Sign APK
+        env:
+          ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd GEL_Cleaner/platforms/android/app/build/outputs/apk/release
+
+          UNSIGNED="app-release-unsigned.apk"
+          ALIGNED="app-release-aligned.apk"
+          SIGNED="../../../../../../GEL_Cleaner_release_signed.apk"
+
+          # zipalign
+          $ANDROID_HOME/build-tools/33.0.2/zipalign -v -p 4 "$UNSIGNED" "$ALIGNED"
+
+          # sign
+          $ANDROID_HOME/build-tools/33.0.2/apksigner sign \
+            --ks ../../../../../../release.keystore \
+            --ks-key-alias "${ANDROID_KEYSTORE_ALIAS}" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "$SIGNED" \
+            "$ALIGNED"
+
+          # verify
+          $ANDROID_HOME/build-tools/33.0.2/apksigner verify --verbose "$SIGNED"
+
+          ls -lah "$SIGNED"
+
+      # 📤 Artifact: το signed, zipaligned Play-Store-ready APK
+      - name: Upload Release APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Cleaner_debug.apk
-          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          name: GEL_Cleaner_release_signed.apk
+          path: GEL_Cleaner/GEL_Cleaner_release_signed.apk

@@ -57,11 +57,6 @@ jobs:
           cp -r ../app/www/img/* www/img/ || true
           cp ../app/config.xml config.xml || true
 
-      - name: Add GEL Cleaner Plugin
-        run: |
-          cd GEL_Cleaner
-          cordova plugin add ../cordova-plugin-gelcleaner
-
       - name: Remove default Cordova logos
         run: |
           cd GEL_Cleaner
@@ -84,7 +79,6 @@ jobs:
             cp GEL_logo.png GEL_logo_ui.png
           fi
 
-      # ✅ KEEP www, KEEP icons — no force rebuild
       - name: Build Debug APK
         run: |
           cd GEL_Cleaner

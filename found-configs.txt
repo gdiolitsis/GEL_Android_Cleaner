@@ -1,0 +1,4 @@
+./GEL_Cleaner/config.xml
+./app/config.xml
+./app/node_modules/cordova-android/templates/project/res/xml/config.xml
+./app/platforms/android/app/src/main/res/xml/config.xml

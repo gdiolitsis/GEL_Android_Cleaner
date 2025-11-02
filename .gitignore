@@ -2,3 +2,6 @@
 # ==== GEL AUTO IGNORE ====
 backups/
 *.bak
+
+# DO NOT TRACK nested Cordova folder
+GEL_Cleaner/

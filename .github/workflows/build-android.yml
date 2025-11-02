@@ -40,6 +40,7 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova@12.0.0
 
+      # ✅ CLEAN ONLY
       - name: Clean previous build folder
         run: |
           rm -rf GEL_Cleaner
@@ -54,6 +55,12 @@ jobs:
           cp -r ../app/www/css www/css || true
           cp -r ../app/www/js www/js || true
           cp -r ../app/www/img/* www/img/ || true
+          cp ../app/config.xml config.xml || true
+
+      - name: Add GEL Cleaner Plugin
+        run: |
+          cd GEL_Cleaner
+          cordova plugin add ../cordova-plugin-gelcleaner
 
       - name: Remove default Cordova logos
         run: |
@@ -67,44 +74,18 @@ jobs:
           if [ -f "GEL_logo.png" ]; then
             convert GEL_logo.png -resize 512x512\> GEL_logo_512.png
           else
-            echo "⚠️ GEL_logo.png not found! Skipping resize."
+            echo "⚠️ GEL_logo.png not found — skipping resize"
           fi
 
-      # 🟡 UI logo (non-launcher)
-      - name: Duplicate smaller GEL logo for app UI
+      - name: Duplicate smaller GEL logo
         run: |
           cd GEL_Cleaner/www/img
           if [ -f "GEL_logo.png" ]; then
             cp GEL_logo.png GEL_logo_ui.png
           fi
 
-      - name: Clean Android platform (force fresh www)
-        run: |
-          cd GEL_Cleaner
-          rm -rf platforms/android plugins
-          cordova platform add android@12
-
-      # ✅ PATCH — replace corrupted nested config.xml to avoid mergeDebugResources crash
-      - name: ✅ Patch broken nested config.xml
-        run: |
-          cd GEL_Cleaner/platforms/android/app/src/main/res/xml || exit 0
-          echo '<?xml version="1.0" encoding="utf-8"?><config></config>' > config.xml
-
-      # 🟡 Replace launcher icons with GEL logo
-      - name: Replace Android launcher icons with GEL logo
-        run: |
-          cd GEL_Cleaner
-          if [ -f "www/img/GEL_logo_512.png" ]; then
-            for d in platforms/android/app/src/main/res/mipmap-*; do
-              rm -f "$d/ic_launcher.png" "$d/ic_launcher_round.png" "$d/ic_launcher.xml" || true
-              cp www/img/GEL_logo_512.png "$d/ic_launcher.png" || true
-              cp www/img/GEL_logo_512.png "$d/ic_launcher_round.png" || true
-            done
-          else
-            echo "⚠️ GEL_logo_512.png not found! Skipping icon replace."
-          fi
-
-      - name: Build with Gradle 8.5
+      # ✅ KEEP www, KEEP icons — no force rebuild
+      - name: Build Debug APK
         run: |
           cd GEL_Cleaner
           export PATH=/opt/gradle/bin:$PATH

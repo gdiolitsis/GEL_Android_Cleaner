@@ -78,7 +78,7 @@ jobs:
             cp GEL_logo.png GEL_logo_ui.png
           fi
 
-      # ✅ Build Signed Release APK
+      # ✅ Build Release APK
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -89,18 +89,47 @@ jobs:
           export PATH=/opt/gradle/bin:$PATH
           cordova build android --release --no-update-notifier
 
-      - name: Locate Release APK
+      # ✅ Locate unsigned APK
+      - name: Locate raw release APK
         run: |
           echo "Searching for release APK..."
-          find GEL_Cleaner -type f -name "*.apk" | tee apk_paths.txt
-          echo "Found APKs:"
-          cat apk_paths.txt
+          find GEL_Cleaner -type f -name "*release*.apk" | tee unsigned.txt
+          echo "Found:"
+          cat unsigned.txt
 
-      - name: Upload Release APK (auto-detect)
+      # ✅ MANUAL ZIPALIGN + APKSIGNER
+      - name: Sign + Zipalign APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          RAW_APK=$(cat unsigned.txt | head -n1)
+          echo "RAW APK = $RAW_APK"
+
+          mkdir -p SignedAPK
+          ZIP_ALIGNED=SignedAPK/GEL_zipaligned.apk
+          FINAL_APK=SignedAPK/GEL_signed.apk
+
+          # ✅ zipalign
+          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$RAW_APK" "$ZIP_ALIGNED"
+
+          # ✅ apksigner
+          ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
+            --ks "${{ secrets.KEYSTORE_PATH }}" \
+            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+            --out "$FINAL_APK" \
+            "$ZIP_ALIGNED"
+
+          echo "✅ FINAL SIGNED APK:"
+          ls -lh "$FINAL_APK"
+
+      # ✅ Upload final FINAL signed APK
+      - name: Upload FINAL signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Cleaner_release_apk
-          path: |
-            GEL_Cleaner/platforms/android/app/build/outputs/apk/release/*.apk
-            GEL_Cleaner/**/outputs/**/*.apk
-          if-no-files-found: warn
+          name: GEL_signed_final
+          path: SignedAPK/GEL_signed.apk
+          if-no-files-found: error

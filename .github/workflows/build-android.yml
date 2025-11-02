@@ -1,4 +1,4 @@
-name: Build Android APK (Cordova) — Release Signed
+name: Build Android APK (Cordova)
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
       - name: Prepare environment
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jdk unzip curl wget imagemagick
+          sudo apt-get install -y openjdk-17-jdk unzip curl wget
           echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
@@ -40,96 +40,34 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova@12.0.0
 
-      # ✅ CLEAN ONLY
       - name: Clean previous build folder
-        run: |
-          rm -rf GEL_Cleaner
+        run: rm -rf GEL_Cleaner
 
       - name: Create Cordova project
         run: |
           cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
           cd GEL_Cleaner
           cordova platform add android@12
-          mkdir -p www/img
-          cp ../app/www/index.html www/index.html || true
-          cp -r ../app/www/css www/css || true
-          cp -r ../app/www/js www/js || true
-          cp -r ../app/www/img/* www/img/ || true
+          mkdir -p www/img www/js www/css
+          # περιεχόμενο από το repo
+          cp -r ../app/www/* ./www/ || true
+          # Χρησιμοποιούμε το ΚΑΘΑΡΟ config.xml του repo
+          cp ../app/config.xml ./config.xml
 
-      - name: Remove default Cordova logos
+      - name: Install GEL Cleaner Plugin (from repo folder)
         run: |
           cd GEL_Cleaner
-          rm -f www/logo.png || true
-          rm -f www/img/logo.png || true
+          cordova plugin add ../app/cordova-plugin-gelcleaner
+          cordova plugins
 
-      - name: Resize GEL logo for launcher icon
-        run: |
-          cd GEL_Cleaner/www/img
-          if [ -f "GEL_logo.png" ]; then
-            convert GEL_logo.png -resize 512x512\> GEL_logo_512.png
-          else
-            echo "⚠️ GEL_logo.png not found — skipping resize"
-          fi
-
-      - name: Duplicate smaller GEL logo
-        run: |
-          cd GEL_Cleaner/www/img
-          if [ -f "GEL_logo.png" ]; then
-            cp GEL_logo.png GEL_logo_ui.png
-          fi
-
-      # ✅ Build Release APK
-      - name: Build Release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Build (Debug)
         run: |
           cd GEL_Cleaner
           export PATH=/opt/gradle/bin:$PATH
-          cordova build android --release --no-update-notifier
+          cordova build android --debug --no-update-notifier
 
-      # ✅ Locate unsigned APK
-      - name: Locate raw release APK
-        run: |
-          echo "Searching for release APK..."
-          find GEL_Cleaner -type f -name "*release*.apk" | tee unsigned.txt
-          echo "Found:"
-          cat unsigned.txt
-
-      # ✅ MANUAL ZIPALIGN + APKSIGNER
-      - name: Sign + Zipalign APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          RAW_APK=$(cat unsigned.txt | head -n1)
-          echo "RAW APK = $RAW_APK"
-
-          mkdir -p SignedAPK
-          ZIP_ALIGNED=SignedAPK/GEL_zipaligned.apk
-          FINAL_APK=SignedAPK/GEL_signed.apk
-
-          # ✅ zipalign
-          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$RAW_APK" "$ZIP_ALIGNED"
-
-          # ✅ apksigner
-          ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
-            --ks "${{ secrets.KEYSTORE_PATH }}" \
-            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
-            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
-            --out "$FINAL_APK" \
-            "$ZIP_ALIGNED"
-
-          echo "✅ FINAL SIGNED APK:"
-          ls -lh "$FINAL_APK"
-
-      # ✅ Upload final FINAL signed APK
-      - name: Upload FINAL signed APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_signed_final
-          path: SignedAPK/GEL_signed.apk
-          if-no-files-found: error
+          name: GEL_Cleaner_debug.apk
+          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk

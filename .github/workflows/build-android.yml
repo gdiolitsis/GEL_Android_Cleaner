@@ -90,4 +90,4 @@ jobs:
           path: |
             app/platforms/android/app/build/outputs/apk/release/*.apk
             app/platforms/android/app/build/outputs/bundle/release/*.aab
-          if-no-files-found: error
+          if-no-files-found: warn

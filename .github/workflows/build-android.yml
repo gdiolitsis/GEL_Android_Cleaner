@@ -60,7 +60,7 @@ jobs:
     # -------------------------------------------------------------
     - name: Decode Keystore from Secrets
       run: |
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > forestrock-release.keystore
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > forestrock-release.keystore
         ls -l forestrock-release.keystore
 
     # -------------------------------------------------------------
@@ -69,9 +69,9 @@ jobs:
     - name: Build Release
       working-directory: app
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSKRD }}
       run: |
         export PATH=/opt/gradle/bin:$PATH
 
@@ -106,9 +106,9 @@ jobs:
         ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$APK" "$ZIP_ALIGNED"
         ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
           --ks forestrock-release.keystore \
-          --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-          --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
-          --key-pass pass:"${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}" \
+          --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
+          --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+          --key-pass pass:"${{ secrets.KEY_ALIAS_PASSKRD }}" \
           --out "$FINAL_APK" \
           "$ZIP_ALIGNED"
 

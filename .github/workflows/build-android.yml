@@ -19,15 +19,10 @@ jobs:
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-      - name: Install Gradle 8.5
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
-          sudo mv gradle-8.5 /opt/gradle
-          echo "/opt/gradle/bin" >> $GITHUB_PATH
-          gradle -v
+      - name: Install Cordova
+        run: npm install -g cordova@12.0.0
 
-      - name: Install Android SDK tools
+      - name: Android SDK
         run: |
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd $ANDROID_HOME/cmdline-tools
@@ -37,37 +32,27 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-      - name: Install Cordova
-        run: npm install -g cordova@12.0.0
-
-      - name: Clean previous build folder
-        run: rm -rf GEL_Cleaner
-
-      - name: Create Cordova project
+      - name: Decode keystore
         run: |
-          cordova create GEL_Cleaner com.gel.cleaner "GEL Android Cleaner"
-          cd GEL_Cleaner
-          cordova platform add android@12
-          mkdir -p www/img www/js www/css
-          # περιεχόμενο από το repo
-          cp -r ../app/www/* ./www/ || true
-          # Χρησιμοποιούμε το ΚΑΘΑΡΟ config.xml του repo
-          cp ../app/config.xml ./config.xml
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
 
-      - name: Install GEL Cleaner Plugin (from repo folder)
+      - name: Build (Release)
         run: |
-          cd GEL_Cleaner
-          cordova plugin add ../app/cordova-plugin-gelcleaner
-          cordova plugins
-
-      - name: Build (Debug)
-        run: |
-          cd GEL_Cleaner
+          cd app
           export PATH=/opt/gradle/bin:$PATH
-          cordova build android --debug --no-update-notifier
+          cordova platform add android@12 || true
 
-      - name: Upload APK artifact
+          cordova build android --release -- \
+            --packageType=bundle \
+            --keystore=../release.keystore \
+            --storePassword=$KEYSTORE_PASS \
+            --password=$KEY_PASS \
+            --alias=$KEY_ALIAS
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Cleaner_debug.apk
-          path: GEL_Cleaner/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          name: GEL_Release
+          path: |
+            app/platforms/android/app/build/outputs/bundle/release/app-release.aab
+            app/platforms/android/app/build/outputs/apk/release/app-release.apk

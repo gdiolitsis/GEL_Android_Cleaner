@@ -1,4 +1,4 @@
-name: Build Android APK (Cordova)
+name: Build Android APK (Cordova) — Release Signed
 
 on:
   workflow_dispatch:
@@ -11,6 +11,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------------
+      #  ENV
+      # ---------------------------------------------------------
       - name: Prepare environment
         run: |
           sudo apt-get update -y
@@ -19,10 +22,21 @@ jobs:
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-      - name: Install Cordova
-        run: npm install -g cordova@12.0.0
+      # ---------------------------------------------------------
+      #  GRADLE (NO VERSION CHANGE → same as before)
+      # ---------------------------------------------------------
+      - name: Install Gradle 8.5
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          sudo mv gradle-8.5 /opt/gradle
+          echo "/opt/gradle/bin" >> $GITHUB_PATH
+          gradle -v
 
-      - name: Android SDK
+      # ---------------------------------------------------------
+      #  ANDROID SDK — SAME VERSIONS
+      # ---------------------------------------------------------
+      - name: Install Android SDK tools
         run: |
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd $ANDROID_HOME/cmdline-tools
@@ -32,27 +46,48 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-      - name: Decode keystore
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+      # ---------------------------------------------------------
+      #  CORDOVA — SAME VERSION
+      # ---------------------------------------------------------
+      - name: Install Cordova
+        run: npm install -g cordova@12.0.0
 
-      - name: Build (Release)
+      # ---------------------------------------------------------
+      #  BUILD DIRECTLY FROM app/
+      # ---------------------------------------------------------
+      - name: Build Release
+        working-directory: app
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cd app
           export PATH=/opt/gradle/bin:$PATH
+
+          # platform
           cordova platform add android@12 || true
 
-          cordova build android --release -- \
-            --packageType=bundle \
-            --keystore=../release.keystore \
-            --storePassword=$KEYSTORE_PASS \
-            --password=$KEY_PASS \
-            --alias=$KEY_ALIAS
+          # build
+          cordova build android --release --no-update-notifier
 
-      - name: Upload artifacts
+      # ---------------------------------------------------------
+      #  FIND artifacts
+      # ---------------------------------------------------------
+      - name: Locate artifacts
+        run: |
+          echo "Searching..."
+          find app/platforms/android -type f | grep -E "(\.apk|\.aab)$" | tee found.txt
+          echo "Found:"
+          cat found.txt
+
+      # ---------------------------------------------------------
+      #  UPLOAD Release outputs
+      # ---------------------------------------------------------
+      - name: Upload FINAL artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Release
+          name: GEL_Release_Build
           path: |
-            app/platforms/android/app/build/outputs/bundle/release/app-release.aab
-            app/platforms/android/app/build/outputs/apk/release/app-release.apk
+            app/platforms/android/app/build/outputs/apk/release/*.apk
+            app/platforms/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

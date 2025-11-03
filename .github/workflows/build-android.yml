@@ -8,11 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # ---------------------------------------------------------
+      # CHECKOUT
+      # ---------------------------------------------------------
+      - name: Checkout
         uses: actions/checkout@v4
 
       # ---------------------------------------------------------
-      #  ENV
+      # ENV
       # ---------------------------------------------------------
       - name: Prepare environment
         run: |
@@ -20,10 +23,11 @@ jobs:
           sudo apt-get install -y openjdk-17-jdk unzip curl wget imagemagick
           echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       # ---------------------------------------------------------
-      #  GRADLE (ΑΓΙΑ ΠΕΝΤΑΔΑ)
+      # GRADLE (NO VERSION CHANGE)
       # ---------------------------------------------------------
       - name: Install Gradle 8.5
         run: |
@@ -34,7 +38,7 @@ jobs:
           gradle -v
 
       # ---------------------------------------------------------
-      #  ANDROID SDK (ΑΓΙΑ ΠΕΝΤΑΔΑ)
+      # ANDROID SDK (NO VERSION CHANGE)
       # ---------------------------------------------------------
       - name: Install Android SDK tools
         run: |
@@ -47,94 +51,108 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
       # ---------------------------------------------------------
-      #  CORDOVA (ΑΓΙΑ ΠΕΝΤΑΔΑ)
+      # CORDOVA (NO VERSION CHANGE)
       # ---------------------------------------------------------
       - name: Install Cordova
         run: npm install -g cordova@12.0.0
 
       # ---------------------------------------------------------
-      #  PLATFORM
+      # RESTORE KEYSTORE FROM BASE64
       # ---------------------------------------------------------
-      - name: Init Cordova platform
-        working-directory: app
+      - name: Restore keystore
         run: |
-          export PATH=/opt/gradle/bin:$PATH
-          cordova platform add android@12 || true
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+          ls -lh release.keystore
 
       # ---------------------------------------------------------
-      #  REPLACE LAUNCHER ICON → GEL logo
+      # BUILD (APP)
       # ---------------------------------------------------------
-      - name: Replace launcher icon
-        run: |
-          LOGO="app/www/img/GEL_logo.png"
-          if [ ! -f "$LOGO" ]; then
-            echo "❌ GEL_logo.png missing"
-            exit 1
-          fi
-
-          for d in app/platforms/android/app/src/main/res/mipmap-*; do
-            rm -f "$d/ic_launcher.xml" || true
-            rm -f "$d/ic_launcher_foreground.png" || true
-            convert "$LOGO" -resize 192x192 "$d/ic_launcher.png"
-          done
-
-
-      # ---------------------------------------------------------
-      #  BUILD APK + AAB
-      # ---------------------------------------------------------
-      - name: Cordova Release Build
-        working-directory: app
-        run: |
-          export PATH=/opt/gradle/bin:$PATH
-          cordova build android --release --no-update-notifier -- --packageType=apk
-          cordova build android --release --no-update-notifier -- --packageType=bundle
-
-      # ---------------------------------------------------------
-      #  SIGN + ZIPALIGN APK
-      # ---------------------------------------------------------
-      - name: Sign + Align APK
+      - name: Build Release
         working-directory: app
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          APK=$(find platforms/android -name "*release*.apk" | head -n1)
-          echo "RAW APK = $APK"
+          export PATH=/opt/gradle/bin:$PATH
+
+          # add platform
+          cordova platform add android@12 || true
+
+          # ensure icon - ONLY launcher replacement
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png     || true
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png      || true
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png       || true
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-hdpi/ic_launcher.png        || true
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-mdpi/ic_launcher.png        || true
+          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-ldpi/ic_launcher.png        || true
+
+          # build — APK + AAB
+          cordova build android --release --no-update-notifier -- --packageType=apk
+          cordova build android --release --no-update-notifier -- --packageType=bundle
+
+      # ---------------------------------------------------------
+      # LOCATE RAW RELEASE APK
+      # ---------------------------------------------------------
+      - name: Locate APK
+        working-directory: app
+        run: |
+          echo "Searching for APK..."
+          find platforms/android -name "*release*.apk" | tee unsigned.txt
+          echo "Found:"
+          cat unsigned.txt
+
+      # ---------------------------------------------------------
+      # ZIPALIGN + SIGN
+      # ---------------------------------------------------------
+      - name: Sign + Zipalign APK
+        working-directory: app
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          RAW_APK=$(cat unsigned.txt | head -n1)
+          echo "RAW APK = $RAW_APK"
 
           mkdir -p SignedAPK
           ZIP_ALIGNED=SignedAPK/GEL_zipaligned.apk
           FINAL_APK=SignedAPK/GEL_signed.apk
 
-          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$APK" "$ZIP_ALIGNED"
+          # zipalign
+          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$RAW_APK" "$ZIP_ALIGNED"
 
+          # sign
           ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
-            --ks "${{ secrets.KEYSTORE_PATH }}" \
+            --ks ../release.keystore \
             --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
             --out "$FINAL_APK" \
             "$ZIP_ALIGNED"
 
-          echo "✅ FINAL SIGNED APK:"
-          ls -l "$FINAL_APK"
+          echo "✅ FINAL SIGNED APK produced:"
+          ls -lh "$FINAL_APK"
 
       # ---------------------------------------------------------
-      #  LOCATE AAB
+      # FIND AAB
       # ---------------------------------------------------------
       - name: Locate AAB
+        working-directory: app
         run: |
-          find app/platforms/android -name "*.aab" | tee aab.txt
+          echo "Searching for AAB..."
+          find platforms/android -name "*release*.aab" | tee aab.txt
+          echo "Found:"
           cat aab.txt
 
       # ---------------------------------------------------------
-      #  UPLOAD
+      # UPLOAD FINAL ARTIFACTS
       # ---------------------------------------------------------
-      - name: Upload Final Builds
+      - name: Upload FINAL artifacts
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Release_Build
           path: |
-            app/SignedAPK/GEL_signed.apk
+            app/SignedAPK/*.apk
             app/platforms/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error

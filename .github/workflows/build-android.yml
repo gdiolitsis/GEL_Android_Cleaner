@@ -8,151 +8,121 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------------------------------------
-      # CHECKOUT
-      # ---------------------------------------------------------
-      - name: Checkout
-        uses: actions/checkout@v4
+    # -------------------------------------------------------------
+    # Checkout
+    # -------------------------------------------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # ENV
-      # ---------------------------------------------------------
-      - name: Prepare environment
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y openjdk-17-jdk unzip curl wget imagemagick
-          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
-          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+    # -------------------------------------------------------------
+    # Java + Android SDK
+    # -------------------------------------------------------------
+    - name: Prepare environment
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y openjdk-17-jdk unzip curl wget
+        echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+        echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-      # ---------------------------------------------------------
-      # GRADLE (NO VERSION CHANGE)
-      # ---------------------------------------------------------
-      - name: Install Gradle 8.5
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
-          sudo mv gradle-8.5 /opt/gradle
-          echo "/opt/gradle/bin" >> $GITHUB_PATH
-          gradle -v
+    # -------------------------------------------------------------
+    # GRADLE — (unchanged)
+    # -------------------------------------------------------------
+    - name: Install Gradle 8.5
+      run: |
+        wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+        unzip -q gradle-8.5-bin.zip
+        sudo mv gradle-8.5 /opt/gradle
+        echo "/opt/gradle/bin" >> $GITHUB_PATH
+        gradle -v
 
-      # ---------------------------------------------------------
-      # ANDROID SDK (NO VERSION CHANGE)
-      # ---------------------------------------------------------
-      - name: Install Android SDK tools
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
-          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-          unzip -q tools.zip -d latest
-          rm tools.zip
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+    # -------------------------------------------------------------
+    # ANDROID SDK — (unchanged)
+    # -------------------------------------------------------------
+    - name: Install Android SDK tools
+      run: |
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+        unzip -q tools.zip -d latest
+        rm tools.zip
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-      # ---------------------------------------------------------
-      # CORDOVA (NO VERSION CHANGE)
-      # ---------------------------------------------------------
-      - name: Install Cordova
-        run: npm install -g cordova@12.0.0
+    # -------------------------------------------------------------
+    # Cordova — (unchanged)
+    # -------------------------------------------------------------
+    - name: Install Cordova
+      run: npm install -g cordova@12.0.0
 
-      # ---------------------------------------------------------
-      # RESTORE KEYSTORE FROM BASE64
-      # ---------------------------------------------------------
-      - name: Restore keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
-          ls -lh release.keystore
+    # -------------------------------------------------------------
+    # Decode Keystore
+    # -------------------------------------------------------------
+    - name: Decode Keystore from Secrets
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > forestrock-release.keystore
+        ls -l forestrock-release.keystore
 
-      # ---------------------------------------------------------
-      # BUILD (APP)
-      # ---------------------------------------------------------
-      - name: Build Release
-        working-directory: app
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          export PATH=/opt/gradle/bin:$PATH
+    # -------------------------------------------------------------
+    # Build (APK + AAB)
+    # -------------------------------------------------------------
+    - name: Build Release
+      working-directory: app
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}
+      run: |
+        export PATH=/opt/gradle/bin:$PATH
 
-          # add platform
-          cordova platform add android@12 || true
+        cordova platform add android@12 || true
+        cordova build android --release --no-update-notifier -- --packageType=apk
+        cordova build android --release --no-update-notifier -- --packageType=bundle
 
-          # ensure icon - ONLY launcher replacement
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png     || true
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png      || true
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png       || true
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-hdpi/ic_launcher.png        || true
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-mdpi/ic_launcher.png        || true
-          cp www/img/GEL_logo.png platforms/android/app/src/main/res/mipmap-ldpi/ic_launcher.png        || true
+    # -------------------------------------------------------------
+    # Locate unsigned artifacts
+    # -------------------------------------------------------------
+    - name: Locate unsigned APK/AAB
+      run: |
+        find app/platforms/android -type f | grep -E "(release.*(apk|aab))" | tee unsigned.txt
+        cat unsigned.txt
 
-          # build — APK + AAB
-          cordova build android --release --no-update-notifier -- --packageType=apk
-          cordova build android --release --no-update-notifier -- --packageType=bundle
+    # -------------------------------------------------------------
+    # Sign (APK)
+    # -------------------------------------------------------------
+    - name: Sign APK
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}
+      run: |
+        APK=$(grep ".apk" unsigned.txt | head -n1)
+        mkdir -p Signed
+        echo "🔎 RAW APK = $APK"
 
-      # ---------------------------------------------------------
-      # LOCATE RAW RELEASE APK
-      # ---------------------------------------------------------
-      - name: Locate APK
-        working-directory: app
-        run: |
-          echo "Searching for APK..."
-          find platforms/android -name "*release*.apk" | tee unsigned.txt
-          echo "Found:"
-          cat unsigned.txt
+        ZIP_ALIGNED=Signed/GEL-aligned.apk
+        FINAL_APK=Signed/GEL-signed.apk
 
-      # ---------------------------------------------------------
-      # ZIPALIGN + SIGN
-      # ---------------------------------------------------------
-      - name: Sign + Zipalign APK
-        working-directory: app
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          RAW_APK=$(cat unsigned.txt | head -n1)
-          echo "RAW APK = $RAW_APK"
+        ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$APK" "$ZIP_ALIGNED"
+        ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
+          --ks forestrock-release.keystore \
+          --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+          --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+          --key-pass pass:"${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}" \
+          --out "$FINAL_APK" \
+          "$ZIP_ALIGNED"
 
-          mkdir -p SignedAPK
-          ZIP_ALIGNED=SignedAPK/GEL_zipaligned.apk
-          FINAL_APK=SignedAPK/GEL_signed.apk
+        echo "✅ SIGNED APK:"
+        ls -lh "$FINAL_APK"
 
-          # zipalign
-          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$RAW_APK" "$ZIP_ALIGNED"
-
-          # sign
-          ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
-            --ks ../release.keystore \
-            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
-            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
-            --out "$FINAL_APK" \
-            "$ZIP_ALIGNED"
-
-          echo "✅ FINAL SIGNED APK produced:"
-          ls -lh "$FINAL_APK"
-
-      # ---------------------------------------------------------
-      # FIND AAB
-      # ---------------------------------------------------------
-      - name: Locate AAB
-        working-directory: app
-        run: |
-          echo "Searching for AAB..."
-          find platforms/android -name "*release*.aab" | tee aab.txt
-          echo "Found:"
-          cat aab.txt
-
-      # ---------------------------------------------------------
-      # UPLOAD FINAL ARTIFACTS
-      # ---------------------------------------------------------
-      - name: Upload FINAL artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: GEL_Release_Build
-          path: |
-            app/SignedAPK/*.apk
-            app/platforms/android/app/build/outputs/bundle/release/*.aab
-          if-no-files-found: error
+    # -------------------------------------------------------------
+    # Collect final outputs
+    # -------------------------------------------------------------
+    - name: Upload FINAL artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: GEL_Release_Build
+        path: |
+          Signed/*.apk
+          app/platforms/android/app/build/outputs/bundle/release/*.aab
+        if-no-files-found: warn

@@ -92,9 +92,9 @@ jobs:
     # -------------------------------------------------------------
     - name: Sign APK
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSKRD }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
       run: |
         APK=$(grep ".apk" unsigned.txt | head -n1)
         mkdir -p Signed

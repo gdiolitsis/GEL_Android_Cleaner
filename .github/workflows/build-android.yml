@@ -68,7 +68,7 @@ jobs:
           cordova platform add android@12 || true
 
           # build
-          cordova build android --release --no-update-notifier
+          cordova build android --release --no-update-notifier -- --packageType=apk
 
       # ---------------------------------------------------------
       #  FIND artifacts

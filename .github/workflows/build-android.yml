@@ -23,7 +23,7 @@ jobs:
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       # ---------------------------------------------------------
-      #  GRADLE (ΑΓΙΑ ΠΕΝΤΑΔΑ → ΚΑΜΙΑ ΑΛΛΑΓΗ)
+      #  GRADLE (ΑΓΙΑ ΠΕΝΤΑΔΑ)
       # ---------------------------------------------------------
       - name: Install Gradle 8.5
         run: |
@@ -53,43 +53,37 @@ jobs:
         run: npm install -g cordova@12.0.0
 
       # ---------------------------------------------------------
-      #  PLATFORM + BUILD
+      #  PLATFORM
       # ---------------------------------------------------------
-      - name: Build Release
+      - name: Init Cordova platform
         working-directory: app
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           export PATH=/opt/gradle/bin:$PATH
-
           cordova platform add android@12 || true
 
       # ---------------------------------------------------------
-      #  REPLACE LAUNCHER ICON → GEL (OΧΙ UI)
+      #  REPLACE LAUNCHER ICON → GEL logo
       # ---------------------------------------------------------
       - name: Replace launcher icon
         run: |
           LOGO="app/www/img/GEL_logo.png"
           if [ ! -f "$LOGO" ]; then
-            echo "❌ GEL_logo.png missing"; exit 1
+            echo "❌ GEL_logo.png missing"
+            exit 1
           fi
 
           for d in app/platforms/android/app/src/main/res/mipmap-*; do
+            rm -f "$d/ic_launcher.xml" || true
+            rm -f "$d/ic_launcher_foreground.png" || true
             convert "$LOGO" -resize 192x192 "$d/ic_launcher.png"
-            convert "$LOGO" -resize 192x192 "$d/ic_launcher_foreground.png"
           done
 
+
       # ---------------------------------------------------------
-      #  BUILD APK + AAB — SIGNED READY
+      #  BUILD APK + AAB
       # ---------------------------------------------------------
       - name: Cordova Release Build
         working-directory: app
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           export PATH=/opt/gradle/bin:$PATH
           cordova build android --release --no-update-notifier -- --packageType=apk
@@ -123,10 +117,10 @@ jobs:
             "$ZIP_ALIGNED"
 
           echo "✅ FINAL SIGNED APK:"
-          ls -lh "$FINAL_APK"
+          ls -l "$FINAL_APK"
 
       # ---------------------------------------------------------
-      #  FIND AAB
+      #  LOCATE AAB
       # ---------------------------------------------------------
       - name: Locate AAB
         run: |
@@ -134,7 +128,7 @@ jobs:
           cat aab.txt
 
       # ---------------------------------------------------------
-      #  UPLOAD ARTIFACTS
+      #  UPLOAD
       # ---------------------------------------------------------
       - name: Upload Final Builds
         uses: actions/upload-artifact@v4

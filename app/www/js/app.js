@@ -1,329 +1,401 @@
+// ===================================================================
 // GDiolitsis Engine Lab (GEL) — app.js FULL Production Build
-// Dark-Gold Edition v4.1 — Play Store Ready
-// -------------------------------------------------------------
-// Wires UI + i18n + plugin calls without HTML edits.
-// - Languages (GR/EN) via window.GEL_LANG (from lang.js)
-// - Button bindings (incl. Deep Clean & Clean All)
-// - Status/progress/log handling
-// - Safe fallbacks if plugin not ready
-// - Optional CPU live mini-chart (if <canvas id="cpuCanvas"> exists)
-// -------------------------------------------------------------
+// Dark-Gold Edition v4.2 — Play Store Ready
+// -------------------------------------------------------------------
+// PURPOSE:
+// • Δένει UI + i18n + Cordova plugin calls
+// • Χωρίς αλλαγές στο HTML
+// • Πολύ ασφαλής fallback όταν το plugin δεν είναι έτοιμο
+// • Υποστηρίζει Clean-All workflow (best effort mode)
+// • Groups + CPU live chart (optional canvas)
+// -------------------------------------------------------------------
+// REQUIRED FILES:
+//   /app/www/js/gelcleaner.js   → plugin bridge
+//   /app/www/js/lang.js         → GEL_LANG strings
+//   /app/www/js/app.js          → THIS FILE
+//   /app/www/css/style.css
+// -------------------------------------------------------------------
+// IMPORTANT:
+// ORDER IN index.html
+//   <script src="js/gelcleaner.js"></script>
+//   <script src="js/lang.js"></script>
+//   <script src="js/app.js"></script>
+// ===================================================================
 
 (function () {
-  // ---------- Safe selectors ----------
-  function byId(id) { return document.getElementById(id); }
-  function qs(sel, root) { return (root || document).querySelector(sel); }
-  function qsa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
-  // ---------- UI helpers ----------
+  // ---------------------------------------------------------------
+  // 🌐 DOM HELPERS
+  // ---------------------------------------------------------------
+  function byId(id) { return document.getElementById(id); }
+  function qs(s, r) { return (r || document).querySelector(s); }
+  function qsa(s, r) { return Array.from((r || document).querySelectorAll(s)); }
+
+
+  // ---------------------------------------------------------------
+  // 📝 LOGGING + UI Status Utilities
+  // ---------------------------------------------------------------
   function logLine() {
-    var el = byId('log');
+    var el = byId("log");
     if (!el) return;
-    var parts = Array.prototype.map.call(arguments, function (x) {
-      try { return (typeof x === 'string') ? x : JSON.stringify(x); }
-      catch (_) { return String(x); }
+    var msg = Array.from(arguments).map(x => {
+      try { return typeof x === "string" ? x : JSON.stringify(x); }
+      catch { return String(x); }
     });
-    el.value += parts.join(' ') + "\n";
+    el.value += msg.join(" ") + "\n";
     el.scrollTop = el.scrollHeight;
   }
+
   function setStatus(t) {
-    var el = byId('status') || qs('.status');
+    var el = byId("status") || qs(".status");
     if (el) el.textContent = t;
   }
+
   function setProgress(p) {
-    var bar = byId('progressBar') || qs('.progress-bar');
+    var bar = byId("progressBar") || qs(".progress-bar");
     if (!bar) return;
     var v = Math.max(0, Math.min(100, p | 0));
-    bar.style.width = v + '%';
+    bar.style.width = v + "%";
   }
 
-  // ---------- Language handling ----------
-  var CURRENT_LANG = 'en';
-  function applyLang(lang) {
-    try {
-      var L = (window.GEL_LANG && window.GEL_LANG[lang]) || (window.GEL_LANG && window.GEL_LANG.en) || {};
-      CURRENT_LANG = lang;
 
-      // Title / Ready
-      var h1 = qs('header h1');
-      if (h1 && L.title) h1.textContent = L.title;
-      var readyEl = qs('.subtitle');
-      if (readyEl && L.ready) readyEl.textContent = L.ready;
+  // ---------------------------------------------------------------
+  // 🌍 LANGUAGE MANAGER
+  // ---------------------------------------------------------------
+  var CURRENT_LANG = "en";
 
-      // Buttons by id
-      setBtnText('btnFullAccess', L.full_access);
-      setBtnText('btnCpu', L.cpu_info);
-      setBtnText('btnCpuLive', L.cpu_live);
-      setBtnText('btnRam', L.clean_ram);
-      setBtnText('btnCleanSafe', L.safe_clean);
-      setBtnText('btnCleanAggro', L.deep_clean || L.aggressive); // prefer Deep Clean label
-      setBtnText('btnCleanAll', L.clean_all);                    // new
-      setBtnText('btnCleanMedia', L.media_junk);
-      setBtnText('btnCleanBrowser', L.browser_cache);
-      setBtnText('btnTemp', L.temp);
-      setBtnText('btnBattery', L.battery_boost);
-      setBtnText('btnKillApps', L.kill_apps);
-
-      var logT = byId('logTitle') || qs('section h2');
-      if (logT && L.log_title) logT.textContent = L.log_title;
-
-      try { localStorage.setItem('gel_lang', lang); } catch (_) { /* ignore */ }
-      document.documentElement.setAttribute('lang', lang);
-    } catch (e) {
-      logLine('i18n error:', e && e.message || e);
-    }
-  }
   function setBtnText(id, txt) {
     var b = byId(id);
     if (b && txt) {
-      // keep emoji/prefix; replace the text after it
-      var prefixMatch = (b.textContent || '').match(/^[\p{Emoji}\s]+/u);
-      var prefix = prefixMatch ? prefixMatch[0] : '';
+      var prefix = (b.textContent || "").match(/^[\p{Emoji}\s]+/u);
+      prefix = prefix ? prefix[0] : "";
       b.textContent = prefix + txt;
     }
   }
-  function detectLang() {
+
+  function applyLang(lang) {
     try {
-      var saved = localStorage.getItem('gel_lang');
-      if (saved) return saved;
-    } catch (_) { /* ignore */ }
-    var n = (navigator.language || 'en').toLowerCase();
-    return n.startsWith('el') || n.startsWith('gr') ? 'gr' : 'en';
+      var L = (window.GEL_LANG && window.GEL_LANG[lang]) ||
+              (window.GEL_LANG && window.GEL_LANG.en) || {};
+
+      CURRENT_LANG = lang;
+
+      if (L.title) qs("header h1").textContent = L.title;
+      if (L.ready) qs(".subtitle").textContent = L.ready;
+
+      // buttons
+      setBtnText("btnFullAccess",   L.full_access);
+      setBtnText("btnCpu",          L.cpu_info);
+      setBtnText("btnCpuLive",      L.cpu_live);
+      setBtnText("btnRam",          L.clean_ram);
+      setBtnText("btnCleanSafe",    L.safe_clean);
+      setBtnText("btnCleanAggro",   L.deep_clean || L.aggressive);
+      setBtnText("btnCleanAll",     L.clean_all);
+      setBtnText("btnCleanMedia",   L.media_junk);
+      setBtnText("btnCleanBrowser", L.browser_cache);
+      setBtnText("btnTemp",         L.temp);
+      setBtnText("btnBattery",      L.battery_boost);
+      setBtnText("btnKillApps",     L.kill_apps);
+
+      if (L.log_title) {
+        var logHeader = byId("logTitle") || qs("section h2");
+        if (logHeader) logHeader.textContent = L.log_title;
+      }
+
+      localStorage.setItem("gel_lang", lang);
+      document.documentElement.setAttribute("lang", lang);
+
+    } catch (e) {
+      logLine("i18n error:", e);
+    }
   }
 
-  // ---------- CPU mini chart (optional) ----------
+  function detectLang() {
+    try {
+      var saved = localStorage.getItem("gel_lang");
+      if (saved) return saved;
+    } catch {}
+    var n = (navigator.language || "en").toLowerCase();
+    return n.startsWith("el") || n.startsWith("gr") ? "gr" : "en";
+  }
+
+
+  // ---------------------------------------------------------------
+  // ⚙️ CPU Live Chart (optional)
+  // ---------------------------------------------------------------
   var cpuTimer = null;
   var cpuBuf = new Array(60).fill(0);
+
   function drawCPU(v) {
-    var c = byId('cpuCanvas');
+    var c = byId("cpuCanvas");
     if (!c) return;
     cpuBuf.push(v);
     cpuBuf.shift();
-    var ctx = c.getContext('2d');
+
+    var ctx = c.getContext("2d");
     ctx.clearRect(0, 0, c.width, c.height);
-    ctx.strokeStyle = '#d4af37';
+    ctx.strokeStyle = "#d4af37";
     ctx.lineWidth = 2;
+
     ctx.beginPath();
-    cpuBuf.forEach(function (val, i) {
-      var x = i * (c.width / (cpuBuf.length - 1));
+    cpuBuf.forEach((val, i) => {
+      var x = (i * c.width) / (cpuBuf.length - 1);
       var y = c.height - (val / 100) * c.height;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    ctx.fillStyle = '#777';
-    ctx.font = '12px sans-serif';
-    ctx.fillText((cpuBuf[cpuBuf.length - 1] || 0).toFixed(0) + '%', 10, 16);
   }
 
-  // ---------- Plugin bridge (safe) ----------
+
+  // ---------------------------------------------------------------
+  // 🔌 CORDOVA PLUGIN SAFE WRAPPER
+  // ---------------------------------------------------------------
   function plugin() {
-    var p = window.GELCleaner; // from cordova-plugin-gelcleaner/www/gelcleaner.js
+    var p = window.GELCleaner;
     if (!p) {
+      // Autogenerate dummy functions if plugin missing
       p = {};
       [
-        'stats', 'version', 'ping',
-        'fullAccess', 'cpuInfo', 'cpuLiveStart', 'cpuLiveStop',
-        'cleanRam', 'kill', 'killApps',
-        'safeClean', 'aggressiveClean', 'clean',
-        'mediaJunkClean', 'browserCacheClean', 'tempClean', 'batteryBoost'
-      ].forEach(function (name) {
-        p[name] = function (ok, fail) {
-          (fail || logLine)('Plugin not ready: ' + name);
-        };
+        "stats", "version", "ping",
+        "fullAccess", "cpuInfo", "cpuLiveStart", "cpuLiveStop",
+        "cleanRam", "kill", "killApps",
+        "safeClean", "aggressiveClean", "clean",
+        "mediaJunkClean", "browserCacheClean", "tempClean", "batteryBoost"
+      ].forEach(name => {
+        p[name] = (_, fail) =>
+          (fail || logLine)("Plugin not ready: " + name);
       });
     }
     return p;
   }
 
-  // Promise wrapper for callback-style plugin fns
   function pcall(fn, label) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       try {
-        fn(function (r) { resolve({ ok: true, label: label, data: r }); },
-           function (e) { resolve({ ok: false, label: label, error: e }); });
+        fn(
+          r => resolve({ ok: true,  label, data: r }),
+          e => resolve({ ok: false, label, error: e })
+        );
       } catch (e) {
-        resolve({ ok: false, label: label, error: e && e.message || e });
+        resolve({ ok: false, label, error: e?.message || e });
       }
     });
   }
 
-  // ---------- Button binding ----------
+
+  // ---------------------------------------------------------------
+  // 🚀 BUTTON Event Binding
+  // ---------------------------------------------------------------
+  function onClick(id, fn) {
+    var b = byId(id);
+    if (b && !b._gelBound) {
+      b.addEventListener("click", fn);
+      b._gelBound = true;
+    }
+  }
+
+
+  // 🔥 MAIN CLEAN LOGIC
+  function runClean(mode) {
+    var P = plugin();
+    var isAgg = mode === "aggressive";
+    var steps = isAgg ? [10, 35, 60, 80, 100] : [20, 60, 100];
+    var label = isAgg ? "Deep" : "Safe";
+
+    setStatus(label + " clean…");
+    var i = 0;
+    (function bump() {
+      if (i < steps.length) {
+        setProgress(steps[i++]);
+        setTimeout(bump, 400);
+      }
+    })();
+
+    var fn = isAgg ? (P.aggressiveClean || P.clean) : P.safeClean;
+
+    fn(
+      r => { setStatus("Clean done ✓"); logLine(label + ":", r); setTimeout(() => setProgress(0), 500); },
+      e => { setStatus("Clean error");   logLine("❌ Clean:", e); }
+    );
+  }
+
+
+  // ✅ BIND ALL BUTTONS
   function bindButtons() {
     var P = plugin();
 
-    onClick('btnFullAccess', function () {
-      setStatus('Requesting full access…');
-      P.fullAccess(function (r) { logLine('📂 Full access:', r); setStatus(''); }, function (e) { logLine('❌ Full access:', e); setStatus(''); });
+    // ----- Direct ID binding -----
+    onClick("btnFullAccess", () => {
+      setStatus("Full Access…");
+      P.fullAccess(r => logLine("📂 Full:", r), e => logLine("❌ Full:", e));
     });
 
-    onClick('btnCpu', function () {
-      P.cpuInfo(function (r) { logLine('🔥 CPU:', r); }, function (e) { logLine('❌ CPU:', e); });
+    onClick("btnCpu", () => {
+      P.cpuInfo(r => logLine("🔥 CPU:", r), e => logLine("❌ CPU:", e));
     });
 
-    onClick('btnCpuLive', function () {
-      if (cpuTimer) { clearInterval(cpuTimer); cpuTimer = null; setStatus('CPU live: stopped'); return; }
-      setStatus('CPU live: running…');
-      cpuTimer = setInterval(function () {
-        P.cpuInfo(function (r) {
-          var pct = (r && (r.percent || r.cpu || r.usage)) ? (r.percent || r.cpu || r.usage) : (Math.random() * 30 + 20);
+    onClick("btnCpuLive", () => {
+      if (cpuTimer) {
+        clearInterval(cpuTimer);
+        cpuTimer = null;
+        setStatus("CPU live: stopped");
+        return;
+      }
+      setStatus("CPU live: running…");
+      cpuTimer = setInterval(() => {
+        P.cpuInfo(r => {
+          var pct = r?.percent || r?.cpu || r?.usage || Math.random() * 30 + 20;
           drawCPU(pct);
-        }, function () { /* ignore */ });
+        }, () => {});
       }, 1000);
     });
 
-    onClick('btnRam', function () {
-      setStatus('Cleaning RAM…'); setProgress(10);
-      P.cleanRam(function (r) { setProgress(100); setStatus('RAM cleaned ✓'); logLine('⚡ RAM:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('RAM error'); logLine('❌ RAM:', e); });
-    });
+    onClick("btnRam", () => runClean("ram"));
+    onClick("btnCleanSafe", () => runClean("safe"));
+    onClick("btnCleanAggro", () => runClean("aggressive"));
 
-    onClick('btnCleanSafe', function () { runClean('safe'); });
-    onClick('btnCleanAggro', function () { runClean('aggressive'); });
 
-    // CLEAN ALL — sequential best-effort
-    onClick('btnCleanAll', async function () {
-      var P = plugin();
-      setStatus('Clean All…'); setProgress(5);
-      logLine('🧨 Clean All: start');
+    // ✅ CLEAN ALL — BEST EFFORT
+    onClick("btnCleanAll", async () => {
+      logLine("🧨 Clean All: start");
+      setStatus("Clean All…");
+      setProgress(5);
 
       var steps = [
-        { fn: P.fullAccess, label: 'FullAccess' },
-        { fn: P.cleanRam, label: 'CleanRAM' },
-        { fn: P.safeClean, label: 'SafeClean' },
-        { fn: P.mediaJunkClean, label: 'MediaJunk' },
-        { fn: P.browserCacheClean, label: 'BrowserCache' },
-        { fn: P.tempClean, label: 'Temp' },
-        { fn: (P.killApps || P.kill), label: 'KillApps' },
-        { fn: (P.aggressiveClean || P.clean), label: 'DeepClean' }
+        { fn: P.fullAccess,        label: "FullAccess" },
+        { fn: P.cleanRam,          label: "CleanRAM" },
+        { fn: P.safeClean,         label: "SafeClean" },
+        { fn: P.mediaJunkClean,    label: "MediaJunk" },
+        { fn: P.browserCacheClean, label: "BrowserCache" },
+        { fn: P.tempClean,         label: "Temp" },
+        { fn: P.killApps || P.kill,label: "KillApps" },
+        { fn: P.aggressiveClean,   label: "DeepClean" }
       ];
 
-      var progMarks = [10, 20, 35, 50, 65, 78, 88, 100];
-      var results = [];
+      var marks = [10,25,40,55,70,82,92,100];
+      var result;
+
       for (var i = 0; i < steps.length; i++) {
-        setProgress(progMarks[i]);
-        // guard missing fn
-        if (typeof steps[i].fn !== 'function') {
-          results.push({ ok: false, label: steps[i].label, error: 'not_implemented' });
+        setProgress(marks[i]);
+        if (typeof steps[i].fn !== "function") {
+          logLine("❌ Missing:", steps[i].label);
           continue;
         }
         // eslint-disable-next-line no-await-in-loop
-        var res = await pcall(steps[i].fn, steps[i].label);
-        results.push(res);
-        logLine(res.ok ? '✅' : '❌', steps[i].label + ':', res.ok ? res.data : (res.error || 'error'));
+        result = await pcall(steps[i].fn, steps[i].label);
+        logLine(result.ok ? "✅" : "❌", result.label, result.ok ? result.data : result.error);
       }
+
       setProgress(100);
-      setStatus('Clean All done ✓');
-      logLine('🧨 Clean All: complete');
-      setTimeout(function () { setProgress(0); }, 800);
+      setStatus("Clean All ✓");
+      logLine("🧨 Clean All complete");
+      setTimeout(() => setProgress(0), 600);
     });
 
-    onClick('btnCleanMedia', function () {
-      setStatus('Cleaning media junk…'); setProgress(20);
-      P.mediaJunkClean(function (r) { setProgress(100); setStatus('Media cleaned ✓'); logLine('🖼 Media:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('Media clean error'); logLine('❌ Media:', e); });
-    });
 
-    onClick('btnCleanBrowser', function () {
-      setStatus('Cleaning browser caches…'); setProgress(25);
-      P.browserCacheClean(function (r) { setProgress(100); setStatus('Browser cleaned ✓'); logLine('🌐 Browser:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('Browser clean error'); logLine('❌ Browser:', e); });
-    });
+    // ----- EXTRA BUTTONS -----
+    onClick("btnCleanMedia", () => runClean());
+    onClick("btnCleanBrowser", () => runClean());
+    onClick("btnTemp", () => runClean());
+    onClick("btnBattery", () => runClean());
+    onClick("btnKillApps", () => runClean());
 
-    onClick('btnTemp', function () {
-      setStatus('Cleaning temp files…'); setProgress(20);
-      P.tempClean(function (r) { setProgress(100); setStatus('Temp cleaned ✓'); logLine('🔥 Temp:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('Temp clean error'); logLine('❌ Temp:', e); });
-    });
 
-    onClick('btnBattery', function () {
-      setStatus('Battery optimizing…'); setProgress(30);
-      P.batteryBoost(function (r) { setProgress(100); setStatus('Battery boost ✓'); logLine('🔋 Battery:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('Battery error'); logLine('❌ Battery:', e); });
-    });
-
-    onClick('btnKillApps', function () {
-      setStatus('Killing apps…'); setProgress(15);
-      var fn = P.killApps || P.kill;
-      fn(function (r) { setProgress(100); setStatus('Apps killed ✓'); logLine('🚀 Kill Apps:', r); setTimeout(function () { setProgress(0); }, 400); }, function (e) { setStatus('Kill error'); logLine('❌ Kill:', e); });
-    });
-
-    // Fallback binding if explicit IDs missing (match by emoji prefix)
-    qsa('.grid button').forEach(function (btn) {
+    // -------------------------------------------------------------
+    // ✅ FALLBACK AUTO-BIND (Emoji detection)
+    // -------------------------------------------------------------
+    qsa(".grid button").forEach(btn => {
       if (btn._gelBound) return;
-      var t = (btn.textContent || '').trim();
+      var t = (btn.textContent || "").trim();
       var bound = true;
+
       switch (true) {
-        case /^📂/.test(t): btn.addEventListener('click', function () { byId('btnFullAccess') ? byId('btnFullAccess').click() : plugin().fullAccess(function (r) { logLine('📂 Full access:', r); }, function (e) { logLine('❌ Full access:', e); }); }); break;
-        case /^🔥\s*CPU Info/.test(t): btn.addEventListener('click', function () { byId('btnCpu') ? byId('btnCpu').click() : plugin().cpuInfo(function (r) { logLine('🔥 CPU:', r); }, function (e) { logLine('❌ CPU:', e); }); }); break;
-        case /^📈/.test(t): btn.addEventListener('click', function () { byId('btnCpuLive') && byId('btnCpuLive').click(); }); break;
-        case /^⚡/.test(t): btn.addEventListener('click', function () { byId('btnRam') ? byId('btnRam').click() : plugin().cleanRam(function (r) { logLine('⚡ RAM:', r); }, function (e) { logLine('❌ RAM:', e); }); }); break;
-        case /^🧹/.test(t): btn.addEventListener('click', function () { runClean('safe'); }); break;
-        case /^💣|🧨/.test(t): btn.addEventListener('click', function () { runClean('aggressive'); }); break;
-        case /^🧨\s*Clean All|^Clean All/.test(t): btn.addEventListener('click', function () { byId('btnCleanAll') && byId('btnCleanAll').click(); }); break;
-        case /^🖼/.test(t): btn.addEventListener('click', function () { byId('btnCleanMedia') ? byId('btnCleanMedia').click() : plugin().mediaJunkClean(function (r) { logLine('🖼 Media:', r); }, function (e) { logLine('❌ Media:', e); }); }); break;
-        case /^🌐/.test(t): btn.addEventListener('click', function () { byId('btnCleanBrowser') ? byId('btnCleanBrowser').click() : plugin().browserCacheClean(function (r) { logLine('🌐 Browser:', r); }, function (e) { logLine('❌ Browser:', e); }); }); break;
-        case /^🔥\s*Temp/.test(t): btn.addEventListener('click', function () { byId('btnTemp') ? byId('btnTemp').click() : plugin().tempClean(function (r) { logLine('🔥 Temp:', r); }, function (e) { logLine('❌ Temp:', e); }); }); break;
-        case /^🔋/.test(t): btn.addEventListener('click', function () { byId('btnBattery') ? byId('btnBattery').click() : plugin().batteryBoost(function (r) { logLine('🔋 Battery:', r); }, function (e) { logLine('❌ Battery:', e); }); }); break;
-        case /^🚀/.test(t): btn.addEventListener('click', function () { byId('btnKillApps') ? byId('btnKillApps').click() : (plugin().killApps || plugin().kill)(function (r) { logLine('🚀 Kill Apps:', r); }, function (e) { logLine('❌ Kill:', e); }); }); break;
-        default: bound = false;
+
+        // ✅ CLEAN ALL MUST BE BEFORE Deep Clean
+        case /^🧨\s*Clean All|^Clean All/i.test(t):
+          btn.addEventListener("click", () => byId("btnCleanAll")?.click());
+          break;
+
+        case /^💣|^🧨/.test(t):
+          btn.addEventListener("click", () => runClean("aggressive"));
+          break;
+
+        case /^📂/.test(t):
+          btn.addEventListener("click", () => byId("btnFullAccess")?.click());
+          break;
+
+        case /^🔥\s*CPU Info/i.test(t):
+          btn.addEventListener("click", () => byId("btnCpu")?.click());
+          break;
+
+        case /^📈/.test(t):
+          btn.addEventListener("click", () => byId("btnCpuLive")?.click());
+          break;
+
+        case /^⚡/.test(t):
+          btn.addEventListener("click", () => byId("btnRam")?.click());
+          break;
+
+        case /^🧹/.test(t):
+          btn.addEventListener("click", () => runClean("safe"));
+          break;
+
+        default:
+          bound = false;
       }
+
       if (bound) btn._gelBound = true;
     });
 
-    // Donate button
-    var donate = qs('.donate-btn');
+
+    // -------------------------------------------------------------
+    // ✅ DONATE BTN
+    // -------------------------------------------------------------
+    var donate = qs(".donate-btn");
     if (donate && !donate._gelBound) {
-      donate.addEventListener('click', function () {
-        try { window.open('https://www.paypal.com/donate?business=gdiolitsis@yahoo.com', '_system'); }
-        catch (_) { location.href = 'https://www.paypal.com/donate?business=gdiolitsis@yahoo.com'; }
+      donate.addEventListener("click", () => {
+        try {
+          window.open(
+            "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com",
+            "_system"
+          );
+        } catch {
+          location.href =
+            "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com";
+        }
       });
       donate._gelBound = true;
     }
   }
 
-  function onClick(id, fn) {
-    var b = byId(id);
-    if (b && !b._gelBound) { b.addEventListener('click', fn); b._gelBound = true; }
-  }
 
-  function runClean(mode) {
-    var P = plugin();
-    var isAgg = (mode === 'aggressive');
-    var steps = isAgg ? [10, 35, 60, 80, 100] : [15, 45, 80, 100];
-    var label = isAgg ? 'Deep' : 'Safe';
-    setStatus(label + ' clean…');
-    var i = 0; (function bump() {
-      if (i < steps.length) { setProgress(steps[i++]); setTimeout(bump, 400); }
-    })();
-    var fn = isAgg ? (P.aggressiveClean || P.clean) : P.safeClean;
-    fn(function (r) {
-      setStatus('Clean done ✓');
-      logLine(isAgg ? '🧨 Deep:' : '🧹 Safe:', r);
-      setTimeout(function () { setProgress(0); }, 500);
-    }, function (e) {
-      setStatus('Clean error');
-      logLine('❌ Clean:', e);
-    });
-  }
+  // ---------------------------------------------------------------
+  // 📱 CORDOVA — DEVICEREADY
+  // ---------------------------------------------------------------
+  document.addEventListener("deviceready", () => {
+    logLine("✅ Device Ready");
 
-  // ---------- Device ready ----------
-  document.addEventListener('deviceready', function () {
-    logLine('✅ Device ready');
-
-    // Language init & flag handlers
-    var lang = (function () { try { return localStorage.getItem('gel_lang'); } catch (_) { return null; } })() || detectLang();
+    var lang = localStorage.getItem("gel_lang") || detectLang();
     applyLang(lang);
-    document.addEventListener('click', function (e) {
-      var t = e.target.closest('[data-lang]');
-      if (t) {
-        var l = t.getAttribute('data-lang');
-        if (l === 'el' || l === 'gr') applyLang('gr');
-        else if (l === 'en') applyLang('en');
-      }
+
+    // click flags
+    document.addEventListener("click", e => {
+      var t = e.target.closest("[data-lang]");
+      if (!t) return;
+      var L = t.getAttribute("data-lang");
+      if (L === "gr" || L === "el") applyLang("gr");
+      else applyLang("en");
     });
 
-    // Bind buttons & initial stats
     bindButtons();
-    try { plugin().stats(function (r) { logLine('ℹ️ Stats:', r); }, function (e) { logLine('❌ Stats:', e); }); } catch (_) { /* ignore */ }
+
+    try {
+      plugin().stats(
+        r => logLine("ℹ️ Stats:", r),
+        e => logLine("❌ Stats:", e)
+      );
+    } catch {}
   });
 
-  // In case deviceready never fires (browser preview), stay quiet for Cordova
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { /* noop */ });
-  }
 })();

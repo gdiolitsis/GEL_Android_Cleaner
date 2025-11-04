@@ -6,7 +6,6 @@
 
     <name>GEL Android Cleaner</name>
 
-    <!-- ✅ GEL-PERM -->
     <platform name="android">
         <config-file parent="/*" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />

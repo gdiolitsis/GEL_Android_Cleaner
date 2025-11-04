@@ -13,19 +13,19 @@
 
     <platform name="android">
 
-        <!-- JAVA -->
+        <!-- ✅ JAVA -->
         <source-file
             src="src/android/com/gel/cleaner/GELCleaner.java"
-            target-dir="src/com/gel/cleaner"/>
+            target-dir="app/src/main/java/com/gel/cleaner"/>
 
-        <!-- REGISTER PLUGIN -->
-        <config-file target="AndroidManifest.xml" parent="/manifest">
+        <!-- ✅ REGISTER -->
+        <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GELCleaner">
                 <param name="android-package" value="com.gel.cleaner.GELCleaner"/>
             </feature>
         </config-file>
 
-        <!-- PERMISSIONS -->
+        <!-- ✅ PERMISSIONS -->
         <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.CLEAR_APP_CACHE" />
             <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />

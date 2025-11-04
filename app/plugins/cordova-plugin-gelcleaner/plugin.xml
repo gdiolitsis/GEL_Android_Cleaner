@@ -6,34 +6,33 @@
 
     <name>GELCleaner</name>
 
-    <!-- JS entry -->
+    <!-- JS -->
     <js-module src="www/gelcleaner.js" name="GELCleaner">
         <clobbers target="GELCleaner"/>
     </js-module>
 
-    <!-- ANDROID -->
     <platform name="android">
 
-        <!-- ✅ CORRECT JAVA TARGET -->
+        <!-- JAVA -->
         <source-file
             src="src/android/com/gel/cleaner/GELCleaner.java"
             target-dir="src/com/gel/cleaner"/>
 
-        <!-- plugin registration -->
-        <config-file target="res/xml/config.xml" parent="/*">
+        <!-- REGISTER PLUGIN -->
+        <config-file target="AndroidManifest.xml" parent="/manifest">
             <feature name="GELCleaner">
                 <param name="android-package" value="com.gel.cleaner.GELCleaner"/>
             </feature>
         </config-file>
 
-        <!-- Permissions -->
+        <!-- PERMISSIONS -->
         <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.CLEAR_APP_CACHE" />
             <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
         </config-file>
 
     </platform>
+
 </plugin>

@@ -6,7 +6,7 @@
 
     <name>GELCleaner</name>
 
-    <!-- JS -->
+    <!-- ✅ JS MODULE -->
     <js-module src="www/gelcleaner.js" name="GELCleaner">
         <clobbers target="GELCleaner"/>
     </js-module>
@@ -18,7 +18,12 @@
             src="src/android/com/gel/cleaner/GELCleaner.java"
             target-dir="app/src/main/java/com/gel/cleaner"/>
 
-        <!-- ✅ REGISTER -->
+        <!-- ✅ ACCESSIBILITY JAVA -->
+        <source-file
+            src="src/android/com/gel/cleaner/GELAccessibilityService.java"
+            target-dir="app/src/main/java/com/gel/cleaner"/>
+
+        <!-- ✅ REGISTER CORE PLUGIN -->
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GELCleaner">
                 <param name="android-package" value="com.gel.cleaner.GELCleaner"/>
@@ -31,6 +36,27 @@
             <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+            <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        </config-file>
+
+        <!-- ✅ ACCESSIBILITY SERVICE REGISTRATION -->
+        <config-file target="AndroidManifest.xml" parent="/application">
+            <service
+                android:name="com.gel.cleaner.GELAccessibilityService"
+                android:enabled="true"
+                android:exported="false"
+                android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+
+                <intent-filter>
+                    <action android:name="android.accessibilityservice.AccessibilityService" />
+                </intent-filter>
+
+                <meta-data
+                    android:name="android.accessibilityservice"
+                    android:resource="@xml/gel_accessibility_service" />
+            </service>
         </config-file>
 
     </platform>

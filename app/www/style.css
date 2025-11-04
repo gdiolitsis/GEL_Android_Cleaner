@@ -1,4 +1,4 @@
-* {color: #fff;} :root {
+:root {
   --bg: #000;
   --panel: #111;
   --gold: #d4af37;
@@ -53,7 +53,7 @@ h1 {
   margin: 10px 0 6px;
 }
 
-.sub {
+.subtitle {
   font-size: 14px;
   color: #ccc;
 }
@@ -76,7 +76,7 @@ h2 {
 button {
   background: linear-gradient(to bottom, #111, #000);
   border-radius: 18px;
-  border: 1px solid var(--gold);
+  border: 2.5px solid var(--gold);
   padding: 14px 10px;
   color: var(--gold);
   font-size: 16px;
@@ -90,25 +90,39 @@ button:hover {
   color: #fff;
 }
 
+/* ✅ SPECIAL BUTTONS */
+.btn-danger {
+  background: linear-gradient(to bottom, #360000, #150000);
+  border: 2.5px solid var(--gold);
+  color: var(--gold);
+}
+
+.btn-danger:hover {
+  border-color: var(--gold-soft);
+  color: #fff;
+}
+
 /* ✅ LOG AREA */
-.log {
+#log {
+  width: 95%;
   background: #080808;
   border: 1px solid var(--border);
   border-radius: 10px;
-  min-height: 140px;
+  min-height: 170px;
   padding: 10px;
   white-space: pre-wrap;
   font-size: 13px;
-  margin-bottom: 20px;
+  margin: 0 auto 20px auto;
+  display: block;
 }
 
 /* ✅ DONATE */
-.donate-wrap {
+.donate-wrapper {
   text-align: center;
-  padding: 12px 0 30px;
+  padding: 12px 0 28px;
 }
 
-.donate {
+.donate-btn {
   width: 90%;
   margin: 0 auto;
   background: var(--gold);
@@ -119,25 +133,14 @@ button:hover {
   border-radius: 14px;
 }
 
-.donate:hover {
+.donate-btn:hover {
   background: var(--gold-soft);
 }
 
-/* GEL Force White Text */
-body, h1, h2, h3, p, button, span, div, textarea {
-  color: #ffffff !important;
-}
-
-
-/* Bolder button outline */
-button {
-  border: 2.5px solid #d4af37 !important;
-}
-
-/* Group titles */
-.group-title {
-  font-size: 1.25em;
-  font-weight: 600;
-  margin: 18px 0 6px 0;
-  color: #ffffff !important;
+/* ✅ BOTTOM CENTER LAYOUT */
+section,
+.donate-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

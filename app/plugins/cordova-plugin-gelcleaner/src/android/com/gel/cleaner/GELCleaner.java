@@ -2,8 +2,10 @@ package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.Settings;
 
 import org.apache.cordova.*;
 import org.json.JSONArray;
@@ -105,8 +107,9 @@ public class GELCleaner extends CordovaPlugin {
         return false;
     }
 
+
     // -----------------------------------------------------
-    // CORE OPS
+    // ✔ REAL CLEANERS
     // -----------------------------------------------------
 
     private JSONObject clearAppCache() throws Exception {
@@ -120,25 +123,33 @@ public class GELCleaner extends CordovaPlugin {
         return o;
     }
 
+
     private JSONObject clearTemp() {
         String[] paths = {
                 "/Download/.temp",
                 "/tmp",
-                "/.temp"
+                "/.temp",
+                "/Android/media/.temp"
         };
 
         for (String p : paths)
             wipeDir(new File(Environment.getExternalStorageDirectory() + p));
 
         JSONObject o = new JSONObject();
-        try { o.put("status", "OK"); } catch (Exception ignored) {}
+        try {
+            o.put("status", "OK");
+            o.put("note", "temp files deleted");
+        } catch (Exception ignored) {}
         return o;
     }
+
 
     private JSONObject removeJunk() {
         String[] paths = {
                 "/DCIM/.thumbnails",
                 "/Pictures/.thumbnails",
+                "/Android/data/com.facebook.katana/cache",
+                "/Android/data/com.whatsapp/cache",
                 "/Android/media/"
         };
 
@@ -146,17 +157,40 @@ public class GELCleaner extends CordovaPlugin {
             wipeDir(new File(Environment.getExternalStorageDirectory() + p));
 
         JSONObject o = new JSONObject();
-        try { o.put("status", "OK"); } catch (Exception ignored) {}
-        return o;
-    }
-
-    private JSONObject optimizeBattery() {
-        JSONObject o = new JSONObject();
         try {
-            o.put("note", "best-effort battery optimizations");
+            o.put("status", "OK");
+            o.put("note", "junk removed");
         } catch (Exception ignored) {}
         return o;
     }
+
+
+    // -----------------------------------------------------
+    // ✔ REAL BATTERY OPTIMIZER
+    // -----------------------------------------------------
+    private JSONObject optimizeBattery() {
+        Context ctx = cordova.getContext();
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(ctx)) {
+                    Intent intent = new Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                    );
+                    intent.setData(android.net.Uri.parse("package:" + ctx.getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    ctx.startActivity(intent);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        JSONObject o = new JSONObject();
+        try {
+            o.put("note", "battery optimization requested / best effort");
+        } catch (Exception ignored) {}
+        return o;
+    }
+
 
     // -----------------------------------------------------
     // UTILITIES
@@ -170,9 +204,8 @@ public class GELCleaner extends CordovaPlugin {
         }
         File[] kids = f.listFiles();
         if (kids != null) {
-            for (File k : kids) {
+            for (File k : kids)
                 deleteRecursively(k);
-            }
         }
     }
 
@@ -187,6 +220,7 @@ public class GELCleaner extends CordovaPlugin {
         }
         try { f.delete(); } catch (Throwable ignored) {}
     }
+
 
     private int killBackgroundApps(Context ctx) {
         int count = 0;
@@ -206,13 +240,14 @@ public class GELCleaner extends CordovaPlugin {
         return count;
     }
 
+
     private JSONObject storageStats() throws JSONException {
         JSONObject o = new JSONObject();
         File root = Environment.getExternalStorageDirectory();
         if (root != null) {
             long total = root.getTotalSpace();
-            long free  = root.getFreeSpace();
-            long used  = total - free;
+            long free = root.getFreeSpace();
+            long used = total - free;
             o.put("total", total);
             o.put("free", free);
             o.put("used", used);

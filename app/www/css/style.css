@@ -1,16 +1,133 @@
+/* =========================================================
+   ✅ DARK–GOLD EDITION 4.0 — BASE UI STYLE
+   GEL — GDiolitsis Engine Lab
+   ========================================================= */
+
+/* ----- GENERAL ----- */
 body {
-    background: #111;
-    color: gold;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding-top: 40px;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  color: #fff;              /* ✅ White text */
+  text-align: center;
 }
+
+h1 {
+  margin: 10px 0;
+  font-size: 26px;
+  color: #ffd700;
+}
+
+.subtitle {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* ----- HEADER / LOGO ----- */
+header {
+  position: relative;
+  padding-top: 12px;
+}
+
+.logo {
+  width: 120px;
+  margin-bottom: 2px;
+}
+
+/* ----- FLAGS — TOP RIGHT ----- */
+.langs.top-right {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  gap: 5px;
+}
+
+.flag {
+  width: 36px;
+  height: 25px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid #ffd700;
+}
+
+/* =========================================================
+   ✅ BUTTON GRID
+   ========================================================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 12px;
+}
+
+/* ----- BUTTON BASE STYLE ----- */
 button {
-    background: gold;
-    color: #111;
-    border: none;
-    padding: 12px 28px;
-    font-size: 18px;
-    border-radius: 10px;
-    cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #ffd700;
+  background: #000;
+  color: #fff;              /* ✅ White text */
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ----- BUTTON HOVER ----- */
+button:hover {
+  filter: brightness(1.25);
+}
+
+/* ----- DANGER BUTTON (Deep + Clean All) ----- */
+.btn-danger {
+  background: #800;         /* Dark red */
+  color: #ffd700;
+  border-color: #ff0000;    /* Red border */
+}
+
+/* =========================================================
+   ✅ GROUPING — CLEAN ALL LAST
+   ========================================================= */
+#btnCleanAll {
+  order: 999;
+}
+
+/* =========================================================
+   ✅ LOG AREA
+   ========================================================= */
+section textarea {
+  width: 92%;
+  height: 140px;            /* ✅ Reasonable size */
+  margin-top: 10px;
+  background: #111;
+  border: 2px solid #ffd700;
+  border-radius: 8px;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 14px;
+  resize: none;
+}
+
+/* =========================================================
+   ✅ DONATE BUTTON
+   ========================================================= */
+.donate-wrapper {
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.donate-btn {
+  width: 92%;
+  padding: 14px;
+  background: #000;         /* ✅ Black */
+  border: 2px solid #ffd700;
+  border-radius: 16px;
+  color: #ffd700;           /* ✅ Gold text */
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.donate-btn:hover {
+  filter: brightness(1.35);
 }

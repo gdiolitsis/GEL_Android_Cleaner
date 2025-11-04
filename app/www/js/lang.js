@@ -9,12 +9,13 @@ window.GEL_LANG = {
     cpu_live: "CPU Live",
     clean_ram: "Clean RAM",
     safe_clean: "Safe Clean",
-    aggressive: "Aggressive",
+    aggressive: "Deep Clean",     // ✅ UPDATED
     media_junk: "Media Junk",
     browser_cache: "Browser Cache",
     temp: "Temp",
     battery_boost: "Battery Boost",
     kill_apps: "Kill Apps",
+    storage_stats: "Storage Stats",
 
     // LOG
     log_title: "Log",
@@ -45,13 +46,14 @@ window.GEL_LANG = {
     cpu_info: "Πληροφορίες CPU",
     cpu_live: "Ζωντανό CPU",
     clean_ram: "Καθαρισμός RAM",
-    safe_clean: "Καθαρισμός Ασφαλείας",
-    aggressive: "Επιθετικός",
+    safe_clean: "Ασφαλής Καθαρισμός",
+    aggressive: "Βαθύς Καθαρισμός",    // ✅ UPDATED
     media_junk: "Άχρηστα Media",
     browser_cache: "Cache Browser",
     temp: "Προσωρινά",
     battery_boost: "Εξοικονόμηση",
     kill_apps: "Τερμ. Εφαρμογές",
+    storage_stats: "Χώρος Αποθήκευσης",
 
     // LOG
     log_title: "Καταγραφή",

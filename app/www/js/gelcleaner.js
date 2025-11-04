@@ -1,45 +1,22 @@
 var GELCleaner = {
-  fullAccess: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "fullAccess", []),
 
-  cpuInfo: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "cpuInfo", []),
+  clearAppCache: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "clearAppCache", []),
 
-  cpuLiveStart: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "cpuLiveStart", []),
+  boostRAM: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "boostRAM", []),
 
-  cpuLiveStop: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "cpuLiveStop", []),
+  clearTemp: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "clearTemp", []),
 
-  cleanRam: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "cleanRam", []),
+  removeJunk: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "removeJunk", []),
 
-  safeClean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "safeClean", []),
+  optimizeBattery: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "optimizeBattery", []),
 
-  aggressiveClean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "aggressiveClean", []),
-
-  clean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "clean", []),
-
-  mediaJunkClean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "mediaJunkClean", []),
-
-  browserCacheClean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "browserCacheClean", []),
-
-  tempClean: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "tempClean", []),
-
-  batteryBoost: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "batteryBoost", []),
-
-  kill: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "kill", []),
-
-  killApps: (ok, err) =>
-    cordova.exec(ok, err, "GELCleaner", "killApps", []),
+  killBackground: (ok, err) =>
+    cordova.exec(ok, err, "GELCleaner", "killBackground", []),
 
   stats: (ok, err) =>
     cordova.exec(ok, err, "GELCleaner", "stats", []),

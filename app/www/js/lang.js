@@ -1,7 +1,7 @@
 window.GEL_LANG = {
   en: {
     title: "GEL Android Cleaner",
-    ready: "Device is ready • Dark-Gold Edition v4.0",
+    ready: "Device is ready • Dark-Gold Edition v4.3",
 
     // BUTTONS
     full_access: "Full Access",
@@ -10,10 +10,10 @@ window.GEL_LANG = {
     clean_ram: "Clean RAM",
     safe_clean: "Safe Clean",
 
-    aggressive: "Deep Clean",      // alias
-    deep_clean: "Deep Clean",      // preferred name
+    aggressive: "Deep Clean",
+    deep_clean: "Deep Clean",
 
-    clean_all: "Clean All",        // NEW ✅
+    clean_all: "Clean All",
 
     media_junk: "Media Junk",
     browser_cache: "Browser Cache",
@@ -44,7 +44,7 @@ window.GEL_LANG = {
 
   gr: {
     title: "GEL Android Cleaner",
-    ready: "Η συσκευή είναι έτοιμη • Dark-Gold Edition v4.0",
+    ready: "Η συσκευή είναι έτοιμη • Dark-Gold Edition v4.3",
 
     // BUTTONS
     full_access: "Πλήρης Πρόσβαση",
@@ -53,10 +53,10 @@ window.GEL_LANG = {
     clean_ram: "Καθαρισμός RAM",
     safe_clean: "Ασφαλής Καθαρισμός",
 
-    aggressive: "Βαθύς Καθαρισμός",   // alias
-    deep_clean: "Βαθύς Καθαρισμός",   // preferred name
+    aggressive: "Βαθύς Καθαρισμός",
+    deep_clean: "Βαθύς Καθαρισμός",
 
-    clean_all: "Καθαρισμός Όλων",     // ✅ NEW
+    clean_all: "Καθαρισμός Όλων",
 
     media_junk: "Άχρηστα Media",
     browser_cache: "Cache Browser",

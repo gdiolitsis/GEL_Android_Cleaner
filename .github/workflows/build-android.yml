@@ -71,13 +71,22 @@ jobs:
         sudo apt-get install -y imagemagick
 
     # -------------------------------------------------------------
+    # FORCE CLEAN OLD ANDROID PLATFORM (SAFE)
+    # -------------------------------------------------------------
+    - name: Clean Android platform
+      working-directory: app
+      run: |
+        cordova platform remove android || true
+        rm -rf platforms/android || true
+
+    # -------------------------------------------------------------
     # Prepare Android platform (create platforms/android tree)
     # -------------------------------------------------------------
     - name: Add Android platform
       working-directory: app
       run: |
         export PATH=/opt/gradle/bin:$PATH
-        cordova platform add android@12 || true
+        cordova platform add android@12
 
     # -------------------------------------------------------------
     # Auto-Generate GEL launcher icons from app/www/img/GEL_logo.png

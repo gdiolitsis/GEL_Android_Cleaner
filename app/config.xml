@@ -1,11 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.gel.cleaner" version="1.0.0"
     xmlns="http://www.w3.org/ns/widgets"
-    xmlns:cdv="http://cordova.apache.org/ns/1.0">
-
-    <feature name="GELCleaner">
-        <param name="android-package" value="com.gel.cleaner.GELCleaner" />
-    </feature>
+    xmlns:cdv="http://cordova.apache.org/ns/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <name>GEL Android Cleaner</name>
     <description>Cleaner App powered by GDiolitsis Engine Lab (GEL)</description>
@@ -17,21 +14,10 @@
     <content src="index.html" />
     <access origin="*" />
 
-    <platform name="android">
-        <config-file parent="/*" target="AndroidManifest.xml">
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-            <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
-            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-        </config-file>
-    </platform>
-
-    <preference name="loglevel" value="DEBUG" />
+    <!-- SDK prefs -->
     <preference name="android-minSdkVersion" value="24" />
     <preference name="android-targetSdkVersion" value="33" />
 
+    <!-- Plugin μόνο. ΚΑΜΙΑ δήλωση permissions εδώ. -->
+    <plugin name="cordova-plugin-gelcleaner" spec="./cordova-plugin-gelcleaner" />
 </widget>

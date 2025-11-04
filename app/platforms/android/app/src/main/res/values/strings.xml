@@ -1,6 +1,11 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">GEL Android Cleaner</string>
     <string name="launcher_name">@string/app_name</string>
     <string name="activity_name">@string/launcher_name</string>
+
+    <!-- ✅ REQUIRED BY accessibility xml -->
+    <string name="accessibility_service_description">GEL Accessibility Service</string>
+
 </resources>

@@ -42,7 +42,7 @@
         </config-file>
 
         <!-- ✅ ACCESSIBILITY SERVICE REGISTRATION -->
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        <config-file target="AndroidManifest.xml" parent="application">
             <service
                 android:name="com.gel.cleaner.GELAccessibilityService"
                 android:enabled="true"

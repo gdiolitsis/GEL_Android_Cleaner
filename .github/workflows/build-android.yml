@@ -64,6 +64,60 @@ jobs:
         ls -l forestrock-release.keystore
 
     # -------------------------------------------------------------
+    # Install ImageMagick for icon generation
+    # -------------------------------------------------------------
+    - name: Install ImageMagick
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y imagemagick
+
+    # -------------------------------------------------------------
+    # Prepare Android platform (create platforms/android tree)
+    # -------------------------------------------------------------
+    - name: Add Android platform
+      working-directory: app
+      run: |
+        export PATH=/opt/gradle/bin:$PATH
+        cordova platform add android@12 || true
+
+    # -------------------------------------------------------------
+    # Auto-Generate GEL launcher icons from app/www/img/GEL_logo.png
+    # (No changes to repo res/, we write into generated res/)
+    # -------------------------------------------------------------
+    - name: Generate GEL Launcher Icons
+      working-directory: app
+      run: |
+        set -e
+        SRC="www/img/GEL_logo.png"
+        RES="platforms/android/app/src/main/res"
+
+        if [ ! -f "$SRC" ]; then
+          echo "⚠️ $SRC not found — skipping icon generation"
+          exit 0
+        fi
+
+        # Clean any adaptive XML that might conflict (duplicate resources)
+        find "$RES" -type f -name "ic_launcher.xml" -delete || true
+        find "$RES" -type f -name "ic_launcher_foreground.xml" -delete || true
+        rm -rf "$RES/mipmap-anydpi-v26" || true
+
+        # Densities and sizes
+        declare -a TYPES=("mipmap-mdpi" "mipmap-hdpi" "mipmap-xhdpi" "mipmap-xxhdpi" "mipmap-xxxhdpi")
+        declare -a SIZES=("48"         "72"          "96"            "144"           "192")
+
+        for i in "${!TYPES[@]}"; do
+          DIR="$RES/${TYPES[$i]}"
+          mkdir -p "$DIR"
+          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher.png"
+          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_round.png"
+          # Optional foreground (some templates reference it)
+          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_foreground.png"
+          echo "✅ ${TYPES[$i]} → ${SIZES[$i]}px"
+        done
+
+        echo "✅ ICONS READY"
+
+    # -------------------------------------------------------------
     # Build (APK + AAB)
     # -------------------------------------------------------------
     - name: Build Release
@@ -74,8 +128,6 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
       run: |
         export PATH=/opt/gradle/bin:$PATH
-
-        cordova platform add android@12 || true
         cordova build android --release --no-update-notifier -- --packageType=apk
         cordova build android --release --no-update-notifier -- --packageType=bundle
 
@@ -126,3 +178,4 @@ jobs:
           Signed/*.apk
           app/platforms/android/app/build/outputs/bundle/release/*.aab
         if-no-files-found: warn
+```0

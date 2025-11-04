@@ -9,8 +9,12 @@ window.GEL_LANG = {
     cpu_live: "CPU Live",
     clean_ram: "Clean RAM",
     safe_clean: "Safe Clean",
-    aggressive: "Deep Clean",        // ✅
-    clean_all: "Clean All",           // ✅ NEW
+
+    aggressive: "Deep Clean",      // alias
+    deep_clean: "Deep Clean",      // preferred name
+
+    clean_all: "Clean All",        // NEW ✅
+
     media_junk: "Media Junk",
     browser_cache: "Browser Cache",
     temp: "Temp",
@@ -48,8 +52,12 @@ window.GEL_LANG = {
     cpu_live: "Ζωντανό CPU",
     clean_ram: "Καθαρισμός RAM",
     safe_clean: "Ασφαλής Καθαρισμός",
-    aggressive: "Βαθύς Καθαρισμός",   // ✅
+
+    aggressive: "Βαθύς Καθαρισμός",   // alias
+    deep_clean: "Βαθύς Καθαρισμός",   // preferred name
+
     clean_all: "Καθαρισμός Όλων",     // ✅ NEW
+
     media_junk: "Άχρηστα Media",
     browser_cache: "Cache Browser",
     temp: "Προσωρινά",

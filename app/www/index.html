@@ -4,58 +4,101 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GEL Android Cleaner</title>
+
+  <!-- ✅ CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
+  <!-- ========== HEADER ========== -->
   <header>
     <img src="img/GEL_logo.png" class="logo" />
+
     <h1>GEL Android Cleaner</h1>
 
+    <!-- ✅ LANGS TOP-RIGHT -->
     <div class="langs top-right">
       <img src="img/flag_gr.png" class="flag" data-lang="gr" />
       <img src="img/flag_en.png" class="flag" data-lang="en" />
     </div>
   </header>
 
+
+  <!-- SUBTITLE -->
   <p class="subtitle">Device is ready • Dark-Gold Edition v4.0</p>
 
-  <section class="grid">
 
+
+  <!-- ========== BUTTON GROUPS ========== -->
+
+  <!-- ✅ SYSTEM INFO -->
+  <h2 class="section-title">System</h2>
+  <section class="grid">
     <button id="btnFullAccess">📂 Full Access</button>
     <button id="btnCpu">🔥 CPU Info</button>
     <button id="btnCpuLive">📈 CPU Live</button>
-    <button id="btnRam">⚡ Clean RAM</button>
-    <button id="btnCleanSafe">🧹 Safe Clean</button>
-
-    <!-- ✅ CORRECT CLASS NAME -->
-    <button id="btnCleanAggro" class="btn-danger">💣 Deep Clean</button>
-    <button id="btnCleanAll" class="btn-danger">🧨 Clean All</button>
-
-    <button id="btnCleanMedia">🖼 Media Junk</button>
-    <button id="btnCleanBrowser">🌐 Browser Cache</button>
-    <button id="btnTemp">🔥 Temp</button>
-    <button id="btnBattery">🔋 Battery Boost</button>
-    <button id="btnKillApps">🚀 Kill Apps</button>
-
   </section>
 
 
+  <!-- ✅ CLEANING -->
+  <h2 class="section-title">Cleaner</h2>
+  <section class="grid">
+    <button id="btnRam">⚡ Clean RAM</button>
+    <button id="btnCleanSafe">🧹 Safe Clean</button>
+
+    <!-- RED BUTTONS -->
+    <button id="btnCleanAggro" class="btn-danger">💣 Deep Clean</button>
+  </section>
+
+
+  <!-- ✅ JUNK -->
+  <h2 class="section-title">Junk</h2>
+  <section class="grid">
+    <button id="btnCleanMedia">🖼 Media Junk</button>
+    <button id="btnCleanBrowser">🌐 Browser Cache</button>
+    <button id="btnTemp">🔥 Temp</button>
+  </section>
+
+
+  <!-- ✅ PERFORMANCE -->
+  <h2 class="section-title">Performance</h2>
+  <section class="grid">
+    <button id="btnBattery">🔋 Battery Boost</button>
+    <button id="btnKillApps">🚀 Kill Apps</button>
+  </section>
+
+
+  <!-- ✅ CLEAN ALL LAST (RED) -->
+  <h2 class="section-title">Danger Zone</h2>
+  <section class="grid">
+    <button id="btnCleanAll" class="btn-danger">🧨 Clean All</button>
+  </section>
+
+
+
+  <!-- ========== LOG PANEL ========== -->
   <section>
     <h2>Log</h2>
     <textarea id="log"></textarea>
   </section>
 
+
+
+  <!-- ========== DONATE ========== -->
   <div class="donate-wrapper">
     <button id="donateBig" class="donate-btn">
       💰 Donate — Keep this app free 💛
     </button>
   </div>
 
-  <!-- ORDER MATTERS -->
-  <script src="gelcleaner.js"></script>
-  <script src="app.js"></script>
+
+
+  <!-- ========== SCRIPTS (ORDER MATTERS) ========== -->
+  <!-- Cordova auto-injected -->
+  <script src="js/gelcleaner.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/lang.js"></script>
 
 </body>
 </html>

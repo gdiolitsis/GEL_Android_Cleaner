@@ -1,8 +1,7 @@
-name: Build Android APK (Cordova) — Release Signed
+name: Build Android APK - Release Signed
 
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest

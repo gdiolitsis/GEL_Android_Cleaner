@@ -23,6 +23,11 @@
             src="src/android/com/gel/cleaner/GELAccessibilityService.java"
             target-dir="app/src/main/java/com/gel/cleaner"/>
 
+        <!-- ✅ COPY XML TO RES -->
+        <resource-file
+            src="src/android/res/xml/gel_accessibility_service.xml"
+            target="res/xml/gel_accessibility_service.xml" />
+
         <!-- ✅ REGISTER FEATURE -->
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GELCleaner">

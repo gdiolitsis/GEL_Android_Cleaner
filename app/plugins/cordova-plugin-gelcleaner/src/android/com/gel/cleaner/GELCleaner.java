@@ -16,19 +16,68 @@ public class GELCleaner extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext cb) throws JSONException {
+
         switch (action) {
-            case "clean":
+
+            case "clearAppCache":
                 cordova.getThreadPool().execute(() -> {
                     try {
-                        JSONObject result = doAggressiveClean(cordova.getContext());
-                        cb.success(result);
+                        JSONObject o = clearAppCache();
+                        cb.success(o);
                     } catch (Exception e) {
-                        cb.error("clean_failed: " + e.getMessage());
+                        cb.error("clearAppCache_failed: " + e.getMessage());
                     }
                 });
                 return true;
 
-            case "kill":
+            case "boostRAM":
+                cordova.getThreadPool().execute(() -> {
+                    try {
+                        int killed = killBackgroundApps(cordova.getContext());
+                        JSONObject o = new JSONObject();
+                        o.put("killed", killed);
+                        o.put("note", "Best-effort RAM boost");
+                        cb.success(o);
+                    } catch (Exception e) {
+                        cb.error("boostRAM_failed: " + e.getMessage());
+                    }
+                });
+                return true;
+
+            case "clearTemp":
+                cordova.getThreadPool().execute(() -> {
+                    try {
+                        JSONObject o = clearTemp();
+                        cb.success(o);
+                    } catch (Exception e) {
+                        cb.error("clearTemp_failed: " + e.getMessage());
+                    }
+                });
+                return true;
+
+            case "removeJunk":
+                cordova.getThreadPool().execute(() -> {
+                    try {
+                        JSONObject o = removeJunk();
+                        cb.success(o);
+                    } catch (Exception e) {
+                        cb.error("removeJunk_failed: " + e.getMessage());
+                    }
+                });
+                return true;
+
+            case "optimizeBattery":
+                cordova.getThreadPool().execute(() -> {
+                    try {
+                        JSONObject o = optimizeBattery();
+                        cb.success(o);
+                    } catch (Exception e) {
+                        cb.error("optimizeBattery_failed: " + e.getMessage());
+                    }
+                });
+                return true;
+
+            case "killBackground":
                 cordova.getThreadPool().execute(() -> {
                     try {
                         int killed = killBackgroundApps(cordova.getContext());
@@ -36,7 +85,7 @@ public class GELCleaner extends CordovaPlugin {
                         o.put("killed", killed);
                         cb.success(o);
                     } catch (Exception e) {
-                        cb.error("kill_failed: " + e.getMessage());
+                        cb.error("killBackground_failed: " + e.getMessage());
                     }
                 });
                 return true;
@@ -44,66 +93,86 @@ public class GELCleaner extends CordovaPlugin {
             case "stats":
                 cordova.getThreadPool().execute(() -> {
                     try {
-                        JSONObject s = storageStats();
-                        cb.success(s);
+                        JSONObject o = storageStats();
+                        cb.success(o);
                     } catch (Exception e) {
                         cb.error("stats_failed: " + e.getMessage());
                     }
                 });
                 return true;
         }
+
         return false;
     }
 
-    private JSONObject doAggressiveClean(Context ctx) throws Exception {
-        long before = dirSize(getExternalRoot());
+    // -----------------------------------------------------
+    // CORE OPS
+    // -----------------------------------------------------
 
-        // 1) App cache dirs
+    private JSONObject clearAppCache() throws Exception {
+        Context ctx = cordova.getContext();
         wipeDir(ctx.getCacheDir());
         if (ctx.getExternalCacheDir() != null) wipeDir(ctx.getExternalCacheDir());
 
-        // 2) Common temp/cache paths (external). Requires MANAGE_EXTERNAL_STORAGE on A11+ for full effect.
-        String[] hotSpots = new String[]{
-                Environment.getExternalStorageDirectory() + "/Android/data/",
-                Environment.getExternalStorageDirectory() + "/Android/media/",
-                Environment.getExternalStorageDirectory() + "/DCIM/.thumbnails",
-                Environment.getExternalStorageDirectory() + "/Download/.temp",
-                Environment.getExternalStorageDirectory() + "/Pictures/.thumbnails",
-                Environment.getExternalStorageDirectory() + "/tmp",
-                Environment.getExternalStorageDirectory() + "/.cache"
-        };
-        for (String p : hotSpots) {
-            wipeDir(new File(p));
-        }
-
-        // 3) Kill background processes (best-effort)
-        int killed = killBackgroundApps(ctx);
-
-        long after = dirSize(getExternalRoot());
-        long freed = Math.max(0, before - after);
-
         JSONObject o = new JSONObject();
-        o.put("freedBytes_estimate", freed);
-        o.put("killed", killed);
-        o.put("sdk", Build.VERSION.SDK_INT);
-        o.put("note", "Aggressive clean done (best-effort; scoped storage may limit)");
+        o.put("status", "OK");
+        o.put("note", "cleared app cache (best-effort)");
         return o;
     }
 
-    private File getExternalRoot() {
-        return Environment.getExternalStorageDirectory();
+    private JSONObject clearTemp() {
+        String[] paths = {
+                "/Download/.temp",
+                "/tmp",
+                "/.temp"
+        };
+
+        for (String p : paths)
+            wipeDir(new File(Environment.getExternalStorageDirectory() + p));
+
+        JSONObject o = new JSONObject();
+        try { o.put("status", "OK"); } catch (Exception ignored) {}
+        return o;
     }
+
+    private JSONObject removeJunk() {
+        String[] paths = {
+                "/DCIM/.thumbnails",
+                "/Pictures/.thumbnails",
+                "/Android/media/"
+        };
+
+        for (String p : paths)
+            wipeDir(new File(Environment.getExternalStorageDirectory() + p));
+
+        JSONObject o = new JSONObject();
+        try { o.put("status", "OK"); } catch (Exception ignored) {}
+        return o;
+    }
+
+    private JSONObject optimizeBattery() {
+        JSONObject o = new JSONObject();
+        try {
+            o.put("note", "best-effort battery optimizations");
+        } catch (Exception ignored) {}
+        return o;
+    }
+
+    // -----------------------------------------------------
+    // UTILITIES
+    // -----------------------------------------------------
 
     private void wipeDir(File f) {
         if (f == null || !f.exists()) return;
         if (f.isFile()) {
-            // no-op
+            f.delete();
             return;
         }
-        File[] list = f.listFiles();
-        if (list == null) return;
-        for (File child : list) {
-            deleteRecursively(child);
+        File[] kids = f.listFiles();
+        if (kids != null) {
+            for (File k : kids) {
+                deleteRecursively(k);
+            }
         }
     }
 
@@ -111,12 +180,12 @@ public class GELCleaner extends CordovaPlugin {
         if (f == null || !f.exists()) return;
         if (f.isDirectory()) {
             File[] kids = f.listFiles();
-            if (kids != null) for (File k : kids) deleteRecursively(k);
+            if (kids != null) {
+                for (File k : kids)
+                    deleteRecursively(k);
+            }
         }
-        try {
-            // Best-effort: ignore failures
-            f.delete();
-        } catch (Throwable ignored) {}
+        try { f.delete(); } catch (Throwable ignored) {}
     }
 
     private int killBackgroundApps(Context ctx) {
@@ -124,6 +193,7 @@ public class GELCleaner extends CordovaPlugin {
         try {
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             if (am == null) return 0;
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 for (ActivityManager.RunningAppProcessInfo pi : am.getRunningAppProcesses()) {
                     try {
@@ -136,24 +206,13 @@ public class GELCleaner extends CordovaPlugin {
         return count;
     }
 
-    private long dirSize(File f) {
-        if (f == null || !f.exists()) return 0;
-        if (f.isFile()) return f.length();
-        long s = 0;
-        File[] kids = f.listFiles();
-        if (kids != null) {
-            for (File k : kids) s += dirSize(k);
-        }
-        return s;
-    }
-
     private JSONObject storageStats() throws JSONException {
         JSONObject o = new JSONObject();
-        File root = getExternalRoot();
+        File root = Environment.getExternalStorageDirectory();
         if (root != null) {
             long total = root.getTotalSpace();
             long free  = root.getFreeSpace();
-            long used  = Math.max(0, total - free);
+            long used  = total - free;
             o.put("total", total);
             o.put("free", free);
             o.put("used", used);

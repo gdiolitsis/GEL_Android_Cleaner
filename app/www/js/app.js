@@ -1,29 +1,17 @@
 // ===================================================================
-// GDiolitsis Engine Lab (GEL) — app.js FULL Production Build
+// GDiolitsis Engine Lab (GEL) — app.js FULL Production
 // Dark-Gold Edition v4.3 — Play Store Ready
 // ===================================================================
 
 (function () {
 
-  // ---------------------------------------------------------------
-  // DOM HELPERS
-  // ---------------------------------------------------------------
   function byId(id) { return document.getElementById(id); }
   function qs(s, r) { return (r || document).querySelector(s); }
-  function qsa(s, r) { return Array.from((r || document).querySelectorAll(s)); }
 
-
-  // ---------------------------------------------------------------
-  // LOGGING
-  // ---------------------------------------------------------------
   function logLine() {
     var el = byId("log");
     if (!el) return;
-    var msg = Array.from(arguments).map(x => {
-      try { return typeof x === "string" ? x : JSON.stringify(x); }
-      catch { return String(x); }
-    });
-    el.value += msg.join(" ") + "\n";
+    el.value += Array.from(arguments).join(" ") + "\n";
     el.scrollTop = el.scrollHeight;
   }
 
@@ -39,10 +27,6 @@
     bar.style.width = v + "%";
   }
 
-
-  // ---------------------------------------------------------------
-  // LANG MANAGER
-  // ---------------------------------------------------------------
   var CURRENT_LANG = "en";
 
   function setBtnText(id, txt) {
@@ -80,9 +64,7 @@
       localStorage.setItem("gel_lang", lang);
       document.documentElement.setAttribute("lang", lang);
 
-    } catch (e) {
-      logLine("i18n error:", e);
-    }
+    } catch (e) {}
   }
 
   function detectLang() {
@@ -94,10 +76,6 @@
     return n.startsWith("el") || n.startsWith("gr") ? "gr" : "en";
   }
 
-
-  // ---------------------------------------------------------------
-  // CPU LIVE (optional)
-  // ---------------------------------------------------------------
   var cpuTimer = null;
   var cpuBuf = new Array(60).fill(0);
 
@@ -120,12 +98,9 @@
     ctx.stroke();
   }
 
-
-  // ---------------------------------------------------------------
-  // ✅ CORDOVA PLUGIN WRAPPER — FINAL
-  // ---------------------------------------------------------------
+  // ✅ TRUE PLUGIN — NO fallback dummy
   function plugin() {
-    return window.GELCleaner;   // ✅ TRUE PLUGIN — no dummy
+    return window.GELCleaner;
   }
 
   function pcall(fn, label) {
@@ -141,10 +116,6 @@
     });
   }
 
-
-  // ---------------------------------------------------------------
-  // BUTTON BIND
-  // ---------------------------------------------------------------
   function onClick(id, fn) {
     var b = byId(id);
     if (b && !b._gelBound) {
@@ -153,18 +124,10 @@
     }
   }
 
-
-  // ---------------------------------------------------------------
-  // MAIN CLEAN — fallback → FullAccess
-  // ---------------------------------------------------------------
   function runClean() {
     byId("btnFullAccess")?.click();
   }
 
-
-  // ---------------------------------------------------------------
-  // BIND BUTTONS
-  // ---------------------------------------------------------------
   function bindButtons() {
     var P = plugin();
 
@@ -203,7 +166,10 @@
     });
 
     onClick("btnCpu", () => {
-      P.stats(r => logLine("🔥 Stats:", r), e => logLine("❌ Stats:", e));
+      plugin().stats(
+        r => logLine("🔥 Stats:", r),
+        e => logLine("❌ Stats:", e)
+      );
     });
 
     onClick("btnCpuLive", () => {
@@ -215,7 +181,7 @@
       }
       setStatus("CPU live: running…");
       cpuTimer = setInterval(() => {
-        P.stats(r => {
+        plugin().stats(r => {
           var pct = r?.cpu || Math.random() * 30 + 20;
           drawCPU(pct);
         },()=>{});
@@ -233,10 +199,6 @@
     onClick("btnKillApps",     () => runClean());
   }
 
-
-  // ---------------------------------------------------------------
-  // DEVICEREADY
-  // ---------------------------------------------------------------
   document.addEventListener("deviceready", () => {
     logLine("✅ Device Ready");
 

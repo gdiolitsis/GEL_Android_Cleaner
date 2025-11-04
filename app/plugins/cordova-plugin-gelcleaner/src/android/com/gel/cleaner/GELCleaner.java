@@ -107,11 +107,6 @@ public class GELCleaner extends CordovaPlugin {
         return false;
     }
 
-
-    // -----------------------------------------------------
-    // ✔ REAL CLEANERS
-    // -----------------------------------------------------
-
     private JSONObject clearAppCache() throws Exception {
         Context ctx = cordova.getContext();
         wipeDir(ctx.getCacheDir());
@@ -122,7 +117,6 @@ public class GELCleaner extends CordovaPlugin {
         o.put("note", "cleared app cache (best-effort)");
         return o;
     }
-
 
     private JSONObject clearTemp() {
         String[] paths = {
@@ -142,7 +136,6 @@ public class GELCleaner extends CordovaPlugin {
         } catch (Exception ignored) {}
         return o;
     }
-
 
     private JSONObject removeJunk() {
         String[] paths = {
@@ -164,10 +157,6 @@ public class GELCleaner extends CordovaPlugin {
         return o;
     }
 
-
-    // -----------------------------------------------------
-    // ✔ REAL BATTERY OPTIMIZER
-    // -----------------------------------------------------
     private JSONObject optimizeBattery() {
         Context ctx = cordova.getContext();
 
@@ -190,11 +179,6 @@ public class GELCleaner extends CordovaPlugin {
         } catch (Exception ignored) {}
         return o;
     }
-
-
-    // -----------------------------------------------------
-    // UTILITIES
-    // -----------------------------------------------------
 
     private void wipeDir(File f) {
         if (f == null || !f.exists()) return;
@@ -221,7 +205,6 @@ public class GELCleaner extends CordovaPlugin {
         try { f.delete(); } catch (Throwable ignored) {}
     }
 
-
     private int killBackgroundApps(Context ctx) {
         int count = 0;
         try {
@@ -239,7 +222,6 @@ public class GELCleaner extends CordovaPlugin {
         } catch (Throwable ignored) {}
         return count;
     }
-
 
     private JSONObject storageStats() throws JSONException {
         JSONObject o = new JSONObject();

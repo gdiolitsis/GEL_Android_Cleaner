@@ -5,15 +5,18 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <name>GELCleaner</name>
+
     <js-module src="www/gelcleaner.js" name="GELCleaner">
         <clobbers target="GELCleaner"/>
     </js-module>
 
     <!-- ANDROID -->
     <platform name="android">
+
+        <!-- ✅ FIXED JAVA PATH -->
         <source-file
             src="src/android/com/gel/cleaner/GELCleaner.java"
-            target-dir="src/com/gel/cleaner"/>
+            target-dir="app/src/main/java/com/gel/cleaner"/>
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GELCleaner">

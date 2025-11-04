@@ -1,13 +1,13 @@
 // ===================================================================
 // GDiolitsis Engine Lab (GEL) — app.js FULL Production Build
-// Dark-Gold Edition v4.2 — Play Store Ready
+// Dark-Gold Edition v4.3 — Play Store Ready
 // -------------------------------------------------------------------
 // PURPOSE:
 // • Δένει UI + i18n + Cordova plugin calls
 // • Χωρίς αλλαγές στο HTML
 // • Πολύ ασφαλής fallback όταν το plugin δεν είναι έτοιμο
-// • Υποστηρίζει Clean-All workflow (best effort mode)
-// • Groups + CPU live chart (optional canvas)
+// • Supports Full-Access + Clean-All workflow (best-effort)
+// • Optional CPU live chart
 // -------------------------------------------------------------------
 // REQUIRED FILES:
 //   /app/www/js/gelcleaner.js   → plugin bridge
@@ -15,13 +15,6 @@
 //   /app/www/js/app.js          → THIS FILE
 //   /app/www/css/style.css
 // -------------------------------------------------------------------
-// IMPORTANT:
-// ORDER IN index.html
-//   <script src="js/gelcleaner.js"></script>
-//   <script src="js/lang.js"></script>
-//   <script src="js/app.js"></script>
-// ===================================================================
-
 (function () {
 
   // ---------------------------------------------------------------
@@ -83,7 +76,6 @@
       if (L.title) qs("header h1").textContent = L.title;
       if (L.ready) qs(".subtitle").textContent = L.ready;
 
-      // buttons
       setBtnText("btnFullAccess",   L.full_access);
       setBtnText("btnCpu",          L.cpu_info);
       setBtnText("btnCpuLive",      L.cpu_live);
@@ -96,11 +88,6 @@
       setBtnText("btnTemp",         L.temp);
       setBtnText("btnBattery",      L.battery_boost);
       setBtnText("btnKillApps",     L.kill_apps);
-
-      if (L.log_title) {
-        var logHeader = byId("logTitle") || qs("section h2");
-        if (logHeader) logHeader.textContent = L.log_title;
-      }
 
       localStorage.setItem("gel_lang", lang);
       document.documentElement.setAttribute("lang", lang);
@@ -154,14 +141,10 @@
   function plugin() {
     var p = window.GELCleaner;
     if (!p) {
-      // Autogenerate dummy functions if plugin missing
       p = {};
       [
-        "stats", "version", "ping",
-        "fullAccess", "cpuInfo", "cpuLiveStart", "cpuLiveStop",
-        "cleanRam", "kill", "killApps",
-        "safeClean", "aggressiveClean", "clean",
-        "mediaJunkClean", "browserCacheClean", "tempClean", "batteryBoost"
+        "clearAppCache","boostRAM","clearTemp","removeJunk",
+        "optimizeBattery","killBackground","stats"
       ].forEach(name => {
         p[name] = (_, fail) =>
           (fail || logLine)("Plugin not ready: " + name);
@@ -197,27 +180,9 @@
 
 
   // 🔥 MAIN CLEAN LOGIC
-  function runClean(mode) {
-    var P = plugin();
-    var isAgg = mode === "aggressive";
-    var steps = isAgg ? [10, 35, 60, 80, 100] : [20, 60, 100];
-    var label = isAgg ? "Deep" : "Safe";
-
-    setStatus(label + " clean…");
-    var i = 0;
-    (function bump() {
-      if (i < steps.length) {
-        setProgress(steps[i++]);
-        setTimeout(bump, 400);
-      }
-    })();
-
-    var fn = isAgg ? (P.aggressiveClean || P.clean) : P.safeClean;
-
-    fn(
-      r => { setStatus("Clean done ✓"); logLine(label + ":", r); setTimeout(() => setProgress(0), 500); },
-      e => { setStatus("Clean error");   logLine("❌ Clean:", e); }
-    );
+  function runClean() {
+    // Uses best-effort via FullAccess sequence
+    byId("btnFullAccess")?.click();
   }
 
 
@@ -225,16 +190,52 @@
   function bindButtons() {
     var P = plugin();
 
-    // ----- Direct ID binding -----
-    onClick("btnFullAccess", () => {
+    // ✅ Full Access
+    onClick("btnFullAccess", async () => {
+      logLine("📂 Full Access: start");
       setStatus("Full Access…");
-      P.fullAccess(r => logLine("📂 Full:", r), e => logLine("❌ Full:", e));
+      setProgress(5);
+
+      let steps = [
+        { fn: P.clearAppCache,   label: "ClearCache" },
+        { fn: P.boostRAM,        label: "BoostRAM" },
+        { fn: P.clearTemp,       label: "Temp" },
+        { fn: P.removeJunk,      label: "Junk" },
+        { fn: P.optimizeBattery, label: "Battery" },
+        { fn: P.killBackground,  label: "Kill" },
+        { fn: P.stats,           label: "Stats" }
+      ];
+
+      let marks = [10,25,40,55,70,82,92,100];
+
+      for (let i = 0; i < steps.length; i++) {
+        setProgress(marks[i]);
+        if (typeof steps[i].fn !== "function") {
+          logLine("❌ Missing:", steps[i].label);
+          continue;
+        }
+        await pcall(steps[i].fn, steps[i].label).then(r =>
+          logLine(r.ok ? "✅" : "❌", r.label, r.ok ? r.data : r.error)
+        );
+      }
+
+      setProgress(100);
+      setStatus("Full Access ✓");
+      logLine("📂 Full Access complete");
+      setTimeout(() => setProgress(0), 600);
     });
 
+
+    // ✅ CPU info
     onClick("btnCpu", () => {
-      P.cpuInfo(r => logLine("🔥 CPU:", r), e => logLine("❌ CPU:", e));
+      P.stats(
+        r => logLine("🔥 Stats:", r),
+        e => logLine("❌ Stats:", e)
+      );
     });
 
+
+    // ✅ CPU live
     onClick("btnCpuLive", () => {
       if (cpuTimer) {
         clearInterval(cpuTimer);
@@ -244,130 +245,27 @@
       }
       setStatus("CPU live: running…");
       cpuTimer = setInterval(() => {
-        P.cpuInfo(r => {
-          var pct = r?.percent || r?.cpu || r?.usage || Math.random() * 30 + 20;
+        P.stats(r => {
+          var pct = r?.cpu || Math.random() * 30 + 20;
           drawCPU(pct);
-        }, () => {});
+        },()=>{});
       }, 1000);
     });
 
-    onClick("btnRam", () => runClean("ram"));
-    onClick("btnCleanSafe", () => runClean("safe"));
-    onClick("btnCleanAggro", () => runClean("aggressive"));
 
+    // ✅ CLEAN safe/deep — simply fallback to FullAccess
+    onClick("btnCleanSafe", () => runClean());
+    onClick("btnCleanAggro", () => runClean());
+    onClick("btnCleanAll",  () => runClean());
 
-    // ✅ CLEAN ALL — BEST EFFORT
-    onClick("btnCleanAll", async () => {
-      logLine("🧨 Clean All: start");
-      setStatus("Clean All…");
-      setProgress(5);
-
-      var steps = [
-        { fn: P.fullAccess,        label: "FullAccess" },
-        { fn: P.cleanRam,          label: "CleanRAM" },
-        { fn: P.safeClean,         label: "SafeClean" },
-        { fn: P.mediaJunkClean,    label: "MediaJunk" },
-        { fn: P.browserCacheClean, label: "BrowserCache" },
-        { fn: P.tempClean,         label: "Temp" },
-        { fn: P.killApps || P.kill,label: "KillApps" },
-        { fn: P.aggressiveClean,   label: "DeepClean" }
-      ];
-
-      var marks = [10,25,40,55,70,82,92,100];
-      var result;
-
-      for (var i = 0; i < steps.length; i++) {
-        setProgress(marks[i]);
-        if (typeof steps[i].fn !== "function") {
-          logLine("❌ Missing:", steps[i].label);
-          continue;
-        }
-        // eslint-disable-next-line no-await-in-loop
-        result = await pcall(steps[i].fn, steps[i].label);
-        logLine(result.ok ? "✅" : "❌", result.label, result.ok ? result.data : result.error);
-      }
-
-      setProgress(100);
-      setStatus("Clean All ✓");
-      logLine("🧨 Clean All complete");
-      setTimeout(() => setProgress(0), 600);
-    });
-
-
-    // ----- EXTRA BUTTONS -----
-    onClick("btnCleanMedia", () => runClean());
+    // ✅ extras
+    onClick("btnCleanMedia",   () => runClean());
     onClick("btnCleanBrowser", () => runClean());
-    onClick("btnTemp", () => runClean());
-    onClick("btnBattery", () => runClean());
-    onClick("btnKillApps", () => runClean());
-
-
-    // -------------------------------------------------------------
-    // ✅ FALLBACK AUTO-BIND (Emoji detection)
-    // -------------------------------------------------------------
-    qsa(".grid button").forEach(btn => {
-      if (btn._gelBound) return;
-      var t = (btn.textContent || "").trim();
-      var bound = true;
-
-      switch (true) {
-
-        // ✅ CLEAN ALL MUST BE BEFORE Deep Clean
-        case /^🧨\s*Clean All|^Clean All/i.test(t):
-          btn.addEventListener("click", () => byId("btnCleanAll")?.click());
-          break;
-
-        case /^💣|^🧨/.test(t):
-          btn.addEventListener("click", () => runClean("aggressive"));
-          break;
-
-        case /^📂/.test(t):
-          btn.addEventListener("click", () => byId("btnFullAccess")?.click());
-          break;
-
-        case /^🔥\s*CPU Info/i.test(t):
-          btn.addEventListener("click", () => byId("btnCpu")?.click());
-          break;
-
-        case /^📈/.test(t):
-          btn.addEventListener("click", () => byId("btnCpuLive")?.click());
-          break;
-
-        case /^⚡/.test(t):
-          btn.addEventListener("click", () => byId("btnRam")?.click());
-          break;
-
-        case /^🧹/.test(t):
-          btn.addEventListener("click", () => runClean("safe"));
-          break;
-
-        default:
-          bound = false;
-      }
-
-      if (bound) btn._gelBound = true;
-    });
-
-
-    // -------------------------------------------------------------
-    // ✅ DONATE BTN
-    // -------------------------------------------------------------
-    var donate = qs(".donate-btn");
-    if (donate && !donate._gelBound) {
-      donate.addEventListener("click", () => {
-        try {
-          window.open(
-            "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com",
-            "_system"
-          );
-        } catch {
-          location.href =
-            "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com";
-        }
-      });
-      donate._gelBound = true;
-    }
+    onClick("btnTemp",         () => runClean());
+    onClick("btnBattery",      () => runClean());
+    onClick("btnKillApps",     () => runClean());
   }
+
 
 
   // ---------------------------------------------------------------

@@ -17,10 +17,10 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Create Gradle wrapper (no jar needed)
+      # ✅ Create Gradle wrapper (8.2.1)
       - name: Generate Gradle Wrapper
         run: |
-          gradle wrapper --gradle-version 8.1.1
+          gradle wrapper --gradle-version 8.2.1
           chmod +x gradlew
 
       # ✅ Decode keystore
@@ -52,7 +52,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # ✅ UPLOAD v4 ARTIFACT
+      # ✅ UPLOAD artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

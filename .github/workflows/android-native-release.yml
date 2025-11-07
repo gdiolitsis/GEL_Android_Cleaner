@@ -17,14 +17,11 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Fetch working Gradle Wrapper JAR
-      - name: Prepare Gradle Wrapper
+      # ✅ Create Gradle wrapper (no jar needed)
+      - name: Generate Gradle Wrapper
         run: |
-          mkdir -p gradle/wrapper
-          curl -L "https://repo.maven.apache.org/maven2/org/gradle/gradle-wrapper/8.1.1/gradle-wrapper-8.1.1.jar" -o gradle/wrapper/gradle-wrapper.jar
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+          gradle wrapper --gradle-version 8.1.1
+          chmod +x gradlew
 
       # ✅ Decode keystore
       - name: Decode Keystore

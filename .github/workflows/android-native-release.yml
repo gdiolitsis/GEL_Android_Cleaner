@@ -27,7 +27,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    # ✅ AUTO FIX: always install real working wrapper
     - name: Ensure Gradle Wrapper (8.2.1)
       run: |
         rm -f gradle/wrapper/gradle-wrapper.jar
@@ -36,28 +35,24 @@ jobs:
         cp gradle-8.2.1/lib/plugins/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.jar
         chmod +x gradlew
 
-    # ✅ Decode Keystore
     - name: Decode Keystore
       run: |
         echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
-    # ✅ Build Release
     - name: Build Release APK
       run: |
         ./gradlew assembleRelease
 
-    # ✅ Upload artifacts
     - name: Upload Release APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: GEL_Android_Cleaner
         path: app/build/outputs/apk/release/*.apk
 
-    # ✅ Upload mapping (optional)
     - name: Upload Mapping
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mapping
         path: app/build/outputs/mapping/release/mapping.txt

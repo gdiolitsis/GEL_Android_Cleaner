@@ -17,13 +17,11 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Φέρνουμε gradle-wrapper.jar
+      # ✅ Fetch working Gradle Wrapper JAR
       - name: Prepare Gradle Wrapper
         run: |
           mkdir -p gradle/wrapper
-          curl -L "https://services.gradle.org/distributions/gradle-8.1.1-bin.zip" -o gradle-8.zip
-          unzip -p gradle-8.zip "gradle-8.1.1/lib/plugins/gradle-wrapper.jar" > gradle/wrapper/gradle-wrapper.jar
-          rm -f gradle-8.zip
+          curl -L "https://repo.maven.apache.org/maven2/org/gradle/gradle-wrapper/8.1.1/gradle-wrapper-8.1.1.jar" -o gradle/wrapper/gradle-wrapper.jar
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -39,7 +37,7 @@ jobs:
       - name: Build Release
         run: ./gradlew assembleRelease
 
-      # ✅ SIGNING
+      # ✅ Signing
       - name: Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do

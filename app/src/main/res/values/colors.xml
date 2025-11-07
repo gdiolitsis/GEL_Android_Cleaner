@@ -1,7 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="gel_gold">#D4AF37</color>
     <color name="gel_black">#0B0B0B</color>
-    <color name="gel_dark">#111111</color>
-    <color name="gel_dark2">#1A1A1A</color>
-    <color name="gel_text">#F2F2F2</color>
+    <color name="gel_black_2">#111111</color>
+    <color name="gel_gold">#D4AF37</color>
+    <color name="gel_gold_dark">#B78E1F</color>
+    <color name="gel_red">#B3261E</color>
+    <color name="gel_green">#2E7D32</color>
+    <color name="gel_text_primary">#FFFFFF</color>
+    <color name="gel_text_secondary">#CCCCCC</color>
+    <color name="gel_button_bg">#1A1A1A</color>
+    <color name="gel_button_stroke">#D4AF37</color>
+    <color name="gel_chip_bg">#151515</color>
 </resources>

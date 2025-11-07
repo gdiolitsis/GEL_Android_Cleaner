@@ -1,14 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GEL Cleaner</string>
-    <string name="cpu_info">CPU Πληροφορίες</string>
-    <string name="cpu_live">CPU Ζωντανά</string>
-    <string name="safe_clean">Ασφαλής Καθαρισμός</string>
-    <string name="browser_cache">Cache Browser</string>
-    <string name="media_junk">Media Junk</string>
-    <string name="temp_clean">Temp Καθαρισμός</string>
-    <string name="clean_ram">Καθαρισμός RAM</string>
-    <string name="clean_all">Καθαρισμός Όλων</string>
-    <string name="donate">Δωρεά</string>
-    <string name="lang_en">EN</string>
-    <string name="lang_el">EL</string>
+    <string name="app_name">GEL Android Cleaner</string>
+    <string name="donate">ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
+    <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition v4.3</string>
+
+    <string name="section_system">System</string>
+    <string name="cpu_info">CPU INFO</string>
+    <string name="cpu_live">CPU LIVE</string>
+
+    <string name="section_cleaner">Cleaner</string>
+    <string name="clean_ram">CLEAN RAM</string>
+    <string name="safe_clean">SAFE CLEAN</string>
+    <string name="deep_clean">DEEP CLEAN</string>
+
+    <string name="section_junk">Junk</string>
+    <string name="media_junk">MEDIA JUNK</string>
+    <string name="browser_cache">BROWSER CACHE</string>
+    <string name="temp">TEMP</string>
+
+    <string name="section_perf">Performance</string>
+    <string name="battery_boost">BATTERY BOOST</string>
+    <string name="kill_apps">KILL APPS</string>
+    <string name="clean_all">CLEAN ALL</string>
+
+    <string name="section_logs">Logs</string>
 </resources>

@@ -1,6 +1,7 @@
 <resources>
-    <color name="gold">#D4AF37</color>
-    <color name="black">#000000</color>
-    <color name="dark">#111111</color>
-    <color name="dark2">#222222</color>
+    <color name="gel_gold">#D4AF37</color>
+    <color name="gel_black">#0B0B0B</color>
+    <color name="gel_dark">#111111</color>
+    <color name="gel_dark2">#1A1A1A</color>
+    <color name="gel_text">#F2F2F2</color>
 </resources>

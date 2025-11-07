@@ -1,6 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:windowBackground">@color/dark</item>
-        <item name="android:textColor">@color/gold</item>
+        <item name="android:windowBackground">@color/gel_dark</item>
+        <item name="android:textColor">@color/gel_text</item>
+        <item name="android:navigationBarColor">@color/gel_black</item>
+        <item name="android:statusBarColor">@color/gel_black</item>
     </style>
 </resources>

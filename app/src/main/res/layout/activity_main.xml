@@ -1,17 +1,157 @@
-<!-- Dark-Gold UI -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="#111111"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/gel_dark"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnCleanCache"
-        android:text="Clean Cache"
-        android:textColor="#D4AF37"
-        android:background="#222222"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-</LinearLayout>
+        <!-- Header -->
+        <TextView
+            android:text="@string/app_name"
+            android:textStyle="bold"
+            android:textSize="22sp"
+            android:textColor="@color/gel_gold"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnCpuInfo"
+                android:text="@string/cpu_info"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnCpuLive"
+                android:text="@string/cpu_live"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnSafe"
+                android:text="@string/safe_clean"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnBrowser"
+                android:text="@string/browser_cache"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnMedia"
+                android:text="@string/media_junk"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnTemp"
+                android:text="@string/temp_clean"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnRam"
+                android:text="@string/clean_ram"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnAll"
+                android:text="@string/clean_all"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_gold"
+                android:background="@color/gel_dark2"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+
+            <Button
+                android:id="@+id/btnDonate"
+                android:text="@string/donate"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_black"
+                android:background="@color/gel_gold"
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"/>
+        </LinearLayout>
+
+        <!-- Language Row -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/langEN"
+                android:text="@string/lang_en"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_text"
+                android:background="@color/gel_dark2"
+                android:layout_marginEnd="8dp"
+                android:layout_width="72dp"
+                android:layout_height="40dp"/>
+            <Button
+                android:id="@+id/langEL"
+                android:text="@string/lang_el"
+                android:textAllCaps="false"
+                android:textColor="@color/gel_text"
+                android:background="@color/gel_dark2"
+                android:layout_width="72dp"
+                android:layout_height="40dp"/>
+        </LinearLayout>
+
+        <!-- Logs -->
+        <TextView
+            android:id="@+id/txtLogs"
+            android:textColor="@color/gel_text"
+            android:background="@color/gel_black"
+            android:padding="12dp"
+            android:layout_marginTop="16dp"
+            android:textSize="13sp"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"/>
+    </LinearLayout>
+</ScrollView>

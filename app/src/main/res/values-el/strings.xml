@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">GEL Cleaner</string>
+    <string name="cpu_info">CPU Πληροφορίες</string>
+    <string name="cpu_live">CPU Ζωντανά</string>
+    <string name="safe_clean">Ασφαλής Καθαρισμός</string>
+    <string name="browser_cache">Cache Browser</string>
+    <string name="media_junk">Media Junk</string>
+    <string name="temp_clean">Temp Καθαρισμός</string>
+    <string name="clean_ram">Καθαρισμός RAM</string>
+    <string name="clean_all">Καθαρισμός Όλων</string>
+    <string name="donate">Δωρεά</string>
+    <string name="lang_en">EN</string>
+    <string name="lang_el">EL</string>
+</resources>

@@ -23,6 +23,12 @@ jobs:
           gradle wrapper --gradle-version 8.2.1
           chmod +x gradlew
 
+      # ✅ Enable AndroidX
+      - name: Enable AndroidX
+        run: |
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
+
       # ✅ Decode keystore
       - name: Decode Keystore
         run: |

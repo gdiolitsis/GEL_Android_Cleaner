@@ -1,4 +1,4 @@
-name: Manual Build — GEL Android Cleaner
+name: Manual Build — GEL Android Cleaner v4
 
 on:
   workflow_dispatch:
@@ -8,28 +8,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
+      # ✅ Φέρνουμε gradle-wrapper.jar
+      - name: Prepare Gradle Wrapper
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L "https://services.gradle.org/distributions/gradle-8.1.1-bin.zip" -o gradle-8.zip
+          unzip -p gradle-8.zip "gradle-8.1.1/lib/plugins/gradle-wrapper.jar" > gradle/wrapper/gradle-wrapper.jar
+          rm -f gradle-8.zip
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # ✅ Decode keystore
       - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      - name: Build Release APK
+      # ✅ Build APK
+      - name: Build Release
         run: ./gradlew assembleRelease
 
+      # ✅ SIGNING
       - name: Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
@@ -40,15 +50,16 @@ jobs:
               -keystore gel-keystore.jks \
               -storepass "$KEYSTORE_PASSWORD" \
               -keypass "$KEY_PASSWORD" \
-              "$f" "$KEY_ALIAS"
+              "$KEY_ALIAS";
           done
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      - name: Upload APK artifact
+      # ✅ UPLOAD v4 ARTIFACT
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Cleaner_Release_APK
+          name: GEL_Cleaner_Release_APK_v4
           path: app/build/outputs/apk/release/*.apk

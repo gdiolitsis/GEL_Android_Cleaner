@@ -2,187 +2,125 @@ name: Build Android APK - Release Signed
 
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # -------------------------------------------------------------
-    # Checkout
-    # -------------------------------------------------------------
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # -------------------------------------------------------------
-    # Java + Android SDK
-    # -------------------------------------------------------------
-    - name: Prepare environment
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y openjdk-17-jdk unzip curl wget
-        echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
-        echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+      - name: Prepare environment
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y openjdk-17-jdk unzip curl wget imagemagick
+          echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-    # -------------------------------------------------------------
-    # GRADLE — (unchanged)
-    # -------------------------------------------------------------
-    - name: Install Gradle 8.5
-      run: |
-        wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-        unzip -q gradle-8.5-bin.zip
-        sudo mv gradle-8.5 /opt/gradle
-        echo "/opt/gradle/bin" >> $GITHUB_PATH
-        gradle -v
+      - name: Install Gradle 8.5
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          sudo mv gradle-8.5 /opt/gradle
+          echo "/opt/gradle/bin" >> $GITHUB_PATH
+          gradle -v
 
-    # -------------------------------------------------------------
-    # ANDROID SDK — (unchanged)
-    # -------------------------------------------------------------
-    - name: Install Android SDK tools
-      run: |
-        mkdir -p $ANDROID_HOME/cmdline-tools
-        cd $ANDROID_HOME/cmdline-tools
-        curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-        unzip -q tools.zip -d latest
-        rm tools.zip
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+      - name: Install Android SDK tools
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          cd $ANDROID_HOME/cmdline-tools
+          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+          unzip -q tools.zip -d latest
+          rm tools.zip
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-    # -------------------------------------------------------------
-    # Cordova — (unchanged)
-    # -------------------------------------------------------------
-    - name: Install Cordova
-      run: npm install -g cordova@12.0.0
+      - name: Install Cordova
+        run: npm install -g cordova@12.0.0
 
-    # -------------------------------------------------------------
-    # Decode Keystore
-    # -------------------------------------------------------------
-    - name: Decode Keystore from Secrets
-      run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > forestrock-release.keystore
-        ls -l forestrock-release.keystore
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > forestrock-release.keystore
+          ls -l forestrock-release.keystore
 
-    # -------------------------------------------------------------
-    # Install ImageMagick for icon generation
-    # -------------------------------------------------------------
-    - name: Install ImageMagick
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y imagemagick
+      - name: Clean android platform
+        working-directory: app
+        run: |
+          cordova platform remove android || true
+          rm -rf platforms/android || true
 
-    # -------------------------------------------------------------
-    # FORCE CLEAN OLD ANDROID PLATFORM (SAFE)
-    # -------------------------------------------------------------
-    - name: Clean Android platform
-      working-directory: app
-      run: |
-        cordova platform remove android || true
-        rm -rf platforms/android || true
+      - name: Add android platform
+        working-directory: app
+        run: |
+          export PATH=/opt/gradle/bin:$PATH
+          cordova platform add android@12
 
-    # -------------------------------------------------------------
-    # Prepare Android platform (create platforms/android tree)
-    # -------------------------------------------------------------
-    - name: Add Android platform
-      working-directory: app
-      run: |
-        export PATH=/opt/gradle/bin:$PATH
-        cordova platform add android@12
+      - name: Generate Launcher Icons
+        working-directory: app
+        run: |
+          set -e
+          SRC="www/img/GEL_logo.png"
+          RES="platforms/android/app/src/main/res"
+          if [ ! -f "$SRC" ]; then
+            echo "⚠️ $SRC missing — skipping icon generation"
+            exit 0
+          fi
+          declare -a TYPES=("mipmap-mdpi" "mipmap-hdpi" "mipmap-xhdpi" "mipmap-xxhdpi" "mipmap-xxxhdpi")
+          declare -a SIZES=("48" "72" "96" "144" "192")
+          for i in "${!TYPES[@]}"; do
+            DIR="$RES/${TYPES[$i]}"
+            mkdir -p "$DIR"
+            convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher.png"
+            convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_round.png"
+            convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_foreground.png"
+            echo "✅ ${TYPES[$i]} → ${SIZES[$i]}px"
+          done
+          echo "✅ Icons OK"
 
-    # -------------------------------------------------------------
-    # Auto-Generate GEL launcher icons from app/www/img/GEL_logo.png
-    # (No changes to repo res/, we write into generated res/)
-    # -------------------------------------------------------------
-    - name: Generate GEL Launcher Icons
-      working-directory: app
-      run: |
-        set -e
-        SRC="www/img/GEL_logo.png"
-        RES="platforms/android/app/src/main/res"
+      - name: Build release
+        working-directory: app
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
+        run: |
+          export PATH=/opt/gradle/bin:$PATH
+          cordova build android --release --no-update-notifier -- --packageType=apk
+          cordova build android --release --no-update-notifier -- --packageType=bundle
 
-        if [ ! -f "$SRC" ]; then
-          echo "⚠️ $SRC not found — skipping icon generation"
-          exit 0
-        fi
+      - name: Locate unsigned artifacts
+        run: |
+          find app/platforms/android -type f | grep -E "(release.*(apk|aab))" | tee unsigned.txt
+          cat unsigned.txt
 
-        # Clean any adaptive XML that might conflict (duplicate resources)
-        find "$RES" -type f -name "ic_launcher.xml" -delete || true
-        find "$RES" -type f -name "ic_launcher_foreground.xml" -delete || true
-        rm -rf "$RES/mipmap-anydpi-v26" || true
+      - name: Sign APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
+        run: |
+          APK=$(grep ".apk" unsigned.txt | head -n1)
+          mkdir -p Signed
+          ZIP_ALIGNED=Signed/GEL-aligned.apk
+          FINAL_APK=Signed/GEL-signed.apk
+          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$APK" "$ZIP_ALIGNED"
+          ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
+            --ks forestrock-release.keystore \
+            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --key-pass pass:"${{ secrets.KEY_ALIAS_PASSWORD }}" \
+            --out "$FINAL_APK" \
+            "$ZIP_ALIGNED"
+          echo "✅ FINAL SIGNED APK:"
+          ls -lh "$FINAL_APK"
 
-        # Densities and sizes
-        declare -a TYPES=("mipmap-mdpi" "mipmap-hdpi" "mipmap-xhdpi" "mipmap-xxhdpi" "mipmap-xxxhdpi")
-        declare -a SIZES=("48"         "72"          "96"            "144"           "192")
-
-        for i in "${!TYPES[@]}"; do
-          DIR="$RES/${TYPES[$i]}"
-          mkdir -p "$DIR"
-          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher.png"
-          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_round.png"
-          # Optional foreground (some templates reference it)
-          convert "$SRC" -resize "${SIZES[$i]}x${SIZES[$i]}" "$DIR/ic_launcher_foreground.png"
-          echo "✅ ${TYPES[$i]} → ${SIZES[$i]}px"
-        done
-
-        echo "✅ ICONS READY"
-
-    # -------------------------------------------------------------
-    # Build (APK + AAB)
-    # -------------------------------------------------------------
-    - name: Build Release
-      working-directory: app
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
-      run: |
-        export PATH=/opt/gradle/bin:$PATH
-        cordova build android --release --no-update-notifier -- --packageType=apk
-        cordova build android --release --no-update-notifier -- --packageType=bundle
-
-    # -------------------------------------------------------------
-    # Locate unsigned artifacts
-    # -------------------------------------------------------------
-    - name: Locate unsigned APK/AAB
-      run: |
-        find app/platforms/android -type f | grep -E "(release.*(apk|aab))" | tee unsigned.txt
-        cat unsigned.txt
-
-    # -------------------------------------------------------------
-    # Sign (APK)
-    # -------------------------------------------------------------
-    - name: Sign APK
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
-      run: |
-        APK=$(grep ".apk" unsigned.txt | head -n1)
-        mkdir -p Signed
-        echo "🔎 RAW APK = $APK"
-
-        ZIP_ALIGNED=Signed/GEL-aligned.apk
-        FINAL_APK=Signed/GEL-signed.apk
-
-        ${ANDROID_HOME}/build-tools/33.0.2/zipalign -f 4 "$APK" "$ZIP_ALIGNED"
-        ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign \
-          --ks forestrock-release.keystore \
-          --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
-          --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-          --key-pass pass:"${{ secrets.KEY_ALIAS_PASSWORD }}" \
-          --out "$FINAL_APK" \
-          "$ZIP_ALIGNED"
-
-        echo "✅ SIGNED APK:"
-        ls -lh "$FINAL_APK"
-
-    # -------------------------------------------------------------
-    # Collect final outputs
-    # -------------------------------------------------------------
-    - name: Upload FINAL artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: GEL_Release_Build
-        path: |
-          Signed/*.apk
-          app/platforms/android/app/build/outputs/bundle/release/*.aab
-        if-no-files-found: warn
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEL_Release_Build
+          path: |
+            Signed/*.apk
+            app/platforms/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn

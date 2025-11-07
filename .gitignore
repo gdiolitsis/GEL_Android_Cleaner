@@ -5,3 +5,8 @@ backups/
 
 # DO NOT TRACK nested Cordova folder
 GEL_Cleaner/
+
+# legacy cordova artifacts
+app/platforms/
+app/plugins/
+

@@ -1,79 +1,63 @@
 package com.gel.cleaner;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView logs;
-
-    private void add(String s, boolean isError) {
-        runOnUiThread(() -> {
-            String cur = logs.getText() == null ? "" : logs.getText().toString();
-            logs.setText(cur + (cur.isEmpty() ? "" : "\n") + (isError ? "❌ " : "") + s);
-        });
-    }
-
-    private final GELCleaner.LogCallback cb = (msg, err) -> add(msg, err);
+    private TextView tvLogs;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.Theme_GEL);
         setContentView(R.layout.activity_main);
-        logs = findViewById(R.id.txtLogs);
 
-        Button btnCpuInfo = findViewById(R.id.btnCpuInfo);
-        Button btnCpuLive = findViewById(R.id.btnCpuLive);
-        Button btnSafe    = findViewById(R.id.btnSafe);
-        Button btnBrowser = findViewById(R.id.btnBrowser);
-        Button btnMedia   = findViewById(R.id.btnMedia);
-        Button btnTemp    = findViewById(R.id.btnTemp);
-        Button btnRam     = findViewById(R.id.btnRam);
-        Button btnAll     = findViewById(R.id.btnAll);
-        Button btnDonate  = findViewById(R.id.btnDonate);
-        Button langEN     = findViewById(R.id.langEN);
-        Button langEL     = findViewById(R.id.langEL);
+        tvLogs = findViewById(R.id.tvLogs);
 
-        btnCpuInfo.setOnClickListener(v -> add(GELCleaner.cpuInfo(), false));
-        btnCpuLive.setOnClickListener(v -> add(GELCleaner.cpuLive(), false));
-        btnSafe.setOnClickListener(v    -> GELCleaner.safeClean(this, cb));
-        btnBrowser.setOnClickListener(v -> GELCleaner.browserCache(this, cb));
-        btnMedia.setOnClickListener(v   -> GELCleaner.mediaJunk(this, cb));
-        btnTemp.setOnClickListener(v    -> GELCleaner.tempClean(this, cb));
-        btnRam.setOnClickListener(v     -> GELCleaner.cleanRAM(this, cb));
-        btnAll.setOnClickListener(v     -> GELCleaner.cleanAll(this, cb));
+        // Language toggles (placeholders)
+        ImageView el = findViewById(R.id.btnLangEL);
+        ImageView en = findViewById(R.id.btnLangEN);
+        el.setOnClickListener(v -> log("Language → EL"));
+        en.setOnClickListener(v -> log("Language → EN"));
 
-        btnDonate.setOnClickListener(v -> {
-            // PayPal donate → email target
-            String url = "https://www.paypal.com/donate?business=gdiolitsis@yahoo.com&no_recurring=0&item_name=Support+GEL+Cleaner&currency_code=EUR";
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        });
+        // Donate
+        findViewById(R.id.btnDonate).setOnClickListener(v -> log("Donate pressed"));
 
-        langEN.setOnClickListener(v -> switchLang("en"));
-        langEL.setOnClickListener(v -> switchLang("el"));
+        // System
+        bindClick(R.id.btnCpuInfo, "CPU INFO");
+        bindClick(R.id.btnCpuLive, "CPU LIVE");
 
-        add("🟡 Ready — Dark-Gold UI loaded", false);
+        // Cleaner
+        bindClick(R.id.btnCleanRam, "CLEAN RAM");
+        bindClick(R.id.btnSafeClean, "SAFE CLEAN");
+        bindClick(R.id.btnDeepClean, "DEEP CLEAN");
+
+        // Junk
+        bindClick(R.id.btnMediaJunk, "MEDIA JUNK");
+        bindClick(R.id.btnBrowserCache, "BROWSER CACHE");
+        bindClick(R.id.btnTemp, "TEMP");
+
+        // Performance
+        bindClick(R.id.btnBattery, "BATTERY BOOST");
+        bindClick(R.id.btnKillApps, "KILL APPS");
+        bindClick(R.id.btnCleanAll, "CLEAN ALL");
     }
 
-    private void switchLang(String code) {
-        try {
-            Locale locale = new Locale(code);
-            Locale.setDefault(locale);
-            android.content.res.Configuration config = getResources().getConfiguration();
-            config.setLocale(locale);
-            getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-            add("🌐 Language → " + code.toUpperCase(), false);
-            recreate();
-        } catch (Exception e) {
-            add("Language switch failed", true);
-        }
+    private void bindClick(int id, String label) {
+        Button b = findViewById(id);
+        b.setOnClickListener(v -> {
+            log(label + " • started");
+            // TODO: connect with GELCleaner actions
+        });
+    }
+
+    private void log(String msg) {
+        String prev = tvLogs.getText() == null ? "" : tvLogs.getText().toString();
+        tvLogs.setText("• " + msg + "\n" + prev);
     }
 }

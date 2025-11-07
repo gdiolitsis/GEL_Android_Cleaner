@@ -1,0 +1,17 @@
+<!-- Dark-Gold UI -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#111111"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/btnCleanCache"
+        android:text="Clean Cache"
+        android:textColor="#D4AF37"
+        android:background="#222222"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"/>
+
+</LinearLayout>

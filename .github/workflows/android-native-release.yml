@@ -17,18 +17,19 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Ensure Gradle wrapper + perms
+      - name: Install Gradle 8.2.1
         run: |
-          ls -l
-          ls -l gradlew || true
-          chmod +x gradlew
+          wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
+          unzip gradle-8.2.1-bin.zip
+          echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
+          echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      - name: Decode keystore
+      - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
@@ -37,8 +38,7 @@ jobs:
       - name: Build Release
         run: |
           echo "=== START BUILD ==="
-          ./gradlew --version
-          ./gradlew assembleRelease --stacktrace
+          gradle assembleRelease --stacktrace
 
       - name: Sign APK
         run: |

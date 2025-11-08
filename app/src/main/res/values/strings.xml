@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- App Name -->
     <string name="app_name">GEL Cleaner</string>
 
+    <!-- Main Buttons / Actions -->
     <string name="clean_cache">Clean Cache</string>
     <string name="speed_boost">Speed Boost</string>
     <string name="logs">Logs</string>
+    <string name="clean_ram">Clean RAM</string>
+    <string name="deep_clean">Deep Clean</string>
+    <string name="donate">Donate</string>
 
 </resources>

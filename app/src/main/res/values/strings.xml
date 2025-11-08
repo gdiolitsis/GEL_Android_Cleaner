@@ -1,23 +1,26 @@
 <resources>
     <string name="app_name">GEL Cleaner</string>
 
-    <string name="sys">System</string>
-    <string name="cleaner">Cleaner</string>
-    <string name="junk">Junk</string>
-    <string name="performance">Performance</string>
-    <string name="logs">Logs</string>
-
+    <!-- Buttons -->
     <string name="cpu_info">🔥 CPU INFO</string>
     <string name="cpu_live">📈 CPU LIVE</string>
     <string name="clean_ram">⚡ CLEAN RAM</string>
     <string name="safe_clean">🧹 SAFE CLEAN</string>
     <string name="deep_clean">💣 DEEP CLEAN</string>
-    <string name="media_junk">🖼 MEDIA JUNK</string>
+    <string name="media_junk">🖼️ MEDIA JUNK</string>
     <string name="browser_cache">🌐 BROWSER CACHE</string>
     <string name="temp_clean">🔥 TEMP</string>
     <string name="battery_boost">🔋 BATTERY BOOST</string>
     <string name="kill_apps">🚀 KILL APPS</string>
     <string name="clean_all">💣 CLEAN ALL</string>
 
+    <!-- Sections -->
+    <string name="system">System</string>
+    <string name="cleaner">Cleaner</string>
+    <string name="junk">Junk</string>
+    <string name="performance">Performance</string>
+    <string name="logs">Logs</string>
+
+    <!-- Donate -->
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
 </resources>

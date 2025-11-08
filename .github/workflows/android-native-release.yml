@@ -8,30 +8,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Grant execute permission to gradlew
-      run: chmod +x gradlew
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Build release APK
-      run: ./gradlew assembleRelease
-      working-directory: .
+      - name: Ensure Gradle Wrapper Exists
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            echo "No gradlew found — ERROR"
+            exit 1
+          fi
+          chmod +x ./gradlew
 
-    - name: Sign APKs
-      env:
-        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        KEY_ALIAS: forestrock
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: |
-        echo "$KEYSTORE_BASE64" | base64 -d > my-keystore.jks
-        for f in app/build/outputs/apk/release/*.apk; do
-           jarsigner -keystore my-keystore.jks -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$f" "$KEY_ALIAS"
-        done
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: GEL_Android_Cleaner_v4
-        path: app/build/outputs/apk/release/*.apk
+      - name: Create keystore file
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Sign APK
+        run: |
+          KEY_ALIAS="${{ secrets.KEY_ALIAS }}"
+          if [ -z "$KEY_ALIAS" ]; then
+            KEY_ALIAS="forestrock"
+          fi
+
+          for APK in app/build/outputs/apk/release/*.apk; do
+            echo "Signing $APK ..."
+            jarsigner \
+              -verbose \
+              -sigalg SHA256withRSA \
+              -digestalg SHA-256 \
+              -keystore keystore.jks \
+              -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+              "$APK" \
+              "$KEY_ALIAS"
+          done
+
+      - name: Zipaligned APK
+        run: |
+          sudo apt-get update
+          sudo apt-get install zipalign -y
+          mkdir -p signed
+          for APK in app/build/outputs/apk/release/*.apk; do
+            OUT="signed/$(basename $APK)"
+            zipalign -f 4 "$APK" "$OUT"
+            echo "Zipaligned → $OUT"
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: GEL_Android_Cleaner_v4
+          path: signed/*.apk

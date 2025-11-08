@@ -17,9 +17,13 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Ensure gradlew is executable
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      # ✅ Install Gradle 8.2.1 clean — no wrapper required
+      - name: Install Gradle 8.2.1
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
+          unzip gradle-8.2.1-bin.zip
+          echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
+          echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
       # ✅ Enable AndroidX
       - name: Enable AndroidX
@@ -29,15 +33,16 @@ jobs:
 
       # ✅ Decode keystore
       - name: Decode Keystore
-        run: echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
 
       # ✅ Build APK
       - name: Build Release
-        run: ./gradlew assembleRelease
+        run: gradle assembleRelease
 
-      # ✅ Sign APK
+      # ✅ Signing
       - name: Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
@@ -48,14 +53,14 @@ jobs:
               -keystore gel-keystore.jks \
               -storepass "$KEYSTORE_PASSWORD" \
               -keypass "$KEY_PASSWORD" \
-              "$f" "$KEY_ALIAS"
+              "$f" "$KEY_ALIAS";
           done
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # ✅ Upload APK
+      # ✅ Upload
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

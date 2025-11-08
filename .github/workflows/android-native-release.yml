@@ -17,7 +17,12 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Move into project directory
+        run: cd GEL_Android_Cleaner && pwd
+        working-directory: ./GEL_Android_Cleaner
+
       - name: Ensure Gradle wrapper exists
+        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "=== CHECK WRAPPER FILES ==="
           ls -R .
@@ -27,38 +32,28 @@ jobs:
           fi
           chmod +x ./gradlew
 
-      - name: Fix wrapper path
-        run: |
-          echo "=== WRAPPER CONTENT ==="
-          ls -R gradle/wrapper || true
-          if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⚠️ gradle-wrapper.jar missing → downloading"
-            mkdir -p gradle/wrapper
-            curl -L "https://services.gradle.org/distributions/gradle-8.2.1-bin.zip" -o gradle.zip
-            unzip gradle.zip -d gradle_tmp
-            WRAPPER_FOUND=$(find gradle_tmp -name "gradle-wrapper.jar" | head -n 1)
-            cp "$WRAPPER_FOUND" gradle/wrapper/
-            echo "✅ Restored wrapper"
-          fi
-
       - name: Enable AndroidX
+        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
       - name: Decode keystore
+        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
 
-      - name: Build APK
+      - name: Build Release
+        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "=== START BUILD ==="
           ./gradlew --version
           ./gradlew assembleRelease --stacktrace
 
       - name: Sign APK
+        working-directory: ./GEL_Android_Cleaner
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
             echo "Signing → $f"
@@ -80,4 +75,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_Release_APK_v4
-          path: app/build/outputs/apk/release/*.apk
+          path: GEL_Android_Cleaner/app/build/outputs/apk/release/*.apk

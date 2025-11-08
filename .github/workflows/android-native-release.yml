@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -17,6 +17,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      # ✅ Install Gradle 8.2.1 (direct)
       - name: Install Gradle 8.2.1
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
@@ -24,22 +25,24 @@ jobs:
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
+      # ✅ Force AndroidX
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
+      # ✅ Decode Keystore
       - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
+      # ✅ Build APK
       - name: Build Release
-        run: |
-          echo "=== START BUILD ==="
-          gradle assembleRelease --stacktrace
+        run: gradle assembleRelease
 
+      # ✅ Sign APK — CORRECT FIX ✅
       - name: Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
@@ -50,14 +53,15 @@ jobs:
               -digestalg SHA-256 \
               -keystore gel-keystore.jks \
               -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_PASSWORD" \
-              "$f" "$KEY_ALIAS";
+              -keypass "$KEY_ALIAS_PASSWORD" \
+              "$f" "$KEY_ALIAS"
           done
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
+      # ✅ Upload artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

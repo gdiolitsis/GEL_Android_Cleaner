@@ -17,43 +17,30 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Move into project directory
-        run: cd GEL_Android_Cleaner && pwd
-        working-directory: ./GEL_Android_Cleaner
-
-      - name: Ensure Gradle wrapper exists
-        working-directory: ./GEL_Android_Cleaner
+      - name: Ensure Gradle wrapper + perms
         run: |
-          echo "=== CHECK WRAPPER FILES ==="
-          ls -R .
-          if [ ! -f "./gradlew" ] || [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⚠️ Gradle wrapper missing → Regenerating"
-            gradle wrapper --gradle-version 8.2.1
-          fi
-          chmod +x ./gradlew
+          ls -l
+          ls -l gradlew || true
+          chmod +x gradlew
 
       - name: Enable AndroidX
-        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
       - name: Decode keystore
-        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
 
       - name: Build Release
-        working-directory: ./GEL_Android_Cleaner
         run: |
           echo "=== START BUILD ==="
           ./gradlew --version
           ./gradlew assembleRelease --stacktrace
 
       - name: Sign APK
-        working-directory: ./GEL_Android_Cleaner
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
             echo "Signing → $f"
@@ -71,8 +58,8 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      - name: Upload signed APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_Release_APK_v4
-          path: GEL_Android_Cleaner/app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk

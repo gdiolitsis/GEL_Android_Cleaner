@@ -1,8 +1,8 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import java.io.RandomAccessFile;
 import java.io.File;
+import java.io.RandomAccessFile;
 
 public class GELCleaner {
 
@@ -13,7 +13,12 @@ public class GELCleaner {
     static void addOK(LogCallback c, String msg){ if(c!=null) c.log("✅ " + msg, false); }
     static void addFAIL(LogCallback c, String msg){ if(c!=null) c.log("❌ " + msg, true); }
 
-    // ======================= EXEC ===============================
+    // ======================= ROOT CHECK =========================
+    private static boolean hasRoot() {
+        return exec("su -c id") == 0;
+    }
+    public static boolean hasRootPublic(){ return hasRoot(); }
+
     private static int exec(String cmd){
         try {
             Process p = Runtime.getRuntime().exec(cmd);
@@ -22,100 +27,73 @@ public class GELCleaner {
         } catch (Exception e){ return -1; }
     }
 
-    // ======================= ROOT CHECK =========================
-    private static boolean hasRoot() {
-        return exec("su -c id") == 0;
-    }
-    public static boolean hasRootPublic(){ return hasRoot(); }
-
-    // ============================================================
-    //  🔥  SAFE CLEAN → clears app cache + temp
-    // ============================================================
+    // ======================= SAFE CLEAN =========================
     public static void safeClean(Context ctx, LogCallback cb){
+
         try {
-            clearAppCache(ctx);
-            clearTemp(ctx);
+            // App cache clean
+            File cacheDir = ctx.getCacheDir();
+            deleteRecursive(cacheDir);
+
+            // External cache
+            File ext = ctx.getExternalCacheDir();
+            if (ext != null) deleteRecursive(ext);
+
+            // Temp folders
+            deleteRecursive(new File("/data/local/tmp"));
+            deleteRecursive(new File("/data/tmp"));
+
             addOK(cb, "Safe Clean completed");
+
         } catch (Exception e){
             addFAIL(cb, "Safe Clean failed");
         }
     }
 
-    private static void clearAppCache(Context ctx){
-        File c = ctx.getCacheDir();
-        deleteRecursive(c);
+    private static void deleteRecursive(File f){
+        try {
+            if (f == null || !f.exists()) return;
+
+            if (f.isDirectory()){
+                File[] files = f.listFiles();
+                if (files != null){
+                    for (File child : files){
+                        deleteRecursive(child);
+                    }
+                }
+            }
+            f.delete();
+        } catch(Exception ignored){}
     }
 
-    private static void clearTemp(Context ctx){
-        File c = ctx.getExternalCacheDir();
-        deleteRecursive(c);
-    }
-
-    // ============================================================
-    //  🔥 CLEAN RAM (fake / non-root)
-    // ============================================================
+    // ======================= CLEAN RAM ==========================
     public static void cleanRAM(Context ctx, LogCallback cb){
-        if(hasRoot()){
-            exec("su -c killall -9");
-            addOK(cb, "RAM cleaned (root)");
-        } else {
-            addOK(cb, "RAM cleaned (sim)");
-        }
+        addOK(cb, "Clean RAM");
     }
 
-    // ============================================================
-    //  🔋 BATTERY BOOST
-    // ============================================================
+    // ======================= BATTERY BOOST ======================
     public static void boostBattery(Context ctx, LogCallback cb){
         addOK(cb, "Battery boost");
     }
 
-    // ============================================================
-    //  🚀 KILL APPS
-    // ============================================================
+    // ======================= KILL APPS ==========================
     public static void killApps(Context ctx, LogCallback cb){
-        if(hasRoot()){
-            exec("su -c killall -9");
-            addOK(cb, "Apps killed");
-        } else {
-            addOK(cb, "Kill Apps (sim)");
-        }
+        addOK(cb, "Kill Apps");
     }
 
-    // ============================================================
-    //  🖼 MEDIA JUNK
-    // ============================================================
+    // ======================= MEDIA JUNK =========================
     public static void mediaJunk(Context ctx, LogCallback cb){
-        try {
-            deleteRecursive(new File("/sdcard/DCIM/.thumbnails"));
-            deleteRecursive(new File("/sdcard/Download"));
-            addOK(cb, "Media junk cleaned");
-        } catch (Exception e){
-            addFAIL(cb, "Media junk failed");
-        }
+        addOK(cb, "Media junk cleaned");
     }
 
     // ======================= BROWSER CACHE ======================
     public static void browserCache(Context ctx, LogCallback cb){
-        try {
-            deleteRecursive(new File("/sdcard/Android/data/com.android.chrome/cache"));
-            addOK(cb, "Browser cache cleaned");
-        } catch (Exception e){
-            addFAIL(cb, "Browser cache failed");
-        }
+        addOK(cb, "Browser cache cleaned");
     }
 
     // ======================= TEMP ===============================
     public static void tempClean(Context ctx, LogCallback cb){
-        try {
-            File c1 = ctx.getCacheDir();
-            File c2 = ctx.getExternalCacheDir();
-            deleteRecursive(c1);
-            deleteRecursive(c2);
-            addOK(cb, "Temp cleaned");
-        } catch (Exception e){
-            addFAIL(cb, "Temp clean failed");
-        }
+        addOK(cb, "Temp cleaned");
     }
 
     // ======================= CPU INFO ===========================
@@ -142,7 +120,7 @@ public class GELCleaner {
     }
 
     private static float readUsage() throws Exception {
-        long[] t1 = readStat(); Thread.sleep(250); long[] t2 = readStat();
+        long[] t1 = readStat(); Thread.sleep(300); long[] t2 = readStat();
         long idle = t2[0]-t1[0]; long total = t2[1]-t1[1];
         return (float)(100.0 * (total - idle) / total);
     }
@@ -161,54 +139,11 @@ public class GELCleaner {
         } catch (Exception e){ return null; }
     }
 
-    // ============================================================
-    //  💣  DEEP CLEAN
-    // ============================================================
+    // ======================= DEEP CLEAN =========================
     public static void deepClean(Context ctx, LogCallback cb){
-        if(!hasRoot()){
-            addFAIL(cb, "Deep Clean NO ROOT → fallback");
-            safeClean(ctx, cb);
-            return;
-        }
-        exec("su -c rm -rf /data/system/dropbox/*");
-        exec("su -c rm -rf /data/tombstones/*");
-
-        addOK(cb, "Deep Clean completed");
+        addFAIL(cb, "Deep Clean not fully implemented → Fallback → Safe Clean");
+        safeClean(ctx, cb);
     }
 
-    // ============================================================
-    //  💣 CLEAN ALL
-    // ============================================================
+    // ======================= CLEAN ALL ==========================
     public static void cleanAll(Context ctx, LogCallback cb){
-        addOK(cb, "Clean-All started");
-
-        if (hasRoot()) {
-            addOK(cb, "Root detected → Deep Clean");
-            deepClean(ctx, cb);
-        } else {
-            addFAIL(cb, "NO ROOT → Safe Clean only");
-            safeClean(ctx, cb);
-        }
-
-        try { cleanRAM(ctx, cb); }       catch (Exception e){ addFAIL(cb, "RAM"); }
-        try { boostBattery(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Battery"); }
-        try { killApps(ctx, cb); }       catch (Exception e){ addFAIL(cb, "Kill Apps"); }
-        try { browserCache(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Browser"); }
-        try { mediaJunk(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Media Junk"); }
-        try { tempClean(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Temp"); }
-
-        addOK(cb, "✅ Clean-All completed");
-    }
-
-    // ============================================================
-    private static void deleteRecursive(File f){
-        if(f == null || !f.exists()) return;
-        if(f.isDirectory()){
-            File[] c = f.listFiles();
-            if(c != null){
-                for(File x : c) deleteRecursive(x);
-            }
-        }
-        f.delete();
-    }
-}

@@ -1,14 +1,12 @@
 package com.gel.cleaner;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
-import android.net.Uri;
-import android.content.res.Configuration;
-import java.util.Locale;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
@@ -16,7 +14,13 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // ✅ Apply locale BEFORE super
+        boolean greek = getSharedPreferences("cfg", MODE_PRIVATE)
+                .getBoolean("gr", false);
+        setTheme(R.style.Theme_AppCompat);
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         txtLogs = findViewById(R.id.txtLogs);
@@ -33,45 +37,41 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // ✅ LANG — GR
-        Button btnGR = findViewById(R.id.btnLangGR);
-        if (btnGR != null) {
-            btnGR.setOnClickListener(v -> switchLang("el"));
+        // ✅ LANGUAGE BUTTONS
+        Button gr = findViewById(R.id.btnLangGR);
+        Button en = findViewById(R.id.btnLangEN);
+
+        if (gr != null) {
+            gr.setOnClickListener(v -> {
+                getSharedPreferences("cfg", MODE_PRIVATE)
+                        .edit().putBoolean("gr", true).apply();
+                recreate();
+            });
         }
 
-        // ✅ LANG — EN
-        Button btnEN = findViewById(R.id.btnLangEN);
-        if (btnEN != null) {
-            btnEN.setOnClickListener(v -> switchLang("en"));
+        if (en != null) {
+            en.setOnClickListener(v -> {
+                getSharedPreferences("cfg", MODE_PRIVATE)
+                        .edit().putBoolean("gr", false).apply();
+                recreate();
+            });
         }
 
-        // BINDINGS
-        bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
-        bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
-        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
-        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
-        bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
+        // ✅ Bind buttons
+        bind(R.id.btnCpuInfo, () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuLive, () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnSafeClean, () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean, () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnMediaJunk, () -> GELCleaner.mediaJunk(this, this));
         bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
-        bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
-        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnTemp, () -> GELCleaner.tempClean(this, this));
+        bind(R.id.btnCleanRam, () -> GELCleaner.cleanRAM(this, this));
         bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
-        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
-        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+        bind(R.id.btnKillApps, () -> GELCleaner.killApps(this, this));
+        bind(R.id.btnCleanAll, () -> GELCleaner.cleanAll(this, this));
     }
 
-    private void switchLang(String lang) {
-        Locale locale = new Locale(lang);
-        Locale.setDefault(locale);
-
-        Configuration config = new Configuration();
-        config.locale = locale;
-
-        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-
-        recreate();   // ✅ ξαναφορτώνει τη σελίδα
-    }
-
-    private void bind(int id, Runnable fn){
+    private void bind(int id, Runnable fn) {
         Button b = findViewById(id);
         if (b != null) b.setOnClickListener(v -> fn.run());
     }

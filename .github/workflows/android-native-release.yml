@@ -9,10 +9,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -53,10 +53,10 @@ jobs:
               "$KEY_ALIAS"
           done
 
-      - name: Zipaligned APK
+      - name: Zipalign APK
         run: |
           sudo apt-get update
-          sudo apt-get install zipalign -y
+          sudo apt-get install -y zipalign
           mkdir -p signed
           for APK in app/build/outputs/apk/release/*.apk; do
             OUT="signed/$(basename $APK)"
@@ -65,7 +65,7 @@ jobs:
           done
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: GEL_Android_Cleaner_v4
           path: signed/*.apk

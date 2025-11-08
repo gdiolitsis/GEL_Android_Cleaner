@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.content.res.Configuration;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
@@ -31,6 +33,19 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
+        // ✅ LANG — GR
+        Button btnGR = findViewById(R.id.btnLangGR);
+        if (btnGR != null) {
+            btnGR.setOnClickListener(v -> switchLang("el"));
+        }
+
+        // ✅ LANG — EN
+        Button btnEN = findViewById(R.id.btnLangEN);
+        if (btnEN != null) {
+            btnEN.setOnClickListener(v -> switchLang("en"));
+        }
+
+        // BINDINGS
         bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
         bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
         bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
@@ -42,6 +57,18 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
         bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
         bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+    }
+
+    private void switchLang(String lang) {
+        Locale locale = new Locale(lang);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.locale = locale;
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        recreate();   // ✅ ξαναφορτώνει τη σελίδα
     }
 
     private void bind(int id, Runnable fn){

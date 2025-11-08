@@ -8,55 +8,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
+    - name: Grant execute permission to gradlew
+      run: chmod +x gradlew
 
-      # ✅ Restore Gradle Wrapper
-      - name: Restore Gradle wrapper
-        run: |
-          if [ ! -f "./gradlew" ]; then
-            echo "gradlew missing — recreating"
-            gradle wrapper --gradle-version 8.2.1
-          fi
-          chmod +x ./gradlew
+    - name: Build release APK
+      run: ./gradlew assembleRelease
+      working-directory: .
 
-      - name: Build Release
-        run: ./gradlew assembleRelease
+    - name: Sign APKs
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        KEY_ALIAS: forestrock
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 -d > my-keystore.jks
+        for f in app/build/outputs/apk/release/*.apk; do
+           jarsigner -keystore my-keystore.jks -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$f" "$KEY_ALIAS"
+        done
 
-      # ✅ Sign APK
-      - name: Sign APK
-        env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
-        run: |
-          echo "$KEYSTORE_B64" | base64 -d > keystore.jks
-          
-          mkdir -p signed
-          for f in app/build/outputs/apk/release/*.apk; do
-            fname=$(basename "$f")
-            echo "Signing: $fname"
-
-            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-              -keystore keystore.jks \
-              -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_ALIAS_PASSWORD" \
-              "$f" "$KEY_ALIAS"
-
-            # ✅ zipalign
-            zipalign -p 4 "$f" "signed/$fname"
-          done
-
-      # ✅ Upload artifacts v4
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: gel-android-cleaner-v4
-          path: signed/*.apk
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: GEL_Android_Cleaner_v4
+        path: app/build/outputs/apk/release/*.apk

@@ -5,6 +5,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.net.Uri;
+
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     TextView txtLogs;
@@ -13,7 +16,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         txtLogs = findViewById(R.id.txtLogs);
+
+        // ✅ DONATE → PayPal
+        Button donateButton = findViewById(R.id.btnDonate);
+        if (donateButton != null) {
+            donateButton.setOnClickListener(v -> {
+                Intent i = new Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
+                );
+                startActivity(i);
+            });
+        }
 
         bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
         bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));

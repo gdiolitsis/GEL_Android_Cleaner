@@ -1,27 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GEL Android Cleaner</string>
-    <string name="donate">ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
-    <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition v4.3</string>
+    <string name="app_name">GEL Καθαριστής</string>
 
-    <string name="section_system">System</string>
-    <string name="cpu_info">CPU INFO</string>
-    <string name="cpu_live">CPU LIVE</string>
+    <string name="sys">Σύστημα</string>
+    <string name="cleaner">Καθαρισμός</string>
+    <string name="junk">Άχρηστα</string>
+    <string name="performance">Απόδοση</string>
+    <string name="logs">Καταγραφές</string>
 
-    <string name="section_cleaner">Cleaner</string>
-    <string name="clean_ram">CLEAN RAM</string>
-    <string name="safe_clean">SAFE CLEAN</string>
-    <string name="deep_clean">DEEP CLEAN</string>
+    <string name="cpu_info">🔥 CPU Πληροφορίες</string>
+    <string name="cpu_live">📈 CPU Live</string>
+    <string name="clean_ram">⚡ Καθαρισμός RAM</string>
+    <string name="safe_clean">🧹 Ασφαλής Καθαρισμός</string>
+    <string name="deep_clean">💣 Βαθύς Καθαρισμός</string>
+    <string name="media_junk">🖼 Άχρηστα Media</string>
+    <string name="browser_cache">🌐 Cache Browser</string>
+    <string name="temp_clean">🔥 Πρόσκαιρα</string>
+    <string name="battery_boost">🔋 Βελτιστοποίηση Μπαταρίας</string>
+    <string name="kill_apps">🚀 Τερματισμός Apps</string>
+    <string name="clean_all">💣 Πλήρης Καθαρισμός</string>
 
-    <string name="section_junk">Junk</string>
-    <string name="media_junk">MEDIA JUNK</string>
-    <string name="browser_cache">BROWSER CACHE</string>
-    <string name="temp">TEMP</string>
-
-    <string name="section_perf">Performance</string>
-    <string name="battery_boost">BATTERY BOOST</string>
-    <string name="kill_apps">KILL APPS</string>
-    <string name="clean_all">CLEAN ALL</string>
-
-    <string name="section_logs">Logs</string>
+    <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
 </resources>

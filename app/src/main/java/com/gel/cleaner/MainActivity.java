@@ -2,62 +2,45 @@ package com.gel.cleaner;
 
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
-    private TextView tvLogs;
+    TextView txtLogs;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.Theme_GEL);
         setContentView(R.layout.activity_main);
+        txtLogs = findViewById(R.id.txtLogs);
 
-        tvLogs = findViewById(R.id.tvLogs);
-
-        // Language toggles (placeholders)
-        ImageView el = findViewById(R.id.btnLangEL);
-        ImageView en = findViewById(R.id.btnLangEN);
-        el.setOnClickListener(v -> log("Language → EL"));
-        en.setOnClickListener(v -> log("Language → EN"));
-
-        // Donate
-        findViewById(R.id.btnDonate).setOnClickListener(v -> log("Donate pressed"));
-
-        // System
-        bindClick(R.id.btnCpuInfo, "CPU INFO");
-        bindClick(R.id.btnCpuLive, "CPU LIVE");
-
-        // Cleaner
-        bindClick(R.id.btnCleanRam, "CLEAN RAM");
-        bindClick(R.id.btnSafeClean, "SAFE CLEAN");
-        bindClick(R.id.btnDeepClean, "DEEP CLEAN");
-
-        // Junk
-        bindClick(R.id.btnMediaJunk, "MEDIA JUNK");
-        bindClick(R.id.btnBrowserCache, "BROWSER CACHE");
-        bindClick(R.id.btnTemp, "TEMP");
-
-        // Performance
-        bindClick(R.id.btnBattery, "BATTERY BOOST");
-        bindClick(R.id.btnKillApps, "KILL APPS");
-        bindClick(R.id.btnCleanAll, "CLEAN ALL");
+        bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
+        bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
+        bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
+        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
+        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
+        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
 
-    private void bindClick(int id, String label) {
+    private void bind(int id, Runnable fn){
         Button b = findViewById(id);
-        b.setOnClickListener(v -> {
-            log(label + " • started");
-            // TODO: connect with GELCleaner actions
-        });
+        if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
-    private void log(String msg) {
-        String prev = tvLogs.getText() == null ? "" : tvLogs.getText().toString();
-        tvLogs.setText("• " + msg + "\n" + prev);
+    @Override
+    public void log(String msg, boolean isError) {
+        runOnUiThread(() -> {
+            String old = txtLogs.getText().toString();
+            txtLogs.setText(old + "\n" + msg);
+            if (isError) {
+                txtLogs.setTextColor(getColor(android.R.color.holo_red_light));
+            }
+        });
     }
 }

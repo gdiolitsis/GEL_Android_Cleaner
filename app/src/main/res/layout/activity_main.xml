@@ -37,14 +37,14 @@
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="❤️ DONATE! KEEP THIS APP FREE"
+            android:text="@string/donate"
             android:background="@drawable/gel_btn_danger"/>
 
         <!-- System -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="System"
+            android:text="@string/system"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
@@ -59,21 +59,21 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🔥 CPU INFO"/>
+                android:text="@string/cpu_info"/>
             <Button
                 android:id="@+id/btnCpuLive"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="📈 CPU LIVE"/>
+                android:text="@string/cpu_live"/>
         </LinearLayout>
 
         <!-- Cleaner -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cleaner"
+            android:text="@string/cleaner"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
@@ -88,28 +88,28 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="⚡ CLEAN RAM"/>
+                android:text="@string/clean_ram"/>
             <Button
                 android:id="@+id/btnSafeClean"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🧹 SAFE CLEAN"/>
+                android:text="@string/safe_clean"/>
         </LinearLayout>
 
         <Button
             android:id="@+id/btnDeepClean"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="💣 DEEP CLEAN"
+            android:text="@string/deep_clean"
             android:background="@drawable/gel_btn_danger"/>
 
         <!-- Junk -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Junk"
+            android:text="@string/junk"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
@@ -124,14 +124,14 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🖼️ MEDIA JUNK"/>
+                android:text="@string/media_junk"/>
             <Button
                 android:id="@+id/btnBrowserCache"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🌐 BROWSER CACHE"/>
+                android:text="@string/browser_cache"/>
         </LinearLayout>
 
         <Button
@@ -139,13 +139,13 @@
             style="@style/GEL.Button"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="🔥 TEMP"/>
+            android:text="@string/temp_clean"/>
 
         <!-- Performance -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Performance"
+            android:text="@string/performance"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
@@ -160,28 +160,28 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🔋 BATTERY BOOST"/>
+                android:text="@string/battery_boost"/>
             <Button
                 android:id="@+id/btnKillApps"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="🚀 KILL APPS"/>
+                android:text="@string/kill_apps"/>
         </LinearLayout>
 
         <Button
             android:id="@+id/btnCleanAll"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="💣 CLEAN ALL"
+            android:text="@string/clean_all"
             android:background="@drawable/gel_btn_danger"/>
 
         <!-- Logs -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Logs"
+            android:text="@string/logs"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>

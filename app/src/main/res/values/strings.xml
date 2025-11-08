@@ -4,6 +4,17 @@
 
     <string name="donate">❤ DONATE! KEEP THIS APP FREE</string>
 
+    <!-- Display status -->
+    <string name="device_ready">Device is ready • Dark-Gold Edition v4.3</string>
+
+    <!-- Sections -->
+    <string name="section_system">System</string>
+    <string name="section_cleaner">Cleaner</string>
+    <string name="section_junk">Junk</string>
+    <string name="section_perf">Performance</string>
+    <string name="section_logs">Logs</string>
+
+    <!-- Buttons -->
     <string name="cpu_info">🔥 CPU INFO</string>
     <string name="cpu_live">📊 CPU LIVE</string>
 
@@ -19,10 +30,11 @@
     <string name="kill_apps">🚀 KILL APPS</string>
     <string name="clean_all">💣 CLEAN ALL</string>
 
-    <string name="logs">Logs</string>
+    <!-- Section Labels -->
     <string name="system">System</string>
     <string name="cleaner">Cleaner</string>
     <string name="junk">Junk</string>
     <string name="performance">Performance</string>
+    <string name="logs">Logs</string>
 
 </resources>

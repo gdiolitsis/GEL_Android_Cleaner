@@ -1,26 +1,29 @@
 <resources>
-    <!-- GOLD -->
+    <!-- ✅ GOLD -->
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
 
-    <!-- PRIMARY UI -->
+    <!-- ✅ PRIMARY UI -->
     <color name="gel_bg">#121212</color>
     <color name="gel_primary">#D4AF37</color>
     <color name="gel_primary_dark">#8B7500</color>
     <color name="gel_text_primary">#FFFFFF</color>
     <color name="gel_text_secondary">#CCCCCC</color>
 
-    <!-- BUTTONS -->
+    <!-- ✅ BUTTONS -->
     <color name="gel_btn_text">#FFFFFF</color>
     <color name="gel_btn_bg">#242424</color>
     <color name="gel_outline">#D4AF37</color>
 
-    <!-- DANGER -->
+    <!-- ✅ DANGER -->
     <color name="gel_red_bg">#8B0000</color>
     <color name="gel_red_text">#FF0000</color>
 
-    <!-- LEGACY -->
+    <!-- ✅ LEGACY / COMMON -->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="dark_gray">#555555</color>
+
+    <!-- ✅ MISSING: used by adaptive icon -->
+    <color name="gel_black">#000000</color>
 </resources>

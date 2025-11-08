@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -17,24 +17,28 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Ensure Gradle Wrapper executable
-        run: chmod +x ./gradlew
-
-      - name: Verify Gradle Wrapper
+      - name: Ensure Gradle wrapper exists
         run: |
-          echo "=== CHECKING GRADLE WRAPPER ==="
+          echo "=== CHECK WRAPPER FILES ==="
           ls -R .
-          ls -R gradle/wrapper || true
+          if [ ! -f "./gradlew" ] || [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "⚠️ Gradle wrapper missing → Regenerating"
+            gradle wrapper --gradle-version 8.2.1
+          fi
+          chmod +x ./gradlew
 
-      - name: Restore Gradle Wrapper if missing
+      - name: Fix wrapper path
         run: |
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Restoring gradle-wrapper.jar"
+          echo "=== WRAPPER CONTENT ==="
+          ls -R gradle/wrapper || true
+          if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "⚠️ gradle-wrapper.jar missing → downloading"
             mkdir -p gradle/wrapper
             curl -L "https://services.gradle.org/distributions/gradle-8.2.1-bin.zip" -o gradle.zip
             unzip gradle.zip -d gradle_tmp
-            find gradle_tmp -name "gradle-wrapper.jar" -exec cp {} gradle/wrapper/ \;
-            echo "✅ Restored gradle-wrapper.jar"
+            WRAPPER_FOUND=$(find gradle_tmp -name "gradle-wrapper.jar" | head -n 1)
+            cp "$WRAPPER_FOUND" gradle/wrapper/
+            echo "✅ Restored wrapper"
           fi
 
       - name: Enable AndroidX
@@ -42,18 +46,22 @@ jobs:
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      - name: Decode Keystore
+      - name: Decode keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
 
-      - name: Build Release
-        run: ./gradlew assembleRelease
+      - name: Build APK
+        run: |
+          echo "=== START BUILD ==="
+          ./gradlew --version
+          ./gradlew assembleRelease --stacktrace
 
       - name: Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
+            echo "Signing → $f"
             jarsigner \
               -verbose \
               -sigalg SHA256withRSA \
@@ -68,7 +76,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      - name: Upload APK
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_Release_APK_v4

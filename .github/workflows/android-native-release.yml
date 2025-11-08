@@ -17,7 +17,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Install Gradle 8.2.1 (direct)
+      # ✅ Install Gradle 8.2.1
       - name: Install Gradle 8.2.1
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
@@ -25,7 +25,6 @@ jobs:
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
-      # ✅ Force AndroidX
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
@@ -42,28 +41,38 @@ jobs:
       - name: Build Release
         run: gradle assembleRelease
 
-      # ✅ Sign APK — CORRECT FIX ✅
-      - name: Sign APK
+      # ✅ Install Zipalign + Apksigner
+      - name: Install Android Build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zipalign apksigner
+
+      # ✅ Align + Sign APK (V2 signature)
+      - name: Align + Sign APK
         run: |
           for f in app/build/outputs/apk/release/*.apk; do
-            echo "Signing → $f"
-            jarsigner \
-              -verbose \
-              -sigalg SHA256withRSA \
-              -digestalg SHA-256 \
-              -keystore gel-keystore.jks \
-              -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_ALIAS_PASSWORD" \
-              "$f" "$KEY_ALIAS"
+            echo ">>> ZIPALIGN $f"
+            zipalign -f 4 "$f" aligned.apk
+
+            echo ">>> SIGNING aligned.apk"
+            apksigner sign \
+              --ks gel-keystore.jks \
+              --ks-pass pass:"$KEYSTORE_PASSWORD" \
+              --key-pass pass:"$KEY_ALIAS_PASSWORD" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --out signed.apk \
+              aligned.apk
+
+            mv signed.apk GEL_Android_Cleaner_v4.apk
           done
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # ✅ Upload artifact
+      # ✅ Upload
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Cleaner_Release_APK_v4
-          path: app/build/outputs/apk/release/*.apk
+          path: GEL_Android_Cleaner_v4.apk

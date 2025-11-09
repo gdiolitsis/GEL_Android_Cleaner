@@ -1,11 +1,11 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.content.Intent;
+import android.net.Uri;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,20 +27,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         setupLangButtons();
         setupDonate();
+        setupCleanerButtons();
 
-        bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
-        bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
-        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
-        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
-        bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
-        bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
-        bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
-        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
-        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
-        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
-        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+        log("✅ Device ready", false);
     }
 
+    /* =========================================
+     *              LANGUAGE
+     * ========================================= */
     private void setupLangButtons() {
         Button bGR = findViewById(R.id.btnLangGR);
         Button bEN = findViewById(R.id.btnLangEN);
@@ -60,6 +54,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
+    /* =========================================
+     *                DONATE
+     * ========================================= */
     private void setupDonate() {
         Button donateButton = findViewById(R.id.btnDonate);
         if (donateButton != null) {
@@ -73,15 +70,37 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
+    /* =========================================
+     *              CLEANER FUNCTIONS
+     * ========================================= */
+    private void setupCleanerButtons() {
+
+        bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
+        bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
+        bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
+        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
+        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
+        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+    }
+
     private void bind(int id, Runnable fn){
         Button b = findViewById(id);
         if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
+    /* =========================================
+     *             LOG CALLBACK
+     * ========================================= */
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
-            txtLogs.append("\n" + msg);
+            String old = txtLogs.getText().toString();
+            txtLogs.setText(old + "\n" + msg);
         });
     }
 }

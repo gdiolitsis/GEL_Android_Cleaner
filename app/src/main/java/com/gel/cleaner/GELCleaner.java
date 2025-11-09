@@ -1,8 +1,26 @@
 package com.gel.cleaner;
 
+import android.app.ActivityManager;
 import android.content.Context;
+import android.os.Build;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+/*
+ * GEL Cleaner — Native Java Core
+ * Mode: Root-capable • Aggressive • EN/GR ready
+ *
+ * NOTE:
+ * - Με root κάνουμε force-stop και καθαρίζουμε system caches.
+ * - Χωρίς root γίνεται ασφαλής καθαρισμός app/external cache + media junk.
+ */
 
 public class GELCleaner {
 
@@ -11,48 +29,50 @@ public class GELCleaner {
         void log(String msg, boolean isError);
     }
     static void addOK(LogCallback c, String msg){ if(c!=null) c.log("✅ " + msg, false); }
+    static void addINFO(LogCallback c, String msg){ if(c!=null) c.log("• " + msg, false); }
     static void addFAIL(LogCallback c, String msg){ if(c!=null) c.log("❌ " + msg, true); }
 
     // ======================= ROOT CHECK =========================
     private static boolean hasRoot() {
-        return exec("su -c id") == 0;
+        int rc = exec("su","-c","id");
+        return rc == 0;
     }
     public static boolean hasRootPublic(){ return hasRoot(); }
 
-    private static int exec(String cmd){
+    // ======================= EXEC HELPERS =======================
+    private static int exec(String... cmd){
         try {
-            Process p = Runtime.getRuntime().exec(cmd);
+            Process p = new ProcessBuilder(cmd)
+                    .redirectErrorStream(true)
+                    .start();
             p.waitFor();
             return p.exitValue();
         } catch (Exception e){ return -1; }
     }
-
-    // ======================= SAFE CLEAN =========================
-    public static void safeClean(Context ctx, LogCallback cb){
-
+    private static int su(String shellCmd){
+        return exec("su","-c", shellCmd);
+    }
+    private static String suOut(String shellCmd){
         try {
-            // App cache clean
-            File cacheDir = ctx.getCacheDir();
-            deleteRecursive(cacheDir);
-
-            // External cache
-            File ext = ctx.getExternalCacheDir();
-            if (ext != null) deleteRecursive(ext);
-
-            // Temp folders
-            deleteRecursive(new File("/data/local/tmp"));
-            deleteRecursive(new File("/data/tmp"));
-
-            addOK(cb, "Safe Clean completed");
-
-        } catch (Exception e){
-            addFAIL(cb, "Safe Clean failed");
-        }
+            Process p = new ProcessBuilder("su","-c", shellCmd)
+                    .redirectErrorStream(true)
+                    .start();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line).append('\n');
+            p.waitFor();
+            return sb.toString();
+        } catch (Exception e){ return null; }
     }
 
+    // ======================= FILE HELPERS =======================
     private static void deleteRecursive(File f){
         try {
             if (f == null || !f.exists()) return;
+            // safety: never allow delete of root or top-level system dirs
+            String path = f.getAbsolutePath();
+            if ("/".equals(path) || "/system".equals(path) || "/data".equals(path)) return;
 
             if (f.isDirectory()){
                 File[] files = f.listFiles();
@@ -62,38 +82,237 @@ public class GELCleaner {
                     }
                 }
             }
+            // ignore result; best-effort
+            //noinspection ResultOfMethodCallIgnored
             f.delete();
         } catch(Exception ignored){}
     }
 
+    private static void deletePath(String path){
+        if (path == null) return;
+        deleteRecursive(new File(path));
+    }
+
+    // ======================= SAFE CLEAN =========================
+    public static void safeClean(Context ctx, LogCallback cb){
+        try {
+            // App internal cache
+            deleteRecursive(ctx.getCacheDir());
+
+            // External cache
+            File ext = ctx.getExternalCacheDir();
+            if (ext != null) deleteRecursive(ext);
+
+            // Generic temp
+            deletePath("/data/local/tmp");
+            deletePath("/data/tmp");
+
+            // /Android/data/*/cache (best-effort, no root = only readable scope on modern Android)
+            File storage = new File("/storage");
+            if (storage.exists()){
+                // Scan visible mount points
+                File[] vols = storage.listFiles();
+                if (vols != null){
+                    for (File vol : vols){
+                        File base = new File(vol, "Android/data");
+                        File[] pkgs = base.listFiles();
+                        if (pkgs != null){
+                            for (File pkg : pkgs){
+                                deleteRecursive(new File(pkg, "cache"));
+                            }
+                        }
+                    }
+                }
+            }
+
+            addOK(cb, "Safe Clean completed");
+        } catch (Exception e){
+            addFAIL(cb, "Safe Clean failed");
+        }
+    }
+
+    // ======================= DEEP CLEAN (ROOT) ==================
+    public static void deepClean(Context ctx, LogCallback cb){
+        if (!hasRoot()){
+            addFAIL(cb, "Deep Clean: no root → fallback Safe Clean");
+            safeClean(ctx, cb);
+            return;
+        }
+        addINFO(cb, "Deep Clean (root) started");
+
+        // Clear dalvik/art cache (only cache files, not critical dirs)
+        su("rm -rf /data/dalvik-cache/*");
+        su("rm -rf /cache/*");
+
+        // Truncate logcat
+        su("logcat -c");
+
+        // System temp
+        su("rm -rf /data/system/dropbox/*");
+        su("rm -rf /data/system/usagestats/*");
+        su("rm -rf /data/anr/*");
+
+        // Chrome/Browser caches
+        List<String> browserPkgs = Arrays.asList(
+                "com.android.chrome",
+                "com.chrome.beta",
+                "com.brave.browser",
+                "org.mozilla.firefox",
+                "org.mozilla.fenix",           // Firefox Nightly
+                "com.opera.browser",
+                "com.opera.mini.native",
+                "com.sec.android.app.sbrowser" // Samsung
+        );
+        for (String pkg : browserPkgs){
+            su("rm -rf /data/data/" + pkg + "/cache/*");
+            su("rm -rf /data/data/" + pkg + "/app_webview/*");
+        }
+
+        // Media junk
+        su("rm -rf /sdcard/DCIM/.thumbnails/*");
+        su("rm -rf /sdcard/Pictures/.thumbnails/*");
+        su("rm -rf /sdcard/Download/.tmp/*");
+        su("rm -rf /sdcard/Movies/.tmp/*");
+        su("rm -rf /sdcard/Android/media/*/.tmp/*");
+
+        addOK(cb, "Deep Clean completed");
+    }
+
     // ======================= CLEAN RAM ==========================
     public static void cleanRAM(Context ctx, LogCallback cb){
-        addOK(cb, "Clean RAM");
+        try {
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null){
+                // kill background processes except ourselves
+                String self = ctx.getPackageName();
+                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                if (procs != null){
+                    for (ActivityManager.RunningAppProcessInfo p : procs){
+                        if (p.pkgList == null) continue;
+                        for (String pkg : p.pkgList){
+                            if (!pkg.equals(self)){
+                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignored){}
+                            }
+                        }
+                    }
+                }
+            }
+            // with root, reclaim more aggressively
+            if (hasRoot()){
+                su("echo 3 > /proc/sys/vm/drop_caches"); // pagecache,dentries,inodes
+            }
+            addOK(cb, "Clean RAM done");
+        } catch (Exception e){
+            addFAIL(cb, "Clean RAM failed");
+        }
     }
 
     // ======================= BATTERY BOOST ======================
     public static void boostBattery(Context ctx, LogCallback cb){
-        addOK(cb, "Battery boost");
+        try {
+            // Best-effort: stop common heavy services (root)
+            if (hasRoot()){
+                List<String> drainers = Arrays.asList(
+                        "com.facebook.katana",
+                        "com.facebook.orca",
+                        "com.instagram.android",
+                        "com.netflix.mediaclient",
+                        "com.snapchat.android",
+                        "com.spotify.music",
+                        "com.google.android.youtube"
+                );
+                for (String p : drainers){
+                    su("am force-stop " + p);
+                }
+            }
+            addOK(cb, "Battery boost done");
+        } catch (Exception e){
+            addFAIL(cb, "Battery boost failed");
+        }
     }
 
     // ======================= KILL APPS ==========================
     public static void killApps(Context ctx, LogCallback cb){
-        addOK(cb, "Kill Apps");
+        try {
+            String self = ctx.getPackageName();
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            HashSet<String> killed = new HashSet<>();
+            if (am != null){
+                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                if (procs != null){
+                    for (ActivityManager.RunningAppProcessInfo p : procs){
+                        if (p.pkgList == null) continue;
+                        for (String pkg : p.pkgList){
+                            if (!pkg.equals(self) && !killed.contains(pkg)){
+                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignored){}
+                                killed.add(pkg);
+                            }
+                        }
+                    }
+                }
+            }
+            if (hasRoot()){
+                for (String pkg : killed){
+                    su("am force-stop " + pkg);
+                }
+            }
+            addOK(cb, "Kill Apps done (" + killed.size() + ")");
+        } catch (Exception e){
+            addFAIL(cb, "Kill Apps failed");
+        }
     }
 
     // ======================= MEDIA JUNK =========================
     public static void mediaJunk(Context ctx, LogCallback cb){
-        addOK(cb, "Media junk cleaned");
+        try {
+            List<String> targets = new ArrayList<>(Arrays.asList(
+                    "/sdcard/DCIM/.thumbnails",
+                    "/sdcard/Pictures/.thumbnails",
+                    "/sdcard/Download/.tmp",
+                    "/sdcard/Movies/.tmp",
+                    "/sdcard/Android/media/.thumbnails"
+            ));
+            for (String t : targets) deletePath(t);
+            addOK(cb, "Media junk cleaned");
+        } catch (Exception e){
+            addFAIL(cb, "Media junk failed");
+        }
     }
 
     // ======================= BROWSER CACHE ======================
     public static void browserCache(Context ctx, LogCallback cb){
-        addOK(cb, "Browser cache cleaned");
+        try {
+            List<String> browserPkgs = Arrays.asList(
+                    "com.android.chrome",
+                    "org.mozilla.firefox",
+                    "com.opera.browser",
+                    "com.sec.android.app.sbrowser",
+                    "com.brave.browser"
+            );
+            for (String pkg : browserPkgs){
+                // best-effort non-root (external webview cache is private; needs root)
+                deletePath("/sdcard/Android/data/" + pkg + "/cache");
+                if (hasRoot()){
+                    su("rm -rf /data/data/" + pkg + "/cache/*");
+                    su("rm -rf /data/data/" + pkg + "/app_webview/*");
+                }
+            }
+            addOK(cb, "Browser cache cleaned");
+        } catch (Exception e){
+            addFAIL(cb, "Browser cache failed");
+        }
     }
 
     // ======================= TEMP ===============================
     public static void tempClean(Context ctx, LogCallback cb){
-        addOK(cb, "Temp cleaned");
+        try {
+            deletePath("/sdcard/Download/.temp");
+            deletePath("/sdcard/Temp");
+            deletePath("/sdcard/tmp");
+            addOK(cb, "Temp cleaned");
+        } catch (Exception e){
+            addFAIL(cb, "Temp clean failed");
+        }
     }
 
     // ======================= CPU INFO ===========================
@@ -124,7 +343,6 @@ public class GELCleaner {
         long idle = t2[0]-t1[0]; long total = t2[1]-t1[1];
         return (float)(100.0 * (total - idle) / total);
     }
-
     private static long[] readStat() throws Exception {
         RandomAccessFile r = new RandomAccessFile("/proc/stat","r");
         String load = r.readLine(); r.close();
@@ -133,7 +351,6 @@ public class GELCleaner {
         long total = 0; for(int i=1;i<toks.length;i++) total += Long.parseLong(toks[i]);
         return new long[]{idle,total};
     }
-
     private static String readFile(String path){
         try {
             RandomAccessFile r = new RandomAccessFile(path,"r");
@@ -141,16 +358,9 @@ public class GELCleaner {
         } catch (Exception e){ return null; }
     }
 
-    // ======================= DEEP CLEAN =========================
-    public static void deepClean(Context ctx, LogCallback cb){
-        addFAIL(cb, "Deep Clean not fully implemented → Fallback → Safe Clean");
-        safeClean(ctx, cb);
-    }
-
     // ======================= CLEAN ALL ==========================
     public static void cleanAll(Context ctx, LogCallback cb){
         addOK(cb, "Clean-All started");
-
         if (hasRoot()) {
             addOK(cb, "Root detected → Deep Clean");
             deepClean(ctx, cb);
@@ -158,14 +368,12 @@ public class GELCleaner {
             addFAIL(cb, "NO ROOT → Safe Clean only");
             safeClean(ctx, cb);
         }
-
         try { cleanRAM(ctx, cb); }       catch (Exception e){ addFAIL(cb, "RAM"); }
         try { boostBattery(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Battery"); }
         try { killApps(ctx, cb); }       catch (Exception e){ addFAIL(cb, "Kill Apps"); }
         try { browserCache(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Browser"); }
         try { mediaJunk(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Media Junk"); }
         try { tempClean(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Temp"); }
-
-        addOK(cb, "✅ Clean-All completed");
+        addOK(cb, "Clean-All completed");
     }
 }

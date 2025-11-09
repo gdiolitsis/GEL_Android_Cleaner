@@ -1,49 +1,37 @@
 package com.gel.cleaner;
 
-import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Build;
-
 import java.util.Locale;
 
 public class LocaleHelper {
 
-    private static final String LANG_EN = "en";
-    private static final String LANG_EL = "el";
+    private static final String PREF_NAME = "gel_locale";
+    private static final String KEY = "lang";
 
-    public static Context setLocale(Context context, boolean greek) {
-        String lang = greek ? LANG_EL : LANG_EN;
-        return updateResources(context, lang);
+    public static Context apply(Context ctx){
+        String lang = get(ctx);
+        return update(ctx, lang);
     }
 
-    @SuppressWarnings("deprecation")
-    private static Context updateResources(Context context, String language) {
-
-        Locale locale = new Locale(language);
-        Locale.setDefault(locale);
-
-        Configuration config = new Configuration(context.getResources().getConfiguration());
-
-        // ✅ For older devices
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            config.locale = locale;
-            context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());
-            return context;
-        }
-
-        // ✅ For newer devices
-        return updateResourcesModern(context, language);
+    public static void set(Context ctx, String lang){
+        SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sp.edit().putString(KEY, lang).apply();
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
-    private static Context updateResourcesModern(Context context, String language) {
-        Locale locale = new Locale(language);
-        Locale.setDefault(locale);
+    public static String get(Context ctx){
+        SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getString(KEY, "en");
+    }
 
-        Configuration config = new Configuration();
+    @SuppressLint("NewApi")
+    private static Context update(Context ctx, String lang){
+        Locale locale = new Locale(lang);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration(ctx.getResources().getConfiguration());
         config.setLocale(locale);
-
-        return context.createConfigurationContext(config);
+        return ctx.createConfigurationContext(config);
     }
 }

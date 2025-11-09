@@ -1,18 +1,34 @@
 <resources>
-    <string name="app_name">GEL Cleaner</string>
 
+    <!-- ===== APP ===== -->
+    <string name="app_name">GEL Cleaner</string>
+    <string name="device_ready">Device is Ready ✅</string>
+
+    <!-- ===== SECTIONS ===== -->
+    <string name="system">System</string>
+    <string name="cleaner">Cleaner</string>
+    <string name="junk">Junk</string>
+    <string name="performance">Performance</string>
+    <string name="logs">Logs</string>
+
+    <!-- ===== ACTIONS ===== -->
     <string name="cpu_info">CPU Info</string>
     <string name="cpu_live">Live CPU</string>
+
     <string name="clean_ram">Clean RAM</string>
     <string name="safe_clean">Safe Clean</string>
     <string name="deep_clean">Deep Clean</string>
 
-    <string name="battery_boost">Battery Boost</string>
-    <string name="kill_apps">Kill Apps</string>
     <string name="media_junk">Media Junk</string>
     <string name="browser_cache">Browser Cache</string>
     <string name="temp_clean">Temp Files</string>
 
+    <string name="battery_boost">Battery Boost</string>
+    <string name="kill_apps">Kill Apps</string>
+
     <string name="clean_all">Clean All</string>
+
+    <!-- ===== DONATE ===== -->
     <string name="donate">DONATE! KEEP APP FREE</string>
+
 </resources>

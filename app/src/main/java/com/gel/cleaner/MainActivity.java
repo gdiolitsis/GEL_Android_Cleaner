@@ -6,13 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
-    private TextView txtLogs;
+    TextView txtLogs;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -22,20 +21,36 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Μην αλλάζεις theme εδώ — χρησιμοποιούμε αυτό από styles.xml
         setContentView(R.layout.activity_main);
 
         txtLogs = findViewById(R.id.txtLogs);
-        log("✅ DEVICE READY • Dark-Gold Edition v4", false);
 
-        setupLanguageButtons();
+        setupLangButtons();
         setupDonate();
-        setupCleanerButtons();
+
+        bind(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
+        bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
+        bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
+        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
+        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
+        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
 
-    private void setupLanguageButtons() {
-        View bGR = findViewById(R.id.btnLangGR);
-        View bEN = findViewById(R.id.btnLangEN);
+    private void setupLangButtons() {
+        Button bGR = findViewById(R.id.btnLangGR);
+        Button bEN = findViewById(R.id.btnLangEN);
+
+        if (bGR != null) {
+            bGR.setOnClickListener(v -> {
+                LocaleHelper.set(this, "el");
+                recreate();
+            });
+        }
 
         if (bEN != null) {
             bEN.setOnClickListener(v -> {
@@ -43,60 +58,30 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 recreate();
             });
         }
-        if (bGR != null) {
-            bGR.setOnClickListener(v -> {
-                LocaleHelper.set(this, "el");
-                recreate();
-            });
-        }
     }
 
     private void setupDonate() {
-        Button donate = findViewById(R.id.btnDonate);
-        if (donate != null) {
-            donate.setOnClickListener(v -> {
-                Intent i = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://www.paypal.com/paypalme/gdiolitsis"));
+        Button donateButton = findViewById(R.id.btnDonate);
+        if (donateButton != null) {
+            donateButton.setOnClickListener(v -> {
+                Intent i = new Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
+                );
                 startActivity(i);
             });
         }
     }
 
-    private void setupCleanerButtons() {
-        bindClick(R.id.btnCpuInfo,      () -> GELCleaner.cpuInfo(this, this));
-        bindClick(R.id.btnCpuLive,      () -> GELCleaner.cpuLive(this, this));
-
-        bindClick(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
-        bindClick(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
-        bindClick(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
-
-        bindClick(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
-        bindClick(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
-        bindClick(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
-
-        bindClick(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
-        bindClick(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
-
-        bindClick(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+    private void bind(int id, Runnable fn){
+        Button b = findViewById(id);
+        if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
-    private void bindClick(int id, Runnable fn) {
-        View v = findViewById(id);
-        if (v != null) v.setOnClickListener(x -> fn.run());
-    }
-
-    // ===== GELCleaner.LogCallback =====
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
-            if (txtLogs == null) return;
-            String old = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
-            txtLogs.setText(old + (old.isEmpty() ? "" : "\n") + msg);
-            // Προαιρετικά: χρωματίζουμε μόνο όταν έρχεται error
-            // (κρατάμε το default χρώμα για OK)
-            if (isError) {
-                txtLogs.setTextColor(getColor(android.R.color.holo_red_light));
-            }
+            txtLogs.append("\n" + msg);
         });
     }
 }

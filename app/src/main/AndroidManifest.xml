@@ -1,37 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.gel.cleaner">
 
-    <!-- Προαιρετικά/ασφαλή permissions -->
-    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
-    <!-- Δεν χρησιμοποιούμε QUERY_ALL_PACKAGES για Play Store compliance -->
+    <!-- ✅ Δεν ζητάμε επικίνδυνα permissions
+         SAF → καθαρισμός χωρίς παραβίαση Play Store policy
+    -->
 
     <application
         android:allowBackup="true"
         android:label="GEL Cleaner"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.GEL">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.AppCompat">
 
-        <activity
-            android:name=".AppListActivity"
-            android:exported="false" />
-
+        <!-- ✅ MAIN -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
         </activity>
 
-    </application>
+        <!-- ✅ APP CACHE LIST -->
+        <activity
+            android:name=".AppListActivity"
+            android:exported="false"/>
 
-    <!-- queries για να μπορούμε να δούμε launcher apps (AppListActivity) -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
-    </queries>
+    </application>
 
 </manifest>

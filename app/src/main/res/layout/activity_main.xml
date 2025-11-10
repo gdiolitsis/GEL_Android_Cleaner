@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="6dp"
-    android:background="@color/black">
+    android:background="@color/gel_bg">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -35,7 +35,6 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
-
         <!-- Donate -->
         <Button
             android:id="@+id/btnDonate"
@@ -44,13 +43,12 @@
             android:text="@string/donate"
             android:background="@drawable/gel_btn_danger"/>
 
-
         <!-- System -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/system"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
 
@@ -76,13 +74,12 @@
                 android:text="@string/cpu_ram_live"/>
         </LinearLayout>
 
-
         <!-- Cleaner -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/cleaner"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
 
@@ -115,13 +112,12 @@
             android:text="@string/deep_clean"
             android:background="@drawable/gel_btn_danger"/>
 
-
         <!-- Junk -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/junk"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
 
@@ -154,23 +150,20 @@
             android:layout_height="60dp"
             android:text="@string/temp_clean"/>
 
-
-        <!-- ✅ NEW — App Cache -->
+        <!-- App cache list -->
         <Button
             android:id="@+id/btnAppCache"
             style="@style/GEL.Button"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="@string/app_cache_title"/>
-
-
+            android:text="@string/app_cache_btn"/>
 
         <!-- Performance -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/performance"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
 
@@ -203,13 +196,12 @@
             android:text="@string/clean_all"
             android:background="@drawable/gel_btn_danger"/>
 
-
         <!-- Logs -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/logs"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="24sp"
             android:layout_marginTop="16dp"/>
 
@@ -219,8 +211,7 @@
             android:layout_height="300dp"
             android:background="@color/dark_gray"
             android:padding="10dp"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="14sp"/>
-
     </LinearLayout>
 </ScrollView>

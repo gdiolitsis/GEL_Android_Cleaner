@@ -1,17 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- PRESSED -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/gel_gold_dark"/>
-            <stroke android:width="2dp" android:color="@color/gel_gold"/>
+            <stroke
+                android:width="2dp"
+                android:color="@color/gel_gold"/>
             <corners android:radius="12dp"/>
+            <padding
+                android:left="12dp"
+                android:top="8dp"
+                android:right="12dp"
+                android:bottom="8dp"/>
         </shape>
     </item>
+
+    <!-- DEFAULT -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/gel_btn_bg"/>
-            <stroke android:width="2dp" android:color="@color/gel_gold"/>
+            <stroke
+                android:width="2dp"
+                android:color="@color/gel_gold"/>
             <corners android:radius="12dp"/>
+            <padding
+                android:left="12dp"
+                android:top="8dp"
+                android:right="12dp"
+                android:bottom="8dp"/>
         </shape>
     </item>
+
 </selector>

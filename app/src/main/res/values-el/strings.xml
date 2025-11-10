@@ -1,28 +1,32 @@
 <resources>
     <string name="app_name">GEL Cleaner</string>
 
+    <!-- System -->
     <string name="system">Σύστημα</string>
-    <string name="cleaner">Καθαριστής</string>
-    <string name="junk">Σκουπίδια</string>
-    <string name="performance">Απόδοση</string>
-    <string name="logs">Μηνύματα</string>
+    <string name="cpu_info">CPU + RAM Πληροφορίες</string>
+    <string name="cpu_live">CPU + RAM Ζωντανά</string>
 
-    <string name="donate">DONATE! ΚΡΑΤΗΣΕ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
-
-    <string name="cpu_info">Πληροφορίες CPU</string>
-    <string name="cpu_live">Ζωντανή CPU</string>
+    <!-- Cleaner -->
+    <string name="cleaner">Καθαρισμός</string>
     <string name="clean_ram">Καθαρισμός RAM</string>
     <string name="safe_clean">Ασφαλής Καθαρισμός</string>
     <string name="deep_clean">Βαθύς Καθαρισμός</string>
-
     <string name="battery_boost">Ενίσχυση Μπαταρίας</string>
-    <string name="kill_apps">Τερματισμός Apps</string>
-    <string name="media_junk">Σκουπίδια Media</string>
+    <string name="kill_apps">Κλείσιμο Εφαρμογών</string>
+    <string name="media_junk">Media Junk</string>
     <string name="browser_cache">Cache Browser</string>
-    <string name="temp_clean">Temp Αρχεία</string>
+    <string name="temp_clean">Προσωρινά Αρχεία</string>
     <string name="clean_all">Καθαρισμός Όλων</string>
 
-    <!-- NEW -->
-    <string name="app_cache">Cache Εφαρμογών</string>
-    <string name="app_cache_title">Διάλεξε εφαρμογή για καθαρισμό cache</string>
+    <!-- Junk -->
+    <string name="junk">Απορρίμματα</string>
+
+    <!-- Performance -->
+    <string name="performance">Απόδοση</string>
+
+    <!-- Donate -->
+    <string name="donate">DONATE! KEEP APP FREE</string>
+
+    <!-- Logs -->
+    <string name="logs">Καταγραφές</string>
 </resources>

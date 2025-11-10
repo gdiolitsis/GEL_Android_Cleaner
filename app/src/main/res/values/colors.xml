@@ -19,11 +19,8 @@
     <color name="gel_red_bg">#8B0000</color>
     <color name="gel_red_text">#FF0000</color>
 
-    <!-- ✅ LEGACY / COMMON -->
+    <!-- ✅ LEGACY -->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="dark_gray">#555555</color>
-
-    <!-- ✅ MISSING: used by adaptive icon -->
-    <color name="gel_black">#000000</color>
 </resources>

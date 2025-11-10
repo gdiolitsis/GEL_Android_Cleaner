@@ -1,104 +1,129 @@
 package com.gel.cleaner;
 
+import android.app.Activity;
+import android.app.usage.StorageStats;
+import android.app.usage.StorageStatsManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
+import android.os.UserHandle;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class AppListActivity extends AppCompatActivity {
 
-    private List<ResolveInfo> apps;
-    private PackageManager pm;
+    ListView listView;
+    List<AppInfo> apps = new ArrayList<>();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_list);
 
-        pm = getPackageManager();
+        listView = findViewById(R.id.listView);
 
-        // Get launcher apps
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        loadApps();
 
-        apps = pm.queryIntentActivities(mainIntent, 0);
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            AppInfo a = apps.get(position);
 
-        // Sort alphabetically
-        Collections.sort(apps, (a, b) ->
-                String.valueOf(a.loadLabel(pm))
-                        .compareToIgnoreCase(String.valueOf(b.loadLabel(pm))));
+            Toast.makeText(this, "Clearing cache: " + a.label, Toast.LENGTH_SHORT).show();
 
-        ListView list = findViewById(R.id.listApps);
-        list.setAdapter(new AppAdapter());
-        list.setOnItemClickListener(onItemClick);
+            GELCleaner.clearAppCache(this, a.packageName, null);
+        });
     }
 
-    // ================== CLICK → APP INFO =====================
-    private final AdapterView.OnItemClickListener onItemClick =
-            (parent, view, position, id) -> {
 
-        ResolveInfo info = apps.get(position);
-        String pkg = info.activityInfo.packageName;
+    /* =========================================
+     *            LOAD APPS & CACHE SIZE
+     * ========================================= */
+    private void loadApps() {
+        PackageManager pm = getPackageManager();
 
-        // Send user to App Info → Clear Cache
-        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.setData(Uri.parse("package:" + pkg));
-        startActivity(i);
-    };
+        List<ApplicationInfo> list = pm.getInstalledApplications(0);
 
-    // ================== ADAPTER =====================
-    private class AppAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return apps.size();
+        for (ApplicationInfo ai : list) {
+            try {
+                String name = pm.getApplicationLabel(ai).toString();
+                long cache = getCacheSize(ai.packageName);
+                apps.add(new AppInfo(name, ai.packageName, cache));
+            } catch (Exception ignored) {}
         }
 
-        @Override
-        public Object getItem(int i) {
-            return apps.get(i);
+        apps.sort((a, b) -> Long.compare(b.cacheSize, a.cacheSize));
+
+        List<String> labels = new ArrayList<>();
+        for (AppInfo a: apps)
+            labels.add(a.label + "   (" + format(a.cacheSize) + ")");
+
+        listView.setAdapter(new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                labels
+        ));
+    }
+
+
+    /* =========================================
+     *                UTILS
+     * ========================================= */
+    private long getCacheSize(String pkg){
+        try {
+            StorageStatsManager ssm = (StorageStatsManager)
+                    getSystemService(Context.STORAGE_STATS_SERVICE);
+
+            UUID uuid = StorageStatsManager.UUID_DEFAULT;
+            UserHandle user = android.os.Process.myUserHandle();
+
+            StorageStats stats = ssm.queryStatsForPackage(
+                    uuid,
+                    pkg,
+                    user
+            );
+
+            return stats.getCacheBytes();
         }
+        catch (Exception ignored) {}
 
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
+        return 0;
+    }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+    private String format(long bytes){
+        if (bytes < 1024) return bytes + " B";
+        int z = (63 - Long.numberOfLeadingZeros(bytes)) / 10;
+        return String.format("%.1f %sB",
+                (double) bytes / (1L << (z * 10)),
+                " KMGTPE".charAt(z));
+    }
 
-            View v = convertView;
-            if (v == null) {
-                v = LayoutInflater.from(AppListActivity.this)
-                        .inflate(R.layout.list_item_app, parent, false);
-            }
 
-            ResolveInfo info = apps.get(position);
+    /* =========================================
+     *              MODEL
+     * ========================================= */
+    static class AppInfo {
+        String label;
+        String packageName;
+        long cacheSize;
 
-            ImageView icon = v.findViewById(R.id.appIcon);
-            TextView name = v.findViewById(R.id.appName);
-            TextView pkg  = v.findViewById(R.id.appPkg);
-
-            icon.setImageDrawable(info.loadIcon(pm));
-            name.setText(info.loadLabel(pm));
-            pkg.setText(info.activityInfo.packageName);
-
-            return v;
+        AppInfo(String label, String packageName, long cacheSize) {
+            this.label = label;
+            this.packageName = packageName;
+            this.cacheSize = cacheSize;
         }
     }
 }

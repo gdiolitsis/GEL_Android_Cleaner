@@ -1,36 +1,33 @@
 package com.gel.cleaner;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Build;
 
 import java.util.Locale;
 
 public class LocaleHelper {
 
-    @SuppressLint("ApplySharedPref")
-    public static void set(Context ctx, String lang) {
-        SharedPreferences sp = ctx.getSharedPreferences("locale", Context.MODE_PRIVATE);
-        sp.edit().putString("lang", lang).commit();
+    private static final String PREF = "gel_locale";
+    private static final String KEY  = "lang";
+
+    public static Context apply(Context context) {
+        SharedPreferences sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        String lang = sp.getString(KEY, "en");
+        return setLocale(context, lang);
     }
 
-    public static Context apply(Context ctx) {
-        SharedPreferences sp = ctx.getSharedPreferences("locale", Context.MODE_PRIVATE);
-        String lang = sp.getString("lang", "en");
+    public static void set(Context context, String lang) {
+        SharedPreferences sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        sp.edit().putString(KEY, lang).apply();
+        setLocale(context, lang);
+    }
 
+    private static Context setLocale(Context context, String lang) {
         Locale locale = new Locale(lang);
         Locale.setDefault(locale);
-
-        Configuration cfg = new Configuration();
+        Configuration cfg = new Configuration(context.getResources().getConfiguration());
         cfg.setLocale(locale);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            return ctx.createConfigurationContext(cfg);
-        } else {
-            ctx.getResources().updateConfiguration(cfg, ctx.getResources().getDisplayMetrics());
-            return ctx;
-        }
+        return context.createConfigurationContext(cfg);
     }
 }

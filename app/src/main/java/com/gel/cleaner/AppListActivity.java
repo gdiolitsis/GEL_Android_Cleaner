@@ -32,41 +32,64 @@ public class AppListActivity extends AppCompatActivity {
 
         pm = getPackageManager();
 
+        // Get launcher apps
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         apps = pm.queryIntentActivities(mainIntent, 0);
+
+        // Sort alphabetically
         Collections.sort(apps, (a, b) ->
-                String.valueOf(a.loadLabel(pm)).compareToIgnoreCase(String.valueOf(b.loadLabel(pm))));
+                String.valueOf(a.loadLabel(pm))
+                        .compareToIgnoreCase(String.valueOf(b.loadLabel(pm))));
 
         ListView list = findViewById(R.id.listApps);
         list.setAdapter(new AppAdapter());
         list.setOnItemClickListener(onItemClick);
     }
 
-    private final AdapterView.OnItemClickListener onItemClick = (parent, view, position, id) -> {
+    // ================== CLICK → APP INFO =====================
+    private final AdapterView.OnItemClickListener onItemClick =
+            (parent, view, position, id) -> {
+
         ResolveInfo info = apps.get(position);
         String pkg = info.activityInfo.packageName;
 
-        // Open App Info screen so the user can tap "Clear cache"
+        // Send user to App Info → Clear Cache
         Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         i.setData(Uri.parse("package:" + pkg));
         startActivity(i);
     };
 
+    // ================== ADAPTER =====================
     private class AppAdapter extends BaseAdapter {
-        @Override public int getCount() { return apps.size(); }
-        @Override public Object getItem(int i) { return apps.get(i); }
-        @Override public long getItemId(int i) { return i; }
+
+        @Override
+        public int getCount() {
+            return apps.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return apps.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+
             View v = convertView;
             if (v == null) {
                 v = LayoutInflater.from(AppListActivity.this)
                         .inflate(R.layout.list_item_app, parent, false);
             }
+
             ResolveInfo info = apps.get(position);
+
             ImageView icon = v.findViewById(R.id.appIcon);
             TextView name = v.findViewById(R.id.appName);
             TextView pkg  = v.findViewById(R.id.appPkg);
@@ -74,6 +97,7 @@ public class AppListActivity extends AppCompatActivity {
             icon.setImageDrawable(info.loadIcon(pm));
             name.setText(info.loadLabel(pm));
             pkg.setText(info.activityInfo.packageName);
+
             return v;
         }
     }

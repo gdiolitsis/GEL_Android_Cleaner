@@ -1,32 +1,28 @@
 <resources>
     <string name="app_name">GEL Cleaner</string>
 
-    <!-- System -->
+    <!-- Ενότητες -->
     <string name="system">Σύστημα</string>
-    <string name="cpu_info">CPU + RAM Πληροφορίες</string>
-    <string name="cpu_live">CPU + RAM Ζωντανά</string>
-
-    <!-- Cleaner -->
     <string name="cleaner">Καθαρισμός</string>
+    <string name="junk">Σκουπίδια</string>
+    <string name="performance">Επιδόσεις</string>
+    <string name="logs">Καταγραφές</string>
+    <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
+
+    <!-- Κουμπιά / Ενέργειες -->
+    <string name="donate">❤️ ΔΩΡΙΣΕ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
+    <string name="cpu_ram_info">CPU + RAM Πληροφορίες</string>
+    <string name="cpu_ram_live">CPU + RAM Live</string>
     <string name="clean_ram">Καθαρισμός RAM</string>
     <string name="safe_clean">Ασφαλής Καθαρισμός</string>
     <string name="deep_clean">Βαθύς Καθαρισμός</string>
+    <string name="media_junk">Πολυμέσα Σκουπίδια</string>
+    <string name="browser_cache">Cache Περιηγητή</string>
+    <string name="temp_clean">Προσωρινά Αρχεία</string>
     <string name="battery_boost">Ενίσχυση Μπαταρίας</string>
     <string name="kill_apps">Κλείσιμο Εφαρμογών</string>
-    <string name="media_junk">Media Junk</string>
-    <string name="browser_cache">Cache Browser</string>
-    <string name="temp_clean">Προσωρινά Αρχεία</string>
-    <string name="clean_all">Καθαρισμός Όλων</string>
+    <string name="clean_all">Καθάρισε Όλα</string>
 
-    <!-- Junk -->
-    <string name="junk">Απορρίμματα</string>
-
-    <!-- Performance -->
-    <string name="performance">Απόδοση</string>
-
-    <!-- Donate -->
-    <string name="donate">DONATE! KEEP APP FREE</string>
-
-    <!-- Logs -->
-    <string name="logs">Καταγραφές</string>
+    <!-- Λίστα εφαρμογών -->
+    <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
 </resources>

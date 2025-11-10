@@ -1,20 +1,16 @@
 <resources>
     <string name="app_name">GEL Cleaner</string>
 
+    <!-- System -->
     <string name="system">System</string>
+    <string name="cpu_info">CPU + RAM Info</string>
+    <string name="cpu_live">CPU + RAM Live</string>
+
+    <!-- Cleaner -->
     <string name="cleaner">Cleaner</string>
-    <string name="junk">Junk</string>
-    <string name="performance">Performance</string>
-    <string name="logs">Logs</string>
-
-    <string name="donate">DONATE! KEEP THIS APP FREE</string>
-
-    <string name="cpu_info">CPU Info</string>
-    <string name="cpu_live">CPU Live</string>
     <string name="clean_ram">Clean RAM</string>
     <string name="safe_clean">Safe Clean</string>
     <string name="deep_clean">Deep Clean</string>
-
     <string name="battery_boost">Battery Boost</string>
     <string name="kill_apps">Kill Apps</string>
     <string name="media_junk">Media Junk</string>
@@ -22,7 +18,15 @@
     <string name="temp_clean">Temp Files</string>
     <string name="clean_all">Clean All</string>
 
-    <!-- NEW -->
-    <string name="app_cache">App Cache</string>
-    <string name="app_cache_title">Select an app to clear its cache</string>
+    <!-- Junk -->
+    <string name="junk">Junk</string>
+
+    <!-- Performance -->
+    <string name="performance">Performance</string>
+
+    <!-- Donate -->
+    <string name="donate">DONATE! KEEP APP FREE</string>
+
+    <!-- Logs -->
+    <string name="logs">Logs</string>
 </resources>

@@ -53,160 +53,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
             <Button
-                android:id="@+id/btnCpuInfo"
+                android:id="@+id/btnCpuRamInfo"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="@string/cpu_info"/>
+                android:text="@string/cpu_ram_info"/>
+
             <Button
-                android:id="@+id/btnCpuLive"
+                android:id="@+id/btnCpuRamLive"
                 style="@style/GEL.Button"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:text="@string/cpu_live"/>
+                android:text="@string/cpu_ram_live"/>
         </LinearLayout>
-
-        <!-- Cleaner -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cleaner"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnCleanRam"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/clean_ram"/>
-            <Button
-                android:id="@+id/btnSafeClean"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/safe_clean"/>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnDeepClean"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/deep_clean"
-            android:background="@drawable/gel_btn_danger"/>
-
-        <!-- Junk -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/junk"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnMediaJunk"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/media_junk"/>
-            <Button
-                android:id="@+id/btnBrowserCache"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/browser_cache"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnTemp"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/temp_clean"/>
-            <Button
-                android:id="@+id/btnAppCache"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/app_cache"/>
-        </LinearLayout>
-
-        <!-- Performance -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/performance"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnBatteryBoost"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/battery_boost"/>
-            <Button
-                android:id="@+id/btnKillApps"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/kill_apps"/>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnCleanAll"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/clean_all"
-            android:background="@drawable/gel_btn_danger"/>
-
-        <!-- Logs -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/logs"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <TextView
-            android:id="@+id/txtLogs"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:background="@color/dark_gray"
-            android:padding="10dp"
-            android:textColor="@color/white"
-            android:textSize="14sp"/>
-
-    </LinearLayout>
-</ScrollView>

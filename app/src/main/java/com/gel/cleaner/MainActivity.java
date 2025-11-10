@@ -12,8 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
-    TextView txtLogs;
-    ScrollView scroll;
+    private TextView txtLogs;
+    private ScrollView scroll;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -26,16 +26,16 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setContentView(R.layout.activity_main);
 
         txtLogs = findViewById(R.id.txtLogs);
-        scroll  = findViewById(R.id.scrollRoot);
+        scroll  = findViewById(R.id.scrollRoot);   // υπάρχει id στο XML
 
         setupLangButtons();
         setupDonate();
         setupCleanerButtons();
 
-        log("✅ Device is ready • Dark-Gold Edition", false);
+        log(getString(R.string.device_ready), false);
     }
 
-    // ============= LANG =============
+    // ================ LANGUAGE =================
     private void setupLangButtons() {
         Button bGR = findViewById(R.id.btnLangGR);
         Button bEN = findViewById(R.id.btnLangEN);
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         });
     }
 
-    // ============= DONATE =============
+    // ================ DONATE ===================
     private void setupDonate() {
         Button donateButton = findViewById(R.id.btnDonate);
         if (donateButton != null) {
@@ -65,26 +65,28 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-    // ============= CLEANER =============
+    // ================ BIND BUTTONS =============
     private void setupCleanerButtons() {
-
         // System
-        bind(R.id.btnCpuRamInfo,   () -> GELCleaner.cpuInfo(this, this));
-        bind(R.id.btnCpuRamLive,   () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnCpuRamInfo, () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuRamLive, () -> GELCleaner.cpuLive(this, this)); // 10s safe loop
 
         // Cleaner
-        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
-        bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
-        bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnCleanRam,   () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnSafeClean,  () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean,  () -> GELCleaner.deepClean(this, this));
 
         // Junk
         bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
         bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
         bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
 
-        // NEW → App Cache
-        bind(R.id.btnAppCache, () ->
-                startActivity(new Intent(this, AppListActivity.class)));
+        // App Cache (list)
+        Button appCache = findViewById(R.id.btnAppCache);
+        if (appCache != null) {
+            appCache.setOnClickListener(v ->
+                    startActivity(new Intent(this, AppListActivity.class)));
+        }
 
         // Performance
         bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
@@ -94,22 +96,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
 
-    private void bind(int id, Runnable fn) {
+    private void bind(int id, Runnable fn){
         Button b = findViewById(id);
-        if (b != null)
-            b.setOnClickListener(v -> fn.run());
+        if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
-    // ============= LOG =============
+    // ================ LOG CALLBACK =============
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
-
             String old = txtLogs.getText().toString();
             txtLogs.setText(old + "\n" + msg);
-
-            if (scroll != null)
+            if (scroll != null) {
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+            }
         });
     }
 }

@@ -1,217 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollRoot"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootMain"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="6dp"
-    android:background="@color/gel_bg">
+    android:background="@color/black">
+
+    <!-- LANG -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="right">
+
+        <Button
+            android:id="@+id/btnLangGR"
+            style="@style/GEL.Button"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            android:text="🇬🇷"
+            android:textSize="18sp"/>
+
+        <Button
+            android:id="@+id/btnLangEN"
+            style="@style/GEL.Button"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            android:text="🇬🇧"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+
+    <!-- DONATE -->
+    <Button
+        android:id="@+id/btnDonate"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/donate"
+        android:background="@drawable/gel_btn_danger"/>
+
+
+    <!-- SYSTEM -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/system"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginTop="16dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <!-- Lang -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="right">
-
-            <Button
-                android:id="@+id/btnLangGR"
-                style="@style/GEL.Button"
-                android:layout_width="60dp"
-                android:layout_height="40dp"
-                android:text="🇬🇷"
-                android:textSize="18sp"/>
-
-            <Button
-                android:id="@+id/btnLangEN"
-                style="@style/GEL.Button"
-                android:layout_width="60dp"
-                android:layout_height="40dp"
-                android:text="🇬🇧"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Donate -->
-        <Button
-            android:id="@+id/btnDonate"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/donate"
-            android:background="@drawable/gel_btn_danger"/>
-
-        <!-- System -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/system"
-            android:textColor="@color/gel_text_primary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnCpuRamInfo"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/cpu_ram_info"/>
-
-            <Button
-                android:id="@+id/btnCpuRamLive"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/cpu_ram_live"/>
-        </LinearLayout>
-
-        <!-- Cleaner -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cleaner"
-            android:textColor="@color/gel_text_primary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnCleanRam"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/clean_ram"/>
-
-            <Button
-                android:id="@+id/btnSafeClean"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/safe_clean"/>
-        </LinearLayout>
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnDeepClean"
-            android:layout_width="match_parent"
+            android:id="@+id/btnCpuRamInfo"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
             android:layout_height="60dp"
-            android:text="@string/deep_clean"
-            android:background="@drawable/gel_btn_danger"/>
+            android:layout_weight="1"
+            android:text="@string/cpu_ram_info"/>
 
-        <!-- Junk -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/junk"
-            android:textColor="@color/gel_text_primary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
+        <Button
+            android:id="@+id/btnCpuRamLive"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/cpu_ram_live"/>
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnMediaJunk"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/media_junk"/>
+    <!-- CLEANER -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cleaner"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginTop="16dp"/>
 
-            <Button
-                android:id="@+id/btnBrowserCache"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/browser_cache"/>
-        </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCleanRam"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/clean_ram"/>
+
+        <Button
+            android:id="@+id/btnSafeClean"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/safe_clean"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnDeepClean"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/deep_clean"
+        android:background="@drawable/gel_btn_danger"/>
+
+
+    <!-- JUNK -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/junk"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginTop="16dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnMediaJunk"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/media_junk"/>
+
+        <Button
+            android:id="@+id/btnBrowserCache"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/browser_cache"/>
+    </LinearLayout>
+
+    <!-- ✅ NEW — side-by-side -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnTemp"
             style="@style/GEL.Button"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="60dp"
+            android:layout_weight="1"
             android:text="@string/temp_clean"/>
 
-        <!-- App cache list -->
         <Button
             android:id="@+id/btnAppCache"
             style="@style/GEL.Button"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="60dp"
-            android:text="@string/app_cache_btn"/>
+            android:layout_weight="1"
+            android:text="@string/app_cache_title"/>
+    </LinearLayout>
 
-        <!-- Performance -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/performance"
-            android:textColor="@color/gel_text_primary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+    <!-- PERFORMANCE -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/performance"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginTop="16dp"/>
 
-            <Button
-                android:id="@+id/btnBatteryBoost"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/battery_boost"/>
-
-            <Button
-                android:id="@+id/btnKillApps"
-                style="@style/GEL.Button"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:text="@string/kill_apps"/>
-        </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnCleanAll"
-            android:layout_width="match_parent"
+            android:id="@+id/btnBatteryBoost"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
             android:layout_height="60dp"
-            android:text="@string/clean_all"
-            android:background="@drawable/gel_btn_danger"/>
+            android:layout_weight="1"
+            android:text="@string/battery_boost"/>
 
-        <!-- Logs -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/logs"
-            android:textColor="@color/gel_text_primary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"/>
+        <Button
+            android:id="@+id/btnKillApps"
+            style="@style/GEL.Button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/kill_apps"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnCleanAll"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/clean_all"
+        android:background="@drawable/gel_btn_danger"/>
+
+
+    <!-- LOGS -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/logs"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginTop="16dp"/>
+
+    <ScrollView
+        android:id="@+id/scrollRoot"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <TextView
             android:id="@+id/txtLogs"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="wrap_content"
             android:background="@color/dark_gray"
             android:padding="10dp"
-            android:textColor="@color/gel_text_primary"
+            android:textColor="@color/white"
             android:textSize="14sp"/>
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+
+</LinearLayout>

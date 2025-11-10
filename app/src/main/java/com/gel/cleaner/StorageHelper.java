@@ -8,6 +8,7 @@ import android.provider.DocumentsContract;
 public class StorageHelper {
 
     public static void cleanSystem(Activity act) {
+        // Παράδειγμα ανοίγματος SAF σε Android/data (όπου επιτρέπεται)
         openSAF(act, "Android/data");
     }
 
@@ -27,11 +28,9 @@ public class StorageHelper {
                     "com.android.externalstorage.documents",
                     "primary:" + relative
             );
-
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
             intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
             act.startActivity(intent);
-
         } catch (Exception ignored) {}
     }
 }

@@ -6,24 +6,31 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class AppListActivity extends AppCompatActivity {
 
-    private List<ResolveInfo> apps;
+    public static class AppInfo {
+        public final String label;
+        public final String packageName;
+        public final ResolveInfo resolveInfo;
+
+        public AppInfo(String label, String packageName, ResolveInfo resolveInfo) {
+            this.label = label;
+            this.packageName = packageName;
+            this.resolveInfo = resolveInfo;
+        }
+    }
+
     private PackageManager pm;
+    private List<AppInfo> data = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,49 +39,30 @@ public class AppListActivity extends AppCompatActivity {
 
         pm = getPackageManager();
 
+        // Apps με LAUNCHER activity
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        apps = pm.queryIntentActivities(mainIntent, 0);
+        List<ResolveInfo> apps = pm.queryIntentActivities(mainIntent, 0);
         Collections.sort(apps, (a, b) ->
                 String.valueOf(a.loadLabel(pm)).compareToIgnoreCase(String.valueOf(b.loadLabel(pm))));
 
+        for (ResolveInfo ri : apps) {
+            String label = String.valueOf(ri.loadLabel(pm));
+            String pkg   = ri.activityInfo.packageName;
+            data.add(new AppInfo(label, pkg, ri));
+        }
+
         ListView list = findViewById(R.id.listApps);
-        list.setAdapter(new AppAdapter());
+        list.setAdapter(new AppListAdapter(this, data));
         list.setOnItemClickListener(onItemClick);
     }
 
     private final AdapterView.OnItemClickListener onItemClick = (parent, view, position, id) -> {
-        ResolveInfo info = apps.get(position);
-        String pkg = info.activityInfo.packageName;
-
-        // Άνοιγμα App Info για manual "Clear cache"
+        AppInfo info = data.get(position);
+        // Ανοίγει App Info → για να πατήσεις χειροκίνητα "Clear cache"
         Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.setData(Uri.parse("package:" + pkg));
+        i.setData(Uri.parse("package:" + info.packageName));
         startActivity(i);
     };
-
-    private class AppAdapter extends BaseAdapter {
-        @Override public int getCount() { return apps.size(); }
-        @Override public Object getItem(int i) { return apps.get(i); }
-        @Override public long getItemId(int i) { return i; }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View v = convertView;
-            if (v == null) {
-                v = LayoutInflater.from(AppListActivity.this)
-                        .inflate(R.layout.list_item_app, parent, false);
-            }
-            ResolveInfo info = apps.get(position);
-            ImageView icon = v.findViewById(R.id.appIcon);
-            TextView name = v.findViewById(R.id.appName);
-            TextView pkg  = v.findViewById(R.id.appPkg);
-
-            icon.setImageDrawable(info.loadIcon(pm));
-            name.setText(info.loadLabel(pm));
-            pkg.setText(info.activityInfo.packageName);
-            return v;
-        }
-    }
 }

@@ -26,20 +26,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setContentView(R.layout.activity_main);
 
         txtLogs = findViewById(R.id.txtLogs);
-        scroll  = findViewById(R.id.scrollRoot);   // <-- needs id in XML
+        scroll  = findViewById(R.id.scrollRoot);
 
         setupLangButtons();
         setupDonate();
         setupCleanerButtons();
 
-        log("✅ Device is ready • Dark-Gold Edition v4.3", false);
+        log("✅ Device is ready • Dark-Gold Edition", false);
     }
+
 
     /* =========================================
      *              LANGUAGE
      * ========================================= */
     private void setupLangButtons() {
-
         Button bGR = findViewById(R.id.btnLangGR);
         Button bEN = findViewById(R.id.btnLangEN);
 
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
 
     /* =========================================
-     *              CLEANER FUNCTIONS
+     *              CLEANER BUTTONS
      * ========================================= */
     private void setupCleanerButtons() {
 
@@ -106,7 +106,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnTemp, () ->
                 GELCleaner.tempClean(this, this));
 
-        // OPTIONAL — App Cache (only if layout contains it)
+
+        // ✅ APP CACHE LIST
         bind(R.id.btnAppCache, () ->
                 startActivity(new Intent(this, AppListActivity.class)));
 
@@ -136,12 +137,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================= */
     @Override
     public void log(String msg, boolean isError) {
-        runOnUiThread(() -> {
 
+        runOnUiThread(() -> {
             String old = txtLogs.getText().toString();
             txtLogs.setText(old + "\n" + msg);
 
-            // AUTO-SCROLL ↓↓↓
+            // ✅ AUTO-SCROLL
             if (scroll != null)
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });

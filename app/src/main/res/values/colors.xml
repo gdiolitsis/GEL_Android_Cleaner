@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- ✅ GOLD -->
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
@@ -23,4 +25,9 @@
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="dark_gray">#555555</color>
+
+    <!-- ✅ REQUIRED ALIASES for row_app.xml / item_app.xml -->
+    <color name="gold">#FFD700</color>
+    <color name="gray">#808080</color>
+
 </resources>

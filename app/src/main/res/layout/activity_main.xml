@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/scrollRoot"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="6dp"
@@ -36,6 +35,7 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
+
         <!-- Donate -->
         <Button
             android:id="@+id/btnDonate"
@@ -43,6 +43,7 @@
             android:layout_height="60dp"
             android:text="@string/donate"
             android:background="@drawable/gel_btn_danger"/>
+
 
         <!-- System -->
         <TextView
@@ -74,6 +75,7 @@
                 android:layout_weight="1"
                 android:text="@string/cpu_ram_live"/>
         </LinearLayout>
+
 
         <!-- Cleaner -->
         <TextView
@@ -113,6 +115,7 @@
             android:text="@string/deep_clean"
             android:background="@drawable/gel_btn_danger"/>
 
+
         <!-- Junk -->
         <TextView
             android:layout_width="wrap_content"
@@ -151,6 +154,17 @@
             android:layout_height="60dp"
             android:text="@string/temp_clean"/>
 
+
+        <!-- ✅ NEW — App Cache -->
+        <Button
+            android:id="@+id/btnAppCache"
+            style="@style/GEL.Button"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/app_cache_title"/>
+
+
+
         <!-- Performance -->
         <TextView
             android:layout_width="wrap_content"
@@ -188,6 +202,7 @@
             android:layout_height="60dp"
             android:text="@string/clean_all"
             android:background="@drawable/gel_btn_danger"/>
+
 
         <!-- Logs -->
         <TextView

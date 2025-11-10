@@ -1,34 +1,16 @@
+// ✅ Root build.gradle (Gradle 8.x / AGP 8.2.2)
+
 plugins {
-    id 'com.android.application'
+    id("com.android.application") version "8.2.2" apply false
 }
 
-android {
-    namespace "com.gel.cleaner"
-    compileSdk 34
-
-    defaultConfig {
-        applicationId "com.gel.cleaner"
-        minSdk 24
-        targetSdk 34
-        versionCode 4
-        versionName "4.0"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'com.google.android.material:material:1.12.0'
+tasks.register("clean", Delete) {
+    delete(rootProject.buildDir)
 }

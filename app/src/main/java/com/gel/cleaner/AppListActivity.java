@@ -1,19 +1,32 @@
 package com.gel.cleaner;
 
-import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.widget.AdapterView;
+import android.provider.Settings;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppListActivity extends Activity {
+public class AppListActivity extends AppCompatActivity {
 
     ListView listView;
-    List<AppEntry> entries = new ArrayList<>();
+    TextView title;
+    List<AppEntry> items = new ArrayList<>();
+    AppListAdapter adapter;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,29 +34,46 @@ public class AppListActivity extends Activity {
         setContentView(R.layout.activity_app_list);
 
         listView = findViewById(R.id.listApps);
+        title    = findViewById(R.id.txtTitle);
+
+        title.setText(getString(R.string.app_cache_title));
 
         loadApps();
-        AppListAdapter adapter = new AppListAdapter(this, entries);
-        listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            AppEntry e = entries.get(position);
-            GELCleaner.clearAppCache(this, e.packageName);
-        });
     }
 
     private void loadApps() {
         PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        List<PackageInfo> pkgs = pm.getInstalledPackages(PackageManager.GET_META_DATA);
 
-        for (ApplicationInfo a : apps) {
-            if ((a.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-                entries.add(new AppEntry(
-                        a.loadLabel(pm).toString(),
-                        a.packageName,
-                        a.loadIcon(pm)
-                ));
-            }
+        items.clear();
+
+        for (PackageInfo info : pkgs) {
+
+            // skip system packages
+            if ((info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                continue;
+
+            String name = info.applicationInfo.loadLabel(pm).toString();
+            String pkg  = info.packageName;
+
+            long size = 0;   // δεν επιτρέπεται πλέον να διαβάσουμε exact cache size
+                             // το αφήνουμε "0" εμφανιστικά
+
+            items.add(new AppEntry(name, pkg, size));
         }
+
+        adapter = new AppListAdapter(this, items);
+        listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener((p, v, i, id) -> {
+            AppEntry e = items.get(i);
+            openAppSettings(e.pkg);
+        });
+    }
+
+    private void openAppSettings(String pkg) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + pkg));
+        startActivity(intent);
     }
 }

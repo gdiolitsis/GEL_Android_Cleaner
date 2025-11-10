@@ -1,13 +1,10 @@
 package com.gel.cleaner;
 
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,57 +13,54 @@ import java.util.List;
 
 public class AppListActivity extends AppCompatActivity {
 
-    ListView listApps;
-    ArrayAdapter<String> adapter;
-    ArrayList<String> appNames = new ArrayList<>();
-    ArrayList<String> packages = new ArrayList<>();
+    ListView list;
+    PackageManager pm;
+    List<AppInfo> apps = new ArrayList<>();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_app_list);
 
-        listApps = findViewById(R.id.listApps);
+        list = findViewById(R.id.appListView);
+        pm   = getPackageManager();
 
         loadApps();
-
-        adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_list_item_1,
-                appNames
-        );
-        listApps.setAdapter(adapter);
-
-        listApps.setOnItemClickListener(onClick);
     }
 
-    /** Load installed apps */
     private void loadApps() {
 
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        List<ApplicationInfo> lst = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        apps.clear();
 
-        for (ApplicationInfo ai : apps) {
+        for (ApplicationInfo a : lst) {
+            if ((a.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                continue;
 
-            // Skip system apps
-            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
+            String label = pm.getApplicationLabel(a).toString();
+            String pkg   = a.packageName;
 
-            String label = pm.getApplicationLabel(ai).toString();
-            appNames.add(label);
-            packages.add(ai.packageName);
+            apps.add(new AppInfo(label, pkg));
         }
+
+        AppListAdapter adapter = new AppListAdapter(this, apps);
+        list.setAdapter(adapter);
+
+        list.setOnItemClickListener((parent, view, pos, id) -> {
+            AppInfo i = apps.get(pos);
+            Toast.makeText(this, "Clear: " + i.pkg, Toast.LENGTH_SHORT).show();
+
+            GELCleaner.clearCacheForApp(this, i.pkg);
+        });
     }
 
-    /** OnClick → go to app-info page */
-    private final AdapterView.OnItemClickListener onClick = (parent, view, pos, id) -> {
+    static class AppInfo {
+        String label;
+        String pkg;
 
-        String pkg = packages.get(pos);
-
-        Intent intent = new Intent(
-                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.parse("package:" + pkg)
-        );
-
-        startActivity(intent);
-    };
+        AppInfo(String l, String p){
+            label = l;
+            pkg   = p;
+        }
+    }
 }

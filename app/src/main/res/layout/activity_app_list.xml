@@ -7,19 +7,18 @@
     android:background="@color/black">
 
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/txtTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/app_cache_title"
-        android:textColor="@color/white"
         android:textSize="22sp"
-        android:padding="8dp" />
+        android:textColor="@color/white"
+        android:padding="6dp" />
 
     <ListView
         android:id="@+id/listApps"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:dividerHeight="1dp"
-        android:divider="@color/dark_gray"/>
-
+        android:divider="@color/dark_gray"
+        android:dividerHeight="1dp"/>
 </LinearLayout>

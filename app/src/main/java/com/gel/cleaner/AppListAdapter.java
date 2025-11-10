@@ -1,8 +1,6 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,69 +12,49 @@ import java.util.List;
 
 public class AppListAdapter extends BaseAdapter {
 
-    Context ctx;
-    List<AppListActivity.AppInfo> data;
-    LayoutInflater inf;
-    PackageManager pm;
+    private final Context ctx;
+    private final LayoutInflater inflater;
+    private final List<AppListActivity.AppInfo> data;
 
     public AppListAdapter(Context c, List<AppListActivity.AppInfo> d) {
-        ctx = c;
-        data = d;
-        inf = LayoutInflater.from(c);
-        pm = c.getPackageManager();
+        this.ctx = c;
+        this.inflater = LayoutInflater.from(c);
+        this.data = d;
     }
 
-    @Override
-    public int getCount() {
-        return data.size();
-    }
+    @Override public int getCount() { return data.size(); }
+    @Override public Object getItem(int position) { return data.get(position); }
+    @Override public long getItemId(int position) { return position; }
 
     @Override
-    public Object getItem(int i) {
-        return data.get(i);
-    }
-
-    @Override
-    public long getItemId(int i) {
-        return i;
-    }
-
-    @Override
-    public View getView(int pos, View v, ViewGroup parent) {
-
-        Holder h;
+    public View getView(int position, View convertView, ViewGroup parent) {
+        RowHolder h;
+        View v = convertView;
         if (v == null) {
-            v = inf.inflate(R.layout.item_app, parent, false);
-            h = new Holder(v);
+            // Χρησιμοποιούμε row_app.xml (πρέπει να υπάρχει ήδη)
+            v = inflater.inflate(R.layout.row_app, parent, false);
+            h = new RowHolder(v);
             v.setTag(h);
         } else {
-            h = (Holder) v.getTag();
+            h = (RowHolder) v.getTag();
         }
 
-        AppListActivity.AppInfo a = data.get(pos);
-
-        Drawable icon;
-        try {
-            icon = pm.getApplicationIcon(a.pkg);
-        } catch (Exception e) {
-            icon = ctx.getDrawable(android.R.drawable.sym_def_app_icon);
-        }
-
-        h.icon.setImageDrawable(icon);
-        h.label.setText(a.label);
-        h.pkg.setText(a.pkg);
-
+        AppListActivity.AppInfo a = data.get(position);
+        h.name.setText(a.label);
+        h.pkg.setText(a.packageName);
+        h.icon.setImageDrawable(a.resolveInfo.loadIcon(ctx.getPackageManager()));
         return v;
     }
 
-    static class Holder {
-        ImageView icon;
-        TextView label, pkg;
+    private static class RowHolder {
+        final ImageView icon;
+        final TextView  name;
+        final TextView  pkg;
 
-        Holder(View v){
+        RowHolder(View v) {
             icon = v.findViewById(R.id.appIcon);
-            label = v.findViewById(R.id.appLabel);
-            pkg = v.findViewById(R.id.appPkg);
+            name = v.findViewById(R.id.appName);
+            pkg  = v.findViewById(R.id.appPkg);
         }
     }
 }

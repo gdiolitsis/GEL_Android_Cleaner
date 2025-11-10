@@ -2,7 +2,7 @@ package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.PowerManager;
+import android.os.Build;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -10,135 +10,112 @@ import java.util.List;
 
 public class GELCleaner {
 
+    // ========== LOG ==========
     public interface LogCallback { void log(String msg, boolean isError); }
-    static void addOK(LogCallback c, String msg){ if(c!=null) c.log("✅ " + msg, false); }
-    static void addFAIL(LogCallback c, String msg){ if(c!=null) c.log("❌ " + msg, true); }
+    static void ok(LogCallback c, String m){ if(c!=null) c.log("✅ " + m, false); }
+    static void fail(LogCallback c, String m){ if(c!=null) c.log("❌ " + m, true); }
 
-    private static boolean hasRoot() { return exec("su -c id") == 0; }
-    public static boolean hasRootPublic(){ return hasRoot(); }
-
-    private static int exec(String cmd){
-        try { Process p = Runtime.getRuntime().exec(cmd); p.waitFor(); return p.exitValue(); }
-        catch (Exception e){ return -1; }
-    }
-
+    // ========== Helpers ==========
     private static void deleteRecursive(File f){
         try {
             if (f == null || !f.exists()) return;
-            if (f.isDirectory()){
-                File[] files = f.listFiles();
-                if (files != null) for (File child : files) deleteRecursive(child);
+            if (f.isDirectory()) {
+                File[] list = f.listFiles();
+                if (list != null) for (File x : list) deleteRecursive(x);
             }
             // ignore result
             //noinspection ResultOfMethodCallIgnored
             f.delete();
-        } catch(Exception ignored){}
+        } catch (Exception ignored) {}
     }
 
-    // -------- SAFE CLEAN (app caches + temp) --------
+    // ========== BASIC (παντού) ==========
     public static void safeClean(Context ctx, LogCallback cb){
         try {
             deleteRecursive(ctx.getCacheDir());
             File ext = ctx.getExternalCacheDir();
             if (ext != null) deleteRecursive(ext);
 
-            deleteRecursive(new File("/data/local/tmp"));
-            deleteRecursive(new File("/data/tmp"));
+            // Public / thumbnails / downloads tmp / logs
+            deleteRecursive(new File("/storage/emulated/0/DCIM/.thumbnails"));
+            deleteRecursive(new File("/storage/emulated/0/Download/.tmp"));
+            deleteRecursive(new File("/storage/emulated/0/Download/.cache"));
+            deleteRecursive(new File("/storage/emulated/0/MIUI/debug_log"));
+            deleteRecursive(new File("/storage/emulated/0/tencent"));
 
-            addOK(cb, "Safe Clean completed");
-        } catch (Exception e){ addFAIL(cb, "Safe Clean failed"); }
+            ok(cb, "Safe Clean completed");
+        } catch (Exception e){
+            fail(cb, "Safe Clean failed");
+        }
     }
 
-    // -------- CLEAN RAM (χωρίς να κλείνει το app σου) --------
     public static void cleanRAM(Context ctx, LogCallback cb){
         try {
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
-                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
-                if (procs != null){
-                    for (ActivityManager.RunningAppProcessInfo p : procs){
-                        // Μην ακουμπάς το δικό μας process
-                        if (p.processName != null && !p.processName.startsWith(ctx.getPackageName())){
-                            am.killBackgroundProcesses(p.processName);
-                        }
-                    }
+                if (Build.VERSION.SDK_INT >= 23) {
+                    // Συμβατός τρόπος: trim background
+                    List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                    if (procs != null) for (ActivityManager.RunningAppProcessInfo p : procs)
+                        am.killBackgroundProcesses(p.processName);
                 }
             }
-            addOK(cb, "RAM cleaned (background apps)");
-        } catch(Exception e){ addFAIL(cb, "RAM Clean failed"); }
+            ok(cb, "RAM: ζητήθηκε τερματισμός background διεργασιών");
+        } catch (Exception e){
+            fail(cb, "RAM clean failed");
+        }
     }
 
-    // -------- BATTERY BOOST (placeholder ασφαλές) --------
-    public static void boostBattery(Context ctx, LogCallback cb){
-        try {
-            PowerManager pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
-            if (pm != null) addOK(cb, "Battery Optimizer → OK");
-            else addFAIL(cb, "Battery Boost unavailable");
-        } catch (Exception e){ addFAIL(cb, "Battery Boost failed"); }
-    }
-
-    // -------- KILL APPS --------
-    public static void killApps(Context ctx, LogCallback cb){
-        try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
-                if (procs != null){
-                    for (ActivityManager.RunningAppProcessInfo p : procs){
-                        if (p.processName != null && !p.processName.startsWith(ctx.getPackageName())){
-                            am.killBackgroundProcesses(p.processName);
-                        }
-                    }
-                }
-            }
-            addOK(cb, "Killed background apps");
-        } catch(Exception e){ addFAIL(cb, "Kill Apps failed"); }
-    }
-
-    // -------- MEDIA JUNK --------
     public static void mediaJunk(Context ctx, LogCallback cb){
         try {
             deleteRecursive(new File("/storage/emulated/0/DCIM/.thumbnails"));
-            deleteRecursive(new File("/sdcard/DCIM/.thumbnails"));
-            addOK(cb, "Media junk cleaned");
-        } catch(Exception e){ addFAIL(cb, "Media Junk failed"); }
-    }
-
-    // -------- BROWSER CACHE (Chrome) --------
-    public static void browserCache(Context ctx, LogCallback cb){
-        try {
-            // Χωρίς root δεν έχουμε write εκεί. Το αφήνω ως best-effort (σε root θα πετύχει).
-            deleteRecursive(new File("/data/data/com.android.chrome/cache"));
-            deleteRecursive(new File("/data/data/com.android.chrome/app_chrome"));
-            deleteRecursive(new File("/data/data/com.android.chrome/files"));
-            addOK(cb, "Browser cache attempt finished");
-        } catch(Exception e){ addFAIL(cb, "Browser cache failed"); }
+            deleteRecursive(new File("/storage/emulated/0/Pictures/.thumbnails"));
+            ok(cb, "Media junk cleaned");
+        } catch (Exception e){
+            fail(cb, "Media junk failed");
+        }
     }
 
     public static void tempClean(Context ctx, LogCallback cb){
         try {
-            deleteRecursive(new File("/cache"));
-            deleteRecursive(new File("/data/cache"));
-            deleteRecursive(new File("/mnt/sdcard/Android/data/com.android.browser/cache"));
-            addOK(cb, "Temp cleaned");
-        } catch(Exception e){ addFAIL(cb, "Temp failed"); }
+            deleteRecursive(new File("/storage/emulated/0/Android/media/.cache"));
+            deleteRecursive(new File("/storage/emulated/0/Android/media/.temp"));
+            deleteRecursive(new File("/storage/emulated/0/.logs"));
+            ok(cb, "Temp cleaned");
+        } catch (Exception e){
+            fail(cb, "Temp failed");
+        }
     }
 
+    public static void browserCache(Context ctx, LogCallback cb){
+        // Χωρίς root δεν αγγίζουμε /data/data άλλων apps. 
+        // Θα ανοίξεις App Info από το AppListActivity.
+        ok(cb, "Άνοιξε τη λίστα εφαρμογών για manual Clear cache.");
+    }
+
+    public static void killApps(Context ctx, LogCallback cb){
+        cleanRAM(ctx, cb);
+    }
+
+    public static void boostBattery(Context ctx, LogCallback cb){
+        ok(cb, "Tip: ενεργοποίησε Battery Optimization & Adaptive Battery στα Settings.");
+    }
+
+    // ========== CPU Info ==========
     public static void cpuInfo(Context ctx, LogCallback cb){
         try {
             int cores = Runtime.getRuntime().availableProcessors();
-            addOK(cb, "Cores: " + cores);
-            String freq = readFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-            if(freq != null) addOK(cb, "Freq: " + freq.trim() + " Hz");
-            else addFAIL(cb, "CPU Freq");
-        } catch (Exception e){ addFAIL(cb, "CPU Info"); }
+            ok(cb, "Cores: " + cores);
+            String f = readFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
+            if (f != null) ok(cb, "Freq: " + f.trim() + " Hz");
+        } catch (Exception e){ fail(cb, "CPU Info"); }
     }
-
     public static void cpuLive(Context ctx, LogCallback cb){
-        try { float usage = readUsage(); addOK(cb, "CPU usage: " + usage + "%"); }
-        catch (Exception e){ addFAIL(cb, "CPU Live"); }
+        try {
+            float u = readUsage();
+            ok(cb, "CPU usage: " + u + "%");
+        } catch (Exception e){ fail(cb, "CPU Live"); }
     }
-
     private static float readUsage() throws Exception {
         long[] t1 = readStat(); Thread.sleep(300); long[] t2 = readStat();
         long idle = t2[0]-t1[0]; long total = t2[1]-t1[1];
@@ -149,38 +126,28 @@ public class GELCleaner {
         String load = r.readLine(); r.close();
         String[] toks = load.split(" +");
         long idle = Long.parseLong(toks[4]);
-        long total = 0; for(int i=1;i<toks.length;i++) total += Long.parseLong(toks[i]);
+        long total = 0; for (int i=1;i<toks.length;i++) total += Long.parseLong(toks[i]);
         return new long[]{idle,total};
     }
-    private static String readFile(String path){
-        try { RandomAccessFile r = new RandomAccessFile(path,"r"); String s = r.readLine(); r.close(); return s; }
-        catch (Exception e){ return null; }
+    private static String readFile(String p){
+        try { RandomAccessFile r=new RandomAccessFile(p,"r"); String s=r.readLine(); r.close(); return s; }
+        catch(Exception e){ return null; }
     }
 
-    public static void deepClean(Context ctx, LogCallback cb){
-        addOK(cb, "Deep Clean (hybrid): Safe Clean + extras");
-        safeClean(ctx, cb);
-        if (hasRoot()){
-            deleteRecursive(new File("/data/dalvik-cache"));
-            deleteRecursive(new File("/cache/dalvik-cache"));
-            addOK(cb, "Dalvik cleaned (root)");
-        } else {
-            addFAIL(cb, "No root → skipping dalvik");
-        }
+    // ========== ENHANCED (SAF) ==========
+    public static void enhancedCleanAndroidData(Context ctx, LogCallback cb){
+        int n = StorageHelper.cleanAndroidDataCaches(ctx, cb);
+        ok(cb, "Enhanced clean finished (" + n + " entries)");
     }
 
+    // ========== CLEAN ALL ==========
     public static void cleanAll(Context ctx, LogCallback cb){
-        addOK(cb, "Clean-All started");
-        if (hasRoot()) deepClean(ctx, cb);
-        else { addOK(cb, "No root → Safe Clean path"); safeClean(ctx, cb); }
-
-        try { cleanRAM(ctx, cb); }       catch (Exception e){ addFAIL(cb, "RAM"); }
-        try { boostBattery(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Battery"); }
-        try { killApps(ctx, cb); }       catch (Exception e){ addFAIL(cb, "Kill Apps"); }
-        try { browserCache(ctx, cb); }   catch (Exception e){ addFAIL(cb, "Browser"); }
-        try { mediaJunk(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Media Junk"); }
-        try { tempClean(ctx, cb); }      catch (Exception e){ addFAIL(cb, "Temp"); }
-
-        addOK(cb, "Clean-All completed");
+        ok(cb, "Clean-All started");
+        safeClean(ctx, cb);
+        mediaJunk(ctx, cb);
+        tempClean(ctx, cb);
+        enhancedCleanAndroidData(ctx, cb);
+        cleanRAM(ctx, cb);
+        ok(cb, "Clean-All completed");
     }
 }

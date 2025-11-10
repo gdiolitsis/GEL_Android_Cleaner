@@ -1,10 +1,13 @@
 package com.gel.cleaner;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -12,11 +15,15 @@ import java.util.List;
 public class AppListAdapter extends BaseAdapter {
 
     Context ctx;
-    List<AppEntry> data;
+    List<AppListActivity.AppInfo> data;
+    LayoutInflater inf;
+    PackageManager pm;
 
-    public AppListAdapter(Context ctx, List<AppEntry> data) {
-        this.ctx = ctx;
-        this.data = data;
+    public AppListAdapter(Context c, List<AppListActivity.AppInfo> d) {
+        ctx = c;
+        data = d;
+        inf = LayoutInflater.from(c);
+        pm = c.getPackageManager();
     }
 
     @Override
@@ -35,20 +42,41 @@ public class AppListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int i, View v, ViewGroup parent) {
+    public View getView(int pos, View v, ViewGroup parent) {
 
+        Holder h;
         if (v == null) {
-            v = LayoutInflater.from(ctx).inflate(R.layout.row_app, parent, false);
+            v = inf.inflate(R.layout.item_app, parent, false);
+            h = new Holder(v);
+            v.setTag(h);
+        } else {
+            h = (Holder) v.getTag();
         }
 
-        TextView name = v.findViewById(R.id.txtName);
-        TextView pkg  = v.findViewById(R.id.txtPkg);
+        AppListActivity.AppInfo a = data.get(pos);
 
-        AppEntry e = data.get(i);
+        Drawable icon;
+        try {
+            icon = pm.getApplicationIcon(a.pkg);
+        } catch (Exception e) {
+            icon = ctx.getDrawable(android.R.drawable.sym_def_app_icon);
+        }
 
-        name.setText(e.name);
-        pkg.setText(e.pkg);
+        h.icon.setImageDrawable(icon);
+        h.label.setText(a.label);
+        h.pkg.setText(a.pkg);
 
         return v;
+    }
+
+    static class Holder {
+        ImageView icon;
+        TextView label, pkg;
+
+        Holder(View v){
+            icon = v.findViewById(R.id.appIcon);
+            label = v.findViewById(R.id.appLabel);
+            pkg = v.findViewById(R.id.appPkg);
+        }
     }
 }

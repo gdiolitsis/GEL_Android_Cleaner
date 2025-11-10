@@ -2,32 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="12dp"
+    android:background="@color/gel_bg">
 
     <TextView
-        android:id="@+id/txtTitle"
+        android:id="@+id/titleApps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/app_cache_title"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        android:padding="6dp" />
+        android:textColor="@color/gel_text_primary"
+        android:textSize="18sp"
+        android:paddingBottom="8dp"/>
 
     <ListView
         android:id="@+id/listApps"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:dividerHeight="1dp"
-        android:divider="@color/dark_gray" />
-
-    <Button
-        android:id="@+id/btnClose"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="@string/back"
-        android:background="@drawable/gel_btn_danger" />
-
+        android:layout_height="match_parent"
+        android:divider="#333333"
+        android:dividerHeight="1dp"/>
 </LinearLayout>

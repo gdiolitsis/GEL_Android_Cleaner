@@ -1,34 +1,28 @@
 <resources>
-
-    <!-- ===== APP ===== -->
     <string name="app_name">GEL Cleaner</string>
-    <string name="device_ready">Η συσκευή είναι έτοιμη ✅</string>
 
-    <!-- ===== SECTIONS ===== -->
     <string name="system">Σύστημα</string>
-    <string name="cleaner">Καθαρισμός</string>
-    <string name="junk">Άχρηστα</string>
+    <string name="cleaner">Καθαριστής</string>
+    <string name="junk">Σκουπίδια</string>
     <string name="performance">Απόδοση</string>
-    <string name="logs">Καταγραφές</string>
+    <string name="logs">Μηνύματα</string>
 
-    <!-- ===== ACTIONS ===== -->
+    <string name="donate">DONATE! ΚΡΑΤΗΣΕ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
+
     <string name="cpu_info">Πληροφορίες CPU</string>
     <string name="cpu_live">Ζωντανή CPU</string>
-
     <string name="clean_ram">Καθαρισμός RAM</string>
     <string name="safe_clean">Ασφαλής Καθαρισμός</string>
     <string name="deep_clean">Βαθύς Καθαρισμός</string>
 
-    <string name="media_junk">Άχρηστα Πολυμέσα</string>
-    <string name="browser_cache">Cache Browser</string>
-    <string name="temp_clean">Προσωρινά Αρχεία</string>
-
     <string name="battery_boost">Ενίσχυση Μπαταρίας</string>
     <string name="kill_apps">Τερματισμός Apps</string>
+    <string name="media_junk">Σκουπίδια Media</string>
+    <string name="browser_cache">Cache Browser</string>
+    <string name="temp_clean">Temp Αρχεία</string>
+    <string name="clean_all">Καθαρισμός Όλων</string>
 
-    <string name="clean_all">Ολικός Καθαρισμός</string>
-
-    <!-- ===== DONATE ===== -->
-    <string name="donate">DONATE! KEEP APP FREE</string>
-
+    <!-- NEW -->
+    <string name="app_cache">Cache Εφαρμογών</string>
+    <string name="app_cache_title">Διάλεξε εφαρμογή για καθαρισμό cache</string>
 </resources>

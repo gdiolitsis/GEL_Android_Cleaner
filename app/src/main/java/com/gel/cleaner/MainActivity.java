@@ -4,13 +4,14 @@ import android.content.Context;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.content.Intent;
+import android.net.Uri;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     TextView txtLogs;
-    private boolean live = false;
-    private Thread liveThread;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -24,37 +25,74 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         txtLogs = findViewById(R.id.txtLogs);
 
-        setupLang();
-        setupButtons();
+        setupLangButtons();
+        setupDonate();
+        setupCleanerButtons();
 
         log("✅ Device ready", false);
     }
 
-    private void setupLang(){
+    /* =========================================
+     *              LANGUAGE
+     * ========================================= */
+    private void setupLangButtons() {
         Button bGR = findViewById(R.id.btnLangGR);
         Button bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null)
-            bGR.setOnClickListener(v -> { LocaleHelper.set(this,"el"); recreate(); });
+        if (bGR != null) {
+            bGR.setOnClickListener(v -> {
+                LocaleHelper.set(this, "el");
+                recreate();
+            });
+        }
 
-        if (bEN != null)
-            bEN.setOnClickListener(v -> { LocaleHelper.set(this,"en"); recreate(); });
+        if (bEN != null) {
+            bEN.setOnClickListener(v -> {
+                LocaleHelper.set(this, "en");
+                recreate();
+            });
+        }
     }
 
-    private void setupButtons(){
-        bind(R.id.btnCpuInfo, () ->
-                GELCleaner.cpuRamInfo(this, this));
+    /* =========================================
+     *                DONATE
+     * ========================================= */
+    private void setupDonate() {
+        Button donateButton = findViewById(R.id.btnDonate);
+        if (donateButton != null) {
+            donateButton.setOnClickListener(v -> {
+                Intent i = new Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
+                );
+                startActivity(i);
+            });
+        }
+    }
 
-        bind(R.id.btnCpuLive, this::startLive);
+    /* =========================================
+     *              CLEANER FUNCTIONS
+     * ========================================= */
+    private void setupCleanerButtons() {
+        // System
+        bind(R.id.btnCpuRamInfo,   () -> GELCleaner.cpuInfo(this, this));   // χρησιμοποιούμε την υπάρχουσα cpuInfo
+        bind(R.id.btnCpuRamLive,   () -> GELCleaner.cpuLive(this, this));   // και την υπάρχουσα cpuLive
 
+        // Cleaner
+        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
         bind(R.id.btnSafeClean,    () -> GELCleaner.safeClean(this, this));
         bind(R.id.btnDeepClean,    () -> GELCleaner.deepClean(this, this));
+
+        // Junk
         bind(R.id.btnMediaJunk,    () -> GELCleaner.mediaJunk(this, this));
         bind(R.id.btnBrowserCache, () -> GELCleaner.browserCache(this, this));
         bind(R.id.btnTemp,         () -> GELCleaner.tempClean(this, this));
-        bind(R.id.btnCleanRam,     () -> GELCleaner.cleanRAM(this, this));
+
+        // Performance
         bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
         bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
+
+        // All
         bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
 
@@ -63,29 +101,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
-    private void startLive(){
-        live = true;
-        if (liveThread != null && liveThread.isAlive()) return;
-
-        liveThread = new Thread(() -> {
-            while (live){
-                GELCleaner.cpuRamInfo(this, this);
-                try { Thread.sleep(1000); } catch (Exception ignored){}
-            }
-        });
-        liveThread.start();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        live = false;
-    }
-
+    /* =========================================
+     *             LOG CALLBACK
+     * ========================================= */
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
-            txtLogs.append("\n" + msg);
+            String old = txtLogs.getText().toString();
+            txtLogs.setText(old + "\n" + msg);
         });
     }
 }

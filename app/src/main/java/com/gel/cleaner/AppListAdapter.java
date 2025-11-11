@@ -25,12 +25,12 @@ public class AppListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return data.size();
+        return (data == null ? 0 : data.size());
     }
 
     @Override
     public Object getItem(int i) {
-        return data.get(i);
+        return (data == null ? null : data.get(i));
     }
 
     @Override
@@ -71,8 +71,9 @@ public class AppListAdapter extends BaseAdapter {
                     r.loadIcon(ctx.getPackageManager())
             );
 
-            String pkg = r.activityInfo != null ?
-                    r.activityInfo.packageName : "";
+            String pkg = (r.activityInfo != null
+                    ? r.activityInfo.packageName
+                    : "");
 
             h.pkg.setText(pkg);
         }

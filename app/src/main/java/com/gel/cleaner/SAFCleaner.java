@@ -30,7 +30,6 @@ public class SAFCleaner {
         );
     }
 
-
     /* ===========================================================
      *  SAF STORE
      * ===========================================================
@@ -60,9 +59,8 @@ public class SAFCleaner {
         return getTreeUri(ctx) != null;
     }
 
-
     /* ===========================================================
-     *  CPU INFO (DUMMY SAFE)
+     *  CPU INFO
      * ===========================================================
      */
     public static void cpuInfo(Context ctx, GELCleaner.LogCallback cb) {
@@ -73,7 +71,6 @@ public class SAFCleaner {
     public static void cpuLive(Context ctx, GELCleaner.LogCallback cb) {
         log(cb, "✅ Live CPU/RAM Monitor started");
     }
-
 
     /* ===========================================================
      *  RAM CLEAN
@@ -91,7 +88,6 @@ public class SAFCleaner {
         }
     }
 
-
     /* ===========================================================
      *  SAFE / DEEP
      * ===========================================================
@@ -106,7 +102,6 @@ public class SAFCleaner {
         tempClean(ctx, cb);
         log(cb, "✅ Deep Clean done");
     }
-
 
     /* ===========================================================
      *  BROWSER + MEDIA
@@ -132,7 +127,6 @@ public class SAFCleaner {
         log(cb, "✅ Browser Cache cleaned");
     }
 
-
     /* ===========================================================
      *  TEMP
      * ===========================================================
@@ -141,7 +135,6 @@ public class SAFCleaner {
         cleanKnownJunk(ctx, cb);
         log(cb, "✅ Temp cleaned");
     }
-
 
     /* ===========================================================
      *  BATTERY BOOST + KILL
@@ -154,7 +147,6 @@ public class SAFCleaner {
     public static void killApps(Context ctx, GELCleaner.LogCallback cb) {
         log(cb, "✅ App cleanup done");
     }
-
 
     /* ===========================================================
      *  CLEAN ALL
@@ -171,7 +163,6 @@ public class SAFCleaner {
 
         log(cb, "🔥🔥 ALL CLEAN DONE 🔥🔥");
     }
-
 
     /* ===========================================================
      *  SAF CLEAN CORE
@@ -215,7 +206,6 @@ public class SAFCleaner {
         log(cb, "SAF clean done (" + wiped + " paths)");
     }
 
-
     private static void safFolders(Context ctx, GELCleaner.LogCallback cb, String[] folders) {
         Uri root = getTreeUri(ctx);
         if (root == null) return;
@@ -226,7 +216,6 @@ public class SAFCleaner {
             wipePath(rootDoc, rel);
         }
     }
-
 
     private static boolean wipePath(DocumentFile rootDoc, String relativePath) {
         String[] parts = relativePath.split("/");
@@ -248,14 +237,12 @@ public class SAFCleaner {
         return cur.delete() || true;
     }
 
-
     private static DocumentFile findChild(DocumentFile parent, String name) {
         for (DocumentFile f : parent.listFiles()) {
             if (name.equalsIgnoreCase(f.getName())) return f;
         }
         return null;
     }
-
 
     private static class IntentFlags {
         static int readWrite() {

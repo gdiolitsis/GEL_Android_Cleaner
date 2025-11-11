@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ✅ BASE -->
+    <!-- ✅ BASIC -->
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
-    <!-- ✅ GEL BASE THEMING -->
+    <!-- ✅ MAIN BACKGROUND -->
     <color name="gel_bg">#FF101010</color>
-    <color name="gel_text_primary">#FFEEDCAA</color>     <!-- Gold-ish -->
-    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- Light gray -->
-    <color name="gel_btn_text">#FFFFFFFF</color>
 
-    <!-- ✅ GOLD -->
-    <color name="gel_gold">#FFD4AF37</color>            <!-- Bright Gold -->
-    <color name="gel_gold_dark">#FFB0892D</color>       <!-- Dark Gold shadow -->
+    <!-- ✅ TEXT COLORS -->
+    <color name="gel_text_primary">#FFEEDCAA</color>     <!-- gold text -->
+    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- light gray -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- ✔ full white text -->
 
-    <!-- ✅ DANGER -->
-    <color name="gel_red_danger">#FFB00020</color>      <!-- Material Red -->
-    <color name="gel_red_danger_dark">#FF7A0016</color> <!-- Dark variant -->
+    <!-- ✅ GOLD BUTTONS -->
+    <color name="gel_gold">#FFD4AF37</color>
+    <color name="gel_gold_dark">#FFB0892D</color>
+
+    <!-- ✅ DANGER BUTTONS (RED) -->
+    <color name="gel_red_danger">#FFB00020</color>
+    <color name="gel_red_danger_dark">#FF7A0016</color>
 
 </resources>

@@ -1,44 +1,58 @@
-apply plugin: "com.android.application"
-
 android {
-    namespace "com.gel.cleaner"
-    compileSdk 34
-
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.gel.cleaner"
-        minSdk 24
-        targetSdk 34
-        versionCode 4
-        versionName "4.3"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 41
+        versionName "4.1"
+        multiDexEnabled true
     }
-
     buildTypes {
         release {
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+    // ✅ Universal συμβατότητα + splits για όλα τα ABI
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            universalApk true        // φτιάχνει 1 APK που δουλεύει παντού
+        }
+        density { enable true }
+        language { enable false }
+    }
+
+    // Για Cordova/Native libs που απαιτούν extract (ασφαλής επιλογή συμβατότητας)
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+        resources {
+            excludes += ['META-INF/*']
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-
 dependencies {
-
-    /* ✅ UI */
+    implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     implementation 'com.google.android.material:material:1.12.0'
-
-    /* ✅ SAF για πρόσβαση σε Android/data */
-    implementation 'androidx.documentfile:documentfile:1.0.1'
-
-    /* ✅ RecyclerView – (App List Screen) */
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-
-    /* ✅ OPTIONAL (αν θέλεις Glide για icons) */
-    // implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    // ΜΗΝ βάλεις Crashlytics/analytics σε release αν δεν το χρειάζεσαι
 }

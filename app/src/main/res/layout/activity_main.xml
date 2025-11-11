@@ -28,6 +28,7 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:src="@drawable/gel_logo"
+                android:gravity="start"
                 android:padding="4dp"
                 android:contentDescription="@string/app_name" />
 
@@ -42,39 +43,37 @@
                 android:textColor="@color/gel_text_primary"
                 android:textStyle="bold"
                 android:textSize="22sp"
-                android:singleLine="true" />
+                android:singleLine="true"/>
 
-            <!-- FLAGS RIGHT (vertical) -->
+            <!-- LANG FLAGS RIGHT (vertical) -->
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:gravity="end">
+                android:gravity="center">
 
-                <ImageView
+                <TextView
                     android:id="@+id/btnLangGR"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:src="@drawable/flag_gr"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="2dp"/>
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:gravity="center"
+                    android:text="🇬🇷"
+                    android:textSize="28sp"
+                    android:layout_marginBottom="4dp"
+                    android:singleLine="true" />
 
-                <ImageView
+                <TextView
                     android:id="@+id/btnLangEN"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:src="@drawable/flag_en"
-                    android:layout_marginTop="6dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="2dp"/>
-
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:gravity="center"
+                    android:text="🇬🇧"
+                    android:textSize="28sp"
+                    android:singleLine="true"/>
             </LinearLayout>
-
         </LinearLayout>
 
-        <!-- ✅ SUBTITLE -->
+        <!-- ✅ Device subtitle -->
         <TextView
             android:id="@+id/txtSubtitle"
             android:layout_width="wrap_content"
@@ -96,8 +95,7 @@
             android:layout_marginTop="12dp"
             android:singleLine="true"/>
 
-
-        <!-- ✅ SYSTEM -->
+        <!-- ✅ ========  SYSTEM  ======== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -137,7 +135,7 @@
         </LinearLayout>
 
 
-        <!-- ✅ CLEANER -->
+        <!-- ✅ ========  CLEANER  ======== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -187,7 +185,7 @@
             android:singleLine="true"/>
 
 
-        <!-- ✅ JUNK -->
+        <!-- ✅ ========  JUNK  ======== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -198,6 +196,123 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-        <!-- REMAINDER = UNCHANGED (same as your latest) -->
-        <!-- ✅ KEEP EVERYTHING BELOW AS IS ✅ -->
+            <Button
+                android:id="@+id/btnMediaJunk"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🖼 MEDIA JUNK"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+
+            <Button
+                android:id="@+id/btnBrowserCache"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🌐 BROWSER CACHE"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnTemp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🔥 TEMP"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+
+            <Button
+                android:id="@+id/btnAppCache"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🧽 APP CACHE"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+
+        <!-- ✅ ======== PERFORMANCE ======== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Performance"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:textColor="@color/gel_text_primary"
+            android:layout_marginTop="18dp"
+            android:paddingLeft="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnBatteryBoost"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🔋 BATTERY BOOST"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+
+            <Button
+                android:id="@+id/btnKillApps"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="🚀 KILL APPS"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnCleanAll"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="💣 CLEAN ALL"
+            android:background="@drawable/gel_btn_danger"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_margin="4dp"
+            android:singleLine="true"/>
+
+
+        <!-- ✅ LOGS -->
+        <TextView
+            android:id="@+id/txtLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="13sp"
+            android:padding="12dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/gel_bg"/>
+
+    </LinearLayout>
+</ScrollView>

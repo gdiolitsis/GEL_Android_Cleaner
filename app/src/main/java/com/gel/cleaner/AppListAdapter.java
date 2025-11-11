@@ -1,7 +1,7 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import android.content.pm.ResolveInfo;
+import android.content.pm.ApplicationInfo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +14,10 @@ import java.util.List;
 public class AppListAdapter extends BaseAdapter {
 
     Context ctx;
-    List<AppInfo> data;
+    List<AppListActivity.AppInfo> data;
     LayoutInflater inflater;
 
-    public AppListAdapter(Context ctx, List<AppInfo> data) {
+    public AppListAdapter(Context ctx, List<AppListActivity.AppInfo> data) {
         this.ctx = ctx;
         this.data = data;
         inflater = LayoutInflater.from(ctx);
@@ -25,7 +25,7 @@ public class AppListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return data.size();
+        return data != null ? data.size() : 0;
     }
 
     @Override
@@ -61,22 +61,26 @@ public class AppListAdapter extends BaseAdapter {
             h = (Holder) convertView.getTag();
         }
 
-        AppInfo a = data.get(position);
+        AppListActivity.AppInfo a = data.get(position);
 
         if (a != null) {
 
-            if (a.resolveInfo != null) {
-                CharSequence label =
-                        a.resolveInfo.loadLabel(ctx.getPackageManager());
-                h.name.setText(label != null ? label : "Unknown");
+            // Label
+            if (a.label != null) {
+                h.name.setText(a.label);
+            } else {
+                h.name.setText("Unknown");
+            }
 
+            // Package
+            h.pkg.setText(a.packageName != null ? a.packageName : "");
+
+            // Icon
+            if (a.resolveInfo != null) {
                 h.icon.setImageDrawable(
                         a.resolveInfo.loadIcon(ctx.getPackageManager())
                 );
             }
-
-            h.pkg.setText(a.packageName != null ? a.packageName : "");
-
         }
 
         return convertView;

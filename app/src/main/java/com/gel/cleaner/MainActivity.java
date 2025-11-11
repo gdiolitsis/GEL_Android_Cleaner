@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity implements SAFCleaner.LogCallback {
+public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -70,30 +70,30 @@ public class MainActivity extends AppCompatActivity implements SAFCleaner.LogCal
 
         // CPU + RAM
         bind(R.id.btnCpuRamInfo, () ->
-                SAFCleaner.cpuInfo(this, this));
+                GELCleaner.cpuInfo(this, this));
 
         bind(R.id.btnCpuRamLive, () ->
-                SAFCleaner.cpuLive(this, this));   // safe loop
+                GELCleaner.cpuLive(this, this));   // safe loop
 
         // Cleaner
         bind(R.id.btnCleanRam,   () ->
-                SAFCleaner.cleanRAM(this, this));
+                GELCleaner.cleanRAM(this, this));
 
         bind(R.id.btnSafeClean,  () ->
-                SAFCleaner.safeClean(this, this));
+                GELCleaner.safeClean(this, this));
 
         bind(R.id.btnDeepClean,  () ->
-                SAFCleaner.deepClean(this, this));
+                GELCleaner.deepClean(this, this));
 
         // Junk
         bind(R.id.btnMediaJunk, () ->
-                SAFCleaner.mediaJunk(this, this));
+                GELCleaner.mediaJunk(this, this));
 
         bind(R.id.btnBrowserCache, () ->
-                SAFCleaner.browserCache(this, this));
+                GELCleaner.browserCache(this, this));
 
         bind(R.id.btnTemp, () ->
-                SAFCleaner.tempClean(this, this));
+                GELCleaner.tempClean(this, this));
 
         // App Cache (List)
         Button appCache = findViewById(R.id.btnAppCache);
@@ -104,14 +104,14 @@ public class MainActivity extends AppCompatActivity implements SAFCleaner.LogCal
 
         // Performance
         bind(R.id.btnBatteryBoost, () ->
-                SAFCleaner.boostBattery(this, this));
+                GELCleaner.boostBattery(this, this));
 
         bind(R.id.btnKillApps, () ->
-                SAFCleaner.killApps(this, this));
+                GELCleaner.killApps(this, this));
 
         // All
         bind(R.id.btnCleanAll, () ->
-                SAFCleaner.cleanAll(this, this));
+                GELCleaner.cleanAll(this, this));
     }
 
     private void bind(int id, Runnable fn) {
@@ -127,8 +127,7 @@ public class MainActivity extends AppCompatActivity implements SAFCleaner.LogCal
             txtLogs.setText(old + "\n" + msg);
 
             if (scroll != null) {
-                scroll.post(() ->
-                        scroll.fullScroll(ScrollView.FOCUS_DOWN));
+                scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
             }
         });
     }

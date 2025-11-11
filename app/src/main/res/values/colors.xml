@@ -5,13 +5,17 @@
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
+    <!-- ✅ ALIASES for compatibility -->
+    <color name="gel_white">@color/white</color>
+    <color name="gel_black">@color/black</color>
+
     <!-- ✅ MAIN BACKGROUND -->
     <color name="gel_bg">#FF101010</color>
 
     <!-- ✅ TEXT COLORS -->
     <color name="gel_text_primary">#FFEEDCAA</color>     <!-- gold text -->
     <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- light gray -->
-    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- ✔ full white text -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- full white text -->
 
     <!-- ✅ GOLD BUTTONS -->
     <color name="gel_gold">#FFD4AF37</color>
@@ -20,5 +24,8 @@
     <!-- ✅ DANGER BUTTONS (RED) -->
     <color name="gel_red_danger">#FFB00020</color>
     <color name="gel_red_danger_dark">#FF7A0016</color>
+
+    <!-- ✅ Needed for danger buttons outline -->
+    <color name="gel_red_text">#FFFFFFFF</color>
 
 </resources>

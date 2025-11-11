@@ -1,33 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ✅ GOLD -->
-    <color name="gel_gold">#FFD700</color>
-    <color name="gel_gold_dark">#B8860B</color>
+    <!-- ✅ BACKGROUNDS -->
+    <color name="gel_bg">#000000</color> <!-- main dark -->
+    <color name="gel_bg_card">#111111</color>
 
-    <!-- ✅ PRIMARY UI -->
-    <color name="gel_bg">#121212</color>
-    <color name="gel_primary">#D4AF37</color>
-    <color name="gel_primary_dark">#8B7500</color>
+    <!-- ✅ GOLD THEME -->
+    <color name="gel_text_gold">#FFD54F</color>        <!-- title -->
+    <color name="gel_border_gold">#FFCC00</color>      <!-- outline -->
+    <color name="gel_gold_dim">#B38F00</color>
+
+    <!-- ✅ TEXT -->
     <color name="gel_text_primary">#FFFFFF</color>
     <color name="gel_text_secondary">#CCCCCC</color>
+    <color name="gel_btn_text">#FFFFFF</color>
 
     <!-- ✅ BUTTONS -->
-    <color name="gel_btn_text">#FFFFFF</color>
-    <color name="gel_btn_bg">#242424</color>
-    <color name="gel_outline">#D4AF37</color>
+    <color name="gel_btn_bg">#1A1A1A</color>
+    <color name="gel_btn_bg_pressed">#333333</color>
 
-    <!-- ✅ DANGER -->
-    <color name="gel_red_bg">#8B0000</color>
-    <color name="gel_red_text">#FF0000</color>
+    <!-- ✅ DANGER BUTTON -->
+    <color name="gel_danger">#B30000</color>
+    <color name="gel_danger_pressed">#D40000</color>
 
-    <!-- ✅ LEGACY -->
-    <color name="black">#000000</color>
-    <color name="white">#FFFFFF</color>
-    <color name="dark_gray">#555555</color>
-
-    <!-- ✅ REQUIRED ALIASES for row_app.xml / item_app.xml -->
-    <color name="gold">#FFD700</color>
-    <color name="gray">#808080</color>
+    <!-- ✅ OUTLINES -->
+    <color name="gel_outline">#FFCC00</color>
+    <color name="gel_outline_pressed">#E6B800</color>
 
 </resources>

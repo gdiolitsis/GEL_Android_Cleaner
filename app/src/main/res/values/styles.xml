@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ============================
-          MAIN THEME
-    ============================= -->
+    <!-- =======================================
+          ✅ MAIN BASE THEME (requested)
+    ======================================== -->
     <style name="Theme.GEL.DarkGold" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:statusBarColor">@color/black</item>
         <item name="android:navigationBarColor">@color/black</item>
@@ -11,6 +11,12 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
+    <!-- =======================================
+          ✅ ADDED FOR MANIFEST COMPATIBILITY
+          (Fix: Theme.App not found)
+    ======================================== -->
+    <style name="Theme.App" parent="Theme.GEL.DarkGold"/>
+    
 
     <!-- ============================
           BUTTON BASE

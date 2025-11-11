@@ -8,21 +8,26 @@
     <!-- MAIN BACKGROUND -->
     <color name="gel_bg">#FF101010</color>
 
-    <!-- TEXT -->
-    <color name="gel_text_primary">#FFEEDCAA</color>     <!-- gold text -->
-    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- gray -->
-    <color name="gel_btn_text">#FFFFFFFF</color>         <!-- ✅ WHITE -->
-    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- backup -->
+    <!-- TEXT COLORS -->
+    <color name="gel_text_primary">#FFEEDCAA</color>
+    <color name="gel_text_secondary">#FFBFBFBF</color>
+    <color name="gel_btn_text">#FFFFFFFF</color>
 
-    <!-- GOLD BUTTON -->
+    <!-- EXTRA COMPATIBILITY -->
+    <color name="gel_text_gold">#FFEEDCAA</color>   <!-- duplicate -->
+    <color name="gold">#FFD4AF37</color>            <!-- fallback -->
+    <color name="gray">#FF888888</color>
+    <color name="dark_gray">#FF444444</color>
+
+    <!-- GOLD BUTTONS -->
     <color name="gel_gold">#FFD4AF37</color>
     <color name="gel_gold_dark">#FFB0892D</color>
 
-    <!-- DANGER BUTTON -->
+    <!-- DANGER BUTTONS -->
     <color name="gel_red_danger">#FFB00020</color>
     <color name="gel_red_danger_dark">#FF7A0016</color>
 
-    <!-- OUTLINE BACKGROUND -->
+    <!-- OUTLINE BG -->
     <color name="gel_btn_bg">#00101010</color>
 
 </resources>

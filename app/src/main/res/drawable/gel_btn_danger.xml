@@ -9,11 +9,8 @@
                 android:width="2dp"
                 android:color="@color/gel_red_danger"/>
             <corners android:radius="12dp"/>
-            <padding
-                android:left="12dp"
-                android:top="8dp"
-                android:right="12dp"
-                android:bottom="8dp"/>
+            <padding android:left="12dp" android:top="8dp"
+                android:right="12dp" android:bottom="8dp"/>
         </shape>
     </item>
 
@@ -25,11 +22,8 @@
                 android:width="2dp"
                 android:color="@color/gel_red_danger_dark"/>
             <corners android:radius="12dp"/>
-            <padding
-                android:left="12dp"
-                android:top="8dp"
-                android:right="12dp"
-                android:bottom="8dp"/>
+            <padding android:left="12dp" android:top="8dp"
+                android:right="12dp" android:bottom="8dp"/>
         </shape>
     </item>
 

@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -47,6 +45,6 @@ public class AppCacheActivity extends Activity {
     }
 
     private void clearCache(String packageName) {
-        // TODO implement real cache clean
+        // TODO real implementation
     }
 }

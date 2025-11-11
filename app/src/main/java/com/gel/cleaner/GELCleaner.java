@@ -3,10 +3,8 @@ package com.gel.cleaner;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Debug;
-import android.os.Process;
 import android.provider.Settings;
 import android.text.format.Formatter;
 import android.webkit.WebView;
@@ -17,25 +15,26 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GELCleaner — Utility class (ΟΧΙ Activity)
- * Option B: Χρησιμοποιεί και deprecated/best-effort κλήσεις όπου γίνεται.
- * Play-Store ready με προσεκτικά try/catch & καθαρά logs.
+ * GELCleaner — Utility class (NOT Activity)
+ * Play-Store safe — best effort cleaning
  */
 public class GELCleaner {
 
-    // ===== Public callback για logs προς το UI =====
+    // =========================================================
+    // LOG CALLBACK
+    // =========================================================
     public interface LogCallback {
         void log(String msg, boolean isError);
     }
 
-    // ===== Helpers για logs =====
     private static void info(LogCallback cb, String m) { if (cb != null) cb.log("ℹ️ " + m, false); }
-    private static void ok(LogCallback cb, String m)   { if (cb != null) cb.log("✅ " + m, false); }
+    private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
     private static void warn(LogCallback cb, String m) { if (cb != null) cb.log("⚠️ " + m, false); }
-    private static void err(LogCallback cb, String m)  { if (cb != null) cb.log("❌ " + m, true);  }
+    private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true);  }
+
 
     // =========================================================
-    //                      SYSTEM INFO
+    // CPU + RAM INFO
     // =========================================================
     public static void cpuInfo(Context ctx, LogCallback cb) {
         try {
@@ -66,8 +65,8 @@ public class GELCleaner {
         }
     }
 
+
     public static void cpuLive(Context ctx, LogCallback cb) {
-        // Απλός, ασφαλής live logger 10 δειγμάτων / 1s
         new Thread(() -> {
             try {
                 for (int i = 1; i <= 10; i++) {
@@ -80,9 +79,9 @@ public class GELCleaner {
                             i,
                             Formatter.formatShortFileSize(ctx, used),
                             Formatter.formatShortFileSize(ctx, total));
-                    ok(cb, msg);
 
-                    try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+                    ok(cb, msg);
+                    Thread.sleep(1000);
                 }
                 ok(cb, "CPU+RAM live finished.");
             } catch (Exception e) {
@@ -91,29 +90,23 @@ public class GELCleaner {
         }).start();
     }
 
-    // =========================================================
-    //                        CLEANERS
-    // =========================================================
 
-    /** Καθαρισμός RAM (best-effort): trim app memory + kill background processes (permission OK). */
+    // =========================================================
+    // CLEANERS
+    // =========================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            // 1) Ζήτα από το σύστημα να κάνει trim στη δική μας διεργασία
             trimAppMemory();
 
-            // 2) Προσπάθησε να τερματίσεις background διεργασίες άλλων apps (όπου επιτρέπεται)
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
                 List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
                 if (procs != null) {
                     for (ActivityManager.RunningAppProcessInfo p : procs) {
-                        // Απόφυγε το δικό μας package
                         if (p.pkgList == null) continue;
                         for (String pkg : p.pkgList) {
                             if (!pkg.equals(ctx.getPackageName())) {
-                                try {
-                                    am.killBackgroundProcesses(pkg);
-                                } catch (Exception ignored) {}
+                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignored) {}
                             }
                         }
                     }
@@ -125,30 +118,24 @@ public class GELCleaner {
         }
     }
 
-    /** Ασφαλής καθαρισμός: δικοί μας cache dirs, WebView cache, tmp αρχεία. */
+
     public static void safeClean(Context ctx, LogCallback cb) {
         try {
             int files = 0;
 
-            // App cache
             files += wipeDir(ctx.getCacheDir());
 
-            // Code cache
             File codeCache = ctx.getCodeCacheDir();
             if (codeCache != null) files += wipeDir(codeCache);
 
-            // External cache
-            File extCache = ctx.getExternalCacheDir();
-            if (extCache != null) files += wipeDir(extCache);
+            File ext = ctx.getExternalCacheDir();
+            if (ext != null) files += wipeDir(ext);
 
-            // WebView cache
             try {
                 WebView w = new WebView(ctx);
                 w.clearCache(true);
                 w.clearFormData();
-            } catch (Throwable t) {
-                // WebView μπορεί να λείπει σε μερικές συσκευές
-            }
+            } catch (Throwable ignore) {}
 
             ok(cb, "Safe clean: " + files + " files cleared.");
         } catch (Exception e) {
@@ -156,7 +143,7 @@ public class GELCleaner {
         }
     }
 
-    /** Deep clean: SAF-based wipe σε γνωστά μονοπάτια + safeClean. */
+
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             if (!SAFCleaner.hasTree(ctx)) {
@@ -164,7 +151,7 @@ public class GELCleaner {
             } else {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             }
-            // Και πάντα ένα πέρασμα στο app μας
+
             safeClean(ctx, cb);
             ok(cb, "Deep clean finished.");
         } catch (Exception e) {
@@ -172,7 +159,7 @@ public class GELCleaner {
         }
     }
 
-    /** Media junk: κυρίως μέσω SAF (DCIM/.thumbnails κ.λπ.). */
+
     public static void mediaJunk(Context ctx, LogCallback cb) {
         try {
             if (!SAFCleaner.hasTree(ctx)) {
@@ -186,7 +173,7 @@ public class GELCleaner {
         }
     }
 
-    /** Browser cache: WebView + SAF γνωστά μονοπάτια Chrome/Firefox. */
+
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
             try {
@@ -203,17 +190,19 @@ public class GELCleaner {
             } else {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             }
+
             ok(cb, "Browser cache pass finished.");
         } catch (Exception e) {
             err(cb, "browserCache failed: " + e.getMessage());
         }
     }
 
-    /** Temp files: δικοί μας temp + SAF temp γνωστά. */
+
     public static void tempClean(Context ctx, LogCallback cb) {
         try {
             int files = 0;
             files += wipeDir(ctx.getCacheDir());
+
             File ext = ctx.getExternalCacheDir();
             if (ext != null) files += wipeDir(ext);
 
@@ -222,27 +211,25 @@ public class GELCleaner {
             } else {
                 warn(cb, "Grant SAF for external temp dirs.");
             }
+
             ok(cb, "Temp clean: " + files + " files removed.");
         } catch (Exception e) {
             err(cb, "tempClean failed: " + e.getMessage());
         }
     }
 
-    /** Ενίσχυση μπαταρίας: kill background + trim + advise battery saver. */
+
     public static void boostBattery(Context ctx, LogCallback cb) {
         try {
             cleanRAM(ctx, cb);
             ok(cb, "Battery boost: background trimmed.");
-
-            // Δεν υπάρχει public API για ενεργοποίηση Battery Saver.
-            // Δίνουμε link στις ρυθμίσεις εξοικονόμησης (προαιρετικό log).
             info(cb, "Tip: Enable Battery Saver for stronger effect.");
         } catch (Exception e) {
             err(cb, "boostBattery failed: " + e.getMessage());
         }
     }
 
-    /** Τερματισμός apps (best-effort). */
+
     public static void killApps(Context ctx, LogCallback cb) {
         try {
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
@@ -250,26 +237,25 @@ public class GELCleaner {
 
             List<String> killed = new ArrayList<>();
             List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+
             if (procs != null) {
                 for (ActivityManager.RunningAppProcessInfo p : procs) {
                     if (p.pkgList == null) continue;
                     for (String pkg : p.pkgList) {
                         if (!pkg.equals(ctx.getPackageName())) {
-                            try {
-                                am.killBackgroundProcesses(pkg);
-                                killed.add(pkg);
-                            } catch (Throwable ignored) {}
+                            try { am.killBackgroundProcesses(pkg); killed.add(pkg); } catch (Throwable ignore) {}
                         }
                     }
                 }
             }
+
             ok(cb, "Killed: " + killed.size() + " packages.");
         } catch (Exception e) {
             err(cb, "killApps failed: " + e.getMessage());
         }
     }
 
-    /** Καθαρισμός όλων με σειρά. */
+
     public static void cleanAll(Context ctx, LogCallback cb) {
         info(cb, "Clean All: started…");
         cleanRAM(ctx, cb);
@@ -281,30 +267,27 @@ public class GELCleaner {
         ok(cb, "Clean All: finished.");
     }
 
+
     // =========================================================
-    //                   INTERNAL UTILITIES
+    // INTERNAL
     // =========================================================
     private static void trimAppMemory() {
         try {
-            Debug.MemoryInfo mi = new Debug.MemoryInfo();
-            Debug.getMemoryInfo(mi);
-            // Hint στο σύστημα (δεν υπάρχει “one-shot” trim API, αλλά το GC βοηθά)
-            System.gc();
-            Process.killProcess(Process.myPid()); // ΔΕΝ το κάνουμε — θα σκοτώσει το app.
-            // Σχόλιο: Δεν εκτελούμε killProcess. Αφήνουμε μόνο GC/trim hints.
+            System.gc();   // ✅ ONLY safe hint
+            // ❌ NO killProcess — NOT allowed
         } catch (Throwable ignored) {}
     }
+
 
     private static int wipeDir(File dir) {
         if (dir == null || !dir.exists()) return 0;
         int count = 0;
         File[] list = dir.listFiles();
         if (list == null) return 0;
-        for (File f : list) {
-            count += deleteRecursively(f);
-        }
+        for (File f : list) count += deleteRecursively(f);
         return count;
     }
+
 
     private static int deleteRecursively(File f) {
         int c = 0;
@@ -318,7 +301,7 @@ public class GELCleaner {
         return c;
     }
 
-    // (Προαιρετικό) Άνοιγμα ρυθμίσεων app — δεν το χρησιμοποιούμε πλέον αυτόματα.
+
     @SuppressWarnings("unused")
     private static void openAppSettings(Context ctx, LogCallback cb) {
         try {

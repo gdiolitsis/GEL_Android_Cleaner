@@ -237,5 +237,63 @@
                 android:layout_margin="4dp"/>
         </LinearLayout>
 
+
+        <!-- ✅ PERFORMANCE (ADDED) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Performance"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:textColor="@color/gel_text_primary"
+            android:layout_marginTop="18dp"
+            android:paddingLeft="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnBatteryBoost"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="🔋 BATTERY BOOST"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"/>
+
+            <Button
+                android:id="@+id/btnKillApps"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="🚀 KILL APPS"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="@color/gel_btn_text_white"
+                android:layout_margin="4dp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnCleanAll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💣 CLEAN ALL"
+            android:background="@drawable/gel_btn_danger"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_margin="4dp"/>
+
+        <!-- ✅ LOGS (ADDED) -->
+        <TextView
+            android:id="@+id/txtLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="13sp"
+            android:padding="12dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/gel_bg"/>
+
     </LinearLayout>
 </ScrollView>

@@ -2,22 +2,28 @@
 <resources>
 
     <!-- === DARK-GOLD EDITION v4.3 === -->
-    <color name="gel_bg">#0B0B0C</color>           <!-- Main black -->
-    <color name="gel_bg_card">#141414</color>      <!-- Section panels -->
-    <color name="gel_text_primary">#E8E3C8</color> <!-- Gold-white -->
-    <color name="gel_text_secondary">#A69B85</color>
+
+    <!-- Backgrounds -->
+    <color name="gel_bg">#0B0B0C</color>
+    <color name="gel_bg_card">#141414</color>
+
+    <!-- ✅ TEXTS — ALL WHITE -->
+    <color name="gel_text_primary">#FFFFFF</color>
+    <color name="gel_text_secondary">#E0E0E0</color>
 
     <!-- Buttons -->
     <color name="gel_btn_outline_border">#F2D65C</color>   <!-- Gold outline -->
     <color name="gel_btn_text_white">#FFFFFF</color>
-    <color name="gel_btn_danger">#B00020</color>           <!-- Dark red -->
 
-    <!-- Gold -->
+    <!-- Red highlight buttons -->
+    <color name="gel_btn_danger">#B00020</color>
+
+    <!-- Gold accent (not text anymore) -->
     <color name="gel_gold">#E7C773</color>
     <color name="gel_gold_dark">#B69343</color>
 
-    <!-- StatusBar/NavBar -->
-    <color name="colorPrimaryDark">#0B0B0C</color>   <!-- FIX unwanted yellow -->
+    <!-- System bars -->
+    <color name="colorPrimaryDark">#0B0B0C</color>
     <color name="colorPrimary">#141414</color>
     <color name="colorAccent">#E7C773</color>
 

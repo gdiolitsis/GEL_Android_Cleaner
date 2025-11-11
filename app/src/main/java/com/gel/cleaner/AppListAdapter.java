@@ -1,7 +1,7 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.ResolveInfo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +14,10 @@ import java.util.List;
 public class AppListAdapter extends BaseAdapter {
 
     Context ctx;
-    List<AppListActivity.AppInfo> data;
+    List<ResolveInfo> data;
     LayoutInflater inflater;
 
-    public AppListAdapter(Context ctx, List<AppListActivity.AppInfo> data) {
+    public AppListAdapter(Context ctx, List<ResolveInfo> data) {
         this.ctx = ctx;
         this.data = data;
         inflater = LayoutInflater.from(ctx);
@@ -61,21 +61,20 @@ public class AppListAdapter extends BaseAdapter {
             h = (Holder) convertView.getTag();
         }
 
-        AppListActivity.AppInfo a = data.get(position);
+        ResolveInfo r = data.get(position);
+        if (r != null) {
 
-        if (a != null) {
+            CharSequence label = r.loadLabel(ctx.getPackageManager());
+            h.name.setText(label != null ? label : "Unknown");
 
-            if (a.resolveInfo != null) {
-                CharSequence label =
-                        a.resolveInfo.loadLabel(ctx.getPackageManager());
-                h.name.setText(label != null ? label : "Unknown");
+            h.icon.setImageDrawable(
+                    r.loadIcon(ctx.getPackageManager())
+            );
 
-                h.icon.setImageDrawable(
-                        a.resolveInfo.loadIcon(ctx.getPackageManager())
-                );
-            }
+            String pkg = r.activityInfo != null ?
+                    r.activityInfo.packageName : "";
 
-            h.pkg.setText(a.packageName != null ? a.packageName : "");
+            h.pkg.setText(pkg);
         }
 
         return convertView;

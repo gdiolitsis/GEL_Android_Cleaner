@@ -1,13 +1,31 @@
+plugins {
+    id 'com.android.application'
+}
+
 android {
+    namespace "com.gel.cleaner"
     compileSdkVersion 34
+
     defaultConfig {
         applicationId "com.gel.cleaner"
         minSdkVersion 23
         targetSdkVersion 34
-        versionCode 41
-        versionName "4.1"
+        versionCode 43
+        versionName "4.3"
+
         multiDexEnabled true
     }
+
+    signingConfigs {
+        release {
+            // Αν χρησιμοποιείς keystore, άστο εδώ
+            // storeFile file("your_keystore.keystore")
+            // storePassword "xxx"
+            // keyAlias "xxx"
+            // keyPassword "xxx"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -16,43 +34,42 @@ android {
             jniDebuggable false
             renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
         debug {
+            minifyEnabled false
             debuggable true
         }
     }
 
-    // ✅ Universal συμβατότητα + splits για όλα τα ABI
+    // ✅ ——— UNIVERSAL APK SPLITS ———
     splits {
         abi {
             enable true
             reset()
             include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
-            universalApk true        // φτιάχνει 1 APK που δουλεύει παντού
-        }
-        density { enable true }
-        language { enable false }
-    }
-
-    // Για Cordova/Native libs που απαιτούν extract (ασφαλής επιλογή συμβατότητας)
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-        resources {
-            excludes += ['META-INF/*']
+            universalApk true
         }
     }
 
+    // ✅ JDK compatibility
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    // ✅ MIUI / old devices stability
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
+
 dependencies {
-    implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.multidex:multidex:2.0.1'
-    // ΜΗΝ βάλεις Crashlytics/analytics σε release αν δεν το χρειάζεσαι
 }

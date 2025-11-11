@@ -12,12 +12,52 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- ========== LANG TOP RIGHT ========== -->
+        <!-- ✅ TOP LOGO + TITLE ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- ✅ LOGO -->
+            <ImageView
+                android:id="@+id/imgLogo"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:src="@drawable/gel_logo"
+                android:padding="4dp"
+                android:contentDescription="@string/app_name"/>
+
+            <!-- ✅ TITLE -->
+            <TextView
+                android:id="@+id/txtTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GEL Android Cleaner"
+                android:textColor="@color/gel_text_gold"
+                android:textSize="22sp"
+                android:paddingLeft="12dp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <!-- ✅ SUBTITLE -->
+        <TextView
+            android:id="@+id/txtSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Device is ready • Dark-Gold Edition v4.3"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"
+            android:paddingLeft="6dp"/>
+
+        <!-- ✅ LANG TOP RIGHT -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_gravity="end"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingTop="10dp">
 
             <Button
                 android:id="@+id/btnLangGR"
@@ -37,7 +77,8 @@
                 android:textColor="@color/gel_btn_text"/>
         </LinearLayout>
 
-        <!-- ========== DONATE BLOCK ========== -->
+
+        <!-- ✅ DONATE BLOCK -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
@@ -47,17 +88,18 @@
             android:textColor="@color/gel_btn_text"
             android:layout_marginTop="12dp"/>
 
-        <!-- ========== SYSTEM TITLE ========== -->
+
+        <!-- ✅ SYSTEM -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="System"
+            android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- ========== SYSTEM BUTTONS ========== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -68,7 +110,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="🧠 CPU + RAM INFO"
+                android:text="🔥 CPU INFO"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text"
                 android:layout_margin="4dp"/>
@@ -78,24 +120,24 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="📊 CPU + RAM LIVE"
+                android:text="📈 CPU LIVE"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text"
                 android:layout_margin="4dp"/>
         </LinearLayout>
 
 
-        <!-- ========== CLEANER TITLE ========== -->
+        <!-- ✅ CLEANER -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cleaner"
+            android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- ========== CLEANER BUTTONS ========== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -132,17 +174,17 @@
             android:layout_margin="4dp"/>
 
 
-        <!-- ========== JUNK TITLE ========== -->
+        <!-- ✅ JUNK -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Junk"
+            android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- ========== JUNK 2x2 ========== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -179,7 +221,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="🔥 TEMP FILES"
+                android:text="🔥 TEMP"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text"
                 android:layout_margin="4dp"/>
@@ -196,17 +238,17 @@
         </LinearLayout>
 
 
-        <!-- ========== PERFORMANCE TITLE ========== -->
+        <!-- ✅ PERFORMANCE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Performance"
+            android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- ========== PERFORMANCE 2x2 ========== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -233,7 +275,6 @@
                 android:layout_margin="4dp"/>
         </LinearLayout>
 
-
         <Button
             android:id="@+id/btnCleanAll"
             android:layout_width="match_parent"
@@ -244,7 +285,7 @@
             android:layout_margin="4dp"/>
 
 
-        <!-- ========== LOGS ========== -->
+        <!-- ✅ LOGS -->
         <TextView
             android:id="@+id/txtLogs"
             android:layout_width="match_parent"

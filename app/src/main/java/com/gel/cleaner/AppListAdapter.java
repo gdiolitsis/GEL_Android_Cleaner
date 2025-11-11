@@ -25,7 +25,7 @@ public class AppListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return data != null ? data.size() : 0;
+        return data.size();
     }
 
     @Override
@@ -65,22 +65,17 @@ public class AppListAdapter extends BaseAdapter {
 
         if (a != null) {
 
-            // Label
-            if (a.label != null) {
-                h.name.setText(a.label);
-            } else {
-                h.name.setText("Unknown");
-            }
-
-            // Package
-            h.pkg.setText(a.packageName != null ? a.packageName : "");
-
-            // Icon
             if (a.resolveInfo != null) {
+                CharSequence label =
+                        a.resolveInfo.loadLabel(ctx.getPackageManager());
+                h.name.setText(label != null ? label : "Unknown");
+
                 h.icon.setImageDrawable(
                         a.resolveInfo.loadIcon(ctx.getPackageManager())
                 );
             }
+
+            h.pkg.setText(a.packageName != null ? a.packageName : "");
         }
 
         return convertView;

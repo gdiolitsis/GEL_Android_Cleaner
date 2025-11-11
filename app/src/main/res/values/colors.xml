@@ -5,29 +5,26 @@
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
-    <!-- MAIN BACKGROUND -->
+    <!-- MAIN BG -->
     <color name="gel_bg">#FF101010</color>
 
-    <!-- TEXT COLORS -->
-    <color name="gel_text_primary">#FFEEDCAA</color>
-    <color name="gel_text_secondary">#FFBFBFBF</color>
-    <color name="gel_btn_text">#FFFFFFFF</color>
+    <!-- TEXT -->
+    <color name="gel_text_primary">#FFEEDCAA</color>     <!-- gold for titles -->
+    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- light gray -->
+    <color name="gel_btn_text">#FFFFFFFF</color>        <!-- ✅ button text = WHITE -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>  <!-- alias (αν ζητηθεί κάπου) -->
 
-    <!-- EXTRA COMPATIBILITY -->
-    <color name="gel_text_gold">#FFEEDCAA</color>   <!-- duplicate -->
-    <color name="gold">#FFD4AF37</color>            <!-- fallback -->
-    <color name="gray">#FF888888</color>
-    <color name="dark_gray">#FF444444</color>
-
-    <!-- GOLD BUTTONS -->
+    <!-- GOLD -->
     <color name="gel_gold">#FFD4AF37</color>
     <color name="gel_gold_dark">#FFB0892D</color>
 
-    <!-- DANGER BUTTONS -->
+    <!-- DANGER -->
     <color name="gel_red_danger">#FFB00020</color>
     <color name="gel_red_danger_dark">#FF7A0016</color>
 
-    <!-- OUTLINE BG -->
-    <color name="gel_btn_bg">#00101010</color>
+    <!-- EXTRA USED IN LAYOUTS (missing refs) -->
+    <color name="dark_gray">#FF444444</color>
+    <color name="gray">#FF888888</color>
+    <color name="gold">#FFD4AF37</color>
 
 </resources>

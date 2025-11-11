@@ -16,9 +16,9 @@ public class AppListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.listviewlayout);
+        setContentView(R.layout.activity_app_cache);   // ✅ σωστό layout
 
-        list = findViewById(R.id.list);
+        list = findViewById(R.id.listApps);            // ✅ σωστό ID
 
         Intent i = new Intent(Intent.ACTION_MAIN, null);
         i.addCategory(Intent.CATEGORY_LAUNCHER);

@@ -3,302 +3,189 @@
     android:id="@+id/scrollRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@color/gel_bg">
+    android:background="#111">
 
     <LinearLayout
         android:orientation="vertical"
-        android:padding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal">
+        android:padding="16dp">
 
-        <!-- ✅ TOP HEADER -->
+        <!-- HEADER -->
         <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+            android:gravity="center_vertical">
 
-            <!-- LOGO -->
             <ImageView
                 android:id="@+id/imgLogo"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:src="@drawable/gel_logo"
-                android:contentDescription="@string/app_name"
-                android:padding="4dp" />
+                android:src="@drawable/ic_launcher"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginRight="10dp" />
 
-            <!-- TITLE -->
             <TextView
                 android:id="@+id/txtTitle"
+                android:text="GEL Android Cleaner"
+                android:textColor="#EEDDAA"
+                android:textSize="22sp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:text="GEL Android Cleaner"
-                android:textColor="@color/gel_text_primary"
-                android:textStyle="bold"
-                android:textSize="22sp"
-                android:singleLine="true"/>
+                android:textStyle="bold" />
 
-            <!-- ✅ FLAGS (VERTICAL) -->
+            <!-- LANG FLAGS STACK -->
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="center_horizontal">
 
                 <Button
                     android:id="@+id/btnLangGR"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:text="🇬🇷"
-                    android:background="@drawable/gel_btn_outline_selector"
-                    android:textColor="@color/gel_btn_text_white"
-                    android:singleLine="true"/>
+                    android:textSize="18sp"
+                    android:backgroundTint="#673AB7"
+                    android:singleLine="true" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="6dp" />
 
                 <Button
                     android:id="@+id/btnLangEN"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:text="🇬🇧"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/gel_btn_outline_selector"
-                    android:textColor="@color/gel_btn_text_white"
-                    android:singleLine="true"/>
+                    android:textSize="18sp"
+                    android:backgroundTint="#673AB7"
+                    android:singleLine="true" />
             </LinearLayout>
+
         </LinearLayout>
+
 
         <!-- SUBTITLE -->
         <TextView
-            android:id="@+id/txtSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/txtSub"
             android:text="Device is ready • Dark-Gold Edition v4.3"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#BBB"
             android:textSize="14sp"
             android:gravity="center"
-            android:layout_marginBottom="10dp"/>
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <!-- DONATE -->
         <Button
             android:id="@+id/btnDonate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:text="❤️ DONATE! KEEP THIS APP FREE"
-            android:background="@drawable/gel_btn_danger"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_marginTop="12dp"
-            android:singleLine="true"/>
+            style="@style/BtnItem"
+            android:layout_marginTop="16dp" />
 
-
-        <!-- ✅ SYSTEM -->
+        <!-- ================= SYSTEM ================= -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="System"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+            style="@style/SectionTitle"
+            android:text="System" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+            style="@style/Row">
             <Button
                 android:id="@+id/btnCpuRamInfo"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🔥 CPU INFO"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🔥 CPU INFO" />
 
             <Button
                 android:id="@+id/btnCpuRamLive"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="📈 CPU LIVE"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="📈 CPU LIVE" />
         </LinearLayout>
 
-
-        <!-- ✅ CLEANER -->
+        <!-- ================= CLEANER ================= -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cleaner"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+            style="@style/SectionTitle"
+            android:text="Cleaner" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+        <LinearLayout style="@style/Row">
             <Button
                 android:id="@+id/btnCleanRam"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="⚡ CLEAN RAM"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="⚡ CLEAN RAM" />
 
             <Button
                 android:id="@+id/btnSafeClean"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🧹 SAFE CLEAN"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🧹 SAFE CLEAN" />
         </LinearLayout>
 
         <Button
             android:id="@+id/btnDeepClean"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="💣 DEEP CLEAN"
-            android:background="@drawable/gel_btn_danger"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"/>
+            style="@style/BtnItem"
+            android:text="💣 DEEP CLEAN" />
 
-
-        <!-- ✅ JUNK -->
+        <!-- ================= JUNK ================= -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Junk"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+            style="@style/SectionTitle"
+            android:text="Junk" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+        <LinearLayout style="@style/Row">
             <Button
                 android:id="@+id/btnMediaJunk"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🖼 MEDIA JUNK"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🖼 MEDIA JUNK" />
 
             <Button
                 android:id="@+id/btnBrowserCache"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🌐 BROWSER CACHE"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🌐 BROWSER CACHE" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+        <LinearLayout style="@style/Row">
             <Button
                 android:id="@+id/btnTemp"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🔥 TEMP"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🔥 TEMP" />
 
             <Button
                 android:id="@+id/btnAppCache"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🧽 APP CACHE"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🐤 APP CACHE" />
         </LinearLayout>
 
-        <!-- ✅ PERFORMANCE -->
+        <!-- ================= PERFORMANCE ================= -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Performance"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+            style="@style/SectionTitle"
+            android:text="Performance" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+        <LinearLayout style="@style/Row">
             <Button
                 android:id="@+id/btnBatteryBoost"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🔋 BATTERY BOOST"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🔋 BATTERY BOOST" />
 
             <Button
                 android:id="@+id/btnKillApps"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="🚀 KILL APPS"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                style="@style/BtnItem"
+                android:text="🚀 KILL APPS" />
         </LinearLayout>
 
+        <!-- ALL -->
         <Button
             android:id="@+id/btnCleanAll"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="💣 CLEAN ALL"
-            android:background="@drawable/gel_btn_danger"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"/>
+            style="@style/BtnItem"
+            android:text="💣 CLEAN ALL" />
 
-        <!-- ✅ LOGS -->
+        <!-- LOGS -->
         <TextView
             android:id="@+id/txtLogs"
+            android:textColor="#CCC"
+            android:textSize="13sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/gel_text_secondary"
-            android:textSize="13sp"
-            android:padding="12dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/gel_bg"/>
+            android:padding="12dp" />
 
     </LinearLayout>
 </ScrollView>

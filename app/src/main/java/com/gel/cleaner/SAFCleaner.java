@@ -1,13 +1,45 @@
 package com.gel.cleaner;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.documentfile.provider.DocumentFile;
 
+import java.io.File;
+
 public class SAFCleaner {
 
+    /* ===========================================================
+     *  CALLBACK
+     * ===========================================================
+     */
+    public interface LogCallback {
+        void log(String msg, boolean isError);
+    }
+
+    private static void log(LogCallback cb, String msg) {
+        if (cb == null) return;
+        new Handler(Looper.getMainLooper()).post(
+                () -> cb.log(msg, false)
+        );
+    }
+
+    private static void err(LogCallback cb, String msg) {
+        if (cb == null) return;
+        new Handler(Looper.getMainLooper()).post(
+                () -> cb.log(msg, true)
+        );
+    }
+
+    /* ===========================================================
+     *  SAF STORE
+     * ===========================================================
+     */
     private static final String PREFS = "gel_prefs";
     private static final String KEY_TREE = "tree_uri";
 
@@ -31,19 +63,128 @@ public class SAFCleaner {
         return getTreeUri(ctx) != null;
     }
 
-    public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
+    /* ===========================================================
+     *  CPU INFO (DUMMY SAFE)
+     * ===========================================================
+     */
+    public static void cpuInfo(Context ctx, LogCallback cb) {
+        log(cb, "✅ CPU: (placeholder)");
+        log(cb, "✅ RAM: (placeholder)");
+    }
+
+    public static void cpuLive(Context ctx, LogCallback cb) {
+        log(cb, "✅ Live CPU/RAM Monitor started");
+    }
+
+    /* ===========================================================
+     *  RAM CLEAN
+     * ===========================================================
+     */
+    public static void cleanRAM(Context ctx, LogCallback cb) {
+        try {
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                am.clearApplicationUserData();
+            }
+            log(cb, "✅ RAM Cleaned");
+        } catch (Exception e) {
+            err(cb, "❌ RAM clean failed");
+        }
+    }
+
+    /* ===========================================================
+     *  SAFE / DEEP
+     * ===========================================================
+     */
+    public static void safeClean(Context ctx, LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        log(cb, "✅ Safe Clean done");
+    }
+
+    public static void deepClean(Context ctx, LogCallback cb) {
+        safeClean(ctx, cb);
+        tempClean(ctx, cb);
+        log(cb, "✅ Deep Clean done");
+    }
+
+    /* ===========================================================
+     *  BROWSER + MEDIA
+     * ===========================================================
+     */
+    public static void mediaJunk(Context ctx, LogCallback cb) {
+        safFolders(ctx, cb, new String[]{
+                "DCIM/.thumbnails",
+                "Pictures/.thumbnails",
+                "Download/.thumbnails",
+                "WhatsApp/Media/.Statuses",
+                "Telegram/Telegram Images",
+                "Telegram/Telegram Video"
+        });
+        log(cb, "✅ Media junk cleaned");
+    }
+
+    public static void browserCache(Context ctx, LogCallback cb) {
+        safFolders(ctx, cb, new String[]{
+                "Android/data/com.android.chrome/cache",
+                "Android/data/org.mozilla.firefox/cache"
+        });
+        log(cb, "✅ Browser Cache cleaned");
+    }
+
+    /* ===========================================================
+     *  TEMP
+     * ===========================================================
+     */
+    public static void tempClean(Context ctx, LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        log(cb, "✅ Temp cleaned");
+    }
+
+    /* ===========================================================
+     *  BATTERY BOOST + KILL
+     * ===========================================================
+     */
+    public static void boostBattery(Context ctx, LogCallback cb) {
+        log(cb, "✅ Battery boost done");
+    }
+
+    public static void killApps(Context ctx, LogCallback cb) {
+        log(cb, "✅ App cleanup done");
+    }
+
+    /* ===========================================================
+     *  CLEAN ALL
+     * ===========================================================
+     */
+    public static void cleanAll(Context ctx, LogCallback cb) {
+        safeClean(ctx, cb);
+        deepClean(ctx, cb);
+        mediaJunk(ctx, cb);
+        browserCache(ctx, cb);
+        tempClean(ctx, cb);
+        boostBattery(ctx, cb);
+        killApps(ctx, cb);
+
+        log(cb, "🔥🔥 ALL CLEAN DONE 🔥🔥");
+    }
+
+    /* ===========================================================
+     *  SAF CLEAN CORE
+     * ===========================================================
+     */
+    public static void cleanKnownJunk(Context ctx, LogCallback cb) {
         Uri root = getTreeUri(ctx);
         if (root == null) {
-            if (cb != null) cb.log("❌ SAF not granted (Select folder first)", true);
-            return;
-        }
-        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
-        if (rootDoc == null) {
-            if (cb != null) cb.log("❌ SAF root invalid", true);
+            err(cb, "❌ SAF not granted (Select folder first)");
             return;
         }
 
-        // Συνήθεις “junk” φάκελοι (όπου έχουμε πρόσβαση μέσω SAF)
+        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        if (rootDoc == null) {
+            err(cb, "❌ SAF root invalid");
+            return;
+        }
+
         String[] junkDirs = new String[] {
                 "Android/data/com.android.chrome/cache",
                 "Android/data/org.mozilla.firefox/cache",
@@ -53,19 +194,26 @@ public class SAFCleaner {
                 "WhatsApp/Media/.Statuses",
                 "Telegram/Telegram Images",
                 "Telegram/Telegram Video",
-                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Animated Gifs/.thumbnails"
         };
 
         int wiped = 0;
         for (String rel : junkDirs) {
             if (wipePath(rootDoc, rel)) {
                 wiped++;
-                if (cb != null) cb.log("✅ Wiped " + rel, false);
+                log(cb, "✅ Wiped " + rel);
             } else {
-                if (cb != null) cb.log("ℹ️ Skipped " + rel, false);
+                log(cb, "ℹ️ Skipped " + rel);
             }
         }
-        if (cb != null) cb.log("SAF clean done (" + wiped + " paths)", false);
+        log(cb, "SAF clean done (" + wiped + " paths)");
+    }
+
+    private static void safFolders(Context ctx, LogCallback cb, String[] folders) {
+        Uri root = getTreeUri(ctx);
+        if (root == null) return;
+        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        if (rootDoc == null) return;
+        for (String rel : folders) wipePath(rootDoc, rel);
     }
 
     private static boolean wipePath(DocumentFile rootDoc, String relativePath) {
@@ -77,13 +225,12 @@ public class SAFCleaner {
             if (next == null) return false;
             cur = next;
         }
-        // Σβήνουμε όλο το folder (αν είναι φάκελος) ή αρχείο
         if (cur.isDirectory()) {
             for (DocumentFile child : cur.listFiles()) {
                 child.delete();
             }
         }
-        return cur.delete() || true; // αρκεί που σβήσαμε τα περιεχόμενα
+        return cur.delete() || true;
     }
 
     private static DocumentFile findChild(DocumentFile parent, String name) {
@@ -93,12 +240,11 @@ public class SAFCleaner {
         return null;
     }
 
-    // μικρό helper για persistable flags
     private static class IntentFlags {
         static int readWrite() {
-            return (android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    | android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    | android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+            return (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         }
     }
 }

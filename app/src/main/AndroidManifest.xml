@@ -12,23 +12,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.App">
 
-        <!-- ✅ THE ONLY LAUNCHER -->
+        <!-- Launcher Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-
         </activity>
 
-        <!-- ✅ Secondary Activities -->
+        <!-- App list screen -->
         <activity
             android:name=".AppListActivity"
-            android:exported="false" />
-
+            android:exported="false"/>
     </application>
 
 </manifest>

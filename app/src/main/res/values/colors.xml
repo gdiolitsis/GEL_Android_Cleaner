@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ✅ BASIC -->
+    <!-- BASIC -->
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
-    <!-- ✅ MAIN BACKGROUND -->
+    <!-- MAIN BACKGROUND -->
     <color name="gel_bg">#FF101010</color>
 
-    <!-- ✅ TEXT COLORS -->
+    <!-- TEXT -->
     <color name="gel_text_primary">#FFEEDCAA</color>     <!-- gold text -->
-    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- light gray -->
-    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- pure white text -->
+    <color name="gel_text_secondary">#FFBFBFBF</color>   <!-- gray -->
+    <color name="gel_btn_text">#FFFFFFFF</color>         <!-- ✅ WHITE -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>   <!-- backup -->
 
-    <!-- ✅ GOLD BUTTONS -->
+    <!-- GOLD BUTTON -->
     <color name="gel_gold">#FFD4AF37</color>
     <color name="gel_gold_dark">#FFB0892D</color>
 
-    <!-- ✅ DANGER BUTTONS (RED) -->
+    <!-- DANGER BUTTON -->
     <color name="gel_red_danger">#FFB00020</color>
     <color name="gel_red_danger_dark">#FF7A0016</color>
 
-    <!-- ✅ RED TEXT/FALLBACK for strokes -->
-    <color name="gel_red_text">#FFFFFFFF</color>     <!-- white text on red -->
+    <!-- OUTLINE BACKGROUND -->
+    <color name="gel_btn_bg">#00101010</color>
 
 </resources>

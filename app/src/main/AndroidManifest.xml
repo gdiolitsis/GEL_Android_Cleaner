@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- ✅ Needed for listing installed apps -->
+    <!-- Needed for listing installed apps -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
     <application
@@ -12,8 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.App">
 
+        <!-- ✅ THE ONLY LAUNCHER -->
         <activity
-            android:name=".GELCleaner"
+            android:name=".MainActivity"
             android:exported="true">
 
             <intent-filter>
@@ -23,8 +24,10 @@
 
         </activity>
 
-        <!-- ❌ Removed per request -->
-        <!-- <activity android:name=".StorageHelper" /> -->
+        <!-- ✅ Secondary Activities -->
+        <activity
+            android:name=".AppListActivity"
+            android:exported="false" />
 
     </application>
 

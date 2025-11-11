@@ -1,9 +1,9 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ListView;
 
@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AppListActivity extends Activity {
 
-    ListView list;
+    private ListView list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

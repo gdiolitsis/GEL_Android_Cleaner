@@ -236,3 +236,6 @@
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"/>
         </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

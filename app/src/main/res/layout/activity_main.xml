@@ -14,7 +14,6 @@
 
         <!-- LOGO -->
         <ImageView
-            android:id="@+id/imgLogo"
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@mipmap/ic_launcher"
@@ -22,7 +21,7 @@
             android:contentDescription="@string/app_name"
             android:padding="8dp"/>
 
-        <!-- TITLE -->
+        <!-- READY LABEL -->
         <TextView
             android:id="@+id/txtTitle"
             android:layout_width="wrap_content"
@@ -34,7 +33,7 @@
             android:paddingTop="8dp"
             android:paddingBottom="16dp"/>
 
-        <!-- LANGUAGE -->
+        <!-- ===== LANGUAGE ===== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,14 +59,108 @@
                 android:textColor="@color/gel_btn_text"/>
         </LinearLayout>
 
-        <!-- ===== BUTTONS SECTION (όπως πριν) ===== -->
 
-        <include layout="@layout/section_system"/>
-        <include layout="@layout/section_cleaner"/>
-        <include layout="@layout/section_junk"/>
-        <include layout="@layout/section_performance"/>
+        <!-- ===== SYSTEM ===== -->
+        <Button
+            android:id="@+id/btnCpuRamInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cpu_ram_info"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"
+            android:layout_marginTop="12dp"/>
 
-        <!-- CLEAN ALL -->
+        <Button
+            android:id="@+id/btnCpuRamLive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cpu_ram_live"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+
+        <!-- ===== CLEANER ===== -->
+        <Button
+            android:id="@+id/btnCleanRam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/clean_ram"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnSafeClean"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/safe_clean"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+        <Button
+            android:id="@+id/btnDeepClean"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/deep_clean"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+
+        <!-- ===== JUNK ===== -->
+        <Button
+            android:id="@+id/btnMediaJunk"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/media_junk"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnBrowserCache"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/browser_cache"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+        <Button
+            android:id="@+id/btnTemp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/temp_clean"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+        <Button
+            android:id="@+id/btnAppCache"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_cache"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+
+        <!-- ===== PERFORMANCE ===== -->
+        <Button
+            android:id="@+id/btnBatteryBoost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/battery_boost"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnKillApps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/kill_apps"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text"/>
+
+
+        <!-- ===== CLEAN ALL ===== -->
         <Button
             android:id="@+id/btnCleanAll"
             android:layout_width="match_parent"
@@ -77,7 +170,8 @@
             android:textColor="@color/gel_btn_text"
             android:layout_marginTop="16dp"/>
 
-        <!-- DONATE -->
+
+        <!-- ===== DONATE ===== -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
@@ -87,7 +181,8 @@
             android:textColor="@color/gel_btn_text"
             android:layout_marginTop="20dp"/>
 
-        <!-- LOG OUTPUT -->
+
+        <!-- LOG VIEW -->
         <TextView
             android:id="@+id/txtLogs"
             android:layout_width="match_parent"

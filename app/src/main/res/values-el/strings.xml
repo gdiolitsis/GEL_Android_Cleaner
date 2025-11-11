@@ -10,25 +10,27 @@
     <string name="logs">Καταγραφή</string>
     <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
 
-    <!-- Κουμπιά / Ενέργειες -->
+    <!-- Κουμπιά / Ενέργειες (με emoji) -->
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
-    <string name="cpu_ram_info">CPU + RAM Πληροφορίες</string>
-    <string name="cpu_ram_live">CPU + RAM Ζωντανά</string>
-    <string name="clean_ram">Καθαρισμός RAM</string>
-    <string name="safe_clean">Ασφαλής Καθαρισμός</string>
-    <string name="deep_clean">Βαθύς Καθαρισμός</string>
-    <string name="media_junk">Media Junk</string>
-    <string name="browser_cache">Cache Browser</string>
+    <string name="cpu_ram_info">🔥 ΠΛΗΡΟΦΟΡΙΕΣ CPU</string>
+    <string name="cpu_ram_live">📈 CPU LIVE</string>
+    <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
+    <string name="safe_clean">🧹 ΑΣΦΑΛΗΣ ΚΑΘΑΡΙΣΜΟΣ</string>
+    <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>
 
-    <string name="temp_clean">Προσωρινά Αρχεία</string>
-    <string name="temp_files">Προσωρινά Αρχεία</string>
+    <string name="media_junk">🖼 MEDIA JUNK</string>
+    <string name="browser_cache">🌐 CACHE BROWSER</string>
 
-    <string name="battery_boost">Ενίσχυση Μπαταρίας</string>
-    <string name="kill_apps">Τερματισμός Εφαρμογών</string>
-    <string name="clean_all">Καθαρισμός Όλων</string>
+    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ</string>
+    <string name="temp_files">🔥 ΠΡΟΣΩΡΙΝΑ</string>
 
-    <string name="app_cache">Cache Εφαρμογών</string>
+    <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
+    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>
+    <string name="clean_all">💣 ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ</string>
+
+    <!-- Οθόνη λίστας εφαρμογών -->
+    <string name="app_cache">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_cache_btn">Cache Εφαρμογών</string>
+    <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 </resources>

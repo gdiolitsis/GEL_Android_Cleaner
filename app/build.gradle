@@ -16,16 +16,6 @@ android {
         multiDexEnabled true
     }
 
-    signingConfigs {
-        release {
-            // Αν χρησιμοποιείς keystore, άστο εδώ
-            // storeFile file("your_keystore.keystore")
-            // storePassword "xxx"
-            // keyAlias "xxx"
-            // keyPassword "xxx"
-        }
-    }
-
     buildTypes {
         release {
             minifyEnabled true
@@ -34,15 +24,15 @@ android {
             jniDebuggable false
             renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
+
         debug {
             minifyEnabled false
             debuggable true
         }
     }
 
-    // ✅ ——— UNIVERSAL APK SPLITS ———
+    /** ✅ UNIVERSAL APK SPLITS */
     splits {
         abi {
             enable true
@@ -52,13 +42,13 @@ android {
         }
     }
 
-    // ✅ JDK compatibility
+    /** ✅ JDK compatibility */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    // ✅ MIUI / old devices stability
+    /** ✅ MIUI / legacy lib handling */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true

@@ -1,30 +1,34 @@
-<resources>
-    <string name="app_name">GEL Cleaner</string>
+<resources>  
+    <string name="app_name">GEL Cleaner</string>  
+  
+    <!-- Ενότητες UI -->  
+    <string name="system">Σύστημα</string>  
+    <string name="cleaner">Καθαρισμός</string>  
+    <string name="junk">Σκουπίδια</string>  
+    <string name="performance">Απόδοση</string>  
+    <string name="logs">Καταγραφή</string>  
+    <string name="device_ready">✅ Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>  
+  
+    <!-- Κουμπιά / Ενέργειες (με σημαδάκια) -->  
+    <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>  
+    <string name="cpu_ram_info">🧠 CPU + RAM INFO</string>  
+    <string name="cpu_ram_live">📊 CPU + RAM LIVE</string>  
+    <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>  
+    <string name="safe_clean">🧹 ΑΣΦΑΛΗΣ ΚΑΘΑΡΙΣΜΟΣ</string>  
+    <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>  
+    <string name="media_junk">🖼️ MEDIA JUNK</string>  
+    <string name="browser_cache">🌐 CACHE BROWSER</string>  
+    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>  
 
-    <!-- Ενότητες UI -->
-    <string name="system">Σύστημα</string>
-    <string name="cleaner">Καθαρισμός</string>
-    <string name="junk">Σκουπίδια</string>
-    <string name="performance">Απόδοση</string>
-    <string name="logs">Καταγραφή</string>
-    <string name="device_ready">✅ Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
+    <!-- ✅ FIX για build error -->
+    <string name="temp_files">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>
 
-    <!-- Κουμπιά / Ενέργειες (με σημαδάκια) -->
-    <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
-    <string name="cpu_ram_info">🧠 CPU + RAM INFO</string>
-    <string name="cpu_ram_live">📊 CPU + RAM LIVE</string>
-    <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
-    <string name="safe_clean">🧹 ΑΣΦΑΛΗΣ ΚΑΘΑΡΙΣΜΟΣ</string>
-    <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>
-    <string name="media_junk">🖼️ MEDIA JUNK</string>
-    <string name="browser_cache">🌐 CACHE BROWSER</string>
-    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>
-    <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
-    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>
-    <string name="clean_all">💣 ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ</string>
-    <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
-
-    <!-- Οθόνη λίστας εφαρμογών -->
-    <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
+    <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>  
+    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>  
+    <string name="clean_all">💣 ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ</string>  
+    <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>  
+  
+    <!-- Οθόνη λίστας εφαρμογών -->  
+    <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>  
+    <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>  
 </resources>

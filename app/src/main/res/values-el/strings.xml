@@ -9,7 +9,7 @@
     <string name="logs">Καταγραφή</string>  
     <string name="device_ready">✅ Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>  
   
-    <!-- Κουμπιά / Ενέργειες (με σημαδάκια) -->  
+    <!-- Κουμπιά / Ενέργειες -->  
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>  
     <string name="cpu_ram_info">🧠 CPU + RAM INFO</string>  
     <string name="cpu_ram_live">📊 CPU + RAM LIVE</string>  
@@ -18,17 +18,21 @@
     <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>  
     <string name="media_junk">🖼️ MEDIA JUNK</string>  
     <string name="browser_cache">🌐 CACHE BROWSER</string>  
-    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>  
 
-    <!-- ✅ FIX για build error -->
+    <!-- ✅ DEFAULT + EL MUST EXIST -->
+    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>  
     <string name="temp_files">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>
 
     <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>  
     <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>  
     <string name="clean_all">💣 ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ</string>  
+
+    <!-- ✅ FIX: υπήρχε → σωστό -->
     <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>  
   
     <!-- Οθόνη λίστας εφαρμογών -->  
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>  
+
+    <!-- ✅ FIX: Must exist → OK -->
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>  
 </resources>

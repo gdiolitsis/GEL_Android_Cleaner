@@ -1,9 +1,12 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.pm.ApplicationInfo;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -11,32 +14,39 @@ import java.util.List;
 
 public class AppCacheActivity extends Activity {
 
-    ListView list;
-    List<AppListActivity.AppInfo> apps = new ArrayList<>();
+    ListView listView;
+    List<ResolveInfo> apps = new ArrayList<>();
 
     @Override
-    protected void onCreate(Bundle b) {
-        super.onCreate(b);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
-        list = findViewById(R.id.list);
+        listView = findViewById(R.id.listApps);
 
         loadApps();
+
         AppListAdapter ad = new AppListAdapter(this, apps);
-        list.setAdapter(ad);
+        listView.setAdapter(ad);
+
+        listView.setOnItemClickListener((adapterView, v, position, id) -> {
+            ResolveInfo r = apps.get(position);
+            if (r != null && r.activityInfo != null) {
+                String pkg = r.activityInfo.packageName;
+                clearCache(pkg);
+            }
+        });
     }
 
-    void loadApps() {
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> installed = pm.getInstalledApplications(0);
+    private void loadApps() {
+        Intent i = new Intent(Intent.ACTION_MAIN, null);
+        i.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        for (ApplicationInfo ai : installed) {
-            String label = ai.loadLabel(pm).toString();
-            apps.add(new AppListActivity.AppInfo(
-                    ai.packageName,
-                    ai,
-                    label
-            ));
-        }
+        PackageManager pm = getPackageManager();
+        apps = pm.queryIntentActivities(i, 0);
+    }
+
+    private void clearCache(String packageName) {
+        // TODO implement real cache clean
     }
 }

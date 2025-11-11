@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal">
 
-        <!-- ✅ ✅ ✅ TOP HEADER -->
+        <!-- ✅ TOP HEADER -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -22,17 +22,16 @@
             android:paddingTop="6dp"
             android:paddingBottom="6dp">
 
-            <!-- LOGO LEFT -->
+            <!-- LOGO -->
             <ImageView
                 android:id="@+id/imgLogo"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:src="@drawable/gel_logo"
-                android:gravity="start"
-                android:padding="4dp"
-                android:contentDescription="@string/app_name" />
+                android:contentDescription="@string/app_name"
+                android:padding="4dp" />
 
-            <!-- TITLE CENTER -->
+            <!-- TITLE -->
             <TextView
                 android:id="@+id/txtTitle"
                 android:layout_width="0dp"
@@ -45,35 +44,35 @@
                 android:textSize="22sp"
                 android:singleLine="true"/>
 
-            <!-- LANG FLAGS RIGHT (vertical) -->
+            <!-- ✅ FLAGS (VERTICAL) -->
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center">
 
-                <TextView
+                <Button
                     android:id="@+id/btnLangGR"
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:gravity="center"
                     android:text="🇬🇷"
-                    android:textSize="28sp"
-                    android:layout_marginBottom="4dp"
-                    android:singleLine="true" />
+                    android:background="@drawable/gel_btn_outline_selector"
+                    android:textColor="@color/gel_btn_text_white"
+                    android:singleLine="true"/>
 
-                <TextView
+                <Button
                     android:id="@+id/btnLangEN"
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:gravity="center"
                     android:text="🇬🇧"
-                    android:textSize="28sp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/gel_btn_outline_selector"
+                    android:textColor="@color/gel_btn_text_white"
                     android:singleLine="true"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ✅ Device subtitle -->
+        <!-- SUBTITLE -->
         <TextView
             android:id="@+id/txtSubtitle"
             android:layout_width="wrap_content"
@@ -84,7 +83,7 @@
             android:gravity="center"
             android:layout_marginBottom="10dp"/>
 
-        <!-- ✅ DONATE -->
+        <!-- DONATE -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
@@ -95,7 +94,8 @@
             android:layout_marginTop="12dp"
             android:singleLine="true"/>
 
-        <!-- ✅ ========  SYSTEM  ======== -->
+
+        <!-- ✅ SYSTEM -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -119,8 +119,7 @@
                 android:text="🔥 CPU INFO"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/btnCpuRamLive"
@@ -130,12 +129,11 @@
                 android:text="📈 CPU LIVE"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
 
 
-        <!-- ✅ ========  CLEANER  ======== -->
+        <!-- ✅ CLEANER -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -159,8 +157,7 @@
                 android:text="⚡ CLEAN RAM"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/btnSafeClean"
@@ -170,8 +167,7 @@
                 android:text="🧹 SAFE CLEAN"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
 
         <Button
@@ -181,11 +177,10 @@
             android:text="💣 DEEP CLEAN"
             android:background="@drawable/gel_btn_danger"
             android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"
-            android:singleLine="true"/>
+            android:layout_margin="4dp"/>
 
 
-        <!-- ✅ ========  JUNK  ======== -->
+        <!-- ✅ JUNK -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -209,8 +204,7 @@
                 android:text="🖼 MEDIA JUNK"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/btnBrowserCache"
@@ -220,8 +214,7 @@
                 android:text="🌐 BROWSER CACHE"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
 
         <LinearLayout
@@ -237,8 +230,7 @@
                 android:text="🔥 TEMP"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/btnAppCache"
@@ -248,12 +240,10 @@
                 android:text="🧽 APP CACHE"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
 
-
-        <!-- ✅ ======== PERFORMANCE ======== -->
+        <!-- ✅ PERFORMANCE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -277,8 +267,7 @@
                 android:text="🔋 BATTERY BOOST"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/btnKillApps"
@@ -288,8 +277,7 @@
                 android:text="🚀 KILL APPS"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
 
         <Button
@@ -299,9 +287,7 @@
             android:text="💣 CLEAN ALL"
             android:background="@drawable/gel_btn_danger"
             android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"
-            android:singleLine="true"/>
-
+            android:layout_margin="4dp"/>
 
         <!-- ✅ LOGS -->
         <TextView

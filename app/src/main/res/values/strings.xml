@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GEL Cleaner</string>
 
@@ -16,26 +17,18 @@
     <string name="clean_ram">Clean RAM</string>
     <string name="safe_clean">Safe Clean</string>
     <string name="deep_clean">Deep Clean</string>
-
     <string name="media_junk">Media Junk</string>
     <string name="browser_cache">Browser Cache</string>
 
-    <!-- ✅ ORIGINAL -->
     <string name="temp_clean">Temp Files</string>
-
-    <!-- ✅ FIX ADDED FOR AAPT -->
     <string name="temp_files">Temp Files</string>
 
     <string name="battery_boost">Battery Boost</string>
     <string name="kill_apps">Kill Apps</string>
     <string name="clean_all">Clean All</string>
 
-    <!-- App list screen -->
     <string name="app_cache">App Cache</string>
     <string name="app_cache_title">Select app to clear cache</string>
-
-    <!-- ✅ REQUIRED FIX FOR LINT -->
     <string name="app_cache_btn">App Cache</string>
     <string name="app_icon_desc">App Icon</string>
-
 </resources>

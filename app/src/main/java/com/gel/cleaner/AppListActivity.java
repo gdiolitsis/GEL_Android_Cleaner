@@ -1,10 +1,13 @@
 package com.gel.cleaner;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.widget.AdapterView;
 import android.widget.ListView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -12,8 +15,8 @@ import java.util.List;
 
 public class AppListActivity extends AppCompatActivity {
 
-    ListView list;
-    List<AppInfo> data = new ArrayList<>();
+    private ListView listView;
+    private List<AppInfo> data = new ArrayList<>();
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -21,44 +24,45 @@ public class AppListActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_app_list);
 
-        list = findViewById(R.id.listApps);
+        listView = findViewById(R.id.list);
 
-        loadApps();
+        load();
     }
 
-    private void loadApps() {
+    private void load() {
         PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
-        data.clear();
+        for (ApplicationInfo ai : apps) {
+            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                continue;
 
-        for (ApplicationInfo a : apps) {
-            if (pm.getLaunchIntentForPackage(a.packageName) != null) {
-                data.add(new AppInfo(
-                        a.loadLabel(pm).toString(),
-                        a.packageName,
-                        a.loadIcon(pm)
-                ));
-            }
+            AppInfo a = new AppInfo();
+            a.packageName = ai.packageName;
+            a.label = pm.getApplicationLabel(ai).toString();
+            a.resolveInfo = ai;
+            data.add(a);
         }
 
         AppListAdapter ad = new AppListAdapter(this, data);
-        list.setAdapter(ad);
+        listView.setAdapter(ad);
+
+        listView.setOnItemClickListener((AdapterView<?> parent, android.view.View v, int pos, long id) -> {
+            AppInfo a = data.get(pos);
+            Intent i = new Intent(this, AppCacheActivity.class);
+            i.putExtra("pkg", a.packageName);
+            startActivity(i);
+        });
     }
 
+    // ✅ CORRECT NESTED CLASS
     public static class AppInfo {
+        public String packageName;
         public String label;
-        public String pkg;
-        public Object icon;
-
-        public AppInfo(String label, String pkg, Object icon) {
-            this.label = label;
-            this.pkg = pkg;
-            this.icon = icon;
-        }
+        public ApplicationInfo resolveInfo;
     }
 }

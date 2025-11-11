@@ -1,8 +1,9 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.pm.ApplicationInfo;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.widget.ListView;
 
@@ -12,43 +13,38 @@ import java.util.List;
 public class AppListActivity extends Activity {
 
     ListView list;
-    List<AppInfo> apps = new ArrayList<>();
+    List<ResolveInfo> apps = new ArrayList<>();
 
     @Override
-    protected void onCreate(Bundle b) {
-        super.onCreate(b);
-        setContentView(R.layout.activity_app_list);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_app_cache);
 
-        list = findViewById(R.id.list);
+        list = findViewById(R.id.listApps);
 
         loadApps();
+
         AppListAdapter ad = new AppListAdapter(this, apps);
         list.setAdapter(ad);
+
+        list.setOnItemClickListener((adapterView, v, position, id) -> {
+            ResolveInfo r = apps.get(position);
+            if (r != null && r.activityInfo != null) {
+                String pkg = r.activityInfo.packageName;
+                clearCache(pkg);
+            }
+        });
     }
 
-    void loadApps() {
+    private void loadApps() {
+        Intent i = new Intent(Intent.ACTION_MAIN, null);
+        i.addCategory(Intent.CATEGORY_LAUNCHER);
+
         PackageManager pm = getPackageManager();
-        List<ApplicationInfo> installed = pm.getInstalledApplications(0);
-
-        for (ApplicationInfo ai : installed) {
-            String label = ai.loadLabel(pm).toString();
-            apps.add(new AppInfo(
-                    ai.packageName,
-                    ai,
-                    label
-            ));
-        }
+        apps = pm.queryIntentActivities(i, 0);
     }
 
-    public static class AppInfo {
-        public String packageName;
-        public ApplicationInfo resolveInfo;
-        public String label;
-
-        public AppInfo(String pkg, ApplicationInfo info, String label) {
-            this.packageName = pkg;
-            this.resolveInfo = info;
-            this.label = label;
-        }
+    private void clearCache(String packageName) {
+        // TODO real implementation
     }
 }

@@ -6,19 +6,24 @@
     android:padding="12dp"
     android:background="@color/gel_bg">
 
+    <!-- TITLE -->
     <TextView
         android:id="@+id/titleApps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/app_cache_title"
         android:textColor="@color/gel_text_primary"
-        android:textSize="18sp"
-        android:paddingBottom="8dp"/>
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingLeft="4dp"
+        android:paddingBottom="10dp" />
 
+    <!-- LIST -->
     <ListView
         android:id="@+id/listApps"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="#333333"
-        android:dividerHeight="1dp"/>
+        android:divider="#444444"
+        android:dividerHeight="1dp"
+        android:background="@color/gel_bg_dark"/>
 </LinearLayout>

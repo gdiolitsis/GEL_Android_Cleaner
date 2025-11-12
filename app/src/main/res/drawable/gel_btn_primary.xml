@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Pressed -->
+    <!-- PRESSED -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#D19A36"/>
-            <stroke android:width="2dp" android:color="#FFB13F"/>
+            <solid android:color="@color/gel_gold_dark"/>
+            <stroke
+                android:width="2dp"
+                android:color="@color/gel_gold"/>
             <corners android:radius="14dp"/>
             <padding
                 android:left="10dp"
@@ -15,11 +17,13 @@
         </shape>
     </item>
 
-    <!-- Default -->
+    <!-- DEFAULT -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFB13F"/>
-            <stroke android:width="2dp" android:color="#FFC766"/>
+            <solid android:color="@color/gel_gold"/>
+            <stroke
+                android:width="2dp"
+                android:color="@color/gel_gold_dark"/>
             <corners android:radius="14dp"/>
             <padding
                 android:left="10dp"

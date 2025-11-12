@@ -4,8 +4,8 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.text.format.Formatter;
 import android.provider.Settings;
+import android.text.format.Formatter;
 import android.webkit.WebView;
 
 import java.io.File;
@@ -15,8 +15,7 @@ import java.util.Locale;
 
 /**
  * GELCleaner — Utility class (NOT Activity)
- * FULL POWER (SAF + Accessibility optional)
- * Play-Store fair-use (permission guided) — SAFE
+ * SAFE + Play-Store acceptable
  */
 public class GELCleaner {
 
@@ -42,21 +41,20 @@ public class GELCleaner {
 
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            if (am != null) {
-                am.getMemoryInfo(mi);
-            }
+            if (am != null) am.getMemoryInfo(mi);
 
             String total = am != null ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
             String avail = am != null ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
 
-            StringBuilder b = new StringBuilder();
-            b.append("CPU cores: ").append(cores).append("\n");
-            b.append("RAM total: ").append(total).append("\n");
-            b.append("RAM free: ").append(avail).append("\n");
-            b.append("Low memory: ").append(mi.lowMemory).append("\n");
-            b.append("SDK: ").append(Build.VERSION.SDK_INT)
-             .append(" (").append(Build.VERSION.RELEASE).append(")\n");
-            b.append("Device: ").append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
+            StringBuilder b = new StringBuilder()
+                    .append("CPU cores: ").append(cores).append("\n")
+                    .append("RAM total: ").append(total).append("\n")
+                    .append("RAM free: ").append(avail).append("\n")
+                    .append("Low memory: ").append(mi.lowMemory).append("\n")
+                    .append("SDK: ").append(Build.VERSION.SDK_INT)
+                    .append(" (").append(Build.VERSION.RELEASE).append(")\n")
+                    .append("Device: ")
+                    .append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
 
             ok(cb, b.toString());
         } catch (Exception e) {
@@ -73,12 +71,12 @@ public class GELCleaner {
                     long used = total - free;
 
                     String msg = String.format(Locale.US,
-                                    "Live %02d/10 | App RAM used: %s / %s",
-                                    i,
-                                    Formatter.formatShortFileSize(ctx, used),
-                                    Formatter.formatShortFileSize(ctx, total));
+                            "Live %02d/10 | App RAM used: %s / %s",
+                            i,
+                            Formatter.formatShortFileSize(ctx, used),
+                            Formatter.formatShortFileSize(ctx, total));
 
-                    ok(cb, msg);
+                    info(cb, msg);
                     Thread.sleep(1000);
                 }
                 ok(cb, "CPU+RAM live finished.");
@@ -96,7 +94,8 @@ public class GELCleaner {
         try {
             trimAppMemory();
 
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am =
+                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
                 List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
                 if (procs != null) {
@@ -104,7 +103,8 @@ public class GELCleaner {
                         if (p.pkgList == null) continue;
                         for (String pkg : p.pkgList) {
                             if (!pkg.equals(ctx.getPackageName())) {
-                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignored) {}
+                                try { am.killBackgroundProcesses(pkg); }
+                                catch (Exception ignored) {}
                             }
                         }
                     }
@@ -118,7 +118,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * SAFE CLEAN (internal only)
+     * SAFE CLEAN (internal)
      * ========================================================= */
     public static void safeClean(Context ctx, LogCallback cb) {
         try {
@@ -132,7 +132,6 @@ public class GELCleaner {
             File ext = ctx.getExternalCacheDir();
             if (ext != null) files += wipeDir(ext);
 
-            // WebView
             try {
                 WebView w = new WebView(ctx);
                 w.clearCache(true);
@@ -147,7 +146,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * DEEP CLEAN — SAF + System junk
+     * DEEP CLEAN
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
@@ -166,14 +165,14 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * MEDIA
+     * MEDIA JUNK
      * ========================================================= */
     public static void mediaJunk(Context ctx, LogCallback cb) {
         try {
-            if (!SAFCleaner.hasTree(ctx)) {
-                warn(cb, "Grant SAF first.");
-            } else {
+            if (SAFCleaner.hasTree(ctx)) {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
+            } else {
+                warn(cb, "Grant SAF first.");
             }
             ok(cb, "Media junk pass finished.");
         } catch (Exception e) {
@@ -196,10 +195,10 @@ public class GELCleaner {
                 warn(cb, "WebView not available.");
             }
 
-            if (!SAFCleaner.hasTree(ctx)) {
-                warn(cb, "Grant SAF to clear Chrome/Firefox cache folders.");
-            } else {
+            if (SAFCleaner.hasTree(ctx)) {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
+            } else {
+                warn(cb, "Grant SAF to clear Chrome/Firefox cache.");
             }
 
             ok(cb, "Browser cache pass finished.");
@@ -234,13 +233,13 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * BATTERY BOOST
+     * BATTERY
      * ========================================================= */
     public static void boostBattery(Context ctx, LogCallback cb) {
         try {
             cleanRAM(ctx, cb);
-            ok(cb, "Battery: RAM trimmed.");
             info(cb, "Tip: Enable Battery Saver for stronger effect.");
+            ok(cb, "Battery boost done.");
         } catch (Exception e) {
             err(cb, "boostBattery failed: " + e.getMessage());
         }
@@ -252,18 +251,26 @@ public class GELCleaner {
      * ========================================================= */
     public static void killApps(Context ctx, LogCallback cb) {
         try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am == null) { err(cb, "ActivityManager is null."); return; }
+            ActivityManager am =
+                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null) {
+                err(cb, "ActivityManager is null.");
+                return;
+            }
 
             List<String> killed = new ArrayList<>();
-            List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+            List<ActivityManager.RunningAppProcessInfo> procs =
+                    am.getRunningAppProcesses();
 
             if (procs != null) {
                 for (ActivityManager.RunningAppProcessInfo p : procs) {
                     if (p.pkgList == null) continue;
                     for (String pkg : p.pkgList) {
                         if (!pkg.equals(ctx.getPackageName())) {
-                            try { am.killBackgroundProcesses(pkg); killed.add(pkg); } catch (Throwable ignore) {}
+                            try {
+                                am.killBackgroundProcesses(pkg);
+                                killed.add(pkg);
+                            } catch (Throwable ignore) {}
                         }
                     }
                 }
@@ -281,23 +288,24 @@ public class GELCleaner {
      * ========================================================= */
     public static void cleanAll(Context ctx, LogCallback cb) {
         info(cb, "Clean All started…");
+
         cleanRAM(ctx, cb);
         safeClean(ctx, cb);
         tempClean(ctx, cb);
         browserCache(ctx, cb);
         mediaJunk(ctx, cb);
         deepClean(ctx, cb);
+
         ok(cb, "Clean All finished.");
     }
 
 
     /* =========================================================
-     * Internal util
+     * INTERNAL FS
      * ========================================================= */
     private static void trimAppMemory() {
         try { System.gc(); } catch (Throwable ignore) {}
     }
-
 
     private static int wipeDir(File dir) {
         if (dir == null || !dir.exists()) return 0;
@@ -318,19 +326,5 @@ public class GELCleaner {
         }
         if (f.delete()) c++;
         return c;
-    }
-
-
-    @SuppressWarnings("unused")
-    private static void openAppSettings(Context ctx, LogCallback cb) {
-        try {
-            Intent it = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            it.setData(android.net.Uri.fromParts("package", ctx.getPackageName(), null));
-            it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(it);
-            info(cb, "Opened app settings.");
-        } catch (Exception e) {
-            err(cb, "openAppSettings failed: " + e.getMessage());
-        }
     }
 }

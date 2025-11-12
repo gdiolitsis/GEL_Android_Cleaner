@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -38,11 +37,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        ensurePermissions();
+        checkPermissions(); // μόνο ενημέρωση, όχι άνοιγμα
 
         log(getString(R.string.device_ready), false);
     }
-
 
     /* =========================================================
      * SAF PICKER INIT
@@ -61,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                         }
                 );
     }
-
 
     /* =========================================================
      * LANGUAGE
@@ -94,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         return c.getResources().getConfiguration().getLocales().get(0).getLanguage();
     }
 
-
     /* =========================================================
      * DONATE
      * ========================================================= */
@@ -114,7 +110,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
     }
-
 
     /* =========================================================
      * CLEAN BUTTONS
@@ -159,47 +154,18 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-
     /* =========================================================
-     * PERMISSIONS
+     * PERMISSIONS CHECK ONLY (χωρίς auto panels)
      * ========================================================= */
-    private void ensurePermissions() {
-
-        // === SAF ===
+    private void checkPermissions() {
         if (!SAFCleaner.hasTree(this)) {
-            log("⚠️ Storage Access missing → requesting…", false);
-
-            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            i.addFlags(
-                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            );
-
-            try {
-                safPicker.launch(i);
-            } catch (Exception e) {
-                log("❌ SAF picker failed: " + e.getMessage(), true);
-            }
+            log("⚠️ Storage Access missing — enable manually in Settings → Files access", false);
         }
-
-        // === Usage Access ===
         if (!hasUsageAccess()) {
-            log("⚠️ Usage Access missing → opening…", false);
-
-            try {
-                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            } catch (Exception e) {
-                log("❌ Cannot open Usage Access settings: " + e.getMessage(), true);
-            }
+            log("⚠️ Usage Access missing — enable manually in Settings → Usage Access", false);
         }
-
-        // === Accessibility (optional) ===
         log("ℹ️ Optional: Settings → Accessibility → GEL Cleaner", false);
     }
-
 
     private boolean hasUsageAccess() {
         try {
@@ -218,7 +184,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         return false;
     }
 
-
     /* =========================================================
      * LOG CALLBACK
      * ========================================================= */
@@ -226,13 +191,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             if (txtLogs == null) return;
-
             String old = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
-            if (old.length() == 0) {
-                txtLogs.setText(msg);
-            } else {
-                txtLogs.setText(old + "\n" + msg);
-            }
+            txtLogs.setText(old.isEmpty() ? msg : old + "\n" + msg);
 
             if (scroll != null) {
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));

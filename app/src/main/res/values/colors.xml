@@ -7,6 +7,11 @@
     <color name="gray">#FF808080</color>
     <color name="dark_gray">#FF444444</color>
 
+    <!-- NEW (required by theme) -->
+    <color name="colorPrimary">#FFD700</color>         <!-- Gold -->
+    <color name="colorPrimaryDark">#B8860B</color>     <!-- Dark Gold -->
+    <color name="colorAccent">#FFD700</color>
+
     <!-- GEL THEME -->
     <color name="gel_bg">#121212</color>
     <color name="gel_bg_dark">#0A0A0A</color>
@@ -22,7 +27,7 @@
     <color name="gel_red_danger">#FF3333</color>
     <color name="gel_red_danger_dark">#CC0000</color>
 
-    <!-- BUTTON WHITE TEXT -->
+    <!-- BUTTON TEXT -->
     <color name="gel_btn_text_white">#FFFFFFFF</color>
 
 </resources>

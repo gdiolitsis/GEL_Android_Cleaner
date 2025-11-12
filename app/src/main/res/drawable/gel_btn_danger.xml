@@ -1,36 +1,15 @@
-?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- PRESSED -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/gel_red_danger_dark"/>
-            <stroke
-                android:width="2dp"
-                android:color="@color/gel_red_danger"/>
-            <corners android:radius="12dp"/>
-            <padding
-                android:left="12dp"
-                android:top="8dp"
-                android:right="12dp"
-                android:bottom="8dp"/>
+            <solid android:color="#FF1744"/> <!-- πιο “καθαρό” κόκκινο -->
+            <corners android:radius="10dp"/>
         </shape>
     </item>
-
-    <!-- DEFAULT -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/gel_red_danger"/>
-            <stroke
-                android:width="2dp"
-                android:color="@color/gel_red_danger_dark"/>
-            <corners android:radius="12dp"/>
-            <padding
-                android:left="12dp"
-                android:top="8dp"
-                android:right="12dp"
-                android:bottom="8dp"/>
+            <solid android:color="#D50000"/>
+            <corners android:radius="10dp"/>
         </shape>
     </item>
-
 </selector>

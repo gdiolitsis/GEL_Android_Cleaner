@@ -11,7 +11,7 @@
     <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
 
     <!-- Κουμπιά / Ενέργειες (με emoji) -->
-    <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
+    <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
     <string name="cpu_ram_info">🔥 ΠΛΗΡΟΦΟΡΙΕΣ CPU</string>
     <string name="cpu_ram_live">📈 CPU LIVE</string>
     <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
@@ -31,4 +31,10 @@
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
     <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
+
+    <!-- Μηνύματα για άδειες -->
+    <string name="toast_storage_access">Παραχώρησε πρόσβαση στα αρχεία για να συνεχίσεις</string>
+    <string name="toast_usage_access">Ενεργοποίησε την πρόσβαση στη χρήση εφαρμογών</string>
+    <string name="toast_accessibility">Προαιρετικό: Ενεργοποίησε την Υπηρεσία Προσβασιμότητας για πλήρη καθαρισμό</string>
+    <string name="toast_done">✅ Οι άδειες παραχωρήθηκαν</string>
 </resources>

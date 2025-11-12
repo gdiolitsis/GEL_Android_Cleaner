@@ -4,9 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -32,10 +33,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
+        ensurePermissions();
+
         log(getString(R.string.device_ready), false);
     }
 
-    /* ================= LANGUAGE ==================== */
+    /* =========================================================
+     * LANGUAGE
+     * ========================================================= */
     private void setupLangButtons() {
 
         View bGR = findViewById(R.id.btnLangGR);
@@ -54,7 +59,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
     }
 
-    /* ================= DONATE ====================== */
+
+    /* =========================================================
+     * DONATE
+     * ========================================================= */
     private void setupDonate() {
         View donateButton = findViewById(R.id.btnDonate);
         if (donateButton != null) {
@@ -68,37 +76,40 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-    /* ================= CLEAN BUTTONS ================ */
+
+    /* =========================================================
+     * CLEAN BUTTONS
+     * ========================================================= */
     private void setupCleanerButtons() {
 
         // CPU + RAM
-        bind(R.id.btnCpuRamInfo, () ->
-                GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuRamInfo,
+                () -> GELCleaner.cpuInfo(this, this));
 
-        bind(R.id.btnCpuRamLive, () ->
-                GELCleaner.cpuLive(this, this));   // safe loop
+        bind(R.id.btnCpuRamLive,
+                () -> GELCleaner.cpuLive(this, this));
 
         // Cleaner
-        bind(R.id.btnCleanRam, () ->
-                GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnCleanRam,
+                () -> GELCleaner.cleanRAM(this, this));
 
-        bind(R.id.btnSafeClean, () ->
-                GELCleaner.safeClean(this, this));
+        bind(R.id.btnSafeClean,
+                () -> GELCleaner.safeClean(this, this));
 
-        bind(R.id.btnDeepClean, () ->
-                GELCleaner.deepClean(this, this));
+        bind(R.id.btnDeepClean,
+                () -> GELCleaner.deepClean(this, this));
 
         // Junk
-        bind(R.id.btnMediaJunk, () ->
-                GELCleaner.mediaJunk(this, this));
+        bind(R.id.btnMediaJunk,
+                () -> GELCleaner.mediaJunk(this, this));
 
-        bind(R.id.btnBrowserCache, () ->
-                GELCleaner.browserCache(this, this));
+        bind(R.id.btnBrowserCache,
+                () -> GELCleaner.browserCache(this, this));
 
-        bind(R.id.btnTemp, () ->
-                GELCleaner.tempClean(this, this));
+        bind(R.id.btnTemp,
+                () -> GELCleaner.tempClean(this, this));
 
-        // App Cache (List)
+        // App Cache → open activity
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v ->
@@ -106,26 +117,58 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
 
         // Performance
-        bind(R.id.btnBatteryBoost, () ->
-                GELCleaner.boostBattery(this, this));
+        bind(R.id.btnBatteryBoost,
+                () -> GELCleaner.boostBattery(this, this));
 
-        bind(R.id.btnKillApps, () ->
-                GELCleaner.killApps(this, this));
+        bind(R.id.btnKillApps,
+                () -> GELCleaner.killApps(this, this));
 
         // All
-        bind(R.id.btnCleanAll, () ->
-                GELCleaner.cleanAll(this, this));
+        bind(R.id.btnCleanAll,
+                () -> GELCleaner.cleanAll(this, this));
     }
+
 
     private void bind(int id, Runnable fn) {
         View b = findViewById(id);
         if (b != null) b.setOnClickListener(v -> fn.run());
     }
 
-    /* ================= LOG CALLBACK ================= */
+
+    /* =========================================================
+     * PERMISSIONS ENTRY
+     * ========================================================= */
+    private void ensurePermissions() {
+
+        // Storage SAF
+        if (!SAFCleaner.hasTree(this)) {
+            log("⚠️ SAF missing → open picker…", false);
+            startActivity(new Intent(this, PermissionsActivity.class));
+        }
+
+        // PACKAGE_USAGE_STATS
+        if (!PermissionHelper.hasUsageAccess(this)) {
+            log("⚠️ Usage access missing", true);
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
+        // Accessibility
+        if (!PermissionHelper.hasAccessibility(this)) {
+            log("⚠️ Accessibility not enabled", true);
+        }
+    }
+
+
+    /* =========================================================
+     * LOG CALLBACK
+     * ========================================================= */
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
+            if (txtLogs == null) return;
+
             String old = txtLogs.getText().toString();
             txtLogs.setText(old + "\n" + msg);
 

@@ -1,12 +1,16 @@
 package com.gel.cleaner;
 
+import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Process;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -16,7 +20,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
     private TextView txtLogs;
     private ScrollView scroll;
-
     private ActivityResultLauncher<Intent> safPicker;
 
     @Override
@@ -37,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        checkPermissions(); // μόνο ενημέρωση, όχι άνοιγμα
+        checkPermissions(); // μόνο ενημέρωση log
 
         log(getString(R.string.device_ready), false);
     }
@@ -46,18 +49,17 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * SAF PICKER INIT
      * ========================================================= */
     private void initSafPicker() {
-        safPicker =
-                registerForActivityResult(
-                        new ActivityResultContracts.StartActivityForResult(),
-                        result -> {
-                            if (result.getData() == null) return;
-                            Uri tree = result.getData().getData();
-                            if (tree != null) {
-                                SAFCleaner.saveTreeUri(this, tree);
-                                log("✅ SAF granted", false);
-                            }
-                        }
-                );
+        safPicker = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getData() == null) return;
+                    Uri tree = result.getData().getData();
+                    if (tree != null) {
+                        SAFCleaner.saveTreeUri(this, tree);
+                        log("✅ SAF granted", false);
+                    }
+                }
+        );
     }
 
     /* =========================================================
@@ -99,10 +101,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         if (donateButton != null) {
             donateButton.setOnClickListener(v -> {
                 try {
-                    Intent i = new Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
-                    );
+                    Intent i = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis"));
                     startActivity(i);
                 } catch (Exception e) {
                     log("❌ Cannot open browser: " + e.getMessage(), true);
@@ -112,50 +112,105 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     /* =========================================================
-     * CLEAN BUTTONS
+     * CLEAN BUTTONS (με smart permission handling)
      * ========================================================= */
     private void setupCleanerButtons() {
 
-        bind(R.id.btnCpuRamInfo, () -> GELCleaner.cpuInfo(this, this));
-        bind(R.id.btnCpuRamLive, () -> GELCleaner.cpuLive(this, this));
+        bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE, () -> GELCleaner.cpuInfo(this, this));
+        bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE, () -> GELCleaner.cpuLive(this, this));
 
-        bind(R.id.btnCleanRam,  () -> GELCleaner.cleanRAM(this, this));
-        bind(R.id.btnSafeClean, () -> GELCleaner.safeClean(this, this));
-        bind(R.id.btnDeepClean, () -> GELCleaner.deepClean(this, this));
+        bindWithCheck(R.id.btnCleanRam,  PermissionType.SAF, () -> GELCleaner.cleanRAM(this, this));
+        bindWithCheck(R.id.btnSafeClean, PermissionType.SAF, () -> GELCleaner.safeClean(this, this));
+        bindWithCheck(R.id.btnDeepClean, PermissionType.SAF, () -> GELCleaner.deepClean(this, this));
 
-        bind(R.id.btnMediaJunk,   () -> GELCleaner.mediaJunk(this, this));
-        bind(R.id.btnBrowserCache,() -> GELCleaner.browserCache(this, this));
-        bind(R.id.btnTemp,        () -> GELCleaner.tempClean(this, this));
+        bindWithCheck(R.id.btnMediaJunk,   PermissionType.SAF, () -> GELCleaner.mediaJunk(this, this));
+        bindWithCheck(R.id.btnBrowserCache,PermissionType.SAF, () -> GELCleaner.browserCache(this, this));
+        bindWithCheck(R.id.btnTemp,        PermissionType.SAF, () -> GELCleaner.tempClean(this, this));
 
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(this, AppListActivity.class));
-                } catch (Exception e) {
-                    log("❌ Cannot open App List: " + e.getMessage(), true);
+                if (!SAFCleaner.hasTree(this)) {
+                    requestStorageAccess();
+                } else {
+                    try {
+                        startActivity(new Intent(this, AppListActivity.class));
+                    } catch (Exception e) {
+                        log("❌ Cannot open App List: " + e.getMessage(), true);
+                    }
                 }
             });
         }
 
-        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
-        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
-
-        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
+        bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE, () -> GELCleaner.boostBattery(this, this));
+        bindWithCheck(R.id.btnKillApps,     PermissionType.USAGE, () -> GELCleaner.killApps(this, this));
+        bindWithCheck(R.id.btnCleanAll,     PermissionType.SAF,   () -> GELCleaner.cleanAll(this, this));
     }
 
-    private void bind(int id, Runnable fn) {
+    /* =========================================================
+     * SMART BIND
+     * ========================================================= */
+    private enum PermissionType { NONE, SAF, USAGE }
+
+    private void bindWithCheck(int id, PermissionType type, Runnable fn) {
         View b = findViewById(id);
-        if (b != null) {
-            b.setOnClickListener(v -> {
-                try { fn.run(); }
-                catch (Throwable t) { log("❌ Action failed: " + t.getMessage(), true); }
-            });
+        if (b == null) return;
+
+        b.setOnClickListener(v -> {
+            switch (type) {
+                case SAF:
+                    if (!SAFCleaner.hasTree(this)) {
+                        Toast.makeText(this, "Please grant Storage Access", Toast.LENGTH_SHORT).show();
+                        requestStorageAccess();
+                        return;
+                    }
+                    break;
+                case USAGE:
+                    if (!hasUsageAccess()) {
+                        Toast.makeText(this, "Please enable Usage Access", Toast.LENGTH_SHORT).show();
+                        requestUsageAccess();
+                        return;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            try {
+                fn.run();
+            } catch (Throwable t) {
+                log("❌ Action failed: " + t.getMessage(), true);
+            }
+        });
+    }
+
+    /* =========================================================
+     * PERMISSION REQUESTS
+     * ========================================================= */
+    private void requestStorageAccess() {
+        try {
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            i.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            safPicker.launch(i);
+        } catch (Exception e) {
+            log("❌ Cannot open Storage Access: " + e.getMessage(), true);
+        }
+    }
+
+    private void requestUsageAccess() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            log("❌ Cannot open Usage Access settings: " + e.getMessage(), true);
         }
     }
 
     /* =========================================================
-     * PERMISSIONS CHECK ONLY (χωρίς auto panels)
+     * PERMISSIONS CHECK ONLY (log only)
      * ========================================================= */
     private void checkPermissions() {
         if (!SAFCleaner.hasTree(this)) {
@@ -169,16 +224,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
     private boolean hasUsageAccess() {
         try {
-            android.app.AppOpsManager appOps =
-                    (android.app.AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-
+            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
             if (appOps != null) {
                 int mode = appOps.unsafeCheckOpNoThrow(
                         "android:get_usage_stats",
-                        android.os.Process.myUid(),
+                        Process.myUid(),
                         getPackageName()
                 );
-                return (mode == android.app.AppOpsManager.MODE_ALLOWED);
+                return (mode == AppOpsManager.MODE_ALLOWED);
             }
         } catch (Exception ignore) {}
         return false;

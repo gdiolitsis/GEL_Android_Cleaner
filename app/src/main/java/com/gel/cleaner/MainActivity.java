@@ -42,23 +42,33 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * LANGUAGE
      * ========================================================= */
     private void setupLangButtons() {
-
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null)
+        if (bGR != null) {
             bGR.setOnClickListener(v -> {
-                LocaleHelper.set(this, "el");
-                recreate();
+                // άλλαξε μόνο αν χρειάζεται
+                if (!"el".equals(getCurrentLang())) {
+                    LocaleHelper.set(this, "el");
+                    recreate();
+                }
             });
+        }
 
-        if (bEN != null)
+        if (bEN != null) {
             bEN.setOnClickListener(v -> {
-                LocaleHelper.set(this, "en");
-                recreate();
+                if (!"en".equals(getCurrentLang())) {
+                    LocaleHelper.set(this, "en");
+                    recreate();
+                }
             });
+        }
     }
 
+    private String getCurrentLang() {
+        Context c = LocaleHelper.apply(this);
+        return c.getResources().getConfiguration().getLocales().get(0).getLanguage();
+    }
 
     /* =========================================================
      * DONATE
@@ -67,15 +77,18 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         View donateButton = findViewById(R.id.btnDonate);
         if (donateButton != null) {
             donateButton.setOnClickListener(v -> {
-                Intent i = new Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
-                );
-                startActivity(i);
+                try {
+                    Intent i = new Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
+                    );
+                    startActivity(i);
+                } catch (Exception e) {
+                    log("❌ Cannot open browser: " + e.getMessage(), true);
+                }
             });
         }
     }
-
 
     /* =========================================================
      * CLEAN BUTTONS
@@ -83,83 +96,79 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private void setupCleanerButtons() {
 
         // CPU + RAM
-        bind(R.id.btnCpuRamInfo,
-                () -> GELCleaner.cpuInfo(this, this));
-
-        bind(R.id.btnCpuRamLive,
-                () -> GELCleaner.cpuLive(this, this));
+        bind(R.id.btnCpuRamInfo, () -> GELCleaner.cpuInfo(this, this));
+        bind(R.id.btnCpuRamLive, () -> GELCleaner.cpuLive(this, this));
 
         // Cleaner
-        bind(R.id.btnCleanRam,
-                () -> GELCleaner.cleanRAM(this, this));
-
-        bind(R.id.btnSafeClean,
-                () -> GELCleaner.safeClean(this, this));
-
-        bind(R.id.btnDeepClean,
-                () -> GELCleaner.deepClean(this, this));
+        bind(R.id.btnCleanRam,  () -> GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnSafeClean, () -> GELCleaner.safeClean(this, this));
+        bind(R.id.btnDeepClean, () -> GELCleaner.deepClean(this, this));
 
         // Junk
-        bind(R.id.btnMediaJunk,
-                () -> GELCleaner.mediaJunk(this, this));
-
-        bind(R.id.btnBrowserCache,
-                () -> GELCleaner.browserCache(this, this));
-
-        bind(R.id.btnTemp,
-                () -> GELCleaner.tempClean(this, this));
+        bind(R.id.btnMediaJunk,   () -> GELCleaner.mediaJunk(this, this));
+        bind(R.id.btnBrowserCache,() -> GELCleaner.browserCache(this, this));
+        bind(R.id.btnTemp,        () -> GELCleaner.tempClean(this, this));
 
         // App Cache → open activity
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
-            appCache.setOnClickListener(v ->
-                    startActivity(new Intent(this, AppListActivity.class)));
+            appCache.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(this, AppListActivity.class));
+                } catch (Exception e) {
+                    log("❌ Cannot open App List: " + e.getMessage(), true);
+                }
+            });
         }
 
         // Performance
-        bind(R.id.btnBatteryBoost,
-                () -> GELCleaner.boostBattery(this, this));
-
-        bind(R.id.btnKillApps,
-                () -> GELCleaner.killApps(this, this));
+        bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
+        bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
 
         // All
-        bind(R.id.btnCleanAll,
-                () -> GELCleaner.cleanAll(this, this));
+        bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
-
 
     private void bind(int id, Runnable fn) {
         View b = findViewById(id);
-        if (b != null) b.setOnClickListener(v -> fn.run());
+        if (b != null) b.setOnClickListener(v -> {
+            try { fn.run(); }
+            catch (Throwable t) { log("❌ Action failed: " + t.getMessage(), true); }
+        });
     }
-
 
     /* =========================================================
      * PERMISSIONS ENTRY
      * ========================================================= */
     private void ensurePermissions() {
 
-        // Storage SAF
+        // Storage SAF (οδηγεί τον χρήστη στη δική σου PermissionsActivity)
         if (!SAFCleaner.hasTree(this)) {
             log("⚠️ SAF missing → open picker…", false);
-            startActivity(new Intent(this, PermissionsActivity.class));
+            try {
+                startActivity(new Intent(this, PermissionsActivity.class));
+            } catch (Exception e) {
+                log("❌ Cannot open SAF helper: " + e.getMessage(), true);
+            }
         }
 
-        // PACKAGE_USAGE_STATS
+        // PACKAGE_USAGE_STATS (Settings screen)
         if (!PermissionHelper.hasUsageAccess(this)) {
             log("⚠️ Usage access missing", true);
-            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            try {
+                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                log("❌ Cannot open Usage Access settings: " + e.getMessage(), true);
+            }
         }
 
-        // Accessibility
+        // Accessibility ενημέρωση (δεν ανοίγω αυτόματα settings για να είναι Play-safe)
         if (!PermissionHelper.hasAccessibility(this)) {
-            log("⚠️ Accessibility not enabled", true);
+            log("⚠️ Accessibility not enabled (Settings → Accessibility → GEL Cleaner)", true);
         }
     }
-
 
     /* =========================================================
      * LOG CALLBACK
@@ -169,8 +178,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         runOnUiThread(() -> {
             if (txtLogs == null) return;
 
-            String old = txtLogs.getText().toString();
-            txtLogs.setText(old + "\n" + msg);
+            String old = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
+            if (old.length() == 0) {
+                txtLogs.setText(msg);
+            } else {
+                txtLogs.setText(old + "\n" + msg);
+            }
 
             if (scroll != null) {
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));

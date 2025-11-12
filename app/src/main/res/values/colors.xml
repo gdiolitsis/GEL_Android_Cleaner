@@ -22,7 +22,7 @@
     <!-- GOLD -->
     <color name="gold">#FFD700</color>
     <color name="gel_gold">#FFD700</color>
-    <color name="gel_gold_dark">#B8860B</color>   <!-- ✅ NEW FIX -->
+    <color name="gel_gold_dark">#B8860B</color>   <!-- ✅ KEEP -->
 
     <!-- RED (DANGER) -->
     <color name="gel_red_danger">#FF3333</color>

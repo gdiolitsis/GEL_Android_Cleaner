@@ -39,21 +39,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        ensureFullStorageAccess(); // 🔥 αυτόματα ζητά full storage
+        ensureFullStorageAccess(); 
         log(getString(R.string.device_ready), false);
     }
 
     /* =========================================================
-     * FULL STORAGE ACCESS (Android 11+)
+     * FULL STORAGE ACCESS
      * ========================================================= */
     private void ensureFullStorageAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    intent.setData(Uri.parse("package:" + getPackageName()));  // 🔥 direct-to-GEL
                     startActivity(intent);
-                    Toast.makeText(this, "Please allow full storage access", Toast.LENGTH_LONG).show();
                 } catch (ActivityNotFoundException e) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
                     startActivity(intent);
@@ -112,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     /* =========================================================
-     * CLEAN BUTTONS (με smart checks)
+     * CLEAN BUTTONS
      * ========================================================= */
     private void setupCleanerButtons() {
 
@@ -151,15 +150,16 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         if (b == null) return;
 
         b.setOnClickListener(v -> {
+
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
-                    ensureFullStorageAccess();
+                    ensureFullStorageAccess();       // 🔥 auto-jump to toggle
                     return;
                 }
             }
 
             if (type == PermissionType.USAGE && !hasUsageAccess()) {
-                requestUsageAccess();
+                requestUsageAccess();               // 🔥 auto-jump to toggle
                 return;
             }
 
@@ -192,15 +192,15 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private void requestUsageAccess() {
         try {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));   // 🔥 direct-to-GEL
             startActivity(intent);
-            Toast.makeText(this, "Enable Usage Access", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Cannot open Usage Access settings", Toast.LENGTH_SHORT).show();
         }
     }
 
     /* =========================================================
-     * LOG CALLBACK
+     * LOG
      * ========================================================= */
     @Override
     public void log(String msg, boolean isError) {

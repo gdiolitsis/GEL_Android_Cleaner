@@ -1,10 +1,13 @@
 package com.gel.cleaner;
 
 import android.app.AppOpsManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Process;
 import android.provider.Settings;
 import android.view.View;
@@ -12,15 +15,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     private TextView txtLogs;
     private ScrollView scroll;
-    private ActivityResultLauncher<Intent> safPicker;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -35,31 +35,31 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
-        initSafPicker();
         setupLangButtons();
         setupDonate();
         setupCleanerButtons();
 
-        checkPermissions(); // μόνο ενημέρωση log
-
+        ensureFullStorageAccess(); // 🔥 αυτόματα ζητά full storage
         log(getString(R.string.device_ready), false);
     }
 
     /* =========================================================
-     * SAF PICKER INIT
+     * FULL STORAGE ACCESS (Android 11+)
      * ========================================================= */
-    private void initSafPicker() {
-        safPicker = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getData() == null) return;
-                    Uri tree = result.getData().getData();
-                    if (tree != null) {
-                        SAFCleaner.saveTreeUri(this, tree);
-                        log("✅ SAF granted", false);
-                    }
+    private void ensureFullStorageAccess() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                    Toast.makeText(this, "Please allow full storage access", Toast.LENGTH_LONG).show();
+                } catch (ActivityNotFoundException e) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivity(intent);
                 }
-        );
+            }
+        }
     }
 
     /* =========================================================
@@ -105,123 +105,75 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                             Uri.parse("https://www.paypal.com/paypalme/gdiolitsis"));
                     startActivity(i);
                 } catch (Exception e) {
-                    log("❌ Cannot open browser: " + e.getMessage(), true);
+                    Toast.makeText(this, "Cannot open browser", Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
     /* =========================================================
-     * CLEAN BUTTONS (με smart permission handling)
+     * CLEAN BUTTONS (με smart checks)
      * ========================================================= */
     private void setupCleanerButtons() {
 
         bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE, () -> GELCleaner.cpuInfo(this, this));
         bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE, () -> GELCleaner.cpuLive(this, this));
 
-        bindWithCheck(R.id.btnCleanRam,  PermissionType.SAF, () -> GELCleaner.cleanRAM(this, this));
-        bindWithCheck(R.id.btnSafeClean, PermissionType.SAF, () -> GELCleaner.safeClean(this, this));
-        bindWithCheck(R.id.btnDeepClean, PermissionType.SAF, () -> GELCleaner.deepClean(this, this));
+        bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE, () -> GELCleaner.cleanRAM(this, this));
+        bindWithCheck(R.id.btnSafeClean, PermissionType.STORAGE, () -> GELCleaner.safeClean(this, this));
+        bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE, () -> GELCleaner.deepClean(this, this));
 
-        bindWithCheck(R.id.btnMediaJunk,   PermissionType.SAF, () -> GELCleaner.mediaJunk(this, this));
-        bindWithCheck(R.id.btnBrowserCache,PermissionType.SAF, () -> GELCleaner.browserCache(this, this));
-        bindWithCheck(R.id.btnTemp,        PermissionType.SAF, () -> GELCleaner.tempClean(this, this));
+        bindWithCheck(R.id.btnMediaJunk,   PermissionType.STORAGE, () -> GELCleaner.mediaJunk(this, this));
+        bindWithCheck(R.id.btnBrowserCache,PermissionType.STORAGE, () -> GELCleaner.browserCache(this, this));
+        bindWithCheck(R.id.btnTemp,        PermissionType.STORAGE, () -> GELCleaner.tempClean(this, this));
 
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
-                if (!SAFCleaner.hasTree(this)) {
-                    requestStorageAccess();
-                } else {
-                    try {
-                        startActivity(new Intent(this, AppListActivity.class));
-                    } catch (Exception e) {
-                        log("❌ Cannot open App List: " + e.getMessage(), true);
-                    }
+                try {
+                    startActivity(new Intent(this, AppListActivity.class));
+                } catch (Exception e) {
+                    Toast.makeText(this, "Cannot open App List", Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
         bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE, () -> GELCleaner.boostBattery(this, this));
         bindWithCheck(R.id.btnKillApps,     PermissionType.USAGE, () -> GELCleaner.killApps(this, this));
-        bindWithCheck(R.id.btnCleanAll,     PermissionType.SAF,   () -> GELCleaner.cleanAll(this, this));
+
+        bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE, () -> GELCleaner.cleanAll(this, this));
     }
 
-    /* =========================================================
-     * SMART BIND
-     * ========================================================= */
-    private enum PermissionType { NONE, SAF, USAGE }
+    private enum PermissionType { NONE, STORAGE, USAGE }
 
     private void bindWithCheck(int id, PermissionType type, Runnable fn) {
         View b = findViewById(id);
         if (b == null) return;
 
         b.setOnClickListener(v -> {
-            switch (type) {
-                case SAF:
-                    if (!SAFCleaner.hasTree(this)) {
-                        Toast.makeText(this, "Please grant Storage Access", Toast.LENGTH_SHORT).show();
-                        requestStorageAccess();
-                        return;
-                    }
-                    break;
-                case USAGE:
-                    if (!hasUsageAccess()) {
-                        Toast.makeText(this, "Please enable Usage Access", Toast.LENGTH_SHORT).show();
-                        requestUsageAccess();
-                        return;
-                    }
-                    break;
-                default:
-                    break;
+            if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (!Environment.isExternalStorageManager()) {
+                    ensureFullStorageAccess();
+                    return;
+                }
+            }
+
+            if (type == PermissionType.USAGE && !hasUsageAccess()) {
+                requestUsageAccess();
+                return;
             }
 
             try {
                 fn.run();
             } catch (Throwable t) {
-                log("❌ Action failed: " + t.getMessage(), true);
+                Toast.makeText(this, "Action failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     /* =========================================================
-     * PERMISSION REQUESTS
+     * USAGE ACCESS
      * ========================================================= */
-    private void requestStorageAccess() {
-        try {
-            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            i.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            safPicker.launch(i);
-        } catch (Exception e) {
-            log("❌ Cannot open Storage Access: " + e.getMessage(), true);
-        }
-    }
-
-    private void requestUsageAccess() {
-        try {
-            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Exception e) {
-            log("❌ Cannot open Usage Access settings: " + e.getMessage(), true);
-        }
-    }
-
-    /* =========================================================
-     * PERMISSIONS CHECK ONLY (log only)
-     * ========================================================= */
-    private void checkPermissions() {
-        if (!SAFCleaner.hasTree(this)) {
-            log("⚠️ Storage Access missing — enable manually in Settings → Files access", false);
-        }
-        if (!hasUsageAccess()) {
-            log("⚠️ Usage Access missing — enable manually in Settings → Usage Access", false);
-        }
-        log("ℹ️ Optional: Settings → Accessibility → GEL Cleaner", false);
-    }
-
     private boolean hasUsageAccess() {
         try {
             AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
@@ -235,6 +187,16 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             }
         } catch (Exception ignore) {}
         return false;
+    }
+
+    private void requestUsageAccess() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            startActivity(intent);
+            Toast.makeText(this, "Enable Usage Access", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open Usage Access settings", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /* =========================================================

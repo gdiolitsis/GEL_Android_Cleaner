@@ -33,4 +33,10 @@
     <string name="app_cache_btn">🧽 APP CACHE</string>
     <string name="app_icon_desc">App Icon</string>
 
+    <!-- Permission prompts -->
+    <string name="toast_storage_access">Please grant Storage Access to continue</string>
+    <string name="toast_usage_access">Please enable Usage Access to continue</string>
+    <string name="toast_accessibility">Optional: Enable Accessibility Service for full cleaning</string>
+    <string name="toast_done">✅ Permissions granted</string>
+
 </resources>

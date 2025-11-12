@@ -3,25 +3,38 @@ package com.gel.cleaner;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Process;
 import android.provider.Settings;
 
 public class PermissionHelper {
 
-    // --------------------------
-    // Usage Access
-    // --------------------------
+    /* =========================================================
+     *  SAF (wrapper πάνω από SAFCleaner)
+     * ========================================================= */
+    public static boolean hasSAF(Context ctx) {
+        return SAFCleaner.hasTree(ctx);
+    }
+
+
+    /* =========================================================
+     *  USAGE ACCESS
+     * ========================================================= */
     public static boolean hasUsageAccess(Context ctx) {
         try {
-            AppOpsManager appOps = (AppOpsManager) ctx.getSystemService(Context.APP_OPS_SERVICE);
+            AppOpsManager appOps =
+                    (AppOpsManager) ctx.getSystemService(Context.APP_OPS_SERVICE);
+
             if (appOps == null) return false;
 
-            int mode = appOps.checkOpNoThrow(
+            int mode = appOps.unsafeCheckOpNoThrow(
                     "android:get_usage_stats",
-                    android.os.Process.myUid(),
+                    Process.myUid(),
                     ctx.getPackageName()
             );
+
             return (mode == AppOpsManager.MODE_ALLOWED);
-        } catch (Exception e) {
+
+        } catch (Exception ignore) {
             return false;
         }
     }
@@ -35,16 +48,16 @@ public class PermissionHelper {
     }
 
 
-    // --------------------------
-    // Accessibility
-    // --------------------------
+    /* =========================================================
+     *  ACCESSIBILITY
+     * ========================================================= */
     public static boolean hasAccessibility(Context ctx) {
         try {
             return Settings.Secure.getInt(
                     ctx.getContentResolver(),
                     Settings.Secure.ACCESSIBILITY_ENABLED
             ) == 1;
-        } catch (Exception e) {
+        } catch (Exception ignore) {
             return false;
         }
     }

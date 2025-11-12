@@ -9,12 +9,16 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     private TextView txtLogs;
     private ScrollView scroll;
+
+    private ActivityResultLauncher<Intent> safPicker;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -29,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
+        initSafPicker();
         setupLangButtons();
         setupDonate();
         setupCleanerButtons();
@@ -36,6 +41,25 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         ensurePermissions();
 
         log(getString(R.string.device_ready), false);
+    }
+
+
+    /* =========================================================
+     * SAF PICKER INIT
+     * ========================================================= */
+    private void initSafPicker() {
+        safPicker =
+                registerForActivityResult(
+                        new ActivityResultContracts.StartActivityForResult(),
+                        result -> {
+                            if (result.getData() == null) return;
+                            Uri tree = result.getData().getData();
+                            if (tree != null) {
+                                SAFCleaner.saveTreeUri(this, tree);
+                                log("✅ SAF granted", false);
+                            }
+                        }
+                );
     }
 
     /* =========================================================
@@ -47,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         if (bGR != null) {
             bGR.setOnClickListener(v -> {
-                // άλλαξε μόνο αν χρειάζεται
                 if (!"el".equals(getCurrentLang())) {
                     LocaleHelper.set(this, "el");
                     recreate();
@@ -69,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         Context c = LocaleHelper.apply(this);
         return c.getResources().getConfiguration().getLocales().get(0).getLanguage();
     }
+
 
     /* =========================================================
      * DONATE
@@ -137,24 +161,33 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         });
     }
 
+
     /* =========================================================
      * PERMISSIONS ENTRY
      * ========================================================= */
     private void ensurePermissions() {
 
-        // Storage SAF (οδηγεί τον χρήστη στη δική σου PermissionsActivity)
+        // === SAF ===
         if (!SAFCleaner.hasTree(this)) {
-            log("⚠️ SAF missing → open picker…", false);
+            log("⚠️ SAF missing → requesting…", false);
+
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            i.addFlags(
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            );
+
             try {
-                startActivity(new Intent(this, PermissionsActivity.class));
+                safPicker.launch(i);
             } catch (Exception e) {
-                log("❌ Cannot open SAF helper: " + e.getMessage(), true);
+                log("❌ SAF picker failed: " + e.getMessage(), true);
             }
         }
 
-        // PACKAGE_USAGE_STATS (Settings screen)
-        if (!PermissionHelper.hasUsageAccess(this)) {
-            log("⚠️ Usage access missing", true);
+        // === Usage Access (optional) ===
+        if (!hasUsageAccess()) {
+            log("⚠️ Usage access missing", false);
             try {
                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -164,11 +197,27 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             }
         }
 
-        // Accessibility ενημέρωση (δεν ανοίγω αυτόματα settings για να είναι Play-safe)
-        if (!PermissionHelper.hasAccessibility(this)) {
-            log("⚠️ Accessibility not enabled (Settings → Accessibility → GEL Cleaner)", true);
-        }
+        // === Accessibility ===
+        log("ℹ️ Accessibility optional (Settings → Accessibility → GEL Cleaner)", false);
     }
+
+    private boolean hasUsageAccess() {
+        try {
+            android.app.AppOpsManager appOps =
+                    (android.app.AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+
+            if (appOps != null) {
+                int mode = appOps.unsafeCheckOpNoThrow(
+                        "android:get_usage_stats",
+                        android.os.Process.myUid(),
+                        getPackageName()
+                );
+                return (mode == android.app.AppOpsManager.MODE_ALLOWED);
+            }
+        } catch (Exception ignore) {}
+        return false;
+    }
+
 
     /* =========================================================
      * LOG CALLBACK

@@ -2,7 +2,6 @@ package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.format.Formatter;
@@ -16,6 +15,7 @@ import java.util.Locale;
 /**
  * GELCleaner — Utility class (NOT Activity)
  * SAFE + Play-Store acceptable
+ * FULL real logs: before → after → freed
  */
 public class GELCleaner {
 
@@ -29,7 +29,7 @@ public class GELCleaner {
     private static void info(LogCallback cb, String m) { if (cb != null) cb.log("ℹ️ " + m, false); }
     private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
     private static void warn(LogCallback cb, String m) { if (cb != null) cb.log("⚠️ " + m, false); }
-    private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true);  }
+    private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
 
     /* =========================================================
@@ -39,7 +39,8 @@ public class GELCleaner {
         try {
             int cores = Runtime.getRuntime().availableProcessors();
 
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am =
+                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             if (am != null) am.getMemoryInfo(mi);
 
@@ -61,6 +62,7 @@ public class GELCleaner {
             err(cb, "cpuInfo failed: " + e.getMessage());
         }
     }
+
 
     public static void cpuLive(Context ctx, LogCallback cb) {
         new Thread(() -> {
@@ -118,12 +120,13 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * SAFE CLEAN (internal)
+     * SAFE CLEAN
      * ========================================================= */
     public static void safeClean(Context ctx, LogCallback cb) {
         try {
-            int files = 0;
+            long before = getTotalCacheSize(ctx);
 
+            int files = 0;
             files += wipeDir(ctx.getCacheDir());
 
             File codeCache = ctx.getCodeCacheDir();
@@ -138,7 +141,17 @@ public class GELCleaner {
                 w.clearFormData();
             } catch (Throwable ignore) {}
 
-            ok(cb, "Safe clean: " + files + " files cleared.");
+            long after = getTotalCacheSize(ctx);
+            long freed = Math.max(0, before - after);
+
+            ok(cb,
+                    "Safe Clean\n" +
+                    " • Files removed: " + files + "\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "safeClean failed: " + e.getMessage());
         }
@@ -150,6 +163,8 @@ public class GELCleaner {
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
+            long before = getTotalCacheSize(ctx);
+
             if (!SAFCleaner.hasTree(ctx)) {
                 warn(cb, "Grant SAF first.");
             } else {
@@ -157,7 +172,17 @@ public class GELCleaner {
             }
 
             safeClean(ctx, cb);
-            ok(cb, "Deep clean finished.");
+
+            long after = getTotalCacheSize(ctx);
+            long freed = Math.max(0, before - after);
+
+            ok(cb,
+                    "Deep Clean\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "deepClean failed: " + e.getMessage());
         }
@@ -169,12 +194,24 @@ public class GELCleaner {
      * ========================================================= */
     public static void mediaJunk(Context ctx, LogCallback cb) {
         try {
+            long before = getTotalCacheSize(ctx);
+
             if (SAFCleaner.hasTree(ctx)) {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             } else {
                 warn(cb, "Grant SAF first.");
             }
-            ok(cb, "Media junk pass finished.");
+
+            long after = getTotalCacheSize(ctx);
+            long freed = Math.max(0, before - after);
+
+            ok(cb,
+                    "Media Junk\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "mediaJunk failed: " + e.getMessage());
         }
@@ -186,6 +223,8 @@ public class GELCleaner {
      * ========================================================= */
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
+            long before = getTotalCacheSize(ctx);
+
             try {
                 WebView w = new WebView(ctx);
                 w.clearCache(true);
@@ -201,7 +240,16 @@ public class GELCleaner {
                 warn(cb, "Grant SAF to clear Chrome/Firefox cache.");
             }
 
-            ok(cb, "Browser cache pass finished.");
+            long after = getTotalCacheSize(ctx);
+            long freed = Math.max(0, before - after);
+
+            ok(cb,
+                    "Browser Cache\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "browserCache failed: " + e.getMessage());
         }
@@ -213,6 +261,8 @@ public class GELCleaner {
      * ========================================================= */
     public static void tempClean(Context ctx, LogCallback cb) {
         try {
+            long before = getTotalCacheSize(ctx);
+
             int files = 0;
             files += wipeDir(ctx.getCacheDir());
 
@@ -225,7 +275,17 @@ public class GELCleaner {
                 warn(cb, "Grant SAF for external temp dirs.");
             }
 
-            ok(cb, "Temp clean: " + files + " files removed.");
+            long after = getTotalCacheSize(ctx);
+            long freed = Math.max(0, before - after);
+
+            ok(cb,
+                    "Temp Clean\n" +
+                    " • Files removed: " + files + "\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "tempClean failed: " + e.getMessage());
         }
@@ -306,6 +366,37 @@ public class GELCleaner {
     private static void trimAppMemory() {
         try { System.gc(); } catch (Throwable ignore) {}
     }
+
+
+    /* ------- size / wipe ------- */
+
+    private static long getTotalCacheSize(Context ctx) {
+        long sum = 0;
+
+        File c1 = ctx.getCacheDir();
+        if (c1 != null) sum += folderSize(c1);
+
+        File c2 = ctx.getCodeCacheDir();
+        if (c2 != null) sum += folderSize(c2);
+
+        File c3 = ctx.getExternalCacheDir();
+        if (c3 != null) sum += folderSize(c3);
+
+        return sum;
+    }
+
+    private static long folderSize(File f) {
+        if (f == null || !f.exists()) return 0;
+        long total = 0;
+        File[] kids = f.listFiles();
+        if (kids == null) return 0;
+        for (File k : kids) {
+            if (k.isDirectory()) total += folderSize(k);
+            else total += k.length();
+        }
+        return total;
+    }
+
 
     private static int wipeDir(File dir) {
         if (dir == null || !dir.exists()) return 0;

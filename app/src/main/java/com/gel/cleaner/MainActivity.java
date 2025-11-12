@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 );
     }
 
+
     /* =========================================================
      * LANGUAGE
      * ========================================================= */
@@ -114,26 +115,23 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
+
     /* =========================================================
      * CLEAN BUTTONS
      * ========================================================= */
     private void setupCleanerButtons() {
 
-        // CPU + RAM
         bind(R.id.btnCpuRamInfo, () -> GELCleaner.cpuInfo(this, this));
         bind(R.id.btnCpuRamLive, () -> GELCleaner.cpuLive(this, this));
 
-        // Cleaner
         bind(R.id.btnCleanRam,  () -> GELCleaner.cleanRAM(this, this));
         bind(R.id.btnSafeClean, () -> GELCleaner.safeClean(this, this));
         bind(R.id.btnDeepClean, () -> GELCleaner.deepClean(this, this));
 
-        // Junk
         bind(R.id.btnMediaJunk,   () -> GELCleaner.mediaJunk(this, this));
         bind(R.id.btnBrowserCache,() -> GELCleaner.browserCache(this, this));
         bind(R.id.btnTemp,        () -> GELCleaner.tempClean(this, this));
 
-        // App Cache → open activity
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -145,37 +143,37 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // Performance
         bind(R.id.btnBatteryBoost, () -> GELCleaner.boostBattery(this, this));
         bind(R.id.btnKillApps,     () -> GELCleaner.killApps(this, this));
 
-        // All
         bind(R.id.btnCleanAll,     () -> GELCleaner.cleanAll(this, this));
     }
 
     private void bind(int id, Runnable fn) {
         View b = findViewById(id);
-        if (b != null) b.setOnClickListener(v -> {
-            try { fn.run(); }
-            catch (Throwable t) { log("❌ Action failed: " + t.getMessage(), true); }
-        });
+        if (b != null) {
+            b.setOnClickListener(v -> {
+                try { fn.run(); }
+                catch (Throwable t) { log("❌ Action failed: " + t.getMessage(), true); }
+            });
+        }
     }
 
 
     /* =========================================================
-     * PERMISSIONS ENTRY
+     * PERMISSIONS
      * ========================================================= */
     private void ensurePermissions() {
 
         // === SAF ===
         if (!SAFCleaner.hasTree(this)) {
-            log("⚠️ SAF missing → requesting…", false);
+            log("⚠️ Storage Access missing → requesting…", false);
 
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
             i.addFlags(
                     Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             );
 
             try {
@@ -185,9 +183,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             }
         }
 
-        // === Usage Access (optional) ===
+        // === Usage Access ===
         if (!hasUsageAccess()) {
-            log("⚠️ Usage access missing", false);
+            log("⚠️ Usage Access missing → opening…", false);
+
             try {
                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -197,9 +196,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             }
         }
 
-        // === Accessibility ===
-        log("ℹ️ Accessibility optional (Settings → Accessibility → GEL Cleaner)", false);
+        // === Accessibility (optional) ===
+        log("ℹ️ Optional: Settings → Accessibility → GEL Cleaner", false);
     }
+
 
     private boolean hasUsageAccess() {
         try {

@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- DARK-GOLD EDITION v4.3 -->
+    <!-- ✅ DARK-GOLD EDITION v4.3 -->
     <style name="Theme.GEL.DarkGold" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Window -->
         <item name="android:windowBackground">@color/gel_bg</item>
+
+        <!-- System bars -->
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
         <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+
+        <!-- Icons always white -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Optional future toggles -->
+        <!-- <item name="android:colorAccent">@color/colorAccent</item> -->
     </style>
 
 </resources>

@@ -9,7 +9,7 @@ import android.provider.Settings;
 public class PermissionHelper {
 
     /* =========================================================
-     *  SAF (wrapper πάνω από SAFCleaner)
+     *  SAF WRAPPER
      * ========================================================= */
     public static boolean hasSAF(Context ctx) {
         return SAFCleaner.hasTree(ctx);
@@ -33,7 +33,6 @@ public class PermissionHelper {
             );
 
             return (mode == AppOpsManager.MODE_ALLOWED);
-
         } catch (Exception ignore) {
             return false;
         }
@@ -44,7 +43,7 @@ public class PermissionHelper {
             Intent i = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-        } catch (Exception ignored) {}
+        } catch (Exception ignore) {}
     }
 
 
@@ -67,7 +66,7 @@ public class PermissionHelper {
             Intent i = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-        } catch (Exception ignored) {}
+        } catch (Exception ignore) {}
     }
 
 }

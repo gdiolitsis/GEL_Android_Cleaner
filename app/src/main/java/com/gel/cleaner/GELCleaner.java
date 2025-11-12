@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GELCleaner — Utility class (NOT Activity)
- * SAFE + Play-Store acceptable
- * FULL real logs: before → after → freed
- * (Rule: πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste)
+ * GELCleaner — FINAL v3.5
+ * Compatible with SAFCleaner v3.2
+ * GDiolitsis Engine Lab (GEL)
+ *
+ * SAFE, Play-Store compliant, no risky APIs.
+ * Always deliver the full file, ready for copy-paste.
  */
 public class GELCleaner {
 
@@ -39,21 +41,14 @@ public class GELCleaner {
         try {
             int cores = Runtime.getRuntime().availableProcessors();
 
-            ActivityManager am =
-                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             if (am != null) am.getMemoryInfo(mi);
 
-            String total = (am != null)
-                    ? Formatter.formatFileSize(ctx, mi.totalMem)
-                    : "-";
-            String avail = (am != null)
-                    ? Formatter.formatFileSize(ctx, mi.availMem)
-                    : "-";
+            String total = (am != null) ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
+            String avail = (am != null) ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
             long usedBytes = (am != null) ? (mi.totalMem - mi.availMem) : 0;
-            String used = (am != null)
-                    ? Formatter.formatFileSize(ctx, usedBytes)
-                    : "-";
+            String used = Formatter.formatFileSize(ctx, usedBytes);
 
             StringBuilder b = new StringBuilder()
                     .append("CPU cores: ").append(cores).append("\n")
@@ -67,6 +62,7 @@ public class GELCleaner {
                     .append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
 
             ok(cb, b.toString());
+
         } catch (Exception e) {
             err(cb, "cpuInfo failed: " + e.getMessage());
         }
@@ -103,8 +99,8 @@ public class GELCleaner {
      * ========================================================= */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            ActivityManager am =
-                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+
             long beforeFree = 0L;
             long afterFree  = 0L;
 
@@ -119,14 +115,13 @@ public class GELCleaner {
             if (am != null) {
                 List<ActivityManager.RunningAppProcessInfo> procs =
                         am.getRunningAppProcesses();
+
                 if (procs != null) {
                     for (ActivityManager.RunningAppProcessInfo p : procs) {
                         if (p.pkgList == null) continue;
                         for (String pkg : p.pkgList) {
                             if (!pkg.equals(ctx.getPackageName())) {
-                                try {
-                                    am.killBackgroundProcesses(pkg);
-                                } catch (Exception ignored) {}
+                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignore) {}
                             }
                         }
                     }
@@ -139,16 +134,13 @@ public class GELCleaner {
 
             long freed = Math.max(0L, afterFree - beforeFree);
 
-            if (beforeFree > 0 && afterFree > 0) {
-                ok(cb,
-                        "RAM cleanup done.\n" +
-                        " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
-                        " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
-                        " • Freed:       " + Formatter.formatFileSize(ctx, freed)
-                );
-            } else {
-                ok(cb, "RAM cleanup done.");
-            }
+            ok(cb,
+                "RAM cleanup\n" +
+                " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
+                " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
+                " • Freed:       " + Formatter.formatFileSize(ctx, freed)
+            );
+
         } catch (Exception e) {
             err(cb, "cleanRAM failed: " + e.getMessage());
         }
@@ -165,8 +157,8 @@ public class GELCleaner {
             int files = 0;
             files += wipeDir(ctx.getCacheDir());
 
-            File codeCache = ctx.getCodeCacheDir();
-            if (codeCache != null) files += wipeDir(codeCache);
+            File code = ctx.getCodeCacheDir();
+            if (code != null) files += wipeDir(code);
 
             File ext = ctx.getExternalCacheDir();
             if (ext != null) files += wipeDir(ext);
@@ -181,11 +173,11 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Safe Clean\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                "Safe Clean\n" +
+                " • Files removed: " + files + "\n" +
+                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -195,16 +187,17 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * DEEP CLEAN
+     * DEEP CLEAN (Internal + SAF)
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             long before = getTotalCacheSize(ctx);
 
-            if (!SAFCleaner.hasTree(ctx)) {
-                warn(cb, "Grant SAF first.");
-            } else {
+            if (SAFCleaner.hasTree(ctx)) {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
+                SAFCleaner.mediaJunk(ctx, cb);
+            } else {
+                warn(cb, "Grant SAF first.");
             }
 
             safeClean(ctx, cb);
@@ -213,43 +206,14 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Deep Clean\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                "Deep Clean\n" +
+                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
             err(cb, "deepClean failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * MEDIA JUNK
-     * ========================================================= */
-    public static void mediaJunk(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-            } else {
-                warn(cb, "Grant SAF first.");
-            }
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Media Junk\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "mediaJunk failed: " + e.getMessage());
         }
     }
 
@@ -273,17 +237,17 @@ public class GELCleaner {
             if (SAFCleaner.hasTree(ctx)) {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             } else {
-                warn(cb, "Grant SAF to clear Chrome/Firefox cache.");
+                warn(cb, "Grant SAF for browser dirs.");
             }
 
             long after = getTotalCacheSize(ctx);
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Browser Cache\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                "Browser Cache\n" +
+                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -299,8 +263,7 @@ public class GELCleaner {
         try {
             long before = getTotalCacheSize(ctx);
 
-            int files = 0;
-            files += wipeDir(ctx.getCacheDir());
+            int files = wipeDir(ctx.getCacheDir());
 
             File ext = ctx.getExternalCacheDir();
             if (ext != null) files += wipeDir(ext);
@@ -315,11 +278,11 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Temp Clean\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                "Temp Clean\n" +
+                " • Files removed: " + files + "\n" +
+                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -329,7 +292,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * BATTERY
+     * BATTERY BOOST
      * ========================================================= */
     public static void boostBattery(Context ctx, LogCallback cb) {
         try {
@@ -347,32 +310,29 @@ public class GELCleaner {
      * ========================================================= */
     public static void killApps(Context ctx, LogCallback cb) {
         try {
-            ActivityManager am =
-                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             if (am == null) {
                 err(cb, "ActivityManager is null.");
                 return;
             }
 
             List<String> killed = new ArrayList<>();
-            List<ActivityManager.RunningAppProcessInfo> procs =
-                    am.getRunningAppProcesses();
+            List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
 
             if (procs != null) {
                 for (ActivityManager.RunningAppProcessInfo p : procs) {
                     if (p.pkgList == null) continue;
                     for (String pkg : p.pkgList) {
                         if (!pkg.equals(ctx.getPackageName())) {
-                            try {
-                                am.killBackgroundProcesses(pkg);
-                                killed.add(pkg);
-                            } catch (Throwable ignore) {}
+                            try { am.killBackgroundProcesses(pkg); killed.add(pkg); }
+                            catch (Throwable ignore) {}
                         }
                     }
                 }
             }
 
-            ok(cb, "Killed: " + killed.size() + " packages.");
+            ok(cb, "Killed " + killed.size() + " packages.");
+
         } catch (Exception e) {
             err(cb, "killApps failed: " + e.getMessage());
         }
@@ -404,8 +364,6 @@ public class GELCleaner {
     }
 
 
-    /* ------- size / wipe ------- */
-
     private static long getTotalCacheSize(Context ctx) {
         long sum = 0;
 
@@ -421,11 +379,14 @@ public class GELCleaner {
         return sum;
     }
 
+
     private static long folderSize(File f) {
         if (f == null || !f.exists()) return 0;
         long total = 0;
+
         File[] kids = f.listFiles();
         if (kids == null) return 0;
+
         for (File k : kids) {
             if (k.isDirectory()) total += folderSize(k);
             else total += k.length();
@@ -437,11 +398,14 @@ public class GELCleaner {
     private static int wipeDir(File dir) {
         if (dir == null || !dir.exists()) return 0;
         int count = 0;
+
         File[] list = dir.listFiles();
         if (list == null) return 0;
+
         for (File f : list) count += deleteRecursively(f);
         return count;
     }
+
 
     private static int deleteRecursively(File f) {
         int c = 0;

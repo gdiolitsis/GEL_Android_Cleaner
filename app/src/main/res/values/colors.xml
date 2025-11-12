@@ -7,9 +7,9 @@
     <color name="gray">#FF808080</color>
     <color name="dark_gray">#FF444444</color>
 
-    <!-- NEW (required by theme) -->
-    <color name="colorPrimary">#FFD700</color>         <!-- Gold -->
-    <color name="colorPrimaryDark">#B8860B</color>     <!-- Dark Gold -->
+    <!-- PRIMARY THEME REQUIRED -->
+    <color name="colorPrimary">#FFD700</color>
+    <color name="colorPrimaryDark">#B8860B</color>
     <color name="colorAccent">#FFD700</color>
 
     <!-- GEL THEME -->
@@ -22,6 +22,7 @@
     <!-- GOLD -->
     <color name="gold">#FFD700</color>
     <color name="gel_gold">#FFD700</color>
+    <color name="gel_gold_dark">#B8860B</color>   <!-- ✅ NEW FIX -->
 
     <!-- RED (DANGER) -->
     <color name="gel_red_danger">#FF3333</color>

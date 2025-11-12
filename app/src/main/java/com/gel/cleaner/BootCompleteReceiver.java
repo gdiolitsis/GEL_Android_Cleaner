@@ -7,15 +7,23 @@ import android.util.Log;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
 
+    private static final String TAG = "GEL.BOOT";
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        if (intent != null &&
-                Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+        if (intent == null) {
+            Log.w(TAG, "⚠ Null intent on BOOT");
+            return;
+        }
 
-            Log.d("GEL", "✅ Boot completed — GEL Cleaner initialized");
+        String action = intent.getAction();
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                || Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action)) {
 
-            // (Optional) Trigger background maintenance
+            Log.d(TAG, "✅ Boot completed — GEL Cleaner initialized");
+
+            // (Optional) Auto optimize (ONLY IF USER ENABLES)
             // GELCleaner.safeClean(context, null);
         }
     }

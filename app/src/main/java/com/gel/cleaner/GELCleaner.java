@@ -3,7 +3,6 @@ package com.gel.cleaner;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
-import android.provider.Settings;
 import android.text.format.Formatter;
 import android.webkit.WebView;
 
@@ -16,6 +15,7 @@ import java.util.Locale;
  * GELCleaner — Utility class (NOT Activity)
  * SAFE + Play-Store acceptable
  * FULL real logs: before → after → freed
+ * (Rule: πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste)
  */
 public class GELCleaner {
 
@@ -44,13 +44,22 @@ public class GELCleaner {
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             if (am != null) am.getMemoryInfo(mi);
 
-            String total = am != null ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
-            String avail = am != null ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
+            String total = (am != null)
+                    ? Formatter.formatFileSize(ctx, mi.totalMem)
+                    : "-";
+            String avail = (am != null)
+                    ? Formatter.formatFileSize(ctx, mi.availMem)
+                    : "-";
+            long usedBytes = (am != null) ? (mi.totalMem - mi.availMem) : 0;
+            String used = (am != null)
+                    ? Formatter.formatFileSize(ctx, usedBytes)
+                    : "-";
 
             StringBuilder b = new StringBuilder()
                     .append("CPU cores: ").append(cores).append("\n")
                     .append("RAM total: ").append(total).append("\n")
-                    .append("RAM free: ").append(avail).append("\n")
+                    .append("RAM used:  ").append(used).append("\n")
+                    .append("RAM free:  ").append(avail).append("\n")
                     .append("Low memory: ").append(mi.lowMemory).append("\n")
                     .append("SDK: ").append(Build.VERSION.SDK_INT)
                     .append(" (").append(Build.VERSION.RELEASE).append(")\n")
@@ -94,25 +103,52 @@ public class GELCleaner {
      * ========================================================= */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            trimAppMemory();
-
             ActivityManager am =
                     (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            long beforeFree = 0L;
+            long afterFree  = 0L;
+
             if (am != null) {
-                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+                beforeFree = mi.availMem;
+            }
+
+            trimAppMemory();
+
+            if (am != null) {
+                List<ActivityManager.RunningAppProcessInfo> procs =
+                        am.getRunningAppProcesses();
                 if (procs != null) {
                     for (ActivityManager.RunningAppProcessInfo p : procs) {
                         if (p.pkgList == null) continue;
                         for (String pkg : p.pkgList) {
                             if (!pkg.equals(ctx.getPackageName())) {
-                                try { am.killBackgroundProcesses(pkg); }
-                                catch (Exception ignored) {}
+                                try {
+                                    am.killBackgroundProcesses(pkg);
+                                } catch (Exception ignored) {}
                             }
                         }
                     }
                 }
+
+                ActivityManager.MemoryInfo miAfter = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(miAfter);
+                afterFree = miAfter.availMem;
             }
-            ok(cb, "RAM cleanup done.");
+
+            long freed = Math.max(0L, afterFree - beforeFree);
+
+            if (beforeFree > 0 && afterFree > 0) {
+                ok(cb,
+                        "RAM cleanup done.\n" +
+                        " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
+                        " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
+                        " • Freed:       " + Formatter.formatFileSize(ctx, freed)
+                );
+            } else {
+                ok(cb, "RAM cleanup done.");
+            }
         } catch (Exception e) {
             err(cb, "cleanRAM failed: " + e.getMessage());
         }
@@ -419,3 +455,4 @@ public class GELCleaner {
         return c;
     }
 }
+```0

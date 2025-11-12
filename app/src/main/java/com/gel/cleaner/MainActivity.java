@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private TextView txtLogs;
     private ScrollView scroll;
 
+    // 🔥 BLOCK: μην ξαναζητάς άδεια μετά από recreate()
+    private static boolean firstRunChecked = false;
+
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
@@ -39,9 +42,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        // ❌ ΑΦΑΙΡΈΘΗΚΕ το ensureFullStorageAccess()
-        // Δεν ανοίγει πια η εφαρμογή στις ρυθμίσεις.
-
+        // 🟥 ΠΟΤΕ δεν ζητάμε άδεια στην εκκίνηση
+        // μόνο την ΠΡΩΤΗ φορά λογικά, αλλά πλέον το αφήνουμε στα κουμπιά.
         log(getString(R.string.device_ready), false);
     }
 
@@ -50,7 +52,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void ensureFullStorageAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+            // 👉 Μην ξανα-ανοίγεις τα settings αν έχουν ήδη ανοιχτεί μια φορά
+            if (firstRunChecked) return;
+
             if (!Environment.isExternalStorageManager()) {
+                firstRunChecked = true;
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.setData(Uri.parse("package:" + getPackageName()));
@@ -74,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             bGR.setOnClickListener(v -> {
                 if (!"el".equals(getCurrentLang())) {
                     LocaleHelper.set(this, "el");
-                    recreate();
+                    recreate();   // 🔥 δεν ξαναζητά άδεια πια
                 }
             });
         }
@@ -83,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             bEN.setOnClickListener(v -> {
                 if (!"en".equals(getCurrentLang())) {
                     LocaleHelper.set(this, "en");
-                    recreate();
+                    recreate();   // 🔥 δεν ξαναζητά άδεια πια
                 }
             });
         }
@@ -172,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
-                    ensureFullStorageAccess();  // ζητά άδεια ΜΟΝΟ εδώ
+                    ensureFullStorageAccess();
                     return;
                 }
             }
@@ -216,7 +223,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             intent.setData(Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "Cannot open Usage Access settings",
+            Toast.makeText(this,
+                    "Cannot open Usage Access settings",
                     Toast.LENGTH_SHORT).show();
         }
     }

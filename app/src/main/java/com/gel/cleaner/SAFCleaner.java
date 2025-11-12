@@ -1,6 +1,5 @@
 package com.gel.cleaner;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
@@ -10,13 +9,12 @@ import android.os.Looper;
 
 import androidx.documentfile.provider.DocumentFile;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
- * SAF cleaner — FULL FINAL
- * Keeps your API & behavior intact — strengthens real cleanup
- * 2025 — GEL
+ * SAF cleaner — FINAL (w/ thumbnail report)
+ * GEL — 2025
  */
 public class SAFCleaner {
 
@@ -39,7 +37,7 @@ public class SAFCleaner {
     }
 
     /* ===========================================================
-     *  SAF STORE
+     *  SAF STORAGE
      * ===========================================================
      */
     private static final String PREFS = "gel_prefs";
@@ -68,6 +66,7 @@ public class SAFCleaner {
         return getTreeUri(ctx) != null;
     }
 
+
     /* ===========================================================
      *  SAFE / DEEP CLEAN
      * ===========================================================
@@ -80,38 +79,30 @@ public class SAFCleaner {
     public static void deepClean(Context ctx, GELCleaner.LogCallback cb) {
         safeClean(ctx, cb);
         tempClean(ctx, cb);
+        thumbnailScanAndDelete(ctx, cb);
         log(cb, "✅ Deep Clean done");
     }
 
+
     /* ===========================================================
-     *  JUNK — MEDIA
+     *  MEDIA JUNK
      * ===========================================================
      */
     public static void mediaJunk(Context ctx, GELCleaner.LogCallback cb) {
-        removeFolders(ctx, cb,
-                "DCIM/.thumbnails",
-                "Pictures/.thumbnails",
-                "Download/.thumbnails",
-                "WhatsApp/Media/.Statuses",
-                "Telegram/Telegram Images",
-                "Telegram/Telegram Video"
-        );
-
+        thumbnailScanAndDelete(ctx, cb);
         log(cb, "✅ Media junk finished");
     }
 
+
     /* ===========================================================
-     *  BROWSER CACHE
+     *  BROWSER
      * ===========================================================
      */
     public static void browserCache(Context ctx, GELCleaner.LogCallback cb) {
-        removeFolders(ctx, cb,
-                "Android/data/com.android.chrome/cache",
-                "Android/data/org.mozilla.firefox/cache"
-        );
-
+        cleanKnownJunk(ctx, cb);
         log(cb, "✅ Browser cache finished");
     }
+
 
     /* ===========================================================
      *  TEMP
@@ -122,20 +113,9 @@ public class SAFCleaner {
         log(cb, "✅ Temp Clean done");
     }
 
-    /* ===========================================================
-     *  BATTERY + KILL
-     * ===========================================================
-     */
-    public static void boostBattery(Context ctx, GELCleaner.LogCallback cb) {
-        log(cb, "✅ Battery boost done");
-    }
-
-    public static void killApps(Context ctx, GELCleaner.LogCallback cb) {
-        log(cb, "✅ Kill apps done");
-    }
 
     /* ===========================================================
-     *  MASTER — CLEAN ALL
+     *  CLEAN ALL
      * ===========================================================
      */
     public static void cleanAll(Context ctx, GELCleaner.LogCallback cb) {
@@ -144,14 +124,13 @@ public class SAFCleaner {
         mediaJunk(ctx, cb);
         browserCache(ctx, cb);
         tempClean(ctx, cb);
-        boostBattery(ctx, cb);
-        killApps(ctx, cb);
 
         log(cb, "🔥🔥 ALL CLEAN DONE 🔥🔥");
     }
 
+
     /* ===========================================================
-     *  MASTER — (folder wipe)
+     *  MAIN — wipe known folders
      * ===========================================================
      */
     public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
@@ -170,9 +149,11 @@ public class SAFCleaner {
         String[] junkDirs = new String[]{
                 "Android/data/com.android.chrome/cache",
                 "Android/data/org.mozilla.firefox/cache",
+
                 "DCIM/.thumbnails",
                 "Pictures/.thumbnails",
                 "Download/.thumbnails",
+
                 "WhatsApp/Media/.Statuses",
                 "Telegram/Telegram Images",
                 "Telegram/Telegram Video"
@@ -192,60 +173,102 @@ public class SAFCleaner {
         log(cb, "✅ SAF Clean paths = " + okCount);
     }
 
+
     /* ===========================================================
-     *  WIPE — MULTI
+     *  THUMBNAIL SCAN
      * ===========================================================
      */
-    private static void removeFolders(Context ctx, GELCleaner.LogCallback cb, String... folders) {
+    private static void thumbnailScanAndDelete(Context ctx, GELCleaner.LogCallback cb) {
         Uri root = getTreeUri(ctx);
         if (root == null) return;
 
         DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
         if (rootDoc == null) return;
 
-        for (String rel : folders) {
-            wipePath(rootDoc, rel);
+        String[] paths = {
+                "DCIM/.thumbnails",
+                "Pictures/.thumbnails",
+                "Download/.thumbnails"
+        };
+
+        long totalBytes = 0;
+        int totalFiles = 0;
+
+        for (String rel : paths) {
+            ThumbnailReport rep = deleteThumbs(rootDoc, rel);
+            totalBytes += rep.bytes;
+            totalFiles += rep.count;
+        }
+
+        if (totalFiles > 0) {
+            log(cb, "📸 Thumbnails found: " + totalFiles);
+            log(cb, "🗑 Deleted: " + formatMB(totalBytes) + " MB");
+        } else {
+            log(cb, "ℹ️ No thumbnails found");
         }
     }
 
+    private static class ThumbnailReport {
+        int count = 0;
+        long bytes = 0;
+    }
+
+    private static ThumbnailReport deleteThumbs(DocumentFile root, String rel) {
+        ThumbnailReport r = new ThumbnailReport();
+
+        DocumentFile folder = traverse(root, rel);
+        if (folder == null) return r;
+
+        for (DocumentFile f : folder.listFiles()) {
+            if (f.isFile()) {
+                long sz = f.length();
+                if (f.delete()) {
+                    r.count++;
+                    r.bytes += sz;
+                }
+            }
+        }
+        return r;
+    }
+
+    private static String formatMB(long b) {
+        return String.format("%.1f", (b / 1024f / 1024f));
+    }
+
+
     /* ===========================================================
-     *  MAIN WIPE ENGINE
+     *  PATH TRAVERSE
      * ===========================================================
      */
-    private static boolean wipePath(DocumentFile rootDoc, String relativePath) {
-
-        String[] parts = relativePath.split("/");
-        DocumentFile cur = rootDoc;
-
+    private static DocumentFile traverse(DocumentFile root, String rel) {
+        String[] parts = rel.split("/");
+        DocumentFile cur = root;
         for (String p : parts) {
             if (p.isEmpty()) continue;
-            DocumentFile next = findChild(cur, p);
-            if (next == null) return false;
-            cur = next;
+            cur = findChild(cur, p);
+            if (cur == null) return null;
         }
-
-        // delete children first
-        for (DocumentFile child : cur.listFiles()) {
-            child.delete();
-        }
-
-        // delete folder if possible
-        try {
-            return cur.delete();
-        } catch (Exception ignored) {
-            return true;   // we tried
-        }
+        return cur;
     }
 
-    /* ===========================================================
-     *  Tree Search
-     * ===========================================================
-     */
+    private static boolean wipePath(DocumentFile rootDoc, String relativePath) {
+        DocumentFile folder = traverse(rootDoc, relativePath);
+        if (folder == null) return false;
+
+        for (DocumentFile child : folder.listFiles()) {
+            child.delete();
+        }
+        try {
+            folder.delete();
+        } catch (Throwable ignore) {}
+        return true;
+    }
+
     private static DocumentFile findChild(DocumentFile parent, String name) {
         if (parent == null) return null;
         for (DocumentFile f : parent.listFiles()) {
             if (f.getName() != null &&
-                    f.getName().equalsIgnoreCase(name)) {
+                f.getName().equalsIgnoreCase(name)) {
                 return f;
             }
         }

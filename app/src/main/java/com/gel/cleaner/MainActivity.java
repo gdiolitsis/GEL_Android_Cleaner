@@ -22,9 +22,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private TextView txtLogs;
     private ScrollView scroll;
 
-    // 🔥 BLOCK: μην ξαναζητάς άδεια μετά από recreate()
-    private static boolean firstRunChecked = false;
-
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
@@ -42,25 +39,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        // 🟥 ΠΟΤΕ δεν ζητάμε άδεια στην εκκίνηση
-        // μόνο την ΠΡΩΤΗ φορά λογικά, αλλά πλέον το αφήνουμε στα κουμπιά.
+        // 🟥 Δεν ζητάμε ΚΑΜΙΑ άδεια στην εκκίνηση.
+        // Όλα ζητούνται μόνο όταν πατάς κουμπί.
         log(getString(R.string.device_ready), false);
     }
 
     /* =========================================================
-     * FULL STORAGE ACCESS — ONLY WHEN NEEDED
+     * FULL STORAGE ACCESS — ONLY WHEN NEEDED (κουμπιά STORAGE)
      * ========================================================= */
     private void ensureFullStorageAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-            // 👉 Μην ξανα-ανοίγεις τα settings αν έχουν ήδη ανοιχτεί μια φορά
-            if (firstRunChecked) return;
-
             if (!Environment.isExternalStorageManager()) {
-                firstRunChecked = true;
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    intent.setData(Uri.parse("package:" + getPackageName()));  // direct-to-GEL
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
@@ -81,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             bGR.setOnClickListener(v -> {
                 if (!"el".equals(getCurrentLang())) {
                     LocaleHelper.set(this, "el");
-                    recreate();   // 🔥 δεν ξαναζητά άδεια πια
+                    recreate();
                 }
             });
         }
@@ -90,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             bEN.setOnClickListener(v -> {
                 if (!"en".equals(getCurrentLang())) {
                     LocaleHelper.set(this, "en");
-                    recreate();   // 🔥 δεν ξαναζητά άδεια πια
+                    recreate();
                 }
             });
         }
@@ -98,7 +90,11 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
     private String getCurrentLang() {
         Context c = LocaleHelper.apply(this);
-        return c.getResources().getConfiguration().getLocales().get(0).getLanguage();
+        return c.getResources()
+                .getConfiguration()
+                .getLocales()
+                .get(0)
+                .getLanguage();
     }
 
     /* =========================================================
@@ -109,8 +105,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         if (donateButton != null) {
             donateButton.setOnClickListener(v -> {
                 try {
-                    Intent i = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis"));
+                    Intent i = new Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")
+                    );
                     startActivity(i);
                 } catch (Exception e) {
                     Toast.makeText(this, "Cannot open browser", Toast.LENGTH_SHORT).show();
@@ -124,12 +122,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void setupCleanerButtons() {
 
+        // CPU / RAM info & live → χρειάζονται USAGE
         bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE,
                 () -> GELCleaner.cpuInfo(this, this));
 
         bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE,
                 () -> GELCleaner.cpuLive(this, this));
 
+        // RAM + Safe / Deep / Junk / Temp / All → χρειάζονται STORAGE
         bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE,
                 () -> GELCleaner.cleanRAM(this, this));
 
@@ -148,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnTemp, PermissionType.STORAGE,
                 () -> GELCleaner.tempClean(this, this));
 
+        // App cache list
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -159,12 +160,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
+        // Battery / Kill → USAGE
         bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE,
                 () -> GELCleaner.boostBattery(this, this));
 
         bindWithCheck(R.id.btnKillApps, PermissionType.USAGE,
                 () -> GELCleaner.killApps(this, this));
 
+        // Clean All → STORAGE
         bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE,
                 () -> GELCleaner.cleanAll(this, this));
     }
@@ -177,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         b.setOnClickListener(v -> {
 
+            // STORAGE → MANAGE_EXTERNAL_STORAGE panel (Android 11+)
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
                     ensureFullStorageAccess();
@@ -184,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 }
             }
 
+            // USAGE → Usage Access panel
             if (type == PermissionType.USAGE && !hasUsageAccess()) {
                 requestUsageAccess();
                 return;
@@ -192,9 +197,11 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             try {
                 fn.run();
             } catch (Throwable t) {
-                Toast.makeText(this,
+                Toast.makeText(
+                        this,
                         "Action failed: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                        Toast.LENGTH_SHORT
+                ).show();
             }
         });
     }
@@ -204,7 +211,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private boolean hasUsageAccess() {
         try {
-            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            AppOpsManager appOps =
+                    (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
             if (appOps != null) {
                 int mode = appOps.unsafeCheckOpNoThrow(
                         "android:get_usage_stats",
@@ -220,12 +228,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private void requestUsageAccess() {
         try {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
+            intent.setData(Uri.parse("package:" + getPackageName())); // direct to GEL
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this,
+            Toast.makeText(
+                    this,
                     "Cannot open Usage Access settings",
-                    Toast.LENGTH_SHORT).show();
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 
@@ -236,6 +246,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             if (txtLogs == null) return;
+
             String old = txtLogs.getText() == null
                     ? "" : txtLogs.getText().toString();
             txtLogs.setText(old.isEmpty() ? msg : old + "\n" + msg);

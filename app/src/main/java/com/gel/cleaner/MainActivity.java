@@ -39,19 +39,21 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        ensureFullStorageAccess(); 
+        // ❌ ΑΦΑΙΡΈΘΗΚΕ το ensureFullStorageAccess()
+        // Δεν ανοίγει πια η εφαρμογή στις ρυθμίσεις.
+
         log(getString(R.string.device_ready), false);
     }
 
     /* =========================================================
-     * FULL STORAGE ACCESS
+     * FULL STORAGE ACCESS — ONLY WHEN NEEDED
      * ========================================================= */
     private void ensureFullStorageAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));  // 🔥 direct-to-GEL
+                    intent.setData(Uri.parse("package:" + getPackageName()));
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
@@ -115,16 +117,29 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void setupCleanerButtons() {
 
-        bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE, () -> GELCleaner.cpuInfo(this, this));
-        bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE, () -> GELCleaner.cpuLive(this, this));
+        bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE,
+                () -> GELCleaner.cpuInfo(this, this));
 
-        bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE, () -> GELCleaner.cleanRAM(this, this));
-        bindWithCheck(R.id.btnSafeClean, PermissionType.STORAGE, () -> GELCleaner.safeClean(this, this));
-        bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE, () -> GELCleaner.deepClean(this, this));
+        bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE,
+                () -> GELCleaner.cpuLive(this, this));
 
-        bindWithCheck(R.id.btnMediaJunk,   PermissionType.STORAGE, () -> GELCleaner.mediaJunk(this, this));
-        bindWithCheck(R.id.btnBrowserCache,PermissionType.STORAGE, () -> GELCleaner.browserCache(this, this));
-        bindWithCheck(R.id.btnTemp,        PermissionType.STORAGE, () -> GELCleaner.tempClean(this, this));
+        bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE,
+                () -> GELCleaner.cleanRAM(this, this));
+
+        bindWithCheck(R.id.btnSafeClean, PermissionType.STORAGE,
+                () -> GELCleaner.safeClean(this, this));
+
+        bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE,
+                () -> GELCleaner.deepClean(this, this));
+
+        bindWithCheck(R.id.btnMediaJunk, PermissionType.STORAGE,
+                () -> GELCleaner.mediaJunk(this, this));
+
+        bindWithCheck(R.id.btnBrowserCache, PermissionType.STORAGE,
+                () -> GELCleaner.browserCache(this, this));
+
+        bindWithCheck(R.id.btnTemp, PermissionType.STORAGE,
+                () -> GELCleaner.tempClean(this, this));
 
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
@@ -137,10 +152,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE, () -> GELCleaner.boostBattery(this, this));
-        bindWithCheck(R.id.btnKillApps,     PermissionType.USAGE, () -> GELCleaner.killApps(this, this));
+        bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE,
+                () -> GELCleaner.boostBattery(this, this));
 
-        bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE, () -> GELCleaner.cleanAll(this, this));
+        bindWithCheck(R.id.btnKillApps, PermissionType.USAGE,
+                () -> GELCleaner.killApps(this, this));
+
+        bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE,
+                () -> GELCleaner.cleanAll(this, this));
     }
 
     private enum PermissionType { NONE, STORAGE, USAGE }
@@ -153,20 +172,22 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
-                    ensureFullStorageAccess();       // 🔥 auto-jump to toggle
+                    ensureFullStorageAccess();  // ζητά άδεια ΜΟΝΟ εδώ
                     return;
                 }
             }
 
             if (type == PermissionType.USAGE && !hasUsageAccess()) {
-                requestUsageAccess();               // 🔥 auto-jump to toggle
+                requestUsageAccess();
                 return;
             }
 
             try {
                 fn.run();
             } catch (Throwable t) {
-                Toast.makeText(this, "Action failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Action failed: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -192,21 +213,23 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private void requestUsageAccess() {
         try {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));   // 🔥 direct-to-GEL
+            intent.setData(Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "Cannot open Usage Access settings", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Cannot open Usage Access settings",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
     /* =========================================================
-     * LOG
+     * LOGGING
      * ========================================================= */
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             if (txtLogs == null) return;
-            String old = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
+            String old = txtLogs.getText() == null
+                    ? "" : txtLogs.getText().toString();
             txtLogs.setText(old.isEmpty() ? msg : old + "\n" + msg);
 
             if (scroll != null) {

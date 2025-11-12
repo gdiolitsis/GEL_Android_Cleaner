@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">GEL Cleaner</string>
 
     <!-- UI Sections -->
@@ -21,7 +22,6 @@
     <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 BROWSER CACHE</string>
 
-    <string name="temp_clean">🔥 TEMP</string>
     <string name="temp_files">🔥 TEMP</string>
 
     <string name="battery_boost">🔋 BATTERY BOOST</string>
@@ -33,4 +33,5 @@
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_cache_btn">🧽 APP CACHE</string>
     <string name="app_icon_desc">App Icon</string>
+
 </resources>

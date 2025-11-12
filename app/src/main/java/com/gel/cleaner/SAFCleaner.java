@@ -15,6 +15,7 @@ import java.util.Deque;
 /**
  * SAF cleaner — FINAL (w/ thumbnail report)
  * GEL — 2025
+ * Rule: πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste.
  */
 public class SAFCleaner {
 
@@ -40,11 +41,23 @@ public class SAFCleaner {
      *  SAF STORAGE
      * ===========================================================
      */
-    private static final String PREFS = "gel_prefs";
+    private static final String PREFS   = "gel_prefs";
     private static final String KEY_TREE = "tree_uri";
 
+    /**
+     * Αποθηκεύει ΜΟΝΟ την ΠΡΩΤΗ φορά το treeUri.
+     * Αν υπάρχει ήδη τιμή στο KEY_TREE, δεν την αντικαθιστά.
+     */
     public static void saveTreeUri(Context ctx, Uri treeUri) {
         if (treeUri == null) return;
+
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String existing = sp.getString(KEY_TREE, null);
+        if (existing != null && !existing.isEmpty()) {
+            // Ήδη έχουμε ρίζα → δεν την αλλάζουμε (first-run only)
+            return;
+        }
+
         try {
             ctx.getContentResolver().takePersistableUriPermission(
                     treeUri,
@@ -52,7 +65,6 @@ public class SAFCleaner {
             );
         } catch (Exception ignored) {}
 
-        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         sp.edit().putString(KEY_TREE, treeUri.toString()).apply();
     }
 
@@ -146,17 +158,68 @@ public class SAFCleaner {
             return;
         }
 
+        // Κύριες διαδρομές “σκουπιδιών” (rel paths από τη ρίζα που διάλεξε ο χρήστης)
         String[] junkDirs = new String[]{
+                // --- Browsers (Chrome, Firefox, Edge, Opera, Brave, DuckDuckGo, WebView) ---
                 "Android/data/com.android.chrome/cache",
+                "Android/data/com.android.chrome/app_chrome/Default/Cache",
+                "Android/data/com.google.android.webview/cache",
                 "Android/data/org.mozilla.firefox/cache",
+                "Android/data/org.mozilla.firefox_beta/cache",
+                "Android/data/com.microsoft.emmx/cache",
+                "Android/data/com.opera.browser/cache",
+                "Android/data/com.opera.mini.native/cache",
+                "Android/data/com.brave.browser/cache",
+                "Android/data/com.duckduckgo.mobile.android/cache",
 
+                // --- WhatsApp / Telegram ---
+                "WhatsApp/Media/.Statuses",
+                "WhatsApp/.Shared",
+                "Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
+                "Android/media/com.whatsapp/WhatsApp/.Shared",
+                "Android/data/com.whatsapp/cache",
+                "Android/data/com.whatsapp/wallpaper",
+                "Android/data/org.telegram.messenger/cache",
+                "Android/data/org.telegram.messenger.beta/cache",
+                "Telegram/Telegram Images",
+                "Telegram/Telegram Video",
+                "Telegram/Telegram Documents",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Images",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Video",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Documents",
+
+                // --- Viber / Messenger / FB / Instagram / TikTok / Snapchat ---
+                "Android/data/com.viber.voip/cache",
+                "Android/data/com.facebook.katana/cache",
+                "Android/data/com.facebook.orca/cache",
+                "Android/data/com.facebook.mlite/cache",
+                "Android/data/com.instagram.android/cache",
+                "Android/data/com.zhiliaoapp.musically/cache",   // παλιό TikTok
+                "Android/data/com.ss.android.ugc.trill/cache",   // νέο TikTok
+                "Android/data/com.snapchat.android/cache",
+
+                // --- YouTube / streaming ---
+                "Android/data/com.google.android.youtube/cache",
+                "Android/data/com.google.android.videos/cache",
+                "Android/data/com.netflix.mediaclient/cache",
+                "Android/data/com.spotify.music/cache",
+
+                // --- Thumbnails / media previews ---
                 "DCIM/.thumbnails",
                 "Pictures/.thumbnails",
                 "Download/.thumbnails",
+                "Movies/.thumbnails",
+                "WhatsApp/.thumbnails",
+                "Android/DCIM/.thumbnails",
 
-                "WhatsApp/Media/.Statuses",
-                "Telegram/Telegram Images",
-                "Telegram/Telegram Video"
+                // --- Γενικά temp / logs σε γνωστές ρίζες ---
+                "Android/data/.tmp",
+                "Android/data/.thumbnails",
+                "Android/data/.log",
+                "Download/.temp",
+                "Download/.cache",
+                "MIUI/debug_log",
+                "MIUI/.cache"
         };
 
         int okCount = 0;
@@ -188,7 +251,9 @@ public class SAFCleaner {
         String[] paths = {
                 "DCIM/.thumbnails",
                 "Pictures/.thumbnails",
-                "Download/.thumbnails"
+                "Download/.thumbnails",
+                "Movies/.thumbnails",
+                "WhatsApp/.thumbnails"
         };
 
         long totalBytes = 0;
@@ -256,7 +321,9 @@ public class SAFCleaner {
         if (folder == null) return false;
 
         for (DocumentFile child : folder.listFiles()) {
-            child.delete();
+            try {
+                child.delete();
+            } catch (Throwable ignore) {}
         }
         try {
             folder.delete();
@@ -268,7 +335,7 @@ public class SAFCleaner {
         if (parent == null) return null;
         for (DocumentFile f : parent.listFiles()) {
             if (f.getName() != null &&
-                f.getName().equalsIgnoreCase(name)) {
+                    f.getName().equalsIgnoreCase(name)) {
                 return f;
             }
         }
@@ -289,3 +356,4 @@ public class SAFCleaner {
         }
     }
 }
+```0

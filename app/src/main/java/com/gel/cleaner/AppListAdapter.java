@@ -13,14 +13,14 @@ import java.util.List;
 
 public class AppListAdapter extends BaseAdapter {
 
-    Context ctx;
-    List<ResolveInfo> data;
-    LayoutInflater inflater;
+    private final Context ctx;
+    private final List<ResolveInfo> data;
+    private final LayoutInflater inflater;
 
     public AppListAdapter(Context ctx, List<ResolveInfo> data) {
         this.ctx = ctx;
         this.data = data;
-        inflater = LayoutInflater.from(ctx);
+        this.inflater = LayoutInflater.from(ctx);
     }
 
     @Override
@@ -64,17 +64,28 @@ public class AppListAdapter extends BaseAdapter {
         ResolveInfo r = data.get(position);
         if (r != null) {
 
-            CharSequence label = r.loadLabel(ctx.getPackageManager());
+            // Name
+            CharSequence label = null;
+            try {
+                label = r.loadLabel(ctx.getPackageManager());
+            } catch (Exception ignored) {}
+
             h.name.setText(label != null ? label : "Unknown");
 
-            h.icon.setImageDrawable(
-                    r.loadIcon(ctx.getPackageManager())
-            );
+            // Icon
+            try {
+                h.icon.setImageDrawable(
+                        r.loadIcon(ctx.getPackageManager())
+                );
+            } catch (Exception ignored) {
+                h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
+            }
 
-            String pkg = (r.activityInfo != null
-                    ? r.activityInfo.packageName
-                    : "");
-
+            // Package
+            String pkg = "";
+            if (r.activityInfo != null && r.activityInfo.packageName != null) {
+                pkg = r.activityInfo.packageName;
+            }
             h.pkg.setText(pkg);
         }
 

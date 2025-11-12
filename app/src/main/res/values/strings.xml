@@ -21,8 +21,7 @@
 
     <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 BROWSER CACHE</string>
-
-    <string name="temp_files">🔥 TEMP</string>
+    <string name="temp_clean">🔥 TEMP</string>
 
     <string name="battery_boost">🔋 BATTERY BOOST</string>
     <string name="kill_apps">🚀 KILL APPS</string>

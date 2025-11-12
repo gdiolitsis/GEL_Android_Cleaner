@@ -3,10 +3,10 @@ package com.gel.cleaner;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.TextView;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
-import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,8 +19,8 @@ public class CleanerActivity extends AppCompatActivity
     private ProgressBar bar;
     private ScrollView scroll;
 
-    private int cleanedMB = 0;
     private long startMs = 0;
+    private final Handler h = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle b) {
@@ -32,7 +32,9 @@ public class CleanerActivity extends AppCompatActivity
         scroll      = findViewById(R.id.scrollProgress);
 
         View btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         startMs = System.currentTimeMillis();
 
@@ -42,6 +44,10 @@ public class CleanerActivity extends AppCompatActivity
         runMode(mode);
     }
 
+
+    /* =========================================================
+     * RUN SELECTED CLEAN METHOD
+     * ========================================================= */
     private void runMode(String mode) {
         log("🔥 Starting: " + mode, false);
 
@@ -49,24 +55,35 @@ public class CleanerActivity extends AppCompatActivity
             case "safe":
                 GELCleaner.safeClean(this, this);
                 break;
+
             case "deep":
                 GELCleaner.deepClean(this, this);
                 break;
+
+            case "all":
             default:
                 GELCleaner.cleanAll(this, this);
                 break;
         }
 
-        // Mark done at end
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            finishStats();
-        }, 1200);
+        // Fake realistic finishing animation
+        h.postDelayed(this::finishStats, 1200);
     }
 
+
+    /* =========================================================
+     * COMPLETE
+     * ========================================================= */
     private void finishStats() {
         long ms = System.currentTimeMillis() - startMs;
         log("✅ DONE in " + (ms / 1000.0) + "s", false);
-        bar.setProgress(100);
+
+        if (bar != null) {
+            bar.setProgress(100);
+        }
+
+        // auto-close after short delay
+        h.postDelayed(this::finish, 800);
     }
 
 
@@ -76,16 +93,21 @@ public class CleanerActivity extends AppCompatActivity
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {
-            String old = txtProgress.getText().toString();
-            txtProgress.setText(old + "\n" + msg);
+
+            if (txtProgress != null) {
+                String old = txtProgress.getText().toString();
+                txtProgress.setText(old + "\n" + msg);
+            }
 
             if (scroll != null) {
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
             }
 
-            // Optional: trigger fake progress
-            int p = bar.getProgress();
-            if (p < 95) bar.setProgress(p + 5);
+            // Smooth progress fill
+            if (bar != null) {
+                int p = bar.getProgress();
+                if (p < 95) bar.setProgress(p + 3);
+            }
         });
     }
 }

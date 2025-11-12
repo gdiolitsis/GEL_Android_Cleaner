@@ -1,30 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- === DARK-GOLD EDITION v4.3 === -->
+    <!-- BASE -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="gray">#FF808080</color>
+    <color name="dark_gray">#FF444444</color>
 
-    <!-- Backgrounds -->
-    <color name="gel_bg">#0B0B0C</color>
-    <color name="gel_bg_card">#141414</color>
+    <!-- GEL THEME -->
+    <color name="gel_bg">#121212</color>
+    <color name="gel_bg_dark">#0A0A0A</color>
 
-    <!-- ✅ TEXTS — ALL WHITE -->
     <color name="gel_text_primary">#FFFFFF</color>
-    <color name="gel_text_secondary">#E0E0E0</color>
+    <color name="gel_text_secondary">#B0B0B0</color>
 
-    <!-- Buttons -->
-    <color name="gel_btn_outline_border">#F2D65C</color>   <!-- Gold outline -->
-    <color name="gel_btn_text_white">#FFFFFF</color>
+    <!-- GOLD -->
+    <color name="gold">#FFD700</color>
+    <color name="gel_gold">#FFD700</color>
 
-    <!-- Red highlight buttons -->
-    <color name="gel_btn_danger">#B00020</color>
+    <!-- RED (DANGER) -->
+    <color name="gel_red_danger">#FF3333</color>
+    <color name="gel_red_danger_dark">#CC0000</color>
 
-    <!-- Gold accent (not text anymore) -->
-    <color name="gel_gold">#E7C773</color>
-    <color name="gel_gold_dark">#B69343</color>
-
-    <!-- System bars -->
-    <color name="colorPrimaryDark">#0B0B0C</color>
-    <color name="colorPrimary">#141414</color>
-    <color name="colorAccent">#E7C773</color>
+    <!-- BUTTON WHITE TEXT -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>
 
 </resources>

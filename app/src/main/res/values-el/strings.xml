@@ -20,9 +20,7 @@
 
     <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 CACHE BROWSER</string>
-
     <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ</string>
-    <string name="temp_files">🔥 ΠΡΟΣΩΡΙΝΑ</string>
 
     <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
     <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>

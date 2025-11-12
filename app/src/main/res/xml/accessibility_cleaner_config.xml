@@ -7,5 +7,4 @@
     android:accessibilityFlags="flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows"
     android:description="@string/app_name"
     android:settingsActivity=""
-    android:packageNames=""
-    />
+    android:packageNames="" />

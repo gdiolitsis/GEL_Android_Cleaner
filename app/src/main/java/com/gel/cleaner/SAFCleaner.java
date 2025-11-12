@@ -9,54 +9,37 @@ import android.os.Looper;
 
 import androidx.documentfile.provider.DocumentFile;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-
 /**
- * SAF cleaner — FINAL (w/ thumbnail report)
- * GEL — 2025
- * Rule: πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste.
+ * SAFCleaner — FINAL v3.2 (Safe, Silent, No folder creation)
+ * GDiolitsis Engine Lab (GEL) — 2025
  */
 public class SAFCleaner {
 
     /* ===========================================================
-     *  LOG HELPERS
-     * ===========================================================
-     */
+     * LOG HELPERS
+     * =========================================================== */
     private static void log(GELCleaner.LogCallback cb, String msg) {
         if (cb == null) return;
-        new Handler(Looper.getMainLooper()).post(
-                () -> cb.log(msg, false)
-        );
+        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, false));
     }
 
     private static void err(GELCleaner.LogCallback cb, String msg) {
         if (cb == null) return;
-        new Handler(Looper.getMainLooper()).post(
-                () -> cb.log(msg, true)
-        );
+        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, true));
     }
 
     /* ===========================================================
-     *  SAF STORAGE
-     * ===========================================================
-     */
-    private static final String PREFS   = "gel_prefs";
+     * SAF STORAGE
+     * =========================================================== */
+    private static final String PREFS = "gel_prefs";
     private static final String KEY_TREE = "tree_uri";
 
-    /**
-     * Αποθηκεύει ΜΟΝΟ την ΠΡΩΤΗ φορά το treeUri.
-     * Αν υπάρχει ήδη τιμή στο KEY_TREE, δεν την αντικαθιστά.
-     */
+    /** Save SAF root only first time */
     public static void saveTreeUri(Context ctx, Uri treeUri) {
         if (treeUri == null) return;
 
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        String existing = sp.getString(KEY_TREE, null);
-        if (existing != null && !existing.isEmpty()) {
-            // Ήδη έχουμε ρίζα → δεν την αλλάζουμε (first-run only)
-            return;
-        }
+        if (sp.getString(KEY_TREE, null) != null) return; // already saved
 
         try {
             ctx.getContentResolver().takePersistableUriPermission(
@@ -69,8 +52,8 @@ public class SAFCleaner {
     }
 
     public static Uri getTreeUri(Context ctx) {
-        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        String s = sp.getString(KEY_TREE, null);
+        String s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_TREE, null);
         return (s == null) ? null : Uri.parse(s);
     }
 
@@ -80,56 +63,35 @@ public class SAFCleaner {
 
 
     /* ===========================================================
-     *  SAFE / DEEP CLEAN
-     * ===========================================================
-     */
+     * PUBLIC CLEAN FUNCTIONS
+     * =========================================================== */
     public static void safeClean(Context ctx, GELCleaner.LogCallback cb) {
         cleanKnownJunk(ctx, cb);
         log(cb, "✅ Safe Clean done");
     }
 
     public static void deepClean(Context ctx, GELCleaner.LogCallback cb) {
-        safeClean(ctx, cb);
+        cleanKnownJunk(ctx, cb);
         tempClean(ctx, cb);
         thumbnailScanAndDelete(ctx, cb);
         log(cb, "✅ Deep Clean done");
     }
 
-
-    /* ===========================================================
-     *  MEDIA JUNK
-     * ===========================================================
-     */
     public static void mediaJunk(Context ctx, GELCleaner.LogCallback cb) {
         thumbnailScanAndDelete(ctx, cb);
-        log(cb, "✅ Media junk finished");
+        log(cb, "✅ Media Junk done");
     }
 
-
-    /* ===========================================================
-     *  BROWSER
-     * ===========================================================
-     */
     public static void browserCache(Context ctx, GELCleaner.LogCallback cb) {
         cleanKnownJunk(ctx, cb);
-        log(cb, "✅ Browser cache finished");
+        log(cb, "✅ Browser Cache done");
     }
 
-
-    /* ===========================================================
-     *  TEMP
-     * ===========================================================
-     */
     public static void tempClean(Context ctx, GELCleaner.LogCallback cb) {
         cleanKnownJunk(ctx, cb);
         log(cb, "✅ Temp Clean done");
     }
 
-
-    /* ===========================================================
-     *  CLEAN ALL
-     * ===========================================================
-     */
     public static void cleanAll(Context ctx, GELCleaner.LogCallback cb) {
         safeClean(ctx, cb);
         deepClean(ctx, cb);
@@ -142,10 +104,10 @@ public class SAFCleaner {
 
 
     /* ===========================================================
-     *  MAIN — wipe known folders
-     * ===========================================================
-     */
+     * MAIN KNOWN PATH CLEANER
+     * =========================================================== */
     public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
+
         Uri root = getTreeUri(ctx);
         if (root == null) {
             err(cb, "❌ SAF not granted");
@@ -158,9 +120,9 @@ public class SAFCleaner {
             return;
         }
 
-        // Κύριες διαδρομές “σκουπιδιών” (rel paths από τη ρίζα που διάλεξε ο χρήστης)
-        String[] junkDirs = new String[]{
-                // --- Browsers (Chrome, Firefox, Edge, Opera, Brave, DuckDuckGo, WebView) ---
+        String[] junk = new String[]{
+
+                // Browsers
                 "Android/data/com.android.chrome/cache",
                 "Android/data/com.android.chrome/app_chrome/Default/Cache",
                 "Android/data/com.google.android.webview/cache",
@@ -172,7 +134,7 @@ public class SAFCleaner {
                 "Android/data/com.brave.browser/cache",
                 "Android/data/com.duckduckgo.mobile.android/cache",
 
-                // --- WhatsApp / Telegram ---
+                // WhatsApp / Telegram
                 "WhatsApp/Media/.Statuses",
                 "WhatsApp/.Shared",
                 "Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
@@ -188,31 +150,29 @@ public class SAFCleaner {
                 "Android/media/org.telegram.messenger/Telegram/Telegram Video",
                 "Android/media/org.telegram.messenger/Telegram/Telegram Documents",
 
-                // --- Viber / Messenger / FB / Instagram / TikTok / Snapchat ---
+                // Viber / FB / Insta / TikTok / Snapchat
                 "Android/data/com.viber.voip/cache",
                 "Android/data/com.facebook.katana/cache",
                 "Android/data/com.facebook.orca/cache",
                 "Android/data/com.facebook.mlite/cache",
                 "Android/data/com.instagram.android/cache",
-                "Android/data/com.zhiliaoapp.musically/cache",   // παλιό TikTok
-                "Android/data/com.ss.android.ugc.trill/cache",   // νέο TikTok
+                "Android/data/com.ss.android.ugc.trill/cache",
                 "Android/data/com.snapchat.android/cache",
 
-                // --- YouTube / streaming ---
+                // Streaming
                 "Android/data/com.google.android.youtube/cache",
                 "Android/data/com.google.android.videos/cache",
                 "Android/data/com.netflix.mediaclient/cache",
                 "Android/data/com.spotify.music/cache",
 
-                // --- Thumbnails / media previews ---
+                // Thumbnails
                 "DCIM/.thumbnails",
                 "Pictures/.thumbnails",
                 "Download/.thumbnails",
                 "Movies/.thumbnails",
                 "WhatsApp/.thumbnails",
-                "Android/DCIM/.thumbnails",
 
-                // --- Γενικά temp / logs σε γνωστές ρίζες ---
+                // Temp / Logs
                 "Android/data/.tmp",
                 "Android/data/.thumbnails",
                 "Android/data/.log",
@@ -222,33 +182,31 @@ public class SAFCleaner {
                 "MIUI/.cache"
         };
 
-        int okCount = 0;
+        int deletedFolders = 0;
 
-        for (String rel : junkDirs) {
-            if (wipePath(rootDoc, rel)) {
-                okCount++;
-                log(cb, "✅ Wiped " + rel);
-            } else {
-                log(cb, "ℹ️ Skip " + rel);
+        for (String rel : junk) {
+            if (wipeFolderSilent(rootDoc, rel)) {
+                deletedFolders++;
+                log(cb, "🗑 " + rel);
             }
         }
 
-        log(cb, "✅ SAF Clean paths = " + okCount);
+        log(cb, "✅ Cleaned folders: " + deletedFolders);
     }
 
 
     /* ===========================================================
-     *  THUMBNAIL SCAN
-     * ===========================================================
-     */
+     * THUMBNAILS SCAN
+     * =========================================================== */
     private static void thumbnailScanAndDelete(Context ctx, GELCleaner.LogCallback cb) {
+
         Uri root = getTreeUri(ctx);
         if (root == null) return;
 
         DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
         if (rootDoc == null) return;
 
-        String[] paths = {
+        String[] rels = {
                 "DCIM/.thumbnails",
                 "Pictures/.thumbnails",
                 "Download/.thumbnails",
@@ -256,20 +214,20 @@ public class SAFCleaner {
                 "WhatsApp/.thumbnails"
         };
 
-        long totalBytes = 0;
-        int totalFiles = 0;
+        long bytes = 0;
+        int count = 0;
 
-        for (String rel : paths) {
-            ThumbnailReport rep = deleteThumbs(rootDoc, rel);
-            totalBytes += rep.bytes;
-            totalFiles += rep.count;
+        for (String rel : rels) {
+            ThumbnailReport r = deleteThumbs(rootDoc, rel);
+            count += r.count;
+            bytes += r.bytes;
         }
 
-        if (totalFiles > 0) {
-            log(cb, "📸 Thumbnails found: " + totalFiles);
-            log(cb, "🗑 Deleted: " + formatMB(totalBytes) + " MB");
-        } else {
+        if (count == 0) {
             log(cb, "ℹ️ No thumbnails found");
+        } else {
+            log(cb, "📸 Deleted " + count + " thumbnails");
+            log(cb, "💾 Freed " + formatMB(bytes) + " MB");
         }
     }
 
@@ -279,80 +237,77 @@ public class SAFCleaner {
     }
 
     private static ThumbnailReport deleteThumbs(DocumentFile root, String rel) {
-        ThumbnailReport r = new ThumbnailReport();
+        ThumbnailReport rep = new ThumbnailReport();
 
         DocumentFile folder = traverse(root, rel);
-        if (folder == null) return r;
+        if (folder == null) return rep;
 
         for (DocumentFile f : folder.listFiles()) {
             if (f.isFile()) {
-                long sz = f.length();
+                long size = f.length();
                 if (f.delete()) {
-                    r.count++;
-                    r.bytes += sz;
+                    rep.count++;
+                    rep.bytes += size;
                 }
             }
         }
-        return r;
-    }
-
-    private static String formatMB(long b) {
-        return String.format("%.1f", (b / 1024f / 1024f));
+        return rep;
     }
 
 
     /* ===========================================================
-     *  PATH TRAVERSE
-     * ===========================================================
-     */
+     * FS HELPERS — SAFE & SILENT
+     * =========================================================== */
     private static DocumentFile traverse(DocumentFile root, String rel) {
+        if (root == null || rel == null) return null;
+
         String[] parts = rel.split("/");
         DocumentFile cur = root;
+
         for (String p : parts) {
             if (p.isEmpty()) continue;
             cur = findChild(cur, p);
-            if (cur == null) return null;
+            if (cur == null) return null; // stop cleanly
         }
         return cur;
     }
 
-    private static boolean wipePath(DocumentFile rootDoc, String relativePath) {
-        DocumentFile folder = traverse(rootDoc, relativePath);
+    private static boolean wipeFolderSilent(DocumentFile root, String rel) {
+        DocumentFile folder = traverse(root, rel);
         if (folder == null) return false;
 
-        for (DocumentFile child : folder.listFiles()) {
-            try {
-                child.delete();
-            } catch (Throwable ignore) {}
+        for (DocumentFile f : folder.listFiles()) {
+            try { f.delete(); } catch (Exception ignored) {}
         }
-        try {
-            folder.delete();
-        } catch (Throwable ignore) {}
+
+        try { folder.delete(); } catch (Exception ignored) {}
+
         return true;
     }
 
     private static DocumentFile findChild(DocumentFile parent, String name) {
-        if (parent == null) return null;
+        if (parent == null || name == null) return null;
+
         for (DocumentFile f : parent.listFiles()) {
-            if (f.getName() != null &&
-                    f.getName().equalsIgnoreCase(name)) {
+            if (name.equalsIgnoreCase(f.getName())) {
                 return f;
             }
         }
         return null;
     }
 
+    private static String formatMB(long b) {
+        return String.format("%.2f", (b / 1024f / 1024f));
+    }
+
     /* ===========================================================
-     *  FLAGS
-     * ===========================================================
-     */
+     * FLAGS
+     * =========================================================== */
     private static class IntentFlags {
         static int readWrite() {
-            return (
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-            );
+            return Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION;
         }
     }
 }

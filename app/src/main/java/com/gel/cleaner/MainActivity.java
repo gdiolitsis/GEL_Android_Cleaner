@@ -4,9 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,23 +37,26 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
     /* ================= LANGUAGE ==================== */
     private void setupLangButtons() {
-        Button bGR = findViewById(R.id.btnLangGR);
-        Button bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null) bGR.setOnClickListener(v -> {
-            LocaleHelper.set(this, "el");
-            recreate();
-        });
+        View bGR = findViewById(R.id.btnLangGR);
+        View bEN = findViewById(R.id.btnLangEN);
 
-        if (bEN != null) bEN.setOnClickListener(v -> {
-            LocaleHelper.set(this, "en");
-            recreate();
-        });
+        if (bGR != null)
+            bGR.setOnClickListener(v -> {
+                LocaleHelper.set(this, "el");
+                recreate();
+            });
+
+        if (bEN != null)
+            bEN.setOnClickListener(v -> {
+                LocaleHelper.set(this, "en");
+                recreate();
+            });
     }
 
     /* ================= DONATE ====================== */
     private void setupDonate() {
-        Button donateButton = findViewById(R.id.btnDonate);
+        View donateButton = findViewById(R.id.btnDonate);
         if (donateButton != null) {
             donateButton.setOnClickListener(v -> {
                 Intent i = new Intent(
@@ -76,13 +79,13 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 GELCleaner.cpuLive(this, this));   // safe loop
 
         // Cleaner
-        bind(R.id.btnCleanRam,   () ->
+        bind(R.id.btnCleanRam, () ->
                 GELCleaner.cleanRAM(this, this));
 
-        bind(R.id.btnSafeClean,  () ->
+        bind(R.id.btnSafeClean, () ->
                 GELCleaner.safeClean(this, this));
 
-        bind(R.id.btnDeepClean,  () ->
+        bind(R.id.btnDeepClean, () ->
                 GELCleaner.deepClean(this, this));
 
         // Junk
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 GELCleaner.tempClean(this, this));
 
         // App Cache (List)
-        Button appCache = findViewById(R.id.btnAppCache);
+        View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v ->
                     startActivity(new Intent(this, AppListActivity.class)));
@@ -115,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     private void bind(int id, Runnable fn) {
-        Button b = findViewById(id);
+        View b = findViewById(id);
         if (b != null) b.setOnClickListener(v -> fn.run());
     }
 

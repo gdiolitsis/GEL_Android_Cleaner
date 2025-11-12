@@ -340,7 +340,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * CLEAN ALL
+     * CLEAN ALL — FIXED (NO mediaJunk)
      * ========================================================= */
     public static void cleanAll(Context ctx, LogCallback cb) {
         info(cb, "Clean All started…");
@@ -349,7 +349,6 @@ public class GELCleaner {
         safeClean(ctx, cb);
         tempClean(ctx, cb);
         browserCache(ctx, cb);
-        mediaJunk(ctx, cb);
         deepClean(ctx, cb);
 
         ok(cb, "Clean All finished.");

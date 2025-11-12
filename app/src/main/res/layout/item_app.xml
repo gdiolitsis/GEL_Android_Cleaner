@@ -5,7 +5,7 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:padding="8dp"
-    android:background="@color/dark_gray">
+    android:background="@drawable/gel_list_selector">
 
     <ImageView
         android:id="@+id/appIcon"
@@ -23,17 +23,17 @@
             android:id="@+id/appLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
+            android:textColor="@color/gel_text_primary"
             android:textSize="16sp"
-            android:text="App Name" />
+            android:singleLine="true" />
 
         <TextView
-            android:id="@+id/appPkg"
+            android:id="@+id/appPackage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/gray"
+            android:textColor="@color/gel_text_secondary"
             android:textSize="12sp"
-            android:text="com.example.app" />
+            android:singleLine="true" />
     </LinearLayout>
 
 </LinearLayout>

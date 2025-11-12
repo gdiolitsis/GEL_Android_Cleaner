@@ -4,9 +4,8 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Debug;
-import android.provider.Settings;
 import android.text.format.Formatter;
+import android.provider.Settings;
 import android.webkit.WebView;
 
 import java.io.File;
@@ -16,13 +15,14 @@ import java.util.Locale;
 
 /**
  * GELCleaner — Utility class (NOT Activity)
- * Play-Store safe — best effort cleaning
+ * FULL POWER (SAF + Accessibility optional)
+ * Play-Store fair-use (permission guided) — SAFE
  */
 public class GELCleaner {
 
-    // =========================================================
-    // LOG CALLBACK
-    // =========================================================
+    /* =========================================================
+     * LOG CALLBACK
+     * ========================================================= */
     public interface LogCallback {
         void log(String msg, boolean isError);
     }
@@ -33,22 +33,21 @@ public class GELCleaner {
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true);  }
 
 
-    // =========================================================
-    // CPU + RAM INFO
-    // =========================================================
+    /* =========================================================
+     * CPU + RAM INFO
+     * ========================================================= */
     public static void cpuInfo(Context ctx, LogCallback cb) {
         try {
             int cores = Runtime.getRuntime().availableProcessors();
+
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            if (am != null) am.getMemoryInfo(mi);
+            if (am != null) {
+                am.getMemoryInfo(mi);
+            }
 
-            String total = (am != null)
-                    ? Formatter.formatFileSize(ctx, mi.totalMem)
-                    : "-";
-            String avail = (am != null)
-                    ? Formatter.formatFileSize(ctx, mi.availMem)
-                    : "-";
+            String total = am != null ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
+            String avail = am != null ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
 
             StringBuilder b = new StringBuilder();
             b.append("CPU cores: ").append(cores).append("\n");
@@ -56,7 +55,7 @@ public class GELCleaner {
             b.append("RAM free: ").append(avail).append("\n");
             b.append("Low memory: ").append(mi.lowMemory).append("\n");
             b.append("SDK: ").append(Build.VERSION.SDK_INT)
-                    .append(" (").append(Build.VERSION.RELEASE).append(")\n");
+             .append(" (").append(Build.VERSION.RELEASE).append(")\n");
             b.append("Device: ").append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
 
             ok(cb, b.toString());
@@ -64,7 +63,6 @@ public class GELCleaner {
             err(cb, "cpuInfo failed: " + e.getMessage());
         }
     }
-
 
     public static void cpuLive(Context ctx, LogCallback cb) {
         new Thread(() -> {
@@ -75,10 +73,10 @@ public class GELCleaner {
                     long used = total - free;
 
                     String msg = String.format(Locale.US,
-                            "Live %02d/10  |  App RAM used: %s / %s",
-                            i,
-                            Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total));
+                                    "Live %02d/10 | App RAM used: %s / %s",
+                                    i,
+                                    Formatter.formatShortFileSize(ctx, used),
+                                    Formatter.formatShortFileSize(ctx, total));
 
                     ok(cb, msg);
                     Thread.sleep(1000);
@@ -91,9 +89,9 @@ public class GELCleaner {
     }
 
 
-    // =========================================================
-    // CLEANERS
-    // =========================================================
+    /* =========================================================
+     * CLEAN — RAM
+     * ========================================================= */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
             trimAppMemory();
@@ -119,6 +117,9 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * SAFE CLEAN (internal only)
+     * ========================================================= */
     public static void safeClean(Context ctx, LogCallback cb) {
         try {
             int files = 0;
@@ -131,6 +132,7 @@ public class GELCleaner {
             File ext = ctx.getExternalCacheDir();
             if (ext != null) files += wipeDir(ext);
 
+            // WebView
             try {
                 WebView w = new WebView(ctx);
                 w.clearCache(true);
@@ -144,10 +146,13 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * DEEP CLEAN — SAF + System junk
+     * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             if (!SAFCleaner.hasTree(ctx)) {
-                warn(cb, "Grant SAF first (Select root folder).");
+                warn(cb, "Grant SAF first.");
             } else {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             }
@@ -160,10 +165,13 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * MEDIA
+     * ========================================================= */
     public static void mediaJunk(Context ctx, LogCallback cb) {
         try {
             if (!SAFCleaner.hasTree(ctx)) {
-                warn(cb, "Grant SAF first (Select root folder).");
+                warn(cb, "Grant SAF first.");
             } else {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
             }
@@ -174,6 +182,9 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * BROWSER CACHE
+     * ========================================================= */
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
             try {
@@ -198,6 +209,9 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * TEMP CLEAN
+     * ========================================================= */
     public static void tempClean(Context ctx, LogCallback cb) {
         try {
             int files = 0;
@@ -219,10 +233,13 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * BATTERY BOOST
+     * ========================================================= */
     public static void boostBattery(Context ctx, LogCallback cb) {
         try {
             cleanRAM(ctx, cb);
-            ok(cb, "Battery boost: background trimmed.");
+            ok(cb, "Battery: RAM trimmed.");
             info(cb, "Tip: Enable Battery Saver for stronger effect.");
         } catch (Exception e) {
             err(cb, "boostBattery failed: " + e.getMessage());
@@ -230,6 +247,9 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * KILL APPS
+     * ========================================================= */
     public static void killApps(Context ctx, LogCallback cb) {
         try {
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
@@ -256,26 +276,26 @@ public class GELCleaner {
     }
 
 
+    /* =========================================================
+     * CLEAN ALL
+     * ========================================================= */
     public static void cleanAll(Context ctx, LogCallback cb) {
-        info(cb, "Clean All: started…");
+        info(cb, "Clean All started…");
         cleanRAM(ctx, cb);
         safeClean(ctx, cb);
         tempClean(ctx, cb);
         browserCache(ctx, cb);
         mediaJunk(ctx, cb);
         deepClean(ctx, cb);
-        ok(cb, "Clean All: finished.");
+        ok(cb, "Clean All finished.");
     }
 
 
-    // =========================================================
-    // INTERNAL
-    // =========================================================
+    /* =========================================================
+     * Internal util
+     * ========================================================= */
     private static void trimAppMemory() {
-        try {
-            System.gc();   // ✅ ONLY safe hint
-            // ❌ NO killProcess — NOT allowed
-        } catch (Throwable ignored) {}
+        try { System.gc(); } catch (Throwable ignore) {}
     }
 
 
@@ -287,7 +307,6 @@ public class GELCleaner {
         for (File f : list) count += deleteRecursively(f);
         return count;
     }
-
 
     private static int deleteRecursively(File f) {
         int c = 0;

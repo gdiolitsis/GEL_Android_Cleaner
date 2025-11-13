@@ -257,4 +257,3 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         });
     }
 }
-```0

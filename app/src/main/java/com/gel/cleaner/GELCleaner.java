@@ -3,27 +3,33 @@ package com.gel.cleaner;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.format.Formatter;
-import android.view.WindowManager;
 
-import java.io.RandomAccessFile;
+import java.io.File;
 import java.util.Locale;
 
 /**
- * GELCleaner v4.0
+ * GELCleaner — FINAL v4.0
  * GDiolitsis Engine Lab (GEL)
  *
- * FULL INTENT CLEANER
- * No file cleaning – only system navigation & system info.
+ * Συμβατό με:
+ * - MainActivity (νέα κουμπιά)
+ * - SAFCleaner v3.3
+ * - Νέο UI layout
+ *
+ * Δεν χρησιμοποιεί καθόλου παλιές Deep Clean/Safe Clean μηχανές.
+ * Όλα τα "μενού καθαρισμού" ανοίγουν το default system cleaner.
  */
+
 public class GELCleaner {
 
-    /* =========================================================
+    /* ===========================================================
      * LOG CALLBACK
-     * ========================================================= */
+     * =========================================================== */
     public interface LogCallback {
         void log(String msg, boolean isError);
     }
@@ -33,97 +39,58 @@ public class GELCleaner {
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
 
-    /* =========================================================
-     * PHONE INFO (Super Report)
-     * ========================================================= */
+    /* ===========================================================
+     * PHONE INFO (νέο κουμπί)
+     * =========================================================== */
     public static void phoneInfo(Context ctx, LogCallback cb) {
         try {
+            StringBuilder b = new StringBuilder();
+
+            b.append("📱 DEVICE INFO\n\n")
+             .append("Brand: ").append(Build.BRAND).append("\n")
+             .append("Model: ").append(Build.MODEL).append("\n")
+             .append("Manufacturer: ").append(Build.MANUFACTURER).append("\n")
+             .append("Device: ").append(Build.DEVICE).append("\n")
+             .append("Product: ").append(Build.PRODUCT).append("\n")
+             .append("Board: ").append(Build.BOARD).append("\n")
+             .append("Hardware: ").append(Build.HARDWARE).append("\n")
+             .append("Bootloader: ").append(Build.BOOTLOADER).append("\n\n")
+
+             .append("Android: ").append(Build.VERSION.RELEASE)
+             .append("  (SDK ").append(Build.VERSION.SDK_INT).append(")\n")
+             .append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n\n");
 
             // RAM
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
 
-            String ramTotal = Formatter.formatFileSize(ctx, mi.totalMem);
-            String ramAvail = Formatter.formatFileSize(ctx, mi.availMem);
+            String total = Formatter.formatFileSize(ctx, mi.totalMem);
+            String free  = Formatter.formatFileSize(ctx, mi.availMem);
+
+            b.append("RAM Total: ").append(total).append("\n")
+             .append("RAM Free:  ").append(free).append("\n\n");
 
             // Storage
-            long total = new android.os.StatFs("/").getTotalBytes();
-            long free  = new android.os.StatFs("/").getAvailableBytes();
+            File data = ctx.getFilesDir();
+            long freeBytes = data.getFreeSpace();
+            long totalBytes = data.getTotalSpace();
 
-            // CPU Model (≈)
-            String cpuModel = readCpuModel();
+            b.append("Internal Storage:\n")
+             .append("Total: ").append(Formatter.formatFileSize(ctx, totalBytes)).append("\n")
+             .append("Free:  ").append(Formatter.formatFileSize(ctx, freeBytes)).append("\n");
 
-            // GPU (best-effort)
-            String gpu = android.os.Build.HARDWARE;
-
-            // Kernel
-            String kernel = System.getProperty("os.version");
-
-            String info = ""
-                    + "📱 DEVICE INFO\n"
-                    + "• Manufacturer: " + Build.MANUFACTURER + "\n"
-                    + "• Model: " + Build.MODEL + "\n"
-                    + "• Board: " + Build.BOARD + "\n"
-                    + "• Hardware: " + Build.HARDWARE + "\n\n"
-
-                    + "⚙️ SYSTEM\n"
-                    + "• Android: " + Build.VERSION.RELEASE + "\n"
-                    + "• SDK: " + Build.VERSION.SDK_INT + "\n"
-                    + "• Kernel: " + kernel + "\n"
-                    + "• Security patch: " + Build.VERSION.SECURITY_PATCH + "\n\n"
-
-                    + "🧠 CPU\n"
-                    + "• Model: " + cpuModel + "\n"
-                    + "• Cores: " + Runtime.getRuntime().availableProcessors() + "\n\n"
-
-                    + "🎮 GPU (approx)\n"
-                    + "• GPU: " + gpu + "\n\n"
-
-                    + "🔥 RAM\n"
-                    + "• Total: " + ramTotal + "\n"
-                    + "• Free:  " + ramAvail + "\n\n"
-
-                    + "💾 STORAGE\n"
-                    + "• Total: " + Formatter.formatFileSize(ctx, total) + "\n"
-                    + "• Free:  " + Formatter.formatFileSize(ctx, free) + "\n\n"
-
-                    + "🌐 NETWORK\n"
-                    + "• Type: auto-detect\n\n"
-
-                    + "⏱ Uptime\n"
-                    + "• " + formatUptime() + "\n";
-
-            ok(cb, info);
+            ok(cb, b.toString());
 
         } catch (Exception e) {
             err(cb, "phoneInfo failed: " + e.getMessage());
         }
     }
 
-    private static String readCpuModel() {
-        try {
-            RandomAccessFile f = new RandomAccessFile("/proc/cpuinfo", "r");
-            String line;
-            while ((line = f.readLine()) != null) {
-                if (line.startsWith("Hardware") || line.startsWith("model name"))
-                    return line.split(":")[1].trim();
-            }
-        } catch (Exception ignored) {}
-        return "Unknown CPU";
-    }
 
-    private static String formatUptime() {
-        long up = android.os.SystemClock.elapsedRealtime() / 1000;
-        long h = up / 3600;
-        long m = (up % 3600) / 60;
-        return h + "h " + m + "m";
-    }
-
-
-    /* =========================================================
-     * CPU + RAM LIVE
-     * ========================================================= */
+    /* ===========================================================
+     * CPU/RAM LIVE
+     * =========================================================== */
     public static void cpuLive(Context ctx, LogCallback cb) {
         new Thread(() -> {
             try {
@@ -132,15 +99,16 @@ public class GELCleaner {
                     long total = Runtime.getRuntime().totalMemory();
                     long used = total - free;
 
-                    info(cb, String.format(Locale.US,
-                            "Live %02d/10 → RAM: %s / %s",
+                    String msg = String.format(Locale.US,
+                            "Live %02d/10 | App RAM used: %s / %s",
                             i,
                             Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total)));
+                            Formatter.formatShortFileSize(ctx, total));
 
+                    info(cb, msg);
                     Thread.sleep(1000);
                 }
-                ok(cb, "CPU+RAM Live finished.");
+                ok(cb, "CPU+RAM live finished.");
             } catch (Exception e) {
                 err(cb, "cpuLive failed: " + e.getMessage());
             }
@@ -148,118 +116,77 @@ public class GELCleaner {
     }
 
 
-    /* =========================================================
-     * CLEAN RAM → Opens RAM management
-     * ========================================================= */
+    /* ===========================================================
+     * CLEAN RAM → system memory menu
+     * =========================================================== */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            ok(cb, "Opening system RAM screen…");
-
             Intent i = new Intent(Settings.ACTION_MEMORY_CARD_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-
+            ok(cb, "Opening system RAM menu…");
         } catch (Exception e) {
-            err(cb, "RAM screen failed: " + e.getMessage());
+            err(cb, "cleanRAM failed: " + e.getMessage());
         }
     }
 
 
-    /* =========================================================
-     * DEEP CLEAN → Opens device default cleaner
-     * ========================================================= */
+    /* ===========================================================
+     * DEEP CLEAN → default system cleaner
+     * =========================================================== */
     public static void deepClean(Context ctx, LogCallback cb) {
-        ok(cb, "Opening system cleaner…");
-
-        Intent[] intents = new Intent[]{
-
-                // Xiaomi / Poco / Redmi
-                new Intent("miui.intent.action.GARBAGE_CLEANUP"),
-
-                // Samsung
-                new Intent("com.samsung.android.sm.ACTION_CLEANUP"),
-
-                // Huawei
-                new Intent("com.huawei.systemmanager.optimize.START"),
-
-                // Oppo / Realme
-                new Intent("oppo.intent.action.OPPO_CLEANER"),
-
-                // OnePlus
-                new Intent("oneplus.intent.action.ONEPLUS_CLEANER"),
-
-                // Vivo / iQOO
-                new Intent("com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity"),
-
-                // Motorola
-                new Intent("com.motorola.ccc.OPTIMIZE"),
-        };
-
-        launchFirstWorking(ctx, intents, cb);
-    }
-
-
-    /* =========================================================
-     * Browser cache settings
-     * ========================================================= */
-    public static void browserCache(Context ctx, LogCallback cb) {
-        ok(cb, "Opening browser cache…");
-
-        Intent[] intents = new Intent[]{
-                browserSettings("com.android.chrome"),
-                browserSettings("org.mozilla.firefox"),
-                browserSettings("com.opera.browser"),
-                browserSettings("com.microsoft.emmx"),
-                browserSettings("com.brave.browser"),
-                browserSettings("com.duckduckgo.mobile.android")
-        };
-
-        launchFirstWorking(ctx, intents, cb);
-    }
-
-    private static Intent browserSettings(String pkg) {
-        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.setData(Uri.parse("package:" + pkg));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return i;
-    }
-
-
-    /* =========================================================
-     * TEMP FILES → Cached data
-     * ========================================================= */
-    public static void tempFiles(Context ctx, LogCallback cb) {
-        ok(cb, "Opening temp/cache page…");
-
-        Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ctx.startActivity(i);
-    }
-
-
-    /* =========================================================
-     * Battery Boost / Kill → Running apps
-     * ========================================================= */
-    public static void openRunningApps(Context ctx, LogCallback cb) {
-        ok(cb, "Opening running apps…");
-
-        Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ctx.startActivity(i);
-    }
-
-
-    /* =========================================================
-     * HELPER for multi-intent clean
-     * ========================================================= */
-    private static void launchFirstWorking(Context ctx, Intent[] list, LogCallback cb) {
-        for (Intent i : list) {
-            try {
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-                return;
-            } catch (Exception ignored) {}
+        try {
+            Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            ok(cb, "Opening system cleaner…");
+        } catch (Exception e) {
+            err(cb, "deepClean failed: " + e.getMessage());
         }
-        err(cb, "No supported cleaner found for this device.");
+    }
+
+
+    /* ===========================================================
+     * BROWSER CACHE → browser settings
+     * =========================================================== */
+    public static void browserCache(Context ctx, LogCallback cb) {
+        try {
+            Intent i = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            ok(cb, "Choose your browser → Storage → Clear Cache.");
+        } catch (Exception e) {
+            err(cb, "browserCache failed: " + e.getMessage());
+        }
+    }
+
+
+    /* ===========================================================
+     * TEMP FILES → system temporary cache
+     * =========================================================== */
+    public static void tempFiles(Context ctx, LogCallback cb) {
+        try {
+            Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            ok(cb, "Opening Temporary Files section…");
+        } catch (Exception e) {
+            err(cb, "tempFiles failed: " + e.getMessage());
+        }
+    }
+
+
+    /* ===========================================================
+     * OPEN RUNNING APPS (Battery Boost / Kill Apps)
+     * =========================================================== */
+    public static void openRunningApps(Context ctx, LogCallback cb) {
+        try {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            ok(cb, "Opening Running Apps…");
+        } catch (Exception e) {
+            err(cb, "openRunningApps failed: " + e.getMessage());
+        }
     }
 }

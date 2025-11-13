@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GELCleaner — FINAL v3.6
+ * GELCleaner — FINAL v3.7
  * Compatible with SAFCleaner v3.2
  * GDiolitsis Engine Lab (GEL)
  *
@@ -345,18 +345,23 @@ public class GELCleaner {
         info(cb, "🔥 GEL Deep Clean Pro started…");
 
         // 1) RAM
+        info(cb, "Step 1/6 — RAM cleanup");
         cleanRAM(ctx, cb);
 
         // 2) Internal cache
+        info(cb, "Step 2/6 — Safe Clean (internal cache)");
         safeClean(ctx, cb);
 
         // 3) Temp (internal + SAF temp)
+        info(cb, "Step 3/6 — Temp Clean (cache + external temp)");
         tempClean(ctx, cb);
 
         // 4) Browser / WebView
+        info(cb, "Step 4/6 — Browser / WebView cache");
         browserCache(ctx, cb);
 
         // 5) Media junk μέσω SAF (WhatsApp, Telegram, κ.λπ.)
+        info(cb, "Step 5/6 — Media Junk (WhatsApp, Telegram, etc)");
         if (SAFCleaner.hasTree(ctx)) {
             SAFCleaner.mediaJunk(ctx, cb);
         } else {
@@ -364,6 +369,7 @@ public class GELCleaner {
         }
 
         // 6) Deep Clean (SAF known dirs + internal recap)
+        info(cb, "Step 6/6 — GEL Deep Clean recap");
         deepClean(ctx, cb);
 
         ok(cb, "🔥 GEL Deep Clean Pro finished.");

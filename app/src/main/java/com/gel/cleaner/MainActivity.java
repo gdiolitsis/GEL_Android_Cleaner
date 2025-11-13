@@ -39,19 +39,19 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        // 🟥 Δεν ζητάμε ΚΑΜΙΑ άδεια στην εκκίνηση.
+        // Δεν ζητάμε καμία άδεια στην εκκίνηση.
         log(getString(R.string.device_ready), false);
     }
 
     /* =========================================================
-     * FULL STORAGE ACCESS — ONLY WHEN NEEDED
+     * FULL STORAGE ACCESS — ONLY WHEN NEEDED (κουμπιά STORAGE)
      * ========================================================= */
     private void ensureFullStorageAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    intent.setData(Uri.parse("package:" + getPackageName()));  // direct-to-GEL
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
@@ -121,12 +121,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void setupCleanerButtons() {
 
+        // CPU / RAM info & live → χρειάζονται USAGE
         bindWithCheck(R.id.btnCpuRamInfo, PermissionType.USAGE,
                 () -> GELCleaner.cpuInfo(this, this));
 
         bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE,
                 () -> GELCleaner.cpuLive(this, this));
 
+        // RAM + Safe / Deep / Junk / Temp / All → STORAGE
         bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE,
                 () -> GELCleaner.cleanRAM(this, this));
 
@@ -136,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE,
                 () -> GELCleaner.deepClean(this, this));
 
-        // 🟩 ΔΙΟΡΘΩΜΕΝΟ — Καλεί SAFCleaner, όχι GELCleaner
+        // 🔥 Media Junk → κατευθείαν SAFCleaner (όχι GELCleaner.mediaJunk)
         bindWithCheck(R.id.btnMediaJunk, PermissionType.STORAGE,
                 () -> SAFCleaner.mediaJunk(this, this));
 
@@ -146,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnTemp, PermissionType.STORAGE,
                 () -> GELCleaner.tempClean(this, this));
 
+        // App cache list
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -157,14 +160,16 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
+        // Battery / Kill → USAGE
         bindWithCheck(R.id.btnBatteryBoost, PermissionType.USAGE,
                 () -> GELCleaner.boostBattery(this, this));
 
         bindWithCheck(R.id.btnKillApps, PermissionType.USAGE,
                 () -> GELCleaner.killApps(this, this));
 
+        // 🔴 CLEAN ALL → GEL Deep Clean Pro
         bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE,
-                () -> GELCleaner.cleanAll(this, this));
+                () -> GELCleaner.gelDeepCleanPro(this, this));
     }
 
     private enum PermissionType { NONE, STORAGE, USAGE }
@@ -175,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         b.setOnClickListener(v -> {
 
+            // STORAGE → MANAGE_EXTERNAL_STORAGE panel (Android 11+)
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
                     ensureFullStorageAccess();
@@ -182,16 +188,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 }
             }
 
+            // USAGE → Usage Access panel
             if (type == PermissionType.USAGE && !hasUsageAccess()) {
                 requestUsageAccess();
                 return;
             }
 
-            try { fn.run(); }
-            catch (Throwable t) {
-                Toast.makeText(this,
+            try {
+                fn.run();
+            } catch (Throwable t) {
+                Toast.makeText(
+                        this,
                         "Action failed: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                        Toast.LENGTH_SHORT
+                ).show();
             }
         });
     }
@@ -218,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private void requestUsageAccess() {
         try {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
+            intent.setData(Uri.parse("package:" + getPackageName())); // direct to GEL
             startActivity(intent);
         } catch (Exception e) {
             Toast.makeText(
@@ -247,3 +257,4 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         });
     }
 }
+```0

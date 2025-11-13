@@ -194,6 +194,16 @@
             android:textColor="@color/gel_btn_text_white"
             android:layout_margin="4dp"/>
 
+        <!-- APP CACHE (NEW BUTTON) -->
+        <Button
+            android:id="@+id/btnAppCache"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="App Cache"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_margin="4dp"/>
+
         <!-- PERFORMANCE -->
         <TextView
             android:layout_width="wrap_content"

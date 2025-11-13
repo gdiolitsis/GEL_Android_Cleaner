@@ -22,10 +22,8 @@
     <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 BROWSER CACHE</string>
 
-    <!-- 🔥 Temp button (existing) -->
+    <!-- Temp -->
     <string name="temp_clean">🔥 TEMP</string>
-
-    <!-- 🆕 FIX FOR BUILD ERROR -->
     <string name="temp_files">🔥 TEMP FILES</string>
 
     <!-- App Cache -->

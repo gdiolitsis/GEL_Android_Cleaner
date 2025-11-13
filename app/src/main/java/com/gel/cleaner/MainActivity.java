@@ -1,13 +1,9 @@
 package com.gel.cleaner;
 
-import android.app.AppOpsManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Process;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.ScrollView;
@@ -36,11 +32,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         setupLangButtons();
         setupDonate();
-        setupCleanerButtons();
+        setupButtons();
 
         log("📱 Device ready", false);
     }
-
 
     /* =========================================================
      * LANGUAGE
@@ -49,33 +44,20 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null) {
-            bGR.setOnClickListener(v -> {
-                LocaleHelper.set(this, "el");
-                recreate();
-            });
-        }
-
-        if (bEN != null) {
-            bEN.setOnClickListener(v -> {
-                LocaleHelper.set(this, "en");
-                recreate();
-            });
-        }
+        if (bGR != null) bGR.setOnClickListener(v -> { LocaleHelper.set(this,"el"); recreate(); });
+        if (bEN != null) bEN.setOnClickListener(v -> { LocaleHelper.set(this,"en"); recreate(); });
     }
-
 
     /* =========================================================
      * DONATE
      * ========================================================= */
     private void setupDonate() {
-        View donateButton = findViewById(R.id.btnDonate);
-        if (donateButton != null) {
-            donateButton.setOnClickListener(v -> {
+        View b = findViewById(R.id.btnDonate);
+        if (b != null) {
+            b.setOnClickListener(v -> {
                 try {
-                    Intent i = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis"));
-                    startActivity(i);
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")));
                 } catch (Exception e) {
                     Toast.makeText(this, "Cannot open browser", Toast.LENGTH_SHORT).show();
                 }
@@ -83,45 +65,35 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-
     /* =========================================================
-     * CLEAN BUTTONS
+     * BUTTON MAPPING
      * ========================================================= */
-    private void setupCleanerButtons() {
+    private void setupButtons() {
 
-        // PHONE INFO (νέο κουμπί)
-        bind(R.id.btnPhoneInfo, () ->
-                GELCleaner.phoneInfo(this, this));
+        bind(R.id.btnPhoneInfo,
+                () -> GELCleaner.phoneInfo(this, this));
 
-        // CPU+RAM LIVE
-        bind(R.id.btnCpuRamLive, () ->
-                GELCleaner.cpuLive(this, this));
+        bind(R.id.btnCpuRamLive,
+                () -> GELCleaner.cpuLive(this, this));
 
-        // CLEAN RAM → system RAM menu
-        bind(R.id.btnCleanRam, () ->
-                GELCleaner.cleanRAM(this, this));
+        bind(R.id.btnCleanRam,
+                () -> GELCleaner.cleanRAM(this, this));
 
-        // DEEP CLEAN → system cleaner
-        bind(R.id.btnDeepClean, () ->
-                GELCleaner.deepClean(this, this));
+        bind(R.id.btnDeepClean,
+                () -> GELCleaner.deepClean(this, this));
 
-        // BROWSER CACHE → browser settings
-        bind(R.id.btnBrowserCache, () ->
-                GELCleaner.browserCache(this, this));
+        bind(R.id.btnBrowserCache,
+                () -> GELCleaner.browserCache(this, this));
 
-        // TEMP FILES → default cached data section
-        bind(R.id.btnTemp, () ->
-                GELCleaner.tempFiles(this, this));
+        bind(R.id.btnTemp,
+                () -> GELCleaner.tempFiles(this, this));
 
-        // BATTERY BOOST → running apps
-        bind(R.id.btnBatteryBoost, () ->
-                GELCleaner.openRunningApps(this, this));
+        bind(R.id.btnBatteryBoost,
+                () -> GELCleaner.openRunningApps(this, this));
 
-        // KILL APPS → running apps again
-        bind(R.id.btnKillApps, () ->
-                GELCleaner.openRunningApps(this, this));
+        bind(R.id.btnKillApps,
+                () -> GELCleaner.openRunningApps(this, this));
 
-        // App Cache List (όπως ήταν)
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -146,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-
     /* =========================================================
      * LOGGING
      * ========================================================= */
@@ -158,9 +129,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             String prev = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
             txtLogs.setText(prev.isEmpty() ? msg : prev + "\n" + msg);
 
-            if (scroll != null) {
+            if (scroll != null)
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-            }
         });
     }
 }

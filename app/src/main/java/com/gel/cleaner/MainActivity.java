@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupDonate();
         setupCleanerButtons();
 
-        // Δεν ζητάμε καμία άδεια στην εκκίνηση.
+        // 🟥 Δεν ζητάμε ΚΑΜΙΑ άδεια στην εκκίνηση.
         log(getString(R.string.device_ready), false);
     }
 
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnCpuRamLive, PermissionType.USAGE,
                 () -> GELCleaner.cpuLive(this, this));
 
-        // RAM + Safe / Deep / Junk / Temp / All → STORAGE
+        // RAM + Safe / Deep / Temp / All → STORAGE
         bindWithCheck(R.id.btnCleanRam,  PermissionType.STORAGE,
                 () -> GELCleaner.cleanRAM(this, this));
 
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE,
                 () -> GELCleaner.deepClean(this, this));
 
-        // 🔥 Media Junk → κατευθείαν SAFCleaner (όχι GELCleaner.mediaJunk)
+        // 🔥 Media Junk → απευθείας SAFCleaner
         bindWithCheck(R.id.btnMediaJunk, PermissionType.STORAGE,
                 () -> SAFCleaner.mediaJunk(this, this));
 
@@ -167,9 +167,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnKillApps, PermissionType.USAGE,
                 () -> GELCleaner.killApps(this, this));
 
-        // 🔴 CLEAN ALL → GEL Deep Clean Pro
+        // Clean All → GEL Deep Clean Pro engine
         bindWithCheck(R.id.btnCleanAll, PermissionType.STORAGE,
-                () -> GELCleaner.gelDeepCleanPro(this, this));
+                () -> GELCleaner.cleanAll(this, this));
     }
 
     private enum PermissionType { NONE, STORAGE, USAGE }

@@ -39,7 +39,7 @@ public class CleanerActivity extends AppCompatActivity
         startMs = System.currentTimeMillis();
 
         String mode = getIntent().getStringExtra(EXTRA_MODE);
-        if (mode == null) mode = "all";
+        if (mode == null) mode = "deep";   // default = deep clean
 
         runMode(mode);
     }
@@ -52,17 +52,25 @@ public class CleanerActivity extends AppCompatActivity
         log("🔥 Starting: " + mode, false);
 
         switch (mode) {
-            case "safe":
-                GELCleaner.safeClean(this, this);
-                break;
 
             case "deep":
                 GELCleaner.deepClean(this, this);
                 break;
 
-            case "all":
+            case "ram":
+                GELCleaner.cleanRAM(this, this);
+                break;
+
+            case "temp":
+                GELCleaner.tempFiles(this, this);
+                break;
+
+            case "browser":
+                GELCleaner.browserCache(this, this);
+                break;
+
             default:
-                GELCleaner.cleanAll(this, this);
+                GELCleaner.deepClean(this, this);
                 break;
         }
 

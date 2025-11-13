@@ -1,5 +1,6 @@
 package com.gel.cleaner;
 
+import android.app.Activity;
 import android.app.AppOpsManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -15,12 +16,17 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
     private TextView txtLogs;
     private ScrollView scroll;
+
+    // SAF picker για ρίζα αποθήκευσης (internal storage)
+    private ActivityResultLauncher<Intent> safPicker;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -35,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
+        initSafPicker();
         setupLangButtons();
         setupDonate();
         setupCleanerButtons();
@@ -42,6 +49,43 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         // 🟥 Δεν ζητάμε ΚΑΜΙΑ άδεια στην εκκίνηση.
         // Όλα ζητούνται μόνο όταν πατάς κουμπί.
         log(getString(R.string.device_ready), false);
+    }
+
+    /* =========================================================
+     * SAF PICKER INIT + REQUEST
+     * ========================================================= */
+    private void initSafPicker() {
+        safPicker = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != Activity.RESULT_OK) return;
+                    Intent data = result.getData();
+                    if (data == null) return;
+                    Uri tree = data.getData();
+                    if (tree != null) {
+                        SAFCleaner.saveTreeUri(this, tree);
+                        Toast.makeText(this,
+                                "Storage root saved for GEL Cleaner",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+    }
+
+    private void requestSafRoot() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            intent.addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+            );
+            safPicker.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(this,
+                    "Cannot open Storage picker",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     /* =========================================================
@@ -181,7 +225,13 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
 
         b.setOnClickListener(v -> {
 
-            // STORAGE → MANAGE_EXTERNAL_STORAGE panel (Android 11+)
+            // 1) Πρώτα SAF root (μόνο αν δεν έχει δοθεί ΠΟΤΕ)
+            if (type == PermissionType.STORAGE && !SAFCleaner.hasTree(this)) {
+                requestSafRoot();
+                return;
+            }
+
+            // 2) Μετά MANAGE_EXTERNAL_STORAGE panel (Android 11+)
             if (type == PermissionType.STORAGE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (!Environment.isExternalStorageManager()) {
                     ensureFullStorageAccess();
@@ -189,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 }
             }
 
-            // USAGE → Usage Access panel
+            // 3) USAGE → Usage Access panel
             if (type == PermissionType.USAGE && !hasUsageAccess()) {
                 requestUsageAccess();
                 return;

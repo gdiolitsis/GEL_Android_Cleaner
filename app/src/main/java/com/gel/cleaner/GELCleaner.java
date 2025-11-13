@@ -2,24 +2,22 @@ package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
+import android.provider.Settings;
 import android.text.format.Formatter;
-import android.webkit.WebView;
+import android.view.WindowManager;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.RandomAccessFile;
 import java.util.Locale;
 
 /**
- * GELCleaner — FINAL v3.7
- * Compatible with SAFCleaner v3.2
+ * GELCleaner v4.0
  * GDiolitsis Engine Lab (GEL)
  *
- * SAFE-ish, using all allowed tricks.
- * Always deliver the full file, ready for copy-paste.
+ * FULL INTENT CLEANER
+ * No file cleaning – only system navigation & system info.
  */
 public class GELCleaner {
 
@@ -32,45 +30,100 @@ public class GELCleaner {
 
     private static void info(LogCallback cb, String m) { if (cb != null) cb.log("ℹ️ " + m, false); }
     private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
-    private static void warn(LogCallback cb, String m) { if (cb != null) cb.log("⚠️ " + m, false); }
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
 
     /* =========================================================
-     * CPU + RAM INFO
+     * PHONE INFO (Super Report)
      * ========================================================= */
-    public static void cpuInfo(Context ctx, LogCallback cb) {
+    public static void phoneInfo(Context ctx, LogCallback cb) {
         try {
-            int cores = Runtime.getRuntime().availableProcessors();
 
+            // RAM
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            if (am != null) am.getMemoryInfo(mi);
+            am.getMemoryInfo(mi);
 
-            String total = (am != null) ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
-            String avail = (am != null) ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
-            long usedBytes = (am != null) ? (mi.totalMem - mi.availMem) : 0;
-            String used = Formatter.formatFileSize(ctx, usedBytes);
+            String ramTotal = Formatter.formatFileSize(ctx, mi.totalMem);
+            String ramAvail = Formatter.formatFileSize(ctx, mi.availMem);
 
-            StringBuilder b = new StringBuilder()
-                    .append("CPU cores: ").append(cores).append("\n")
-                    .append("RAM total: ").append(total).append("\n")
-                    .append("RAM used:  ").append(used).append("\n")
-                    .append("RAM free:  ").append(avail).append("\n")
-                    .append("Low memory: ").append(mi.lowMemory).append("\n")
-                    .append("SDK: ").append(Build.VERSION.SDK_INT)
-                    .append(" (").append(Build.VERSION.RELEASE).append(")\n")
-                    .append("Device: ")
-                    .append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
+            // Storage
+            long total = new android.os.StatFs("/").getTotalBytes();
+            long free  = new android.os.StatFs("/").getAvailableBytes();
 
-            ok(cb, b.toString());
+            // CPU Model (≈)
+            String cpuModel = readCpuModel();
+
+            // GPU (best-effort)
+            String gpu = android.os.Build.HARDWARE;
+
+            // Kernel
+            String kernel = System.getProperty("os.version");
+
+            String info = ""
+                    + "📱 DEVICE INFO\n"
+                    + "• Manufacturer: " + Build.MANUFACTURER + "\n"
+                    + "• Model: " + Build.MODEL + "\n"
+                    + "• Board: " + Build.BOARD + "\n"
+                    + "• Hardware: " + Build.HARDWARE + "\n\n"
+
+                    + "⚙️ SYSTEM\n"
+                    + "• Android: " + Build.VERSION.RELEASE + "\n"
+                    + "• SDK: " + Build.VERSION.SDK_INT + "\n"
+                    + "• Kernel: " + kernel + "\n"
+                    + "• Security patch: " + Build.VERSION.SECURITY_PATCH + "\n\n"
+
+                    + "🧠 CPU\n"
+                    + "• Model: " + cpuModel + "\n"
+                    + "• Cores: " + Runtime.getRuntime().availableProcessors() + "\n\n"
+
+                    + "🎮 GPU (approx)\n"
+                    + "• GPU: " + gpu + "\n\n"
+
+                    + "🔥 RAM\n"
+                    + "• Total: " + ramTotal + "\n"
+                    + "• Free:  " + ramAvail + "\n\n"
+
+                    + "💾 STORAGE\n"
+                    + "• Total: " + Formatter.formatFileSize(ctx, total) + "\n"
+                    + "• Free:  " + Formatter.formatFileSize(ctx, free) + "\n\n"
+
+                    + "🌐 NETWORK\n"
+                    + "• Type: auto-detect\n\n"
+
+                    + "⏱ Uptime\n"
+                    + "• " + formatUptime() + "\n";
+
+            ok(cb, info);
 
         } catch (Exception e) {
-            err(cb, "cpuInfo failed: " + e.getMessage());
+            err(cb, "phoneInfo failed: " + e.getMessage());
         }
     }
 
+    private static String readCpuModel() {
+        try {
+            RandomAccessFile f = new RandomAccessFile("/proc/cpuinfo", "r");
+            String line;
+            while ((line = f.readLine()) != null) {
+                if (line.startsWith("Hardware") || line.startsWith("model name"))
+                    return line.split(":")[1].trim();
+            }
+        } catch (Exception ignored) {}
+        return "Unknown CPU";
+    }
 
+    private static String formatUptime() {
+        long up = android.os.SystemClock.elapsedRealtime() / 1000;
+        long h = up / 3600;
+        long m = (up % 3600) / 60;
+        return h + "h " + m + "m";
+    }
+
+
+    /* =========================================================
+     * CPU + RAM LIVE
+     * ========================================================= */
     public static void cpuLive(Context ctx, LogCallback cb) {
         new Thread(() -> {
             try {
@@ -79,16 +132,15 @@ public class GELCleaner {
                     long total = Runtime.getRuntime().totalMemory();
                     long used = total - free;
 
-                    String msg = String.format(Locale.US,
-                            "Live %02d/10 | App RAM used: %s / %s",
+                    info(cb, String.format(Locale.US,
+                            "Live %02d/10 → RAM: %s / %s",
                             i,
                             Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total));
+                            Formatter.formatShortFileSize(ctx, total)));
 
-                    info(cb, msg);
                     Thread.sleep(1000);
                 }
-                ok(cb, "CPU+RAM live finished.");
+                ok(cb, "CPU+RAM Live finished.");
             } catch (Exception e) {
                 err(cb, "cpuLive failed: " + e.getMessage());
             }
@@ -97,386 +149,117 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * CLEAN — RAM
+     * CLEAN RAM → Opens RAM management
      * ========================================================= */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            ok(cb, "Opening system RAM screen…");
 
-            long beforeFree = 0L;
-            long afterFree  = 0L;
-
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
-                beforeFree = mi.availMem;
-            }
-
-            trimAppMemory();
-
-            if (am != null) {
-                List<ActivityManager.RunningAppProcessInfo> procs =
-                        am.getRunningAppProcesses();
-
-                if (procs != null) {
-                    for (ActivityManager.RunningAppProcessInfo p : procs) {
-                        if (p.pkgList == null) continue;
-                        for (String pkg : p.pkgList) {
-                            if (!pkg.equals(ctx.getPackageName())) {
-                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignore) {}
-                            }
-                        }
-                    }
-                }
-
-                ActivityManager.MemoryInfo miAfter = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(miAfter);
-                afterFree = miAfter.availMem;
-            }
-
-            long freed = Math.max(0L, afterFree - beforeFree);
-
-            ok(cb,
-                    "RAM cleanup\n" +
-                    " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
-                    " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
-                    " • Freed:       " + Formatter.formatFileSize(ctx, freed)
-            );
+            Intent i = new Intent(Settings.ACTION_MEMORY_CARD_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
 
         } catch (Exception e) {
-            err(cb, "cleanRAM failed: " + e.getMessage());
+            err(cb, "RAM screen failed: " + e.getMessage());
         }
     }
 
 
     /* =========================================================
-     * SAFE CLEAN (internal cache + WebView)
-     * ========================================================= */
-    public static void safeClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            int files = 0;
-            files += wipeDir(ctx.getCacheDir());
-
-            File code = ctx.getCodeCacheDir();
-            if (code != null) files += wipeDir(code);
-
-            File ext = ctx.getExternalCacheDir();
-            if (ext != null) files += wipeDir(ext);
-
-            try {
-                WebView w = new WebView(ctx);
-                w.clearCache(true);
-                w.clearFormData();
-            } catch (Throwable ignore) {}
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Safe Clean\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "safeClean failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * DEEP CLEAN (Internal + SAF junk)
+     * DEEP CLEAN → Opens device default cleaner
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
+        ok(cb, "Opening system cleaner…");
 
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);   // SAF γνωστές διαδρομές
-            } else {
-                warn(cb, "Grant SAF first.");
-            }
+        Intent[] intents = new Intent[]{
 
-            safeClean(ctx, cb);                       // εσωτερικά cache
+                // Xiaomi / Poco / Redmi
+                new Intent("miui.intent.action.GARBAGE_CLEANUP"),
 
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
+                // Samsung
+                new Intent("com.samsung.android.sm.ACTION_CLEANUP"),
 
-            ok(cb,
-                    "GEL Deep Clean\n" +
-                    " • Before (internal caches): " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:                    " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed (internal view):    " + Formatter.formatFileSize(ctx, freed)
-            );
+                // Huawei
+                new Intent("com.huawei.systemmanager.optimize.START"),
 
-        } catch (Exception e) {
-            err(cb, "deepClean failed: " + e.getMessage());
-        }
+                // Oppo / Realme
+                new Intent("oppo.intent.action.OPPO_CLEANER"),
+
+                // OnePlus
+                new Intent("oneplus.intent.action.ONEPLUS_CLEANER"),
+
+                // Vivo / iQOO
+                new Intent("com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity"),
+
+                // Motorola
+                new Intent("com.motorola.ccc.OPTIMIZE"),
+        };
+
+        launchFirstWorking(ctx, intents, cb);
     }
 
 
     /* =========================================================
-     * BROWSER CACHE
+     * Browser cache settings
      * ========================================================= */
     public static void browserCache(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
+        ok(cb, "Opening browser cache…");
 
+        Intent[] intents = new Intent[]{
+                browserSettings("com.android.chrome"),
+                browserSettings("org.mozilla.firefox"),
+                browserSettings("com.opera.browser"),
+                browserSettings("com.microsoft.emmx"),
+                browserSettings("com.brave.browser"),
+                browserSettings("com.duckduckgo.mobile.android")
+        };
+
+        launchFirstWorking(ctx, intents, cb);
+    }
+
+    private static Intent browserSettings(String pkg) {
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.setData(Uri.parse("package:" + pkg));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return i;
+    }
+
+
+    /* =========================================================
+     * TEMP FILES → Cached data
+     * ========================================================= */
+    public static void tempFiles(Context ctx, LogCallback cb) {
+        ok(cb, "Opening temp/cache page…");
+
+        Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(i);
+    }
+
+
+    /* =========================================================
+     * Battery Boost / Kill → Running apps
+     * ========================================================= */
+    public static void openRunningApps(Context ctx, LogCallback cb) {
+        ok(cb, "Opening running apps…");
+
+        Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(i);
+    }
+
+
+    /* =========================================================
+     * HELPER for multi-intent clean
+     * ========================================================= */
+    private static void launchFirstWorking(Context ctx, Intent[] list, LogCallback cb) {
+        for (Intent i : list) {
             try {
-                WebView w = new WebView(ctx);
-                w.clearCache(true);
-                w.clearFormData();
-                ok(cb, "WebView cache cleared.");
-            } catch (Throwable t) {
-                warn(cb, "WebView not available.");
-            }
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-            } else {
-                warn(cb, "Grant SAF for browser dirs.");
-            }
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Browser Cache (internal view)\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "browserCache failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * TEMP CLEAN
-     * ========================================================= */
-    public static void tempClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            int files = wipeDir(ctx.getCacheDir());
-
-            File ext = ctx.getExternalCacheDir();
-            if (ext != null) files += wipeDir(ext);
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-            } else {
-                warn(cb, "Grant SAF for external temp dirs.");
-            }
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Temp Clean (internal view)\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "tempClean failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * BATTERY BOOST
-     * ========================================================= */
-    public static void boostBattery(Context ctx, LogCallback cb) {
-        try {
-            cleanRAM(ctx, cb);
-            info(cb, "Tip: Enable Battery Saver for stronger effect.");
-            ok(cb, "Battery boost done.");
-        } catch (Exception e) {
-            err(cb, "boostBattery failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * KILL APPS
-     * ========================================================= */
-    public static void killApps(Context ctx, LogCallback cb) {
-        try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am == null) {
-                err(cb, "ActivityManager is null.");
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(i);
                 return;
-            }
-
-            List<String> killed = new ArrayList<>();
-            List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
-
-            if (procs != null) {
-                for (ActivityManager.RunningAppProcessInfo p : procs) {
-                    if (p.pkgList == null) continue;
-                    for (String pkg : p.pkgList) {
-                        if (!pkg.equals(ctx.getPackageName())) {
-                            try { am.killBackgroundProcesses(pkg); killed.add(pkg); }
-                            catch (Throwable ignore) {}
-                        }
-                    }
-                }
-            }
-
-            ok(cb, "Killed " + killed.size() + " packages.");
-
-        } catch (Exception e) {
-            err(cb, "killApps failed: " + e.getMessage());
+            } catch (Exception ignored) {}
         }
-    }
-
-
-    /* =========================================================
-     * GEL DEEP CLEAN PRO ENGINE (Clean All button)
-     * ========================================================= */
-    public static void cleanAll(Context ctx, LogCallback cb) {
-        info(cb, "🔥 GEL Deep Clean Pro started…");
-
-        // ΣΥΝΟΛΙΚΗ ΧΡΗΣΗ ΣΥΣΚΕΥΗΣ ΠΡΙΝ
-        StorageStats before = getStorageStats();
-
-        // 1) RAM
-        cleanRAM(ctx, cb);
-
-        // 2) Internal cache
-        safeClean(ctx, cb);
-
-        // 3) Temp (internal + SAF temp)
-        tempClean(ctx, cb);
-
-        // 4) Browser / WebView
-        browserCache(ctx, cb);
-
-        // 5) Media junk μέσω SAF (WhatsApp, Telegram, κ.λπ.)
-        if (SAFCleaner.hasTree(ctx)) {
-            SAFCleaner.mediaJunk(ctx, cb);
-        } else {
-            warn(cb, "Grant SAF for media junk.");
-        }
-
-        // 6) Deep Clean (SAF known dirs + internal recap)
-        deepClean(ctx, cb);
-
-        // ΣΥΝΟΛΙΚΗ ΧΡΗΣΗ ΣΥΣΚΕΥΗΣ ΜΕΤΑ
-        StorageStats after = getStorageStats();
-
-        if (before != null && after != null) {
-            long usedBefore = before.total - before.free;
-            long usedAfter  = after.total - after.free;
-            long freed      = Math.max(0L, usedBefore - usedAfter);
-
-            ok(cb,
-                    "🔥 GEL Deep Clean Pro — Device summary\n" +
-                    " • Used before: " + Formatter.formatFileSize(ctx, usedBefore) + "\n" +
-                    " • Used after:  " + Formatter.formatFileSize(ctx, usedAfter) + "\n" +
-                    " • Freed total: " + Formatter.formatFileSize(ctx, freed)
-            );
-        } else {
-            warn(cb, "Storage stats not available for global summary.");
-        }
-
-        ok(cb, "🔥 GEL Deep Clean Pro finished.");
-    }
-
-
-    /* =========================================================
-     * INTERNAL FS HELPERS
-     * ========================================================= */
-    private static void trimAppMemory() {
-        try { System.gc(); } catch (Throwable ignore) {}
-    }
-
-
-    private static long getTotalCacheSize(Context ctx) {
-        long sum = 0;
-
-        File c1 = ctx.getCacheDir();
-        if (c1 != null) sum += folderSize(c1);
-
-        File c2 = ctx.getCodeCacheDir();
-        if (c2 != null) sum += folderSize(c2);
-
-        File c3 = ctx.getExternalCacheDir();
-        if (c3 != null) sum += folderSize(c3);
-
-        return sum;
-    }
-
-
-    private static long folderSize(File f) {
-        if (f == null || !f.exists()) return 0;
-        long total = 0;
-
-        File[] kids = f.listFiles();
-        if (kids == null) return 0;
-
-        for (File k : kids) {
-            if (k.isDirectory()) total += folderSize(k);
-            else total += k.length();
-        }
-        return total;
-    }
-
-
-    private static int wipeDir(File dir) {
-        if (dir == null || !dir.exists()) return 0;
-        int count = 0;
-
-        File[] list = dir.listFiles();
-        if (list == null) return 0;
-
-        for (File f : list) count += deleteRecursively(f);
-        return count;
-    }
-
-
-    private static int deleteRecursively(File f) {
-        int c = 0;
-        if (f.isDirectory()) {
-            File[] kids = f.listFiles();
-            if (kids != null) {
-                for (File k : kids) c += deleteRecursively(k);
-            }
-        }
-        if (f.delete()) c++;
-        return c;
-    }
-
-
-    /* =========================================================
-     * GLOBAL STORAGE STATS (Internal storage root)
-     * ========================================================= */
-    private static class StorageStats {
-        long total;
-        long free;
-    }
-
-    private static StorageStats getStorageStats() {
-        try {
-            File path = Environment.getExternalStorageDirectory();
-            if (path == null) return null;
-
-            StatFs stat = new StatFs(path.getAbsolutePath());
-            StorageStats s = new StorageStats();
-            s.total = stat.getBlockCountLong() * stat.getBlockSizeLong();
-            s.free  = stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
-            return s;
-        } catch (Throwable t) {
-            return null;
-        }
+        err(cb, "No supported cleaner found for this device.");
     }
 }

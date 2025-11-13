@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GELCleaner — FINAL v3.5
+ * GELCleaner — FINAL v3.6
  * Compatible with SAFCleaner v3.2
  * GDiolitsis Engine Lab (GEL)
  *
@@ -55,7 +55,7 @@ public class GELCleaner {
                     .append("RAM total: ").append(total).append("\n")
                     .append("RAM used:  ").append(used).append("\n")
                     .append("RAM free:  ").append(avail).append("\n")
-                    .append("Low memory: ").append(mi.lowMemory).append("\n")
+                    .append("Low memory: ").append(am != null && mi.lowMemory).append("\n")
                     .append("SDK: ").append(Build.VERSION.SDK_INT)
                     .append(" (").append(Build.VERSION.RELEASE).append(")\n")
                     .append("Device: ")
@@ -135,10 +135,10 @@ public class GELCleaner {
             long freed = Math.max(0L, afterFree - beforeFree);
 
             ok(cb,
-                "RAM cleanup\n" +
-                " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
-                " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
-                " • Freed:       " + Formatter.formatFileSize(ctx, freed)
+                    "RAM cleanup\n" +
+                    " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
+                    " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
+                    " • Freed:       " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -173,11 +173,11 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                "Safe Clean\n" +
-                " • Files removed: " + files + "\n" +
-                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                    "Safe Clean\n" +
+                    " • Files removed: " + files + "\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -187,7 +187,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * DEEP CLEAN (Internal + SAF)
+     * DEEP CLEAN (internal + SAF helper)
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
@@ -197,7 +197,7 @@ public class GELCleaner {
                 SAFCleaner.cleanKnownJunk(ctx, cb);
                 SAFCleaner.mediaJunk(ctx, cb);
             } else {
-                warn(cb, "Grant SAF first.");
+                warn(cb, "Grant SAF first to clean external junk.");
             }
 
             safeClean(ctx, cb);
@@ -206,10 +206,10 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                "Deep Clean\n" +
-                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                    "Deep Clean\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed (internal):  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -244,10 +244,10 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                "Browser Cache\n" +
-                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                    "Browser Cache\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -278,11 +278,11 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                "Temp Clean\n" +
-                " • Files removed: " + files + "\n" +
-                " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                    "Temp Clean\n" +
+                    " • Files removed: " + files + "\n" +
+                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -340,18 +340,51 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * CLEAN ALL — FIXED (NO mediaJunk)
+     * GEL DEEP CLEAN PRO (ONE BUTTON)
      * ========================================================= */
-    public static void cleanAll(Context ctx, LogCallback cb) {
-        info(cb, "Clean All started…");
+    public static void gelDeepCleanPro(Context ctx, LogCallback cb) {
+        info(cb, "🧠 GEL Deep Clean Pro started…");
 
+        // 1) RAM
         cleanRAM(ctx, cb);
+
+        // 2) Internal cache snapshot
+        long before = getTotalCacheSize(ctx);
+
+        // 3) Internal safe + temp + browser
         safeClean(ctx, cb);
         tempClean(ctx, cb);
         browserCache(ctx, cb);
-        deepClean(ctx, cb);
 
-        ok(cb, "Clean All finished.");
+        // 4) External junk via SAF (thumbnails, WA/Telegram, etc.)
+        if (SAFCleaner.hasTree(ctx)) {
+            SAFCleaner.cleanKnownJunk(ctx, cb);
+            SAFCleaner.mediaJunk(ctx, cb);
+            SAFCleaner.tempClean(ctx, cb);
+        } else {
+            warn(cb, "Grant SAF once to enable full storage clean.");
+        }
+
+        long after = getTotalCacheSize(ctx);
+        long freed = Math.max(0, before - after);
+
+        ok(cb,
+                "GEL Deep Clean Pro — summary\n" +
+                " • Internal cache before: " + Formatter.formatFileSize(ctx, before) + "\n" +
+                " • Internal cache after:  " + Formatter.formatFileSize(ctx, after) + "\n" +
+                " • Freed (internal):      " + Formatter.formatFileSize(ctx, freed) + "\n" +
+                "ℹ️ Extra space also freed from external storage via SAF paths (see logs above)."
+        );
+
+        ok(cb, "GEL Deep Clean Pro finished.");
+    }
+
+
+    /* =========================================================
+     * CLEAN ALL  → alias για GEL Deep Clean Pro
+     * ========================================================= */
+    public static void cleanAll(Context ctx, LogCallback cb) {
+        gelDeepCleanPro(ctx, cb);
     }
 
 

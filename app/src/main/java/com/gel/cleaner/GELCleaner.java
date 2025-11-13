@@ -1,435 +1,339 @@
 package com.gel.cleaner;
 
-import android.app.ActivityManager;
 import android.content.Context;
-import android.os.Build;
-import android.text.format.Formatter;
-import android.webkit.WebView;
+import android.content.SharedPreferences;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import androidx.documentfile.provider.DocumentFile;
 
 /**
- * GELCleaner — FINAL v3.6
- * Compatible with SAFCleaner v3.2
- * GDiolitsis Engine Lab (GEL)
+ * SAFCleaner — FINAL v3.3
+ * - Safe, silent, ΔΕΝ δημιουργεί φακέλους
+ * - Μετράει πόσο SAF space ελευθερώθηκε (MB)
+ * GDiolitsis Engine Lab (GEL) — 2025
  *
- * SAFE, Play-Store compliant, no risky APIs.
- * Always deliver the full file, ready for copy-paste.
+ * Rule: Πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste.
  */
-public class GELCleaner {
+public class SAFCleaner {
 
-    /* =========================================================
-     * LOG CALLBACK
-     * ========================================================= */
-    public interface LogCallback {
-        void log(String msg, boolean isError);
+    /* ===========================================================
+     * LOG HELPERS
+     * =========================================================== */
+    private static void log(GELCleaner.LogCallback cb, String msg) {
+        if (cb == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, false));
     }
 
-    private static void info(LogCallback cb, String m) { if (cb != null) cb.log("ℹ️ " + m, false); }
-    private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
-    private static void warn(LogCallback cb, String m) { if (cb != null) cb.log("⚠️ " + m, false); }
-    private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
+    private static void err(GELCleaner.LogCallback cb, String msg) {
+        if (cb == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, true));
+    }
 
+    /* ===========================================================
+     * SAF STORAGE
+     * =========================================================== */
+    private static final String PREFS = "gel_prefs";
+    private static final String KEY_TREE = "tree_uri";
 
-    /* =========================================================
-     * CPU + RAM INFO
-     * ========================================================= */
-    public static void cpuInfo(Context ctx, LogCallback cb) {
+    /** Αποθήκευση SAF root ΜΟΝΟ την πρώτη φορά */
+    public static void saveTreeUri(Context ctx, Uri treeUri) {
+        if (treeUri == null) return;
+
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (sp.getString(KEY_TREE, null) != null) return; // ήδη υπάρχει
+
         try {
-            int cores = Runtime.getRuntime().availableProcessors();
-
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            if (am != null) am.getMemoryInfo(mi);
-
-            String total = (am != null) ? Formatter.formatFileSize(ctx, mi.totalMem) : "-";
-            String avail = (am != null) ? Formatter.formatFileSize(ctx, mi.availMem) : "-";
-            long usedBytes = (am != null) ? (mi.totalMem - mi.availMem) : 0;
-            String used = Formatter.formatFileSize(ctx, usedBytes);
-
-            StringBuilder b = new StringBuilder()
-                    .append("CPU cores: ").append(cores).append("\n")
-                    .append("RAM total: ").append(total).append("\n")
-                    .append("RAM used:  ").append(used).append("\n")
-                    .append("RAM free:  ").append(avail).append("\n")
-                    .append("Low memory: ").append(mi.lowMemory).append("\n")
-                    .append("SDK: ").append(Build.VERSION.SDK_INT)
-                    .append(" (").append(Build.VERSION.RELEASE).append(")\n")
-                    .append("Device: ")
-                    .append(Build.MANUFACTURER).append(" ").append(Build.MODEL);
-
-            ok(cb, b.toString());
-
-        } catch (Exception e) {
-            err(cb, "cpuInfo failed: " + e.getMessage());
-        }
-    }
-
-
-    public static void cpuLive(Context ctx, LogCallback cb) {
-        new Thread(() -> {
-            try {
-                for (int i = 1; i <= 10; i++) {
-                    long free = Runtime.getRuntime().freeMemory();
-                    long total = Runtime.getRuntime().totalMemory();
-                    long used = total - free;
-
-                    String msg = String.format(Locale.US,
-                            "Live %02d/10 | App RAM used: %s / %s",
-                            i,
-                            Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total));
-
-                    info(cb, msg);
-                    Thread.sleep(1000);
-                }
-                ok(cb, "CPU+RAM live finished.");
-            } catch (Exception e) {
-                err(cb, "cpuLive failed: " + e.getMessage());
-            }
-        }).start();
-    }
-
-
-    /* =========================================================
-     * CLEAN — RAM
-     * ========================================================= */
-    public static void cleanRAM(Context ctx, LogCallback cb) {
-        try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-
-            long beforeFree = 0L;
-            long afterFree  = 0L;
-
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
-                beforeFree = mi.availMem;
-            }
-
-            trimAppMemory();
-
-            if (am != null) {
-                List<ActivityManager.RunningAppProcessInfo> procs =
-                        am.getRunningAppProcesses();
-
-                if (procs != null) {
-                    for (ActivityManager.RunningAppProcessInfo p : procs) {
-                        if (p.pkgList == null) continue;
-                        for (String pkg : p.pkgList) {
-                            if (!pkg.equals(ctx.getPackageName())) {
-                                try { am.killBackgroundProcesses(pkg); } catch (Exception ignore) {}
-                            }
-                        }
-                    }
-                }
-
-                ActivityManager.MemoryInfo miAfter = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(miAfter);
-                afterFree = miAfter.availMem;
-            }
-
-            long freed = Math.max(0L, afterFree - beforeFree);
-
-            ok(cb,
-                    "RAM cleanup\n" +
-                    " • Before free: " + Formatter.formatFileSize(ctx, beforeFree) + "\n" +
-                    " • After free:  " + Formatter.formatFileSize(ctx, afterFree) + "\n" +
-                    " • Freed:       " + Formatter.formatFileSize(ctx, freed)
+            ctx.getContentResolver().takePersistableUriPermission(
+                    treeUri,
+                    IntentFlags.readWrite()
             );
+        } catch (Exception ignored) {}
 
-        } catch (Exception e) {
-            err(cb, "cleanRAM failed: " + e.getMessage());
-        }
+        sp.edit().putString(KEY_TREE, treeUri.toString()).apply();
+    }
+
+    public static Uri getTreeUri(Context ctx) {
+        String s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_TREE, null);
+        return (s == null) ? null : Uri.parse(s);
+    }
+
+    public static boolean hasTree(Context ctx) {
+        return getTreeUri(ctx) != null;
     }
 
 
-    /* =========================================================
-     * SAFE CLEAN
-     * ========================================================= */
-    public static void safeClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            int files = 0;
-            files += wipeDir(ctx.getCacheDir());
-
-            File code = ctx.getCodeCacheDir();
-            if (code != null) files += wipeDir(code);
-
-            File ext = ctx.getExternalCacheDir();
-            if (ext != null) files += wipeDir(ext);
-
-            try {
-                WebView w = new WebView(ctx);
-                w.clearCache(true);
-                w.clearFormData();
-            } catch (Throwable ignore) {}
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Safe Clean\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "safeClean failed: " + e.getMessage());
-        }
+    /* ===========================================================
+     * PUBLIC CLEAN FUNCTIONS
+     * =========================================================== */
+    public static void safeClean(Context ctx, GELCleaner.LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        log(cb, "✅ Safe Clean done");
     }
 
-
-    /* =========================================================
-     * DEEP CLEAN (Internal + SAF junk)
-     * ========================================================= */
-    public static void deepClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);   // SAF γνωστές διαδρομές
-            } else {
-                warn(cb, "Grant SAF first.");
-            }
-
-            safeClean(ctx, cb);                       // εσωτερικά cache
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "GEL Deep Clean\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "deepClean failed: " + e.getMessage());
-        }
+    public static void deepClean(Context ctx, GELCleaner.LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        tempClean(ctx, cb);
+        thumbnailScanAndDelete(ctx, cb);
+        log(cb, "✅ Deep Clean done");
     }
 
-
-    /* =========================================================
-     * BROWSER CACHE
-     * ========================================================= */
-    public static void browserCache(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            try {
-                WebView w = new WebView(ctx);
-                w.clearCache(true);
-                w.clearFormData();
-                ok(cb, "WebView cache cleared.");
-            } catch (Throwable t) {
-                warn(cb, "WebView not available.");
-            }
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-            } else {
-                warn(cb, "Grant SAF for browser dirs.");
-            }
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Browser Cache\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "browserCache failed: " + e.getMessage());
-        }
+    public static void mediaJunk(Context ctx, GELCleaner.LogCallback cb) {
+        thumbnailScanAndDelete(ctx, cb);
+        log(cb, "✅ Media Junk done");
     }
 
-
-    /* =========================================================
-     * TEMP CLEAN
-     * ========================================================= */
-    public static void tempClean(Context ctx, LogCallback cb) {
-        try {
-            long before = getTotalCacheSize(ctx);
-
-            int files = wipeDir(ctx.getCacheDir());
-
-            File ext = ctx.getExternalCacheDir();
-            if (ext != null) files += wipeDir(ext);
-
-            if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-            } else {
-                warn(cb, "Grant SAF for external temp dirs.");
-            }
-
-            long after = getTotalCacheSize(ctx);
-            long freed = Math.max(0, before - after);
-
-            ok(cb,
-                    "Temp Clean\n" +
-                    " • Files removed: " + files + "\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
-            );
-
-        } catch (Exception e) {
-            err(cb, "tempClean failed: " + e.getMessage());
-        }
+    public static void browserCache(Context ctx, GELCleaner.LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        log(cb, "✅ Browser Cache done");
     }
 
-
-    /* =========================================================
-     * BATTERY BOOST
-     * ========================================================= */
-    public static void boostBattery(Context ctx, LogCallback cb) {
-        try {
-            cleanRAM(ctx, cb);
-            info(cb, "Tip: Enable Battery Saver for stronger effect.");
-            ok(cb, "Battery boost done.");
-        } catch (Exception e) {
-            err(cb, "boostBattery failed: " + e.getMessage());
-        }
+    public static void tempClean(Context ctx, GELCleaner.LogCallback cb) {
+        cleanKnownJunk(ctx, cb);
+        log(cb, "✅ Temp Clean done");
     }
 
-
-    /* =========================================================
-     * KILL APPS
-     * ========================================================= */
-    public static void killApps(Context ctx, LogCallback cb) {
-        try {
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am == null) {
-                err(cb, "ActivityManager is null.");
-                return;
-            }
-
-            List<String> killed = new ArrayList<>();
-            List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
-
-            if (procs != null) {
-                for (ActivityManager.RunningAppProcessInfo p : procs) {
-                    if (p.pkgList == null) continue;
-                    for (String pkg : p.pkgList) {
-                        if (!pkg.equals(ctx.getPackageName())) {
-                            try { am.killBackgroundProcesses(pkg); killed.add(pkg); }
-                            catch (Throwable ignore) {}
-                        }
-                    }
-                }
-            }
-
-            ok(cb, "Killed " + killed.size() + " packages.");
-
-        } catch (Exception e) {
-            err(cb, "killApps failed: " + e.getMessage());
-        }
-    }
-
-
-    /* =========================================================
-     * GEL DEEP CLEAN PRO ENGINE (Clean All button)
-     * ========================================================= */
-    public static void cleanAll(Context ctx, LogCallback cb) {
-        info(cb, "🔥 GEL Deep Clean Pro started…");
-
-        // 1) RAM
-        cleanRAM(ctx, cb);
-
-        // 2) Internal cache
+    public static void cleanAll(Context ctx, GELCleaner.LogCallback cb) {
         safeClean(ctx, cb);
-
-        // 3) Temp (internal + SAF temp)
+        deepClean(ctx, cb);
+        mediaJunk(ctx, cb);
+        browserCache(ctx, cb);
         tempClean(ctx, cb);
 
-        // 4) Browser / WebView
-        browserCache(ctx, cb);
+        log(cb, "🔥🔥 ALL CLEAN DONE 🔥🔥");
+    }
 
-        // 5) Media junk μέσω SAF (WhatsApp, Telegram, κ.λπ.)
-        if (SAFCleaner.hasTree(ctx)) {
-            SAFCleaner.mediaJunk(ctx, cb);
-        } else {
-            warn(cb, "Grant SAF for media junk.");
+
+    /* ===========================================================
+     * MAIN KNOWN PATH CLEANER (με freed MB)
+     * =========================================================== */
+    public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
+
+        Uri root = getTreeUri(ctx);
+        if (root == null) {
+            err(cb, "❌ SAF not granted");
+            return;
         }
 
-        // 6) Deep Clean (SAF known dirs + internal recap)
-        deepClean(ctx, cb);
-
-        ok(cb, "🔥 GEL Deep Clean Pro finished.");
-    }
-
-
-    /* =========================================================
-     * INTERNAL FS HELPERS
-     * ========================================================= */
-    private static void trimAppMemory() {
-        try { System.gc(); } catch (Throwable ignore) {}
-    }
-
-
-    private static long getTotalCacheSize(Context ctx) {
-        long sum = 0;
-
-        File c1 = ctx.getCacheDir();
-        if (c1 != null) sum += folderSize(c1);
-
-        File c2 = ctx.getCodeCacheDir();
-        if (c2 != null) sum += folderSize(c2);
-
-        File c3 = ctx.getExternalCacheDir();
-        if (c3 != null) sum += folderSize(c3);
-
-        return sum;
-    }
-
-
-    private static long folderSize(File f) {
-        if (f == null || !f.exists()) return 0;
-        long total = 0;
-
-        File[] kids = f.listFiles();
-        if (kids == null) return 0;
-
-        for (File k : kids) {
-            if (k.isDirectory()) total += folderSize(k);
-            else total += k.length();
+        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        if (rootDoc == null) {
+            err(cb, "❌ SAF root invalid");
+            return;
         }
-        return total;
-    }
 
+        String[] junk = new String[]{
 
-    private static int wipeDir(File dir) {
-        if (dir == null || !dir.exists()) return 0;
-        int count = 0;
+                // Browsers
+                "Android/data/com.android.chrome/cache",
+                "Android/data/com.android.chrome/app_chrome/Default/Cache",
+                "Android/data/com.google.android.webview/cache",
+                "Android/data/org.mozilla.firefox/cache",
+                "Android/data/org.mozilla.firefox_beta/cache",
+                "Android/data/com.microsoft.emmx/cache",
+                "Android/data/com.opera.browser/cache",
+                "Android/data/com.opera.mini.native/cache",
+                "Android/data/com.brave.browser/cache",
+                "Android/data/com.duckduckgo.mobile.android/cache",
 
-        File[] list = dir.listFiles();
-        if (list == null) return 0;
+                // WhatsApp / Telegram
+                "WhatsApp/Media/.Statuses",
+                "WhatsApp/.Shared",
+                "Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
+                "Android/media/com.whatsapp/WhatsApp/.Shared",
+                "Android/data/com.whatsapp/cache",
+                "Android/data/com.whatsapp/wallpaper",
+                "Android/data/org.telegram.messenger/cache",
+                "Android/data/org.telegram.messenger.beta/cache",
+                "Telegram/Telegram Images",
+                "Telegram/Telegram Video",
+                "Telegram/Telegram Documents",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Images",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Video",
+                "Android/media/org.telegram.messenger/Telegram/Telegram Documents",
 
-        for (File f : list) count += deleteRecursively(f);
-        return count;
-    }
+                // Viber / FB / Insta / TikTok / Snapchat
+                "Android/data/com.viber.voip/cache",
+                "Android/data/com.facebook.katana/cache",
+                "Android/data/com.facebook.orca/cache",
+                "Android/data/com.facebook.mlite/cache",
+                "Android/data/com.instagram.android/cache",
+                "Android/data/com.ss.android.ugc.trill/cache",
+                "Android/data/com.snapchat.android/cache",
 
+                // Streaming
+                "Android/data/com.google.android.youtube/cache",
+                "Android/data/com.google.android.videos/cache",
+                "Android/data/com.netflix.mediaclient/cache",
+                "Android/data/com.spotify.music/cache",
 
-    private static int deleteRecursively(File f) {
-        int c = 0;
-        if (f.isDirectory()) {
-            File[] kids = f.listFiles();
-            if (kids != null) {
-                for (File k : kids) c += deleteRecursively(k);
+                // Thumbnails
+                "DCIM/.thumbnails",
+                "Pictures/.thumbnails",
+                "Download/.thumbnails",
+                "Movies/.thumbnails",
+                "WhatsApp/.thumbnails",
+
+                // Temp / Logs
+                "Android/data/.tmp",
+                "Android/data/.thumbnails",
+                "Android/data/.log",
+                "Download/.temp",
+                "Download/.cache",
+                "MIUI/debug_log",
+                "MIUI/.cache"
+        };
+
+        int deletedFolders = 0;
+        long totalFreedBytes = 0L;
+
+        for (String rel : junk) {
+            long freed = wipeFolderWithSize(rootDoc, rel);
+            if (freed > 0) {
+                deletedFolders++;
+                totalFreedBytes += freed;
+                log(cb, "🗑 " + rel + "  (" + formatMB(freed) + " MB)");
             }
         }
-        if (f.delete()) c++;
-        return c;
+
+        log(cb, "✅ Cleaned folders: " + deletedFolders);
+        if (totalFreedBytes > 0) {
+            log(cb, "💾 SAF freed: " + formatMB(totalFreedBytes) + " MB");
+        }
+    }
+
+
+    /* ===========================================================
+     * THUMBNAILS SCAN
+     * =========================================================== */
+    private static void thumbnailScanAndDelete(Context ctx, GELCleaner.LogCallback cb) {
+
+        Uri root = getTreeUri(ctx);
+        if (root == null) return;
+
+        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        if (rootDoc == null) return;
+
+        String[] rels = {
+                "DCIM/.thumbnails",
+                "Pictures/.thumbnails",
+                "Download/.thumbnails",
+                "Movies/.thumbnails",
+                "WhatsApp/.thumbnails"
+        };
+
+        long bytes = 0;
+        int count = 0;
+
+        for (String rel : rels) {
+            ThumbnailReport r = deleteThumbs(rootDoc, rel);
+            count += r.count;
+            bytes += r.bytes;
+        }
+
+        if (count == 0) {
+            log(cb, "ℹ️ No thumbnails found");
+        } else {
+            log(cb, "📸 Deleted " + count + " thumbnails");
+            log(cb, "💾 Freed " + formatMB(bytes) + " MB");
+        }
+    }
+
+    private static class ThumbnailReport {
+        int count = 0;
+        long bytes = 0;
+    }
+
+    private static ThumbnailReport deleteThumbs(DocumentFile root, String rel) {
+        ThumbnailReport rep = new ThumbnailReport();
+
+        DocumentFile folder = traverse(root, rel);
+        if (folder == null) return rep;
+
+        for (DocumentFile f : folder.listFiles()) {
+            if (f.isFile()) {
+                long size = f.length();
+                if (f.delete()) {
+                    rep.count++;
+                    rep.bytes += size;
+                }
+            }
+        }
+        return rep;
+    }
+
+
+    /* ===========================================================
+     * FS HELPERS — SAFE & SILENT (χωρίς δημιουργία φακέλων)
+     * =========================================================== */
+    private static DocumentFile traverse(DocumentFile root, String rel) {
+        if (root == null || rel == null) return null;
+
+        String[] parts = rel.split("/");
+        DocumentFile cur = root;
+
+        for (String p : parts) {
+            if (p.isEmpty()) continue;
+            cur = findChild(cur, p);
+            if (cur == null) return null; // αν λείπει κάτι, σταματάμε ήσυχα
+        }
+        return cur;
+    }
+
+    /**
+     * Σβήνει ΟΛΑ τα παιδιά του φακέλου και επιστρέφει τα bytes που ελευθερώθηκαν.
+     * Δεν δημιουργεί ποτέ νέο φάκελο.
+     */
+    private static long wipeFolderWithSize(DocumentFile root, String rel) {
+        DocumentFile folder = traverse(root, rel);
+        if (folder == null) return 0L;
+
+        long freed = 0L;
+
+        for (DocumentFile f : folder.listFiles()) {
+            try {
+                long sz = f.length();
+                if (f.delete()) {
+                    freed += sz;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            long sz = folder.length(); // συνήθως 0, αλλά το κρατάμε
+            if (folder.delete()) {
+                freed += sz;
+            }
+        } catch (Exception ignored) {}
+
+        return freed;
+    }
+
+    private static DocumentFile findChild(DocumentFile parent, String name) {
+        if (parent == null || name == null) return null;
+
+        for (DocumentFile f : parent.listFiles()) {
+            if (name.equalsIgnoreCase(f.getName())) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    private static String formatMB(long b) {
+        return String.format("%.2f", (b / 1024f / 1024f));
+    }
+
+    /* ===========================================================
+     * FLAGS
+     * =========================================================== */
+    private static class IntentFlags {
+        static int readWrite() {
+            return Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION;
+        }
     }
 }

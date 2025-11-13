@@ -10,8 +10,12 @@ import android.os.Looper;
 import androidx.documentfile.provider.DocumentFile;
 
 /**
- * SAFCleaner — FINAL v3.2 (Safe, Silent, No folder creation)
+ * SAFCleaner — FINAL v3.3
+ * - Safe, silent, ΔΕΝ δημιουργεί φακέλους
+ * - Μετράει πόσο SAF space ελευθερώθηκε (MB)
  * GDiolitsis Engine Lab (GEL) — 2025
+ *
+ * Rule: Πάντα στέλνουμε ολόκληρο το τελικό αρχείο έτοιμο για copy-paste.
  */
 public class SAFCleaner {
 
@@ -34,12 +38,12 @@ public class SAFCleaner {
     private static final String PREFS = "gel_prefs";
     private static final String KEY_TREE = "tree_uri";
 
-    /** Save SAF root only first time */
+    /** Αποθήκευση SAF root ΜΟΝΟ την πρώτη φορά */
     public static void saveTreeUri(Context ctx, Uri treeUri) {
         if (treeUri == null) return;
 
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        if (sp.getString(KEY_TREE, null) != null) return; // already saved
+        if (sp.getString(KEY_TREE, null) != null) return; // ήδη υπάρχει
 
         try {
             ctx.getContentResolver().takePersistableUriPermission(
@@ -104,7 +108,7 @@ public class SAFCleaner {
 
 
     /* ===========================================================
-     * MAIN KNOWN PATH CLEANER
+     * MAIN KNOWN PATH CLEANER (με freed MB)
      * =========================================================== */
     public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
 
@@ -183,15 +187,21 @@ public class SAFCleaner {
         };
 
         int deletedFolders = 0;
+        long totalFreedBytes = 0L;
 
         for (String rel : junk) {
-            if (wipeFolderSilent(rootDoc, rel)) {
+            long freed = wipeFolderWithSize(rootDoc, rel);
+            if (freed > 0) {
                 deletedFolders++;
-                log(cb, "🗑 " + rel);
+                totalFreedBytes += freed;
+                log(cb, "🗑 " + rel + "  (" + formatMB(freed) + " MB)");
             }
         }
 
         log(cb, "✅ Cleaned folders: " + deletedFolders);
+        if (totalFreedBytes > 0) {
+            log(cb, "💾 SAF freed: " + formatMB(totalFreedBytes) + " MB");
+        }
     }
 
 
@@ -256,7 +266,7 @@ public class SAFCleaner {
 
 
     /* ===========================================================
-     * FS HELPERS — SAFE & SILENT
+     * FS HELPERS — SAFE & SILENT (χωρίς δημιουργία φακέλων)
      * =========================================================== */
     private static DocumentFile traverse(DocumentFile root, String rel) {
         if (root == null || rel == null) return null;
@@ -267,22 +277,38 @@ public class SAFCleaner {
         for (String p : parts) {
             if (p.isEmpty()) continue;
             cur = findChild(cur, p);
-            if (cur == null) return null; // stop cleanly
+            if (cur == null) return null; // αν λείπει κάτι, σταματάμε ήσυχα
         }
         return cur;
     }
 
-    private static boolean wipeFolderSilent(DocumentFile root, String rel) {
+    /**
+     * Σβήνει ΟΛΑ τα παιδιά του φακέλου και επιστρέφει τα bytes που ελευθερώθηκαν.
+     * Δεν δημιουργεί ποτέ νέο φάκελο.
+     */
+    private static long wipeFolderWithSize(DocumentFile root, String rel) {
         DocumentFile folder = traverse(root, rel);
-        if (folder == null) return false;
+        if (folder == null) return 0L;
+
+        long freed = 0L;
 
         for (DocumentFile f : folder.listFiles()) {
-            try { f.delete(); } catch (Exception ignored) {}
+            try {
+                long sz = f.length();
+                if (f.delete()) {
+                    freed += sz;
+                }
+            } catch (Exception ignored) {}
         }
 
-        try { folder.delete(); } catch (Exception ignored) {}
+        try {
+            long sz = folder.length(); // συνήθως 0, αλλά το κρατάμε
+            if (folder.delete()) {
+                freed += sz;
+            }
+        } catch (Exception ignored) {}
 
-        return true;
+        return freed;
     }
 
     private static DocumentFile findChild(DocumentFile parent, String name) {

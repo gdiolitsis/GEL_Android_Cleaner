@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import android.os.StatFs;
 import android.text.format.Formatter;
 import android.webkit.WebView;
 
@@ -13,18 +14,12 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GELCleaner — FINAL v4.0
+ * GELCleaner — FINAL v3.7
  * Compatible with SAFCleaner v3.2
  * GDiolitsis Engine Lab (GEL)
  *
- * GEL Deep Clean Pro Engine:
- *  - RAM cleanup + process kill
- *  - Internal cache + temp
- *  - Browser / WebView cache
- *  - SAF junk (WhatsApp / Telegram / Browsers / Streaming)
- *  - File-engine on external storage (big junk + thumbnails)
- *
- * ΠΑΝΤΑ στέλνουμε ολόκληρο το αρχείο, έτοιμο για copy-paste.
+ * SAFE-ish, using all allowed tricks.
+ * Always deliver the full file, ready for copy-paste.
  */
 public class GELCleaner {
 
@@ -155,7 +150,7 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * SAFE CLEAN (internal cache dirs)
+     * SAFE CLEAN (internal cache + WebView)
      * ========================================================= */
     public static void safeClean(Context ctx, LogCallback cb) {
         try {
@@ -201,23 +196,21 @@ public class GELCleaner {
             long before = getTotalCacheSize(ctx);
 
             if (SAFCleaner.hasTree(ctx)) {
-                // SAF γνωστές διαδρομές (Android/data, Android/media, WhatsApp, Telegram κ.λπ.)
-                SAFCleaner.cleanKnownJunk(ctx, cb);
+                SAFCleaner.cleanKnownJunk(ctx, cb);   // SAF γνωστές διαδρομές
             } else {
-                warn(cb, "Grant SAF first for full deep clean.");
+                warn(cb, "Grant SAF first.");
             }
 
-            // Internal cache
-            safeClean(ctx, cb);
+            safeClean(ctx, cb);                       // εσωτερικά cache
 
             long after = getTotalCacheSize(ctx);
             long freed = Math.max(0, before - after);
 
             ok(cb,
                     "GEL Deep Clean\n" +
-                    " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                    " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
+                    " • Before (internal caches): " + Formatter.formatFileSize(ctx, before) + "\n" +
+                    " • After:                    " + Formatter.formatFileSize(ctx, after) + "\n" +
+                    " • Freed (internal view):    " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -243,7 +236,7 @@ public class GELCleaner {
             }
 
             if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.browserCache(ctx, cb);   // SAF browser dirs
+                SAFCleaner.cleanKnownJunk(ctx, cb);
             } else {
                 warn(cb, "Grant SAF for browser dirs.");
             }
@@ -252,7 +245,7 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Browser Cache\n" +
+                    "Browser Cache (internal view)\n" +
                     " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
                     " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
                     " • Freed:  " + Formatter.formatFileSize(ctx, freed)
@@ -277,7 +270,7 @@ public class GELCleaner {
             if (ext != null) files += wipeDir(ext);
 
             if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.tempClean(ctx, cb); // SAF temp/logs
+                SAFCleaner.cleanKnownJunk(ctx, cb);
             } else {
                 warn(cb, "Grant SAF for external temp dirs.");
             }
@@ -286,7 +279,7 @@ public class GELCleaner {
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Temp Clean\n" +
+                    "Temp Clean (internal view)\n" +
                     " • Files removed: " + files + "\n" +
                     " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
                     " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
@@ -353,6 +346,9 @@ public class GELCleaner {
     public static void cleanAll(Context ctx, LogCallback cb) {
         info(cb, "🔥 GEL Deep Clean Pro started…");
 
+        // ΣΥΝΟΛΙΚΗ ΧΡΗΣΗ ΣΥΣΚΕΥΗΣ ΠΡΙΝ
+        StorageStats before = getStorageStats();
+
         // 1) RAM
         cleanRAM(ctx, cb);
 
@@ -362,7 +358,7 @@ public class GELCleaner {
         // 3) Temp (internal + SAF temp)
         tempClean(ctx, cb);
 
-        // 4) Browser / WebView + SAF browser junk
+        // 4) Browser / WebView
         browserCache(ctx, cb);
 
         // 5) Media junk μέσω SAF (WhatsApp, Telegram, κ.λπ.)
@@ -375,202 +371,30 @@ public class GELCleaner {
         // 6) Deep Clean (SAF known dirs + internal recap)
         deepClean(ctx, cb);
 
-        // 7) File-Engine πάνω στο πραγματικό filesystem (MANAGE_EXTERNAL_STORAGE)
-        runFileEngine(ctx, cb);
+        // ΣΥΝΟΛΙΚΗ ΧΡΗΣΗ ΣΥΣΚΕΥΗΣ ΜΕΤΑ
+        StorageStats after = getStorageStats();
+
+        if (before != null && after != null) {
+            long usedBefore = before.total - before.free;
+            long usedAfter  = after.total - after.free;
+            long freed      = Math.max(0L, usedBefore - usedAfter);
+
+            ok(cb,
+                    "🔥 GEL Deep Clean Pro — Device summary\n" +
+                    " • Used before: " + Formatter.formatFileSize(ctx, usedBefore) + "\n" +
+                    " • Used after:  " + Formatter.formatFileSize(ctx, usedAfter) + "\n" +
+                    " • Freed total: " + Formatter.formatFileSize(ctx, freed)
+            );
+        } else {
+            warn(cb, "Storage stats not available for global summary.");
+        }
 
         ok(cb, "🔥 GEL Deep Clean Pro finished.");
     }
 
 
     /* =========================================================
-     * FILE ENGINE (external storage)
-     * ========================================================= */
-
-    // Αν είναι πολύ συντηρητικό, μπορούμε να χαμηλώσουμε όριο ή να προσθέσουμε φακέλους.
-    private static final long BIG_FILE_MIN_BYTES = 30L * 1024L * 1024L; // 30 MB
-    private static final long BIG_FILE_MIN_AGE_MS = 14L * 24L * 60L * 60L * 1000L; // 14 μέρες
-
-    private static class DeleteStats {
-        long bytes = 0;
-        int  files = 0;
-    }
-
-    private static void runFileEngine(Context ctx, LogCallback cb) {
-        File root = Environment.getExternalStorageDirectory();
-        if (root == null || !root.exists()) {
-            warn(cb, "External storage not available for file-engine.");
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        long totalBytes = 0;
-        int  totalFiles = 0;
-
-        // 1) Thumbnails folders (DCIM / Pictures / WhatsApp / Movies)
-        String[] thumbDirs = new String[]{
-                "DCIM/.thumbnails",
-                "Pictures/.thumbnails",
-                "Download/.thumbnails",
-                "Movies/.thumbnails",
-                "WhatsApp/.thumbnails",
-                "Android/DCIM/.thumbnails"
-        };
-
-        for (String rel : thumbDirs) {
-            File dir = new File(root, rel);
-            DeleteStats s = deleteAllChildren(dir);
-            if (s.files > 0) {
-                info(cb, "🗑 Thumbs " + rel + " → " +
-                        s.files + " files, " +
-                        Formatter.formatFileSize(ctx, s.bytes));
-            }
-            totalFiles += s.files;
-            totalBytes += s.bytes;
-        }
-
-        // 2) Big media in γνωστούς φακέλους εφαρμογών
-        String[] bigMediaDirs = new String[]{
-                // WhatsApp
-                "WhatsApp/Media/WhatsApp Video",
-                "WhatsApp/Media/WhatsApp Animated Gifs",
-                "WhatsApp/Media/WhatsApp Documents",
-                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video",
-                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Animated Gifs",
-                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents",
-
-                // Telegram
-                "Telegram/Telegram Video",
-                "Telegram/Telegram Documents",
-                "Android/media/org.telegram.messenger/Telegram/Telegram Video",
-                "Android/media/org.telegram.messenger/Telegram/Telegram Documents",
-
-                // Viber
-                "Android/data/com.viber.voip/files",
-
-                // TikTok / Insta / FB (cache-like / export)
-                "Android/data/com.ss.android.ugc.trill/cache",
-                "Android/data/com.instagram.android/cache",
-                "Android/data/com.facebook.katana/cache",
-                "Android/data/com.facebook.orca/cache"
-        };
-
-        for (String rel : bigMediaDirs) {
-            File dir = new File(root, rel);
-            DeleteStats s = deleteBigOldFiles(dir, BIG_FILE_MIN_BYTES, BIG_FILE_MIN_AGE_MS, now);
-            if (s.files > 0) {
-                info(cb, "🧹 Big media " + rel + " → " +
-                        s.files + " files, " +
-                        Formatter.formatFileSize(ctx, s.bytes));
-            }
-            totalFiles += s.files;
-            totalBytes += s.bytes;
-        }
-
-        if (totalFiles == 0) {
-            info(cb, "ℹ️ File-engine: no extra junk found.");
-        } else {
-            ok(cb,
-                    "GEL File-Engine summary\n" +
-                    " • Files deleted: " + totalFiles + "\n" +
-                    " • Freed: " + Formatter.formatFileSize(ctx, totalBytes)
-            );
-        }
-    }
-
-    /**
-     * Σβήνει ΟΛΑ τα παιδιά ενός φακέλου (όχι τον ίδιο τον φάκελο).
-     */
-    private static DeleteStats deleteAllChildren(File dir) {
-        DeleteStats stats = new DeleteStats();
-        if (dir == null || !dir.exists()) return stats;
-
-        File[] list = dir.listFiles();
-        if (list == null) return stats;
-
-        for (File f : list) {
-            stats.bytes += deleteRecursivelyBytes(f);
-        }
-        // files μετρήθηκαν μέσα στο deleteRecursivelyBytes
-        // αλλά πρέπει να το επιστρέφει κι αυτό → άρα:
-        // το deleteRecursivelyBytes θα μετράει μόνο bytes,
-        // κι εδώ θα βάλουμε ξεχωριστό counter:
-
-        // Για απλότητα: δεύτερο πέρασμα μόνο για count
-        int count = 0;
-        list = dir.listFiles();
-        if (list != null) {
-            for (File f : list) {
-                if (!f.exists()) count++; // ήδη σβησμένο
-            }
-        }
-        stats.files = count;
-        return stats;
-    }
-
-    /**
-     * Σβήνει μεγάλα & παλιά αρχεία σε έναν φάκελο (δεν σβήνει τον φάκελο).
-     */
-    private static DeleteStats deleteBigOldFiles(File dir,
-                                                 long minBytes,
-                                                 long minAgeMs,
-                                                 long nowMs) {
-        DeleteStats stats = new DeleteStats();
-        if (dir == null || !dir.exists()) return stats;
-
-        File[] list = dir.listFiles();
-        if (list == null) return stats;
-
-        for (File f : list) {
-            if (f.isDirectory()) {
-                DeleteStats child = deleteBigOldFiles(f, minBytes, minAgeMs, nowMs);
-                stats.bytes += child.bytes;
-                stats.files += child.files;
-                continue;
-            }
-
-            long size = f.length();
-            long age  = nowMs - f.lastModified();
-
-            if (size >= minBytes && age >= minAgeMs) {
-                if (f.delete()) {
-                    stats.bytes += size;
-                    stats.files += 1;
-                }
-            }
-        }
-        return stats;
-    }
-
-    /**
-     * Διαγραφή με μέτρηση bytes (για file-engine).
-     */
-    private static long deleteRecursivelyBytes(File f) {
-        long total = 0;
-        if (f == null || !f.exists()) return 0;
-
-        if (f.isDirectory()) {
-            File[] kids = f.listFiles();
-            if (kids != null) {
-                for (File k : kids) {
-                    total += deleteRecursivelyBytes(k);
-                }
-            }
-        } else {
-            long size = f.length();
-            if (f.delete()) {
-                total += size;
-            }
-            return total;
-        }
-
-        // προσπάθησε να σβήσει και τον ίδιο τον φάκελο
-        try { f.delete(); } catch (Throwable ignore) {}
-        return total;
-    }
-
-
-    /* =========================================================
-     * INTERNAL FS HELPERS (παλιά κομμάτια)
+     * INTERNAL FS HELPERS
      * ========================================================= */
     private static void trimAppMemory() {
         try { System.gc(); } catch (Throwable ignore) {}
@@ -630,5 +454,29 @@ public class GELCleaner {
         }
         if (f.delete()) c++;
         return c;
+    }
+
+
+    /* =========================================================
+     * GLOBAL STORAGE STATS (Internal storage root)
+     * ========================================================= */
+    private static class StorageStats {
+        long total;
+        long free;
+    }
+
+    private static StorageStats getStorageStats() {
+        try {
+            File path = Environment.getExternalStorageDirectory();
+            if (path == null) return null;
+
+            StatFs stat = new StatFs(path.getAbsolutePath());
+            StorageStats s = new StorageStats();
+            s.total = stat.getBlockCountLong() * stat.getBlockSizeLong();
+            s.free  = stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
+            return s;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 }

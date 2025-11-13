@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/gel_bg">
+
+    <TextView
+        android:id="@+id/titleApps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_cache_title"
+        android:textColor="@color/gel_text_primary"
+        android:textSize="18sp"
+        android:paddingBottom="8dp"/>
+
+    <ListView
+        android:id="@+id/listApps"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="#333333"
+        android:dividerHeight="1dp"/>
+</LinearLayout>

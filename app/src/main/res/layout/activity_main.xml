@@ -25,7 +25,7 @@
             <ImageView
                 android:id="@+id/imgLogo"
                 android:layout_width="64dp"
-                android:layout_layout="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/gel_logo"
                 android:contentDescription="@string/app_name"
                 android:layout_marginRight="4dp" />
@@ -42,6 +42,7 @@
                 android:textSize="22sp"
                 android:singleLine="true" />
 
+            <!-- LANG FLAGS -->
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="40dp"
@@ -158,26 +159,16 @@
                 android:singleLine="true"/>
 
             <Button
-                android:id="@+id/btnSafeClean"
+                android:id="@+id/btnDeepClean"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
-                android:text="@string/safe_clean"
-                android:background="@drawable/gel_btn_outline_selector"
+                android:text="@string/deep_clean"
+                android:background="@drawable/gel_btn_danger"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
                 android:singleLine="true"/>
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnDeepClean"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/deep_clean"
-            android:background="@drawable/gel_btn_danger"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"
-            android:singleLine="true"/>
 
         <!-- JUNK -->
         <TextView
@@ -190,21 +181,11 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
+        <!-- Row: Browser Cache + Temp Files -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnMediaJunk"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/media_junk"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
 
             <Button
                 android:id="@+id/btnBrowserCache"
@@ -216,12 +197,6 @@
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
                 android:singleLine="true"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnTemp"
@@ -233,18 +208,18 @@
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
                 android:singleLine="true"/>
-
-            <Button
-                android:id="@+id/btnAppCache"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/app_cache"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
         </LinearLayout>
+
+        <!-- Row: App Cache (full width) -->
+        <Button
+            android:id="@+id/btnAppCache"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/app_cache"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_margin="4dp"
+            android:singleLine="true"/>
 
         <!-- PERFORMANCE -->
         <TextView
@@ -297,3 +272,4 @@
             android:background="@color/gel_bg"/>
     </LinearLayout>
 </ScrollView>
+```0

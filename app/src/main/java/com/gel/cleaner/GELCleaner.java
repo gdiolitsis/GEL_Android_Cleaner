@@ -55,7 +55,7 @@ public class GELCleaner {
                     .append("RAM total: ").append(total).append("\n")
                     .append("RAM used:  ").append(used).append("\n")
                     .append("RAM free:  ").append(avail).append("\n")
-                    .append("Low memory: ").append(am != null && mi.lowMemory).append("\n")
+                    .append("Low memory: ").append(mi.lowMemory).append("\n")
                     .append("SDK: ").append(Build.VERSION.SDK_INT)
                     .append(" (").append(Build.VERSION.RELEASE).append(")\n")
                     .append("Device: ")
@@ -187,29 +187,28 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * DEEP CLEAN (internal + SAF helper)
+     * DEEP CLEAN (Internal + SAF junk)
      * ========================================================= */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             long before = getTotalCacheSize(ctx);
 
             if (SAFCleaner.hasTree(ctx)) {
-                SAFCleaner.cleanKnownJunk(ctx, cb);
-                SAFCleaner.mediaJunk(ctx, cb);
+                SAFCleaner.cleanKnownJunk(ctx, cb);   // SAF γνωστές διαδρομές
             } else {
-                warn(cb, "Grant SAF first to clean external junk.");
+                warn(cb, "Grant SAF first.");
             }
 
-            safeClean(ctx, cb);
+            safeClean(ctx, cb);                       // εσωτερικά cache
 
             long after = getTotalCacheSize(ctx);
             long freed = Math.max(0, before - after);
 
             ok(cb,
-                    "Deep Clean\n" +
+                    "GEL Deep Clean\n" +
                     " • Before: " + Formatter.formatFileSize(ctx, before) + "\n" +
                     " • After:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                    " • Freed (internal):  " + Formatter.formatFileSize(ctx, freed)
+                    " • Freed:  " + Formatter.formatFileSize(ctx, freed)
             );
 
         } catch (Exception e) {
@@ -340,56 +339,39 @@ public class GELCleaner {
 
 
     /* =========================================================
-     * GEL DEEP CLEAN PRO (ONE BUTTON)
+     * GEL DEEP CLEAN PRO ENGINE (Clean All button)
      * ========================================================= */
-    public static void gelDeepCleanPro(Context ctx, LogCallback cb) {
-        info(cb, "🧠 GEL Deep Clean Pro started…");
+    public static void cleanAll(Context ctx, LogCallback cb) {
+        info(cb, "🔥 GEL Deep Clean Pro started…");
 
         // 1) RAM
         cleanRAM(ctx, cb);
 
-        // 2) Internal cache snapshot
-        long before = getTotalCacheSize(ctx);
-
-        // 3) Internal safe + temp + browser
+        // 2) Internal cache
         safeClean(ctx, cb);
+
+        // 3) Temp (internal + SAF temp)
         tempClean(ctx, cb);
+
+        // 4) Browser / WebView
         browserCache(ctx, cb);
 
-        // 4) External junk via SAF (thumbnails, WA/Telegram, etc.)
+        // 5) Media junk μέσω SAF (WhatsApp, Telegram, κ.λπ.)
         if (SAFCleaner.hasTree(ctx)) {
-            SAFCleaner.cleanKnownJunk(ctx, cb);
             SAFCleaner.mediaJunk(ctx, cb);
-            SAFCleaner.tempClean(ctx, cb);
         } else {
-            warn(cb, "Grant SAF once to enable full storage clean.");
+            warn(cb, "Grant SAF for media junk.");
         }
 
-        long after = getTotalCacheSize(ctx);
-        long freed = Math.max(0, before - after);
+        // 6) Deep Clean (SAF known dirs + internal recap)
+        deepClean(ctx, cb);
 
-        ok(cb,
-                "GEL Deep Clean Pro — summary\n" +
-                " • Internal cache before: " + Formatter.formatFileSize(ctx, before) + "\n" +
-                " • Internal cache after:  " + Formatter.formatFileSize(ctx, after) + "\n" +
-                " • Freed (internal):      " + Formatter.formatFileSize(ctx, freed) + "\n" +
-                "ℹ️ Extra space also freed from external storage via SAF paths (see logs above)."
-        );
-
-        ok(cb, "GEL Deep Clean Pro finished.");
+        ok(cb, "🔥 GEL Deep Clean Pro finished.");
     }
 
 
     /* =========================================================
-     * CLEAN ALL  → alias για GEL Deep Clean Pro
-     * ========================================================= */
-    public static void cleanAll(Context ctx, LogCallback cb) {
-        gelDeepCleanPro(ctx, cb);
-    }
-
-
-    /* =========================================================
-     * INTERNAL FS
+     * INTERNAL FS HELPERS
      * ========================================================= */
     private static void trimAppMemory() {
         try { System.gc(); } catch (Throwable ignore) {}

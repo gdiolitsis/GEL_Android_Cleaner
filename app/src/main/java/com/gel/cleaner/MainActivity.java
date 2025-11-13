@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         setupCleanerButtons();
 
         // 🟥 Δεν ζητάμε ΚΑΜΙΑ άδεια στην εκκίνηση.
+        // Όλα ζητούνται μόνο όταν πατάς κουμπί.
         log(getString(R.string.device_ready), false);
     }
 
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bindWithCheck(R.id.btnDeepClean, PermissionType.STORAGE,
                 () -> GELCleaner.deepClean(this, this));
 
-        // 🔥 Media Junk → απευθείας SAFCleaner
+        // 🔥 Media Junk → απευθείας SAFCleaner (SAF paths)
         bindWithCheck(R.id.btnMediaJunk, PermissionType.STORAGE,
                 () -> SAFCleaner.mediaJunk(this, this));
 

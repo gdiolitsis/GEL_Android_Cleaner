@@ -12,22 +12,19 @@
 
     <!-- Κουμπιά / Ενέργειες (με emoji) -->
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
-    <string name="cpu_ram_info">🔥 ΠΛΗΡΟΦΟΡΙΕΣ CPU</string>
+    <string name="cpu_ram_info">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ</string>
     <string name="cpu_ram_live">📈 CPU LIVE</string>
     <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
-    <string name="safe_clean">🧹 ΑΣΦΑΛΗΣ ΚΑΘΑΡΙΣΜΟΣ</string>
     <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>
 
-    <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 CACHE BROWSER</string>
-    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ</string>
+    <string name="temp_clean">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>
 
+    <string name="app_cache">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
-    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜ.</string>
-    <string name="clean_all">💣 ΚΑΘΑΡΙΣΜΟΣ ΟΛΩΝ</string>
+    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜΟΓΩΝ</string>
 
     <!-- Οθόνη λίστας εφαρμογών -->
-    <string name="app_cache">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
     <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>

@@ -24,7 +24,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <!-- 🔥 Κρίσιμο για Android 10–11 -->
     <application
         android:allowBackup="false"
         android:supportsRtl="true"
@@ -59,24 +58,30 @@
             android:exported="false"
             android:screenOrientation="portrait"/>
 
-        <!-- PERMISSION HELPER SCREEN -->
+        <!-- PERMISSION HELPER -->
         <activity
             android:name=".PermissionsActivity"
             android:exported="false"/>
 
-        <!-- DEVICE INFO (Internal Specs) -->
+        <!-- INTERNAL DEVICE INFO -->
         <activity
             android:name=".DeviceInfoInternalActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- DEVICE INFO (Peripherals) -->
+        <!-- PERIPHERALS DEVICE INFO -->
         <activity
             android:name=".DeviceInfoPeripheralsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Accessibility auto-clean service -->
+        <!-- 🆕 CPU/RAM LIVE ACTIVITY -->
+        <activity
+            android:name=".CpuRamLiveActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- ACCESSIBILITY SERVICE -->
         <service
             android:name=".GELAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

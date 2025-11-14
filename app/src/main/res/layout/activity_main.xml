@@ -108,24 +108,25 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <!-- 🔥 Εδώ είναι η μοναδική αλλαγή -->
+            <!-- Phone Info (Internal) -->
             <Button
                 android:id="@+id/btnPhoneInfo"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
-                android:text="@string/cpu_ram_info"
+                android:text="@string/phone_info_internal"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
                 android:singleLine="true"/>
 
+            <!-- Phone Info (Peripherals) -->
             <Button
-                android:id="@+id/btnCpuRamLive"
+                android:id="@+id/btnPhoneInfoPeripherals"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
-                android:text="@string/cpu_ram_live"
+                android:text="@string/phone_info_peripherals"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"

@@ -25,8 +25,8 @@
     <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜΟΓΩΝ</string>
 
     <!-- ΝΕΑ ΚΟΥΜΠΙΑ ΠΟΥ ΘΕΛΟΥΜΕ -->
-    <string name="phone_info_internal">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ (ΕΣΩΤΕΡΙΚΑ)</string>
-    <string name="phone_info_peripherals">📡 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ (ΠΕΡΙΦΕΡΕΙΑΚΑ)</string>
+    <string name="phone_info_internal">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ\n(ΕΣΩΤΕΡΙΚΑ)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ\n(ΠΕΡΙΦΕΡΕΙΑΚΑ)</string>
 
     <!-- Οθόνη λίστας εφαρμογών -->
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>

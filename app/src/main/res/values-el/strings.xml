@@ -11,7 +11,7 @@
     <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
 
     <!-- Κουμπιά / Ενέργειες (με emoji) -->
-    <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
+    <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
     <string name="cpu_ram_info">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
     <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
@@ -26,7 +26,7 @@
 
     <!-- ΝΕΑ ΚΟΥΜΠΙΑ ΠΟΥ ΘΕΛΟΥΜΕ -->
     <string name="phone_info_internal">📱 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n   ΕΣΩΤΕΡΙΚΑ</string>
-<string name="phone_info_peripherals">📡 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n.  ΠΕΡΙΦΕΡΕΙΑΚΑ</string>
+<string name="phone_info_peripherals">📡 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n  ΠΕΡΙΦΕΡΕΙΑΚΑ</string>
 
     <!-- Οθόνη λίστας εφαρμογών -->
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>

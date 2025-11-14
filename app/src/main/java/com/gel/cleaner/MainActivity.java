@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -44,8 +43,8 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null) bGR.setOnClickListener(v -> { LocaleHelper.set(this,"el"); recreate(); });
-        if (bEN != null) bEN.setOnClickListener(v -> { LocaleHelper.set(this,"en"); recreate(); });
+        if (bGR != null) bGR.setOnClickListener(v -> { LocaleHelper.set(this, "el"); recreate(); });
+        if (bEN != null) bEN.setOnClickListener(v -> { LocaleHelper.set(this, "en"); recreate(); });
     }
 
     /* =========================================================
@@ -78,9 +77,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnPhoneInfoPeripherals,
                 () -> startActivity(new Intent(this, DeviceInfoPeripheralsActivity.class)));
 
-        // CPU/RAM LIVE
+        // CPU + RAM LIVE — FIXED
         bind(R.id.btnCpuRamLive,
-                () -> GELCleaner.cpuLive(this, this));
+                () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
         // CLEANING ACTIONS
         bind(R.id.btnCleanRam,

@@ -15,6 +15,11 @@ import java.io.File;
 public class DeviceInfoInternalActivity extends AppCompatActivity {
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);

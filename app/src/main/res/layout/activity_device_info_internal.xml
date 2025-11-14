@@ -16,7 +16,7 @@
             android:id="@+id/txtTitleDevice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/cpu_ram_info"
+            android:text="@string/phone_info_internal"
             android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"

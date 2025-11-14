@@ -11,25 +11,25 @@
     <string name="logs">📜 Logs</string>
     <string name="device_ready">Device is ready • Dark-Gold Edition</string>
 
-    <!-- Buttons / Actions (με emoji) -->
+    <!-- Buttons / Actions -->
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
 
     <!-- SYSTEM -->
     <string name="cpu_ram_info">📱 PHONE INFO</string>
     <string name="cpu_ram_live">📈 CPU/RAM LIVE</string>
 
+    <!-- NEW STRINGS (Internal / Peripherals) -->
+    <string name="phone_info_internal">📱 PHONE INFO (Internal)</string>
+    <string name="phone_info_peripherals">📡 PHONE INFO (Peripherals)</string>
+
     <!-- CLEANER -->
     <string name="clean_ram">⚡ CLEAN RAM</string>
-    <!-- safe_clean δεν χρησιμοποιείται πλέον στο layout αλλά το κρατάμε για συμβατότητα -->
     <string name="safe_clean">🧹 SAFE CLEAN</string>
     <string name="deep_clean">💣 DEEP CLEAN</string>
 
     <!-- JUNK -->
-    <!-- media_junk δεν χρησιμοποιείται πλέον στο layout αλλά το κρατάμε για συμβατότητα -->
     <string name="media_junk">🖼 MEDIA JUNK</string>
     <string name="browser_cache">🌐 BROWSER CACHE</string>
-
-    <!-- Temp button (Text στο btnTemp) -->
     <string name="temp_files">🔥 TEMP FILES</string>
 
     <!-- App Cache -->
@@ -41,7 +41,6 @@
     <!-- PERFORMANCE -->
     <string name="battery_boost">🔋 BATTERY BOOST</string>
     <string name="kill_apps">🚀 KILL APPS</string>
-    <!-- clean_all δεν χρησιμοποιείται πλέον στο layout αλλά το κρατάμε για ασφάλεια -->
     <string name="clean_all">💣 CLEAN ALL</string>
 
     <!-- Permission prompts -->

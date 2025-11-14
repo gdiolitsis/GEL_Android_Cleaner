@@ -16,6 +16,11 @@ import java.util.List;
 public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
@@ -74,7 +79,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         }
         s.append("\n");
 
-        // CONNECTIVITY (χωρίς MAC, IMEI)
+        // CONNECTIVITY
         s.append("── CONNECTIVITY ──\n");
         s.append("NFC: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
@@ -110,9 +115,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
 
-        // VIBRATOR (universal-safe)
+        // VIBRATOR — SAFE MODE
         Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        boolean hasVib = (vib != null && vib.hasVibrator());
+        boolean hasVib = vib != null && vib.hasVibrator();
         s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n");
 
         if (info != null) {

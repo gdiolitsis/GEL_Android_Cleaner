@@ -17,56 +17,97 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info);
+        setContentView(R.layout.activity_device_info_internal);
 
-        TextView t = findViewById(R.id.txtDeviceInfo);
+        TextView title = findViewById(R.id.txtTitleDevice);
+        TextView info  = findViewById(R.id.txtDeviceInfo);
+
+        if (title != null) {
+            title.setText(getString(R.string.phone_info_internal));
+        }
 
         StringBuilder s = new StringBuilder();
 
-        s.append("📱 **DEVICE INTERNAL INFO**\n\n");
-
-        // MODEL / BRAND
-        s.append("• Brand: ").append(Build.BRAND).append("\n");
-        s.append("• Manufacturer: ").append(Build.MANUFACTURER).append("\n");
-        s.append("• Model: ").append(Build.MODEL).append("\n");
-        s.append("• Device: ").append(Build.DEVICE).append("\n");
-        s.append("• Product: ").append(Build.PRODUCT).append("\n\n");
+        // SYSTEM
+        s.append("── SYSTEM ──\n");
+        s.append("Brand: ").append(Build.BRAND).append("\n");
+        s.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
+        s.append("Model: ").append(Build.MODEL).append("\n");
+        s.append("Device: ").append(Build.DEVICE).append("\n");
+        s.append("Product: ").append(Build.PRODUCT).append("\n");
+        s.append("Board: ").append(Build.BOARD).append("\n");
+        s.append("Hardware: ").append(Build.HARDWARE).append("\n\n");
 
         // ANDROID
-        s.append("• Android Version: ").append(Build.VERSION.RELEASE).append("\n");
-        s.append("• API Level: ").append(Build.VERSION.SDK_INT).append("\n");
-        s.append("• Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n\n");
+        s.append("── ANDROID ──\n");
+        s.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
+        s.append("API Level: ").append(Build.VERSION.SDK_INT).append("\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            s.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+        }
+        s.append("Build ID: ").append(Build.ID).append("\n");
+        s.append("Build Type: ").append(Build.TYPE).append("\n");
+        s.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
+        s.append("Kernel: ").append(System.getProperty("os.version")).append("\n\n");
 
         // CPU
-        s.append("🧠 CPU\n");
-        s.append("• ABI: ").append(Build.SUPPORTED_ABIS[0]).append("\n");
-        s.append("• Hardware: ").append(Build.HARDWARE).append("\n");
-        s.append("• Board: ").append(Build.BOARD).append("\n\n");
+        s.append("── CPU ──\n");
+        String[] abis = Build.SUPPORTED_ABIS;
+        if (abis != null && abis.length > 0) {
+            s.append("Primary ABI: ").append(abis[0]).append("\n");
+        }
+        s.append("CPU ABIs: ");
+        if (abis != null) {
+            for (int i = 0; i < abis.length; i++) {
+                s.append(abis[i]);
+                if (i < abis.length - 1) s.append(", ");
+            }
+        }
+        s.append("\n\n");
 
         // RAM
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        s.append("── RAM ──\n");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        am.getMemoryInfo(mi);
+        if (am != null) {
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            long totalMb = mi.totalMem / (1024L * 1024L);
+            long availMb = mi.availMem / (1024L * 1024L);
+            long usedMb  = totalMb - availMb;
 
-        long totalRam = mi.totalMem / (1024 * 1024);
-        s.append("💾 RAM\n");
-        s.append("• Total RAM: ").append(totalRam).append(" MB\n\n");
+            s.append("Total RAM: ").append(totalMb).append(" MB\n");
+            s.append("Used RAM: ").append(usedMb).append(" MB\n");
+            s.append("Free RAM: ").append(availMb).append(" MB\n");
+            s.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n\n");
+        }
 
-        // STORAGE
-        File path = Environment.getDataDirectory();
-        long blkSize = path.getTotalSpace() / (1024 * 1024*1024);
-        long freeSize = path.getFreeSpace() / (1024 * 1024*1024);
+        // INTERNAL STORAGE
+        s.append("── INTERNAL STORAGE ──\n");
+        try {
+            File dataDir = Environment.getDataDirectory();
+            long totalBytes = dataDir.getTotalSpace();
+            long freeBytes  = dataDir.getFreeSpace();
+            long totalGb = totalBytes / (1024L * 1024L * 1024L);
+            long freeGb  = freeBytes / (1024L * 1024L * 1024L);
+            long usedGb  = totalGb - freeGb;
 
-        s.append("💽 INTERNAL STORAGE\n");
-        s.append("• Total: ").append(blkSize).append(" GB\n");
-        s.append("• Free: ").append(freeSize).append(" GB\n\n");
+            s.append("Total: ").append(totalGb).append(" GB\n");
+            s.append("Used: ").append(usedGb).append(" GB\n");
+            s.append("Free: ").append(freeGb).append(" GB\n\n");
+        } catch (Throwable t) {
+            s.append("Storage info: N/A (").append(t.getMessage()).append(")\n\n");
+        }
 
         // SCREEN
+        s.append("── SCREEN ──\n");
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        s.append("📺 SCREEN\n");
-        s.append("• Resolution: ").append(dm.widthPixels).append(" x ").append(dm.heightPixels).append("\n");
-        s.append("• Density: ").append(dm.densityDpi).append(" dpi\n");
+        s.append("Resolution: ").append(dm.widthPixels)
+                .append(" x ").append(dm.heightPixels).append(" px\n");
+        s.append("Density: ").append(dm.densityDpi).append(" dpi\n");
+        s.append("Scaled density: ").append(dm.scaledDensity).append("\n");
 
-        t.setText(s.toString());
+        if (info != null) {
+            info.setText(s.toString());
+        }
     }
 }

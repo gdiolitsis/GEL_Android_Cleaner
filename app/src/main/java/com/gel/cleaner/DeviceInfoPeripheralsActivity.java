@@ -6,6 +6,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,12 +42,13 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) ? "YES" : "NO")
                 .append("\n\n");
 
-        // BIOMETRICS (χωρίς ευαίσθητα IDs)
+        // BIOMETRICS
         s.append("── BIOMETRICS ──\n");
         boolean hasFingerprint =
                 pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
                         || pm.hasSystemFeature("android.hardware.fingerprint");
         s.append("Fingerprint sensor: ").append(hasFingerprint ? "YES" : "NO").append("\n");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             boolean hasFace =
                     pm.hasSystemFeature(PackageManager.FEATURE_FACE)
@@ -72,7 +74,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         }
         s.append("\n");
 
-        // CONNECTIVITY (χωρίς MAC, χωρίς IMEI)
+        // CONNECTIVITY (χωρίς MAC, IMEI)
         s.append("── CONNECTIVITY ──\n");
         s.append("NFC: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
@@ -107,9 +109,11 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         s.append("USB accessory: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
-        s.append("Vibrator: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_HAPTIC_VIBRATION) ? "YES" : "NO")
-                .append("\n");
+
+        // VIBRATOR (universal-safe)
+        Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        boolean hasVib = (vib != null && vib.hasVibrator());
+        s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n");
 
         if (info != null) {
             info.setText(s.toString());

@@ -64,7 +64,19 @@
             android:name=".PermissionsActivity"
             android:exported="false"/>
 
-        <!-- ✅ Accessibility auto-clean service -->
+        <!-- DEVICE INFO (Internal Specs) -->
+        <activity
+            android:name=".DeviceInfoInternalActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- DEVICE INFO (Peripherals) -->
+        <activity
+            android:name=".DeviceInfoPeripheralsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Accessibility auto-clean service -->
         <service
             android:name=".GELAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

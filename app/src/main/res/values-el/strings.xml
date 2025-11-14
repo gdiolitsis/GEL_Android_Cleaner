@@ -13,7 +13,7 @@
     <!-- Κουμπιά / Ενέργειες (με emoji) -->
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
     <string name="cpu_ram_info">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ</string>
-    <string name="cpu_ram_live">📈 CPU LIVE</string>
+    <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
     <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
     <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>
 
@@ -25,8 +25,8 @@
     <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜΟΓΩΝ</string>
 
     <!-- ΝΕΑ ΚΟΥΜΠΙΑ ΠΟΥ ΘΕΛΟΥΜΕ -->
-    <string name="phone_info_internal">📱 ΠΛΗΡΟΦ.\u00A0ΣΥΣΚΕΥΗΣ\n   ΕΣΩΤΕΡΙΚΑ</string>
-<string name="phone_info_peripherals">📡 ΠΛΗΡΟΦ.\u00A0ΣΥΣΚΕΥΗΣ\n.  ΠΕΡΙΦΕΡΕΙΑΚΑ</string>
+    <string name="phone_info_internal">📱 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n   ΕΣΩΤΕΡΙΚΑ</string>
+<string name="phone_info_peripherals">📡 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n.  ΠΕΡΙΦΕΡΕΙΑΚΑ</string>
 
     <!-- Οθόνη λίστας εφαρμογών -->
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>

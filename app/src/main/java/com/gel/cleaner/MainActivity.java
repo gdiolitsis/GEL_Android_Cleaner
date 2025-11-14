@@ -70,12 +70,19 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void setupButtons() {
 
-        bind(R.id.btnPhoneInfo,
-                () -> GELCleaner.phoneInfo(this, this));
+        // INTERNAL DEVICE INFO
+        bind(R.id.btnPhoneInfoInternal,
+                () -> startActivity(new Intent(this, DeviceInfoInternalActivity.class)));
 
+        // PERIPHERALS DEVICE INFO
+        bind(R.id.btnPhoneInfoPeripherals,
+                () -> startActivity(new Intent(this, DeviceInfoPeripheralsActivity.class)));
+
+        // CPU/RAM LIVE
         bind(R.id.btnCpuRamLive,
                 () -> GELCleaner.cpuLive(this, this));
 
+        // CLEANING ACTIONS
         bind(R.id.btnCleanRam,
                 () -> GELCleaner.cleanRAM(this, this));
 
@@ -88,12 +95,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnTemp,
                 () -> GELCleaner.tempFiles(this, this));
 
+        // PERFORMANCE
         bind(R.id.btnBatteryBoost,
                 () -> GELCleaner.openRunningApps(this, this));
 
         bind(R.id.btnKillApps,
                 () -> GELCleaner.openRunningApps(this, this));
 
+        // APP CACHE LIST
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {

@@ -19,8 +19,8 @@
     <string name="cpu_ram_live">📈 CPU/RAM LIVE</string>
 
     <!-- NEW STRINGS (Internal / Peripherals) -->
-    <string name="phone_info_internal">📱 PHONE INFO\n(Internal)</string>
-    <string name="phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
+    <string name="phone_info_internal">📱 PHONE INFO\n  (Internal)</string>
+    <string name="phone_info_peripherals">📡 PHONE INFO\n  (Peripherals)</string>
     <!-- CLEANER -->
     <string name="clean_ram">⚡ CLEAN RAM</string>
     <string name="safe_clean">🧹 SAFE CLEAN</string>

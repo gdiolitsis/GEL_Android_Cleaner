@@ -24,6 +24,10 @@
     <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
     <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜΟΓΩΝ</string>
 
+    <!-- ΝΕΑ ΚΟΥΜΠΙΑ ΠΟΥ ΘΕΛΟΥΜΕ -->
+    <string name="phone_info_internal">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ (ΕΣΩΤΕΡΙΚΑ)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ (ΠΕΡΙΦΕΡΕΙΑΚΑ)</string>
+
     <!-- Οθόνη λίστας εφαρμογών -->
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
     <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>

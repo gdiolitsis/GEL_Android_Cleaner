@@ -108,7 +108,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
         s.append("Vibrator: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_VIBRATOR) ? "YES" : "NO")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_HAPTIC_VIBRATION) ? "YES" : "NO")
                 .append("\n");
 
         if (info != null) {

@@ -150,43 +150,37 @@
             android:singleLine="true"/>
 
         <!-- CLEANER -->
+<TextView
+    android:id="@+id/section_clean"
+    style="@style/SectionTitle"
+    android:text="Καθαρισμός" />
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center">
+
+    <LinearLayout
+        android:id="@+id/btnCleanAll"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_weight="1"
+        android:background="@drawable/btn_red"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/cleaner"
+            android:text="🧹 GEL Cleaner ALL"
+            android:textColor="@color/white"
             android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+            android:textSize="17sp" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnCleanRam"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/clean_ram"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
-
-            <Button
-                android:id="@+id/btnDeepClean"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/deep_clean"
-                android:background="@drawable/gel_btn_danger"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
-        </LinearLayout>
+</LinearLayout>
 
         <!-- JUNK -->
         <TextView

@@ -19,10 +19,10 @@
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
     <!-- PHONE INFO (Internal / Peripherals) -->
-    <string name="phone_info_internal">📱 PHONE INFO\n      (Internal)</string>
-    <string name="phone_info_peripherals">📡 PHONE INFO\n      (Peripherals)</string>
+    <string name="phone_info_internal">📱 PHONE INFO\n    (Internal)</string>
+    <string name="phone_info_peripherals">📡 PHONE INFO\n    (Peripherals)</string>
 
-    <!-- CLEANER (μόνο 1 κουμπί πλέον) -->
+    <!-- CLEANER (1 unified button) -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>
 
     <!-- JUNK -->

@@ -5,8 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
-import android.text.format.Formatter;
+import android.text.format Formatter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -21,9 +22,9 @@ public class GELCleaner {
     private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
-    // --------------------------------------------------------------------
+    // ====================================================================
     // CPU LIVE
-    // --------------------------------------------------------------------
+    // ====================================================================
     public static void cpuLive(Context ctx, LogCallback cb) {
 
         new Thread(() -> {
@@ -54,33 +55,26 @@ public class GELCleaner {
         }).start();
     }
 
-    // --------------------------------------------------------------------
-    // CLEAN RAM
-    // --------------------------------------------------------------------
+    // ====================================================================
+    // CLEAN RAM → πλέον SmartClean
+    // ====================================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
-            boolean launched = CleanLauncher.openMemoryCleaner(ctx);
+            boolean launched = CleanLauncher.smartClean(ctx);
 
             if (launched) {
-                ok(cb, "Opening device memory cleaner…");
+                ok(cb, "Smart RAM Cleaner ενεργοποιήθηκε.");
                 return;
             }
 
-            try {
-                Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-                ok(cb, "Opening Internal Storage settings…");
-                return;
-            } catch (Exception ignored) {}
-
+            // fallback
             try {
                 Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(i);
                 ok(cb, "Opening device info…");
                 return;
-            } catch (Exception ignored2) {}
+            } catch (Exception ignored) {}
 
             err(cb, "No compatible RAM/cleaner screen found on this device.");
 
@@ -89,9 +83,9 @@ public class GELCleaner {
         }
     }
 
-    // --------------------------------------------------------------------
+    // ====================================================================
     // DEEP CLEAN
-    // --------------------------------------------------------------------
+    // ====================================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             boolean launched = CleanLauncher.openDeepCleaner(ctx);
@@ -115,9 +109,43 @@ public class GELCleaner {
         }
     }
 
-    // --------------------------------------------------------------------
-    // BROWSER CACHE — Only REAL browsers (universal)
-    // --------------------------------------------------------------------
+    // ====================================================================
+    // CLEAN APP CACHE — με report τι καθαρίστηκε
+    // ====================================================================
+    public static void cleanAppCache(Context ctx, LogCallback cb) {
+        try {
+            long before = folderSize(ctx.getCacheDir());
+            deleteFolder(ctx.getCacheDir());
+            long after = 0;
+            long diff = before - after;
+
+            ok(cb, "Cache cleaned: " + readable(diff));
+
+        } catch (Exception e) {
+            err(cb, "cache clean failed: " + e.getMessage());
+        }
+    }
+
+    // ====================================================================
+    // TEMP FILES WITH REPORT
+    // ====================================================================
+    public static void cleanTempFiles(Context ctx, LogCallback cb) {
+        try {
+            File temp = new File(ctx.getFilesDir(), "temp");
+            long before = folderSize(temp);
+
+            deleteFolder(temp);
+
+            ok(cb, "Temp files removed: " + readable(before));
+
+        } catch (Exception e) {
+            err(cb, "tempFiles failed: " + e.getMessage());
+        }
+    }
+
+    // ====================================================================
+    // BROWSER CACHE — universal
+    // ====================================================================
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
             PackageManager pm = ctx.getPackageManager();
@@ -136,10 +164,8 @@ public class GELCleaner {
             List<String> installed = new ArrayList<>();
 
             for (String pkg : browsers) {
-                try {
-                    pm.getPackageInfo(pkg, 0);
-                    installed.add(pkg);
-                } catch (PackageManager.NameNotFoundException ignored) {}
+                try { pm.getPackageInfo(pkg, 0); installed.add(pkg); }
+                catch (PackageManager.NameNotFoundException ignored) {}
             }
 
             if (installed.isEmpty()) {
@@ -167,23 +193,9 @@ public class GELCleaner {
         }
     }
 
-    // --------------------------------------------------------------------
-    // TEMP FILES
-    // --------------------------------------------------------------------
-    public static void tempFiles(Context ctx, LogCallback cb) {
-        try {
-            Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(i);
-            ok(cb, "Opening Temporary Files section…");
-        } catch (Exception e) {
-            err(cb, "tempFiles failed: " + e.getMessage());
-        }
-    }
-
-    // --------------------------------------------------------------------
+    // ====================================================================
     // RUNNING APPS
-    // --------------------------------------------------------------------
+    // ====================================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
@@ -193,5 +205,41 @@ public class GELCleaner {
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
         }
+    }
+
+    // ====================================================================
+    // HELPERS
+    // ====================================================================
+    private static long folderSize(File f) {
+        if (f == null || !f.exists()) return 0;
+        if (f.isFile()) return f.length();
+
+        long size = 0;
+        File[] children = f.listFiles();
+        if (children != null) {
+            for (File c : children) size += folderSize(c);
+        }
+        return size;
+    }
+
+    private static void deleteFolder(File f) {
+        if (f == null || !f.exists()) return;
+        if (f.isFile()) { f.delete(); return; }
+
+        File[] children = f.listFiles();
+        if (children != null) {
+            for (File c : children) deleteFolder(c);
+        }
+        f.delete();
+    }
+
+    private static String readable(long bytes) {
+        if (bytes <= 0) return "0 KB";
+        float kb = bytes / 1024f;
+        if (kb < 1024) return String.format(Locale.US, "%.2f KB", kb);
+        float mb = kb / 1024f;
+        if (mb < 1024) return String.format(Locale.US, "%.2f MB", mb);
+        float gb = mb / 1024f;
+        return String.format(Locale.US, "%.2f GB", gb);
     }
 }

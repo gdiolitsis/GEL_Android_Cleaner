@@ -2,6 +2,7 @@ package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -9,7 +10,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
 
@@ -85,9 +90,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
-        // BROWSER CACHE
+        // 👉 NEW POPUP FOR BROWSERS
         bind(R.id.btnBrowserCache,
-                () -> GELCleaner.browserCache(this, this));
+                this::showBrowserPicker);
 
         // TEMP FILES
         bind(R.id.btnTemp,
@@ -123,6 +128,67 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                     Toast.makeText(this, "Action failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    /* =========================================================
+     * POPUP BROWSER LIST
+     * ========================================================= */
+    private void showBrowserPicker() {
+
+        PackageManager pm = getPackageManager();
+        String[] candidates = {
+                "com.android.chrome",
+                "com.chrome.beta",
+                "org.mozilla.firefox",
+                "com.opera.browser",
+                "com.microsoft.emmx",
+                "com.brave.browser",
+                "com.vivaldi.browser",
+                "com.duckduckgo.mobile.android",
+                "com.sec.android.app.sbrowser"
+        };
+
+        List<String> installed = new ArrayList<>();
+
+        for (String pkg : candidates) {
+            try {
+                pm.getPackageInfo(pkg, 0);
+                installed.add(pkg);
+            } catch (Exception ignored) {}
+        }
+
+        if (installed.isEmpty()) {
+            Toast.makeText(this, "No browsers installed.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Only 1 browser → go directly
+        if (installed.size() == 1) {
+            openAppInfo(installed.get(0));
+            return;
+        }
+
+        // Many browsers → create dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Browser");
+
+        String[] labels = installed.toArray(new String[0]);
+
+        builder.setItems(labels, (dialog, which) -> {
+            openAppInfo(installed.get(which));
+        });
+
+        builder.show();
+    }
+
+    private void openAppInfo(String pkg) {
+        try {
+            Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(Uri.parse("package:" + pkg));
+            startActivity(i);
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();
         }
     }
 

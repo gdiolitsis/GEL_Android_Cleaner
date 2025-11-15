@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
@@ -21,25 +22,24 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
-
-        if (txtLive != null) {
-            txtLive.setText("CPU / RAM Live Monitor started…\n");
-        }
+        txtLive.setText("CPU / RAM Live Monitor started…\n");
 
         startLive();
     }
 
     private void startLive() {
+
         Thread t = new Thread(() -> {
 
-            ActivityManager am =
-                    (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
             int i = 1;
             while (running) {
 
-                double cpu = getCpuPercent();
+                double cpu = getRealCpu();
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
+
+                String tempTxt = readCpuTemp();
 
                 long usedMb = 0, totalMb = 0;
 
@@ -54,21 +54,16 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
                 String line = "Live " + String.format("%02d", i)
                         + " | CPU: " + cpuTxt
-                        + " | Temp: " + readCpuTemp()
+                        + " | Temp: " + tempTxt
                         + " | RAM: " + usedMb + " MB / " + totalMb + " MB";
 
                 String finalLine = line;
 
-                runOnUiThread(() -> {
-                    if (txtLive != null) {
-                        txtLive.append("\n" + finalLine);
-                    }
-                });
+                runOnUiThread(() -> txtLive.append("\n" + finalLine));
 
                 i++;
 
-                try { Thread.sleep(1000); }
-                catch (Exception ignored) {}
+                try { Thread.sleep(900); } catch (Exception ignored) {}
             }
         });
 
@@ -76,25 +71,25 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         t.start();
     }
 
-    // -------------------------------------------------------------------
-    // REAL CPU USAGE (/proc/stat)
-    // -------------------------------------------------------------------
-    private double getCpuPercent() {
+    // ----------------------------------------------------------
+    // REAL CPU (Ultra Stable v3.1)
+    // ----------------------------------------------------------
+    private double getRealCpu() {
         try {
             long[] t1 = readCpuStat();
             if (t1 == null) return -1;
 
-            Thread.sleep(360);
+            Thread.sleep(250); // πιο safe timing
 
             long[] t2 = readCpuStat();
             if (t2 == null) return -1;
 
-            long idleDiff = t2[0] - t1[0];
-            long cpuDiff  = t2[1] - t1[1];
+            long idle = t2[0] - t1[0];
+            long cpu = t2[1] - t1[1];
 
-            if (cpuDiff <= 0) return -1;
+            if (cpu <= 0) return -1;
 
-            return (cpuDiff - idleDiff) * 100.0 / cpuDiff;
+            return (cpu - idle) * 100.0 / cpu;
 
         } catch (Exception e) {
             return -1;
@@ -102,12 +97,14 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     private long[] readCpuStat() {
-        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
-
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
             String line = br.readLine();
+            br.close();
+
             if (line == null || !line.startsWith("cpu ")) return null;
 
-            String[] p = line.split("\\s+");
+            String[] p = line.trim().split("\\s+");
 
             long user = Long.parseLong(p[1]);
             long nice = Long.parseLong(p[2]);
@@ -127,31 +124,34 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 
-    // -------------------------------------------------------------------
-    // CPU TEMPERATURE (universal paths)
-    // -------------------------------------------------------------------
+    // ----------------------------------------------------------
+    // UNIVERSAL CPU TEMPERATURE (auto-detect zone)
+    // ----------------------------------------------------------
     private String readCpuTemp() {
-        String[] paths = new String[]{
-                "/sys/class/thermal/thermal_zone0/temp",
-                "/sys/class/thermal/thermal_zone1/temp",
-                "/sys/class/thermal/thermal_zone2/temp",
-                "/sys/devices/virtual/thermal/thermal_zone0/temp"
-        };
 
-        for (String p : paths) {
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(p));
-                String s = br.readLine();
-                br.close();
+        File thermalRoot = new File("/sys/class/thermal");
 
-                if (s != null) {
-                    float temp = Float.parseFloat(s);
-                    if (temp > 0) {
-                        if (temp > 1000) temp /= 1000f;
-                        return String.format("%.1f°C", temp);
+        if (thermalRoot.exists()) {
+            File[] zones = thermalRoot.listFiles();
+            if (zones != null) {
+                for (File z : zones) {
+                    if (z.getName().startsWith("thermal_zone")) {
+                        try {
+                            File tempFile = new File(z, "temp");
+                            if (tempFile.exists()) {
+                                BufferedReader br = new BufferedReader(new FileReader(tempFile));
+                                String s = br.readLine();
+                                br.close();
+                                if (s != null) {
+                                    float t = Float.parseFloat(s);
+                                    if (t > 1000) t /= 1000f;
+                                    if (t > 0 && t < 150) return String.format("%.1f°C", t);
+                                }
+                            }
+                        } catch (Exception ignored) {}
                     }
                 }
-            } catch (Exception ignored) {}
+            }
         }
 
         return "N/A";
@@ -159,7 +159,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         running = false;
+        super.onDestroy();
     }
 }

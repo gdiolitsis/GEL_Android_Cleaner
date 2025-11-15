@@ -77,29 +77,21 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnPhoneInfoPeripherals,
                 () -> startActivity(new Intent(this, DeviceInfoPeripheralsActivity.class)));
 
-        // CPU + RAM LIVE — FIXED
+        // CPU + RAM LIVE
         bind(R.id.btnCpuRamLive,
                 () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        // CLEANING ACTIONS
-        bind(R.id.btnCleanRam,
-                () -> GELCleaner.cleanRAM(this, this));
-
-        bind(R.id.btnDeepClean,
+        // NEW — SINGLE CLEANER BUTTON
+        bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
+        // BROWSER CACHE
         bind(R.id.btnBrowserCache,
                 () -> GELCleaner.browserCache(this, this));
 
+        // TEMP FILES
         bind(R.id.btnTemp,
                 () -> GELCleaner.tempFiles(this, this));
-
-        // PERFORMANCE
-        bind(R.id.btnBatteryBoost,
-                () -> GELCleaner.openRunningApps(this, this));
-
-        bind(R.id.btnKillApps,
-                () -> GELCleaner.openRunningApps(this, this));
 
         // APP CACHE LIST
         View appCache = findViewById(R.id.btnAppCache);
@@ -112,6 +104,14 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 }
             });
         }
+
+        // BATTERY BOOST (opens Running Apps)
+        bind(R.id.btnBatteryBoost,
+                () -> GELCleaner.openRunningApps(this, this));
+
+        // KILL APPS
+        bind(R.id.btnKillApps,
+                () -> GELCleaner.openRunningApps(this, this));
     }
 
     private void bind(int id, Runnable fn) {

@@ -75,7 +75,7 @@ public class CleanLauncher {
                 "com.brave.browser.settings.MainPreferences"))
             return true;
 
-        // Universal fallback: App Info for browsers only
+        // Universal fallback
         try {
             Intent i = new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -91,13 +91,9 @@ public class CleanLauncher {
     // ============================================================
     public static boolean openTempCleaner(Context ctx) {
 
-        // Android 12+ has Storage Cleanup panel
-        if (Build.VERSION.SDK_INT >= 31) {
-            if (tryAction(ctx, Settings.ACTION_STORAGE_MANAGER_SETTINGS))
-                return true;
-        }
+        // ❌ Removed ACTION_STORAGE_MANAGER_SETTINGS (caused compile error)
 
-        // Generic Storage panel (works in ALL brands)
+        // Generic Storage Panel (universal)
         if (tryAction(ctx, Settings.ACTION_INTERNAL_STORAGE_SETTINGS))
             return true;
 
@@ -116,17 +112,14 @@ public class CleanLauncher {
         boolean isXiaomi  = brand.contains("xiaomi")  || brand.contains("redmi")
                 || brand.contains("poco") || manu.contains("xiaomi") || manu.contains("redmi");
         boolean isHuawei  = brand.contains("huawei") || manu.contains("huawei");
-        boolean isOppo    = brand.contains("oppo")   || manu.contains("oppo")
-                || manu.contains("realme") || brand.contains("realme");
-        boolean isVivo    = brand.contains("vivo")   || manu.contains("vivo");
-        boolean isOnePlus = brand.contains("oneplus")|| manu.contains("oneplus");
-        boolean isMoto    = brand.contains("motorola")|| manu.contains("motorola");
+        boolean isOppo    = manu.contains("oppo") || manu.contains("realme") || brand.contains("realme");
+        boolean isVivo    = brand.contains("vivo") || manu.contains("vivo");
+        boolean isOnePlus = brand.contains("oneplus") || manu.contains("oneplus");
+        boolean isMoto    = brand.contains("motorola") || manu.contains("motorola");
 
         boolean launched = false;
 
-        // ------------------------------------------------------------
-        // SAMSUNG → Device Care
-        // ------------------------------------------------------------
+        // Samsung → Device Care
         if (isSamsung && !launched) {
             launched = tryComponent(ctx,
                     "com.samsung.android.lool",
@@ -143,9 +136,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // XIAOMI / REDMI / POCO → MIUI Cleaner
-        // ------------------------------------------------------------
+        // Xiaomi / Redmi / Poco
         if (isXiaomi && !launched) {
             launched = tryComponent(ctx,
                     "com.miui.securitycenter",
@@ -158,9 +149,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // HUAWEI → System Manager
-        // ------------------------------------------------------------
+        // Huawei
         if (isHuawei && !launched) {
             launched = tryComponent(ctx,
                     "com.huawei.systemmanager",
@@ -169,9 +158,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // OPPO / REALME
-        // ------------------------------------------------------------
+        // Oppo / Realme
         if (isOppo && !launched) {
             launched = tryComponent(ctx,
                     "com.coloros.phonemanager",
@@ -180,9 +167,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // VIVO
-        // ------------------------------------------------------------
+        // Vivo
         if (isVivo && !launched) {
             launched = tryComponent(ctx,
                     "com.iqoo.secure",
@@ -191,9 +176,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // ONEPLUS
-        // ------------------------------------------------------------
+        // OnePlus
         if (isOnePlus && !launched) {
             launched = tryComponent(ctx,
                     "com.oneplus.security",
@@ -202,9 +185,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // ------------------------------------------------------------
-        // MOTOROLA
-        // ------------------------------------------------------------
+        // Motorola
         if (isMoto && !launched) {
             launched = tryComponent(ctx,
                     "com.motorola.ccc",
@@ -225,9 +206,8 @@ public class CleanLauncher {
         String manu  = low(Build.MANUFACTURER);
 
         boolean isSamsung = brand.contains("samsung") || manu.contains("samsung");
-        boolean isXiaomi  = brand.contains("xiaomi")  || brand.contains("redmi")
-                || manu.contains("xiaomi");
-        boolean isHuawei  = brand.contains("huawei") || manu.contains("huawei");
+        boolean isXiaomi  = brand.contains("xiaomi")  || brand.contains("redmi") || manu.contains("xiaomi");
+        boolean isHuawei  = brand.contains("huawei")  || manu.contains("huawei");
 
         boolean launched = false;
 
@@ -244,7 +224,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // Xiaomi Security Center
+        // Xiaomi Security Scan
         if (isXiaomi && !launched) {
             launched = tryComponent(ctx,
                     "com.miui.securitycenter",

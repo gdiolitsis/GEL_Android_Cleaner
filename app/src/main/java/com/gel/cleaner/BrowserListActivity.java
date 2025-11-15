@@ -7,9 +7,9 @@ import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -22,9 +22,9 @@ public class BrowserListActivity extends AppCompatActivity {
     private static class BrowserItem {
         String pkg;
         String label;
-        int icon;
-        BrowserItem(String p, String l, int i) {
-            pkg = p; label = l; icon = i;
+        BrowserItem(String p, String l) {
+            pkg = p;
+            label = l;
         }
     }
 
@@ -56,15 +56,15 @@ public class BrowserListActivity extends AppCompatActivity {
 
         BrowserItem[] all = {
 
-                new BrowserItem("com.android.chrome", "Google Chrome", R.drawable.ic_browser_chrome),
-                new BrowserItem("com.chrome.beta", "Chrome Beta", R.drawable.ic_browser_chrome),
-                new BrowserItem("org.mozilla.firefox", "Firefox", R.drawable.ic_browser_firefox),
-                new BrowserItem("com.brave.browser", "Brave", R.drawable.ic_browser_brave),
-                new BrowserItem("com.microsoft.emmx", "Microsoft Edge", R.drawable.ic_browser_edge),
-                new BrowserItem("com.opera.browser", "Opera", R.drawable.ic_browser_opera),
-                new BrowserItem("com.vivaldi.browser", "Vivaldi", R.drawable.ic_browser_vivaldi),
-                new BrowserItem("com.duckduckgo.mobile.android", "DuckDuckGo", R.drawable.ic_browser_ddg),
-                new BrowserItem("com.sec.android.app.sbrowser", "Samsung Internet", R.drawable.ic_browser_samsung)
+                new BrowserItem("com.android.chrome", "Google Chrome"),
+                new BrowserItem("com.chrome.beta", "Chrome Beta"),
+                new BrowserItem("org.mozilla.firefox", "Firefox"),
+                new BrowserItem("com.brave.browser", "Brave"),
+                new BrowserItem("com.microsoft.emmx", "Microsoft Edge"),
+                new BrowserItem("com.opera.browser", "Opera"),
+                new BrowserItem("com.vivaldi.browser", "Vivaldi"),
+                new BrowserItem("com.duckduckgo.mobile.android", "DuckDuckGo"),
+                new BrowserItem("com.sec.android.app.sbrowser", "Samsung Internet")
         };
 
         for (BrowserItem b : all) {
@@ -84,10 +84,7 @@ public class BrowserListActivity extends AppCompatActivity {
 
         View row = getLayoutInflater().inflate(R.layout.row_browser_item, null);
 
-        ImageView icon = row.findViewById(R.id.iconBrowser);
-        TextView name  = row.findViewById(R.id.txtBrowserName);
-
-        icon.setImageResource(b.icon);
+        TextView name = row.findViewById(R.id.txtBrowserName);
         name.setText(b.label);
 
         row.setOnClickListener(v -> openBrowserSettings(b.pkg));

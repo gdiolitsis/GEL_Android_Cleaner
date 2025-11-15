@@ -2,11 +2,14 @@ package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.text.format.Formatter;
+import android.text.format Formatter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class GELCleaner {
@@ -20,7 +23,7 @@ public class GELCleaner {
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
     // --------------------------------------------------------------------
-    // CPU LIVE INSIDE MAIN (app-only usage)
+    // CPU LIVE
     // --------------------------------------------------------------------
     public static void cpuLive(Context ctx, LogCallback cb) {
 
@@ -55,7 +58,7 @@ public class GELCleaner {
     }
 
     // --------------------------------------------------------------------
-    // CLEAN RAM → OEM memory cleaner if possible, else generic Settings
+    // CLEAN RAM
     // --------------------------------------------------------------------
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
@@ -66,7 +69,6 @@ public class GELCleaner {
                 return;
             }
 
-            // Fallback: generic Android RAM/storage panel
             try {
                 Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -91,7 +93,7 @@ public class GELCleaner {
     }
 
     // --------------------------------------------------------------------
-    // DEEP CLEAN → OEM main optimizer if possible, else generic cleaner
+    // DEEP CLEAN
     // --------------------------------------------------------------------
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
@@ -102,7 +104,6 @@ public class GELCleaner {
                 return;
             }
 
-            // Generic fallback (όπως είχες)
             try {
                 Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -118,19 +119,65 @@ public class GELCleaner {
     }
 
     // --------------------------------------------------------------------
-    // Remaining system actions (unchanged)
+    // BROWSER CACHE — Only real browsers
     // --------------------------------------------------------------------
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
-            Intent i = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
+            PackageManager pm = ctx.getPackageManager();
+
+            // Known browser package names
+            String[] candidates = {
+                    "com.android.chrome",
+                    "com.chrome.beta",
+                    "com.chrome.dev",
+                    "org.mozilla.firefox",
+                    "com.opera.browser",
+                    "com.microsoft.emmx",
+                    "com.brave.browser",
+                    "com.vivaldi.browser",
+                    "com.duckduckgo.mobile.android",
+                    "com.sec.android.app.sbrowser"
+            };
+
+            List<String> installed = new ArrayList<>();
+
+            for (String pkg : candidates) {
+                try {
+                    pm.getPackageInfo(pkg, 0);
+                    installed.add(pkg);
+                } catch (PackageManager.NameNotFoundException ignored) {}
+            }
+
+            if (installed.isEmpty()) {
+                err(cb, "No browsers found on your device.");
+                return;
+            }
+
+            // Only one browser installed → open directly
+            if (installed.size() == 1) {
+                String pkg = installed.get(0);
+                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                i.setData(Uri.parse("package:" + pkg));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(i);
+                ok(cb, "Opening browser storage → Clear Cache.");
+                return;
+            }
+
+            // Many browsers → open the “All Apps” list filtered
+            Intent i = new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            ok(cb, "Choose your browser → Storage → Clear Cache.");
+            ok(cb, "Select a browser → Storage → Clear Cache.");
+
         } catch (Exception e) {
             err(cb, "browserCache failed: " + e.getMessage());
         }
     }
 
+    // --------------------------------------------------------------------
+    // TEMP FILES
+    // --------------------------------------------------------------------
     public static void tempFiles(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
@@ -142,6 +189,9 @@ public class GELCleaner {
         }
     }
 
+    // --------------------------------------------------------------------
+    // RUNNING APPS
+    // --------------------------------------------------------------------
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);

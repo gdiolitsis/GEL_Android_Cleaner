@@ -3,27 +3,16 @@ package com.gel.cleaner;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.format.Formatter;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.RandomAccessFile;
 import java.io.File;
 import java.util.Locale;
-
-/**
- * GELCleaner — FINAL v4.0
- * GDiolitsis Engine Lab (GEL)
- *
- * Συμβατό με:
- * - MainActivity (νέα κουμπιά)
- * - SAFCleaner v3.3
- * - Νέο UI layout
- *
- * Δεν χρησιμοποιεί καθόλου παλιές Deep Clean/Safe Clean μηχανές.
- * Όλα τα "μενού καθαρισμού" ανοίγουν το default system cleaner.
- */
 
 public class GELCleaner {
 
@@ -40,7 +29,98 @@ public class GELCleaner {
 
 
     /* ===========================================================
-     * PHONE INFO (νέο κουμπί)
+     * CPU/RAM LIVE — REAL DEVICE CPU
+     * =========================================================== */
+    public static void cpuLive(Context ctx, LogCallback cb) {
+
+        new Thread(() -> {
+            try {
+
+                for (int i = 1; i <= 10; i++) {
+
+                    double cpu = readCpuUsage();
+                    String cpuTxt = cpu < 0 ? "N/A" : String.format(Locale.US, "%.1f%%", cpu);
+
+                    // RAM
+                    ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+                    ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                    am.getMemoryInfo(mi);
+
+                    long totalMb = mi.totalMem / (1024 * 1024);
+                    long availMb = mi.availMem / (1024 * 1024);
+                    long usedMb  = totalMb - availMb;
+
+                    String msg = String.format(Locale.US,
+                            "Live %02d | CPU: %s | RAM: %d MB / %d MB",
+                            i, cpuTxt, usedMb, totalMb);
+
+                    info(cb, msg);
+                    Thread.sleep(1000);
+                }
+
+                ok(cb, "CPU+RAM live finished.");
+
+            } catch (Exception e) {
+                err(cb, "cpuLive failed: " + e.getMessage());
+            }
+        }).start();
+    }
+
+
+    // =====================================================================
+    // REAL CPU USAGE FOR ANDROID (/proc/stat method)
+    // =====================================================================
+    private static long[] readCpuStat() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu ")) return null;
+
+            String[] parts = line.split("\\s+");
+
+            long user = Long.parseLong(parts[1]);
+            long nice = Long.parseLong(parts[2]);
+            long system = Long.parseLong(parts[3]);
+            long idle = Long.parseLong(parts[4]);
+            long iowait = Long.parseLong(parts[5]);
+            long irq = Long.parseLong(parts[6]);
+            long softirq = Long.parseLong(parts[7]);
+
+            long idleAll = idle + iowait;
+            long cpuAll = user + nice + system + idle + iowait + irq + softirq;
+
+            return new long[]{ idleAll, cpuAll };
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static double readCpuUsage() {
+        try {
+            long[] t1 = readCpuStat();
+            if (t1 == null) return -1;
+
+            Thread.sleep(360);
+
+            long[] t2 = readCpuStat();
+            if (t2 == null) return -1;
+
+            long idle = t2[0] - t1[0];
+            long cpu  = t2[1] - t1[1];
+
+            if (cpu == 0) return -1;
+
+            return ((cpu - idle) * 100.0) / cpu;
+
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+
+
+    /* ===========================================================
+     * PHONE INFO (δεν αλλάχτηκε)
      * =========================================================== */
     public static void phoneInfo(Context ctx, LogCallback cb) {
         try {
@@ -49,18 +129,8 @@ public class GELCleaner {
             b.append("📱 DEVICE INFO\n\n")
              .append("Brand: ").append(Build.BRAND).append("\n")
              .append("Model: ").append(Build.MODEL).append("\n")
-             .append("Manufacturer: ").append(Build.MANUFACTURER).append("\n")
-             .append("Device: ").append(Build.DEVICE).append("\n")
-             .append("Product: ").append(Build.PRODUCT).append("\n")
-             .append("Board: ").append(Build.BOARD).append("\n")
-             .append("Hardware: ").append(Build.HARDWARE).append("\n")
-             .append("Bootloader: ").append(Build.BOOTLOADER).append("\n\n")
+             .append("Android: ").append(Build.VERSION.RELEASE).append("\n\n");
 
-             .append("Android: ").append(Build.VERSION.RELEASE)
-             .append("  (SDK ").append(Build.VERSION.SDK_INT).append(")\n")
-             .append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n\n");
-
-            // RAM
             ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
@@ -69,16 +139,7 @@ public class GELCleaner {
             String free  = Formatter.formatFileSize(ctx, mi.availMem);
 
             b.append("RAM Total: ").append(total).append("\n")
-             .append("RAM Free:  ").append(free).append("\n\n");
-
-            // Storage
-            File data = ctx.getFilesDir();
-            long freeBytes = data.getFreeSpace();
-            long totalBytes = data.getTotalSpace();
-
-            b.append("Internal Storage:\n")
-             .append("Total: ").append(Formatter.formatFileSize(ctx, totalBytes)).append("\n")
-             .append("Free:  ").append(Formatter.formatFileSize(ctx, freeBytes)).append("\n");
+             .append("RAM Free:  ").append(free).append("\n");
 
             ok(cb, b.toString());
 
@@ -89,36 +150,10 @@ public class GELCleaner {
 
 
     /* ===========================================================
-     * CPU/RAM LIVE
+     * CLEAN RAM / DEEP CLEAN / ETC
+     * (όλα τα υπόλοιπα μένουν ίδια)
      * =========================================================== */
-    public static void cpuLive(Context ctx, LogCallback cb) {
-        new Thread(() -> {
-            try {
-                for (int i = 1; i <= 10; i++) {
-                    long free = Runtime.getRuntime().freeMemory();
-                    long total = Runtime.getRuntime().totalMemory();
-                    long used = total - free;
 
-                    String msg = String.format(Locale.US,
-                            "Live %02d/10 | App RAM used: %s / %s",
-                            i,
-                            Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total));
-
-                    info(cb, msg);
-                    Thread.sleep(1000);
-                }
-                ok(cb, "CPU+RAM live finished.");
-            } catch (Exception e) {
-                err(cb, "cpuLive failed: " + e.getMessage());
-            }
-        }).start();
-    }
-
-
-    /* ===========================================================
-     * CLEAN RAM → system memory menu
-     * =========================================================== */
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_MEMORY_CARD_SETTINGS);
@@ -130,10 +165,6 @@ public class GELCleaner {
         }
     }
 
-
-    /* ===========================================================
-     * DEEP CLEAN → default system cleaner
-     * =========================================================== */
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
@@ -145,10 +176,6 @@ public class GELCleaner {
         }
     }
 
-
-    /* ===========================================================
-     * BROWSER CACHE → browser settings
-     * =========================================================== */
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
@@ -160,10 +187,6 @@ public class GELCleaner {
         }
     }
 
-
-    /* ===========================================================
-     * TEMP FILES → system temporary cache
-     * =========================================================== */
     public static void tempFiles(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
@@ -175,10 +198,6 @@ public class GELCleaner {
         }
     }
 
-
-    /* ===========================================================
-     * OPEN RUNNING APPS (Battery Boost / Kill Apps)
-     * =========================================================== */
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);

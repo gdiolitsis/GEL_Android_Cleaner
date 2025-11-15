@@ -3,12 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#000">
+    android:background="#000000">
 
     <LinearLayout
         android:id="@+id/browserListRoot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:orientation="vertical"
+        android:dividerHeight="12dp" />
 
 </ScrollView>

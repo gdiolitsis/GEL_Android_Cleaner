@@ -10,15 +10,10 @@ import android.text.format.Formatter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.RandomAccessFile;
-import java.io.File;
 import java.util.Locale;
 
 public class GELCleaner {
 
-    /* ===========================================================
-     * LOG CALLBACK
-     * =========================================================== */
     public interface LogCallback {
         void log(String msg, boolean isError);
     }
@@ -27,35 +22,31 @@ public class GELCleaner {
     private static void ok  (LogCallback cb, String m) { if (cb != null) cb.log("✅ " + m, false); }
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
-
-    /* ===========================================================
-     * CPU/RAM LIVE — REAL DEVICE CPU
-     * =========================================================== */
+    // --------------------------------------------------------------------
+    // CPU LIVE INSIDE MAIN (app-only usage)
+    // --------------------------------------------------------------------
     public static void cpuLive(Context ctx, LogCallback cb) {
 
         new Thread(() -> {
             try {
 
-                for (int i = 1; i <= 10; i++) {
+                int i = 1;
+                while (i <= 10) {
 
-                    double cpu = readCpuUsage();
-                    String cpuTxt = cpu < 0 ? "N/A" : String.format(Locale.US, "%.1f%%", cpu);
-
-                    // RAM
-                    ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-                    ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                    am.getMemoryInfo(mi);
-
-                    long totalMb = mi.totalMem / (1024 * 1024);
-                    long availMb = mi.availMem / (1024 * 1024);
-                    long usedMb  = totalMb - availMb;
+                    long free = Runtime.getRuntime().freeMemory();
+                    long total = Runtime.getRuntime().totalMemory();
+                    long used = total - free;
 
                     String msg = String.format(Locale.US,
-                            "Live %02d | CPU: %s | RAM: %d MB / %d MB",
-                            i, cpuTxt, usedMb, totalMb);
+                            "Live %02d | App RAM used: %s / %s",
+                            i,
+                            Formatter.formatShortFileSize(ctx, used),
+                            Formatter.formatShortFileSize(ctx, total));
 
                     info(cb, msg);
+
                     Thread.sleep(1000);
+                    i++;
                 }
 
                 ok(cb, "CPU+RAM live finished.");
@@ -66,94 +57,9 @@ public class GELCleaner {
         }).start();
     }
 
-
-    // =====================================================================
-    // REAL CPU USAGE FOR ANDROID (/proc/stat method)
-    // =====================================================================
-    private static long[] readCpuStat() {
-        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
-            String line = br.readLine();
-            if (line == null || !line.startsWith("cpu ")) return null;
-
-            String[] parts = line.split("\\s+");
-
-            long user = Long.parseLong(parts[1]);
-            long nice = Long.parseLong(parts[2]);
-            long system = Long.parseLong(parts[3]);
-            long idle = Long.parseLong(parts[4]);
-            long iowait = Long.parseLong(parts[5]);
-            long irq = Long.parseLong(parts[6]);
-            long softirq = Long.parseLong(parts[7]);
-
-            long idleAll = idle + iowait;
-            long cpuAll = user + nice + system + idle + iowait + irq + softirq;
-
-            return new long[]{ idleAll, cpuAll };
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static double readCpuUsage() {
-        try {
-            long[] t1 = readCpuStat();
-            if (t1 == null) return -1;
-
-            Thread.sleep(360);
-
-            long[] t2 = readCpuStat();
-            if (t2 == null) return -1;
-
-            long idle = t2[0] - t1[0];
-            long cpu  = t2[1] - t1[1];
-
-            if (cpu == 0) return -1;
-
-            return ((cpu - idle) * 100.0) / cpu;
-
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-
-
-    /* ===========================================================
-     * PHONE INFO (δεν αλλάχτηκε)
-     * =========================================================== */
-    public static void phoneInfo(Context ctx, LogCallback cb) {
-        try {
-            StringBuilder b = new StringBuilder();
-
-            b.append("📱 DEVICE INFO\n\n")
-             .append("Brand: ").append(Build.BRAND).append("\n")
-             .append("Model: ").append(Build.MODEL).append("\n")
-             .append("Android: ").append(Build.VERSION.RELEASE).append("\n\n");
-
-            ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-
-            String total = Formatter.formatFileSize(ctx, mi.totalMem);
-            String free  = Formatter.formatFileSize(ctx, mi.availMem);
-
-            b.append("RAM Total: ").append(total).append("\n")
-             .append("RAM Free:  ").append(free).append("\n");
-
-            ok(cb, b.toString());
-
-        } catch (Exception e) {
-            err(cb, "phoneInfo failed: " + e.getMessage());
-        }
-    }
-
-
-    /* ===========================================================
-     * CLEAN RAM / DEEP CLEAN / ETC
-     * (όλα τα υπόλοιπα μένουν ίδια)
-     * =========================================================== */
-
+    // --------------------------------------------------------------------
+    // Remaining system actions (unchanged)
+    // --------------------------------------------------------------------
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
             Intent i = new Intent(Settings.ACTION_MEMORY_CARD_SETTINGS);

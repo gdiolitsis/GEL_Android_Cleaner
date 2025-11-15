@@ -4,9 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.Settings;
-import android.text.format Formatter;
+import android.text.format.Formatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,6 @@ public class GELCleaner {
 
         new Thread(() -> {
             try {
-
                 int i = 1;
                 while (i <= 10) {
 
@@ -44,7 +42,6 @@ public class GELCleaner {
                             Formatter.formatShortFileSize(ctx, total));
 
                     info(cb, msg);
-
                     Thread.sleep(1000);
                     i++;
                 }
@@ -119,17 +116,14 @@ public class GELCleaner {
     }
 
     // --------------------------------------------------------------------
-    // BROWSER CACHE — Only real browsers
+    // BROWSER CACHE — Only REAL browsers (universal)
     // --------------------------------------------------------------------
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
             PackageManager pm = ctx.getPackageManager();
 
-            // Known browser package names
-            String[] candidates = {
+            String[] browsers = {
                     "com.android.chrome",
-                    "com.chrome.beta",
-                    "com.chrome.dev",
                     "org.mozilla.firefox",
                     "com.opera.browser",
                     "com.microsoft.emmx",
@@ -141,7 +135,7 @@ public class GELCleaner {
 
             List<String> installed = new ArrayList<>();
 
-            for (String pkg : candidates) {
+            for (String pkg : browsers) {
                 try {
                     pm.getPackageInfo(pkg, 0);
                     installed.add(pkg);
@@ -153,7 +147,6 @@ public class GELCleaner {
                 return;
             }
 
-            // Only one browser installed → open directly
             if (installed.size() == 1) {
                 String pkg = installed.get(0);
                 Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -164,7 +157,6 @@ public class GELCleaner {
                 return;
             }
 
-            // Many browsers → open the “All Apps” list filtered
             Intent i = new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);

@@ -1,66 +1,94 @@
+package com.gel.cleaner;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.ComponentName;
+import android.os.Build;
+
 // ============================================================
-// OEM DEEP CLEANER  (FIXED FOR MIUI)
+// CleanLauncher (OEM Deep Cleaner Launcher)
 // ============================================================
-public static boolean openDeepCleaner(Context ctx) {
+public class CleanLauncher {
 
-    String brand = low(Build.BRAND);
-    String manu  = low(Build.MANUFACTURER);
+    private static String low(String s) {
+        return (s == null) ? "" : s.toLowerCase().trim();
+    }
 
-    boolean isXiaomi = brand.contains("xiaomi")
-            || brand.contains("redmi")
-            || brand.contains("poco")
-            || manu.contains("xiaomi")
-            || manu.contains("redmi")
-            || manu.contains("poco");
+    private static boolean tryComponent(Context ctx, String pkg, String cls) {
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(pkg, cls));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-    boolean isSamsung = brand.contains("samsung") || manu.contains("samsung");
-    boolean isHuawei  = brand.contains("huawei")  || manu.contains("huawei");
+    // ============================================================
+    // OEM DEEP CLEANER  (FIXED FOR MIUI)
+    // ============================================================
+    public static boolean openDeepCleaner(Context ctx) {
 
-    boolean launched = false;
+        String brand = low(Build.BRAND);
+        String manu  = low(Build.MANUFACTURER);
 
-    // ------------------------------------------------------------
-    // XIAOMI / REDMI / POCO → TRUE CLEAN PANEL (the one in your photos)
-    // ------------------------------------------------------------
-    if (isXiaomi && !launched) {
+        boolean isXiaomi = brand.contains("xiaomi")
+                || brand.contains("redmi")
+                || brand.contains("poco")
+                || manu.contains("xiaomi")
+                || manu.contains("redmi")
+                || manu.contains("poco");
 
-        // This is the real Cleanup screen (your left screenshot)
-        launched = tryComponent(ctx,
-                "com.miui.cleaner",
-                "com.miui.cleaner.MainActivity");
+        boolean isSamsung = brand.contains("samsung") || manu.contains("samsung");
+        boolean isHuawei  = brand.contains("huawei")  || manu.contains("huawei");
 
-        if (!launched)
+        boolean launched = false;
+
+        // ------------------------------------------------------------
+        // XIAOMI / REDMI / POCO → TRUE CLEAN PANEL
+        // ------------------------------------------------------------
+        if (isXiaomi && !launched) {
+
             launched = tryComponent(ctx,
-                    "com.miui.securitycenter",
-                    "com.miui.securityscan.MainActivity");
+                    "com.miui.cleaner",
+                    "com.miui.cleaner.MainActivity");
 
-        if (launched) return true;
+            if (!launched)
+                launched = tryComponent(ctx,
+                        "com.miui.securitycenter",
+                        "com.miui.securityscan.MainActivity");
+
+            if (launched) return true;
+        }
+
+        // ------------------------------------------------------------
+        // Samsung Device Care Dashboard
+        // ------------------------------------------------------------
+        if (isSamsung && !launched) {
+            launched = tryComponent(ctx,
+                    "com.samsung.android.lool",
+                    "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity");
+
+            if (!launched) launched = tryComponent(ctx,
+                    "com.samsung.android.sm",
+                    "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity");
+
+            if (launched) return true;
+        }
+
+        // ------------------------------------------------------------
+        // Huawei System Manager
+        // ------------------------------------------------------------
+        if (isHuawei && !launched) {
+            launched = tryComponent(ctx,
+                    "com.huawei.systemmanager",
+                    "com.huawei.systemmanager.mainscreen.MainScreenActivity");
+
+            if (launched) return true;
+        }
+
+        return false;
     }
-
-    // ------------------------------------------------------------
-    // Samsung Device Care Dashboard
-    // ------------------------------------------------------------
-    if (isSamsung && !launched) {
-        launched = tryComponent(ctx,
-                "com.samsung.android.lool",
-                "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity");
-
-        if (!launched) launched = tryComponent(ctx,
-                "com.samsung.android.sm",
-                "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity");
-
-        if (launched) return true;
-    }
-
-    // ------------------------------------------------------------
-    // Huawei System Manager
-    // ------------------------------------------------------------
-    if (isHuawei && !launched) {
-        launched = tryComponent(ctx,
-                "com.huawei.systemmanager",
-                "com.huawei.systemmanager.mainscreen.MainScreenActivity");
-
-        if (launched) return true;
-    }
-
-    return false;
 }

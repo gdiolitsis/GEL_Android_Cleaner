@@ -1,41 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">GEL Cleaner</string>
 
     <!-- Ενότητες UI -->
-    <string name="system">Σύστημα</string>
-    <string name="cleaner">Καθαρισμός</string>
-    <string name="junk">Σκουπίδια</string>
-    <string name="performance">Απόδοση</string>
-    <string name="logs">Καταγραφή</string>
+    <string name="system">🛠 Σύστημα</string>
+    <string name="cleaner">🧹 Καθαρισμός</string>
+    <string name="junk">🗑 Σκουπίδια</string>
+    <string name="performance">🚀 Απόδοση</string>
+    <string name="logs">📜 Καταγραφή</string>
     <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
 
-    <!-- Κουμπιά / Ενέργειες (με emoji) -->
+    <!-- Κουμπιά / Ενέργειες -->
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
-    <string name="cpu_ram_info">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ</string>
+
+    <!-- SYSTEM -->
+    <string name="cpu_ram_info">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
-    <string name="clean_ram">⚡ ΚΑΘΑΡΙΣΜΟΣ RAM</string>
-    <string name="deep_clean">💣 ΒΑΘΥΣ ΚΑΘΑΡΙΣΜΟΣ</string>
 
+    <!-- PHONE INFO (Internal / Peripherals) -->
+    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Περιφερειακά)</string>
+
+    <!-- CLEANER – μόνο 1 κουμπί πλέον -->
+    <string name="clean_all">🧹 GEL Cleaner ALL</string>
+
+    <!-- JUNK -->
     <string name="browser_cache">🌐 CACHE BROWSER</string>
-    <string name="temp_files">🔥 ΠΡΟΣΩΡΙΝΑ ΑΡΧΕΙΑ</string>
+    <string name="temp_files">🔥 Προσωρινά Αρχεία</string>
 
-    <string name="app_cache">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
-    <string name="battery_boost">🔋 ΕΝΙΣΧΥΣΗ ΜΠΑΤΑΡΙΑΣ</string>
-    <string name="kill_apps">🚀 ΤΕΡΜΑΤΙΣΜΟΣ ΕΦΑΡΜΟΓΩΝ</string>
-
-    <!-- ΝΕΑ ΚΟΥΜΠΙΑ ΠΟΥ ΘΕΛΟΥΜΕ -->
-    <string name="phone_info_internal">📱 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n    ΕΣΩΤΕΡΙΚΑ</string>
-<string name="phone_info_peripherals">📡 ΠΛΗΡ.\u00A0ΣΥΣΚΕΥΗΣ\n    ΠΕΡΙΦΕΡΕΙΑΚΑ</string>
-
-    <!-- Οθόνη λίστας εφαρμογών -->
+    <!-- APP CACHE -->
+    <string name="app_cache">🧽 Cache Εφαρμογών</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_cache_btn">🧽 CACHE ΕΦΑΡΜΟΓΩΝ</string>
+    <string name="app_cache_btn">🧽 Cache Εφαρμογών</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
-    <!-- Μηνύματα για άδειες -->
+    <!-- PERFORMANCE -->
+    <string name="battery_boost">🔋 Ενίσχυση Μπαταρίας</string>
+    <string name="kill_apps">🚀 Τερματισμός Εφαρμογών</string>
+
+    <!-- Μηνύματα Αδειών -->
     <string name="toast_storage_access">Παραχώρησε πρόσβαση στα αρχεία για να συνεχίσεις</string>
     <string name="toast_usage_access">Ενεργοποίησε την πρόσβαση στη χρήση εφαρμογών</string>
     <string name="toast_accessibility">Προαιρετικό: Ενεργοποίησε την Υπηρεσία Προσβασιμότητας για πλήρη καθαρισμό</string>
     <string name="toast_done">✅ Οι άδειες παραχωρήθηκαν</string>
+
 </resources>

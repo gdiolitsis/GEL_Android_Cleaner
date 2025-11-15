@@ -2,14 +2,14 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#000000">
+    android:background="#0A0A0A"
+    android:padding="12dp">
 
     <LinearLayout
         android:id="@+id/browserListRoot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:dividerHeight="12dp" />
+        android:paddingBottom="20dp" />
 
 </ScrollView>

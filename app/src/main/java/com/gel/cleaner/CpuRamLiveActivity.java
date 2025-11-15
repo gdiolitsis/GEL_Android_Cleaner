@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
@@ -22,21 +21,24 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
-        txtLive.setText("CPU / RAM Live Monitor started…\n");
+
+        if (txtLive != null) {
+            txtLive.setText("CPU / RAM Live Monitor started…\n");
+        }
 
         startLive();
     }
 
     private void startLive() {
-
         Thread t = new Thread(() -> {
 
             ActivityManager am =
                     (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
-            for (int i = 1; i <= 10 && running; i++) {
+            int i = 1;
+            while (running) {
 
-                double cpu = getCpuTotalAvgPercent();   // ← NEW MULTI-CORE CPU LOGIC
+                double cpu = getCpuPercent();
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
 
                 long usedMb = 0, totalMb = 0;
@@ -50,15 +52,20 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                     usedMb = totalMb - availMb;
                 }
 
-                String temp = getCpuTemp(); // CPU temperature
+                String line = "Live " + String.format("%02d", i)
+                        + " | CPU: " + cpuTxt
+                        + " | Temp: " + readCpuTemp()
+                        + " | RAM: " + usedMb + " MB / " + totalMb + " MB";
 
-                String line =
-                        "Live " + String.format("%02d", i) +
-                                " | CPU: " + cpuTxt +
-                                " | Temp: " + temp +
-                                " | RAM: " + usedMb + " MB / " + totalMb + " MB";
+                String finalLine = line;
 
-                runOnUiThread(() -> txtLive.append("\n" + line));
+                runOnUiThread(() -> {
+                    if (txtLive != null) {
+                        txtLive.append("\n" + finalLine);
+                    }
+                });
+
+                i++;
 
                 try { Thread.sleep(1000); }
                 catch (Exception ignored) {}
@@ -69,63 +76,82 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         t.start();
     }
 
-    // ======================================================================
-    // MULTI-CORE CPU PERCENT (Universal Android 10–14)
-    // ======================================================================
-    private double getCpuTotalAvgPercent() {
-
+    // -------------------------------------------------------------------
+    // REAL CPU USAGE (/proc/stat)
+    // -------------------------------------------------------------------
+    private double getCpuPercent() {
         try {
-            // Count cores
-            int cores = new File("/sys/devices/system/cpu/").listFiles((f, n) -> n.matches("cpu[0-9]+")).length;
-            if (cores <= 0) return -1;
+            long[] t1 = readCpuStat();
+            if (t1 == null) return -1;
 
-            double sum = 0;
-            int valid = 0;
+            Thread.sleep(360);
 
-            for (int c = 0; c < cores; c++) {
-                long cur = readLong("/sys/devices/system/cpu/cpu" + c + "/cpufreq/scaling_cur_freq");
-                long max = readLong("/sys/devices/system/cpu/cpu" + c + "/cpufreq/scaling_max_freq");
+            long[] t2 = readCpuStat();
+            if (t2 == null) return -1;
 
-                if (cur > 0 && max > 0) {
-                    sum += (cur * 100.0) / max;
-                    valid++;
-                }
-            }
+            long idleDiff = t2[0] - t1[0];
+            long cpuDiff  = t2[1] - t1[1];
 
-            if (valid == 0) return -1;
-            return sum / valid;
+            if (cpuDiff <= 0) return -1;
+
+            return (cpuDiff - idleDiff) * 100.0 / cpuDiff;
 
         } catch (Exception e) {
             return -1;
         }
     }
 
-    private long readLong(String path) {
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            return Long.parseLong(br.readLine().trim());
+    private long[] readCpuStat() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
+
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu ")) return null;
+
+            String[] p = line.split("\\s+");
+
+            long user = Long.parseLong(p[1]);
+            long nice = Long.parseLong(p[2]);
+            long system = Long.parseLong(p[3]);
+            long idle = Long.parseLong(p[4]);
+            long iowait = Long.parseLong(p[5]);
+            long irq = Long.parseLong(p[6]);
+            long softirq = Long.parseLong(p[7]);
+
+            long idleAll = idle + iowait;
+            long cpuAll = user + nice + system + idle + iowait + irq + softirq;
+
+            return new long[]{ idleAll, cpuAll };
+
         } catch (Exception e) {
-            return -1;
+            return null;
         }
     }
 
-    // ======================================================================
-    // CPU TEMPERATURE (if allowed by device)
-    // ======================================================================
-    private String getCpuTemp() {
-
+    // -------------------------------------------------------------------
+    // CPU TEMPERATURE (universal paths)
+    // -------------------------------------------------------------------
+    private String readCpuTemp() {
         String[] paths = new String[]{
                 "/sys/class/thermal/thermal_zone0/temp",
                 "/sys/class/thermal/thermal_zone1/temp",
-                "/sys/class/hwmon/hwmon0/temp1_input"
+                "/sys/class/thermal/thermal_zone2/temp",
+                "/sys/devices/virtual/thermal/thermal_zone0/temp"
         };
 
         for (String p : paths) {
-            long v = readLong(p);
-            if (v > 0) {
-                // Samsung/Xiaomi return e.g. 41000 → 41.0°C
-                if (v > 1000) return String.format("%.1f°C", v / 1000f);
-                else return String.format("%.1f°C", (float) v);
-            }
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(p));
+                String s = br.readLine();
+                br.close();
+
+                if (s != null) {
+                    float temp = Float.parseFloat(s);
+                    if (temp > 0) {
+                        if (temp > 1000) temp /= 1000f;
+                        return String.format("%.1f°C", temp);
+                    }
+                }
+            } catch (Exception ignored) {}
         }
 
         return "N/A";

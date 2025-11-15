@@ -3,7 +3,6 @@ package com.gel.cleaner;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,9 +15,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     private TextView txtLive;
     private volatile boolean running = true;
 
-    private long lastCpuTime = 0;
-    private long lastAppTime = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +23,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         txtLive = findViewById(R.id.txtLiveInfo);
 
         if (txtLive != null) {
-            txtLive.setText("Starting CPU / RAM live monitor...\n");
+            txtLive.setText("CPU / RAM Live Monitor started…\n");
         }
 
         startLive();
@@ -39,35 +35,31 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             ActivityManager am =
                     (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
-            // αρχική μέτρηση
-            lastCpuTime = readAppCpuTime();
-            lastAppTime = SystemClock.elapsedRealtime();
+            for (int i = 1; i <= 10 && running; i++) {
 
-            for (int i = 1; i <= 20 && running; i++) {
-
-                double cpu = getAppCpuPercent();
+                double cpu = getCpuPercent();
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
 
-                String line = "📊 Live " + String.format("%02d", i);
+                long usedMb = 0, totalMb = 0;
 
                 if (am != null) {
                     ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
                     am.getMemoryInfo(mi);
 
-                    long totalMb = mi.totalMem / (1024 * 1024);
+                    totalMb = mi.totalMem / (1024 * 1024);
                     long availMb = mi.availMem / (1024 * 1024);
-                    long usedMb  = totalMb - availMb;
-
-                    line += "  |  CPU: " + cpuTxt +
-                            "  |  RAM: " + usedMb + " MB / " + totalMb + " MB";
+                    usedMb = totalMb - availMb;
                 }
+
+                String line = "Live " + String.format("%02d", i)
+                        + " | CPU: " + cpuTxt
+                        + " | RAM: " + usedMb + " MB / " + totalMb + " MB";
 
                 String finalLine = line;
 
                 runOnUiThread(() -> {
                     if (txtLive != null) {
-                        String prev = txtLive.getText().toString();
-                        txtLive.setText(prev + "\n" + finalLine);
+                        txtLive.append("\n" + finalLine);
                     }
                 });
 
@@ -80,41 +72,55 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         t.start();
     }
 
-    // ---------------------------------------------------------
-    //      REAL CPU USAGE OF OUR APP  →  Works Everywhere
-    // ---------------------------------------------------------
-    private long readAppCpuTime() {
-        try (BufferedReader br = new BufferedReader(new FileReader("/proc/self/stat"))) {
-            String[] parts = br.readLine().split(" ");
-            long utime = Long.parseLong(parts[13]);
-            long stime = Long.parseLong(parts[14]);
-            return utime + stime;
+    // -------------------------------------------------------------------
+    // REAL CPU USAGE (universal Android method using /proc/stat)
+    // -------------------------------------------------------------------
+    private double getCpuPercent() {
+        try {
+            long[] t1 = readCpuStat();
+            if (t1 == null) return -1;
+
+            Thread.sleep(360);
+
+            long[] t2 = readCpuStat();
+            if (t2 == null) return -1;
+
+            long idleDiff = t2[0] - t1[0];
+            long cpuDiff  = t2[1] - t1[1];
+
+            if (cpuDiff <= 0) return -1;
+
+            return (cpuDiff - idleDiff) * 100.0 / cpuDiff;
+
         } catch (Exception e) {
             return -1;
         }
     }
 
-    private double getAppCpuPercent() {
-        long cpuNow = readAppCpuTime();
-        long timeNow = SystemClock.elapsedRealtime();
+    private long[] readCpuStat() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
 
-        if (cpuNow < 0) return -1;
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu ")) return null;
 
-        long cpuDiff = cpuNow - lastCpuTime;
-        long timeDiff = timeNow - lastAppTime;
+            String[] parts = line.split("\\s+");
 
-        lastCpuTime = cpuNow;
-        lastAppTime = timeNow;
+            long user = Long.parseLong(parts[1]);
+            long nice = Long.parseLong(parts[2]);
+            long system = Long.parseLong(parts[3]);
+            long idle = Long.parseLong(parts[4]);
+            long iowait = Long.parseLong(parts[5]);
+            long irq = Long.parseLong(parts[6]);
+            long softirq = Long.parseLong(parts[7]);
 
-        if (timeDiff == 0) return 0;
+            long idleAll = idle + iowait;
+            long cpuAll = user + nice + system + idle + iowait + irq + softirq;
 
-        // 1 tick = 10ms συνήθως (100Hz kernel)
-        double cpuPercent = (cpuDiff * 10.0) / timeDiff * 100.0;
+            return new long[]{ idleAll, cpuAll };
 
-        if (cpuPercent < 0) cpuPercent = 0;
-        if (cpuPercent > 100) cpuPercent = 100;
-
-        return cpuPercent;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

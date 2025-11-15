@@ -3,22 +3,26 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="60dp"
-    android:padding="10dp"
+    android:padding="12dp"
     android:gravity="center_vertical"
-    android:background="#111"
-    android:layout_marginBottom="8dp">
+    android:background="#0D0D0D"
+    android:layout_marginBottom="10dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <ImageView
         android:id="@+id/iconBrowser"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginRight="16dp"/>
+        android:layout_marginEnd="16dp" />
 
     <TextView
         android:id="@+id/txtBrowserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#fff"
-        android:textSize="18sp"/>
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
 
 </LinearLayout>

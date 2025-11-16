@@ -111,9 +111,11 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // PERFORMANCE DIAGNOSTICS — 20 LABS
+        // =====================================================
+        // 🟦 GEL DIAGNOSIS BUTTON FIXED (FULL MENU RESTORED)
+        // =====================================================
         bind(R.id.btnDiagnostics,
-                () -> startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
+                () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
     }
 
     private void bind(int id, Runnable fn) {

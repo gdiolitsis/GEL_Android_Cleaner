@@ -17,6 +17,7 @@ import android.os.HardwarePropertiesManager;
 import android.os.Looper;
 import android.os.SELinux;
 import android.os.StatFs;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -35,6 +36,10 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Locale;
 
+// ============================================================
+// GEL Phone Diagnosis — Service Lab
+// Αυτόματη διάγνωση + extra root diagnostics όταν υπάρχει root
+// ============================================================
 public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     private TextView txtDiag;
@@ -58,7 +63,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         ui = new Handler(Looper.getMainLooper());
 
-        // Νέος πελάτης → καθάρισμα προηγούμενου Service Log
+        // Νέος πελάτης → καθαρίζουμε το service log
         GELServiceLog.clear();
 
         logTitle("🔬 GEL Phone Diagnosis — Service Lab");
@@ -70,7 +75,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * HTML + NEW GEL LOGGING (καθρέφτης στο Service Log)
+     * HTML + MIRROR ΣΕ GELServiceLog
      * ============================================================ */
     private void appendHtml(String html) {
         ui.post(() -> {
@@ -123,25 +128,33 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * MAIN DIAG (με αυτόματο root-aware flow)
+     * MAIN DIAG FLOW
      * ============================================================ */
     private void runFullDiagnosis() {
         new Thread(() -> {
 
-            labHardware();
+            // ---------- LAB 0 — ROOT STATUS & EXTRA CHECKS ----------
+            logSection("LAB 0 — Root / System Integrity");
 
-            // LAB 0 — Root status & extra διαγνώσεις
-            boolean rooted = isDeviceRooted();
+            boolean rooted = isDeviceRootedBasic();
             if (rooted) {
-                logSection("LAB 0 — Root Status / Security (PRO)");
-                logWarn("Η συσκευή φαίνεται ROOTED — ενεργοποίηση επιπλέον ελέγχων.");
-                labRootAdvanced();
+                logError("Η συσκευή φαίνεται ROOTED — μειωμένη ασφάλεια / πιθανό tampering.");
             } else {
-                logSection("LAB 0 — Root Status (SAFE)");
-                logOk("Η συσκευή δεν φαίνεται rooted με τους γνωστούς ελέγχους.");
-                labRootBasic();
+                logOk("Δεν εντοπίζω εμφανή root (ή είναι καλά κρυμμένο).");
             }
 
+            // Λεπτομερής root ανάλυση μόνο αν φαίνεται rooted
+            if (rooted) {
+                labRootOverview();
+                labRootSecurityFlags();
+                labRootDangerousProps();
+                labRootMounts();
+            }
+
+            logLine();
+
+            // ---------- Κλασικά LABS (1–10) για ΟΛΕΣ τις συσκευές ----------
+            labHardware();
             labCpuRam();
             labStorage();
             labBattery();
@@ -153,46 +166,33 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             labSystemHealth();
 
             logLine();
-            logOk("Διάγνωση ολοκληρώθηκε. Τα ❌ είναι οι βλάβες / σοβαρά προβλήματα.");
+            logOk("Διάγνωση ολοκληρώθηκε. Τα ❌ είναι οι βλάβες / σοβαρές ανωμαλίες.");
 
         }).start();
     }
 
     /* ============================================================
-     * ROOT DETECTION CORE
+     * ROOT DETECTION (BASIC) — Χωρίς βαριά su tests
      * ============================================================ */
-    private boolean isDeviceRooted() {
-        return checkRootBuildTags() || checkRootPaths() || checkSuCommand();
+    // Γρήγορο root check για να αποφασίσουμε αν θα τρέξουμε τα extra labs
+    private boolean isDeviceRootedBasic() {
+        return hasTestKeys() || hasSuBinary();
     }
 
-    private boolean checkRootBuildTags() {
-        try {
-            String tags = Build.TAGS;
-            return tags != null && tags.contains("test-keys");
-        } catch (Exception ignored) {
-            return false;
-        }
+    private boolean hasTestKeys() {
+        String tags = Build.TAGS;
+        return tags != null && tags.contains("test-keys");
     }
 
-    private boolean checkRootPaths() {
-        String[] paths = new String[] {
-                "/system/bin/su",
-                "/system/xbin/su",
-                "/sbin/su",
-                "/system/bin/.ext/.su",
-                "/system/app/Superuser.apk",
-                "/system/app/SuperSU.apk",
-                "/system/xbin/daemonsu",
-                "/system/xbin/busybox",
-                "/su/bin/su",
-                "/magisk/.core/bin/su",
-                "/data/adb/magisk.db",
-                "/data/adb/magisk",
-                "/data/adb/modules"
+    private boolean hasSuBinary() {
+        String[] paths = new String[]{
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/app/Superuser.apk", "/system/app/Magisk.apk",
+                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
         };
         try {
-            for (String path : paths) {
-                if (new File(path).exists()) {
+            for (String p : paths) {
+                if (new File(p).exists()) {
                     return true;
                 }
             }
@@ -200,78 +200,180 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         return false;
     }
 
-    private boolean checkSuCommand() {
-        Process p = null;
-        BufferedReader in = null;
-        try {
-            p = Runtime.getRuntime().exec(new String[]{"/system/xbin/which", "su"});
-            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = in.readLine();
-            return (line != null);
-        } catch (Exception ignored) {
-            return false;
-        } finally {
+    /* ============================================================
+     * ROOT LABS — ΤΡΕΧΟΥΝ ΜΟΝΟ ΑΝ ΦΑΙΝΕΤΑΙ ROOT
+     * ============================================================ */
+
+    // LAB 0.1 — Συνοπτική εικόνα root + su test
+    private void labRootOverview() {
+        logInfo("Root overview: basic indicators και su test.");
+
+        // 1) Build tags
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            logWarn("Build tags: test-keys — συνήθως custom / rooted ROM.");
+        } else {
+            logInfo("Build tags: " + tags);
+        }
+
+        // 2) su binary paths
+        String[] paths = new String[]{
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
+        };
+        boolean anySu = false;
+        for (String p : paths) {
             try {
-                if (in != null) in.close();
+                if (new File(p).exists()) {
+                    logWarn("Βρέθηκε su binary: " + p);
+                    anySu = true;
+                }
             } catch (Exception ignored) {}
-            if (p != null) p.destroy();
+        }
+        if (!anySu) {
+            logInfo("Δεν εντοπίστηκε su binary στα κλασικά paths (μπορεί να είναι κρυμμένο).");
+        }
+
+        // 3) su -c id test (αν απαντήσει uid=0 → root OK)
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String out = r.readLine();
+            try { p.destroy(); } catch (Exception ignored) {}
+
+            if (out != null && out.contains("uid=0")) {
+                logError("su test: επιστροφή uid=0 — πλήρης root πρόσβαση διαθέσιμη.");
+            } else if (out != null) {
+                logWarn("su test: απάντηση χωρίς uid=0 → περιορισμένο / προβληματικό root: " + out);
+            } else {
+                logWarn("su test: καμία απάντηση (ίσως Magisk hide ή μπλοκάρισμα).");
+            }
+        } catch (Exception e) {
+            logWarn("su test πέταξε exception (ίσως app δεν έχει root permission): " + e.getMessage());
         }
     }
 
-    /* ============================================================
-     * LAB 0 — ROOT BASIC / ADVANCED
-     * ============================================================ */
-    private void labRootBasic() {
-        logInfo("Safe mode diagnostics — καμία ένδειξη root με τους βασικούς ελέγχους.");
-    }
+    // LAB 0.2 — SELinux / Debuggable / ADB
+    private void labRootSecurityFlags() {
+        logSection("LAB 0.2 — Security / SELinux / Debug");
 
-    private void labRootAdvanced() {
-        logInfo("Εντοπίστηκαν ενδείξεις root (build tags / su / root paths).");
-
-        // Έλεγχος κλασικών root components
-        checkRootFile("/system/app/Superuser.apk", "Superuser.apk");
-        checkRootFile("/system/app/SuperSU.apk", "SuperSU.apk");
-        checkRootFile("/system/xbin/daemonsu", "daemonsu binary");
-        checkRootFile("/system/xbin/busybox", "busybox binary");
-        checkRootFile("/su/bin/su", "su binary (/su)");
-        checkRootFile("/data/adb/magisk.db", "Magisk database");
-        checkRootFile("/data/adb/magisk", "Magisk core");
-        checkRootFile("/data/adb/modules", "Magisk modules folder");
-
-        // SELinux state (όπου υποστηρίζεται)
+        // SELinux status
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                boolean enforced = SELinux.isSELinuxEnforced();
-                if (!enforced) {
-                    logWarn("SELinux σε PERMISSIVE — χαμηλή ασφάλεια συστήματος.");
-                } else {
-                    logOk("SELinux Enforced.");
-                }
+            boolean enabled = SELinux.isSELinuxEnabled();
+            boolean enforced = SELinux.isSELinuxEnforced();
+            logInfo("SELinux enabled: " + enabled + " | enforced: " + enforced);
+
+            if (!enabled) {
+                logError("SELinux: απενεργοποιημένο — πολύ χαμηλή ασφάλεια συστήματος.");
+            } else if (!enforced) {
+                logWarn("SELinux: PERMISSIVE — χαλαρή πολιτική, πιθανές παρακάμψεις ασφαλείας.");
             } else {
-                logWarn("SELinux state δεν είναι διαθέσιμο σε αυτή την έκδοση Android.");
+                logOk("SELinux: ENFORCING — τουλάχιστον σε κανονικό επίπεδο.");
             }
         } catch (Throwable t) {
-            logWarn("Δεν ήταν δυνατή η ανάγνωση SELinux state: " + t.getMessage());
+            logWarn("Δεν μπόρεσα να διαβάσω με ασφάλεια το SELinux status: " + t.getMessage());
         }
 
-        // Απλό "Bootloader / custom" hint (όσο γίνεται από εδώ)
+        // Debuggable flag / ADB / Developer options
         try {
-            String bootloader = Build.BOOTLOADER;
-            if (bootloader != null && !"unknown".equalsIgnoreCase(bootloader)) {
-                logInfo("Bootloader string: " + bootloader);
-            }
-        } catch (Exception ignored) {}
+            int adb = Settings.Global.getInt(getContentResolver(), Settings.Global.ADB_ENABLED, 0);
+            int dev = Settings.Global.getInt(getContentResolver(), Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0);
 
-        logLine();
+            logInfo("ADB Enabled: " + (adb == 1 ? "YES" : "NO"));
+            logInfo("Developer Options: " + (dev == 1 ? "ON" : "OFF"));
+
+            if (adb == 1) {
+                logWarn("ADB είναι ενεργό — σε rooted συσκευή αυξάνει πολύ τον κίνδυνο.");
+            }
+        } catch (Throwable t) {
+            logWarn("Δεν μπόρεσα να διαβάσω ADB/Dev flags (πιθανό permission θέμα).");
+        }
     }
 
-    private void checkRootFile(String path, String label) {
+    // LAB 0.3 — Dangerous system properties / CTS-like flags
+    private void labRootDangerousProps() {
+        logSection("LAB 0.3 — Dangerous System Properties");
+
+        checkProp("ro.debuggable", "1", "ro.debuggable=1 — build σε debug mode (μη ασφαλές).");
+        checkProp("ro.secure", "0", "ro.secure=0 — πολύ χαλαρή ασφάλεια system.");
+        checkProp("ro.boot.verifiedbootstate", "orange", "Verified Boot: ORANGE — μη έμπιστο boot.");
+        checkProp("ro.boot.verifiedbootstate", "red", "Verified Boot: RED — σοβαρό πρόβλημα εμπιστοσύνης.");
+    }
+
+    private void checkProp(String key, String badValue, String badMsg) {
+        String val = readProp(key);
+        if (val == null) {
+            logInfo("prop " + key + " = [N/A]");
+            return;
+        }
+        logInfo("prop " + key + " = " + val);
+        if (val.trim().equalsIgnoreCase(badValue)) {
+            logError(badMsg);
+        }
+    }
+
+    private String readProp(String key) {
+        BufferedReader r = null;
         try {
-            File f = new File(path);
-            if (f.exists()) {
-                logWarn("Root component εντοπίστηκε: " + label + " (" + path + ")");
+            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+            r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = r.readLine();
+            try { p.destroy(); } catch (Exception ignored) {}
+            return line;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            try {
+                if (r != null) r.close();
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // LAB 0.4 — Mounts / System RW check (best effort)
+    private void labRootMounts() {
+        logSection("LAB 0.4 — Filesystem / Mounts");
+
+        BufferedReader r = null;
+        try {
+            // Προσπαθούμε με su -c mount, αλλιώς απλό mount
+            Process p;
+            try {
+                p = Runtime.getRuntime().exec(new String[]{"su", "-c", "mount"});
+            } catch (Exception e1) {
+                p = Runtime.getRuntime().exec("mount");
             }
-        } catch (Exception ignored) {}
+
+            r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            boolean systemRW = false;
+            boolean vendorRW = false;
+
+            while ((line = r.readLine()) != null) {
+                String lower = line.toLowerCase(Locale.US);
+                if (lower.contains(" /system ") && lower.contains("(rw,")) {
+                    systemRW = true;
+                }
+                if (lower.contains(" /vendor ") && lower.contains("(rw,")) {
+                    vendorRW = true;
+                }
+            }
+            try { p.destroy(); } catch (Exception ignored) {}
+
+            if (systemRW) {
+                logError("/system είναι mounted RW — εύκολη αλλοίωση system αρχείων.");
+            } else {
+                logOk("/system δεν φαίνεται RW από το mount output.");
+            }
+
+            if (vendorRW) {
+                logWarn("/vendor είναι RW — πιθανή αλλοίωση vendor partition.");
+            }
+
+        } catch (Exception e) {
+            logWarn("Δεν μπόρεσα να αναλύσω τα mounts (ίσως root app περιορισμένο): " + e.getMessage());
+        } finally {
+            try { if (r != null) r.close(); } catch (Exception ignored) {}
+        }
     }
 
     /* ============================================================
@@ -289,13 +391,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         int api = Build.VERSION.SDK_INT;
         logInfo("Android: " + Build.VERSION.RELEASE + " (API " + api + ")");
 
-        if (api < 26) {
-            logError("Android < 8 — σοβαρές ελλείψεις ασφαλείας.");
-        } else if (api < 30) {
-            logWarn("Android < 11 — ίσως χωρίς σύγχρονα security patches.");
-        } else {
-            logOk("OS level OK για σύγχρονη χρήση.");
-        }
+        if (api < 26) logError("Android < 8 — σοβαρές ελλείψεις ασφαλείας.");
+        else if (api < 30) logWarn("Android < 11 — ίσως χωρίς σύγχρονα patches.");
+        else logOk("OS level OK.");
 
         logLine();
     }
@@ -309,22 +407,15 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         int cores = Runtime.getRuntime().availableProcessors();
         logInfo("CPU Cores: " + cores);
 
-        if (cores <= 4) {
-            logWarn("Λίγοι CPU πυρήνες — πιθανές καθυστερήσεις σε βαριά χρήση.");
-        } else {
-            logOk("CPU cores OK.");
-        }
+        if (cores <= 4) logWarn("Λίγοι CPU πυρήνες — πιθανές καθυστερήσεις.");
+        else logOk("CPU cores OK.");
 
         long totalMem = getTotalRam();
         logInfo("Συνολική RAM: " + readable(totalMem));
 
-        if (totalMem < gb(2)) {
-            logError("RAM < 2GB — συνεχόμενα κολλήματα σε απλή χρήση.");
-        } else if (totalMem < gb(4)) {
-            logWarn("RAM 2–4GB — οριακή για βαριές εφαρμογές.");
-        } else {
-            logOk("RAM capacity OK.");
-        }
+        if (totalMem < gb(2)) logError("RAM < 2GB — συνεχόμενα κολλήματα.");
+        else if (totalMem < gb(4)) logWarn("RAM 2–4GB — οριακή.");
+        else logOk("RAM OK.");
 
         logLine();
     }
@@ -357,13 +448,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Χώρος: " + readable(free) + " / " + readable(total) + " (" + pct + "% free)");
 
-            if (pct < 10) {
-                logError("Storage < 10% — υψηλός κίνδυνος κολλημάτων / crashes.");
-            } else if (pct < 20) {
-                logWarn("Storage < 20% — προτείνεται καθάρισμα.");
-            } else {
-                logOk("Storage σε καλά επίπεδα.");
-            }
+            if (pct < 10) logError("Storage < 10% — κολλήματα.");
+            else if (pct < 20) logWarn("Storage < 20% — προτείνεται καθάρισμα.");
+            else logOk("Storage OK.");
 
         } catch (Exception e) {
             logError("Storage error: " + e.getMessage());
@@ -381,8 +468,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         try {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (i == null) {
-                logError("Δεν μπορώ να διαβάσω μπαταρία (ACTION_BATTERY_CHANGED=null).");
-                logLine();
+                logError("Δεν μπορώ να διαβάσω μπαταρία.");
                 return;
             }
 
@@ -397,20 +483,16 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             logInfo(String.format(Locale.US, "Battery: %.1f%%", pct));
             logInfo(String.format(Locale.US, "Temp: %.1f°C", temp));
 
-            if (temp > 45) {
-                logError("Πολύ υψηλή θερμοκρασία μπαταρίας — πιθανή βλάβη / φορτιστής.");
-            } else if (temp > 38) {
-                logWarn("Ζεστή μπαταρία (>38°C) — έντονη χρήση ή θερμικό θέμα.");
-            }
+            if (temp > 45) logError("Πολύ υψηλή θερμοκρασία μπαταρίας.");
+            else if (temp > 38) logWarn("Ζεστή μπαταρία.");
 
             if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
-                    health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE) {
-                logError("Μπαταρία κατεστραμμένη — προτείνεται άμεση αντικατάσταση.");
-            } else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT) {
-                logError("Υπερθέρμανση μπαταρίας (Android flag)!");
-            } else {
-                logOk("Battery health OK (σύμφωνα με Android).");
-            }
+                    health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE)
+                logError("Μπαταρία κατεστραμμένη.");
+            else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT)
+                logError("Υπερθέρμανση μπαταρίας!");
+            else
+                logOk("Battery OK.");
 
         } catch (Exception e) {
             logError("Battery error: " + e.getMessage());
@@ -427,11 +509,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) {
-                logError("ConnectivityManager λείπει — πιθανό σοβαρό σφάλμα συστήματος.");
-                logLine();
-                return;
-            }
 
             boolean online = false;
             boolean wifi = false;
@@ -454,11 +531,10 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 }
             }
 
-            if (!online) {
-                logError("Καμία ενεργή σύνδεση Internet αυτή τη στιγμή.");
-            } else {
+            if (!online) logError("Καμία σύνδεση Internet.");
+            else {
                 if (wifi) logOk("WiFi ενεργό.");
-                if (mobile) logOk("Mobile Data ενεργά.");
+                if (mobile) logOk("Mobile Data ενεργό.");
             }
 
         } catch (Exception e) {
@@ -479,7 +555,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                     (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
             if (wm == null || !wm.isWifiEnabled()) {
-                logWarn("WiFi κλειστό ή μη διαθέσιμο.");
+                logWarn("WiFi κλειστό.");
                 logLine();
                 return;
             }
@@ -487,13 +563,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int rssi = wm.getConnectionInfo().getRssi();
             logInfo("WiFi RSSI: " + rssi + " dBm");
 
-            if (rssi > -60) {
-                logOk("Πολύ καλή λήψη WiFi.");
-            } else if (rssi > -75) {
-                logWarn("Μέτρια λήψη WiFi (πιθανά disconnects).");
-            } else {
-                logError("Κακή λήψη WiFi (< -75 dBm).");
-            }
+            if (rssi > -60) logOk("Πολύ καλή λήψη.");
+            else if (rssi > -75) logWarn("Μέτρια λήψη.");
+            else logError("Κακή λήψη.");
 
         } catch (Exception e) {
             logError("WiFi error: " + e.getMessage());
@@ -510,14 +582,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         try {
             SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            if (sm == null) {
-                logError("SensorManager λείπει — πιθανό πρόβλημα framework.");
-                logLine();
-                return;
-            }
 
             List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-            logInfo("Σύνολο αισθητήρων: " + (all == null ? 0 : all.size()));
+            logInfo("Σύνολο: " + (all == null ? 0 : all.size()));
 
             checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
             checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
@@ -536,11 +603,10 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         boolean ok = sm.getDefaultSensor(type) != null;
 
         if (!ok) {
-            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_PROXIMITY) {
-                logError(name + " λείπει — πιθανή βλάβη / ελλιπής πλακέτα.");
-            } else {
-                logWarn(name + " δεν υπάρχει σε αυτή τη συσκευή.");
-            }
+            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_PROXIMITY)
+                logError(name + " λείπει — πιθανή βλάβη.");
+            else
+                logWarn(name + " δεν υπάρχει.");
         } else {
             logOk(name + " OK.");
         }
@@ -557,11 +623,8 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (Build.VERSION.SDK_INT >= 30) {
                 Display disp = getDisplay();
-                if (disp != null) {
-                    disp.getRealMetrics(dm);
-                } else {
-                    getWindowManager().getDefaultDisplay().getMetrics(dm);
-                }
+                if (disp != null) disp.getRealMetrics(dm);
+                else getWindowManager().getDefaultDisplay().getMetrics(dm);
             } else {
                 getWindowManager().getDefaultDisplay().getMetrics(dm);
             }
@@ -571,11 +634,10 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Resolution: " + w + " × " + h);
 
-            if (Math.min(w, h) < 720) {
-                logWarn("Χαμηλή ανάλυση οθόνης — πιθανή «θολή» εμπειρία.");
-            } else {
-                logOk("Display ανάλυση OK.");
-            }
+            if (Math.min(w, h) < 720)
+                logWarn("Χαμηλή ανάλυση.");
+            else
+                logOk("Display OK.");
 
         } catch (Exception e) {
             logError("Display error: " + e.getMessage());
@@ -604,18 +666,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                         float t = temps[0];
                         logInfo("CPU Temp: " + t + "°C");
 
-                        if (t > 80) {
-                            logError("Πολύ υψηλή θερμοκρασία CPU (>80°C) — πιθανή βλάβη ψύξης / SoC.");
-                        } else if (t > 70) {
-                            logWarn("Υψηλή θερμοκρασία CPU (70–80°C) — throttling / κολλήματα.");
-                        } else {
-                            logOk("CPU θερμοκρασία εντός φυσιολογικών ορίων.");
-                        }
+                        if (t > 80) logError("Πολύ υψηλή θερμοκρασία CPU.");
+                        else if (t > 70) logWarn("CPU ζεστό.");
+                        else logOk("CPU OK.");
                     } else {
-                        logWarn("Δεν δόθηκαν CPU θερμοκρασίες από το σύστημα.");
+                        logWarn("Δεν δόθηκαν θερμοκρασίες.");
                     }
                 } else {
-                    logWarn("HardwarePropertiesManager όχι διαθέσιμο — περιορισμένη thermal διάγνωση.");
+                    logWarn("HardwarePropertiesManager όχι διαθέσιμο.");
                 }
 
             } catch (Exception e) {
@@ -623,7 +681,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             }
 
         } else {
-            logWarn("Thermal API δεν υποστηρίζεται (API < 29).");
+            logWarn("Thermal API δεν υπάρχει (API < 29).");
         }
 
         logLine();
@@ -633,19 +691,16 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 10 — SYSTEM HEALTH
      * ============================================================ */
     private void labSystemHealth() {
-        logSection("LAB 10 — System Health / Telephony");
+        logSection("LAB 10 — System Health");
 
         try {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
             if (tm != null) {
-                String net = tm.getNetworkOperatorName();
-                String sim = tm.getSimOperatorName();
-
-                logInfo("Network operator: " + (net == null ? "N/A" : net));
-                logInfo("SIM operator: " + (sim == null ? "N/A" : sim));
+                logInfo("Network operator: " + tm.getNetworkOperatorName());
+                logInfo("SIM operator: " + tm.getSimOperatorName());
             } else {
-                logWarn("TelephonyManager δεν υπάρχει (ίσως WiFi-only συσκευή).");
+                logWarn("TelephonyManager δεν υπάρχει.");
             }
 
         } catch (Exception e) {
@@ -659,17 +714,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             long avail = mi.availMem;
             long total = mi.totalMem;
+
             int pct = (int) ((avail * 100L) / total);
 
             logInfo("Live RAM: " + readable(avail) + " (" + pct + "% free)");
 
-            if (pct < 10) {
-                logError("Πολύ χαμηλή διαθέσιμη RAM (<10%) — σχεδόν σίγουρα κολλήματα.");
-            } else if (pct < 20) {
-                logWarn("Χαμηλή διαθέσιμη RAM (<20%) — προτείνεται restart / κλείσιμο apps.");
-            } else {
-                logOk("RAM live status OK.");
-            }
+            if (pct < 10) logError("Πολύ χαμηλή RAM.");
+            else if (pct < 20) logWarn("Χαμηλή RAM.");
+            else logOk("RAM OK.");
 
         } catch (Exception e) {
             logError("RAM error: " + e.getMessage());

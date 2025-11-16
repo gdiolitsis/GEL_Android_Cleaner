@@ -1,39 +1,37 @@
 package com.gel.cleaner;
 
-import java.util.ArrayList;
-import java.util.List;
-
+// ============================================================
+// GELServiceLog
+// Κεντρικό "μαύρο κουτί" για Service Lab / Reports
+// ============================================================
 public class GELServiceLog {
 
-    private static final List<String> logs = new ArrayList<>();
+    private static final StringBuilder LOG = new StringBuilder();
 
-    public static void add(String txt) {
-        logs.add("ℹ️  " + txt);
+    // Προσθήκη απλής γραμμής
+    public static synchronized void addLine(String line) {
+        if (line == null) return;
+        LOG.append(line).append("\n");
     }
 
-    public static void addOK(String txt) {
-        logs.add("✅  " + txt);
+    // Βοηθητικά με icons (όπως στο UI)
+    public static void info(String msg)  { addLine("ℹ️ " + msg); }
+    public static void ok(String msg)    { addLine("✅ " + msg); }
+    public static void warn(String msg)  { addLine("⚠️ " + msg); }
+    public static void error(String msg) { addLine("❌ " + msg); }
+
+    // Παίρνουμε όλο το log (για export)
+    public static synchronized String getAll() {
+        return LOG.toString();
     }
 
-    public static void addWarn(String txt) {
-        logs.add("⚠️  " + txt);
+    // Καθάρισμα log για επόμενο πελάτη
+    public static synchronized void clear() {
+        LOG.setLength(0);
     }
 
-    public static void addError(String txt) {
-        logs.add("❌  " + txt);
-    }
-
-    public static List<String> getAll() {
-        return new ArrayList<>(logs);
-    }
-
-    public static String getAsString() {
-        StringBuilder sb = new StringBuilder();
-        for (String s : logs) sb.append(s).append("\n");
-        return sb.toString();
-    }
-
-    public static void clear() {
-        logs.clear();
+    // Γρήγορος έλεγχος αν έχουμε δεδομένα
+    public static synchronized boolean isEmpty() {
+        return LOG.length() == 0;
     }
 }

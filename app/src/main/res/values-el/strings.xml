@@ -22,22 +22,18 @@
     <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Εσωτερικά)</string>
     <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Περιφερειακά)</string>
 
-    <!-- CLEANER – μόνο 1 κουμπί πλέον -->
+    <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 CACHE BROWSER</string>
-    <string name="temp_files">🔥 Προσωρινά Αρχεία</string>
-
-    <!-- APP CACHE -->
+    <string name="browser_cache">🌐 Cache Browser</string>
     <string name="app_cache">🧽 Cache Εφαρμογών</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
     <string name="app_cache_btn">🧽 Cache Εφαρμογών</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
-    <!-- PERFORMANCE -->
-    <string name="battery_boost">🔋 Ενίσχυση Μπαταρίας</string>
-    <string name="kill_apps">🚀 Τερματισμός Εφαρμογών</string>
+    <!-- PERFORMANCE (μόνο 1 κουμπί πλέον) -->
+    <string name="diagnostics">🩺 GEL Διάγνωση Συσκευής</string>
 
     <!-- Μηνύματα Αδειών -->
     <string name="toast_storage_access">Παραχώρησε πρόσβαση στα αρχεία για να συνεχίσεις</string>

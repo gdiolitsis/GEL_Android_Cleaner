@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HardwarePropertiesManager;
 import android.os.Looper;
@@ -54,6 +55,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         ui = new Handler(Looper.getMainLooper());
 
+        // Καθαρίζουμε το Service Log για νέο πελάτη
         GELServiceLog.clear();
 
         logTitle("🔬 GEL Phone Diagnosis — Service Lab");
@@ -123,6 +125,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     private void runFullDiagnosis() {
         new Thread(() -> {
 
+            // LAB 0 — Root / Integrity πρέπει να τρέχει πρώτο
+            labRootStatus();
+
             labHardware();
             labCpuRam();
             labStorage();
@@ -141,6 +146,60 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
+     * LAB 0 — ROOT / INTEGRITY
+     * ============================================================ */
+    private void labRootStatus() {
+        logSection("LAB 0 — Root / Integrity");
+
+        boolean rooted = isDeviceRooted();
+
+        if (rooted) {
+            logWarn("Η συσκευή φαίνεται ROOTED (εντοπίστηκαν ενδείξεις su / test-keys).");
+            logInfo("• Πιθανός προηγμένος χρήστης ή επέμβαση σε σύστημα.");
+            logInfo("• Για τραπεζικές / ευαίσθητες εφαρμογές ενημέρωσε τον πελάτη.");
+        } else {
+            logOk("Η συσκευή φαίνεται UNROOTED (κανονική, χωρίς ενδείξεις root).");
+            logInfo("• Κατάλληλη για Google Play, banking, security-sensitive apps.");
+        }
+
+        logLine();
+    }
+
+    /**
+     * Απλός root detection χωρίς επικίνδυνες ενέργειες.
+     * Δεν κάνει root, δεν αλλάζει κάτι — μόνο ανίχνευση.
+     */
+    private boolean isDeviceRooted() {
+        // 1) Build tags
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            return true;
+        }
+
+        // 2) Κλασικές διαδρομές για su / Superuser
+        String[] paths = {
+                "/system/app/Superuser.apk",
+                "/system/xbin/su",
+                "/system/bin/su",
+                "/sbin/su",
+                "/system/su",
+                "/system/bin/failsafe/su",
+                "/su/bin/su"
+        };
+
+        for (String path : paths) {
+            try {
+                if (new File(path).exists()) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        return false;
+    }
+
+    /* ============================================================
      * LAB 1 — HARDWARE / OS
      * ============================================================ */
     private void labHardware() {
@@ -154,9 +213,15 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         int api = Build.VERSION.SDK_INT;
 
-        if (api < 26) logError("Android < 8 — σοβαρές ελλείψεις ασφαλείας.");
-        else if (api < 30) logWarn("Android < 11 — ίσως χωρίς σύγχρονα patches.");
-        else logOk("OS level OK.");
+        logInfo("Android: " + Build.VERSION.RELEASE + " (API " + api + ")");
+
+        if (api < 26) {
+            logError("Android < 8 — σοβαρές ελλείψεις ασφαλείας.");
+        } else if (api < 30) {
+            logWarn("Android < 11 — ίσως χωρίς σύγχρονα patches.");
+        } else {
+            logOk("OS level OK.");
+        }
 
         logLine();
     }
@@ -170,15 +235,22 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         int cores = Runtime.getRuntime().availableProcessors();
         logInfo("CPU Cores: " + cores);
 
-        if (cores <= 4) logWarn("Λίγοι CPU πυρήνες — πιθανές καθυστερήσεις.");
-        else logOk("CPU cores OK.");
+        if (cores <= 4) {
+            logWarn("Λίγοι CPU πυρήνες — πιθανές καθυστερήσεις.");
+        } else {
+            logOk("CPU cores OK.");
+        }
 
         long totalMem = getTotalRam();
         logInfo("Συνολική RAM: " + readable(totalMem));
 
-        if (totalMem < gb(2)) logError("RAM < 2GB — συνεχόμενα κολλήματα.");
-        else if (totalMem < gb(4)) logWarn("RAM 2–4GB — οριακή.");
-        else logOk("RAM OK.");
+        if (totalMem < gb(2)) {
+            logError("RAM < 2GB — συνεχόμενα κολλήματα.");
+        } else if (totalMem < gb(4)) {
+            logWarn("RAM 2–4GB — οριακή.");
+        } else {
+            logOk("RAM OK.");
+        }
 
         logLine();
     }
@@ -211,9 +283,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Χώρος: " + readable(free) + " / " + readable(total) + " (" + pct + "% free)");
 
-            if (pct < 10) logError("Storage < 10% — κολλήματα.");
-            else if (pct < 20) logWarn("Storage < 20% — προτείνεται καθάρισμα.");
-            else logOk("Storage OK.");
+            if (pct < 10) {
+                logError("Storage < 10% — κολλήματα.");
+            } else if (pct < 20) {
+                logWarn("Storage < 20% — προτείνεται καθάρισμα.");
+            } else {
+                logOk("Storage OK.");
+            }
 
         } catch (Exception e) {
             logError("Storage error: " + e.getMessage());
@@ -232,6 +308,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (i == null) {
                 logError("Δεν μπορώ να διαβάσω μπαταρία.");
+                logLine();
                 return;
             }
 
@@ -247,16 +324,20 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             logInfo(String.format(Locale.US, "Battery: %.1f%%", pct));
             logInfo(String.format(Locale.US, "Temp: %.1f°C", temp));
 
-            if (temp > 45) logError("Πολύ υψηλή θερμοκρασία μπαταρίας.");
-            else if (temp > 38) logWarn("Ζεστή μπαταρία.");
+            if (temp > 45) {
+                logError("Πολύ υψηλή θερμοκρασία μπαταρίας.");
+            } else if (temp > 38) {
+                logWarn("Ζεστή μπαταρία.");
+            }
 
             if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
-                health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE)
+                    health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE) {
                 logError("Μπαταρία κατεστραμμένη.");
-            else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT)
+            } else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT) {
                 logError("Υπερθέρμανση μπαταρίας!");
-            else
+            } else {
                 logOk("Battery OK.");
+            }
 
         } catch (Exception e) {
             logError("Battery error: " + e.getMessage());
@@ -295,8 +376,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 }
             }
 
-            if (!online) logError("Καμία σύνδεση Internet.");
-            else {
+            if (!online) {
+                logError("Καμία σύνδεση Internet.");
+            } else {
                 if (wifi) logOk("WiFi ενεργό.");
                 if (mobile) logOk("Mobile Data ενεργό.");
             }
@@ -327,9 +409,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int rssi = wm.getConnectionInfo().getRssi();
             logInfo("WiFi RSSI: " + rssi + " dBm");
 
-            if (rssi > -60) logOk("Πολύ καλή λήψη.");
-            else if (rssi > -75) logWarn("Μέτρια λήψη.");
-            else logError("Κακή λήψη.");
+            if (rssi > -60) {
+                logOk("Πολύ καλή λήψη.");
+            } else if (rssi > -75) {
+                logWarn("Μέτρια λήψη.");
+            } else {
+                logError("Κακή λήψη.");
+            }
 
         } catch (Exception e) {
             logError("WiFi error: " + e.getMessage());
@@ -367,10 +453,11 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         boolean ok = sm.getDefaultSensor(type) != null;
 
         if (!ok) {
-            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_PROXIMITY)
+            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_PROXIMITY) {
                 logError(name + " λείπει — πιθανή βλάβη.");
-            else
+            } else {
                 logWarn(name + " δεν υπάρχει.");
+            }
         } else {
             logOk(name + " OK.");
         }
@@ -387,8 +474,11 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (Build.VERSION.SDK_INT >= 30) {
                 Display disp = getDisplay();
-                if (disp != null) disp.getRealMetrics(dm);
-                else getWindowManager().getDefaultDisplay().getMetrics(dm);
+                if (disp != null) {
+                    disp.getRealMetrics(dm);
+                } else {
+                    getWindowManager().getDefaultDisplay().getMetrics(dm);
+                }
             } else {
                 getWindowManager().getDefaultDisplay().getMetrics(dm);
             }
@@ -398,10 +488,11 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Resolution: " + w + " × " + h);
 
-            if (Math.min(w, h) < 720)
+            if (Math.min(w, h) < 720) {
                 logWarn("Χαμηλή ανάλυση.");
-            else
+            } else {
                 logOk("Display OK.");
+            }
 
         } catch (Exception e) {
             logError("Display error: " + e.getMessage());
@@ -430,9 +521,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                         float t = temps[0];
                         logInfo("CPU Temp: " + t + "°C");
 
-                        if (t > 80) logError("Πολύ υψηλή θερμοκρασία CPU.");
-                        else if (t > 70) logWarn("CPU ζεστό.");
-                        else logOk("CPU OK.");
+                        if (t > 80) {
+                            logError("Πολύ υψηλή θερμοκρασία CPU.");
+                        } else if (t > 70) {
+                            logWarn("CPU ζεστό.");
+                        } else {
+                            logOk("CPU OK.");
+                        }
                     } else {
                         logWarn("Δεν δόθηκαν θερμοκρασίες.");
                     }
@@ -483,9 +578,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Live RAM: " + readable(avail) + " (" + pct + "% free)");
 
-            if (pct < 10) logError("Πολύ χαμηλή RAM.");
-            else if (pct < 20) logWarn("Χαμηλή RAM.");
-            else logOk("RAM OK.");
+            if (pct < 10) {
+                logError("Πολύ χαμηλή RAM.");
+            } else if (pct < 20) {
+                logWarn("Χαμηλή RAM.");
+            } else {
+                logOk("RAM OK.");
+            }
 
         } catch (Exception e) {
             logError("RAM error: " + e.getMessage());

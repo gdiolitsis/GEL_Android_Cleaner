@@ -81,13 +81,13 @@
             android:gravity="center"
             android:layout_marginBottom="10dp"/>
 
-        <!-- DONATE -->
+        <!-- DONATE BUTTON (FIXED OUTLINE) -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/donate"
-            android:background="@drawable/gel_btn_danger"
+            android:background="@drawable/gel_btn_danger_outline"
             android:textColor="@color/gel_btn_text_white"
             android:layout_marginTop="12dp"
             android:singleLine="true"/>
@@ -155,7 +155,7 @@
             android:paddingLeft="6dp"
             android:layout_marginTop="18dp"/>
 
-        <!-- CLEAN ALL -->
+        <!-- CLEAN ALL (FIXED OUTLINE) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -166,7 +166,7 @@
                 android:id="@+id/btnCleanAll"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="@drawable/gel_btn_danger"
+                android:background="@drawable/gel_btn_danger_outline"
                 android:gravity="center"
                 android:orientation="horizontal"
                 android:padding="12dp"
@@ -191,7 +191,7 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- BROWSER CACHE + APP CACHE (2 στη σειρά) -->
+        <!-- BROWSER CACHE + APP CACHE -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -229,7 +229,7 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <!-- ONLY 1 BUTTON: GEL DIAGNOSTICS -->
+        <!-- DIAGNOSTICS -->
         <Button
             android:id="@+id/btnDiagnostics"
             android:layout_width="match_parent"

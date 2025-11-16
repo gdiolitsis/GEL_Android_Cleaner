@@ -107,34 +107,79 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES → OEM TEMP/JUNK SCREEN (the one from your screenshot)
+    // TEMP FILES — UNIVERSAL JUNK CLEANER
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
-
-            // 1) OEM cleaner screen (universal)
-            boolean launched = CleanLauncher.openDeepCleaner(ctx);
-
-            if (launched) {
-                ok(cb, "Άνοιξα την οθόνη καθαρισμού temp & junk.");
-                info(cb, "➡ Temporary files, residual junk, logs, cache.");
-                info(cb, "➡ Το καθάρισμα γίνεται εκεί (OEM-level).");
+            // 1) MIUI / HyperOS Cleaner (όπως στη φωτογραφία σου)
+            if (tryLaunch(ctx,
+                    "com.miui.cleaner",
+                    "com.miui.cleaner.MainActivity")) {
+                ok(cb, "Άνοιξα MIUI Cleaner → Εκκαθάριση.");
+                info(cb, "➡ Επέλεξε ό,τι θέλεις και πάτα 'Εκκαθάριση'.");
                 return;
             }
 
-            // 2) Universal fallback — Storage Settings
-            try {
-                Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-
-                ok(cb, "Άνοιξα Storage → Clear Junk / Cache.");
+            if (tryLaunch(ctx,
+                    "com.miui.securitycenter",
+                    "com.miui.securityscan.MainActivity")) {
+                ok(cb, "Άνοιξα MIUI Security Cleaner.");
                 return;
+            }
 
-            } catch (Exception ignored) {}
+            // 2) Samsung Device Care
+            if (tryLaunch(ctx,
+                    "com.samsung.android.lool",
+                    "com.samsung.android.lool.MainActivity")
+             || tryLaunch(ctx,
+                    "com.samsung.android.devicecare",
+                    "com.samsung.android.devicecare.ui.DeviceCareActivity")) {
+                ok(cb, "Άνοιξα Samsung Device Care → Storage / Clean.");
+                return;
+            }
 
-            // 3) No cleaner available
-            err(cb, "Temp cleaner δεν βρέθηκε στη συσκευή.");
+            // 3) Oppo / Realme
+            if (tryLaunch(ctx,
+                    "com.coloros.phonemanager",
+                    "com.coloros.phonemanager.main.MainActivity")
+             || tryLaunch(ctx,
+                    "com.coloros.oppoguardelf",
+                    "com.coloros.oppoguardelf.OppoGuardElfMainActivity")) {
+                ok(cb, "Άνοιξα Oppo/Realme Phone Manager Cleaner.");
+                return;
+            }
+
+            // 4) OnePlus
+            if (tryLaunch(ctx,
+                    "com.oneplus.security",
+                    "com.oneplus.security.chaincleaner.ChainCleanerActivity")) {
+                ok(cb, "Άνοιξα OnePlus Cleaner.");
+                return;
+            }
+
+            // 5) Vivo / iQOO
+            if (tryLaunch(ctx,
+                    "com.iqoo.secure",
+                    "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity")) {
+                ok(cb, "Άνοιξα Vivo Phone Optimizer.");
+                return;
+            }
+
+            // 6) Huawei / Honor
+            if (tryLaunch(ctx,
+                    "com.huawei.systemmanager",
+                    "com.huawei.systemmanager.spaceclean.SpaceCleanActivity")) {
+                ok(cb, "Άνοιξα Huawei Space Cleaner.");
+                return;
+            }
+
+            // 7) Fallback → Storage settings (Pixel / Motorola / λοιποί)
+            Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+
+            ok(cb, "Άνοιξα Storage → Free up space / Clean.");
+            info(cb, "➡ Εκεί θα βρεις τα temporary / junk files της συσκευής.");
 
         } catch (Exception e) {
             err(cb, "cleanTempFiles failed: " + e.getMessage());
@@ -242,4 +287,18 @@ public class GELCleaner {
         float gb = mb / 1024f;
         return String.format(Locale.US, "%.2f GB", gb);
     }
+
+    // helper για OEM cleaners
+    private static boolean tryLaunch(Context ctx, String pkg, String cls) {
+        try {
+            Intent i = new Intent();
+            i.setClassName(pkg, cls);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
+```0

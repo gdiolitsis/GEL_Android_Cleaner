@@ -4,359 +4,324 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.net.TrafficStats;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Environment;
-import android.os.StatFs;
-import android.text.format.DateFormat;
-import android.text.format.Formatter;
-import android.view.ViewGroup;
-import android.widget.ScrollView;
+import android.os.SystemClock;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.Date;
+import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
-// ============================================================
-// GEL Phone Diagnosis — PerformanceDiagnosticsActivity
-// "Πανεπιστημιακό νοσοκομείο" διάγνωση συσκευής
-// ============================================================
 public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     private TextView txtDiag;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_diagnostics);
 
-        // Δημιουργία layout ΠΡΟΓΡΑΜΜΑΤΙΚΑ (χωρίς XML)
-        ScrollView scrollView = new ScrollView(this);
-        scrollView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
+        setTitle(R.string.diagnostics); // "GEL Phone Diagnosis"
 
-        txtDiag = new TextView(this);
-        txtDiag.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        txtDiag.setTextSize(14f);
-        txtDiag.setPadding(24, 24, 24, 24);
-        txtDiag.setTextIsSelectable(true);
-        txtDiag.setTypeface(android.graphics.Typeface.MONOSPACE);
-
-        scrollView.addView(txtDiag);
-
-        setContentView(scrollView);
-
-        runDiagnostics();
-    }
-
-    // ============================================================
-    // ΚΥΡΙΑ ΡΟΗ ΔΙΑΓΝΩΣΗΣ
-    // ============================================================
-    private void runDiagnostics() {
-        new Thread(() -> {
-            StringBuilder sb = new StringBuilder();
-
-            sb.append("📋 GEL Phone Diagnosis\n");
-            sb.append("Date: ").append(DateFormat.format("yyyy-MM-dd HH:mm", new Date())).append("\n");
-            sb.append("Device: ").append(Build.MANUFACTURER).append(" ").append(Build.MODEL).append("\n");
-            sb.append("Android: ").append(Build.VERSION.RELEASE).append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
-            sb.append("Board: ").append(Build.BOARD).append("\n");
-            sb.append("Hardware: ").append(Build.HARDWARE).append("\n");
-            sb.append("Fingerprint: ").append(Build.FINGERPRINT).append("\n\n");
-
-            sb.append("====================================================\n");
-            sb.append("1) CPU / SOC\n");
-            sb.append("====================================================\n");
-            sb.append(cpuReport()).append("\n\n");
-
-            sb.append("====================================================\n");
-            sb.append("2) RAM / Μνήμη\n");
-            sb.append("====================================================\n");
-            sb.append(memoryReport()).append("\n\n");
-
-            sb.append("====================================================\n");
-            sb.append("3) Αποθήκευση (Storage)\n");
-            sb.append("====================================================\n");
-            sb.append(storageReport()).append("\n\n");
-
-            sb.append("====================================================\n");
-            sb.append("4) Μπαταρία\n");
-            sb.append("====================================================\n");
-            sb.append(batteryReport()).append("\n\n");
-
-            sb.append("====================================================\n");
-            sb.append("5) Συμπέρασμα GEL (Auto Diagnosis)\n");
-            sb.append("====================================================\n");
-            sb.append(autoDiagnosis());
-
-            runOnUiThread(() -> txtDiag.setText(sb.toString()));
-        }).start();
-    }
-
-    // ============================================================
-    // CPU REPORT
-    // ============================================================
-    private String cpuReport() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            int cores = Runtime.getRuntime().availableProcessors();
-            sb.append("CPU cores: ").append(cores).append("\n");
-
-            // Συχνότητα (CPU0 όπου γίνεται)
-            String maxFreq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-            String minFreq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-            String curFreq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-
-            if (maxFreq != null) sb.append("Max freq (cpu0): ").append(formatKHz(maxFreq)).append("\n");
-            if (minFreq != null) sb.append("Min freq (cpu0): ").append(formatKHz(minFreq)).append("\n");
-            if (curFreq != null) sb.append("Cur freq (cpu0): ").append(formatKHz(curFreq)).append("\n");
-
-            // /proc/cpuinfo (μονάχα τα βασικά)
-            String cpuInfo = readCpuInfoModel();
-            if (cpuInfo != null) {
-                sb.append("CPU model: ").append(cpuInfo).append("\n");
-            }
-
-        } catch (Exception e) {
-            sb.append("CPU report error: ").append(e.getMessage()).append("\n");
+        txtDiag = findViewById(R.id.txtDiagnostics);
+        if (txtDiag != null) {
+            txtDiag.setMovementMethod(new ScrollingMovementMethod());
         }
+
+        runFullDiagnostics();
+    }
+
+    // ============================================================
+    // MAIN DIAGNOSTICS ENTRY
+    // ============================================================
+    private void runFullDiagnostics() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("=== DEVICE OVERVIEW ===\n");
+        sb.append(getDeviceOverview());
+        sb.append("\n");
+
+        sb.append("=== CPU & PERFORMANCE ===\n");
+        sb.append(getCpuInfo());
+        sb.append("\n");
+
+        sb.append("=== MEMORY (RAM) ===\n");
+        sb.append(getRamInfo());
+        sb.append("\n");
+
+        sb.append("=== STORAGE ===\n");
+        sb.append(getStorageInfo());
+        sb.append("\n");
+
+        sb.append("=== BATTERY ===\n");
+        sb.append(getBatteryInfo());
+        sb.append("\n");
+
+        sb.append("=== THERMAL / TEMPERATURE (best effort) ===\n");
+        sb.append(getThermalInfo());
+        sb.append("\n");
+
+        sb.append("=== SENSORS ===\n");
+        sb.append(getSensorsInfo());
+        sb.append("\n");
+
+        sb.append("=== NETWORK (basic) ===\n");
+        sb.append(getNetworkInfo());
+        sb.append("\n");
+
+        sb.append("=== UPTIME ===\n");
+        sb.append(getUptimeInfo());
+        sb.append("\n");
+
+        if (txtDiag != null) {
+            txtDiag.setText(sb.toString());
+        }
+    }
+
+    // ============================================================
+    // DEVICE OVERVIEW
+    // ============================================================
+    private String getDeviceOverview() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Brand: ").append(Build.BRAND).append("\n");
+        sb.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
+        sb.append("Model: ").append(Build.MODEL).append("\n");
+        sb.append("Device: ").append(Build.DEVICE).append("\n");
+        sb.append("Board: ").append(Build.BOARD).append("\n");
+        sb.append("Hardware: ").append(Build.HARDWARE).append("\n");
+        sb.append("Product: ").append(Build.PRODUCT).append("\n");
+        sb.append("Android: ").append(Build.VERSION.RELEASE)
+                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
+        sb.append("Build ID: ").append(Build.ID).append("\n");
         return sb.toString();
     }
 
-    private String readCpuInfoModel() {
-        BufferedReader br = null;
+    // ============================================================
+    // CPU INFO
+    // ============================================================
+    private String getCpuInfo() {
+        StringBuilder sb = new StringBuilder();
+        int cores = Runtime.getRuntime().availableProcessors();
+        sb.append("Cores: ").append(cores).append("\n");
+
+        // /proc/cpuinfo (best effort)
         try {
-            br = new BufferedReader(new FileReader("/proc/cpuinfo"));
+            String cpuInfo = readCpuInfoShort();
+            if (cpuInfo != null && !cpuInfo.isEmpty()) {
+                sb.append(cpuInfo).append("\n");
+            }
+        } catch (Exception ignored) {}
+
+        // Frequencies per core (best effort)
+        for (int i = 0; i < cores; i++) {
+            String basePath = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
+            long min = readLongFromFile(basePath + "cpuinfo_min_freq");
+            long max = readLongFromFile(basePath + "cpuinfo_max_freq");
+            long cur = readLongFromFile(basePath + "scaling_cur_freq");
+
+            sb.append("CPU").append(i).append(": ");
+            if (min > 0 || max > 0 || cur > 0) {
+                if (min > 0) sb.append("min=").append(min / 1000).append(" MHz, ");
+                if (max > 0) sb.append("max=").append(max / 1000).append(" MHz, ");
+                if (cur > 0) sb.append("cur=").append(cur / 1000).append(" MHz");
+            } else {
+                sb.append("frequency info: N/A (restricted by device)");
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String readCpuInfoShort() {
+        File f = new File("/proc/cpuinfo");
+        if (!f.exists()) return "";
+        StringBuilder sb = new StringBuilder();
+        int lines = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
-            while ((line = br.readLine()) != null) {
-                line = line.toLowerCase(Locale.US);
-                if (line.startsWith("hardware") || line.startsWith("model name")) {
-                    String[] parts = line.split(":", 2);
-                    if (parts.length == 2) return parts[1].trim();
-                }
+            while ((line = br.readLine()) != null && lines < 8) {
+                sb.append(line).append("\n");
+                lines++;
             }
-        } catch (Exception ignored) {
-        } finally {
-            if (br != null) try { br.close(); } catch (Exception ignored) {}
-        }
-        return null;
+        } catch (IOException ignored) {}
+        return sb.toString();
     }
 
-    private String formatKHz(String raw) {
-        try {
-            long khz = Long.parseLong(raw.trim());
-            long mhz = khz / 1000;
-            long ghzInt = mhz / 1000;
-            double ghz = mhz / 1000.0;
-            if (ghzInt > 0) {
-                return String.format(Locale.US, "%.2f GHz (%d MHz)", ghz, mhz);
-            } else {
-                return mhz + " MHz";
-            }
-        } catch (Exception e) {
-            return raw.trim() + " kHz";
-        }
-    }
-
-    private String readFirstLine(String path) {
+    private long readLongFromFile(String path) {
+        File f = new File(path);
+        if (!f.exists()) return -1;
         BufferedReader br = null;
         try {
-            br = new BufferedReader(new FileReader(path));
-            return br.readLine();
+            br = new BufferedReader(new FileReader(f));
+            String s = br.readLine();
+            if (s != null) {
+                s = s.trim();
+                return Long.parseLong(s);
+            }
         } catch (Exception ignored) {
-            return null;
         } finally {
-            if (br != null) try { br.close(); } catch (Exception ignored) {}
+            if (br != null) {
+                try { br.close(); } catch (IOException ignored) {}
+            }
         }
+        return -1;
     }
 
     // ============================================================
-    // RAM REPORT
+    // RAM
     // ============================================================
-    private String memoryReport() {
+    private String getRamInfo() {
         StringBuilder sb = new StringBuilder();
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            if (am != null) {
-                am.getMemoryInfo(mi);
-
-                long total = mi.totalMem;
-                long avail = mi.availMem;
-                long used = total - avail;
-                double usedPct = total > 0 ? (used * 100.0 / total) : 0.0;
-
-                sb.append("Total RAM : ").append(human(total)).append("\n");
-                sb.append("Used RAM  : ").append(human(used))
-                  .append("  (").append(String.format(Locale.US, "%.1f", usedPct)).append("%)").append("\n");
-                sb.append("Free RAM  : ").append(human(avail)).append("\n");
-                sb.append("Low memory flag: ").append(mi.lowMemory).append("\n");
-                sb.append("System low mem threshold: ").append(human(mi.threshold)).append("\n");
-
-                if (mi.lowMemory || usedPct > 85.0) {
-                    sb.append("⚠ Suspicious: Very high RAM usage (").append(String.format(Locale.US, "%.1f", usedPct)).append("%)\n");
-                } else {
-                    sb.append("✓ RAM status: OK\n");
-                }
-            } else {
-                sb.append("ActivityManager not available.\n");
-            }
-        } catch (Exception e) {
-            sb.append("Memory report error: ").append(e.getMessage()).append("\n");
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am == null) {
+            sb.append("RAM info not available.\n");
+            return sb.toString();
         }
+
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+
+        sb.append("Total RAM: ").append(formatBytes(mi.totalMem)).append("\n");
+        sb.append("Available RAM: ").append(formatBytes(mi.availMem)).append("\n");
+        sb.append("Used RAM: ").append(formatBytes(mi.totalMem - mi.availMem)).append("\n");
+        sb.append("Low memory: ").append(mi.lowMemory).append("\n");
+        sb.append("Threshold: ").append(formatBytes(mi.threshold)).append("\n");
+
+        double usedPercent = 0;
+        if (mi.totalMem > 0) {
+            usedPercent = (mi.totalMem - mi.availMem) * 100.0 / mi.totalMem;
+        }
+        sb.append("Usage: ").append(String.format(Locale.US, "%.1f%%", usedPercent)).append("\n");
+
         return sb.toString();
     }
 
     // ============================================================
-    // STORAGE REPORT
+    // STORAGE
     // ============================================================
-    private String storageReport() {
+    private String getStorageInfo() {
         StringBuilder sb = new StringBuilder();
-        try {
-            // Internal storage
-            File dataDir = Environment.getDataDirectory();
-            StatFs stat = new StatFs(dataDir.getAbsolutePath());
 
-            long blockSize, totalBlocks, availBlocks;
+        // Internal
+        File internal = Environment.getDataDirectory();
+        appendStorageLine(sb, "Internal", internal);
+
+        // External (primary)
+        File external = Environment.getExternalStorageDirectory();
+        if (external != null) {
+            appendStorageLine(sb, "External (primary)", external);
+        } else {
+            sb.append("External storage: not accessible\n");
+        }
+
+        return sb.toString();
+    }
+
+    private void appendStorageLine(StringBuilder sb, String label, File path) {
+        try {
+            android.os.StatFs stat = new android.os.StatFs(path.getAbsolutePath());
+            long blockSize, totalBlocks, availableBlocks;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 blockSize = stat.getBlockSizeLong();
                 totalBlocks = stat.getBlockCountLong();
-                availBlocks = stat.getAvailableBlocksLong();
+                availableBlocks = stat.getAvailableBlocksLong();
             } else {
                 blockSize = stat.getBlockSize();
                 totalBlocks = stat.getBlockCount();
-                availBlocks = stat.getAvailableBlocks();
+                availableBlocks = stat.getAvailableBlocks();
             }
 
             long total = totalBlocks * blockSize;
-            long free = availBlocks * blockSize;
-            long used = total - free;
-            double usedPct = total > 0 ? (used * 100.0 / total) : 0.0;
+            long avail = availableBlocks * blockSize;
+            long used = total - avail;
 
-            sb.append("Internal storage (data):\n");
-            sb.append("  Total : ").append(human(total)).append("\n");
-            sb.append("  Used  : ").append(human(used))
-              .append("  (").append(String.format(Locale.US, "%.1f", usedPct)).append("%)\n");
-            sb.append("  Free  : ").append(human(free)).append("\n");
-
-            if (usedPct > 90.0) {
-                sb.append("⚠ Suspicious: Very low free space (<10%).\n");
-            } else if (usedPct > 80.0) {
-                sb.append("ℹ Suggestion: Clean junk / media (storage >80%).\n");
-            } else {
-                sb.append("✓ Storage status: OK\n");
-            }
-
-            // External (if exists)
-            File external = getExternalFilesDir(null);
-            if (external != null) {
-                try {
-                    StatFs statExt = new StatFs(external.getAbsolutePath());
-                    long bs2, tb2, ab2;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        bs2 = statExt.getBlockSizeLong();
-                        tb2 = statExt.getBlockCountLong();
-                        ab2 = statExt.getAvailableBlocksLong();
-                    } else {
-                        bs2 = statExt.getBlockSize();
-                        tb2 = statExt.getBlockCount();
-                        ab2 = statExt.getAvailableBlocks();
-                    }
-                    long total2 = tb2 * bs2;
-                    long free2 = ab2 * bs2;
-                    long used2 = total2 - free2;
-                    double usedPct2 = total2 > 0 ? (used2 * 100.0 / total2) : 0.0;
-
-                    sb.append("\nExternal / SD (app area):\n");
-                    sb.append("  Total : ").append(human(total2)).append("\n");
-                    sb.append("  Used  : ").append(human(used2))
-                      .append("  (").append(String.format(Locale.US, "%.1f", usedPct2)).append("%)\n");
-                    sb.append("  Free  : ").append(human(free2)).append("\n");
-                } catch (Exception ignore) {
-                    sb.append("\nExternal storage: not fully accessible.\n");
-                }
-            }
-
+            sb.append(label).append(":\n");
+            sb.append("  Total: ").append(formatBytes(total)).append("\n");
+            sb.append("  Used:  ").append(formatBytes(used)).append("\n");
+            sb.append("  Free:  ").append(formatBytes(avail)).append("\n");
         } catch (Exception e) {
-            sb.append("Storage report error: ").append(e.getMessage()).append("\n");
+            sb.append(label).append(": error reading storage (")
+                    .append(e.getMessage()).append(")\n");
         }
-        return sb.toString();
     }
 
     // ============================================================
-    // BATTERY REPORT
+    // BATTERY
     // ============================================================
-    private String batteryReport() {
+    private String getBatteryInfo() {
         StringBuilder sb = new StringBuilder();
+
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+        if (batteryStatus == null) {
+            sb.append("Battery info not available.\n");
+            return sb.toString();
+        }
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+        int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        String tech = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
+
+        float pct = (level >= 0 && scale > 0) ? (level * 100f / scale) : -1f;
+
+        sb.append("Level: ").append(level).append(" / ").append(scale);
+        if (pct >= 0) sb.append(" (").append(String.format(Locale.US, "%.1f%%", pct)).append(")");
+        sb.append("\n");
+
+        sb.append("Status: ").append(decodeBatteryStatus(status)).append("\n");
+        sb.append("Health: ").append(decodeBatteryHealth(health)).append("\n");
+        sb.append("Plugged: ").append(decodeBatteryPlugged(plugged)).append("\n");
+
+        if (temp > 0) {
+            sb.append("Temperature: ")
+                    .append(temp / 10f).append(" °C\n");
+        }
+
+        if (voltage > 0) {
+            sb.append("Voltage: ")
+                    .append(voltage / 1000f).append(" V\n");
+        }
+
+        if (tech != null) {
+            sb.append("Technology: ").append(tech).append("\n");
+        }
+
+        // Battery capacity (approximate, not all devices support this cleanly)
         try {
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = registerReceiver(null, ifilter);
-
-            if (batteryStatus == null) {
-                sb.append("Battery info not available.\n");
-                return sb.toString();
-            }
-
-            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
-            int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-
-            float pct = (level >= 0 && scale > 0) ? (level * 100f / scale) : -1f;
-
-            sb.append("Level     : ");
-            if (pct >= 0) sb.append(String.format(Locale.US, "%.1f", pct)).append("% (").append(level).append("/").append(scale).append(")\n");
-            else sb.append("N/A\n");
-
-            sb.append("Status    : ").append(batteryStatusToString(status)).append("\n");
-            sb.append("Plugged   : ").append(batteryPluggedToString(plugged)).append("\n");
-            sb.append("Health    : ").append(batteryHealthToString(health)).append("\n");
-
-            if (temp > 0) {
-                float c = temp / 10f;
-                sb.append("Temperature: ").append(String.format(Locale.US, "%.1f °C", c)).append("\n");
-                if (c >= 45.0f) {
-                    sb.append("⚠ HIGH temperature — Possible thermal issues.\n");
-                } else if (c >= 40.0f) {
-                    sb.append("ℹ Warm battery — check heavy apps / charging.\n");
+            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+            if (bm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                long capacityMicroAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+                if (capacityMicroAh > 0) {
+                    sb.append("Charge counter: ")
+                            .append(capacityMicroAh / 1000).append(" mAh (approx)\n");
                 }
             }
+        } catch (Exception ignored) {}
 
-            if (voltage > 0) {
-                sb.append("Voltage   : ").append(voltage / 1000.0f).append(" V\n");
-            }
-
-            if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
-                health == BatteryManager.BATTERY_HEALTH_OVERHEAT ||
-                health == BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE ||
-                health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE) {
-                sb.append("⚠ Suspicious: Battery health is not good — πιθανή φθορά / βλάβη.\n");
-            } else {
-                sb.append("✓ Battery health: OK (σύμφωνα με Android).\n");
-            }
-
-        } catch (Exception e) {
-            sb.append("Battery report error: ").append(e.getMessage()).append("\n");
-        }
         return sb.toString();
     }
 
-    private String batteryStatusToString(int status) {
+    private String decodeBatteryStatus(int status) {
         switch (status) {
             case BatteryManager.BATTERY_STATUS_CHARGING: return "Charging";
             case BatteryManager.BATTERY_STATUS_DISCHARGING: return "Discharging";
@@ -367,76 +332,171 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         }
     }
 
-    private String batteryPluggedToString(int plugged) {
-        if (plugged == BatteryManager.BATTERY_PLUGGED_AC) return "AC";
-        if (plugged == BatteryManager.BATTERY_PLUGGED_USB) return "USB";
-        if (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS) return "Wireless";
-        if (plugged == 0) return "Not plugged";
-        return "Other";
-    }
-
-    private String batteryHealthToString(int health) {
+    private String decodeBatteryHealth(int health) {
         switch (health) {
-            case BatteryManager.BATTERY_HEALTH_COLD: return "Cold";
-            case BatteryManager.BATTERY_HEALTH_DEAD: return "Dead";
             case BatteryManager.BATTERY_HEALTH_GOOD: return "Good";
             case BatteryManager.BATTERY_HEALTH_OVERHEAT: return "Overheat";
-            case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE: return "Over-voltage";
-            case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: return "Unspecified failure";
+            case BatteryManager.BATTERY_HEALTH_DEAD: return "Dead";
+            case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE: return "Over voltage";
+            case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: return "Failure";
+            case BatteryManager.BATTERY_HEALTH_COLD: return "Cold";
             case BatteryManager.BATTERY_HEALTH_UNKNOWN:
             default: return "Unknown";
         }
     }
 
+    private String decodeBatteryPlugged(int plugged) {
+        switch (plugged) {
+            case BatteryManager.BATTERY_PLUGGED_AC: return "AC";
+            case BatteryManager.BATTERY_PLUGGED_USB: return "USB";
+            case BatteryManager.BATTERY_PLUGGED_WIRELESS: return "Wireless";
+            default: return "Not plugged";
+        }
+    }
+
     // ============================================================
-    // AUTO DIAGNOSIS (ΣΥΜΠΕΡΑΣΜΑΤΑ ΓΙΑ ΤΕΧΝΙΚΟ)
+    // THERMAL (BEST EFFORT)
     // ============================================================
-    private String autoDiagnosis() {
+    private String getThermalInfo() {
         StringBuilder sb = new StringBuilder();
 
-        // Εδώ δεν έχουμε όλα τα raw δεδομένα (είναι πάνω στη στιγμή),
-        // οπότε δίνουμε γενικές οδηγίες για τεχνικό.
+        // Best-effort: read some thermal zones if available
+        File thermalDir = new File("/sys/class/thermal");
+        if (!thermalDir.exists() || !thermalDir.isDirectory()) {
+            sb.append("Thermal zones not accessible on this device.\n");
+            return sb.toString();
+        }
 
-        sb.append("• Αν η RAM είναι συνεχώς >85% και η συσκευή είναι αργή:\n");
-        sb.append("  → Ύποπτη ύπαρξη βαριάς εφαρμογής / διαρροής μνήμης.\n");
-        sb.append("  → Έλεγχος: uninstall/disable άγνωστες εφαρμογές,\n");
-        sb.append("    δοκιμή σε Safe Mode, έλεγχος για malware.\n\n");
+        File[] zones = thermalDir.listFiles();
+        if (zones == null || zones.length == 0) {
+            sb.append("No thermal zone entries found.\n");
+            return sb.toString();
+        }
 
-        sb.append("• Αν η εσωτερική αποθήκευση έχει <10% ελεύθερο χώρο:\n");
-        sb.append("  → Πιθανές καθυστερήσεις / κόλλημα σε updates.\n");
-        sb.append("  → Έλεγχος: μεγάλα βίντεο/φωτογραφίες, cache social apps,\n");
-        sb.append("    κλωνοποιημένες εφαρμογές, WhatsApp backups κ.λπ.\n\n");
+        int count = 0;
+        for (File zone : zones) {
+            if (!zone.getName().startsWith("thermal_zone")) continue;
+            File tempFile = new File(zone, "temp");
+            if (!tempFile.exists()) continue;
 
-        sb.append("• Αν η θερμοκρασία μπαταρίας συχνά >45°C:\n");
-        sb.append("  → Πιθανό thermal throttling, φθορά μπαταρίας ή CPU stress.\n");
-        sb.append("  → Έλεγχος: φορτιστής/καλώδιο, χρήση κατά τη φόρτιση,\n");
-        sb.append("    βαριά games, φουσκωμένη μπαταρία, βραχυκύκλωμα.\n\n");
+            String type = readFirstLineSafe(new File(zone, "type"));
+            String tempStr = readFirstLineSafe(tempFile);
+            if (tempStr == null) continue;
 
-        sb.append("• Αν το Battery Health δεν είναι GOOD:\n");
-        sb.append("  → Πιθανή ανάγκη αντικατάστασης μπαταρίας.\n");
-        sb.append("  → Έλεγχος: γρήγορη πτώση %, τυχαία shutdowns, boot-loops.\n\n");
+            try {
+                float value = Float.parseFloat(tempStr.trim());
+                // Most devices: value in millidegrees
+                if (value > 100) value = value / 1000f;
+                sb.append(zone.getName()).append(" (").append(type).append("): ")
+                        .append(String.format(Locale.US, "%.1f °C", value))
+                        .append("\n");
+                count++;
+            } catch (Exception ignored) {}
+        }
 
-        sb.append("• Αν Storage / RAM είναι ΟΚ αλλά η συσκευή κολλάει:\n");
-        sb.append("  → Ύποπτο πρόβλημα firmware ή κατεστραμμένος αποθηκευτικός χώρος.\n");
-        sb.append("  → Έλεγχος: factory reset (με πλήρες backup),\n");
-        sb.append("    official ROM reflash, έλεγχος eMMC/UFS με εργαλεία του κατασκευαστή.\n\n");
+        if (count == 0) {
+            sb.append("No readable thermal sensors (restricted by vendor).\n");
+        }
 
-        sb.append("• Αν παρουσιαστούν συχνά freezes + επανεκκινήσεις:\n");
-        sb.append("  → Πιθανό hardware (RAM chips, PMIC, motherboard).\n");
-        sb.append("  → Έλεγχος με service menu του κατασκευαστή + θερμοκρασίες/τάσεις.\n\n");
+        return sb.toString();
+    }
 
-        sb.append("Συνοπτικά:\n");
-        sb.append("  - Χρησιμοποίησε τα παραπάνω νούμερα σαν screening.\n");
-        sb.append("  - Συνδύασέ τα με δικά σου service tools (JTAG, vendor tools,\n");
-        sb.append("    full logs, baseband, modem, sensors, touchscreen tests κ.λπ.).\n");
+    private String readFirstLineSafe(File f) {
+        if (f == null || !f.exists()) return null;
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(f));
+            return br.readLine();
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            if (br != null) {
+                try { br.close(); } catch (IOException ignored) {}
+            }
+        }
+    }
+
+    // ============================================================
+    // SENSORS
+    // ============================================================
+    private String getSensorsInfo() {
+        StringBuilder sb = new StringBuilder();
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sm == null) {
+            sb.append("SensorManager not available.\n");
+            return sb.toString();
+        }
+
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        sb.append("Total sensors: ").append(sensors.size()).append("\n");
+
+        for (Sensor s : sensors) {
+            sb.append("- ").append(s.getName())
+                    .append(" (type ").append(s.getType()).append(")\n");
+            sb.append("  Vendor: ").append(s.getVendor()).append("\n");
+            sb.append("  Version: ").append(s.getVersion()).append("\n");
+            sb.append("  Max range: ").append(s.getMaximumRange()).append("\n");
+            sb.append("  Power: ").append(s.getPower()).append(" mA\n");
+        }
 
         return sb.toString();
     }
 
     // ============================================================
+    // NETWORK (BASIC)
+    // ============================================================
+    private String getNetworkInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        long rxMobile = TrafficStats.getMobileRxBytes();
+        long txMobile = TrafficStats.getMobileTxBytes();
+        long rxTotal = TrafficStats.getTotalRxBytes();
+        long txTotal = TrafficStats.getTotalTxBytes();
+
+        if (rxTotal == TrafficStats.UNSUPPORTED || txTotal == TrafficStats.UNSUPPORTED) {
+            sb.append("Traffic stats unsupported on this device.\n");
+        } else {
+            sb.append("Mobile RX: ").append(formatBytes(rxMobile)).append("\n");
+            sb.append("Mobile TX: ").append(formatBytes(txMobile)).append("\n");
+            sb.append("Total RX : ").append(formatBytes(rxTotal)).append("\n");
+            sb.append("Total TX : ").append(formatBytes(txTotal)).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    // ============================================================
+    // UPTIME
+    // ============================================================
+    private String getUptimeInfo() {
+        long uptimeMs = SystemClock.elapsedRealtime();
+        long seconds = uptimeMs / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+
+        hours = hours % 24;
+        minutes = minutes % 60;
+        seconds = seconds % 60;
+
+        return String.format(Locale.US,
+                "Uptime: %d days, %02d:%02d:%02d\n",
+                days, hours, minutes, seconds);
+    }
+
+    // ============================================================
     // HELPERS
     // ============================================================
-    private String human(long bytes) {
-        return Formatter.formatFileSize(this, bytes);
+    private String formatBytes(long bytes) {
+        if (bytes < 0) return "N/A";
+        if (bytes < 1024) return bytes + " B";
+        float kb = bytes / 1024f;
+        if (kb < 1024) return String.format(Locale.US, "%.2f KB", kb);
+        float mb = kb / 1024f;
+        if (mb < 1024) return String.format(Locale.US, "%.2f MB", mb);
+        float gb = mb / 1024f;
+        if (gb < 1024) return String.format(Locale.US, "%.2f GB", gb);
+        float tb = gb / 1024f;
+        return String.format(Locale.US, "%.2f TB", tb);
     }
 }

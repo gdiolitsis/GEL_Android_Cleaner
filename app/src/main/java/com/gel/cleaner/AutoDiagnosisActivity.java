@@ -1,5 +1,7 @@
 package com.gel.cleaner;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.hardware.Sensor;

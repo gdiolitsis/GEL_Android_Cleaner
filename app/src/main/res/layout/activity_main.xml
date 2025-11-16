@@ -118,10 +118,7 @@
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:maxLines="2"
-                android:lines="2"
-                android:singleLine="false"
-                android:ellipsize="none" />
+                android:maxLines="2" />
 
             <Button
                 android:id="@+id/btnPhoneInfoPeripherals"
@@ -132,10 +129,7 @@
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:maxLines="2"
-                android:lines="2"
-                android:singleLine="false"
-                android:ellipsize="none" />
+                android:maxLines="2" />
         </LinearLayout>
 
         <!-- CPU/RAM LIVE -->
@@ -149,12 +143,12 @@
             android:layout_margin="4dp"
             android:singleLine="true"/>
 
-        <!-- CLEANER TITLE (without style) -->
+        <!-- CLEANER -->
         <TextView
             android:id="@+id/section_clean"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Καθαρισμός"
+            android:text="@string/cleaner"
             android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
@@ -170,18 +164,16 @@
 
             <LinearLayout
                 android:id="@+id/btnCleanAll"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_weight="1"
                 android:background="@drawable/gel_btn_danger"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="12dp"
+                android:layout_margin="4dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🧹 GEL Cleaner ALL"
+                    android:text="@string/clean_all"
                     android:textColor="@color/white"
                     android:textStyle="bold"
                     android:textSize="17sp" />
@@ -199,6 +191,7 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
+        <!-- BROWSER CACHE + APP CACHE (2 στη σειρά) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -212,30 +205,18 @@
                 android:text="@string/browser_cache"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
 
             <Button
-                android:id="@+id/btnTemp"
+                android:id="@+id/btnAppCache"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
-                android:text="@string/temp_files"
+                android:text="@string/app_cache"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
+                android:layout_margin="4dp"/>
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnAppCache"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/app_cache"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"
-            android:singleLine="true"/>
 
         <!-- PERFORMANCE -->
         <TextView
@@ -248,33 +229,15 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
-        <LinearLayout
+        <!-- ONLY 1 BUTTON: GEL DIAGNOSTICS -->
+        <Button
+            android:id="@+id/btnDiagnostics"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnBatteryBoost"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/battery_boost"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
-
-            <Button
-                android:id="@+id/btnKillApps"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/kill_apps"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:singleLine="true"/>
-        </LinearLayout>
+            android:layout_height="60dp"
+            android:text="@string/diagnostics"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_margin="4dp"/>
 
         <!-- LOGS -->
         <TextView
@@ -286,5 +249,6 @@
             android:padding="12dp"
             android:layout_marginTop="20dp"
             android:background="@color/gel_bg"/>
+
     </LinearLayout>
 </ScrollView>

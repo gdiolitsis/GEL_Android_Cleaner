@@ -11,9 +11,14 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
+
+    private boolean isRooted = false;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -32,10 +37,15 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             title.setText(getString(R.string.phone_info_peripherals));
         }
 
-        StringBuilder s = new StringBuilder();
-        PackageManager pm = getPackageManager();
+        // ROOT CHECK
+        isRooted = isDeviceRooted();
 
+        PackageManager pm = getPackageManager();
+        StringBuilder s = new StringBuilder();
+
+        // =====================================================
         // CAMERA
+        // =====================================================
         s.append("── CAMERA ──\n");
         s.append("Any camera: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ? "YES" : "NO")
@@ -47,7 +57,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) ? "YES" : "NO")
                 .append("\n\n");
 
+        // =====================================================
         // BIOMETRICS
+        // =====================================================
         s.append("── BIOMETRICS ──\n");
         boolean hasFingerprint =
                 pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
@@ -62,7 +74,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         }
         s.append("\n");
 
+        // =====================================================
         // SENSORS
+        // =====================================================
         s.append("── SENSORS ──\n");
         SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sm != null) {
@@ -79,7 +93,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         }
         s.append("\n");
 
+        // =====================================================
         // CONNECTIVITY
+        // =====================================================
         s.append("── CONNECTIVITY ──\n");
         s.append("NFC: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
@@ -97,7 +113,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature("android.hardware.telephony.5g") ? "YES" : "NO")
                 .append("\n\n");
 
+        // =====================================================
         // LOCATION
+        // =====================================================
         s.append("── LOCATION ──\n");
         s.append("GPS: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "YES" : "NO")
@@ -106,7 +124,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "YES" : "NO")
                 .append("\n\n");
 
+        // =====================================================
         // OTHER PERIPHERALS
+        // =====================================================
         s.append("── OTHER ──\n");
         s.append("USB host: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST) ? "YES" : "NO")
@@ -115,13 +135,90 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
 
-        // VIBRATOR — SAFE MODE
+        // Vibrator
         Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         boolean hasVib = vib != null && vib.hasVibrator();
-        s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n");
+        s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n\n");
+
+        // =====================================================
+        // EXTRA PERIPHERALS INFO FOR ROOTED DEVICES
+        // =====================================================
+        if (isRooted) {
+            s.append("── ROOT EXTRA INFO ──\n");
+            s.append("Build Tags: ").append(Build.TAGS).append("\n");
+            s.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+            s.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+            s.append("SELinux: ").append(getSelinux()).append("\n");
+            s.append("su path: ").append(checkSuPaths()).append("\n");
+            s.append("\n");
+        }
 
         if (info != null) {
             info.setText(s.toString());
         }
+    }
+
+    // ============================================================
+    // ROOT UTILS
+    // ============================================================
+    private boolean isDeviceRooted() {
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) return true;
+
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su"
+        };
+
+        for (String p : paths) {
+            if (new File(p).exists()) return true;
+        }
+
+        String debuggable = getProp("ro.debuggable");
+        String secure = getProp("ro.secure");
+
+        if ("1".equals(debuggable) || "0".equals(secure)) return true;
+
+        return false;
+    }
+
+    private String getProp(String key) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = br.readLine();
+            br.close();
+            return line != null ? line.trim() : "[empty]";
+        } catch (Exception e) {
+            return "[error]";
+        }
+    }
+
+    private String getSelinux() {
+        try {
+            Process p = Runtime.getRuntime().exec("getenforce");
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = br.readLine();
+            br.close();
+            return line != null ? line.trim() : "unknown";
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    private String checkSuPaths() {
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su"
+        };
+
+        for (String p : paths) {
+            if (new File(p).exists()) return p;
+        }
+        return "none";
     }
 }

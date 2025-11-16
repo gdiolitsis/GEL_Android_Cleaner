@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 // ============================================================
-// GEL Service Lab — Main Diagnosis Menu  (Updated)
+// GEL Service Lab — Main Diagnosis Menu  (Updated, 20-Labs Hooked)
 // ============================================================
 public class DiagnosisMenuActivity extends AppCompatActivity {
 
@@ -45,16 +45,16 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         root.addView(sub);
 
         // =========================
-        // 🟦 AUTO DIAGNOSIS (UPDATED)
+        // 🟦 AUTO DIAGNOSIS — (FULL 20 LABS)
         // =========================
         root.addView(sectionLabel("AUTO DIAGNOSIS"));
 
-        View autoBtn = makeBlockButton("📊 GEL Auto Diagnosis",
-                "Πλήρης αυτόματη διάγνωση (Service Lab)\nHardware • RAM • Storage • Battery • Network • Sensors…");
+        View autoBtn = makeBlockButton("📊 GEL Phone Diagnosis",
+                "Πλήρης αυτόματη διάγνωση 20 εργαστηριακών ελέγχων\nHardware • RAM • Storage • Battery • Network • Sensors…");
 
-        // 🔥 Updated: NOW opens AutoDiagnosisActivity
+        // 🔥 Updated: OPEN FULL AUTO DIAG (20 LABS)
         autoBtn.setOnClickListener(v ->
-                startActivity(new Intent(this, AutoDiagnosisActivity.class)));
+                startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
 
         root.addView(autoBtn);
 

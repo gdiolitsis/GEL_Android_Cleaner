@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 // ============================================================
-// GEL Service Lab — Main Diagnosis Menu
+// GEL Service Lab — Main Diagnosis Menu  (Updated)
 // ============================================================
 public class DiagnosisMenuActivity extends AppCompatActivity {
 
@@ -19,7 +19,6 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Simple dark-gold style layout
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
@@ -45,16 +44,23 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         sub.setPadding(0, 0, 0, dp(16));
         root.addView(sub);
 
-        // AUTO DIAG BLOCK
+        // =========================
+        // 🟦 AUTO DIAGNOSIS (UPDATED)
+        // =========================
         root.addView(sectionLabel("AUTO DIAGNOSIS"));
 
         View autoBtn = makeBlockButton("📊 GEL Auto Diagnosis",
                 "Πλήρης αυτόματη διάγνωση (Service Lab)\nHardware • RAM • Storage • Battery • Network • Sensors…");
+
+        // 🔥 Updated: NOW opens AutoDiagnosisActivity
         autoBtn.setOnClickListener(v ->
-                startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
+                startActivity(new Intent(this, AutoDiagnosisActivity.class)));
+
         root.addView(autoBtn);
 
-        // MANUAL TESTS BLOCK
+        // =========================
+        // 🟩 MANUAL TESTS
+        // =========================
         root.addView(sectionLabel("MANUAL TESTS"));
 
         View manualBtn = makeBlockButton("🧪 Manual Tests",
@@ -63,7 +69,9 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ManualTestsActivity.class)));
         root.addView(manualBtn);
 
-        // NEW: EXPORT BLOCK
+        // =========================
+        // 🟨 EXPORT REPORT
+        // =========================
         root.addView(sectionLabel("SERVICE REPORT"));
 
         View exportBtn = makeBlockButton(
@@ -91,12 +99,14 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(dp(12), dp(12), dp(12), dp(12));
+
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0, dp(6), 0, dp(6));
         card.setLayoutParams(lp);
+
         card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
         TextView t = new TextView(this);

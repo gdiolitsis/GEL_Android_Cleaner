@@ -1,4 +1,4 @@
-package com.gdiolitsis.gelcleaner;
+package com.gel.cleaner;
 
 import android.os.Bundle;
 import android.text.Html;
@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class AutoDiagnosisActivity extends AppCompatActivity {
@@ -28,7 +29,7 @@ public class AutoDiagnosisActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * HTML + COLOR LOGS (GEL STYLE)
+     * HTML + COLOR LOGGING
      * ============================================================ */
     private void appendHtml(String html) {
         CharSequence prev = txtDiag.getText();
@@ -74,32 +75,28 @@ public class AutoDiagnosisActivity extends AppCompatActivity {
 
         // DEVICE MODEL
         try {
-            String model = android.os.Build.MODEL;
-            logOk("Device Model: " + model);
+            logOk("Device Model: " + android.os.Build.MODEL);
         } catch (Exception e) {
             logAccessDenied("Device Model");
         }
 
         // ANDROID VERSION
         try {
-            String androidVer = android.os.Build.VERSION.RELEASE;
-            logOk("Android Version: " + androidVer);
+            logOk("Android Version: " + android.os.Build.VERSION.RELEASE);
         } catch (Exception e) {
             logAccessDenied("Android Version");
         }
 
         // MANUFACTURER
         try {
-            String manufacturer = android.os.Build.MANUFACTURER;
-            logOk("Manufacturer: " + manufacturer);
+            logOk("Manufacturer: " + android.os.Build.MANUFACTURER);
         } catch (Exception e) {
             logAccessDenied("Manufacturer");
         }
 
         // SECURITY PATCH
         try {
-            String securityPatch = android.os.Build.VERSION.SECURITY_PATCH;
-            logOk("Security Patch: " + securityPatch);
+            logOk("Security Patch: " + android.os.Build.VERSION.SECURITY_PATCH);
         } catch (Exception e) {
             logAccessDenied("Security Patch");
         }

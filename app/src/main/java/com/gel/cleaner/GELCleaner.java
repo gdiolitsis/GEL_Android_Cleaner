@@ -56,7 +56,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // CLEAN RAM → SmartClean
+    // CLEAN RAM
     // ====================================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
@@ -67,16 +67,7 @@ public class GELCleaner {
                 return;
             }
 
-            // fallback
-            try {
-                Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-                ok(cb, "Opening device info…");
-                return;
-            } catch (Exception ignored) {}
-
-            err(cb, "No compatible RAM/cleaner screen found on this device.");
+            err(cb, "Δεν βρέθηκε RAM cleaner στη συσκευή.");
 
         } catch (Exception e) {
             err(cb, "cleanRAM failed: " + e.getMessage());
@@ -84,32 +75,18 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // DEEP CLEAN
+    // DEEP CLEAN (ασφαλές, δεν σκοτώνει την εφαρμογή)
     // ====================================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
-            boolean launched = CleanLauncher.smartClean(ctx);
+            boolean launched = CleanLauncher.openDeepCleaner(ctx);
 
             if (launched) {
-                ok(cb, "Smart Cleaner ενεργοποιήθηκε.");
+                ok(cb, "Device Deep Cleaner ενεργοποιήθηκε.");
                 return;
             }
 
-            launched = CleanLauncher.openDeepCleaner(ctx);
-
-            if (launched) {
-                ok(cb, "Opening device deep cleaner…");
-                return;
-            }
-
-            try {
-                Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-                ok(cb, "Opening system cleaner…");
-            } catch (Exception e2) {
-                err(cb, "deepClean fallback failed: " + e2.getMessage());
-            }
+            err(cb, "Δεν βρέθηκε deep cleaner στη συσκευή.");
 
         } catch (Exception e) {
             err(cb, "deepClean failed: " + e.getMessage());
@@ -123,9 +100,8 @@ public class GELCleaner {
         try {
             long before = folderSize(ctx.getCacheDir());
             deleteFolder(ctx.getCacheDir());
-            long diff = before;
 
-            ok(cb, "Cache cleaned: " + readable(diff));
+            ok(cb, "App cache cleaned: " + readable(before));
 
         } catch (Exception e) {
             err(cb, "cache clean failed: " + e.getMessage());
@@ -133,7 +109,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES — FIXED (no exit)
+    // TEMP FILES — FINAL FIX (ποτέ δεν ανοίγει activity)
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
@@ -143,8 +119,6 @@ public class GELCleaner {
             deleteFolder(temp);
 
             ok(cb, "Temp files removed: " + readable(before));
-
-            // ❗ FIX — δεν ανοίγουμε activity μετά τον καθαρισμό → δεν πετάει έξω
             info(cb, "Temp cleanup completed safely.");
 
         } catch (Exception e) {
@@ -168,9 +142,11 @@ public class GELCleaner {
                     "com.vivaldi.browser",
                     "com.duckduckgo.mobile.android",
                     "com.sec.android.app.sbrowser",
-                    "com.mi.globalbrowser",   // Mi Browser Global
-                    "com.android.browser",     // AOSP Browser
-                    "com.miui.hybrid"          // Xiaomi Hybrid browser
+
+                    // MI Browser variations
+                    "com.mi.globalbrowser",
+                    "com.android.browser",
+                    "com.miui.hybrid"
             };
 
             List<String> installed = new ArrayList<>();
@@ -181,24 +157,18 @@ public class GELCleaner {
             }
 
             if (installed.isEmpty()) {
-                err(cb, "No browsers found.");
+                err(cb, "No browser found.");
                 return;
             }
 
-            if (installed.size() == 1) {
-                String pkg = installed.get(0);
-                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                i.setData(Uri.parse("package:" + pkg));
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-                ok(cb, "Opening browser → Storage → Clear Cache.");
-                return;
-            }
+            String pkg = installed.get(0);
 
-            Intent i = new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(Uri.parse("package:" + pkg));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            ok(cb, "Select a browser → Storage → Clear Cache.");
+
+            ok(cb, "Άνοιξα τον browser → Storage → Clear Cache.");
 
         } catch (Exception e) {
             err(cb, "browserCache failed: " + e.getMessage());
@@ -206,23 +176,21 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // RUNNING APPS → with full instructions
+    // RUNNING APPS — χωρίς Developer Options όπου δεν υπάρχουν
     // ====================================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
-            // Developer Services
+            // Developer options
             try {
                 Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
                 dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(dev);
 
-                ok(cb, "Developer Services opened.");
+                ok(cb, "Developer menu opened.");
                 info(cb,
-                        "Για να δεις τις ενεργές εφαρμογές:\n" +
-                        "1) Πήγαινε στο 'Running Services'\n" +
-                        "2) Εκεί θα τις δεις όλες\n" +
-                        "3) Μπορείς να τερματίσεις όποια θέλεις");
-
+                        "➡ Πήγαινε στο 'Running Services'\n" +
+                        "➡ Εκεί βλέπεις τις ενεργές εφαρμογές\n" +
+                        "➡ Μπορείς να τερματίσεις όποια θέλεις");
                 return;
             } catch (Exception ignored) {}
 
@@ -231,10 +199,10 @@ public class GELCleaner {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
 
-            ok(cb, "Opening Applications list.");
+            ok(cb, "Άνοιξα τη λίστα εφαρμογών.");
             info(cb,
-                    "⚠️ Από Android 12+, η Google έκρυψε τις 'Running Apps'.\n" +
-                    "Ενεργοποίησε Developer Options για περισσότερα.");
+                    "⚠ Στις νεότερες συσκευές η Google έκρυψε το Running Apps.\n" +
+                    "Πρέπει να ενεργοποιήσεις Developer Options.");
 
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
@@ -247,23 +215,17 @@ public class GELCleaner {
     private static long folderSize(File f) {
         if (f == null || !f.exists()) return 0;
         if (f.isFile()) return f.length();
-
         long size = 0;
         File[] children = f.listFiles();
-        if (children != null) {
-            for (File c : children) size += folderSize(c);
-        }
+        if (children != null) for (File c : children) size += folderSize(c);
         return size;
     }
 
     private static void deleteFolder(File f) {
         if (f == null || !f.exists()) return;
         if (f.isFile()) { f.delete(); return; }
-
         File[] children = f.listFiles();
-        if (children != null) {
-            for (File c : children) deleteFolder(c);
-        }
+        if (children != null) for (File c : children) deleteFolder(c);
         f.delete();
     }
 

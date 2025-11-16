@@ -32,6 +32,7 @@ public class CleanerActivity extends AppCompatActivity {
         Button btnBrowser    = findViewById(R.id.btnBrowserClean);
         Button btnRunning    = findViewById(R.id.btnRunningApps);
 
+        // FIXED: now valid
         log("🧹 GEL Cleaner loaded.\n");
 
         // ====================================================================
@@ -47,13 +48,13 @@ public class CleanerActivity extends AppCompatActivity {
                 GELCleaner.deepClean(getBaseContext(), this::log));
 
         // ====================================================================
-        // 3) TEMP FILES — includes automatic ROOT EXTRA cleanup if rooted
+        // 3) TEMP FILES
         // ====================================================================
         btnTempClean.setOnClickListener(v ->
                 GELCleaner.cleanTempFiles(getBaseContext(), this::log));
 
         // ====================================================================
-        // 4) BROWSER CACHE CLEAN
+        // 4) BROWSER CACHE
         // ====================================================================
         btnBrowser.setOnClickListener(v ->
                 GELCleaner.browserCache(getBaseContext(), this::log));
@@ -66,7 +67,7 @@ public class CleanerActivity extends AppCompatActivity {
     }
 
     // ========================================================================
-    // LOG PRINTER
+    // LOG PRINTER (CORE)
     // ========================================================================
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {
@@ -77,5 +78,12 @@ public class CleanerActivity extends AppCompatActivity {
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
             }
         });
+    }
+
+    // ========================================================================
+    // OVERLOAD FOR SIMPLE CALLS  (FIX)
+    // ========================================================================
+    private void log(String msg) {
+        log(msg, false);
     }
 }

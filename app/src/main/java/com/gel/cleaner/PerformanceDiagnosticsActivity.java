@@ -440,4 +440,3 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         return Formatter.formatFileSize(this, bytes);
     }
 }
-```0

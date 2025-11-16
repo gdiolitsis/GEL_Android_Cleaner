@@ -629,4 +629,3 @@ public class ManualTestsActivity extends AppCompatActivity {
         return String.format(Locale.US, "%.2f GB", gb);
     }
 }
-```0

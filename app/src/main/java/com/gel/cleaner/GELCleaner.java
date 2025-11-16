@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
-import android.text.format.Formatter;
+import android.text.format Formatter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // CLEAN RAM → πλέον SmartClean
+    // CLEAN RAM → SmartClean
     // ====================================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
@@ -84,17 +84,27 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // DEEP CLEAN
+    // DEEP CLEAN → SmartClean ΠΡΩΤΑ, μετά OEM deep cleaner
     // ====================================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
-            boolean launched = CleanLauncher.openDeepCleaner(ctx);
+            // 1) Προσπάθεια με SmartClean (RAM / OEM optimized)
+            boolean launched = CleanLauncher.smartClean(ctx);
+
+            if (launched) {
+                ok(cb, "Smart Cleaner ενεργοποιήθηκε (RAM / OEM optimization).");
+                return;
+            }
+
+            // 2) Fallback → OEM Deep Cleaner
+            launched = CleanLauncher.openDeepCleaner(ctx);
 
             if (launched) {
                 ok(cb, "Opening device deep cleaner…");
                 return;
             }
 
+            // 3) Τελικό fallback → System Info
             try {
                 Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -127,7 +137,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES WITH REPORT
+    // TEMP FILES WITH REPORT + ανοίγει Storage Settings
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
@@ -138,13 +148,20 @@ public class GELCleaner {
 
             ok(cb, "Temp files removed: " + readable(before));
 
+            // Επιπλέον: άνοιγμα Storage Settings, ώστε "να σε πάει κάπου"
+            try {
+                Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(i);
+            } catch (Exception ignored) {}
+
         } catch (Exception e) {
             err(cb, "tempFiles failed: " + e.getMessage());
         }
     }
 
     // ====================================================================
-    // BROWSER CACHE — universal
+    // BROWSER CACHE — universal + Mi Browser support
     // ====================================================================
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
@@ -158,7 +175,11 @@ public class GELCleaner {
                     "com.brave.browser",
                     "com.vivaldi.browser",
                     "com.duckduckgo.mobile.android",
-                    "com.sec.android.app.sbrowser"
+                    "com.sec.android.app.sbrowser",
+                    // MI Browser variations
+                    "com.mi.globalbrowser",
+                    "com.android.browser",
+                    "com.miui.hybrid"
             };
 
             List<String> installed = new ArrayList<>();
@@ -194,14 +215,24 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // RUNNING APPS
+    // RUNNING APPS → όσο επιτρέπει η Google
     // ====================================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
+            // 1) Developer / Running Services (όπου υπάρχει)
+            try {
+                Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+                dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(dev);
+                ok(cb, "Opening Developer / Running Services (where supported)...");
+                return;
+            } catch (Exception ignored) {}
+
+            // 2) Fallback → Application Settings (λίστα εφαρμογών)
             Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            ok(cb, "Opening Running Apps…");
+            ok(cb, "Opening Applications list (running apps visibility is restricted by Android).");
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
         }

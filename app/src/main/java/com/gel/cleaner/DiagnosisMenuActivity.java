@@ -19,7 +19,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Simple dark-gold style layout, in code (να μην μπλέκουμε με extra XML)
+        // Simple dark-gold style layout
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
@@ -27,19 +27,19 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         root.setOrientation(LinearLayout.VERTICAL);
         int pad = dp(16);
         root.setPadding(pad, pad, pad, pad);
-        root.setBackgroundColor(0xFF101010); // dark bg
+        root.setBackgroundColor(0xFF101010);
 
         // TITLE
         TextView title = new TextView(this);
         title.setText("🔬 GEL Service Lab");
         title.setTextSize(22f);
-        title.setTextColor(0xFFFFD700); // gold
+        title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
         // SUBTITLE
         TextView sub = new TextView(this);
-        sub.setText("Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests");
+        sub.setText("Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report");
         sub.setTextSize(14f);
         sub.setTextColor(0xFFCCCCCC);
         sub.setPadding(0, 0, 0, dp(16));
@@ -58,10 +58,21 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         root.addView(sectionLabel("MANUAL TESTS"));
 
         View manualBtn = makeBlockButton("🧪 Manual Tests",
-                "Στοχευμένα tests για service:\nΗχεία, δόνηση, αισθητήρες, οθόνη, RAM live, WiFi κ.λπ.");
+                "Στοχευμένα tests για service:\nΗχεία, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.");
         manualBtn.setOnClickListener(v ->
                 startActivity(new Intent(this, ManualTestsActivity.class)));
         root.addView(manualBtn);
+
+        // NEW: EXPORT BLOCK
+        root.addView(sectionLabel("SERVICE REPORT"));
+
+        View exportBtn = makeBlockButton(
+                "📄 Export Service Report",
+                "Τελικό Report για τον πελάτη (PDF ή TXT) + αυτόματο reset"
+        );
+        exportBtn.setOnClickListener(v ->
+                startActivity(new Intent(this, ServiceReportActivity.class)));
+        root.addView(exportBtn);
 
         scroll.addView(root);
         setContentView(scroll);
@@ -103,7 +114,6 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         card.setClickable(true);
         card.setFocusable(true);
-
         return card;
     }
 

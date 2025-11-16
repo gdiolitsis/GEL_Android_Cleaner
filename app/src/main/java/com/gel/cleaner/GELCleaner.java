@@ -84,19 +84,17 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // DEEP CLEAN → SmartClean ΠΡΩΤΑ, μετά OEM deep cleaner
+    // DEEP CLEAN
     // ====================================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
-            // 1) Προσπάθεια με SmartClean (RAM / OEM optimized)
             boolean launched = CleanLauncher.smartClean(ctx);
 
             if (launched) {
-                ok(cb, "Smart Cleaner ενεργοποιήθηκε (RAM / OEM optimization).");
+                ok(cb, "Smart Cleaner ενεργοποιήθηκε.");
                 return;
             }
 
-            // 2) Fallback → OEM Deep Cleaner
             launched = CleanLauncher.openDeepCleaner(ctx);
 
             if (launched) {
@@ -104,7 +102,6 @@ public class GELCleaner {
                 return;
             }
 
-            // 3) Τελικό fallback → System Info
             try {
                 Intent i = new Intent(Settings.ACTION_DEVICE_INFO_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -120,14 +117,13 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // CLEAN APP CACHE — με report τι καθαρίστηκε
+    // CLEAN APP CACHE — report
     // ====================================================================
     public static void cleanAppCache(Context ctx, LogCallback cb) {
         try {
             long before = folderSize(ctx.getCacheDir());
             deleteFolder(ctx.getCacheDir());
-            long after = 0;
-            long diff = before - after;
+            long diff = before;
 
             ok(cb, "Cache cleaned: " + readable(diff));
 
@@ -137,7 +133,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES WITH REPORT + ανοίγει Storage Settings
+    // TEMP FILES — FIXED (no exit)
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
@@ -148,12 +144,8 @@ public class GELCleaner {
 
             ok(cb, "Temp files removed: " + readable(before));
 
-            // Επιπλέον: άνοιγμα Storage Settings, ώστε "να σε πάει κάπου"
-            try {
-                Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-            } catch (Exception ignored) {}
+            // ❗ FIX — δεν ανοίγουμε activity μετά τον καθαρισμό → δεν πετάει έξω
+            info(cb, "Temp cleanup completed safely.");
 
         } catch (Exception e) {
             err(cb, "tempFiles failed: " + e.getMessage());
@@ -161,7 +153,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // BROWSER CACHE — universal + Mi Browser support
+    // BROWSER CACHE — universal + Mi Browser
     // ====================================================================
     public static void browserCache(Context ctx, LogCallback cb) {
         try {
@@ -176,10 +168,9 @@ public class GELCleaner {
                     "com.vivaldi.browser",
                     "com.duckduckgo.mobile.android",
                     "com.sec.android.app.sbrowser",
-                    // MI Browser variations
-                    "com.mi.globalbrowser",
-                    "com.android.browser",
-                    "com.miui.hybrid"
+                    "com.mi.globalbrowser",   // Mi Browser Global
+                    "com.android.browser",     // AOSP Browser
+                    "com.miui.hybrid"          // Xiaomi Hybrid browser
             };
 
             List<String> installed = new ArrayList<>();
@@ -190,7 +181,7 @@ public class GELCleaner {
             }
 
             if (installed.isEmpty()) {
-                err(cb, "No browsers found on your device.");
+                err(cb, "No browsers found.");
                 return;
             }
 
@@ -200,7 +191,7 @@ public class GELCleaner {
                 i.setData(Uri.parse("package:" + pkg));
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(i);
-                ok(cb, "Opening browser storage → Clear Cache.");
+                ok(cb, "Opening browser → Storage → Clear Cache.");
                 return;
             }
 
@@ -215,24 +206,36 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // RUNNING APPS → όσο επιτρέπει η Google
+    // RUNNING APPS → with full instructions
     // ====================================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
-            // 1) Developer / Running Services (όπου υπάρχει)
+            // Developer Services
             try {
                 Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
                 dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(dev);
-                ok(cb, "Opening Developer / Running Services (where supported)...");
+
+                ok(cb, "Developer Services opened.");
+                info(cb,
+                        "Για να δεις τις ενεργές εφαρμογές:\n" +
+                        "1) Πήγαινε στο 'Running Services'\n" +
+                        "2) Εκεί θα τις δεις όλες\n" +
+                        "3) Μπορείς να τερματίσεις όποια θέλεις");
+
                 return;
             } catch (Exception ignored) {}
 
-            // 2) Fallback → Application Settings (λίστα εφαρμογών)
+            // Fallback
             Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            ok(cb, "Opening Applications list (running apps visibility is restricted by Android).");
+
+            ok(cb, "Opening Applications list.");
+            info(cb,
+                    "⚠️ Από Android 12+, η Google έκρυψε τις 'Running Apps'.\n" +
+                    "Ενεργοποίησε Developer Options για περισσότερα.");
+
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
         }

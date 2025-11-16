@@ -25,25 +25,24 @@ import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 // ============================================================
-// ServiceReportActivity
-// Export Service Report (TXT + PDF) με GEL ΛΟΓΟΤΥΠΟ & ΥΠΟΓΡΑΦΗ
+// ServiceReportActivity — GEL LAB OFFICIAL EDITION
+// TXT + PDF Export with Multi-Page, Unicode Wrap & GEL Logo
 // ============================================================
 public class ServiceReportActivity extends AppCompatActivity {
 
     private static final int REQ_WRITE = 9911;
-
     private TextView txtPreview;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // --- Απλό UI με preview + 2 κουμπιά ---
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
@@ -63,14 +62,14 @@ public class ServiceReportActivity extends AppCompatActivity {
         TextView sub = new TextView(this);
         sub.setText(
                 "GDiolitsis Engine Lab (GEL) — Author & Developer\n" +
-                "Όλα τα ευρήματα διάγνωσης (Auto + Manual) σε ένα αρχείο."
+                "Τελικό Report για τον πελάτη (Auto + Manual)"
         );
         sub.setTextSize(13f);
         sub.setTextColor(0xFFCCCCCC);
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 
-        // Preview log
+        // PREVIEW
         txtPreview = new TextView(this);
         txtPreview.setTextSize(13f);
         txtPreview.setTextColor(0xFFEEEEEE);
@@ -87,8 +86,8 @@ public class ServiceReportActivity extends AppCompatActivity {
         Button btnTxt = new Button(this);
         btnTxt.setText("💾 Export TXT");
         btnTxt.setAllCaps(false);
-        btnTxt.setTextColor(0xFFFFFFFF);
         btnTxt.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        btnTxt.setTextColor(0xFFFFFFFF);
         LinearLayout.LayoutParams lp1 =
                 new LinearLayout.LayoutParams(0, dp(48), 1f);
         lp1.setMargins(0, dp(8), dp(4), dp(8));
@@ -98,8 +97,8 @@ public class ServiceReportActivity extends AppCompatActivity {
         Button btnPdf = new Button(this);
         btnPdf.setText("📄 Export PDF");
         btnPdf.setAllCaps(false);
-        btnPdf.setTextColor(0xFFFFFFFF);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        btnPdf.setTextColor(0xFFFFFFFF);
         LinearLayout.LayoutParams lp2 =
                 new LinearLayout.LayoutParams(0, dp(48), 1f);
         lp2.setMargins(dp(4), dp(8), 0, dp(8));
@@ -115,31 +114,32 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ------------------------------------------------------------
-    // Πριν γράψουμε, ζητάμε δικαίωμα αν χρειάζεται
+    // PERMISSION CHECK
     // ------------------------------------------------------------
     private void exportWithCheck(boolean pdf) {
+
         if (GELServiceLog.isEmpty()) {
-            Toast.makeText(this, "Δεν υπάρχει διαθέσιμο Service Log για export.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Δεν υπάρχει Service Log για export.", Toast.LENGTH_LONG).show();
             return;
         }
 
+        // Android 10 και πίσω -> χρειάζεται WRITE_EXTERNAL_STORAGE
         if (Build.VERSION.SDK_INT <= 29) {
-            // Χρειαζόμαστε WRITE_EXTERNAL_STORAGE στα παλιά
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQ_WRITE);
-                // Θα ξαναπατήσει ο χρήστης το κουμπί μετά την άδεια
+
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQ_WRITE
+                );
                 return;
             }
         }
 
-        if (pdf) {
-            exportPdf();
-        } else {
-            exportTxt();
-        }
+        if (pdf) exportPdf();
+        else exportTxt();
     }
 
     // ------------------------------------------------------------
@@ -151,33 +151,28 @@ public class ServiceReportActivity extends AppCompatActivity {
                     Environment.DIRECTORY_DOWNLOADS);
             if (!outDir.exists()) outDir.mkdirs();
 
-            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                    .format(new Date());
+            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
             File out = new File(outDir, "GEL_Service_Report_" + time + ".txt");
 
             String body = buildReportBody();
             FileOutputStream fos = new FileOutputStream(out);
-            fos.write(body.getBytes("UTF-8"));
-            fos.flush();
+            fos.write(body.getBytes(StandardCharsets.UTF_8));
             fos.close();
 
             Toast.makeText(this,
-                    "TXT report αποθηκεύτηκε:\n" + out.getAbsolutePath(),
+                    "TXT αποθηκεύτηκε:\n" + out.getAbsolutePath(),
                     Toast.LENGTH_LONG).show();
 
-            // Reset log για επόμενο πελάτη
             GELServiceLog.clear();
             txtPreview.setText(getPreviewText());
 
         } catch (Exception e) {
-            Toast.makeText(this,
-                    "Σφάλμα στο TXT export: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Σφάλμα TXT: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     // ------------------------------------------------------------
-    // PDF EXPORT (με λογότυπο GEL στην κορυφή)
+    // PDF EXPORT — MULTI PAGE + LOGO
     // ------------------------------------------------------------
     private void exportPdf() {
         try {
@@ -185,117 +180,131 @@ public class ServiceReportActivity extends AppCompatActivity {
                     Environment.DIRECTORY_DOWNLOADS);
             if (!outDir.exists()) outDir.mkdirs();
 
-            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                    .format(new Date());
+            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
             File out = new File(outDir, "GEL_Service_Report_" + time + ".pdf");
 
             String body = buildReportBody();
 
-            PdfDocument doc = new PdfDocument();
+            PdfDocument pdf = new PdfDocument();
             Paint paint = new Paint();
 
-            int pageWidth = 595;  // A4 περίπου σε 72dpi
+            int pageWidth = 595;  // A4 72dpi
             int pageHeight = 842;
+            int margin = 40;
+            int y;
 
-            PdfDocument.PageInfo pageInfo =
-                    new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create();
-            PdfDocument.Page page = doc.startPage(pageInfo);
-            Canvas canvas = page.getCanvas();
-
-            int y = 40;
-
-            // Logo (αν υπάρχει)
-            try {
-                Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
-                if (logo != null) {
-                    int lw = 64;
-                    int lh = 64;
-                    Bitmap scaled = Bitmap.createScaledBitmap(logo, lw, lh, true);
-                    canvas.drawBitmap(scaled, 40, y, paint);
-                }
-            } catch (Exception ignored) {}
-
-            // Header κείμενο
-            paint.setColor(0xFF000000);
-            paint.setTextSize(14f);
-            canvas.drawText("GEL Service Report", 120, y + 25, paint);
-
-            paint.setTextSize(10f);
-            canvas.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
-                    120, y + 45, paint);
-
-            y += 80;
-
-            // Κύριο σώμα (πολύ απλό line-wrap)
-            paint.setTextSize(9.5f);
+            // split text safely
             String[] lines = body.split("\n");
-            int lineHeight = 12;
 
-            for (String line : lines) {
-                // απλό wrap σε ~80 chars
-                while (line.length() > 80) {
-                    String part = line.substring(0, 80);
-                    canvas.drawText(part, 40, y, paint);
-                    y += lineHeight;
-                    line = line.substring(80);
-                    if (y > pageHeight - 40) break;
+            int currentLine = 0;
+            int pageNumber = 1;
+
+            while (currentLine < lines.length) {
+
+                PdfDocument.PageInfo pageInfo =
+                        new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
+                PdfDocument.Page page = pdf.startPage(pageInfo);
+                Canvas canvas = page.getCanvas();
+
+                y = margin;
+
+                // ----- LOGO -----
+                try {
+                    Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
+                    if (logo != null) {
+                        Bitmap scaled = Bitmap.createScaledBitmap(logo, 64, 64, true);
+                        canvas.drawBitmap(scaled, margin, y, paint);
+                    }
+                } catch (Exception ignored) {}
+
+                paint.setColor(0xFF000000);
+                paint.setTextSize(14f);
+                canvas.drawText("GEL Service Report", margin + 80, y + 25, paint);
+
+                paint.setTextSize(10f);
+                canvas.drawText("GDiolitsis Engine Lab (GEL)", margin + 80, y + 45, paint);
+
+                y += 90;
+                paint.setTextSize(9f);
+
+                int lineHeight = 12;
+                int maxY = pageHeight - margin;
+
+                // write lines
+                while (currentLine < lines.length && y < maxY) {
+                    String line = unicodeWrap(lines[currentLine], 85);
+                    for (String sub : line.split("\n")) {
+                        if (y >= maxY) break;
+                        canvas.drawText(sub, margin, y, paint);
+                        y += lineHeight;
+                    }
+                    currentLine++;
                 }
-                if (y > pageHeight - 40) break;
-                canvas.drawText(line, 40, y, paint);
-                y += lineHeight;
+
+                pdf.finishPage(page);
+                pageNumber++;
             }
 
-            doc.finishPage(page);
-
             FileOutputStream fos = new FileOutputStream(out);
-            doc.writeTo(fos);
-            fos.flush();
+            pdf.writeTo(fos);
             fos.close();
-            doc.close();
+            pdf.close();
 
             Toast.makeText(this,
-                    "PDF report αποθηκεύτηκε:\n" + out.getAbsolutePath(),
+                    "PDF αποθηκεύτηκε:\n" + out.getAbsolutePath(),
                     Toast.LENGTH_LONG).show();
 
-            // Reset log για επόμενο πελάτη
             GELServiceLog.clear();
             txtPreview.setText(getPreviewText());
 
         } catch (Exception e) {
-            Toast.makeText(this,
-                    "Σφάλμα στο PDF export: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Σφάλμα PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     // ------------------------------------------------------------
-    // Χτίσιμο σώματος report (πάντα branded GEL)
+    // Safe Unicode wrap (χωρίς να κόβει ελληνικά στη μέση)
+    // ------------------------------------------------------------
+    private String unicodeWrap(String text, int width) {
+        if (text.length() <= width) return text;
+
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+
+        while (index < text.length()) {
+            int end = Math.min(index + width, text.length());
+            sb.append(text, index, end).append("\n");
+            index = end;
+        }
+        return sb.toString();
+    }
+
+    // ------------------------------------------------------------
+    // BUILD FULL REPORT BODY
     // ------------------------------------------------------------
     private String buildReportBody() {
         StringBuilder sb = new StringBuilder();
 
-        // Header
         sb.append("GEL Service Report\n");
         sb.append("GDiolitsis Engine Lab (GEL) — Author & Developer\n");
-        sb.append("App: GEL Cleaner (Android)\n");
         sb.append("----------------------------------------\n");
         sb.append("Ημερομηνία: ")
                 .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                         .format(new Date()))
                 .append("\n\n");
 
-        // Device info (όσο μπορούμε χωρίς extra permissions)
         sb.append("Συσκευή: ")
-                .append(android.os.Build.MANUFACTURER).append(" ")
-                .append(android.os.Build.MODEL).append("\n");
+                .append(Build.MANUFACTURER).append(" ")
+                .append(Build.MODEL).append("\n");
+
         sb.append("Android: ")
-                .append(android.os.Build.VERSION.RELEASE)
-                .append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\n\n");
+                .append(Build.VERSION.RELEASE)
+                .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
         sb.append("=== Service Lab Diagnostics ===\n\n");
 
         if (GELServiceLog.isEmpty()) {
-            sb.append("[Δεν υπάρχουν διαθέσιμα logs — τρέξε Auto/Manual διαγνώσεις πρώτα.]\n");
+            sb.append("[Δεν υπάρχουν καταχωρημένες διαγνώσεις.]\n");
         } else {
             sb.append(GELServiceLog.getAll()).append("\n");
         }
@@ -308,9 +317,9 @@ public class ServiceReportActivity extends AppCompatActivity {
 
     private String getPreviewText() {
         if (GELServiceLog.isEmpty()) {
-            return "Δεν υπάρχουν ακόμη καταχωρημένες διαγνώσεις.\n" +
-                   "Τρέξε Auto Diagnosis ή Manual Tests,\n" +
-                   "και μετά γύρνα εδώ για Export.";
+            return "Δεν υπάρχουν ακόμη διαγνώσεις.\n" +
+                   "Τρέξε Auto Diagnosis ή Manual Tests\n" +
+                   "και μετά κάνε Export.";
         }
         return GELServiceLog.getAll();
     }

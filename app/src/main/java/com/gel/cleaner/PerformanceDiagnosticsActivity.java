@@ -6,6 +6,8 @@
 // ============================================================
 package com.gel.cleaner;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -160,10 +162,35 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 .replace(">", "&gt;");
     }
 
+    // ============================================================
+    // CHECK SYSTEM PROPERTY (ROOT / SECURITY / VERIFIED BOOT)
+    // ============================================================
+private void checkProp(String key, String expected, String msg) {
+    try {
+        Process p = Runtime.getRuntime().exec("getprop " + key);
+        java.io.BufferedReader br = new java.io.BufferedReader(
+                new java.io.InputStreamReader(p.getInputStream()));
+        String value = br.readLine();
+        br.close();
+
+        if (value == null) {
+            logWarn("Property " + key + " returned NULL.");
+            return;
+        }
+
+        if (value.equalsIgnoreCase(expected)) {
+            logError(msg);  // intentionally error-level if unsafe
+        } else {
+            logOk(key + "=" + value + " (normal)");
+        }
+    } catch (Exception e) {
+        logError("checkProp error for " + key + ": " + e.getMessage());
+    }
+}
     /* ============================================================
      * MAIN DIAG FLOW — 30 LABS
      * ============================================================ */
-    private void runFullDiagnosis() {
+ private void runFullDiagnosis() {
         new Thread(() -> {
 
             // LAB 0–3: Root & security baseline

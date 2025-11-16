@@ -29,7 +29,6 @@ import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
 import android.view.Display;
-import android.view.WindowManager;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -142,7 +141,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * MAIN DIAG FLOW
+     * MAIN DIAG FLOW (20 LABS STYLE)
      * ============================================================ */
     private void runFullDiagnosis() {
         new Thread(() -> {
@@ -150,31 +149,35 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             logSection("LAB 0 — Root / System Integrity");
 
             boolean rooted = isDeviceRootedBasic();
-            if (rooted) logError("Η συσκευή φαίνεται ROOTED — μειωμένη ασφάλεια.");
-            else logOk("Δεν εντοπίζω εμφανή root.");
 
             if (rooted) {
+                logError("Η συσκευή φαίνεται ROOTED — μειωμένη ασφάλεια.");
+                // Τρέχουμε τα extra root labs μόνο αν φαίνεται rooted
                 labRootOverview();
                 labRootSecurityFlags();
                 labRootDangerousProps();
                 labRootMounts();
+            } else {
+                logInfo("Root status: NOT ROOTED / LOCKED (δεν βρέθηκαν σαφείς ενδείξεις).");
+                logLine();
+                logInfo("Παράλειψη Root LABS (η συσκευή δεν φαίνεται rooted).");
             }
 
             logLine();
 
-            labHardware();
-            labCpuRam();
-            labStorage();
-            labBattery();
-            labNetwork();
-            labWifiSignal();
-            labSensors();
-            labDisplay();
-            labThermal();
-            labSystemHealth();
+            labHardware();      // LAB 1
+            labCpuRam();        // LAB 2
+            labStorage();       // LAB 3
+            labBattery();       // LAB 4
+            labNetwork();       // LAB 5
+            labWifiSignal();    // LAB 6
+            labSensors();       // LAB 7
+            labDisplay();       // LAB 8
+            labThermal();       // LAB 9
+            labSystemHealth();  // LAB 10
 
             logLine();
-            logOk("Διάγνωση ολοκληρώθηκε.");
+            logOk("Auto Diagnosis ολοκληρώθηκε. Τα ❌ είναι πραγματικές βλάβες ή σοβαρές ενδείξεις.");
 
         }).start();
     }
@@ -267,7 +270,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 enabled = (boolean) clazz.getMethod("isSELinuxEnabled").invoke(null);
                 enforced = (boolean) clazz.getMethod("isSELinuxEnforced").invoke(null);
             } catch (Throwable ignored) {
-                // Εδώ είναι κλασική περίπτωση firmware limitation
                 logAccessDenied("SELinux status API");
             }
 
@@ -290,7 +292,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (adb == 1) logWarn("ADB ενεργό.");
         } catch (Throwable t) {
-            // Πολλά firmware μπλοκάρουν Global settings
             logAccessDenied("ADB / Developer Settings");
         }
     }
@@ -310,7 +311,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     private void checkProp(String key, String bad, String msg) {
         String val = readProp(key);
         if (val == null) {
-            // Αν δεν επιστρέφει τίποτα, παίζει να είναι OEM lock, αλλά το αφήνουμε ως info
             logInfo(key + " = N/A");
             return;
         }
@@ -356,7 +356,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             else logOk("/system not RW");
 
         } catch (Exception e) {
-            // Συνήθως permission issue
             logAccessDenied("mount table");
         } finally {
             try { if (r != null) r.close(); } catch (Exception ignored) {}
@@ -420,7 +419,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             long total = s.getBlockCountLong() * s.getBlockSizeLong();
             long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
-            int pct = (int)((free * 100L) / total);
+            int pct = (int) ((free * 100L) / total);
 
             logInfo("Storage: " + readable(free) + " free (" + pct + "%)");
 
@@ -440,7 +439,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         try {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (i == null) {
-                // Δεν μας άφησε να διαβάσουμε battery stats
                 logAccessDenied("Battery stats");
                 logLine();
                 return;
@@ -453,8 +451,44 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int rawTemp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
             float temp = rawTemp / 10f;
 
+            int health = i.getIntExtra(BatteryManager.EXTRA_HEALTH,
+                    BatteryManager.BATTERY_HEALTH_UNKNOWN);
+
             logInfo(String.format(Locale.US, "Battery: %.1f%%", pct));
             logInfo(String.format(Locale.US, "Temp: %.1f°C", temp));
+
+            String healthStr;
+            boolean bad = false;
+            switch (health) {
+                case BatteryManager.BATTERY_HEALTH_GOOD:
+                    healthStr = "GOOD";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_OVERHEAT:
+                    healthStr = "OVERHEAT";
+                    bad = true;
+                    break;
+                case BatteryManager.BATTERY_HEALTH_DEAD:
+                    healthStr = "DEAD";
+                    bad = true;
+                    break;
+                case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
+                    healthStr = "OVER_VOLTAGE";
+                    bad = true;
+                    break;
+                case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
+                    healthStr = "FAILURE";
+                    bad = true;
+                    break;
+                default:
+                    healthStr = "UNKNOWN";
+                    break;
+            }
+
+            logInfo("Health: " + healthStr);
+            if (bad)
+                logError("Battery health εκτός φυσιολογικών ορίων (σύμφωνα με Android).");
+            else
+                logOk("Battery health εντός φυσιολογικών ορίων (σύμφωνα με Android).");
 
         } catch (Exception e) {
             logError("Battery error");
@@ -544,9 +578,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             }
 
             List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-            logInfo("Sensors: " + (all == null ? 0 : all.size()));
+            int count = (all == null ? 0 : all.size());
+            logInfo("Σύνολο αισθητήρων: " + count);
 
             checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+            checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+            checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer");
+            checkSensor(sm, Sensor.TYPE_LIGHT, "Light Sensor");
+            checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
 
         } catch (Exception e) {
             logError("Sensor error");
@@ -581,7 +620,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int w = dm.widthPixels;
             int h = dm.heightPixels;
 
-            logInfo("Resolution: " + w + "x" + h);
+            logInfo("Resolution: " + w + " × " + h);
+
+            // Απλό check όπως στο παλιό report
+            if (w >= 720 && h >= 1280)
+                logOk("Display resolution OK.");
+            else
+                logWarn("Low display resolution για σύγχρονες εφαρμογές.");
 
         } catch (Exception e) {
             logError("Display error");
@@ -619,7 +664,6 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 logAccessDenied("Thermal sensors");
             }
         } else {
-            // Κλασική περίπτωση firmware/OS limitation
             logAccessDenied("Thermal API < 29");
         }
 
@@ -627,22 +671,52 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 10 — System Health
+     * LAB 10 — System Health / Telephony / Live RAM
      * ============================================================ */
     private void labSystemHealth() {
-        logSection("LAB 10 — System Health");
+        logSection("LAB 10 — System / Telephony / Live RAM");
 
         try {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
             if (tm != null) {
-                logInfo("Network operator: " + tm.getNetworkOperatorName());
+                String netOp = tm.getNetworkOperatorName();
+                String simOp = tm.getSimOperatorName();
+
+                logInfo("Network operator: " + (netOp == null ? "N/A" : netOp));
+                logInfo("SIM operator: " + (simOp == null ? "N/A" : simOp));
             } else {
                 logAccessDenied("TelephonyManager");
             }
 
         } catch (Exception e) {
             logAccessDenied("Telephony service");
+        }
+
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+                long free = mi.availMem;
+                long total = mi.totalMem;
+                float pct = total > 0 ? (100f * free / total) : -1f;
+
+                String ramLine = String.format(
+                        Locale.US,
+                        "Live RAM: %s (%.0f%% free)",
+                        readable(free),
+                        pct
+                );
+                logInfo(ramLine);
+
+                if (pct >= 25f)
+                    logOk("RAM live status OK.");
+                else
+                    logWarn("Χαμηλή διαθέσιμη RAM αυτή τη στιγμή.");
+            }
+        } catch (Exception e) {
+            logError("Live RAM error");
         }
 
         logLine();

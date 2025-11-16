@@ -1,0 +1,119 @@
+GEL Manual Diagnostic Tests — Hospital Edition (30 LABS)
+GDiolitsis Engine Lab (GEL)
+LAB 0 — Root / Integrity Manual Check
+• Verify with external root apps (Root Checker etc.)
+• Check bootloader unlock status if accessible
+• Confirm no unauthorized modifications
+LAB 1 — SELinux / Debug Manual Check
+• Verify Developer Options manually
+• Confirm USB Debugging ON/OFF
+• Check for OEM unlock toggle state
+LAB 2 — Dangerous System Properties Manual Review
+• Compare build fingerprint
+• Check Verified Boot status from fastboot (if available)
+LAB 3 — System Mounts / File System
+• Validate /system write protection using PC tools
+• Inspect partition integrity via adb shell (if permitted)
+LAB 4 — Hardware Identity Confirmation
+• Compare model number with physical label
+• Verify serial/IMEI consistency
+LAB 5 — CPU Physical Test
+• Run a CPU stress test (Geekbench / CPU Throttling Test)
+• Check for abnormal temperature spikes
+• Listen for abnormal performance drops
+LAB 6 — RAM Stress Test
+• Open 5–7 heavy apps manually
+• Observe app reload behavior
+• Confirm multitasking stability
+LAB 7 — Internal Storage Manual Check
+• Test large file copy (100MB+)
+• Validate storage speed using external app
+• Confirm no abnormal slowdowns/stalls
+LAB 8 — External Storage (SD)
+• Insert SD card (if present)
+• Test read/write
+• Check formatting and errors
+LAB 9 — Battery Live Observation
+• Observe battery drain for 5 minutes idle
+• Compare with expected model baseline
+LAB 10 — Battery Health (Manual)
+• Use AccuBattery or OEM diagnostics
+• Check charge cycles
+• Inspect physical battery swelling
+LAB 11 — Thermal Manual Inspection
+• Observe device temperature under 3 minutes stress test
+• Check for abnormal hot spots on chassis
+LAB 12 — Network Connectivity Manual
+• Test browsing speed
+• Test app loading
+• Use Speedtest / Fast.com briefly
+LAB 13 — WiFi Manual Test
+• Connect to 2.4GHz and 5GHz AP
+• Check stability walking 5–10 meters away
+• Verify reconnection time
+LAB 14 — Mobile Signal Manual Test
+• Check LTE/5G signal strength at fixed spot
+• Test mobile data browsing
+• Confirm calls/SMS work normally
+LAB 15 — Bluetooth Manual Test
+• Pair with earphones or speaker
+• Confirm audio latency
+• Check reconnect behavior
+LAB 16 — Sensors Manual Testing
+• Rotate device → Gyro test
+• Move device → Accelerometer test
+• Use compass app → Magnetometer test
+• Cover proximity sensor → Screen off/on
+• Check light sensor in dark/bright room
+LAB 17 — Display Manual Test
+• Check for dead pixels (full red/green/blue/white/black screens)
+• Test brightness range
+• View angles
+• Touch accuracy test (draw lines)
+LAB 18 — GPU Stress Test
+• Use simple GPU benchmark (3DMark / GFX)
+• Validate stability & temperature
+LAB 19 — Audio & Vibration Manual Test
+• Play music – check left/right channels
+• Test loudspeaker distortion
+• Test vibration motor intensity
+• Test microphone via voice recorder
+LAB 20 — Camera Manual Test
+• Rear camera autofocus
+• Front camera clarity
+• Video stabilization
+• Check flash brightness
+• Test QR code scanning
+LAB 21 — GPS Manual Test
+• Open Google Maps → wait for lock
+• Check accuracy (≤10 meters)
+• Confirm stable lock outdoors
+LAB 22 — System Uptime Manual Context
+• Confirm no random restarts
+• Ask user for reboot history if necessary
+LAB 23 — Installed Apps Manual Review
+• Check for suspicious apps
+• Verify no bloatware causing drain
+• Remove unused heavy apps
+LAB 24 — Security Patch Manual Review
+• Compare patch date against current month
+• Check OEM update availability
+LAB 25 — Power Optimization Manual Test
+• Check app battery usage in Settings
+• Validate deep sleep status
+• Confirm no rogue background apps
+LAB 26 — Accessibility Manual Review
+• Confirm all accessibility services are trusted
+• Disable suspicious overlays/services
+LAB 27 — Special Permissions Review
+• Check apps with “Display over other apps”
+• Check apps with “Install unknown apps”
+• Check usage access permissions
+LAB 28 — Live RAM Second Pass (Manual)
+• After running apps, check current RAM
+• Verify if RAM drops dangerously low
+LAB 29 — Final Clinical Summary (Manual)
+• Combine automatic + manual findings
+• Provide final technician recommendations
+• Mark pass/fail + required follow-up actions
+End of GEL Hospital Edition — Manual Tests (30 LABS)

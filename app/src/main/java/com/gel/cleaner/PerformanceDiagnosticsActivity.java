@@ -1,7 +1,6 @@
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.Sensor;
@@ -9,7 +8,6 @@ import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,7 +16,6 @@ import android.os.Handler;
 import android.os.HardwarePropertiesManager;
 import android.os.Looper;
 import android.os.StatFs;
-import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -58,6 +55,8 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         ui = new Handler(Looper.getMainLooper());
 
+        GELServiceLog.clear(); // καθάρισμα πριν νέα διάγνωση
+
         logTitle("🔬 GEL Phone Diagnosis — Service Lab");
         logInfo("Μοντέλο: " + Build.MANUFACTURER + " " + Build.MODEL);
         logInfo("Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
@@ -67,25 +66,47 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * HTML LOG HELPERS
+     * HTML LOG HELPERS + SERVICE LOG MIRROR
      * ============================================================ */
-    private void appendHtmlLine(String html) {
+    private void appendHtmlLine(String html, String raw) {
         ui.post(() -> {
             CharSequence current = txtDiag.getText();
             String add = Html.fromHtml(html + "<br>") + "";
             txtDiag.setText(current + add);
-
             scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });
+
+        GELServiceLog.addLine(raw);
     }
 
-    private void logTitle(String msg) { appendHtmlLine("<b>" + escape(msg) + "</b>"); }
-    private void logSection(String msg) { appendHtmlLine("<br><b>▌ " + escape(msg) + "</b>"); }
-    private void logInfo(String msg) { appendHtmlLine("ℹ️ " + escape(msg)); }
-    private void logOk(String msg) { appendHtmlLine("<font color='#88FF88'>✅ " + escape(msg) + "</font>"); }
-    private void logWarn(String msg) { appendHtmlLine("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>"); }
-    private void logError(String msg) { appendHtmlLine("<font color='#FF5555'>❌ " + escape(msg) + "</font>"); }
-    private void logLine() { appendHtmlLine("<font color='#666666'>────────────────────────────────</font>"); }
+    private void logTitle(String msg) {
+        appendHtmlLine("<b>" + escape(msg) + "</b>", msg);
+    }
+
+    private void logSection(String msg) {
+        appendHtmlLine("<br><b>▌ " + escape(msg) + "</b>", "▌ " + msg);
+    }
+
+    private void logInfo(String msg) {
+        appendHtmlLine("ℹ️ " + escape(msg), "ℹ️ " + msg);
+    }
+
+    private void logOk(String msg) {
+        appendHtmlLine("<font color='#88FF88'>✅ " + escape(msg) + "</font>", "✅ " + msg);
+    }
+
+    private void logWarn(String msg) {
+        appendHtmlLine("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>", "⚠️ " + msg);
+    }
+
+    private void logError(String msg) {
+        appendHtmlLine("<font color='#FF5555'>❌ " + escape(msg) + "</font>", "❌ " + msg);
+    }
+
+    private void logLine() {
+        appendHtmlLine("<font color='#666666'>────────────────────────────────</font>",
+                "────────────────────────────────");
+    }
 
     private String escape(String s) {
         if (s == null) return "";

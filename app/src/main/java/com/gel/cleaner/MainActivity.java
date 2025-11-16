@@ -94,9 +94,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnBrowserCache,
                 this::showBrowserPicker);
 
-        // TEMP FILES
+        // TEMP FILES  (FIXED)
         bind(R.id.btnTemp,
-                () -> GELCleaner.tempFiles(this, this));
+                () -> GELCleaner.cleanTempFiles(this, this));
 
         // APP CACHE LIST
         View appCache = findViewById(R.id.btnAppCache);

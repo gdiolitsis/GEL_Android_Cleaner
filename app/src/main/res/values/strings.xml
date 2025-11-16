@@ -11,31 +11,29 @@
     <string name="logs">📜 Logs</string>
     <string name="device_ready">Device is ready • Dark-Gold Edition</string>
 
-    <!-- Buttons / Actions -->
+    <!-- Donate -->
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
 
     <!-- SYSTEM -->
     <string name="cpu_ram_info">📱 PHONE INFO</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
-    <!-- PHONE INFO (Internal / Peripherals) -->
+    <!-- PHONE INFO -->
     <string name="phone_info_internal">📱 PHONE INFO\n    (Internal)</string>
     <string name="phone_info_peripherals">📡 PHONE INFO\n    (Peripherals)</string>
 
-    <!-- CLEANER (1 unified button) -->
+    <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>
 
     <!-- JUNK -->
     <string name="browser_cache">🌐 BROWSER CACHE</string>
-    <string name="temp_files">🔥 TEMP FILES</string>
     <string name="app_cache">🧽 APP CACHE</string>
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_cache_btn">🧽 APP CACHE</string>
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->
-    <string name="battery_boost">🔋 BATTERY BOOST</string>
-    <string name="kill_apps">🚀 KILL APPS</string>
+    <string name="diagnostics">🩺 GEL Phone Diagnosis</string>
 
     <!-- Permission prompts -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>

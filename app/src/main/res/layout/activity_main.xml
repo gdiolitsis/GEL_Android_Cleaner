@@ -81,7 +81,7 @@
             android:gravity="center"
             android:layout_marginBottom="10dp"/>
 
-        <!-- DONATE BUTTON (FIXED OUTLINE) -->
+        <!-- DONATE BUTTON -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
@@ -155,7 +155,7 @@
             android:paddingLeft="6dp"
             android:layout_marginTop="18dp"/>
 
-        <!-- CLEAN ALL (FIXED OUTLINE) -->
+        <!-- CLEAN ALL -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

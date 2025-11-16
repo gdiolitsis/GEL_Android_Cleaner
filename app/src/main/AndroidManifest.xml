@@ -2,29 +2,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ✅ FULL STORAGE + APPS + PROCESS -->
+    <!-- STORAGE -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
-    <!-- ✅ Legacy storage (≤ Android 10) -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
-    <!-- ✅ Usage access -->
+    <!-- USAGE -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions"/>
 
-    <!-- ✅ Kill background tasks -->
+    <!-- TASKS -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
 
-    <!-- ✅ Network -->
+    <!-- NETWORK -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <!-- ✅ Vibration -->
+    <!-- VIBRATION -->
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
@@ -37,7 +36,7 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.GEL.DarkGold">
 
-        <!-- MAIN LAUNCHER -->
+        <!-- MAIN -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -49,66 +48,52 @@
             </intent-filter>
         </activity>
 
-        <!-- PER-APP CACHE VIEW -->
-        <activity
-            android:name=".AppListActivity"
+        <activity android:name=".AppListActivity"
             android:exported="false"
             android:screenOrientation="portrait"/>
 
-        <!-- CLEANER SCREEN -->
-        <activity
-            android:name=".CleanerActivity"
+        <activity android:name=".CleanerActivity"
             android:exported="false"
             android:screenOrientation="portrait"/>
 
-        <!-- PERMISSION HELPER -->
-        <activity
-            android:name=".PermissionsActivity"
+        <activity android:name=".PermissionsActivity"
             android:exported="false"/>
 
-        <!-- INTERNAL DEVICE INFO -->
-        <activity
-            android:name=".DeviceInfoInternalActivity"
+        <activity android:name=".DeviceInfoInternalActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- PERIPHERALS DEVICE INFO -->
-        <activity
-            android:name=".DeviceInfoPeripheralsActivity"
+        <activity android:name=".DeviceInfoPeripheralsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- CPU/RAM LIVE ACTIVITY -->
-        <activity
-            android:name=".CpuRamLiveActivity"
+        <activity android:name=".CpuRamLiveActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🆕 SERVICE LAB — MAIN MENU -->
-        <activity
-            android:name=".DiagnosisMenuActivity"
+        <!-- SERVICE LAB -->
+        <activity android:name=".DiagnosisMenuActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🆕 SERVICE LAB — MANUAL TESTS -->
-        <activity
-            android:name=".ManualTestsActivity"
+        <activity android:name=".ManualTestsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🆕 AUTO DIAGNOSIS — FULL SERVICE LAB -->
-        <activity
-            android:name=".PerformanceDiagnosticsActivity"
+        <activity android:name=".PerformanceDiagnosticsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🆕 SERVICE LAB — EXPORT REPORT -->
-        <activity
-            android:name=".ServiceReportActivity"
+        <activity android:name=".ServiceReportActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- ACCESSIBILITY SERVICE -->
+        <!-- 🆕 NEW AUTO DIAG ROOT-AWARE -->
+        <activity android:name=".AutoDiagnosisActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- ACCESSIBILITY -->
         <service
             android:name=".GELAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

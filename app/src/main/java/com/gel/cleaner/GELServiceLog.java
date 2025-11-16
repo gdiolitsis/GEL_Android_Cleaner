@@ -35,6 +35,14 @@ public class GELServiceLog {
     public static void error(String msg) { add("❌ ERROR", msg); }
 
     // ------------------------------------------------------------
+    // ADD LINE (NEEDED BY MANUAL TESTS & AUTO DIAGNOSIS)
+    // ------------------------------------------------------------
+    public static synchronized void addLine(String line) {
+        if (line == null) line = "────────────────────────────";
+        add("──", line);
+    }
+
+    // ------------------------------------------------------------
     // GET FULL REPORT
     // ------------------------------------------------------------
     public static synchronized String getAll() {

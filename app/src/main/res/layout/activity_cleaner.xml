@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#101010"
+    android:padding="16dp">
+
+    <!-- TITLE -->
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🧹 GEL Cleaner"
+        android:textColor="#FFD700"
+        android:textSize="22sp"
+        android:paddingBottom="12dp"
+        android:textStyle="bold" />
+
+    <!-- BUTTONS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnCleanRam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚡ Clean RAM"
+            android:background="@drawable/gel_btn_outline"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnDeepClean"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🛠 Deep Clean"
+            android:background="@drawable/gel_btn_outline"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnTempFiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔥 Temp / Junk Files"
+            android:background="@drawable/gel_btn_outline"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnBrowserClean"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🌐 Browser Cache"
+            android:background="@drawable/gel_btn_outline"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnRunningApps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🚀 Running Apps"
+            android:background="@drawable/gel_btn_outline"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="14dp" />
+
+    </LinearLayout>
+
+    <!-- LOG AREA -->
+    <ScrollView
+        android:id="@+id/scrollCleaner"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#151515"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/txtCleanerLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#CCCCCC"
+            android:textSize="14sp"
+            android:text="Log ready…\n" />
+
+    </ScrollView>
+
+</LinearLayout>

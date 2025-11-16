@@ -10,9 +10,13 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 
 public class DeviceInfoInternalActivity extends AppCompatActivity {
+
+    private boolean isRooted = false;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -31,9 +35,16 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             title.setText(getString(R.string.phone_info_internal));
         }
 
+        // ===========================
+        // ROOT CHECK
+        // ===========================
+        isRooted = isDeviceRooted();
+
         StringBuilder s = new StringBuilder();
 
+        // ===========================
         // SYSTEM
+        // ===========================
         s.append("── SYSTEM ──\n");
         s.append("Brand: ").append(Build.BRAND).append("\n");
         s.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
@@ -43,7 +54,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         s.append("Board: ").append(Build.BOARD).append("\n");
         s.append("Hardware: ").append(Build.HARDWARE).append("\n\n");
 
+        // ===========================
         // ANDROID
+        // ===========================
         s.append("── ANDROID ──\n");
         s.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
         s.append("API Level: ").append(Build.VERSION.SDK_INT).append("\n");
@@ -55,7 +68,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         s.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
         s.append("Kernel: ").append(System.getProperty("os.version")).append("\n\n");
 
+        // ===========================
         // CPU
+        // ===========================
         s.append("── CPU ──\n");
         String[] abis = Build.SUPPORTED_ABIS;
         if (abis != null && abis.length > 0) {
@@ -70,7 +85,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         }
         s.append("\n\n");
 
+        // ===========================
         // RAM
+        // ===========================
         s.append("── RAM ──\n");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
@@ -86,7 +103,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             s.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n\n");
         }
 
-        // INTERNAL STORAGE
+        // ===========================
+        // STORAGE
+        // ===========================
         s.append("── INTERNAL STORAGE ──\n");
         try {
             File dataDir = Environment.getDataDirectory();
@@ -103,16 +122,94 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             s.append("Storage info: N/A (").append(t.getMessage()).append(")\n\n");
         }
 
+        // ===========================
         // SCREEN
+        // ===========================
         s.append("── SCREEN ──\n");
         DisplayMetrics dm = getResources().getDisplayMetrics();
         s.append("Resolution: ").append(dm.widthPixels)
                 .append(" x ").append(dm.heightPixels).append(" px\n");
         s.append("Density: ").append(dm.densityDpi).append(" dpi\n");
-        s.append("Scaled density: ").append(dm.scaledDensity).append("\n");
+        s.append("Scaled density: ").append(dm.scaledDensity).append("\n\n");
+
+        // ===========================
+        // ROOT EXTRAS (ONLY IF ROOTED)
+        // ===========================
+        if (isRooted) {
+            s.append("── ROOT MODE ACTIVE ──\n");
+            s.append("Build Tags: ").append(Build.TAGS).append("\n");
+            s.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+            s.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+            s.append("SELinux: ").append(getSelinux()).append("\n");
+            s.append("su paths: ").append(checkSuPaths()).append("\n");
+        }
 
         if (info != null) {
             info.setText(s.toString());
         }
+    }
+
+    // ============================================================
+    // ROOT UTILITY METHODS
+    // ============================================================
+    private boolean isDeviceRooted() {
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) return true;
+
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su"
+        };
+
+        for (String p : paths) {
+            if (new File(p).exists()) return true;
+        }
+
+        String debuggable = getProp("ro.debuggable");
+        String secure = getProp("ro.secure");
+
+        if ("1".equals(debuggable) || "0".equals(secure)) return true;
+
+        return false;
+    }
+
+    private String getProp(String key) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = br.readLine();
+            br.close();
+            return line != null ? line.trim() : "[empty]";
+        } catch (Exception e) {
+            return "[error]";
+        }
+    }
+
+    private String getSelinux() {
+        try {
+            Process p = Runtime.getRuntime().exec("getenforce");
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = br.readLine();
+            br.close();
+            return line != null ? line.trim() : "unknown";
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    private String checkSuPaths() {
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su"
+        };
+
+        for (String p : paths) {
+            if (new File(p).exists()) return p;
+        }
+        return "none";
     }
 }

@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;   // ✅ FIXED
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -91,17 +91,13 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnCpuRamLive,
                 () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        // GEL CLEANER ALL → SAFE DEEP CLEAN (ΔΕΝ σκοτώνει το app)
+        // GEL CLEANER ALL → SAFE DEEP CLEAN
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
-        // BROWSER CACHE → UNIVERSAL + Mi Browser popup
+        // BROWSER CACHE
         bind(R.id.btnBrowserCache,
                 this::showBrowserPicker);
-
-        // TEMP FILES → FIXED (δεν ανοίγει Activity)
-        bind(R.id.btnTemp,
-                () -> GELCleaner.cleanTempFiles(this, this));
 
         // APP CACHE LIST
         View appCache = findViewById(R.id.btnAppCache);
@@ -115,13 +111,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // BATTERY BOOST
-        bind(R.id.btnBatteryBoost,
-                () -> GELCleaner.openRunningApps(this, this));
-
-        // KILL APPS
-        bind(R.id.btnKillApps,
-                () -> GELCleaner.openRunningApps(this, this));
+        // PERFORMANCE DIAGNOSTICS (New button)
+        bind(R.id.btnDiagnostics,
+                () -> startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
     }
 
     private void bind(int id, Runnable fn) {
@@ -137,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     /* =========================================================
-     * POPUP BROWSER LIST — FIXED + MI BROWSER SUPPORT
+     * POPUP BROWSER LIST
      * ========================================================= */
     private void showBrowserPicker() {
 

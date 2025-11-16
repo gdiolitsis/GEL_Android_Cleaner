@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
-import android.text.format.Formatter;
+import android.text.format Formatter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // CLEAN RAM
+    // CLEAN RAM (Smart Clean)
     // ====================================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         try {
@@ -75,7 +75,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // DEEP CLEAN (ασφαλές)
+    // DEEP CLEAN (OEM Cleaner)
     // ====================================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         try {
@@ -94,7 +94,7 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // CLEAN APP CACHE — report
+    // CLEAN APP CACHE
     // ====================================================================
     public static void cleanAppCache(Context ctx, LogCallback cb) {
         try {
@@ -107,35 +107,37 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES — UNIVERSAL CLEANER SCREEN (όπως στη φωτογραφία)
+    // TEMP FILES → OEM TEMP/JUNK SCREEN (the one from your screenshot)
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
-            // OEM cleaner – ίδια λογική με το GEL Cleaner All,
-            // αλλά ΔΕΝ σκοτώνει την εφαρμογή γιατί δεν τρέχει RAM clean.
+
+            // 1) OEM cleaner screen (universal)
             boolean launched = CleanLauncher.openDeepCleaner(ctx);
 
             if (launched) {
-                ok(cb, "Άνοιξα τον OEM Cleaner για temp clean.");
-                info(cb, "➡ Εκεί γίνεται ο καθαρισμός temp & junk (OEM level).");
+                ok(cb, "Άνοιξα την οθόνη καθαρισμού temp & junk.");
+                info(cb, "➡ Temporary files, residual junk, logs, cache.");
+                info(cb, "➡ Το καθάρισμα γίνεται εκεί (OEM-level).");
                 return;
             }
 
-            // Fallback → Storage page
+            // 2) Universal fallback — Storage Settings
             try {
                 Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(i);
 
-                ok(cb, "Άνοιξα Storage → κάνε Clear Cache / Junk.");
+                ok(cb, "Άνοιξα Storage → Clear Junk / Cache.");
                 return;
 
             } catch (Exception ignored) {}
 
-            err(cb, "Temp cleaner δεν βρέθηκε.");
+            // 3) No cleaner available
+            err(cb, "Temp cleaner δεν βρέθηκε στη συσκευή.");
 
         } catch (Exception e) {
-            err(cb, "tempFiles failed: " + e.getMessage());
+            err(cb, "cleanTempFiles failed: " + e.getMessage());
         }
     }
 
@@ -195,8 +197,7 @@ public class GELCleaner {
                 ctx.startActivity(dev);
 
                 ok(cb, "Developer menu opened.");
-                info(cb,
-                        "➡ 'Running Services' για ενεργές εφαρμογές.");
+                info(cb, "➡ 'Running Services' για ενεργές εφαρμογές.");
                 return;
             } catch (Exception ignored) {}
 

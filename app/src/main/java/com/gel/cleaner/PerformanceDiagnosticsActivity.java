@@ -11,7 +11,6 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HardwarePropertiesManager;
 import android.os.Looper;
@@ -55,7 +54,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         ui = new Handler(Looper.getMainLooper());
 
-        GELServiceLog.clear(); // καθάρισμα πριν νέα διάγνωση
+        GELServiceLog.clear();
 
         logTitle("🔬 GEL Phone Diagnosis — Service Lab");
         logInfo("Μοντέλο: " + Build.MANUFACTURER + " " + Build.MODEL);
@@ -66,46 +65,49 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * HTML LOG HELPERS + SERVICE LOG MIRROR
+     * HTML + NEW GEL LOGGING
      * ============================================================ */
-    private void appendHtmlLine(String html, String raw) {
+    private void appendHtml(String html) {
         ui.post(() -> {
             CharSequence current = txtDiag.getText();
-            String add = Html.fromHtml(html + "<br>") + "";
-            txtDiag.setText(current + add);
+            txtDiag.setText(current + Html.fromHtml(html + "<br>"));
             scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });
-
-        GELServiceLog.addLine(raw);
     }
 
     private void logTitle(String msg) {
-        appendHtmlLine("<b>" + escape(msg) + "</b>", msg);
+        appendHtml("<b>" + escape(msg) + "</b>");
+        GELServiceLog.info(msg);
     }
 
     private void logSection(String msg) {
-        appendHtmlLine("<br><b>▌ " + escape(msg) + "</b>", "▌ " + msg);
+        appendHtml("<br><b>▌ " + escape(msg) + "</b>");
+        GELServiceLog.info("SECTION: " + msg);
     }
 
     private void logInfo(String msg) {
-        appendHtmlLine("ℹ️ " + escape(msg), "ℹ️ " + msg);
+        appendHtml("ℹ️ " + escape(msg));
+        GELServiceLog.info(msg);
     }
 
     private void logOk(String msg) {
-        appendHtmlLine("<font color='#88FF88'>✅ " + escape(msg) + "</font>", "✅ " + msg);
+        appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+        GELServiceLog.ok(msg);
     }
 
     private void logWarn(String msg) {
-        appendHtmlLine("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>", "⚠️ " + msg);
+        appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+        GELServiceLog.warn(msg);
     }
 
     private void logError(String msg) {
-        appendHtmlLine("<font color='#FF5555'>❌ " + escape(msg) + "</font>", "❌ " + msg);
+        appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+        GELServiceLog.error(msg);
     }
 
     private void logLine() {
-        appendHtmlLine("<font color='#666666'>────────────────────────────────</font>",
-                "────────────────────────────────");
+        appendHtml("<font color='#666666'>────────────────────────────────</font>");
+        GELServiceLog.info("------------------------------");
     }
 
     private String escape(String s) {
@@ -116,7 +118,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * MAIN FULL DIAG
+     * MAIN DIAG
      * ============================================================ */
     private void runFullDiagnosis() {
         new Thread(() -> {
@@ -133,7 +135,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             labSystemHealth();
 
             logLine();
-            logOk("Διάγνωση ολοκληρώθηκε. Τα κόκκινα ❌ είναι οι πραγματικές βλάβες.");
+            logOk("Διάγνωση ολοκληρώθηκε. Τα ❌ είναι οι βλάβες.");
 
         }).start();
     }
@@ -146,15 +148,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         logInfo("Κατασκευαστής: " + Build.MANUFACTURER);
         logInfo("Μοντέλο: " + Build.MODEL);
-        logInfo("Συσκευή: " + Build.DEVICE);
+        logInfo("Device: " + Build.DEVICE);
         logInfo("Product: " + Build.PRODUCT);
         logInfo("Board: " + Build.BOARD);
 
         int api = Build.VERSION.SDK_INT;
-        logInfo("Android: " + Build.VERSION.RELEASE + " (API " + api + ")");
 
         if (api < 26) logError("Android < 8 — σοβαρές ελλείψεις ασφαλείας.");
-        else if (api < 30) logWarn("Android < 11 — ίσως παλιά security patches.");
+        else if (api < 30) logWarn("Android < 11 — ίσως χωρίς σύγχρονα patches.");
         else logOk("OS level OK.");
 
         logLine();
@@ -169,14 +170,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         int cores = Runtime.getRuntime().availableProcessors();
         logInfo("CPU Cores: " + cores);
 
-        if (cores <= 4) logWarn("Λίγοι πυρήνες CPU — πιθανές καθυστερήσεις.");
+        if (cores <= 4) logWarn("Λίγοι CPU πυρήνες — πιθανές καθυστερήσεις.");
         else logOk("CPU cores OK.");
 
         long totalMem = getTotalRam();
-        if (totalMem > 0) logInfo("Συνολική RAM: " + readable(totalMem));
+        logInfo("Συνολική RAM: " + readable(totalMem));
 
-        if (totalMem < gb(2)) logError("RAM < 2GB — συχνά κολλήματα.");
-        else if (totalMem < gb(4)) logWarn("RAM 2–4GB — οριακή για βαριά χρήση.");
+        if (totalMem < gb(2)) logError("RAM < 2GB — συνεχόμενα κολλήματα.");
+        else if (totalMem < gb(4)) logWarn("RAM 2–4GB — οριακή.");
         else logOk("RAM OK.");
 
         logLine();
@@ -210,12 +211,12 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             logInfo("Χώρος: " + readable(free) + " / " + readable(total) + " (" + pct + "% free)");
 
-            if (pct < 10) logError("Storage < 10% — βαρύ κόλλημα / crashes.");
+            if (pct < 10) logError("Storage < 10% — κολλήματα.");
             else if (pct < 20) logWarn("Storage < 20% — προτείνεται καθάρισμα.");
             else logOk("Storage OK.");
 
         } catch (Exception e) {
-            logError("Αποτυχία ανάγνωσης storage: " + e.getMessage());
+            logError("Storage error: " + e.getMessage());
         }
 
         logLine();
@@ -225,40 +226,40 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 4 — BATTERY
      * ============================================================ */
     private void labBattery() {
-        logSection("LAB 4 — Μπαταρία");
+        logSection("LAB 4 — Battery");
 
         try {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (i == null) {
-                logError("Δεν μπόρεσα να διαβάσω μπαταρία.");
-                logLine();
+                logError("Δεν μπορώ να διαβάσω μπαταρία.");
                 return;
             }
 
-            int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int lvl = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float pct = (100f * level / scale);
+            float pct = (100f * lvl / scale);
 
             int health = i.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
-            int tempRaw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            float temp = tempRaw / 10f;
 
-            logInfo(String.format(Locale.US, "Φόρτιση: %.1f%%", pct));
-            logInfo(String.format(Locale.US, "Θερμοκρασία: %.1f°C", temp));
+            int rawTemp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            float temp = rawTemp / 10f;
 
-            if (temp > 45) logError("Μπαταρία πολύ ζεστή — πιθανή βλάβη.");
-            else if (temp > 38) logWarn("Υψηλή θερμοκρασία μπαταρίας.");
+            logInfo(String.format(Locale.US, "Battery: %.1f%%", pct));
+            logInfo(String.format(Locale.US, "Temp: %.1f°C", temp));
+
+            if (temp > 45) logError("Πολύ υψηλή θερμοκρασία μπαταρίας.");
+            else if (temp > 38) logWarn("Ζεστή μπαταρία.");
 
             if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
                 health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE)
-                logError("Μπαταρία ΚΑΤΕΣΤΡΑΜΜΕΝΗ — αλλαγή άμεσα.");
+                logError("Μπαταρία κατεστραμμένη.");
             else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT)
-                logError("Μπαταρία σε υπερθέρμανση!");
+                logError("Υπερθέρμανση μπαταρίας!");
             else
-                logOk("Battery health OK.");
+                logOk("Battery OK.");
 
         } catch (Exception e) {
-            logError("Σφάλμα battery: " + e.getMessage());
+            logError("Battery error: " + e.getMessage());
         }
 
         logLine();
@@ -268,15 +269,10 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 5 — NETWORK
      * ============================================================ */
     private void labNetwork() {
-        logSection("LAB 5 — Δίκτυο");
+        logSection("LAB 5 — Network");
 
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) {
-                logError("ConnectivityManager λείπει.");
-                logLine();
-                return;
-            }
 
             boolean online = false;
             boolean wifi = false;
@@ -284,18 +280,18 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (Build.VERSION.SDK_INT >= 23) {
                 android.net.Network n = cm.getActiveNetwork();
-                NetworkCapabilities nc = cm.getNetworkCapabilities(n);
-                if (nc != null) {
-                    online = nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                    wifi = nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                    mobile = nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                NetworkCapabilities caps = cm.getNetworkCapabilities(n);
+                if (caps != null) {
+                    online = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                    wifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                    mobile = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
                 }
             } else {
                 NetworkInfo ni = cm.getActiveNetworkInfo();
                 if (ni != null && ni.isConnected()) {
                     online = true;
-                    if (ni.getType() == ConnectivityManager.TYPE_WIFI) wifi = true;
-                    if (ni.getType() == ConnectivityManager.TYPE_MOBILE) mobile = true;
+                    wifi = ni.getType() == ConnectivityManager.TYPE_WIFI;
+                    mobile = ni.getType() == ConnectivityManager.TYPE_MOBILE;
                 }
             }
 
@@ -320,25 +316,20 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         try {
             android.net.wifi.WifiManager wm =
-                    (android.net.wifi.WifiManager) getApplicationContext()
-                            .getSystemService(WIFI_SERVICE);
+                    (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
             if (wm == null || !wm.isWifiEnabled()) {
-                logWarn("WiFi κλειστό ή μη διαθέσιμο.");
+                logWarn("WiFi κλειστό.");
                 logLine();
                 return;
             }
 
-            int rssi = -100;
-            try {
-                rssi = wm.getConnectionInfo().getRssi();
-            } catch (Exception ignored) {}
-
+            int rssi = wm.getConnectionInfo().getRssi();
             logInfo("WiFi RSSI: " + rssi + " dBm");
 
             if (rssi > -60) logOk("Πολύ καλή λήψη.");
             else if (rssi > -75) logWarn("Μέτρια λήψη.");
-            else logError("Κακή λήψη WiFi (< -75 dBm).");
+            else logError("Κακή λήψη.");
 
         } catch (Exception e) {
             logError("WiFi error: " + e.getMessage());
@@ -351,18 +342,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 7 — SENSORS
      * ============================================================ */
     private void labSensors() {
-        logSection("LAB 7 — Αισθητήρες");
+        logSection("LAB 7 — Sensors");
 
         try {
             SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            if (sm == null) {
-                logError("SensorManager λείπει.");
-                logLine();
-                return;
-            }
 
             List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-            logInfo("Σύνολο αισθητήρων: " + (all == null ? 0 : all.size()));
+            logInfo("Σύνολο: " + (all == null ? 0 : all.size()));
 
             checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
             checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
@@ -379,10 +365,10 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     private void checkSensor(SensorManager sm, int type, String name) {
         boolean ok = sm.getDefaultSensor(type) != null;
+
         if (!ok) {
-            if (type == Sensor.TYPE_ACCELEROMETER ||
-                type == Sensor.TYPE_PROXIMITY)
-                logError("Λείπει " + name + " — πιθανή βλάβη.");
+            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_PROXIMITY)
+                logError(name + " λείπει — πιθανή βλάβη.");
             else
                 logWarn(name + " δεν υπάρχει.");
         } else {
@@ -394,7 +380,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 8 — DISPLAY
      * ============================================================ */
     private void labDisplay() {
-        logSection("LAB 8 — Οθόνη");
+        logSection("LAB 8 — Display");
 
         try {
             DisplayMetrics dm = new DisplayMetrics();
@@ -402,19 +388,15 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= 30) {
                 Display disp = getDisplay();
                 if (disp != null) disp.getRealMetrics(dm);
-                else {
-                    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-                    wm.getDefaultDisplay().getMetrics(dm);
-                }
+                else getWindowManager().getDefaultDisplay().getMetrics(dm);
             } else {
-                WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-                wm.getDefaultDisplay().getMetrics(dm);
+                getWindowManager().getDefaultDisplay().getMetrics(dm);
             }
 
             int w = dm.widthPixels;
             int h = dm.heightPixels;
 
-            logInfo("Ανάλυση: " + w + " x " + h);
+            logInfo("Resolution: " + w + " × " + h);
 
             if (Math.min(w, h) < 720)
                 logWarn("Χαμηλή ανάλυση.");
@@ -432,7 +414,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
      * LAB 9 — THERMAL
      * ============================================================ */
     private void labThermal() {
-        logSection("LAB 9 — Θερμικά");
+        logSection("LAB 9 — Thermal");
 
         if (Build.VERSION.SDK_INT >= 29) {
             try {
@@ -442,53 +424,49 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 if (hpm != null) {
                     float[] temps = hpm.getDeviceTemperatures(
                             HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
-                            HardwarePropertiesManager.TEMPERATURE_CURRENT
-                    );
+                            HardwarePropertiesManager.TEMPERATURE_CURRENT);
 
                     if (temps != null && temps.length > 0) {
                         float t = temps[0];
                         logInfo("CPU Temp: " + t + "°C");
 
-                        if (t > 80) logError("CPU ΠΟΛΥ ΖΕΣΤΟ — throttling.");
-                        else if (t > 70) logWarn("CPU ζεστό — πιθανό throttling.");
-                        else logOk("CPU θερμοκρασία OK.");
+                        if (t > 80) logError("Πολύ υψηλή θερμοκρασία CPU.");
+                        else if (t > 70) logWarn("CPU ζεστό.");
+                        else logOk("CPU OK.");
                     } else {
-                        logWarn("Δεν δόθηκαν CPU θερμοκρασίες.");
+                        logWarn("Δεν δόθηκαν θερμοκρασίες.");
                     }
-                } else logWarn("HardwarePropertiesManager όχι διαθέσιμο.");
+                } else {
+                    logWarn("HardwarePropertiesManager όχι διαθέσιμο.");
+                }
 
             } catch (Exception e) {
                 logError("Thermal error: " + e.getMessage());
             }
 
         } else {
-            logWarn("Thermal API δεν υποστηρίζεται (API < 29).");
+            logWarn("Thermal API δεν υπάρχει (API < 29).");
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 10 — SYSTEM HEALTH / TELEPHONY
+     * LAB 10 — SYSTEM HEALTH
      * ============================================================ */
     private void labSystemHealth() {
-        logSection("LAB 10 — Σύστημα / Τηλεφωνία");
+        logSection("LAB 10 — System Health");
 
         try {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
             if (tm != null) {
-                String net = tm.getNetworkOperatorName();
-                String sim = tm.getSimOperatorName();
-
-                logInfo("Network operator: " + (net == null ? "N/A" : net));
-                logInfo("SIM operator: " + (sim == null ? "N/A" : sim));
+                logInfo("Network operator: " + tm.getNetworkOperatorName());
+                logInfo("SIM operator: " + tm.getSimOperatorName());
             } else {
-                logWarn("TelephonyManager δεν υπάρχει (ίσως tablet).");
+                logWarn("TelephonyManager δεν υπάρχει.");
             }
 
-        } catch (SecurityException se) {
-            logWarn("Δεν έχω δικαίωμα Telephony info.");
         } catch (Exception e) {
             logError("Telephony error: " + e.getMessage());
         }
@@ -500,16 +478,17 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             long avail = mi.availMem;
             long total = mi.totalMem;
+
             int pct = (int) ((avail * 100L) / total);
 
-            logInfo("Disponível RAM: " + readable(avail) + " (" + pct + "% free)");
+            logInfo("Live RAM: " + readable(avail) + " (" + pct + "% free)");
 
-            if (pct < 10) logError("ΠΟΛΥ χαμηλή RAM — κολλήματα σίγουρα.");
-            else if (pct < 20) logWarn("Χαμηλή RAM — restart ίσως βοηθήσει.");
-            else logOk("RAM live OK.");
+            if (pct < 10) logError("Πολύ χαμηλή RAM.");
+            else if (pct < 20) logWarn("Χαμηλή RAM.");
+            else logOk("RAM OK.");
 
         } catch (Exception e) {
-            logError("System RAM error: " + e.getMessage());
+            logError("RAM error: " + e.getMessage());
         }
 
         logLine();
@@ -528,5 +507,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         return String.format(Locale.US, "%.2f GB", gb);
     }
 
-    private long gb(int g) { return g * 1024L * 1024L * 1024L; }
+    private long gb(int g) {
+        return g * 1024L * 1024L * 1024L;
+    }
 }

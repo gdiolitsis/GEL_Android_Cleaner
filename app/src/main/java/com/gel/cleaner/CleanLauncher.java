@@ -7,6 +7,10 @@ import android.os.Build;
 
 // ============================================================
 // CleanLauncher — Universal Smart Cleaner (GEL Edition)
+// Fully patched for:
+// Xiaomi / Redmi / Poco / Mi Browser
+// Samsung / Huawei / Oppo / Vivo / Realme / OnePlus
+// Motorola / Sony / Pixel
 // ============================================================
 public class CleanLauncher {
 
@@ -27,7 +31,7 @@ public class CleanLauncher {
     }
 
     // ============================================================
-    // OEM DEEP CLEAN (Fallback)
+    // 1) OEM DEEP CLEAN (Universal)
     // ============================================================
     public static boolean openDeepCleaner(Context ctx) {
 
@@ -49,15 +53,34 @@ public class CleanLauncher {
 
         boolean launched = false;
 
-        // Xiaomi
+        // ------------------------------------------------------------
+        // **Xiaomi / Redmi / Poco → TRUE CLEANER (and Mi Browser Cleaner)**
+        // ------------------------------------------------------------
         if (isXiaomi && !launched) {
-            launched = tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity");
+
+            // Main Cleaner UI
+            launched = tryComponent(ctx,
+                    "com.miui.cleaner",
+                    "com.miui.cleaner.MainActivity");
+
+            // SecurityCenter Cleaner
             if (!launched)
-                launched = tryComponent(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity");
+                launched = tryComponent(ctx,
+                        "com.miui.securitycenter",
+                        "com.miui.securityscan.MainActivity");
+
+            // NEW — Mi Browser Cleaner
+            if (!launched)
+                launched = tryComponent(ctx,
+                        "com.miui.miservice",
+                        "com.miui.miservice.settings.ClearStorageActivity");
+
             if (launched) return true;
         }
 
-        // Samsung
+        // ------------------------------------------------------------
+        // Samsung → Device Care
+        // ------------------------------------------------------------
         if (isSamsung && !launched) {
             launched = tryComponent(ctx,
                     "com.samsung.android.sm",
@@ -65,7 +88,9 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
+        // ------------------------------------------------------------
         // Huawei
+        // ------------------------------------------------------------
         if (isHuawei && !launched) {
             launched = tryComponent(ctx,
                     "com.huawei.systemmanager",
@@ -73,13 +98,19 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // Oppo / Vivo / OnePlus / Realme
+        // ------------------------------------------------------------
+        // Oppo / Vivo / Realme / OnePlus
+        // ------------------------------------------------------------
         if (!launched) {
-            launched = tryComponent(ctx, "com.coloros.phonemanager", "com.coloros.phonemanager.CleanupActivity");
+            launched = tryComponent(ctx,
+                    "com.coloros.phonemanager",
+                    "com.coloros.phonemanager.CleanupActivity");
             if (launched) return true;
         }
 
+        // ------------------------------------------------------------
         // Motorola
+        // ------------------------------------------------------------
         if (isMotorola && !launched) {
             launched = tryComponent(ctx,
                     "com.motorola.ccc",
@@ -87,7 +118,9 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
+        // ------------------------------------------------------------
         // Sony
+        // ------------------------------------------------------------
         if (isSony && !launched) {
             launched = tryComponent(ctx,
                     "com.sonymobile.settings",
@@ -95,7 +128,9 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // Pixel
+        // ------------------------------------------------------------
+        // Pixel → Storage Cleaner
+        // ------------------------------------------------------------
         if (isPixel && !launched) {
             launched = tryComponent(ctx,
                     "com.google.android.settings.intelligence",
@@ -107,7 +142,7 @@ public class CleanLauncher {
     }
 
     // ============================================================
-    // SMART CLEAN — Silent Auto-Detect
+    // 2) SMART CLEAN (Auto-Detect RAM Cleaner)
     // ============================================================
     public static boolean smartClean(Context ctx) {
 
@@ -119,18 +154,21 @@ public class CleanLauncher {
 
         boolean launched = false;
 
-        // 1) OEMs με RAM Cleaner (Samsung / Huawei)
+        // Samsung RAM Cleaner
         if (isSamsung && !launched) {
             launched = tryComponent(ctx,
                     "com.samsung.android.sm",
                     "com.samsung.android.sm.ui.ram.RamActivity");
+
             if (!launched)
                 launched = tryComponent(ctx,
                         "com.samsung.android.sm",
                         "com.samsung.android.sm.ui.memory.MemoryActivity");
+
             if (launched) return true;
         }
 
+        // Huawei RAM Cleaner
         if (isHuawei && !launched) {
             launched = tryComponent(ctx,
                     "com.huawei.systemmanager",
@@ -138,7 +176,7 @@ public class CleanLauncher {
             if (launched) return true;
         }
 
-        // 2) Fallback → Deep Cleaner
+        // Fallback → Universal Deep Cleaner
         return openDeepCleaner(ctx);
     }
 }

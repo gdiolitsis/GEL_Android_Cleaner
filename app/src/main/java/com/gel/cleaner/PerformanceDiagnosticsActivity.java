@@ -1,20 +1,28 @@
 // ============================================================
 // PerformanceDiagnosticsActivity
-// GEL Phone Diagnosis — Service Lab (Hospital Edition)
-// Full-screen scroll log with color-coded levels
-// All logs / comments in EN for international use.
-// NOTE: Entire file is ready for copy-paste (GEL rule).
+// GEL Phone Diagnosis — Hospital Edition (30 LABS v2)
+// Full-screen scroll log with color-coded levels + summary
+// NOTE: Όλο το αρχείο είναι έτοιμο για copy-paste (GEL rule).
 // ============================================================
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
-import android.content.Intent;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.ConfigurationInfo;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.LocationManager;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.nfc.NfcAdapter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +30,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HardwarePropertiesManager;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.StatFs;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -40,7 +49,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -50,11 +63,15 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     private ScrollView scroll;
     private Handler ui;
 
+    // Counters for final summary
+    private int warnCount = 0;
+    private int errorCount = 0;
+    private boolean rooted = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Simple full-screen scrollable text log
         scroll = new ScrollView(this);
         txtDiag = new TextView(this);
 
@@ -68,20 +85,18 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
         ui = new Handler(Looper.getMainLooper());
 
-        // Clear previous service log (for fresh Service Report)
         GELServiceLog.clear();
 
-        logTitle("🔬 GEL Phone Diagnosis — Service Lab (Hospital Edition)");
+        logTitle("🔬 GEL Phone Diagnosis — Hospital Edition (30 LABS)");
         logInfo("Device: " + Build.MANUFACTURER + " " + Build.MODEL);
         logInfo("Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
-        logInfo("Build: " + Build.DISPLAY);
         logLine();
 
         runFullDiagnosis();
     }
 
     /* ============================================================
-     * HTML APPEND + MIRROR TO GELServiceLog
+     * HTML + MIRROR LOG
      * ============================================================ */
     private void appendHtml(String html) {
         ui.post(() -> {
@@ -115,22 +130,21 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     // ⚠️ WARNING → Gold
     private void logWarn(String msg) {
+        warnCount++;
         appendHtml("<font color='#FFD700'>⚠️ " + escape(msg) + "</font>");
         GELServiceLog.warn(msg);
     }
 
     // ❌ ERROR → Red
     private void logError(String msg) {
+        errorCount++;
         appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
         GELServiceLog.error(msg);
     }
 
-    // ACCESS DENIED — Firmware / Security Restriction
+    // ⚠️ ACCESS DENIED — Firmware / permission restriction
     private void logAccessDenied(String area) {
-        String base = "Access denied — firmware / security restriction";
-        if (area != null && !area.isEmpty()) {
-            base = base + " (" + area + ")";
-        }
+        String base = "Access denied or restricted (" + area + ")";
         logWarn(base);
     }
 
@@ -147,152 +161,88 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * MAIN DIAG FLOW (ROOT-AWARE, HOSPITAL EDITION)
+     * MAIN DIAG FLOW — 30 LABS
      * ============================================================ */
     private void runFullDiagnosis() {
         new Thread(() -> {
 
-            // LAB 0 — Root / System Integrity (High-level)
-            logSection("LAB 0 — Root / System Integrity");
+            // LAB 0–3: Root & security baseline
+            lab0RootIntegrity();
+            lab1SelinuxAndDebug();
+            lab2DangerousProperties();
+            lab3MountsAndFs();
 
-            boolean rooted = isDeviceRootedBasic();
-            if (rooted) {
-                logError("Device appears to be ROOTED — reduced security from Play Store perspective.");
-                logInfo("For service technicians this is OK, but it should be clearly explained to the customer.");
-            } else {
-                logOk("No clear root indicators detected (typical Play Store device).");
-            }
+            // LAB 4–7: Hardware, CPU, RAM, Storage (+ I/O)
+            lab4HardwareOs();
+            lab5CpuCoresAndAbi();
+            lab6RamStatus();
+            lab7InternalStorageAndIo();
 
-            // Run deep root labs only if root indicators exist
-            if (rooted) {
-                labRootOverview();        // LAB 0.1
-                labRootSecurityFlags();   // LAB 0.2
-                labRootDangerousProps();  // LAB 0.3
-                labRootMounts();          // LAB 0.4
-            } else {
-                logInfo("Skipping deep Root LABs because device does not look rooted.");
-            }
+            // LAB 8–10: External storage, battery core, battery health
+            lab8ExternalStorage();
+            lab9BatteryCore();
+            lab10BatteryHealth();
+
+            // LAB 11–13: Thermal, network, WiFi
+            lab11Thermals();
+            lab12NetworkConnectivity();
+            lab13WifiDetails();
+
+            // LAB 14–16: Mobile radio, Bluetooth, sensors
+            lab14MobileRadio();
+            lab15Bluetooth();
+            lab16SensorsOverview();
+
+            // LAB 17–19: Display, GPU, Audio / vibration
+            lab17Display();
+            lab18GpuRenderer();
+            lab19AudioAndVibration();
+
+            // LAB 20–22: Camera, location (GPS + NFC), uptime
+            lab20CameraSummary();
+            lab21LocationGpsAndNfc();
+            lab22SystemUptime();
+
+            // LAB 23–25: Apps footprint, security patch age, power optimizations
+            lab23AppsFootprint();
+            lab24SecurityPatch();
+            lab25PowerOptimizations();
+
+            // LAB 26–28: Accessibility, special permissions, live RAM / pressure
+            lab26AccessibilityServices();
+            lab27SpecialPermissions();
+            lab28LiveRamPressure();
+
+            // LAB 29: Final clinical summary
+            lab29FinalSummary();
 
             logLine();
-
-            // LAB 1–10 (Core system metrics)
-            labHardware();      // LAB 1 — Hardware / OS
-            labCpuRam();        // LAB 2 — CPU / RAM static
-            labStorage();       // LAB 3 — Internal storage
-            labBattery();       // LAB 4 — Battery health & temperature
-            labNetwork();       // LAB 5 — Network connectivity + basic latency
-            labWifiSignal();    // LAB 6 — Wi-Fi status
-            labSensors();       // LAB 7 — Sensor inventory
-            labDisplay();       // LAB 8 — Display resolution profile
-            labThermal();       // LAB 9 — CPU thermal sensors (if available)
-            labSystemHealth();  // LAB 10 — Telephony + live RAM
-
-            // LAB 11 — Uptime / Boot profile
-            labUptime();
-
-            // LAB 12 — Installed apps footprint (approximate load)
-            labAppsFootprint();
-
-            logLine();
-            logOk("Auto Diagnosis finished. ❌ marks critical or abnormal findings. " +
-                    "⚠️ marks warnings/risks. ✅ marks values within normal range.");
+            logOk("Hospital-grade diagnosis completed. Review all ⚠️ and ❌ entries together with the customer.");
 
         }).start();
     }
 
     /* ============================================================
-     * ROOT CHECK BASIC
+     * LAB 0 — Root / System Integrity
      * ============================================================ */
-    private boolean isDeviceRootedBasic() {
-        return hasTestKeys() || hasSuBinary() || hasWhichSu();
-    }
+    private void lab0RootIntegrity() {
+        logSection("LAB 0 — Root / System Integrity");
 
-    private boolean hasTestKeys() {
-        String tags = Build.TAGS;
-        return tags != null && tags.contains("test-keys");
-    }
-
-    private boolean hasSuBinary() {
-        String[] paths = new String[]{
-                "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                "/system/app/Superuser.apk", "/system/app/Magisk.apk",
-                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
-        };
-        try {
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
-            }
-        } catch (Exception ignored) { }
-        return false;
-    }
-
-    private boolean hasWhichSu() {
-        BufferedReader in = null;
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"which", "su"});
-            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = in.readLine();
-            return line != null && !line.trim().isEmpty();
-        } catch (Exception ignored) {
-            return false;
-        } finally {
-            try { if (in != null) in.close(); } catch (Exception ignored) {}
+        rooted = isDeviceRootedBasic();
+        if (rooted) {
+            logError("Device appears ROOTED or modified (test-keys / su binary / Superuser traces).");
+            logInfo("From a service-lab perspective this is acceptable, but system security is reduced.");
+        } else {
+            logOk("No direct root indicators found. Device looks locked / non-rooted.");
         }
+        logLine();
     }
 
     /* ============================================================
-     * ROOT LABS (SAFE)
+     * LAB 1 — SELinux / Debug / ADB
      * ============================================================ */
-    private void labRootOverview() {
-        logSection("LAB 0.1 — Root Overview");
-
-        String tags = Build.TAGS;
-        if (tags != null && tags.contains("test-keys"))
-            logWarn("Build tags: test-keys (typical for rooted / custom ROM).");
-        else
-            logInfo("Build tags: " + tags);
-
-        String[] paths = new String[]{
-                "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
-        };
-
-        boolean anySu = false;
-        for (String p : paths) {
-            try {
-                if (new File(p).exists()) {
-                    logWarn("su binary present: " + p);
-                    anySu = true;
-                }
-            } catch (Exception ignored) {}
-        }
-
-        if (!anySu) logInfo("No su binary found in common locations.");
-
-        // Check actual su privileges
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String out = r.readLine();
-            try { p.destroy(); } catch (Exception ignored) {}
-
-            if (out != null && out.contains("uid=0"))
-                logError("su test → uid=0 (FULL ROOT access confirmed).");
-            else if (out != null)
-                logWarn("su test → " + out);
-            else
-                logWarn("su test → no response (root manager may be blocking).");
-
-        } catch (Exception e) {
-            logWarn("su test exception: " + e.getMessage());
-        }
-    }
-
-    /* ============================================================
-     * LAB 0.2 — Security / SELinux / Debug
-     * ============================================================ */
-    private void labRootSecurityFlags() {
-        logSection("LAB 0.2 — Security / SELinux / Debug");
+    private void lab1SelinuxAndDebug() {
+        logSection("LAB 1 — SELinux / Debug / ADB");
 
         try {
             boolean enabled = false;
@@ -303,17 +253,16 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 enabled = (boolean) clazz.getMethod("isSELinuxEnabled").invoke(null);
                 enforced = (boolean) clazz.getMethod("isSELinuxEnforced").invoke(null);
             } catch (Throwable ignored) {
-                logAccessDenied("SELinux status API");
+                logAccessDenied("SELinux API");
             }
 
             logInfo("SELinux enabled: " + enabled + " | enforced: " + enforced);
 
-            if (!enabled) logError("SELinux is DISABLED — low security profile.");
-            else if (!enforced) logWarn("SELinux is PERMISSIVE — weaker security policy.");
-            else logOk("SELinux is ENFORCING — normal for modern Android.");
-
+            if (!enabled) logError("SELinux is disabled — security isolation is weak.");
+            else if (!enforced) logWarn("SELinux is permissive — weaker policy enforcement.");
+            else logOk("SELinux is enforcing — expected on modern Android.");
         } catch (Throwable t) {
-            logWarn("SELinux read failed: " + t.getMessage());
+            logWarn("Failed to read SELinux status: " + t.getMessage());
         }
 
         try {
@@ -321,57 +270,41 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int dev = Settings.Global.getInt(getContentResolver(), Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0);
 
             logInfo("ADB enabled: " + (adb == 1));
-            logInfo("Developer options: " + (dev == 1));
+            logInfo("Developer options enabled: " + (dev == 1));
 
-            if (adb == 1)
-                logWarn("ADB is enabled — recommend disabling for non-developer customers.");
+            if (adb == 1) logWarn("ADB is enabled — only recommended for developers/service usage.");
         } catch (Throwable t) {
-            logAccessDenied("ADB / Developer Settings");
+            logAccessDenied("ADB / Developer settings");
         }
+
+        logLine();
     }
 
     /* ============================================================
-     * LAB 0.3 — Dangerous Properties
+     * LAB 2 — Dangerous System Properties
      * ============================================================ */
-    private void labRootDangerousProps() {
-        logSection("LAB 0.3 — Dangerous Properties");
+    private void lab2DangerousProperties() {
+        logSection("LAB 2 — Dangerous System Properties");
 
-        checkProp("ro.debuggable", "1", "ro.debuggable=1 — debug build (not production).");
-        checkProp("ro.secure", "0", "ro.secure=0 — low security build.");
-        checkProp("ro.boot.verifiedbootstate", "orange", "VerifiedBoot = ORANGE (boot chain modified).");
-        checkProp("ro.boot.verifiedbootstate", "red", "VerifiedBoot = RED (boot chain compromised).");
-    }
+        checkProp("ro.debuggable", "1", "ro.debuggable=1 — debug build; not recommended for production.");
+        checkProp("ro.secure", "0", "ro.secure=0 — low security mode.");
+        checkProp("ro.boot.verifiedbootstate", "orange", "Verified Boot state: ORANGE (integrity warnings).");
+        checkProp("ro.boot.verifiedbootstate", "red", "Verified Boot state: RED (integrity compromised).");
 
-    private void checkProp(String key, String bad, String msg) {
-        String val = readProp(key);
-        if (val == null) {
-            logInfo(key + " = N/A (OEM restricted or not set).");
-            return;
-        }
-        logInfo(key + " = " + val);
-        if (val.trim().equalsIgnoreCase(bad)) logError(msg);
-    }
-
-    private String readProp(String key) {
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = r.readLine();
-            try { p.destroy(); } catch (Exception ignored) {}
-            return line;
-        } catch (Exception e) { return null; }
+        logLine();
     }
 
     /* ============================================================
-     * LAB 0.4 — MOUNTS
+     * LAB 3 — Mounts / File System Flags
      * ============================================================ */
-    private void labRootMounts() {
-        logSection("LAB 0.4 — System Mounts");
+    private void lab3MountsAndFs() {
+        logSection("LAB 3 — System Mounts / File System Flags");
 
         BufferedReader r = null;
         try {
             Process p;
             try {
+                // On rooted devices try full mount table first
                 p = Runtime.getRuntime().exec(new String[]{"su", "-c", "mount"});
             } catch (Exception e) {
                 p = Runtime.getRuntime().exec("mount");
@@ -386,96 +319,140 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 if (low.contains(" /system ") && low.contains("(rw,")) systemRW = true;
             }
 
-            if (systemRW) logError("/system is mounted READ-WRITE — not safe for normal customers.");
-            else logOk("/system is NOT mounted read-write (more secure).");
+            if (systemRW)
+                logError("/system is mounted read-write — strong sign of modification/root.");
+            else
+                logOk("/system is not mounted read-write (expected for stock builds).");
 
         } catch (Exception e) {
             logAccessDenied("mount table");
         } finally {
             try { if (r != null) r.close(); } catch (Exception ignored) {}
         }
+
+        logLine();
     }
 
     /* ============================================================
-     * LAB 1 — Hardware / OS
+     * LAB 4 — Hardware / OS
      * ============================================================ */
-    private void labHardware() {
-        logSection("LAB 1 — Hardware / OS Profile");
+    private void lab4HardwareOs() {
+        logSection("LAB 4 — Hardware / OS Overview");
 
         logInfo("Manufacturer: " + Build.MANUFACTURER);
         logInfo("Model: " + Build.MODEL);
         logInfo("Device: " + Build.DEVICE);
         logInfo("Product: " + Build.PRODUCT);
-        logInfo("Fingerprint: " + Build.FINGERPRINT);
+
+        if (Build.VERSION.SDK_INT >= 31) {
+            String soc = Build.SOC_MODEL != null ? Build.SOC_MODEL : "N/A";
+            logInfo("SoC model (reported): " + soc);
+        }
 
         int api = Build.VERSION.SDK_INT;
-        logInfo("Android: " + Build.VERSION.RELEASE + " (API " + api + ")");
-        logInfo("Security patch: " + Build.VERSION.SECURITY_PATCH);
+        logInfo("Android version: " + Build.VERSION.RELEASE + " (API " + api + ")");
 
-        if (api < 26) logError("Android < 8 — below modern security baseline.");
-        else if (api < 30) logWarn("Android < 11 — still supported but older generation.");
-        else logOk("Android version is modern for everyday use.");
+        if (api < 26) logError("Android < 8 — heavily outdated and insecure.");
+        else if (api < 30) logWarn("Android < 11 — may miss modern privacy and security features.");
+        else logOk("Android version is modern for daily usage.");
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 2 — CPU / RAM (Static)
+     * LAB 5 — CPU Cores / ABI
      * ============================================================ */
-    private void labCpuRam() {
-        logSection("LAB 2 — CPU / RAM Capacity");
+    private void lab5CpuCoresAndAbi() {
+        logSection("LAB 5 — CPU / Cores / ABI");
 
         int cores = Runtime.getRuntime().availableProcessors();
-        logInfo("CPU cores reported: " + cores);
+        logInfo("CPU cores detected: " + cores);
 
-        long totalMem = getTotalRam();
-        logInfo("Total RAM (system): " + readable(totalMem));
+        if (cores <= 4)
+            logWarn("Low core count (≤4) for heavy multitasking and modern workloads.");
+        else
+            logOk("CPU core count is adequate for everyday usage.");
 
-        if (cores <= 4) {
-            logWarn("Low core count (≤ 4) for heavy multitasking / modern apps.");
-        } else {
-            logOk("CPU core count is adequate for typical workloads.");
-        }
+        String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
+                ? Build.SUPPORTED_ABIS[0]
+                : Build.CPU_ABI;
+        logInfo("Primary ABI: " + abi);
 
-        if (totalMem < 2L * 1024 * 1024 * 1024L) {
-            logWarn("RAM < 2 GB — device may struggle with modern apps.");
-        } else if (totalMem < 4L * 1024 * 1024 * 1024L) {
-            logInfo("RAM between 2–4 GB — acceptable but not ideal for heavy users.");
-        } else {
-            logOk("RAM ≥ 4 GB — good for daily use.");
-        }
-
-        // Optional: read max CPU freq if available
-        String maxFreq = safeReadFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        // Try to read max frequency (best-effort)
+        String maxFreq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
         if (maxFreq != null) {
             try {
                 long khz = Long.parseLong(maxFreq.trim());
                 double ghz = khz / 1_000_000.0;
-                logInfo(String.format(Locale.US, "CPU0 max frequency: %.2f GHz", ghz));
+                logInfo(String.format(Locale.US, "CPU0 max frequency: %.2f GHz (reported)", ghz));
             } catch (Exception e) {
                 logInfo("CPU0 max frequency (raw): " + maxFreq.trim());
             }
         } else {
-            logInfo("CPU frequency info not exposed (OEM restriction).");
+            logAccessDenied("CPU frequency sysfs");
         }
 
         logLine();
     }
 
-    private long getTotalRam() {
+    /* ============================================================
+     * LAB 6 — RAM / Memory Pressure
+     * ============================================================ */
+    private void lab6RamStatus() {
+        logSection("LAB 6 — RAM / Memory Pressure");
+
         try {
-            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null) {
+                logError("Cannot access ActivityManager — RAM check unavailable.");
+                logLine();
+                return;
+            }
+
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
-            return mi.totalMem;
-        } catch (Exception e) { return 0; }
+
+            long total = mi.totalMem;
+            long avail = mi.availMem;
+            long used = total - avail;
+
+            double freePercent = (total > 0) ? (avail * 100.0 / total) : 0;
+
+            logInfo(String.format(Locale.US,
+                    "RAM used: %s / %s (free %s)",
+                    readable(used), readable(total), readable(avail)));
+
+            if (freePercent < 5.0) {
+                logError(String.format(Locale.US,
+                        "Very low free RAM (%.1f%%) — heavy lag and app kills expected.", freePercent));
+            } else if (freePercent < 15.0) {
+                logWarn(String.format(Locale.US,
+                        "Low free RAM (%.1f%%) — performance may be degraded under load.", freePercent));
+            } else {
+                logOk(String.format(Locale.US,
+                        "Free RAM %.1f%% — acceptable for normal use.", freePercent));
+            }
+
+            if (mi.lowMemory)
+                logError("System reports LOW MEMORY state — Android is aggressively killing apps.");
+
+            // Extra: memory class (per-app heap limit)
+            int memClass = am.getMemoryClass();
+            int largeClass = am.getLargeMemoryClass();
+            logInfo("App memory class: " + memClass + " MB (large heap class: " + largeClass + " MB)");
+
+        } catch (Exception e) {
+            logError("RAM diagnostics error: " + e.getMessage());
+        }
+
+        logLine();
     }
 
     /* ============================================================
-     * LAB 3 — Storage
+     * LAB 7 — Internal Storage + I/O micro benchmark
      * ============================================================ */
-    private void labStorage() {
-        logSection("LAB 3 — Internal Storage");
+    private void lab7InternalStorageAndIo() {
+        logSection("LAB 7 — Internal Storage + I/O");
 
         try {
             File data = Environment.getDataDirectory();
@@ -484,65 +461,189 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             long total = s.getBlockCountLong() * s.getBlockSizeLong();
             long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
             long used = total - free;
+
             int pctFree = (int) ((free * 100L) / total);
 
-            logInfo("Total internal storage: " + readable(total));
-            logInfo("Used: " + readable(used) + " | Free: " + readable(free) + " (" + pctFree + "% free)");
+            logInfo("Internal storage used: " + readable(used) + " / " + readable(total) +
+                    " (free " + readable(free) + ", " + pctFree + "%)");
 
-            if (pctFree < 5) {
-                logError("Free space < 5% — critical. Immediate cleanup / backup recommended.");
-            } else if (pctFree < 10) {
-                logWarn("Free space < 10% — possible slowdowns, update problems, app crashes.");
+            if (pctFree < 5)
+                logError("Free space below 5% — critical risk of crashes and failed updates.");
+            else if (pctFree < 10)
+                logWarn("Free space below 10% — slow performance and update issues possible.");
+            else
+                logOk("Internal storage free space is within safe limits.");
+
+        } catch (Exception e) {
+            logError("Internal storage error: " + e.getMessage());
+        }
+
+        // Small I/O benchmark in app cache dir (safe size)
+        runInternalIoBenchmark();
+
+        logLine();
+    }
+
+    private void runInternalIoBenchmark() {
+        File cache = getCacheDir();
+        if (cache == null) {
+            logAccessDenied("cache dir (I/O benchmark)");
+            return;
+        }
+
+        File testFile = new File(cache, "gel_io_benchmark.tmp");
+        int mbToTest = 4; // 4MB
+        byte[] buf = new byte[1024 * 1024]; // 1MB buffer
+
+        try {
+            long totalBytes = mbToTest * 1024L * 1024L;
+
+            long start = System.nanoTime();
+            FileOutputStream fos = new FileOutputStream(testFile);
+            for (int i = 0; i < mbToTest; i++) {
+                fos.write(buf);
+            }
+            fos.flush();
+            fos.close();
+            long writeMs = (System.nanoTime() - start) / 1_000_000L;
+
+            float writeSpeed = (writeMs > 0)
+                    ? (totalBytes / 1024f / 1024f) / (writeMs / 1000f)
+                    : 0f;
+
+            logInfo(String.format(Locale.US,
+                    "I/O write: %d MB in %d ms (%.1f MB/s)", mbToTest, writeMs, writeSpeed));
+
+            start = System.nanoTime();
+            FileInputStream fis = new FileInputStream(testFile);
+            while (fis.read(buf) != -1) {
+                // discard
+            }
+            fis.close();
+            long readMs = (System.nanoTime() - start) / 1_000_000L;
+
+            float readSpeed = (readMs > 0)
+                    ? (totalBytes / 1024f / 1024f) / (readMs / 1000f)
+                    : 0f;
+
+            logInfo(String.format(Locale.US,
+                    "I/O read: %d MB in %d ms (%.1f MB/s)", mbToTest, readMs, readSpeed));
+
+            if (writeSpeed < 5f || readSpeed < 5f) {
+                logWarn("Internal I/O speed is relatively low — installs and updates may feel slow.");
             } else {
-                logOk("Free space is acceptable for normal use.");
+                logOk("Internal I/O performance is acceptable for daily use.");
             }
 
         } catch (Exception e) {
-            logError("Storage error while reading internal stats: " + e.getMessage());
+            logAccessDenied("I/O benchmark (" + e.getMessage() + ")");
+        } finally {
+            try { if (testFile.exists()) testFile.delete(); } catch (Exception ignored) {}
+        }
+    }
+
+    /* ============================================================
+     * LAB 8 — External Storage (if any)
+     * ============================================================ */
+    private void lab8ExternalStorage() {
+        logSection("LAB 8 — External Storage (SD / Secondary)");
+
+        try {
+            File ext = getExternalFilesDir(null);
+            if (ext == null) {
+                logInfo("No external storage directory reported for this app.");
+                logLine();
+                return;
+            }
+
+            StatFs s = new StatFs(ext.getAbsolutePath());
+            long total = s.getBlockCountLong() * s.getBlockSizeLong();
+            long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
+
+            logInfo("External (app) storage: " + readable(free) + " free / " + readable(total) + " total.");
+            logOk("External storage is accessible for this application.");
+
+        } catch (Exception e) {
+            logAccessDenied("External storage stats");
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 4 — Battery
+     * LAB 9 — Battery Core Metrics
      * ============================================================ */
-    private void labBattery() {
-        logSection("LAB 4 — Battery Health & Temperature");
+    private void lab9BatteryCore() {
+        logSection("LAB 9 — Battery Core Metrics");
 
         try {
-            Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            android.content.Intent i = registerReceiver(null, filter);
             if (i == null) {
-                logAccessDenied("Battery stats");
+                logAccessDenied("Battery status broadcast");
                 logLine();
                 return;
             }
 
             int lvl = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float pct = (scale > 0 ? (100f * lvl / scale) : -1f);
+            float pct = (scale > 0) ? (100f * lvl / scale) : -1f;
 
             int rawTemp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
             float temp = rawTemp > 0 ? (rawTemp / 10f) : -1f;
 
-            int health = i.getIntExtra(BatteryManager.EXTRA_HEALTH,
-                    BatteryManager.BATTERY_HEALTH_UNKNOWN);
-            int status = i.getIntExtra(BatteryManager.EXTRA_STATUS,
-                    BatteryManager.BATTERY_STATUS_UNKNOWN);
-
             logInfo(String.format(Locale.US, "Battery level: %.1f%%", pct));
             logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", temp));
 
-            // Health
+            if (pct >= 0 && pct <= 5)
+                logError("Battery almost empty — risk of sudden shutdown.");
+            else if (pct <= 15)
+                logWarn("Battery low — user should charge soon.");
+
+            if (temp > 45f)
+                logError("Battery temperature is very high — possible damage or poor cooling.");
+            else if (temp > 40f)
+                logWarn("Battery temperature is high — monitor under heavy use.");
+
+        } catch (Exception e) {
+            logError("Battery core metrics error: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 10 — Battery Health & Status
+     * ============================================================ */
+    private void lab10BatteryHealth() {
+        logSection("LAB 10 — Battery Health & Status");
+
+        try {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            android.content.Intent i = registerReceiver(null, filter);
+            if (i == null) {
+                logAccessDenied("Battery health");
+                logLine();
+                return;
+            }
+
+            int health = i.getIntExtra(BatteryManager.EXTRA_HEALTH,
+                    BatteryManager.BATTERY_HEALTH_UNKNOWN);
+            int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
             String healthStr;
             boolean bad = false;
+
             switch (health) {
+                case BatteryManager.BATTERY_HEALTH_GOOD:
+                    healthStr = "GOOD";
+                    break;
                 case BatteryManager.BATTERY_HEALTH_DEAD:
                     healthStr = "DEAD";
                     bad = true;
                     break;
-                case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
                 case BatteryManager.BATTERY_HEALTH_OVERHEAT:
+                case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
                     healthStr = "OVERHEAT / OVERVOLTAGE";
                     bad = true;
                     break;
@@ -550,37 +651,17 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                     healthStr = "UNSPECIFIED FAILURE";
                     bad = true;
                     break;
-                case BatteryManager.BATTERY_HEALTH_GOOD:
-                    healthStr = "GOOD";
-                    break;
                 default:
-                    healthStr = "UNKNOWN";
+                    healthStr = "UNKNOWN or OEM-specific";
                     break;
             }
 
-            logInfo("Battery health (reported by Android): " + healthStr);
+            logInfo("Battery health (Android): " + healthStr);
             if (bad)
-                logError("Battery health is outside normal range — replacement strongly recommended.");
+                logError("Battery health reported outside normal range — replacement may be required.");
             else if (health == BatteryManager.BATTERY_HEALTH_GOOD)
-                logOk("Battery health looks good according to Android.");
-            else
-                logWarn("Battery health is not clearly GOOD, monitoring recommended.");
+                logOk("Battery health is within normal range (as reported by Android).");
 
-            // Temperature thresholds
-            if (temp > 45f) {
-                logError(String.format(Locale.US,
-                        "Battery temperature is very high (%.1f°C). Risk of damage, overheating or shutdown.",
-                        temp));
-            } else if (temp > 40f) {
-                logWarn(String.format(Locale.US,
-                        "Battery temperature is elevated (%.1f°C). May be caused by heavy use / charging / hot environment.",
-                        temp));
-            } else if (temp > 0) {
-                logOk(String.format(Locale.US,
-                        "Battery temperature in normal range (%.1f°C).", temp));
-            }
-
-            // Charging status
             String statusStr;
             switch (status) {
                 case BatteryManager.BATTERY_STATUS_CHARGING:
@@ -597,22 +678,64 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                     break;
                 default:
                     statusStr = "Unknown";
-                    break;
             }
             logInfo("Battery status: " + statusStr);
 
         } catch (Exception e) {
-            logError("Battery error: " + e.getMessage());
+            logError("Battery health diagnostics error: " + e.getMessage());
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 5 — Network
+     * LAB 11 — Thermal Sensors
      * ============================================================ */
-    private void labNetwork() {
-        logSection("LAB 5 — Network Connectivity");
+    private void lab11Thermals() {
+        logSection("LAB 11 — Thermal Sensors");
+
+        if (Build.VERSION.SDK_INT >= 29) {
+            try {
+                HardwarePropertiesManager hpm =
+                        (HardwarePropertiesManager) getSystemService(HARDWARE_PROPERTIES_SERVICE);
+
+                if (hpm != null) {
+                    float[] cpuTemps = hpm.getDeviceTemperatures(
+                            HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                            HardwarePropertiesManager.TEMPERATURE_CURRENT);
+
+                    if (cpuTemps != null && cpuTemps.length > 0) {
+                        float t = cpuTemps[0];
+                        logInfo("CPU temperature: " + t + "°C (reported)");
+
+                        if (t > 80f)
+                            logError("CPU temperature is extremely high — throttling or damage possible.");
+                        else if (t > 70f)
+                            logWarn("CPU temperature is high — device may throttle under load.");
+                        else
+                            logOk("CPU temperature appears within acceptable range.");
+                    } else {
+                        logAccessDenied("CPU thermal sensors (no data)");
+                    }
+                } else {
+                    logAccessDenied("HardwarePropertiesManager");
+                }
+
+            } catch (Exception e) {
+                logAccessDenied("Thermal sensors");
+            }
+        } else {
+            logAccessDenied("Thermal API < 29");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 12 — Network Connectivity
+     * ============================================================ */
+    private void lab12NetworkConnectivity() {
+        logSection("LAB 12 — Network Connectivity");
 
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
@@ -623,38 +746,31 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             }
 
             boolean online = false;
+            String transport = "UNKNOWN";
+
             if (Build.VERSION.SDK_INT >= 23) {
                 android.net.Network n = cm.getActiveNetwork();
                 NetworkCapabilities caps = cm.getNetworkCapabilities(n);
-                if (caps != null) online = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                if (caps != null) {
+                    online = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        transport = "WIFI";
+                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        transport = "CELLULAR";
+                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        transport = "ETHERNET";
+                    }
+                }
             } else {
                 NetworkInfo ni = cm.getActiveNetworkInfo();
                 online = ni != null && ni.isConnected();
+                if (ni != null) transport = ni.getTypeName();
             }
 
             if (!online) {
-                logError("No active internet capability detected.");
+                logError("No active Internet connectivity detected.");
             } else {
-                logOk("Internet capability detected (active network).");
-            }
-
-            // Basic latency test (if possible) in background thread context
-            if (online) {
-                try {
-                    long start = SystemClock.elapsedRealtime();
-                    Process p = Runtime.getRuntime().exec("ping -c 1 8.8.8.8");
-                    int rc = p.waitFor();
-                    long end = SystemClock.elapsedRealtime();
-                    long ms = end - start;
-
-                    if (rc == 0) {
-                        logInfo("Ping 8.8.8.8 success, approx latency: " + ms + " ms.");
-                    } else {
-                        logWarn("Ping 8.8.8.8 failed — network may be filtered or unstable.");
-                    }
-                } catch (Exception e) {
-                    logAccessDenied("ICMP ping (OS/network restriction)");
-                }
+                logOk("Internet connectivity: ACTIVE (" + transport + ")");
             }
 
         } catch (Exception e) {
@@ -665,49 +781,125 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 6 — WiFi
+     * LAB 13 — WiFi Details
      * ============================================================ */
-    private void labWifiSignal() {
-        logSection("LAB 6 — Wi-Fi Status");
+    private void lab13WifiDetails() {
+        logSection("LAB 13 — WiFi Signal & Link");
 
         try {
-            android.net.wifi.WifiManager wm =
-                    (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
             if (wm == null) {
-                logAccessDenied("WiFi manager");
+                logAccessDenied("WifiManager");
                 logLine();
                 return;
             }
 
             if (!wm.isWifiEnabled()) {
-                logWarn("Wi-Fi is OFF.");
+                logWarn("WiFi is disabled.");
                 logLine();
                 return;
             }
 
-            int rssi = wm.getConnectionInfo().getRssi();
-            logInfo("Wi-Fi RSSI: " + rssi + " dBm");
+            WifiInfo info = wm.getConnectionInfo();
+            if (info == null || info.getNetworkId() == -1) {
+                logWarn("WiFi enabled but not connected to any access point.");
+                logLine();
+                return;
+            }
 
-            if (rssi > -60)
-                logOk("Wi-Fi signal is strong for normal use.");
-            else if (rssi > -75)
-                logWarn("Wi-Fi signal is medium — possible drops in crowded networks.");
+            int rssi = info.getRssi();
+            int linkSpeed = info.getLinkSpeed();
+
+            logInfo("SSID: " + info.getSSID());
+            logInfo("RSSI: " + rssi + " dBm");
+            logInfo("Link speed: " + linkSpeed + " Mbps");
+
+            if (rssi > -65)
+                logOk("WiFi signal is strong for normal usage.");
+            else if (rssi > -80)
+                logWarn("WiFi signal is moderate — possible instability at distance.");
             else
-                logError("Wi-Fi signal is weak — user may experience frequent disconnects.");
+                logError("WiFi signal is very weak — disconnections and slow speeds expected.");
 
         } catch (Exception e) {
-            logError("Wi-Fi error: " + e.getMessage());
+            logError("WiFi diagnostics error: " + e.getMessage());
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 7 — Sensors
+     * LAB 14 — Mobile Radio
      * ============================================================ */
-    private void labSensors() {
-        logSection("LAB 7 — Sensors Inventory");
+    private void lab14MobileRadio() {
+        logSection("LAB 14 — Mobile Radio / Operator");
+
+        try {
+            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+            if (tm == null) {
+                logAccessDenied("TelephonyManager");
+                logLine();
+                return;
+            }
+
+            String netOp = tm.getNetworkOperatorName();
+            String simOp = tm.getSimOperatorName();
+
+            logInfo("Network operator: " + (netOp == null ? "N/A" : netOp));
+            logInfo("SIM operator: " + (simOp == null ? "N/A" : simOp));
+
+            logOk("Mobile radio basic information collected.");
+
+        } catch (Exception e) {
+            logAccessDenied("Telephony service");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 15 — Bluetooth Status
+     * ============================================================ */
+    private void lab15Bluetooth() {
+        logSection("LAB 15 — Bluetooth Status");
+
+        try {
+            BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+            if (bt == null) {
+                logInfo("This device reports no Bluetooth adapter.");
+                logLine();
+                return;
+            }
+
+            boolean enabled;
+            try {
+                enabled = bt.isEnabled();
+            } catch (SecurityException se) {
+                logAccessDenied("Bluetooth status (permissions)");
+                logLine();
+                return;
+            }
+
+            logInfo("Bluetooth present: YES");
+            logInfo("Bluetooth enabled: " + enabled);
+
+            if (enabled)
+                logOk("Bluetooth is available and enabled.");
+            else
+                logWarn("Bluetooth is disabled at the moment.");
+
+        } catch (Exception e) {
+            logError("Bluetooth diagnostics error: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 16 — Sensors Overview
+     * ============================================================ */
+    private void lab16SensorsOverview() {
+        logSection("LAB 16 — Sensors Overview");
 
         try {
             SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -724,14 +916,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
             checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
             checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer");
-            checkSensor(sm, Sensor.TYPE_LIGHT, "Light Sensor");
+            checkSensor(sm, Sensor.TYPE_LIGHT, "Light sensor");
             checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
-            checkSensor(sm, Sensor.TYPE_PRESSURE, "Barometer");
-            checkSensor(sm, Sensor.TYPE_GRAVITY, "Gravity");
-            checkSensor(sm, Sensor.TYPE_LINEAR_ACCELERATION, "Linear Acceleration");
+            checkSensor(sm, Sensor.TYPE_PRESSURE, "Barometer (pressure)");
+            checkSensor(sm, Sensor.TYPE_GRAVITY, "Gravity sensor");
 
         } catch (Exception e) {
-            logError("Sensor error: " + e.getMessage());
+            logError("Sensor diagnostics error: " + e.getMessage());
         }
 
         logLine();
@@ -739,15 +930,15 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     private void checkSensor(SensorManager sm, int type, String name) {
         boolean ok = sm.getDefaultSensor(type) != null;
-        if (!ok) logWarn(name + " sensor is missing or not exposed.");
-        else logOk(name + " sensor is present.");
+        if (!ok) logWarn(name + " not reported by this device.");
+        else logOk(name + " reported as available.");
     }
 
     /* ============================================================
-     * LAB 8 — Display
+     * LAB 17 — Display / Resolution / Density
      * ============================================================ */
-    private void labDisplay() {
-        logSection("LAB 8 — Display Profile");
+    private void lab17Display() {
+        logSection("LAB 17 — Display / Resolution / Density");
 
         try {
             DisplayMetrics dm = new DisplayMetrics();
@@ -763,92 +954,370 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             int w = dm.widthPixels;
             int h = dm.heightPixels;
             float density = dm.density;
+            int dpi = dm.densityDpi;
 
-            logInfo("Resolution: " + w + " × " + h);
-            logInfo(String.format(Locale.US, "Logical density: %.2f", density));
+            logInfo("Resolution: " + w + " × " + h + " px");
+            logInfo("Density: " + density + " (DPI " + dpi + ")");
 
             if (w >= 1080 && h >= 1920)
-                logOk("Display resolution is modern and suitable for most apps.");
+                logOk("Display resolution is suitable for modern apps.");
             else if (w >= 720 && h >= 1280)
-                logWarn("Display resolution is mid-range. UI may be tight for some modern apps.");
+                logWarn("Display resolution is mid-range — some UI elements may look compact.");
             else
-                logError("Low display resolution for modern applications. UI may feel cramped or blurry.");
+                logError("Very low display resolution for modern applications.");
 
         } catch (Exception e) {
-            logError("Display error: " + e.getMessage());
+            logError("Display diagnostics error: " + e.getMessage());
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 9 — Thermal
+     * LAB 18 — GPU / Renderer Info
      * ============================================================ */
-    private void labThermal() {
-        logSection("LAB 9 — Thermal Sensors (CPU)");
+    private void lab18GpuRenderer() {
+        logSection("LAB 18 — GPU / Renderer (Best-effort)");
 
-        if (Build.VERSION.SDK_INT >= 29) {
-            try {
-                HardwarePropertiesManager hpm =
-                        (HardwarePropertiesManager) getSystemService(HARDWARE_PROPERTIES_SERVICE);
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                ConfigurationInfo ci = am.getDeviceConfigurationInfo();
+                int gl = ci.reqGlEsVersion;
+                int major = ((gl & 0xffff0000) >> 16);
+                int minor = (gl & 0x0000ffff);
+                logInfo("Reported OpenGL ES level: " + major + "." + minor);
+            } else {
+                logAccessDenied("ActivityManager (GPU config)");
+            }
+        } catch (Exception e) {
+            logAccessDenied("GPU / GL ES info");
+        }
 
-                if (hpm != null) {
-                    float[] temps = hpm.getDeviceTemperatures(
-                            HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
-                            HardwarePropertiesManager.TEMPERATURE_CURRENT);
+        logInfo("For advanced GPU profiling, run a dedicated benchmark or profiling tool.");
+        logOk("GPU information lab recorded (informational only).");
+        logLine();
+    }
 
-                    if (temps != null && temps.length > 0) {
-                        float cpuTemp = temps[0];
-                        logInfo(String.format(Locale.US, "CPU temperature (reported): %.1f°C", cpuTemp));
+    /* ============================================================
+     * LAB 19 — Audio / Vibration Capability
+     * ============================================================ */
+    private void lab19AudioAndVibration() {
+        logSection("LAB 19 — Audio / Vibration Capability");
 
-                        if (cpuTemp > 85f)
-                            logError("CPU temperature is extremely high — heavy throttling or shutdown risk.");
-                        else if (cpuTemp > 75f)
-                            logWarn("CPU temperature is high — performance throttling likely.");
-                        else
-                            logOk("CPU temperature is within normal operating range.");
-                    } else {
-                        logAccessDenied("Thermal sensors returned no data.");
-                    }
-                } else {
-                    logAccessDenied("HardwarePropertiesManager not available.");
+        try {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am == null) {
+                logAccessDenied("AudioManager");
+            } else {
+                int music = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                int ring = am.getStreamVolume(AudioManager.STREAM_RING);
+                int maxMusic = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                int maxRing = am.getStreamMaxVolume(AudioManager.STREAM_RING);
+
+                logInfo("Music volume: " + music + " / " + maxMusic);
+                logInfo("Ring volume: " + ring + " / " + maxRing);
+
+                if (music == 0 && ring == 0)
+                    logWarn("Both music and ring volumes are at 0 — user may think speaker is faulty.");
+                else
+                    logOk("Audio volumes are non-zero.");
+            }
+        } catch (Exception e) {
+            logError("Audio diagnostics error: " + e.getMessage());
+        }
+
+        // We do not actively trigger vibration here to avoid surprises.
+        logInfo("Vibration motor test is available in Manual Tests module (not executed here).");
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 20 — Camera Hardware Summary
+     * ============================================================ */
+    private void lab20CameraSummary() {
+        logSection("LAB 20 — Camera Hardware Summary (Best-effort)");
+
+        try {
+            PackageManager pm = getPackageManager();
+            boolean hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+            boolean hasFront = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
+
+            logInfo("Any camera present: " + hasCamera);
+            logInfo("Front camera present: " + hasFront);
+
+            if (!hasCamera)
+                logError("No camera hardware reported by system features.");
+            else
+                logOk("Camera hardware is reported as present by the system.");
+
+        } catch (Exception e) {
+            logError("Camera feature check error: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 21 — Location / GPS / NFC
+     * ============================================================ */
+    private void lab21LocationGpsAndNfc() {
+        logSection("LAB 21 — Location / GPS / NFC");
+
+        try {
+            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (lm == null) {
+                logAccessDenied("LocationManager");
+            } else {
+                boolean gps, network;
+                try {
+                    gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                    network = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                } catch (Exception e) {
+                    logAccessDenied("Location provider status");
+                    gps = false;
+                    network = false;
                 }
 
-            } catch (Exception e) {
-                logAccessDenied("Thermal sensors: " + e.getMessage());
+                logInfo("GPS provider enabled: " + gps);
+                logInfo("Network location enabled: " + network);
+
+                if (!gps && !network)
+                    logWarn("All location providers are disabled — location-based apps may fail.");
+                else
+                    logOk("At least one location provider is enabled.");
             }
-        } else {
-            logAccessDenied("Thermal API requires Android 10+ (API 29+).");
+        } catch (Exception e) {
+            logError("Location diagnostics error: " + e.getMessage());
+        }
+
+        // NFC quick check
+        try {
+            NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
+            if (nfc == null) {
+                logInfo("NFC hardware: not reported by this device.");
+            } else {
+                logInfo("NFC supported: YES, enabled=" + nfc.isEnabled());
+            }
+        } catch (Exception e) {
+            logAccessDenied("NFC state");
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 10 — System / Telephony / Live RAM
+     * LAB 22 — System Uptime / Reboot
      * ============================================================ */
-    private void labSystemHealth() {
-        logSection("LAB 10 — System / Telephony / Live RAM");
+    private void lab22SystemUptime() {
+        logSection("LAB 22 — System Uptime");
 
-        // Telephony / Operator info
+        long upMs = SystemClock.elapsedRealtime();
+        String upStr = formatDuration(upMs);
+
+        logInfo("System uptime since last boot: " + upStr);
+
+        if (upMs < 2 * 60 * 60 * 1000L) {
+            logWarn("System was rebooted recently (≤ 2 hours) — some issues may be transient.");
+        } else {
+            logOk("System has been running for a reasonable amount of time.");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 23 — Installed Apps Footprint
+     * ============================================================ */
+    private void lab23AppsFootprint() {
+        logSection("LAB 23 — Installed Apps Footprint");
+
         try {
-            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+            PackageManager pm = getPackageManager();
+            List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+            if (apps == null) {
+                logAccessDenied("Installed applications list");
+                logLine();
+                return;
+            }
 
-            if (tm != null) {
-                String netOp = tm.getNetworkOperatorName();
-                String simOp = tm.getSimOperatorName();
+            int userApps = 0;
+            int systemApps = 0;
+            int disabledApps = 0;
 
-                logInfo("Network operator: " + (netOp == null ? "N/A" : netOp));
-                logInfo("SIM operator: " + (simOp == null ? "N/A" : simOp));
+            for (ApplicationInfo ai : apps) {
+                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                    systemApps++;
+                else
+                    userApps++;
+
+                if (!ai.enabled) disabledApps++;
+            }
+
+            logInfo("User-installed apps: " + userApps);
+            logInfo("System apps: " + systemApps);
+            logInfo("Disabled apps: " + disabledApps);
+            logInfo("Total installed packages: " + apps.size());
+
+            if (userApps > 120)
+                logError("Very high number of user apps — strong risk of background drain and slowdowns.");
+            else if (userApps > 80)
+                logWarn("High number of user apps — possible performance impact.");
+            else
+                logOk("App footprint is within normal range.");
+
+        } catch (Exception e) {
+            logError("Apps footprint diagnostics error: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 24 — Security Patch / OS Age
+     * ============================================================ */
+    private void lab24SecurityPatch() {
+        logSection("LAB 24 — Security Patch Level");
+
+        try {
+            String patch = Build.VERSION.SECURITY_PATCH;
+            if (patch == null || patch.trim().isEmpty()) {
+                logInfo("Security patch level: not reported (OEM-specific or pre-6.0).");
+                logWarn("Cannot verify security patch level — treat as unknown risk.");
             } else {
-                logAccessDenied("TelephonyManager");
+                logInfo("Security patch level (from Android): " + patch);
+
+                // Best-effort patch age evaluation
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    Date patchDate = sdf.parse(patch);
+                    if (patchDate != null) {
+                        long diffMs = System.currentTimeMillis() - patchDate.getTime();
+                        long diffDays = diffMs / (1000L * 60L * 60L * 24L);
+
+                        logInfo("Security patch age (approx): " + diffDays + " days");
+
+                        if (diffDays > 730) {
+                            logError("Security patch is older than ~2 years — high security risk.");
+                        } else if (diffDays > 365) {
+                            logWarn("Security patch is older than ~1 year — consider updating.");
+                        } else {
+                            logOk("Security patch is relatively recent for typical use.");
+                        }
+                    }
+                } catch (Exception ignored) {
+                    logWarn("Could not parse security patch date for age calculation.");
+                }
+            }
+        } catch (Exception e) {
+            logAccessDenied("Security patch property");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 25 — Power Optimizations / Doze (Best-effort)
+     * ============================================================ */
+    private void lab25PowerOptimizations() {
+        logSection("LAB 25 — Power Optimizations / Doze (Best-effort)");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            logInfo("Doze & app standby are supported on this Android version.");
+
+            try {
+                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                if (pm != null) {
+                    boolean ignoring = pm.isIgnoringBatteryOptimizations(getPackageName());
+                    logInfo("This app ignoring battery optimizations: " + ignoring);
+                }
+            } catch (Exception e) {
+                logAccessDenied("Battery optimizations state for this app");
+            }
+
+            logOk("Power optimization framework is available; per-app whitelists must be reviewed manually.");
+        } else {
+            logWarn("This Android version does not support modern Doze / standby optimizations.");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 26 — Accessibility Services
+     * ============================================================ */
+    private void lab26AccessibilityServices() {
+        logSection("LAB 26 — Accessibility Services (Best-effort)");
+
+        try {
+            String enabled = Settings.Secure.getString(
+                    getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            );
+
+            if (enabled == null || enabled.isEmpty()) {
+                logInfo("No accessibility services reported as enabled.");
+                logOk("Accessibility services baseline appears normal.");
+            } else {
+                logInfo("Enabled accessibility services (raw): " + enabled);
+                logWarn("At least one accessibility service is enabled — verify that all are trusted.");
+            }
+        } catch (Exception e) {
+            logAccessDenied("Accessibility services list");
+        }
+
+        // Animator scale can affect perceived performance
+        try {
+            float scale = Settings.Global.getFloat(
+                    getContentResolver(),
+                    Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+            );
+            logInfo("Animator duration scale: " + scale);
+        } catch (Exception e) {
+            logAccessDenied("Animator duration scale");
+        }
+
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 27 — Special Permissions / Usage Stats (Best-effort)
+     * ============================================================ */
+    private void lab27SpecialPermissions() {
+        logSection("LAB 27 — Special Permissions Snapshot");
+
+        try {
+            boolean usageStatsGranted = false;
+            try {
+                int mode = Settings.Secure.getInt(
+                        getContentResolver(),
+                        "usage_stats_enabled", 0
+                );
+                usageStatsGranted = (mode == 1);
+            } catch (Exception ignored) {
+                // Some OEMs hide this; ignore silently and report as unknown.
+            }
+
+            if (usageStatsGranted) {
+                logWarn("Usage stats access appears enabled — verify which apps hold this permission.");
+            } else {
+                logInfo("No obvious usage stats permission flags detected from this context.");
             }
 
         } catch (Exception e) {
-            logAccessDenied("Telephony service: " + e.getMessage());
+            logAccessDenied("Usage stats permission flags");
         }
 
-        // Live RAM snapshot
+        logLine();
+    }
+
+    /* ============================================================
+     * LAB 28 — Live RAM Snapshot (second pass)
+     * ============================================================ */
+    private void lab28LiveRamPressure() {
+        logSection("LAB 28 — Live RAM Snapshot (Second Pass)");
+
         try {
             ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
             if (am != null) {
@@ -860,84 +1329,102 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
                 String ramLine = String.format(
                         Locale.US,
-                        "Live RAM now: %s free (%.0f%% of total)",
+                        "Live RAM now: %s (%.0f%% free)",
                         readable(free),
                         pct
                 );
                 logInfo(ramLine);
 
                 if (pct >= 25f)
-                    logOk("Live RAM status is healthy at the moment.");
-                else if (pct >= 15f)
-                    logWarn("Live RAM is getting low — closing background apps is recommended.");
+                    logOk("Live RAM status acceptable at the moment of this test.");
                 else
-                    logError("Live RAM is critically low — system may kill apps aggressively.");
-            }
-        } catch (Exception e) {
-            logError("Live RAM error: " + e.getMessage());
-        }
-
-        logLine();
-    }
-
-    /* ============================================================
-     * LAB 11 — Uptime / Boot Profile
-     * ============================================================ */
-    private void labUptime() {
-        logSection("LAB 11 — Uptime / Boot Profile");
-
-        long uptimeMs = SystemClock.elapsedRealtime();
-        long sec = uptimeMs / 1000;
-        long min = sec / 60;
-        long hrs = min / 60;
-        long days = hrs / 24;
-
-        StringBuilder sb = new StringBuilder();
-        if (days > 0) sb.append(days).append("d ");
-        if (hrs % 24 > 0) sb.append(hrs % 24).append("h ");
-        if (min % 60 > 0) sb.append(min % 60).append("m ");
-
-        logInfo("System uptime since last boot: " + sb.toString().trim());
-
-        if (days >= 7) {
-            logWarn("Device has not been rebooted for a long time (≥ 7 days). A restart may improve stability.");
-        } else if (days == 0 && hrs < 2) {
-            logInfo("Recent reboot detected — good for troubleshooting.");
-        } else {
-            logOk("Uptime is reasonable for daily use.");
-        }
-
-        logLine();
-    }
-
-    /* ============================================================
-     * LAB 12 — Installed Apps Footprint (basic)
-     * ============================================================ */
-    private void labAppsFootprint() {
-        logSection("LAB 12 — Installed Apps Footprint");
-
-        try {
-            int count = getPackageManager().getInstalledApplications(0).size();
-            logInfo("Installed applications (approx): " + count);
-
-            if (count > 200) {
-                logWarn("Very high number of installed apps — may affect RAM, battery and performance.");
-            } else if (count > 120) {
-                logInfo("Above average number of installed apps — monitor performance and storage.");
+                    logWarn("Live RAM is relatively low at this moment.");
             } else {
-                logOk("Installed app count is within a normal range.");
+                logAccessDenied("ActivityManager (live RAM)");
             }
         } catch (Exception e) {
-            logAccessDenied("Installed apps list: " + e.getMessage());
+            logError("Live RAM check error: " + e.getMessage());
         }
 
         logLine();
+    }
+
+    /* ============================================================
+     * LAB 29 — Final Summary / Recommendations
+     * ============================================================ */
+    private void lab29FinalSummary() {
+        logSection("LAB 29 — Final Summary & Recommendations");
+
+        logInfo("Total warnings detected: " + warnCount);
+        logInfo("Total critical issues detected: " + errorCount);
+
+        if (errorCount == 0 && warnCount == 0) {
+            logOk("No warnings or critical issues detected. Device is in excellent condition.");
+        } else if (errorCount == 0 && warnCount > 0) {
+            logWarn("No critical failures, but there are warnings that should be explained to the customer.");
+        } else if (errorCount > 0) {
+            logError("Critical issues present. Recommend detailed service consultation and, if needed, hardware checks.");
+        }
+
+        if (rooted) {
+            logWarn("Since the device appears rooted, some protections are bypassed. Document this clearly in the report.");
+        }
+
+        logInfo("Use this automatic report together with Manual Tests (audio, display, sensors, input, charging) for a complete service diagnosis.");
+        logLine();
+    }
+
+    /* ============================================================
+     * ROOT HELPERS
+     * ============================================================ */
+    private boolean isDeviceRootedBasic() {
+        return hasTestKeys() || hasSuBinary() || hasSuperUserApk() || whichSu();
+    }
+
+    private boolean hasTestKeys() {
+        String tags = Build.TAGS;
+        return tags != null && tags.contains("test-keys");
+    }
+
+    private boolean hasSuBinary() {
+        String[] paths = new String[]{
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
+        };
+        try {
+            for (String p : paths) {
+                if (new File(p).exists()) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private boolean hasSuperUserApk() {
+        try {
+            return new File("/system/app/Superuser.apk").exists();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean whichSu() {
+        BufferedReader in = null;
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"which", "su"});
+            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = in.readLine();
+            return line != null;
+        } catch (Exception ignored) {
+            return false;
+        } finally {
+            if (in != null) try { in.close(); } catch (Exception ignored) {}
+        }
     }
 
     /* ============================================================
      * SMALL HELPERS
      * ============================================================ */
-    private String safeReadFirstLine(String path) {
+    private String readFirstLine(String path) {
         BufferedReader br = null;
         try {
             File f = new File(path);
@@ -961,5 +1448,20 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         if (gb < 1024) return String.format(Locale.US, "%.2f GB", gb);
         float tb = gb / 1024f;
         return String.format(Locale.US, "%.2f TB", tb);
+    }
+
+    private String formatDuration(long ms) {
+        long seconds = ms / 1000;
+        long days = seconds / (24 * 3600);
+        seconds %= (24 * 3600);
+        long hours = seconds / 3600;
+        seconds %= 3600;
+        long minutes = seconds / 60;
+
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("d ");
+        if (hours > 0 || days > 0) sb.append(hours).append("h ");
+        sb.append(minutes).append("m");
+        return sb.toString().trim();
     }
 }

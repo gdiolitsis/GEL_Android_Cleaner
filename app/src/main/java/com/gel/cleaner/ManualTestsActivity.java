@@ -34,6 +34,7 @@ import java.util.Locale;
 
 // ============================================================
 // GEL Manual Tests — στοχευμένα service tests (PRO Edition)
+// Με πλήρη Service Log (GELServiceLog) για export
 // ============================================================
 public class ManualTestsActivity extends AppCompatActivity {
 
@@ -155,22 +156,27 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void logInfo(String msg) {
+        GELServiceLog.info(msg); // για export
         appendHtml("ℹ️ " + escape(msg));
     }
 
     private void logOk(String msg) {
+        GELServiceLog.ok(msg); // για export
         appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
     }
 
     private void logError(String msg) {
+        GELServiceLog.error(msg); // για export
         appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
     }
 
     private void logWarn(String msg) {
+        GELServiceLog.warn(msg); // για export
         appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
     }
 
     private void logLine() {
+        GELServiceLog.addLine("────────────────────────────");
         appendHtml("<font color='#666666'>────────────────────────────</font>");
     }
 
@@ -623,3 +629,4 @@ public class ManualTestsActivity extends AppCompatActivity {
         return String.format(Locale.US, "%.2f GB", gb);
     }
 }
+```0

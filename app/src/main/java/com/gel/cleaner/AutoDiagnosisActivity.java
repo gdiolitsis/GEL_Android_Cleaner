@@ -1,6 +1,9 @@
 package com.gdiolitsis.gelcleaner;
 
 import android.os.Bundle;
+import android.text.Html;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,65 +21,108 @@ public class AutoDiagnosisActivity extends AppCompatActivity {
         txtDiag = findViewById(R.id.txtDiag);
         scroll = findViewById(R.id.scrollDiag);
 
+        txtDiag.setMovementMethod(new ScrollingMovementMethod());
+        txtDiag.setTextSize(15f);
+
         runDiagnostics();
     }
 
-    private void runDiagnostics() {
-        append("🔍 Starting Auto-Diagnosis...\n");
-
-        // -------------------------
-        // 📌 DEVICE MODEL
-        // -------------------------
-        String model = android.os.Build.MODEL;
-        append("📱 Device Model: " + model);
-
-        // -------------------------
-        // 📌 ANDROID VERSION
-        // -------------------------
-        String androidVer = android.os.Build.VERSION.RELEASE;
-        append("🤖 Android Version: " + androidVer);
-
-        // -------------------------
-        // 📌 MANUFACTURER
-        // -------------------------
-        String manufacturer = android.os.Build.MANUFACTURER;
-        append("🏭 Manufacturer: " + manufacturer);
-
-        // -------------------------
-        // 📌 SECURITY PATCH LEVEL
-        // -------------------------
-        String securityPatch = android.os.Build.VERSION.SECURITY_PATCH;
-        append("🔐 Security Patch: " + securityPatch);
-
-        // -------------------------
-        // 📌 STORAGE CHECK
-        // -------------------------
-        try {
-            long freeBytes = getFilesDir().getFreeSpace();
-            long freeMB = freeBytes / (1024 * 1024);
-            append("💾 Free Internal Storage: " + freeMB + " MB");
-        } catch (Exception e) {
-            append("⚠ Storage check not available on this device.");
-        }
-
-        // -------------------------
-        // 📌 RAM CHECK
-        // -------------------------
-        try {
-            Runtime rt = Runtime.getRuntime();
-            long free = rt.freeMemory() / (1024 * 1024);
-            long total = rt.totalMemory() / (1024 * 1024);
-            append("🐏 RAM: " + free + "MB free / " + total + "MB total");
-        } catch (Exception e) {
-            append("⚠ RAM check not available.");
-        }
-
-        append("\n✅ Auto-Diagnosis Completed.");
-    }
-
-    private void append(String msg) {
-        txtDiag.append(msg + "\n");
+    /* ============================================================
+     * HTML + COLOR LOGS (GEL STYLE)
+     * ============================================================ */
+    private void appendHtml(String html) {
+        CharSequence prev = txtDiag.getText();
+        CharSequence next = Html.fromHtml(html + "<br>");
+        txtDiag.setText(TextUtils.concat(prev, next));
 
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+    }
+
+    private void logInfo(String msg) {
+        appendHtml("ℹ️ " + escape(msg));
+    }
+
+    private void logOk(String msg) {
+        appendHtml("<font color='#66FF66'>✅ " + escape(msg) + "</font>");
+    }
+
+    private void logWarn(String msg) {
+        appendHtml("<font color='#FFD700'>⚠️ " + escape(msg) + "</font>");
+    }
+
+    private void logError(String msg) {
+        appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+    }
+
+    private void logAccessDenied(String area) {
+        appendHtml("<font color='#FFD700'>⚠️ Access Denied — Firmware Restriction (" +
+                escape(area) + ")</font>");
+    }
+
+    private String escape(String s) {
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    /* ============================================================
+     * AUTO DIAG ENGINE
+     * ============================================================ */
+    private void runDiagnostics() {
+
+        logInfo("🔍 Starting Auto-Diagnosis...");
+
+        // DEVICE MODEL
+        try {
+            String model = android.os.Build.MODEL;
+            logOk("Device Model: " + model);
+        } catch (Exception e) {
+            logAccessDenied("Device Model");
+        }
+
+        // ANDROID VERSION
+        try {
+            String androidVer = android.os.Build.VERSION.RELEASE;
+            logOk("Android Version: " + androidVer);
+        } catch (Exception e) {
+            logAccessDenied("Android Version");
+        }
+
+        // MANUFACTURER
+        try {
+            String manufacturer = android.os.Build.MANUFACTURER;
+            logOk("Manufacturer: " + manufacturer);
+        } catch (Exception e) {
+            logAccessDenied("Manufacturer");
+        }
+
+        // SECURITY PATCH
+        try {
+            String securityPatch = android.os.Build.VERSION.SECURITY_PATCH;
+            logOk("Security Patch: " + securityPatch);
+        } catch (Exception e) {
+            logAccessDenied("Security Patch");
+        }
+
+        // STORAGE
+        try {
+            long freeBytes = getFilesDir().getFreeSpace();
+            long freeMB = freeBytes / (1024L * 1024L);
+            logInfo("Free Internal Storage: " + freeMB + " MB");
+        } catch (Exception e) {
+            logAccessDenied("Storage Check");
+        }
+
+        // RAM
+        try {
+            Runtime rt = Runtime.getRuntime();
+            long free = rt.freeMemory() / (1024L * 1024L);
+            long total = rt.totalMemory() / (1024L * 1024L);
+            logInfo("RAM: " + free + "MB free / " + total + "MB total");
+        } catch (Exception e) {
+            logAccessDenied("RAM Check");
+        }
+
+        logOk("Auto-Diagnosis Completed.");
     }
 }

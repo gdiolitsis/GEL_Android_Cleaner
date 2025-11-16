@@ -24,39 +24,6 @@ public class GELCleaner {
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
     // ====================================================================
-    // CPU LIVE
-    // ====================================================================
-    public static void cpuLive(Context ctx, LogCallback cb) {
-
-        new Thread(() -> {
-            try {
-                int i = 1;
-                while (i <= 10) {
-
-                    long free = Runtime.getRuntime().freeMemory();
-                    long total = Runtime.getRuntime().totalMemory();
-                    long used = total - free;
-
-                    String msg = String.format(Locale.US,
-                            "Live %02d | App RAM used: %s / %s",
-                            i,
-                            Formatter.formatShortFileSize(ctx, used),
-                            Formatter.formatShortFileSize(ctx, total));
-
-                    info(cb, msg);
-                    Thread.sleep(1000);
-                    i++;
-                }
-
-                ok(cb, "CPU+RAM live finished.");
-
-            } catch (Exception e) {
-                err(cb, "cpuLive failed: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    // ====================================================================
     // CLEAN RAM (Smart Clean)
     // ====================================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
@@ -108,48 +75,38 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES — UNIVERSAL TEMP/JUNK CLEANER (1 TAP) + ROOT EXTRA
+    // TEMP FILES — UNIVERSAL CLEANER (Root or Not)
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
-            // ----------------------------------------------------------------
-            // 0) Αν η συσκευή είναι rooted → τρέχουμε extra root-only καθάρισμα
-            // ----------------------------------------------------------------
+            // ROOT MODE
             if (isDeviceRooted()) {
-                info(cb, "Root detected — ενεργοποιώ GEL Root Temp Cleaner (system temp, ANR, tombstones).");
+                info(cb, "Root detected — ενεργοποιώ GEL Root Temp Cleaner.");
                 rootExtraTempCleanup(cb);
+                rootExtendedCleanup(cb);       // <<< ΝΕΟ ΜΕΓΑΛΟ ROOT CLEANER
             } else {
-                info(cb, "Device not rooted — τρέχει μόνο ο κλασικός temp cleaner (safe mode).");
+                info(cb, "Device not rooted — τρέχει μόνο ο ασφαλής temp cleaner.");
             }
 
-            // ===============================
-            // 1) Πρώτη επιλογή → Universal Storage Cleaner
-            // ===============================
+            // 1) Universal Storage Cleaner
             boolean launched = CleanLauncher.openTempStorageCleaner(ctx);
 
             if (launched) {
                 ok(cb, "Άνοιξα Storage/Junk Cleaner της συσκευής.");
-                info(cb, "➡ Εκεί φαίνονται temp, junk, cache, large files κ.λπ.");
                 return;
             }
 
-            // ===============================
-            // 2) Fallback → Storage Settings
-            // ===============================
+            // 2) Fallback → Internal Storage settings
             try {
                 Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(i);
 
                 ok(cb, "Άνοιξα Storage Settings.");
-                info(cb, "➡ Βρες 'Free up space / Clean / Junk'.");
                 return;
-
             } catch (Exception ignored) {}
 
-            // ===============================
-            // 3) Αν ΟΛΑ αποτύχουν → MIUI/Samsung Deep Cleaner (safe)
-            // ===============================
+            // 3) OEM Deep Cleaner fallback
             boolean deep = CleanLauncher.openDeepCleaner(ctx);
 
             if (deep) {
@@ -157,10 +114,8 @@ public class GELCleaner {
                 return;
             }
 
-            // ===============================
-            // 4) Τελευταίο fallback
-            // ===============================
-            err(cb, "Δεν βρέθηκε cleaner για temp files στη συσκευή.");
+            // 4) Last resort
+            err(cb, "Δεν βρέθηκε cleaner για temp files.");
 
         } catch (Exception e) {
             err(cb, "cleanTempFiles failed: " + e.getMessage());
@@ -175,17 +130,10 @@ public class GELCleaner {
             PackageManager pm = ctx.getPackageManager();
 
             String[] browsers = {
-                    "com.android.chrome",
-                    "org.mozilla.firefox",
-                    "com.opera.browser",
-                    "com.microsoft.emmx",
-                    "com.brave.browser",
-                    "com.vivaldi.browser",
-                    "com.duckduckgo.mobile.android",
-                    "com.sec.android.app.sbrowser",
-                    "com.mi.globalbrowser",
-                    "com.android.browser",
-                    "com.miui.hybrid"
+                    "com.android.chrome", "org.mozilla.firefox", "com.opera.browser",
+                    "com.microsoft.emmx", "com.brave.browser", "com.vivaldi.browser",
+                    "com.duckduckgo.mobile.android", "com.sec.android.app.sbrowser",
+                    "com.mi.globalbrowser", "com.android.browser", "com.miui.hybrid"
             };
 
             List<String> installed = new ArrayList<>();
@@ -217,22 +165,12 @@ public class GELCleaner {
     // ====================================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         try {
-            try {
-                Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-                dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(dev);
+            Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+            dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(dev);
 
-                ok(cb, "Developer menu opened.");
-                info(cb, "➡ 'Running Services' για ενεργές εφαρμογές.");
-                return;
-            } catch (Exception ignored) {}
-
-            Intent i = new Intent(Settings.ACTION_APPLICATION_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(i);
-
-            ok(cb, "Άνοιξα λίστα εφαρμογών.");
-            info(cb, "⚠ Running Apps απαιτεί Developer Options.");
+            ok(cb, "Developer menu opened.");
+            info(cb, "➡ 'Running Services' για ενεργές εφαρμογές.");
 
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
@@ -256,7 +194,6 @@ public class GELCleaner {
         if (f.isFile()) { f.delete(); return; }
         File[] children = f.listFiles();
         if (children != null) for (File c : children) deleteFolder(c);
-        //noinspection ResultOfMethodCallIgnored
         f.delete();
     }
 
@@ -271,46 +208,20 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // OEM Cleaner Helper
-    // ====================================================================
-    private static boolean tryLaunch(Context ctx, String pkg, String cls) {
-        try {
-            Intent i = new Intent();
-            i.setClassName(pkg, cls);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(i);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    // ====================================================================
-    // ROOT HELPERS (SAFE)
+    // ROOT DETECTION (SAFE)
     // ====================================================================
     private static boolean isDeviceRooted() {
-        // 1) build tags
         String tags = Build.TAGS;
-        if (tags != null && tags.contains("test-keys")) {
-            return true;
-        }
+        if (tags != null && tags.contains("test-keys")) return true;
 
-        // 2) SU binary σε γνωστά μονοπάτια
         String[] paths = {
-                "/system/bin/su",
-                "/system/xbin/su",
-                "/sbin/su",
-                "/system/su",
-                "/system/bin/.ext/su",
-                "/system/usr/we-need-root/su",
-                "/system/xbin/mu"
+                "/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su",
+                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
         };
+
         for (String path : paths) {
-            try {
-                if (new File(path).exists()) {
-                    return true;
-                }
-            } catch (Throwable ignored) {}
+            try { if (new File(path).exists()) return true; }
+            catch (Throwable ignored) {}
         }
 
         return false;
@@ -327,11 +238,10 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // ROOT EXTRA TEMP CLEANER
+    // ROOT EXTRA CLEANER (Basic)
     // ====================================================================
     private static void rootExtraTempCleanup(LogCallback cb) {
-        // Προσεκτικά επιλεγμένοι φάκελοι temp/logs — ΟΧΙ dalvik/art
-        String[] paths = new String[] {
+        String[] paths = {
                 "/data/local/tmp",
                 "/data/anr",
                 "/data/tombstones",
@@ -339,22 +249,36 @@ public class GELCleaner {
                 "/cache"
         };
 
-        boolean anySuccess = false;
-
         for (String p : paths) {
             String cmd = "rm -rf " + p + "/*";
-            if (runSu(cmd)) {
-                anySuccess = true;
-                ok(cb, "Root clean: " + p);
-            } else {
-                info(cb, "Root clean failed ή δεν επιτρέπεται: " + p);
-            }
+            if (runSu(cmd)) ok(cb, "Root cleaned: " + p);
+            else info(cb, "Root skip: " + p);
         }
 
-        if (!anySuccess) {
-            info(cb, "Root temp clean δεν ολοκληρώθηκε (πιθανόν περιορισμένο root / Magisk deny).");
-        } else {
-            ok(cb, "GEL Root Temp Cleaner ολοκληρώθηκε (system temp / ANR / tombstones).");
+        ok(cb, "GEL Root Temp Cleaner ολοκληρώθηκε.");
+    }
+
+    // ====================================================================
+    // ROOT EXTENDED CLEANER (SAFE — EXTRA MODULES)
+    // ====================================================================
+    private static void rootExtendedCleanup(LogCallback cb) {
+        info(cb, "Root Extended Cleaner ενεργό…");
+
+        String[] extraPaths = {
+                "/data/system/usagestats/*",
+                "/data/system/package_cache/*",
+                "/data/system/procstats/*",
+                "/data/system/uiderrors/*",
+                "/data/log/*",
+                "/data/vendor/log/*"
+        };
+
+        for (String p : extraPaths) {
+            String cmd = "rm -rf " + p;
+            if (runSu(cmd)) ok(cb, "Root extended cleaned: " + p);
+            else info(cb, "Skip: " + p);
         }
+
+        ok(cb, "Root Extended Cleaner — COMPLETE.");
     }
 }

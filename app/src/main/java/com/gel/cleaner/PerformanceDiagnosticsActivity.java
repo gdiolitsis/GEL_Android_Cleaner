@@ -4,499 +4,604 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.net.TrafficStats;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.SystemClock;
+import android.os.Handler;
+import android.os.Looper;
+import android.telephony.TelephonyManager;
+import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.BufferedReader;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.os.StatFs;
+
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+// ============================================================
+// GEL Phone Diagnosis — PerformanceDiagnosticsActivity
+// Full "Service Lab" diagnostic, universal για όλες τις συσκευές
+// ============================================================
 public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
     private TextView txtDiag;
+    private ScrollView scroll;
+    private Handler ui;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_diagnostics);
 
-        setTitle(R.string.diagnostics); // "GEL Phone Diagnosis"
+        // Απλό generic layout: full-screen TextView με Scroll
+        scroll = new ScrollView(this);
+        txtDiag = new TextView(this);
+        txtDiag.setTextSize(14f);
+        txtDiag.setTextColor(0xFFE0E0E0); // light grey
+        txtDiag.setPadding(32, 32, 32, 32);
+        txtDiag.setMovementMethod(new ScrollingMovementMethod());
 
-        txtDiag = findViewById(R.id.txtDiagnostics);
-        if (txtDiag != null) {
-            txtDiag.setMovementMethod(new ScrollingMovementMethod());
+        scroll.addView(txtDiag);
+        setContentView(scroll);
+
+        ui = new Handler(Looper.getMainLooper());
+
+        logTitle("🔬 GEL Phone Diagnosis — Service Lab");
+        logInfo("Μοντέλο: " + Build.MANUFACTURER + " " + Build.MODEL);
+        logInfo("Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
+        logLine();
+
+        runFullDiagnosis();
+    }
+
+    // ============================================================
+    // LOG HELPERS (με κόκκινα errors)
+    // ============================================================
+    private void appendHtmlLine(final String html) {
+        ui.post(() -> {
+            CharSequence current = txtDiag.getText();
+            String add = Html.fromHtml(html + "<br>") + "";
+            txtDiag.setText(current + add);
+
+            if (scroll != null) {
+                scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+            }
+        });
+    }
+
+    private void logTitle(String msg) {
+        appendHtmlLine("<b>" + escape(msg) + "</b>");
+    }
+
+    private void logSection(String msg) {
+        appendHtmlLine("<br><b>▌ " + escape(msg) + "</b>");
+    }
+
+    private void logInfo(String msg) {
+        appendHtmlLine("ℹ️ " + escape(msg));
+    }
+
+    private void logOk(String msg) {
+        appendHtmlLine("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+    }
+
+    private void logError(String msg) {
+        appendHtmlLine("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+    }
+
+    private void logWarn(String msg) {
+        appendHtmlLine("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+    }
+
+    private void logLine() {
+        appendHtmlLine("<font color='#666666'>────────────────────────────────</font>");
+    }
+
+    private String escape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    // ============================================================
+    // MAIN DIAG FLOW
+    // ============================================================
+    private void runFullDiagnosis() {
+        new Thread(() -> {
+            labHardware();
+            labCpuRam();
+            labStorage();
+            labBattery();
+            labNetwork();
+            labWifiSignal();
+            labSensors();
+            labDisplay();
+            labThermal();
+            labSystemHealth();
+
+            logLine();
+            logOk("Διάγνωση ολοκληρώθηκε. Χρησιμοποίησε τα errors (κόκκινα) για service report.");
+        }).start();
+    }
+
+    // ============================================================
+    // LAB 1 — Hardware / OS Info
+    // ============================================================
+    private void labHardware() {
+        logSection("LAB 1 — Hardware / OS");
+
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        String device = Build.DEVICE;
+        String product = Build.PRODUCT;
+        String board = Build.BOARD;
+
+        logInfo("Κατασκευαστής: " + manufacturer);
+        logInfo("Μοντέλο: " + model);
+        logInfo("Συσκευή: " + device);
+        logInfo("Product: " + product);
+        logInfo("Board: " + board);
+        logInfo("Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
+
+        if (Build.VERSION.SDK_INT < 26) {
+            logWarn("Παλιό Android (< 8.0) — πιθανή γενική αστάθεια / έλλειψη updates.");
+        } else if (Build.VERSION.SDK_INT < 30) {
+            logWarn("Android < 11 — ίσως δεν υπάρχουν τα τελευταία security patches.");
+        } else {
+            logOk("OS level: OK για σύγχρονη χρήση.");
         }
 
-        runFullDiagnostics();
+        logLine();
     }
 
     // ============================================================
-    // MAIN DIAGNOSTICS ENTRY
+    // LAB 2 — CPU / RAM
     // ============================================================
-    private void runFullDiagnostics() {
-        StringBuilder sb = new StringBuilder();
+    private void labCpuRam() {
+        logSection("LAB 2 — CPU / RAM");
 
-        sb.append("=== DEVICE OVERVIEW ===\n");
-        sb.append(getDeviceOverview());
-        sb.append("\n");
-
-        sb.append("=== CPU & PERFORMANCE ===\n");
-        sb.append(getCpuInfo());
-        sb.append("\n");
-
-        sb.append("=== MEMORY (RAM) ===\n");
-        sb.append(getRamInfo());
-        sb.append("\n");
-
-        sb.append("=== STORAGE ===\n");
-        sb.append(getStorageInfo());
-        sb.append("\n");
-
-        sb.append("=== BATTERY ===\n");
-        sb.append(getBatteryInfo());
-        sb.append("\n");
-
-        sb.append("=== THERMAL / TEMPERATURE (best effort) ===\n");
-        sb.append(getThermalInfo());
-        sb.append("\n");
-
-        sb.append("=== SENSORS ===\n");
-        sb.append(getSensorsInfo());
-        sb.append("\n");
-
-        sb.append("=== NETWORK (basic) ===\n");
-        sb.append(getNetworkInfo());
-        sb.append("\n");
-
-        sb.append("=== UPTIME ===\n");
-        sb.append(getUptimeInfo());
-        sb.append("\n");
-
-        if (txtDiag != null) {
-            txtDiag.setText(sb.toString());
-        }
-    }
-
-    // ============================================================
-    // DEVICE OVERVIEW
-    // ============================================================
-    private String getDeviceOverview() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Brand: ").append(Build.BRAND).append("\n");
-        sb.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
-        sb.append("Model: ").append(Build.MODEL).append("\n");
-        sb.append("Device: ").append(Build.DEVICE).append("\n");
-        sb.append("Board: ").append(Build.BOARD).append("\n");
-        sb.append("Hardware: ").append(Build.HARDWARE).append("\n");
-        sb.append("Product: ").append(Build.PRODUCT).append("\n");
-        sb.append("Android: ").append(Build.VERSION.RELEASE)
-                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
-        sb.append("Build ID: ").append(Build.ID).append("\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // CPU INFO
-    // ============================================================
-    private String getCpuInfo() {
-        StringBuilder sb = new StringBuilder();
         int cores = Runtime.getRuntime().availableProcessors();
-        sb.append("Cores: ").append(cores).append("\n");
+        long maxMem = Runtime.getRuntime().maxMemory();     // app heap
+        long totalMem = getTotalRam();                      // device RAM
+        long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-        // /proc/cpuinfo (best effort)
+        logInfo("CPU Cores: " + cores);
+        logInfo("App heap used: " + readable(usedHeap) + " / " + readable(maxMem));
+        if (totalMem > 0) {
+            logInfo("Συνολική RAM συσκευής: " + readable(totalMem));
+        }
+
+        if (totalMem > 0 && totalMem < gb(2)) {
+            logError("Πολύ λίγη RAM (< 2 GB) — η συσκευή θα κολλάει με πολλές εφαρμογές.");
+        } else if (totalMem > 0 && totalMem < gb(4)) {
+            logWarn("RAM ~2–4 GB — οριακά για βαριά χρήση / πολλά apps.");
+        } else if (totalMem > 0) {
+            logOk("RAM capacity: Ικανοποιητική για καθημερινή χρήση.");
+        }
+
+        if (cores <= 4) {
+            logWarn("CPU με ≤ 4 πυρήνες — περιορισμένη απόδοση σε βαριά tasks.");
+        } else {
+            logOk("CPU cores count: OK.");
+        }
+
+        logLine();
+    }
+
+    private long getTotalRam() {
         try {
-            String cpuInfo = readCpuInfoShort();
-            if (cpuInfo != null && !cpuInfo.isEmpty()) {
-                sb.append(cpuInfo).append("\n");
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            if (am != null) {
+                am.getMemoryInfo(mi);
+                return mi.totalMem;
             }
         } catch (Exception ignored) {}
-
-        // Frequencies per core (best effort)
-        for (int i = 0; i < cores; i++) {
-            String basePath = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
-            long min = readLongFromFile(basePath + "cpuinfo_min_freq");
-            long max = readLongFromFile(basePath + "cpuinfo_max_freq");
-            long cur = readLongFromFile(basePath + "scaling_cur_freq");
-
-            sb.append("CPU").append(i).append(": ");
-            if (min > 0 || max > 0 || cur > 0) {
-                if (min > 0) sb.append("min=").append(min / 1000).append(" MHz, ");
-                if (max > 0) sb.append("max=").append(max / 1000).append(" MHz, ");
-                if (cur > 0) sb.append("cur=").append(cur / 1000).append(" MHz");
-            } else {
-                sb.append("frequency info: N/A (restricted by device)");
-            }
-            sb.append("\n");
-        }
-
-        return sb.toString();
+        return 0;
     }
 
-    private String readCpuInfoShort() {
-        File f = new File("/proc/cpuinfo");
-        if (!f.exists()) return "";
-        StringBuilder sb = new StringBuilder();
-        int lines = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null && lines < 8) {
-                sb.append(line).append("\n");
-                lines++;
-            }
-        } catch (IOException ignored) {}
-        return sb.toString();
-    }
+    // ============================================================
+    // LAB 3 — Storage
+    // ============================================================
+    private void labStorage() {
+        logSection("LAB 3 — Storage");
 
-    private long readLongFromFile(String path) {
-        File f = new File(path);
-        if (!f.exists()) return -1;
-        BufferedReader br = null;
         try {
-            br = new BufferedReader(new FileReader(f));
-            String s = br.readLine();
-            if (s != null) {
-                s = s.trim();
-                return Long.parseLong(s);
-            }
-        } catch (Exception ignored) {
-        } finally {
-            if (br != null) {
-                try { br.close(); } catch (IOException ignored) {}
-            }
-        }
-        return -1;
-    }
+            File dataDir = Environment.getDataDirectory();
+            StatFs statFs = new StatFs(dataDir.getAbsolutePath());
 
-    // ============================================================
-    // RAM
-    // ============================================================
-    private String getRamInfo() {
-        StringBuilder sb = new StringBuilder();
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        if (am == null) {
-            sb.append("RAM info not available.\n");
-            return sb.toString();
-        }
-
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        am.getMemoryInfo(mi);
-
-        sb.append("Total RAM: ").append(formatBytes(mi.totalMem)).append("\n");
-        sb.append("Available RAM: ").append(formatBytes(mi.availMem)).append("\n");
-        sb.append("Used RAM: ").append(formatBytes(mi.totalMem - mi.availMem)).append("\n");
-        sb.append("Low memory: ").append(mi.lowMemory).append("\n");
-        sb.append("Threshold: ").append(formatBytes(mi.threshold)).append("\n");
-
-        double usedPercent = 0;
-        if (mi.totalMem > 0) {
-            usedPercent = (mi.totalMem - mi.availMem) * 100.0 / mi.totalMem;
-        }
-        sb.append("Usage: ").append(String.format(Locale.US, "%.1f%%", usedPercent)).append("\n");
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // STORAGE
-    // ============================================================
-    private String getStorageInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        // Internal
-        File internal = Environment.getDataDirectory();
-        appendStorageLine(sb, "Internal", internal);
-
-        // External (primary)
-        File external = Environment.getExternalStorageDirectory();
-        if (external != null) {
-            appendStorageLine(sb, "External (primary)", external);
-        } else {
-            sb.append("External storage: not accessible\n");
-        }
-
-        return sb.toString();
-    }
-
-    private void appendStorageLine(StringBuilder sb, String label, File path) {
-        try {
-            android.os.StatFs stat = new android.os.StatFs(path.getAbsolutePath());
-            long blockSize, totalBlocks, availableBlocks;
-
+            long total, free;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize = stat.getBlockSizeLong();
-                totalBlocks = stat.getBlockCountLong();
-                availableBlocks = stat.getAvailableBlocksLong();
+                total = statFs.getBlockCountLong() * statFs.getBlockSizeLong();
+                free  = statFs.getAvailableBlocksLong() * statFs.getBlockSizeLong();
             } else {
-                blockSize = stat.getBlockSize();
-                totalBlocks = stat.getBlockCount();
-                availableBlocks = stat.getAvailableBlocks();
+                total = (long) statFs.getBlockCount() * statFs.getBlockSize();
+                free  = (long) statFs.getAvailableBlocks() * statFs.getBlockSize();
             }
 
-            long total = totalBlocks * blockSize;
-            long avail = availableBlocks * blockSize;
-            long used = total - avail;
+            long used = total - free;
+            int percentFree = (int) ((free * 100L) / total);
 
-            sb.append(label).append(":\n");
-            sb.append("  Total: ").append(formatBytes(total)).append("\n");
-            sb.append("  Used:  ").append(formatBytes(used)).append("\n");
-            sb.append("  Free:  ").append(formatBytes(avail)).append("\n");
+            logInfo("Εσωτερική αποθήκευση: " + readable(used) + " / " + readable(total));
+            logInfo("Ελεύθερος χώρος: " + percentFree + "%");
+
+            if (percentFree < 10) {
+                logError("Πολύ λίγο Storage (< 10%) — υψηλός κίνδυνος κολλημάτων / σφαλμάτων.");
+            } else if (percentFree < 20) {
+                logWarn("Ελεύθερο Storage < 20% — προτείνεται καθαρισμός.");
+            } else {
+                logOk("Storage: OK.");
+            }
         } catch (Exception e) {
-            sb.append(label).append(": error reading storage (")
-                    .append(e.getMessage()).append(")\n");
+            logError("Αδυναμία ανάγνωσης Storage: " + e.getMessage());
         }
+
+        logLine();
     }
 
     // ============================================================
-    // BATTERY
+    // LAB 4 — Battery / Charging
     // ============================================================
-    private String getBatteryInfo() {
-        StringBuilder sb = new StringBuilder();
+    private void labBattery() {
+        logSection("LAB 4 — Μπαταρία / Φόρτιση");
 
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
-        if (batteryStatus == null) {
-            sb.append("Battery info not available.\n");
-            return sb.toString();
-        }
-
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
-        int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-        int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-        String tech = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-
-        float pct = (level >= 0 && scale > 0) ? (level * 100f / scale) : -1f;
-
-        sb.append("Level: ").append(level).append(" / ").append(scale);
-        if (pct >= 0) sb.append(" (").append(String.format(Locale.US, "%.1f%%", pct)).append(")");
-        sb.append("\n");
-
-        sb.append("Status: ").append(decodeBatteryStatus(status)).append("\n");
-        sb.append("Health: ").append(decodeBatteryHealth(health)).append("\n");
-        sb.append("Plugged: ").append(decodeBatteryPlugged(plugged)).append("\n");
-
-        if (temp > 0) {
-            sb.append("Temperature: ")
-                    .append(temp / 10f).append(" °C\n");
-        }
-
-        if (voltage > 0) {
-            sb.append("Voltage: ")
-                    .append(voltage / 1000f).append(" V\n");
-        }
-
-        if (tech != null) {
-            sb.append("Technology: ").append(tech).append("\n");
-        }
-
-        // Battery capacity (approximate, not all devices support this cleanly)
         try {
-            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-            if (bm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                long capacityMicroAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-                if (capacityMicroAh > 0) {
-                    sb.append("Charge counter: ")
-                            .append(capacityMicroAh / 1000).append(" mAh (approx)\n");
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+
+            if (batteryStatus == null) {
+                logError("Δεν μπόρεσα να διαβάσω την κατάσταση μπαταρίας.");
+                logLine();
+                return;
+            }
+
+            int level  = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale  = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+            int temp10 = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1); // σε δέκατα °C
+
+            float pct  = (level >= 0 && scale > 0) ? (100f * level / scale) : -1f;
+            float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
+
+            if (pct >= 0) logInfo(String.format(Locale.US, "Φόρτιση: %.1f%%", pct));
+            if (temp > 0) logInfo(String.format(Locale.US, "Θερμοκρασία μπαταρίας: %.1f°C", temp));
+
+            String healthStr;
+            switch (health) {
+                case BatteryManager.BATTERY_HEALTH_GOOD:        healthStr = "GOOD"; break;
+                case BatteryManager.BATTERY_HEALTH_OVERHEAT:    healthStr = "OVERHEAT"; break;
+                case BatteryManager.BATTERY_HEALTH_DEAD:        healthStr = "DEAD"; break;
+                case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:healthStr = "OVER_VOLTAGE"; break;
+                case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: healthStr = "UNSPECIFIED_FAILURE"; break;
+                default: healthStr = "UNKNOWN"; break;
+            }
+            logInfo("Κατάσταση υγείας: " + healthStr);
+
+            if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
+                health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE) {
+                logError("Η μπαταρία φαίνεται ΚΑΤΕΣΤΡΑΜΜΕΝΗ — πρότεινε αλλαγή μπαταρίας.");
+            } else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT) {
+                logError("Υπερθέρμανση μπαταρίας — πιθανός κίνδυνος, έλεγχος hardware.");
+            } else {
+                logOk("Battery health: ΟΚ (σύμφωνα με τα Android flags).");
+            }
+
+            if (temp > 45f) {
+                logError("Υψηλή θερμοκρασία μπαταρίας (> 45°C) — έλεγχος φορτιστή / πλακέτας.");
+            } else if (temp > 38f) {
+                logWarn("Ζεστή μπαταρία (38–45°C) — πιθανή έντονη χρήση ή θερμικό θέμα.");
+            }
+
+        } catch (Exception e) {
+            logError("Σφάλμα στη διάγνωση μπαταρίας: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    // ============================================================
+    // LAB 5 — Network Connectivity
+    // ============================================================
+    private void labNetwork() {
+        logSection("LAB 5 — Δίκτυο / Internet");
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (cm == null) {
+            logError("Δεν βρέθηκε ConnectivityManager — πιθανό σοβαρό πρόβλημα συστήματος.");
+            logLine();
+            return;
+        }
+
+        boolean hasInternet = false;
+        boolean wifi = false;
+        boolean mobile = false;
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                android.net.Network network = cm.getActiveNetwork();
+                if (network != null) {
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+                    if (caps != null) {
+                        hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        wifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                        mobile = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                    }
+                }
+            } else {
+                @SuppressWarnings("deprecation")
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                if (ni != null && ni.isConnected()) {
+                    hasInternet = true;
+                    if (ni.getType() == ConnectivityManager.TYPE_WIFI) wifi = true;
+                    if (ni.getType() == ConnectivityManager.TYPE_MOBILE) mobile = true;
                 }
             }
-        } catch (Exception ignored) {}
-
-        return sb.toString();
-    }
-
-    private String decodeBatteryStatus(int status) {
-        switch (status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING: return "Charging";
-            case BatteryManager.BATTERY_STATUS_DISCHARGING: return "Discharging";
-            case BatteryManager.BATTERY_STATUS_FULL: return "Full";
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING: return "Not charging";
-            case BatteryManager.BATTERY_STATUS_UNKNOWN:
-            default: return "Unknown";
-        }
-    }
-
-    private String decodeBatteryHealth(int health) {
-        switch (health) {
-            case BatteryManager.BATTERY_HEALTH_GOOD: return "Good";
-            case BatteryManager.BATTERY_HEALTH_OVERHEAT: return "Overheat";
-            case BatteryManager.BATTERY_HEALTH_DEAD: return "Dead";
-            case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE: return "Over voltage";
-            case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: return "Failure";
-            case BatteryManager.BATTERY_HEALTH_COLD: return "Cold";
-            case BatteryManager.BATTERY_HEALTH_UNKNOWN:
-            default: return "Unknown";
-        }
-    }
-
-    private String decodeBatteryPlugged(int plugged) {
-        switch (plugged) {
-            case BatteryManager.BATTERY_PLUGGED_AC: return "AC";
-            case BatteryManager.BATTERY_PLUGGED_USB: return "USB";
-            case BatteryManager.BATTERY_PLUGGED_WIRELESS: return "Wireless";
-            default: return "Not plugged";
-        }
-    }
-
-    // ============================================================
-    // THERMAL (BEST EFFORT)
-    // ============================================================
-    private String getThermalInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        // Best-effort: read some thermal zones if available
-        File thermalDir = new File("/sys/class/thermal");
-        if (!thermalDir.exists() || !thermalDir.isDirectory()) {
-            sb.append("Thermal zones not accessible on this device.\n");
-            return sb.toString();
+        } catch (Exception e) {
+            logError("Σφάλμα στον έλεγχο δικτύου: " + e.getMessage());
         }
 
-        File[] zones = thermalDir.listFiles();
-        if (zones == null || zones.length == 0) {
-            sb.append("No thermal zone entries found.\n");
-            return sb.toString();
-        }
-
-        int count = 0;
-        for (File zone : zones) {
-            if (!zone.getName().startsWith("thermal_zone")) continue;
-            File tempFile = new File(zone, "temp");
-            if (!tempFile.exists()) continue;
-
-            String type = readFirstLineSafe(new File(zone, "type"));
-            String tempStr = readFirstLineSafe(tempFile);
-            if (tempStr == null) continue;
-
-            try {
-                float value = Float.parseFloat(tempStr.trim());
-                // Most devices: value in millidegrees
-                if (value > 100) value = value / 1000f;
-                sb.append(zone.getName()).append(" (").append(type).append("): ")
-                        .append(String.format(Locale.US, "%.1f °C", value))
-                        .append("\n");
-                count++;
-            } catch (Exception ignored) {}
-        }
-
-        if (count == 0) {
-            sb.append("No readable thermal sensors (restricted by vendor).\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String readFirstLineSafe(File f) {
-        if (f == null || !f.exists()) return null;
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(f));
-            return br.readLine();
-        } catch (Exception ignored) {
-            return null;
-        } finally {
-            if (br != null) {
-                try { br.close(); } catch (IOException ignored) {}
-            }
-        }
-    }
-
-    // ============================================================
-    // SENSORS
-    // ============================================================
-    private String getSensorsInfo() {
-        StringBuilder sb = new StringBuilder();
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sm == null) {
-            sb.append("SensorManager not available.\n");
-            return sb.toString();
-        }
-
-        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-        sb.append("Total sensors: ").append(sensors.size()).append("\n");
-
-        for (Sensor s : sensors) {
-            sb.append("- ").append(s.getName())
-                    .append(" (type ").append(s.getType()).append(")\n");
-            sb.append("  Vendor: ").append(s.getVendor()).append("\n");
-            sb.append("  Version: ").append(s.getVersion()).append("\n");
-            sb.append("  Max range: ").append(s.getMaximumRange()).append("\n");
-            sb.append("  Power: ").append(s.getPower()).append(" mA\n");
-        }
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // NETWORK (BASIC)
-    // ============================================================
-    private String getNetworkInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        long rxMobile = TrafficStats.getMobileRxBytes();
-        long txMobile = TrafficStats.getMobileTxBytes();
-        long rxTotal = TrafficStats.getTotalRxBytes();
-        long txTotal = TrafficStats.getTotalTxBytes();
-
-        if (rxTotal == TrafficStats.UNSUPPORTED || txTotal == TrafficStats.UNSUPPORTED) {
-            sb.append("Traffic stats unsupported on this device.\n");
+        if (!hasInternet) {
+            logError("Δεν φαίνεται ενεργή σύνδεση Internet — έλεγξε WiFi / Data / κεραίες.");
         } else {
-            sb.append("Mobile RX: ").append(formatBytes(rxMobile)).append("\n");
-            sb.append("Mobile TX: ").append(formatBytes(txMobile)).append("\n");
-            sb.append("Total RX : ").append(formatBytes(rxTotal)).append("\n");
-            sb.append("Total TX : ").append(formatBytes(txTotal)).append("\n");
+            if (wifi) logOk("WiFi σύνδεση ενεργή.");
+            if (mobile) logOk("Mobile data σύνδεση ενεργή.");
         }
 
-        return sb.toString();
+        logLine();
     }
 
     // ============================================================
-    // UPTIME
+    // LAB 6 — WiFi Signal (basic)
     // ============================================================
-    private String getUptimeInfo() {
-        long uptimeMs = SystemClock.elapsedRealtime();
-        long seconds = uptimeMs / 1000;
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        long days = hours / 24;
+    private void labWifiSignal() {
+        logSection("LAB 6 — WiFi Signal (Basic)");
 
-        hours = hours % 24;
-        minutes = minutes % 60;
-        seconds = seconds % 60;
+        try {
+            android.net.wifi.WifiManager wm =
+                    (android.net.wifi.WifiManager) getApplicationContext()
+                            .getSystemService(Context.WIFI_SERVICE);
 
-        return String.format(Locale.US,
-                "Uptime: %d days, %02d:%02d:%02d\n",
-                days, hours, minutes, seconds);
+            if (wm == null || !wm.isWifiEnabled()) {
+                logWarn("WiFi απενεργοποιημένο ή μη διαθέσιμο.");
+                logLine();
+                return;
+            }
+
+            @SuppressWarnings("deprecation")
+            int rssi = wm.getConnectionInfo().getRssi(); // dBm
+
+            logInfo("WiFi RSSI: " + rssi + " dBm");
+
+            if (rssi == 0) {
+                logWarn("Δεν είμαι σίγουρος για τη λήψη WiFi (RSSI=0).");
+            } else if (rssi > -60) {
+                logOk("Πολύ καλή λήψη WiFi.");
+            } else if (rssi > -75) {
+                logWarn("Μέτρια λήψη WiFi (πιθανά disconnects).");
+            } else {
+                logError("Κακή λήψη WiFi (< -75 dBm) — πιθανό θέμα router / κεραίας / τοποθεσίας.");
+            }
+
+        } catch (Exception e) {
+            logError("Σφάλμα στη διάγνωση WiFi: " + e.getMessage());
+        }
+
+        logLine();
     }
 
     // ============================================================
-    // HELPERS
+    // LAB 7 — Sensors
     // ============================================================
-    private String formatBytes(long bytes) {
-        if (bytes < 0) return "N/A";
-        if (bytes < 1024) return bytes + " B";
+    private void labSensors() {
+        logSection("LAB 7 — Αισθητήρες");
+
+        try {
+            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm == null) {
+                logError("Δεν βρέθηκε SensorManager — πιθανό σοβαρό πρόβλημα framework.");
+                logLine();
+                return;
+            }
+
+            List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
+            logInfo("Σύνολο αισθητήρων: " + (all == null ? 0 : all.size()));
+
+            boolean hasAccel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null;
+            boolean hasGyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null;
+            boolean hasMag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null;
+            boolean hasLight = sm.getDefaultSensor(Sensor.TYPE_LIGHT) != null;
+            boolean hasProx = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY) != null;
+
+            if (!hasAccel) logError("Λείπει accelerometer — πιθανό θέμα πλακέτας / βασικών αισθητήρων.");
+            if (!hasGyro)  logWarn("Δεν υπάρχει gyroscope — περιορισμένα motion features.");
+            if (!hasMag)   logWarn("Δεν υπάρχει magnetometer — προβλήματα σε πυξίδα / navigation.");
+            if (!hasLight) logWarn("Δεν υπάρχει light sensor — auto-brightness δεν θα λειτουργεί σωστά.");
+            if (!hasProx)  logError("Δεν υπάρχει proximity — πιθανές βλάβες σε κλείσιμο οθόνης σε κλήσεις.");
+
+            if (hasAccel && hasGyro && hasProx) {
+                logOk("Βασικοί αισθητήρες (accelerometer/gyro/proximity) υπάρχουν.");
+            }
+
+        } catch (Exception e) {
+            logError("Σφάλμα στη διάγνωση αισθητήρων: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    // ============================================================
+    // LAB 8 — Display / Screen
+    // ============================================================
+    private void labDisplay() {
+        logSection("LAB 8 — Οθόνη");
+
+        try {
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm == null) {
+                logError("Δεν βρέθηκε WindowManager για την οθόνη.");
+                logLine();
+                return;
+            }
+
+            DisplayMetrics dm = new DisplayMetrics();
+            if (Build.VERSION.SDK_INT >= 30) {
+                getDisplay().getRealMetrics(dm);
+            } else {
+                //noinspection deprecation
+                wm.getDefaultDisplay().getMetrics(dm);
+            }
+
+            int width = dm.widthPixels;
+            int height = dm.heightPixels;
+            float density = dm.density;
+            float dpiX = dm.xdpi;
+            float dpiY = dm.ydpi;
+
+            logInfo("Ανάλυση: " + width + " x " + height + " px");
+            logInfo(String.format(Locale.US, "Density: %.2f  |  DPI: %.1f x %.1f", density, dpiX, dpiY));
+
+            if (Math.min(width, height) < 720) {
+                logWarn("Χαμηλή ανάλυση οθόνης — ίσως «θολά» γράμματα / icons.");
+            } else {
+                logOk("Display resolution: OK για καθημερινή χρήση.");
+            }
+
+        } catch (Exception e) {
+            logError("Σφάλμα στη διάγνωση οθόνης: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    // ============================================================
+    // LAB 9 — Thermal / Throttling (Basic)
+    // ============================================================
+    private void labThermal() {
+        logSection("LAB 9 — Θερμική Συμπεριφορά (Basic)");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                android.os.Temperature tempCpu = null;
+                android.os.HardwarePropertiesManager hpm =
+                        (android.os.HardwarePropertiesManager)
+                                getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+
+                if (hpm != null) {
+                    float[] cpuTemps = hpm.getDeviceTemperatures(
+                            android.os.HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                            android.os.HardwarePropertiesManager.TEMPERATURE_CURRENT);
+
+                    if (cpuTemps != null && cpuTemps.length > 0) {
+                        float t = cpuTemps[0];
+                        logInfo(String.format(Locale.US, "Θερμοκρασία CPU: %.1f°C", t));
+
+                        if (t > 80f) {
+                            logError("Πολύ υψηλή CPU θερμοκρασία (> 80°C) — πιθανή βλάβη ψύξης / SoC.");
+                        } else if (t > 70f) {
+                            logWarn("Ψηλή CPU θερμοκρασία (70–80°C) — throttling / κολλήματα.");
+                        } else {
+                            logOk("CPU temperature: εντός φυσιολογικών ορίων.");
+                        }
+                    } else {
+                        logWarn("Δεν διατέθηκαν θερμοκρασίες CPU από το σύστημα.");
+                    }
+                } else {
+                    logWarn("Δεν διατέθηκε HardwarePropertiesManager — περιορισμένη thermal διάγνωση.");
+                }
+
+            } catch (Throwable t) {
+                logError("Σφάλμα thermal check: " + t.getMessage());
+            }
+        } else {
+            logWarn("Thermal APIs δεν υποστηρίζονται (API < 29).");
+        }
+
+        logLine();
+    }
+
+    // ============================================================
+    // LAB 10 — System Health / Telephony
+    // ============================================================
+    private void labSystemHealth() {
+        logSection("LAB 10 — System / Telephony");
+
+        // Telephony basic info
+        try {
+            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            if (tm != null) {
+                String opName = tm.getNetworkOperatorName();
+                String simOp = tm.getSimOperatorName();
+
+                logInfo("Network operator: " + (opName == null || opName.isEmpty() ? "N/A" : opName));
+                logInfo("SIM operator: " + (simOp == null || simOp.isEmpty() ? "N/A" : simOp));
+            } else {
+                logWarn("Δεν βρέθηκε TelephonyManager (WiFi-only συσκευή ή σοβαρό σφάλμα).");
+            }
+        } catch (SecurityException se) {
+            logWarn("Δεν έχω δικαίωμα για πλήρη telephony info (OK για τη διάγνωση).");
+        } catch (Exception e) {
+            logError("Σφάλμα Telephony: " + e.getMessage());
+        }
+
+        // Basic check for low system resources
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+
+                long avail = mi.availMem;
+                long total = mi.totalMem;
+                int pctFree = (int) ((avail * 100L) / total);
+
+                logInfo("Διαθέσιμη RAM τώρα: " + readable(avail) +
+                        " (" + pctFree + "% ελεύθερα)");
+
+                if (pctFree < 10) {
+                    logError("ΠΟΛΥ χαμηλή διαθέσιμη RAM (< 10%) — πρότεινε κλείσιμο apps / πιθανή επανεκκίνηση.");
+                } else if (pctFree < 20) {
+                    logWarn("Χαμηλή διαθέσιμη RAM (< 20%) — οριακή κατάσταση.");
+                } else {
+                    logOk("Live RAM status: OK.");
+                }
+            }
+        } catch (Exception e) {
+            logError("Σφάλμα RAM live check: " + e.getMessage());
+        }
+
+        logLine();
+    }
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+    private String readable(long bytes) {
+        if (bytes <= 0) return "0 B";
         float kb = bytes / 1024f;
         if (kb < 1024) return String.format(Locale.US, "%.2f KB", kb);
         float mb = kb / 1024f;
         if (mb < 1024) return String.format(Locale.US, "%.2f MB", mb);
         float gb = mb / 1024f;
-        if (gb < 1024) return String.format(Locale.US, "%.2f GB", gb);
-        float tb = gb / 1024f;
-        return String.format(Locale.US, "%.2f TB", tb);
+        return String.format(Locale.US, "%.2f GB", gb);
+    }
+
+    private long gb(int g) {
+        return g * 1024L * 1024L * 1024L;
     }
 }

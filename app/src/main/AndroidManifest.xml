@@ -12,7 +12,7 @@
         android:maxSdkVersion="29"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
-    <!-- ✅ Usage access (special permission screen) -->
+    <!-- ✅ Usage access -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions"/>
@@ -23,6 +23,9 @@
     <!-- ✅ Network -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- ✅ VIBRATION for Manual Tests -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:allowBackup="false"
@@ -81,7 +84,19 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🆕 PERFORMANCE DIAGNOSTICS (ΝΕΟ ΚΟΥΜΠΙ) -->
+        <!-- 🆕 SERVICE LAB — MAIN MENU -->
+        <activity
+            android:name=".DiagnosisMenuActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- 🆕 SERVICE LAB — MANUAL TESTS -->
+        <activity
+            android:name=".ManualTestsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- 🆕 AUTO DIAGNOSIS — FULL SERVICE LAB -->
         <activity
             android:name=".PerformanceDiagnosticsActivity"
             android:exported="false"

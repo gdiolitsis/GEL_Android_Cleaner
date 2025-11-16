@@ -1,3 +1,9 @@
+// ============================================================
+// PerformanceDiagnosticsActivity
+// GEL Phone Diagnosis — Service Lab
+// Full-screen scroll log with color-coded levels
+// NOTE: Όλο το αρχείο είναι έτοιμο για copy-paste (GEL rule).
+// ============================================================
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
@@ -96,19 +102,31 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         GELServiceLog.info(msg);
     }
 
+    // ✅ OK → Πράσινο
     private void logOk(String msg) {
-        appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+        appendHtml("<font color='#66FF66'>✅ " + escape(msg) + "</font>");
         GELServiceLog.ok(msg);
     }
 
+    // ⚠️ WARNING → Χρυσό
     private void logWarn(String msg) {
-        appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+        appendHtml("<font color='#FFD700'>⚠️ " + escape(msg) + "</font>");
         GELServiceLog.warn(msg);
     }
 
+    // ❌ ERROR → Κόκκινο
     private void logError(String msg) {
         appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
         GELServiceLog.error(msg);
+    }
+
+    // ⚠️ ACCESS DENIED — Firmware Restriction (χρησιμοποιεί το κίτρινο)
+    private void logAccessDenied(String area) {
+        String base = "Access Denied — Firmware Restriction";
+        if (area != null && !area.isEmpty()) {
+            base = base + " (" + area + ")";
+        }
+        logWarn(base);
     }
 
     private void logLine() {
@@ -235,13 +253,12 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 0.2 — SELinux SAFE FALLBACK
+     * LAB 0.2 — Security / SELinux / Debug
      * ============================================================ */
     private void labRootSecurityFlags() {
         logSection("LAB 0.2 — Security / SELinux / Debug");
 
         try {
-            // GitHub runner ΔΕΝ έχει SELinux API → fallback
             boolean enabled = false;
             boolean enforced = false;
 
@@ -250,7 +267,8 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                 enabled = (boolean) clazz.getMethod("isSELinuxEnabled").invoke(null);
                 enforced = (boolean) clazz.getMethod("isSELinuxEnforced").invoke(null);
             } catch (Throwable ignored) {
-                logWarn("SELinux API not available στο build env.");
+                // Εδώ είναι κλασική περίπτωση firmware limitation
+                logAccessDenied("SELinux status API");
             }
 
             logInfo("SELinux enabled: " + enabled + " | enforced: " + enforced);
@@ -272,12 +290,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (adb == 1) logWarn("ADB ενεργό.");
         } catch (Throwable t) {
-            logWarn("ADB/Dev read failed.");
+            // Πολλά firmware μπλοκάρουν Global settings
+            logAccessDenied("ADB / Developer Settings");
         }
     }
 
     /* ============================================================
-     * LAB 0.3 — PROPS
+     * LAB 0.3 — Dangerous Properties
      * ============================================================ */
     private void labRootDangerousProps() {
         logSection("LAB 0.3 — Dangerous Properties");
@@ -291,6 +310,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     private void checkProp(String key, String bad, String msg) {
         String val = readProp(key);
         if (val == null) {
+            // Αν δεν επιστρέφει τίποτα, παίζει να είναι OEM lock, αλλά το αφήνουμε ως info
             logInfo(key + " = N/A");
             return;
         }
@@ -336,16 +356,16 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             else logOk("/system not RW");
 
         } catch (Exception e) {
-            logWarn("mount read error");
+            // Συνήθως permission issue
+            logAccessDenied("mount table");
         } finally {
             try { if (r != null) r.close(); } catch (Exception ignored) {}
         }
     }
 
     /* ============================================================
-     * LAB 1 —
+     * LAB 1 — Hardware / OS
      * ============================================================ */
-
     private void labHardware() {
         logSection("LAB 1 — Hardware / OS");
 
@@ -365,7 +385,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 2 —
+     * LAB 2 — CPU / RAM
      * ============================================================ */
     private void labCpuRam() {
         logSection("LAB 2 — CPU / RAM");
@@ -389,7 +409,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 3 —
+     * LAB 3 — Storage
      * ============================================================ */
     private void labStorage() {
         logSection("LAB 3 — Storage");
@@ -412,7 +432,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 4 —
+     * LAB 4 — Battery
      * ============================================================ */
     private void labBattery() {
         logSection("LAB 4 — Battery");
@@ -420,7 +440,9 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         try {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (i == null) {
-                logError("No battery data");
+                // Δεν μας άφησε να διαβάσουμε battery stats
+                logAccessDenied("Battery stats");
+                logLine();
                 return;
             }
 
@@ -442,13 +464,18 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 5 —
+     * LAB 5 — Network
      * ============================================================ */
     private void labNetwork() {
         logSection("LAB 5 — Network");
 
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            if (cm == null) {
+                logAccessDenied("ConnectivityManager");
+                logLine();
+                return;
+            }
 
             boolean online = false;
             if (Build.VERSION.SDK_INT >= 23) {
@@ -464,14 +491,14 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             else logOk("Internet OK");
 
         } catch (Exception e) {
-            logError("Network error");
+            logAccessDenied("Network state");
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 6 —
+     * LAB 6 — WiFi
      * ============================================================ */
     private void labWifiSignal() {
         logSection("LAB 6 — WiFi");
@@ -480,7 +507,13 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
             android.net.wifi.WifiManager wm =
                     (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
-            if (wm == null || !wm.isWifiEnabled()) {
+            if (wm == null) {
+                logAccessDenied("WiFi manager");
+                logLine();
+                return;
+            }
+
+            if (!wm.isWifiEnabled()) {
                 logWarn("WiFi off");
                 logLine();
                 return;
@@ -497,13 +530,19 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 7 —
+     * LAB 7 — Sensors
      * ============================================================ */
     private void labSensors() {
         logSection("LAB 7 — Sensors");
 
         try {
             SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+            if (sm == null) {
+                logAccessDenied("SensorManager");
+                logLine();
+                return;
+            }
+
             List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
             logInfo("Sensors: " + (all == null ? 0 : all.size()));
 
@@ -523,14 +562,21 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 8 —
+     * LAB 8 — Display
      * ============================================================ */
     private void labDisplay() {
         logSection("LAB 8 — Display");
 
         try {
             DisplayMetrics dm = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+            if (Build.VERSION.SDK_INT >= 30) {
+                Display disp = getDisplay();
+                if (disp != null) disp.getRealMetrics(dm);
+                else getWindowManager().getDefaultDisplay().getMetrics(dm);
+            } else {
+                getWindowManager().getDefaultDisplay().getMetrics(dm);
+            }
 
             int w = dm.widthPixels;
             int h = dm.heightPixels;
@@ -545,7 +591,7 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
     }
 
     /* ============================================================
-     * LAB 9 —
+     * LAB 9 — Thermal
      * ============================================================ */
     private void labThermal() {
         logSection("LAB 9 — Thermal");
@@ -560,22 +606,28 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
                             HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
                             HardwarePropertiesManager.TEMPERATURE_CURRENT);
 
-                    if (temps != null && temps.length > 0)
+                    if (temps != null && temps.length > 0) {
                         logInfo("CPU Temp: " + temps[0]);
+                    } else {
+                        logAccessDenied("Thermal sensors (no data)");
+                    }
+                } else {
+                    logAccessDenied("HardwarePropertiesManager");
                 }
 
             } catch (Exception e) {
-                logError("Thermal error");
+                logAccessDenied("Thermal sensors");
             }
         } else {
-            logWarn("Thermal API < 29");
+            // Κλασική περίπτωση firmware/OS limitation
+            logAccessDenied("Thermal API < 29");
         }
 
         logLine();
     }
 
     /* ============================================================
-     * LAB 10 —
+     * LAB 10 — System Health
      * ============================================================ */
     private void labSystemHealth() {
         logSection("LAB 10 — System Health");
@@ -585,10 +637,12 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
 
             if (tm != null) {
                 logInfo("Network operator: " + tm.getNetworkOperatorName());
+            } else {
+                logAccessDenied("TelephonyManager");
             }
 
         } catch (Exception e) {
-            logError("Telephony error");
+            logAccessDenied("Telephony service");
         }
 
         logLine();
@@ -604,3 +658,4 @@ public class PerformanceDiagnosticsActivity extends AppCompatActivity {
         return String.format(Locale.US, "%.2f GB", gb);
     }
 }
+```0

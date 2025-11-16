@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
-import android.text.format Formatter;
+import android.text.format.Formatter;
 
 import java.io.File;
 import java.util.ArrayList;

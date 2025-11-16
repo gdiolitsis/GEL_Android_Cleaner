@@ -8,6 +8,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HardwarePropertiesManager;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.os.Vibrator;
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.Locale;
 
 // ============================================================
-// GEL Manual Tests — στοχευμένα service tests
+// GEL Manual Tests — στοχευμένα service tests (PRO Edition)
 // ============================================================
 public class ManualTestsActivity extends AppCompatActivity {
 
@@ -64,30 +65,38 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.addView(title);
 
         TextView sub = new TextView(this);
-        sub.setText("Εργαλεία για επαγγελματικό service.\nΚάθε test γράφει αναλυτικά αποτελέσματα παρακάτω.");
+        sub.setText("Εργαλεία για επαγγελματικό service.\n" +
+                "Κάθε test γράφει αναλυτικά αποτελέσματα παρακάτω (OK / WARN / ERROR).");
         sub.setTextSize(13f);
         sub.setTextColor(0xFFCCCCCC);
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 
-        // BUTTONS ROWS
+        // ===================== Ήχος / Δόνηση =====================
         root.addView(makeSectionLabel("Ήχος / Δόνηση"));
 
         root.addView(makeButton("🔊 Speaker Test", this::testSpeaker));
         root.addView(makeButton("📞 Earpiece Basic Check", this::testEarpieceExplain));
         root.addView(makeButton("📳 Vibration Test", this::testVibration));
+        root.addView(makeButton("🎶 Speaker Sweep Test", this::testSpeakerSweep));
+        root.addView(makeButton("🎙 Mic Manual Check", this::testMicManualInfo));
 
+        // ===================== Αισθητήρες / Οθόνη =====================
         root.addView(makeSectionLabel("Αισθητήρες / Οθόνη"));
 
         root.addView(makeButton("🎛 Sensors Quick Check", this::testSensorsQuick));
         root.addView(makeButton("📲 Proximity Quick Check", this::testProximityQuickInfo));
         root.addView(makeButton("🖥 Display / Touch Basic", this::testDisplayBasic));
+        root.addView(makeButton("📋 Full Sensor List", this::testSensorFullList));
 
-        root.addView(makeSectionLabel("Σύστημα / RAM / Uptime"));
+        // ===================== Σύστημα / RAM / Uptime =====================
+        root.addView(makeSectionLabel("Σύστημα / RAM / Uptime / Θερμοκρασίες"));
 
         root.addView(makeButton("💾 RAM Live Snapshot", this::testRamSnapshot));
         root.addView(makeButton("⏱ Uptime / Reboots", this::testUptime));
         root.addView(makeButton("🌐 Network Quick Check", this::testNetworkQuick));
+        root.addView(makeButton("🔋 Battery Snapshot", this::testBatterySnapshot));
+        root.addView(makeButton("🌡 Thermal Snapshot", this::testThermalSnapshot));
 
         // LOG AREA
         txtLog = new TextView(this);
@@ -181,7 +190,7 @@ public class ManualTestsActivity extends AppCompatActivity {
     // TESTS
     // ============================================================
 
-    // 1) Speaker Test
+    // 1) Speaker Test (basic tone)
     private void testSpeaker() {
         logLine();
         logInfo("🔊 Speaker Test ξεκίνησε (2–3 δευτ.).");
@@ -203,7 +212,42 @@ public class ManualTestsActivity extends AppCompatActivity {
         }
     }
 
-    // 2) Earpiece basic info (δίνουμε οδηγίες)
+    // 1b) Speaker Sweep Test (σειρά από διαφορετικούς τόνους)
+    private void testSpeakerSweep() {
+        logLine();
+        logInfo("🎶 Speaker Sweep Test (διαφορετικές συχνότητες ~2–3 δευτ.).");
+        try {
+            new Thread(() -> {
+                ToneGenerator tg = null;
+                try {
+                    tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+
+                    int[] tones = {
+                            ToneGenerator.TONE_DTMF_1,
+                            ToneGenerator.TONE_DTMF_3,
+                            ToneGenerator.TONE_DTMF_6,
+                            ToneGenerator.TONE_DTMF_9
+                    };
+
+                    for (int tone : tones) {
+                        tg.startTone(tone, 700);
+                        SystemClock.sleep(750);
+                    }
+
+                    logOk("Αν όλοι οι τόνοι ακούστηκαν καθαρά → speaker OK σε όλο το φάσμα.");
+                    logError("Αν κάποιο tone «βρομάει» ή δεν ακούγεται → πιθανή βλάβη σε συγκεκριμένες συχνότητες.");
+                } catch (Exception e) {
+                    logError("Σφάλμα Speaker Sweep: " + e.getMessage());
+                } finally {
+                    if (tg != null) tg.release();
+                }
+            }).start();
+        } catch (Throwable t) {
+            logError("Σφάλμα Speaker Sweep Thread: " + t.getMessage());
+        }
+    }
+
+    // 2) Earpiece basic info (οδηγίες)
     private void testEarpieceExplain() {
         logLine();
         logInfo("📞 Earpiece Basic Check (manual).");
@@ -215,6 +259,18 @@ public class ManualTestsActivity extends AppCompatActivity {
         logError("   → earpiece ή γραμμή ήχου προς επάνω μέρος βλάβη.");
     }
 
+    // 2b) Mic Manual Check (οδηγίες για service)
+    private void testMicManualInfo() {
+        logLine();
+        logInfo("🎙 Mic Manual Check (χωρίς root / χωρίς extra άδειες).");
+        logInfo("1) Άνοιξε την εφαρμογή Εγγραφής Ήχου ή στείλε φωνητικό μήνυμα (WhatsApp / Viber κ.λπ.).");
+        logInfo("2) Μίλα κανονικά από την κάτω πλευρά του κινητού (κύριο μικρόφωνο).");
+        logInfo("3) Άκουσε την εγγραφή:");
+        logError("   → Αν ο ήχος είναι πολύ χαμηλός / «βουίζει» / κόβεται → πιθανή βλάβη μικροφώνου ή φίλτρου.");
+        logError("   → Αν δεν γράφει καθόλου → βλάβη μικροφώνου, γραμμής ή IC audio.");
+        logInfo("4) Για δεύτερο μικρόφωνο (πάνω πλευρά): κάνε δοκιμή σε βίντεο ή σε loudspeaker κλήση.");
+    }
+
     // 3) Vibration Test
     private void testVibration() {
         logLine();
@@ -222,11 +278,12 @@ public class ManualTestsActivity extends AppCompatActivity {
         try {
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (v == null) {
-                logError("Δεν βρέθηκε Vibrator service — πιθανή βλάβη ή tablet χωρίς δόνηση.");
+                logError("Δεν βρέθηκε Vibrator service — πιθανή βλάβη ή συσκευή χωρίς δόνηση.");
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(android.os.VibrationEffect.createOneShot(800, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+                v.vibrate(android.os.VibrationEffect.createOneShot(
+                        800, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
                 //noinspection deprecation
                 v.vibrate(800);
@@ -271,6 +328,38 @@ public class ManualTestsActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             logError("Σφάλμα Sensors Quick Check: " + e.getMessage());
+        }
+    }
+
+    // 4b) Full Sensor List (για service report)
+    private void testSensorFullList() {
+        logLine();
+        logInfo("📋 Full Sensor List (τύπος / vendor / name).");
+
+        try {
+            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm == null) {
+                logError("Δεν βρέθηκε SensorManager.");
+                return;
+            }
+
+            List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+            if (sensors == null || sensors.isEmpty()) {
+                logError("Δεν αναφέρθηκαν αισθητήρες από το σύστημα.");
+                return;
+            }
+
+            for (Sensor s : sensors) {
+                String line = "• type=" + s.getType()
+                        + " | name=" + s.getName()
+                        + " | vendor=" + s.getVendor();
+                logInfo(line);
+            }
+
+            logOk("Λίστα αισθητήρων συμπληρώθηκε για service report.");
+
+        } catch (Exception e) {
+            logError("Σφάλμα Full Sensor List: " + e.getMessage());
         }
     }
 
@@ -398,6 +487,126 @@ public class ManualTestsActivity extends AppCompatActivity {
         } else {
             if (wifi) logOk("WiFi ενεργό.");
             if (mobile) logOk("Mobile Data ενεργά.");
+        }
+    }
+
+    // 10) Battery Snapshot
+    private void testBatterySnapshot() {
+        logLine();
+        logInfo("🔋 Battery Snapshot (level / temp / health).");
+
+        try {
+            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+
+            // Best-effort: level
+            int level = -1;
+            if (bm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            }
+
+            if (level >= 0) {
+                logInfo("Εκτιμώμενη στάθμη μπαταρίας: " + level + "%");
+            } else {
+                logWarn("Δεν μπόρεσα να πάρω ακριβές επίπεδο μπαταρίας.");
+            }
+
+            // Θερμοκρασία / health με ACTION_BATTERY_CHANGED
+            android.content.Intent intent = registerReceiver(
+                    null,
+                    new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
+            );
+
+            if (intent != null) {
+                int temp10 = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
+                int health = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+
+                if (temp > 0) {
+                    logInfo(String.format(Locale.US, "Θερμοκρασία μπαταρίας: %.1f°C", temp));
+                    if (temp > 45f) {
+                        logError("Υψηλή θερμοκρασία μπαταρίας (> 45°C) — έλεγχος φορτιστή / πλακέτας.");
+                    } else if (temp > 38f) {
+                        logWarn("Ζεστή μπαταρία (38–45°C) — πιθανή έντονη χρήση / θερμικό θέμα.");
+                    } else {
+                        logOk("Θερμοκρασία μπαταρίας σε φυσιολογικά επίπεδα.");
+                    }
+                }
+
+                String healthStr;
+                switch (health) {
+                    case BatteryManager.BATTERY_HEALTH_GOOD:
+                        healthStr = "GOOD";
+                        break;
+                    case BatteryManager.BATTERY_HEALTH_OVERHEAT:
+                        healthStr = "OVERHEAT";
+                        break;
+                    case BatteryManager.BATTERY_HEALTH_DEAD:
+                        healthStr = "DEAD";
+                        break;
+                    case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
+                        healthStr = "OVER_VOLTAGE";
+                        break;
+                    case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
+                        healthStr = "UNSPECIFIED_FAILURE";
+                        break;
+                    default:
+                        healthStr = "UNKNOWN";
+                        break;
+                }
+
+                logInfo("Κατάσταση υγείας (Android flag): " + healthStr);
+
+                if (health == BatteryManager.BATTERY_HEALTH_DEAD ||
+                        health == BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE) {
+                    logError("Η μπαταρία φαίνεται ΚΑΤΕΣΤΡΑΜΜΕΝΗ — πρότεινε αλλαγή μπαταρίας.");
+                } else if (health == BatteryManager.BATTERY_HEALTH_OVERHEAT) {
+                    logError("Flag OVERHEAT — σοβαρή υπερθέρμανση, έλεγχος hardware.");
+                }
+            } else {
+                logWarn("Δεν μπόρεσα να διαβάσω λεπτομέρειες μπαταρίας (ACTION_BATTERY_CHANGED=null).");
+            }
+
+        } catch (Exception e) {
+            logError("Σφάλμα Battery Snapshot: " + e.getMessage());
+        }
+    }
+
+    // 11) Thermal Snapshot (CPU όπου υποστηρίζεται)
+    private void testThermalSnapshot() {
+        logLine();
+        logInfo("🌡 Thermal Snapshot (CPU θερμοκρασία όπου υποστηρίζεται).");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                HardwarePropertiesManager hpm =
+                        (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+                if (hpm != null) {
+                    float[] cpuTemps = hpm.getDeviceTemperatures(
+                            HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                            HardwarePropertiesManager.TEMPERATURE_CURRENT);
+
+                    if (cpuTemps != null && cpuTemps.length > 0) {
+                        float t = cpuTemps[0];
+                        logInfo(String.format(Locale.US, "CPU θερμοκρασία: %.1f°C", t));
+
+                        if (t > 80f) {
+                            logError("Πολύ υψηλή CPU θερμοκρασία (> 80°C) — πιθανή βλάβη ψύξης / SoC.");
+                        } else if (t > 70f) {
+                            logWarn("Υψηλή CPU θερμοκρασία (70–80°C) — throttling / κολλήματα.");
+                        } else {
+                            logOk("CPU temperature: εντός φυσιολογικών ορίων.");
+                        }
+                    } else {
+                        logWarn("Δεν διατέθηκαν θερμοκρασίες CPU από το σύστημα.");
+                    }
+                } else {
+                    logWarn("Δεν διατέθηκε HardwarePropertiesManager — περιορισμένη thermal διάγνωση.");
+                }
+            } catch (Throwable t) {
+                logError("Σφάλμα thermal check: " + t.getMessage());
+            }
+        } else {
+            logWarn("Thermal APIs δεν υποστηρίζονται σε αυτήν την έκδοση Android (API < 29).");
         }
     }
 

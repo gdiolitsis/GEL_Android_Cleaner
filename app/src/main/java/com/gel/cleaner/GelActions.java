@@ -28,9 +28,11 @@ public class GelActions {
     }
 
     // ============================================================
-    // BATTERY BOOSTER
+    // BATTERY BOOSTER — FIXED (Play-Safe, universal)
     // ============================================================
     public static void openBatteryBooster(Activity activity) {
+
+        // 1) Battery Saver — works everywhere
         try {
             Intent intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -39,14 +41,16 @@ public class GelActions {
             return;
         } catch (Exception ignored) {}
 
+        // 2) Universal fallback (replaces ACTION_POWER_USAGE_SUMMARY)
         try {
-            Intent intent = new Intent(Settings.ACTION_POWER_USAGE_SUMMARY);
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             activity.startActivity(intent);
             Toast.makeText(activity, "⚡ Άνοιγμα Battery Usage", Toast.LENGTH_SHORT).show();
             return;
         } catch (Exception ignored) {}
 
+        // 3) Last fallback
         Toast.makeText(activity, "⚡ Άνοιγμα Ρυθμίσεων Μπαταρίας", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(Settings.ACTION_SETTINGS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -63,8 +67,7 @@ public class GelActions {
         deleteDirSafe(context.getCacheDir());
         deleteDirSafe(context.getExternalCacheDir());
 
-        long after = 0;
-        long diff = before - after;
+        long diff = before;
 
         Toast.makeText(context,
                 "🧹 Cache καθαρίστηκε: " + formatSize(diff),

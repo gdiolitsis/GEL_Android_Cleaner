@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // PERFORMANCE DIAGNOSTICS (New button)
+        // PERFORMANCE — ONLY NEW DIAGNOSTICS BUTTON
         bind(R.id.btnDiagnostics,
                 () -> startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
     }

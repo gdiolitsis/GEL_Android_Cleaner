@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 import android.text.format.Formatter;
 
@@ -107,10 +108,19 @@ public class GELCleaner {
     }
 
     // ====================================================================
-    // TEMP FILES — UNIVERSAL TEMP/JUNK CLEANER (1 TAP)
+    // TEMP FILES — UNIVERSAL TEMP/JUNK CLEANER (1 TAP) + ROOT EXTRA
     // ====================================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         try {
+            // ----------------------------------------------------------------
+            // 0) Αν η συσκευή είναι rooted → τρέχουμε extra root-only καθάρισμα
+            // ----------------------------------------------------------------
+            if (isDeviceRooted()) {
+                info(cb, "Root detected — ενεργοποιώ GEL Root Temp Cleaner (system temp, ANR, tombstones).");
+                rootExtraTempCleanup(cb);
+            } else {
+                info(cb, "Device not rooted — τρέχει μόνο ο κλασικός temp cleaner (safe mode).");
+            }
 
             // ===============================
             // 1) Πρώτη επιλογή → Universal Storage Cleaner
@@ -246,6 +256,7 @@ public class GELCleaner {
         if (f.isFile()) { f.delete(); return; }
         File[] children = f.listFiles();
         if (children != null) for (File c : children) deleteFolder(c);
+        //noinspection ResultOfMethodCallIgnored
         f.delete();
     }
 
@@ -273,4 +284,78 @@ public class GELCleaner {
             return false;
         }
     }
+
+    // ====================================================================
+    // ROOT HELPERS (SAFE)
+    // ====================================================================
+    private static boolean isDeviceRooted() {
+        // 1) build tags
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            return true;
+        }
+
+        // 2) SU binary σε γνωστά μονοπάτια
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su",
+                "/system/bin/.ext/su",
+                "/system/usr/we-need-root/su",
+                "/system/xbin/mu"
+        };
+        for (String path : paths) {
+            try {
+                if (new File(path).exists()) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return false;
+    }
+
+    private static boolean runSu(String cmd) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
+            int code = p.waitFor();
+            return code == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ====================================================================
+    // ROOT EXTRA TEMP CLEANER
+    // ====================================================================
+    private static void rootExtraTempCleanup(LogCallback cb) {
+        // Προσεκτικά επιλεγμένοι φάκελοι temp/logs — ΟΧΙ dalvik/art
+        String[] paths = new String[] {
+                "/data/local/tmp",
+                "/data/anr",
+                "/data/tombstones",
+                "/data/system/dropbox",
+                "/cache"
+        };
+
+        boolean anySuccess = false;
+
+        for (String p : paths) {
+            String cmd = "rm -rf " + p + "/*";
+            if (runSu(cmd)) {
+                anySuccess = true;
+                ok(cb, "Root clean: " + p);
+            } else {
+                info(cb, "Root clean failed ή δεν επιτρέπεται: " + p);
+            }
+        }
+
+        if (!anySuccess) {
+            info(cb, "Root temp clean δεν ολοκληρώθηκε (πιθανόν περιορισμένο root / Magisk deny).");
+        } else {
+            ok(cb, "GEL Root Temp Cleaner ολοκληρώθηκε (system temp / ANR / tombstones).");
+        }
+    }
 }
+```0

@@ -13,14 +13,14 @@ import java.text.DecimalFormat;
 
 // ============================================================
 // GDiolitsis Engine Lab (GEL) — System Actions Manager
-// Με αναφορές τι καθαρίστηκε
+// UNIVERSAL EDITION — Works on ALL devices
 // ============================================================
 public class GelActions {
 
     private static final DecimalFormat DF = new DecimalFormat("#.##");
 
     // ============================================================
-    // SMART CLEAN
+    // SMART CLEAN (Universal RAM Cleaner)
     // ============================================================
     public static void doSmartClean(Activity activity) {
         CleanLauncher.smartClean(activity);
@@ -28,20 +28,20 @@ public class GelActions {
     }
 
     // ============================================================
-    // BATTERY BOOSTER — FIXED (Play-Safe, universal)
+    // BATTERY BOOSTER — Play-Safe σε όλες τις συσκευές
     // ============================================================
     public static void openBatteryBooster(Activity activity) {
 
-        // 1) Battery Saver — works everywhere
+        // 1) Battery Saver (universal)
         try {
             Intent intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             activity.startActivity(intent);
-            Toast.makeText(activity, "⚡ Άνοιγμα Battery Saver", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "⚡ Battery Saver ανοίχτηκε", Toast.LENGTH_SHORT).show();
             return;
         } catch (Exception ignored) {}
 
-        // 2) Universal fallback (replaces ACTION_POWER_USAGE_SUMMARY)
+        // 2) Usage Access (fallback)
         try {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -51,18 +51,18 @@ public class GelActions {
         } catch (Exception ignored) {}
 
         // 3) Last fallback
-        Toast.makeText(activity, "⚡ Άνοιγμα Ρυθμίσεων Μπαταρίας", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(Settings.ACTION_SETTINGS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         activity.startActivity(intent);
+        Toast.makeText(activity, "⚡ Ρυθμίσεις Μπαταρίας", Toast.LENGTH_SHORT).show();
     }
 
     // ============================================================
-    // CLEAN OWN CACHE (με αναφορά)
+    // OWN APP CACHE CLEAN — με αναφορά
     // ============================================================
     public static void cleanOwnCache(Context context) {
         long before = getFolderSize(context.getCacheDir()) +
-                      getFolderSize(context.getExternalCacheDir());
+                getFolderSize(context.getExternalCacheDir());
 
         deleteDirSafe(context.getCacheDir());
         deleteDirSafe(context.getExternalCacheDir());
@@ -75,40 +75,123 @@ public class GelActions {
     }
 
     // ============================================================
-    // CLEAN TEMP FILES (με αναφορά)
+    // UNIVERSAL TEMP FILES CLEANER — για ΟΛΕΣ τις συσκευές
     // ============================================================
-    public static void cleanTempFiles(Context context) {
-        File tempDir = new File(context.getFilesDir(), "temp");
-        long before = getFolderSize(tempDir);
+    public static void cleanTempFiles(Context ctx) {
 
-        deleteDirSafe(tempDir);
+        // ---------- 1) Xiaomi / Redmi / Poco (MIUI / HyperOS) ----------
+        if (isMiui()) {
+            if (launch(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity")) {
+                Toast.makeText(ctx, "🗑 MIUI Cleaner → Temp Files", Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (launch(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity")) {
+                Toast.makeText(ctx, "🗑 MIUI Security Cleaner", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
 
-        long diff = before;
+        // ---------- 2) Samsung ----------
+        if (launch(ctx,
+                "com.samsung.android.lool",
+                "com.samsung.android.lool.MainActivity")) {
+            Toast.makeText(ctx, "🗑 Samsung Device Care", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        Toast.makeText(context,
-                "🗑 Temp files διαγράφηκαν: " + formatSize(diff),
-                Toast.LENGTH_LONG).show();
+        if (launch(ctx,
+                "com.samsung.android.devicecare",
+                "com.samsung.android.devicecare.ui.DeviceCareActivity")) {
+            Toast.makeText(ctx, "🗑 Samsung Storage Cleaner", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ---------- 3) Oppo / Realme ----------
+        if (launch(ctx,
+                "com.coloros.phonemanager",
+                "com.coloros.phonemanager.main.MainActivity")) {
+            Toast.makeText(ctx, "🗑 ColorOS Cleaner", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ---------- 4) OnePlus ----------
+        if (launch(ctx,
+                "com.oneplus.security",
+                "com.oneplus.security.cleaner.CleanerActivity")) {
+            Toast.makeText(ctx, "🗑 OnePlus Cleaner", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ---------- 5) Vivo / iQOO ----------
+        if (launch(ctx,
+                "com.iqoo.secure",
+                "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity")) {
+            Toast.makeText(ctx, "🗑 Vivo Phone Optimizer", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ---------- 6) Huawei / Honor ----------
+        if (launch(ctx,
+                "com.huawei.systemmanager",
+                "com.huawei.systemmanager.spaceclean.SpaceCleanActivity")) {
+            Toast.makeText(ctx, "🗑 Huawei Space Cleaner", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ---------- 7) Pixel / Motorola / Sony / γενικές συσκευές ----------
+        try {
+            Intent i = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+            Toast.makeText(ctx, "📦 Storage → Temporary / Junk Files", Toast.LENGTH_LONG).show();
+            return;
+        } catch (Exception ignored) {}
+
+        // ---------- 8) Last fallback ----------
+        Toast.makeText(ctx, "⚠ Δεν βρέθηκε temp cleaner.", Toast.LENGTH_LONG).show();
+        Intent fallback = new Intent(Settings.ACTION_SETTINGS);
+        fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(fallback);
     }
 
     // ============================================================
-    // OPEN STORAGE MANAGER
+    // STORAGE MANAGER
     // ============================================================
     public static void openStorageManager(Activity activity) {
         try {
             Intent intent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             activity.startActivity(intent);
-            Toast.makeText(activity, "📦 Άνοιγμα Storage Manager", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "📦 Storage Manager", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(activity, "📦 Άνοιγμα Ρυθμίσεων Αποθήκευσης", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Settings.ACTION_SETTINGS);
             activity.startActivity(intent);
+            Toast.makeText(activity, "📦 Storage Settings", Toast.LENGTH_SHORT).show();
         }
     }
 
     // ============================================================
     // HELPERS
     // ============================================================
+    private static boolean launch(Context ctx, String pkg, String cls) {
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(pkg, cls));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean isMiui() {
+        String brand = Build.BRAND.toLowerCase();
+        String manu = Build.MANUFACTURER.toLowerCase();
+        return (brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
+                || manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco"));
+    }
+
     private static void deleteDirSafe(File dir) {
         if (dir == null || !dir.exists()) return;
         if (dir.isFile()) {
@@ -127,9 +210,7 @@ public class GelActions {
         if (dir.isFile()) return dir.length();
         long size = 0;
         File[] children = dir.listFiles();
-        if (children != null) {
-            for (File f : children) size += getFolderSize(f);
-        }
+        if (children != null) for (File f : children) size += getFolderSize(f);
         return size;
     }
 

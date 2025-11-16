@@ -118,7 +118,8 @@
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:maxLines="2" />
+                android:singleLine="true"
+                android:ellipsize="end" />
 
             <Button
                 android:id="@+id/btnPhoneInfoPeripherals"
@@ -129,7 +130,8 @@
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:maxLines="2" />
+                android:singleLine="true"
+                android:ellipsize="end" />
         </LinearLayout>
 
         <!-- CPU/RAM LIVE -->
@@ -141,7 +143,8 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:textColor="@color/gel_btn_text_white"
             android:layout_margin="4dp"
-            android:singleLine="true"/>
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <!-- CLEANER -->
         <TextView
@@ -207,7 +210,9 @@
                 android:text="@string/browser_cache"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                android:layout_margin="4dp"
+                android:singleLine="true"
+                android:ellipsize="end"/>
 
             <Button
                 android:id="@+id/btnAppCache"
@@ -217,7 +222,9 @@
                 android:text="@string/app_cache"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"/>
+                android:layout_margin="4dp"
+                android:singleLine="true"
+                android:ellipsize="end"/>
         </LinearLayout>
 
         <!-- PERFORMANCE -->
@@ -239,7 +246,9 @@
             android:text="@string/diagnostics"
             android:background="@drawable/gel_btn_outline_selector"
             android:textColor="@color/gel_btn_text_white"
-            android:layout_margin="4dp"/>
+            android:layout_margin="4dp"
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <!-- LOGS -->
         <TextView

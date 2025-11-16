@@ -48,8 +48,15 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null) bGR.setOnClickListener(v -> { LocaleHelper.set(this, "el"); recreate(); });
-        if (bEN != null) bEN.setOnClickListener(v -> { LocaleHelper.set(this, "en"); recreate(); });
+        if (bGR != null) bGR.setOnClickListener(v -> {
+            LocaleHelper.set(this, "el");
+            recreate();
+        });
+
+        if (bEN != null) bEN.setOnClickListener(v -> {
+            LocaleHelper.set(this, "en");
+            recreate();
+        });
     }
 
     /* =========================================================
@@ -74,27 +81,24 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
      * ========================================================= */
     private void setupButtons() {
 
-        // INTERNAL DEVICE INFO
         bind(R.id.btnPhoneInfoInternal,
                 () -> startActivity(new Intent(this, DeviceInfoInternalActivity.class)));
 
-        // PERIPHERALS DEVICE INFO
         bind(R.id.btnPhoneInfoPeripherals,
                 () -> startActivity(new Intent(this, DeviceInfoPeripheralsActivity.class)));
 
-        // CPU + RAM LIVE
         bind(R.id.btnCpuRamLive,
                 () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        // NEW — SINGLE CLEANER BUTTON
+        // GEL CLEANER ALL → SAFE DEEP CLEAN (ΔΕΝ σκοτώνει το app)
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
-        // 👉 NEW POPUP FOR BROWSERS
+        // BROWSER CACHE → UNIVERSAL + Mi Browser popup
         bind(R.id.btnBrowserCache,
                 this::showBrowserPicker);
 
-        // TEMP FILES  (FIXED)
+        // TEMP FILES → FIXED (δεν ανοίγει Activity)
         bind(R.id.btnTemp,
                 () -> GELCleaner.cleanTempFiles(this, this));
 
@@ -110,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // BATTERY BOOST (opens Running Apps)
+        // BATTERY BOOST
         bind(R.id.btnBatteryBoost,
                 () -> GELCleaner.openRunningApps(this, this));
 
@@ -132,11 +136,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     /* =========================================================
-     * POPUP BROWSER LIST
+     * POPUP BROWSER LIST — FIXED + MI BROWSER SUPPORT
      * ========================================================= */
     private void showBrowserPicker() {
 
         PackageManager pm = getPackageManager();
+
         String[] candidates = {
                 "com.android.chrome",
                 "com.chrome.beta",
@@ -146,7 +151,10 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 "com.brave.browser",
                 "com.vivaldi.browser",
                 "com.duckduckgo.mobile.android",
-                "com.sec.android.app.sbrowser"
+                "com.sec.android.app.sbrowser",
+                "com.mi.globalbrowser",
+                "com.miui.hybrid",
+                "com.android.browser"
         };
 
         List<String> installed = new ArrayList<>();
@@ -163,29 +171,26 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             return;
         }
 
-        // Only 1 browser → go directly
         if (installed.size() == 1) {
             openAppInfo(installed.get(0));
             return;
         }
 
-        // Many browsers → create dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Browser");
-
         String[] labels = installed.toArray(new String[0]);
 
-        builder.setItems(labels, (dialog, which) -> {
-            openAppInfo(installed.get(which));
-        });
+        builder.setItems(labels, (dialog, which) ->
+                openAppInfo(installed.get(which)));
 
         builder.show();
     }
 
     private void openAppInfo(String pkg) {
         try {
-            Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             i.setData(Uri.parse("package:" + pkg));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
         } catch (Exception e) {
             Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();

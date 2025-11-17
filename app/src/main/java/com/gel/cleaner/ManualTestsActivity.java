@@ -83,7 +83,7 @@ public class ManualTestsActivity extends AppCompatActivity {
                 "Each manual lab writes detailed results below (OK / WARN / ERROR)\n" +
                 "and is included in the final Service Report.");
         sub.setTextSize(13f);
-        sub.setTextColor(0xFFCCCCCC);
+        sub.setTextColor(0x32FF7E);
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 

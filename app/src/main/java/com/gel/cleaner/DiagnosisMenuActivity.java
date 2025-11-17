@@ -49,7 +49,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         // =========================
         // 🟦 AUTO DIAGNOSIS
-        =========================
+        //=========================
         root.addView(sectionLabel("AUTO DIAGNOSIS"));
 
         View autoBtn = makeBlockButton(
@@ -62,7 +62,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         // =========================
         // 🟩 MANUAL TESTS
-        =========================
+        //==========================
         root.addView(sectionLabel("MANUAL TESTS"));
 
         View manualBtn = makeBlockButton(
@@ -75,7 +75,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         // =========================
         // 🟨 EXPORT REPORT
-        =========================
+        //==========================
         root.addView(sectionLabel("SERVICE REPORT"));
 
         View exportBtn = makeBlockButton(

@@ -33,8 +33,8 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         TextView title = new TextView(this);
         title.setText("🔬 GEL Service Lab");
         title.setTextSize(22f);
-        title.setTextColor(0xFFFFFFFF);        // 🔥 White title
-        title.setGravity(Gravity.CENTER_HORIZONTAL);   // 🔥 Center
+        title.setTextColor(0xFFFFFFFF);        // White title
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
@@ -43,17 +43,18 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         sub.setText("Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report");
         sub.setTextSize(14f);
         sub.setTextColor(0xFFCCCCCC);
-        sub.setGravity(Gravity.CENTER_HORIZONTAL);     // 🔥 Center
+        sub.setGravity(Gravity.CENTER_HORIZONTAL);
         sub.setPadding(0, 0, 0, dp(16));
         root.addView(sub);
 
         // =========================
         // 🟦 AUTO DIAGNOSIS
-        //=========================
+        // =========================
         root.addView(sectionLabel("AUTO DIAGNOSIS"));
 
-        View autoBtn = makeBlockButton(
-                "📊 GEL Phone Diagnosis",
+        // 🔥 ΕΙΔΙΚΟ ΚΟΥΜΠΙ ΜΕ ΣΗΜΑ & NEON GREEN TEXT
+        View autoBtn = makeMedicalBlockButton(
+                "GEL Phone Diagnosis",
                 "Πλήρης αυτόματη διάγνωση 20 εργαστηριακών ελέγχων\nHardware • RAM • Storage • Battery • Network • Sensors…"
         );
         autoBtn.setOnClickListener(v ->
@@ -62,7 +63,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         // =========================
         // 🟩 MANUAL TESTS
-        //==========================
+        // =========================
         root.addView(sectionLabel("MANUAL TESTS"));
 
         View manualBtn = makeBlockButton(
@@ -75,7 +76,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         // =========================
         // 🟨 EXPORT REPORT
-        //==========================
+        // =========================
         root.addView(sectionLabel("SERVICE REPORT"));
 
         View exportBtn = makeBlockButton(
@@ -95,16 +96,19 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         tv.setText(txt);
         tv.setTextSize(16f);
         tv.setTextColor(0xFFEEEEEE);
-        tv.setGravity(Gravity.CENTER_HORIZONTAL);     // 🔥 Center section label
+        tv.setGravity(Gravity.CENTER_HORIZONTAL);
         tv.setPadding(0, dp(12), 0, dp(6));
         return tv;
     }
 
+    // ------------------------------------------------------------
+    // Κλασικό block button (λευκό κείμενο)
+    // ------------------------------------------------------------
     private View makeBlockButton(String title, String subtitle) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(dp(12), dp(12), dp(12), dp(12));
-        card.setGravity(Gravity.CENTER_HORIZONTAL);   // 🔥 Center inside button
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -118,9 +122,50 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         TextView t = new TextView(this);
         t.setText(title);
         t.setTextSize(16f);
-        t.setTextColor(0xFFFFFFFF);           // 🔥 White button text
+        t.setTextColor(0xFFFFFFFF);           // White text
         t.setGravity(Gravity.CENTER_HORIZONTAL);
         t.setPadding(0, 0, 0, dp(4));
+        card.addView(t);
+
+        TextView s = new TextView(this);
+        s.setText(subtitle);
+        s.setTextSize(13f);
+        s.setTextColor(0xFFAAAAAA);
+        s.setGravity(Gravity.CENTER_HORIZONTAL);
+        card.addView(s);
+
+        card.setClickable(true);
+        card.setFocusable(true);
+        return card;
+    }
+
+    // ------------------------------------------------------------
+    // ΕΙΔΙΚΟ medical button για GEL Phone Diagnosis
+    // ------------------------------------------------------------
+    private View makeMedicalBlockButton(String title, String subtitle) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(12), dp(12), dp(12), dp(12));
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(0, dp(6), 0, dp(6));
+        card.setLayoutParams(lp);
+
+        card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+
+        TextView t = new TextView(this);
+        t.setText(title);
+        t.setTextSize(16f);
+        t.setTextColor(0xFF39FF14);           // NEON GREEN text
+        t.setGravity(Gravity.CENTER_HORIZONTAL);
+        t.setPadding(0, 0, 0, dp(4));
+        // medical.jpg στο drawable -> R.drawable.medical
+        t.setCompoundDrawablesWithIntrinsicBounds(R.drawable.medical, 0, 0, 0);
+        t.setCompoundDrawablePadding(dp(8));
         card.addView(t);
 
         TextView s = new TextView(this);

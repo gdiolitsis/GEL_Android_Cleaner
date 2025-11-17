@@ -2,6 +2,7 @@ package com.gel.cleaner;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -11,7 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 // ============================================================
-// GEL Service Lab — Main Diagnosis Menu  (Updated, 20-Labs Hooked)
+// GEL Service Lab — Main Diagnosis Menu  (Updated UI - Centered)
 // ============================================================
 public class DiagnosisMenuActivity extends AppCompatActivity {
 
@@ -33,6 +34,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         title.setText("🔬 GEL Service Lab");
         title.setTextSize(22f);
         title.setTextColor(0xFFFFD700);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
@@ -41,18 +43,18 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         sub.setText("Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report");
         sub.setTextSize(14f);
         sub.setTextColor(0xFFCCCCCC);
+        sub.setGravity(Gravity.CENTER_HORIZONTAL);
         sub.setPadding(0, 0, 0, dp(16));
         root.addView(sub);
 
         // =========================
-        // 🟦 AUTO DIAGNOSIS — (FULL 20 LABS)
+        // 🟦 AUTO DIAGNOSIS
         // =========================
         root.addView(sectionLabel("AUTO DIAGNOSIS"));
 
         View autoBtn = makeBlockButton("📊 GEL Phone Diagnosis",
                 "Πλήρης αυτόματη διάγνωση 20 εργαστηριακών ελέγχων\nHardware • RAM • Storage • Battery • Network • Sensors…");
 
-        // 🔥 Updated: OPEN FULL AUTO DIAG (20 LABS)
         autoBtn.setOnClickListener(v ->
                 startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
 
@@ -65,6 +67,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
 
         View manualBtn = makeBlockButton("🧪 Manual Tests",
                 "Στοχευμένα tests για service:\nΗχεία, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.");
+
         manualBtn.setOnClickListener(v ->
                 startActivity(new Intent(this, ManualTestsActivity.class)));
         root.addView(manualBtn);
@@ -78,6 +81,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
                 "📄 Export Service Report",
                 "Τελικό Report για τον πελάτη (PDF ή TXT) + αυτόματο reset"
         );
+
         exportBtn.setOnClickListener(v ->
                 startActivity(new Intent(this, ServiceReportActivity.class)));
         root.addView(exportBtn);
@@ -91,6 +95,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         tv.setText(txt);
         tv.setTextSize(16f);
         tv.setTextColor(0xFFEEEEEE);
+        tv.setGravity(Gravity.CENTER_HORIZONTAL);
         tv.setPadding(0, dp(12), 0, dp(6));
         return tv;
     }
@@ -108,18 +113,21 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         card.setLayoutParams(lp);
 
         card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
 
         TextView t = new TextView(this);
         t.setText(title);
         t.setTextSize(16f);
-        t.setTextColor(0xFFFFFFFF);
+        t.setTextColor(0xFFFFFFFF);      // WHITE
+        t.setGravity(Gravity.CENTER_HORIZONTAL);
         t.setPadding(0, 0, 0, dp(4));
         card.addView(t);
 
         TextView s = new TextView(this);
         s.setText(subtitle);
         s.setTextSize(13f);
-        s.setTextColor(0xFFCCCCCC);
+        s.setTextColor(0xFFFFFFFF);      // WHITE
+        s.setGravity(Gravity.CENTER_HORIZONTAL);
         card.addView(s);
 
         card.setClickable(true);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GEL Cleaner</string>
+    <string name="app_name">GEL Android Doctor</string>
 
     <!-- UI Sections -->
     <string name="system">🛠 System</string>
@@ -19,8 +19,8 @@
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
     <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 PHONE INFO\n    (Internal)</string>
-    <string name="phone_info_peripherals">📡 PHONE INFO\n    (Peripherals)</string>
+    <string name="phone_info_internal">📱 PHONE INFO\n  (Internal)</string>
+    <string name="phone_info_peripherals">📡 PHONE INFO\n  (Peripherals)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>

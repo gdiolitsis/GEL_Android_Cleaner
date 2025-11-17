@@ -110,30 +110,30 @@
     android:orientation="horizontal">
 
     <Button
-        android:id="@+id/btnPhoneInfoInternal"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="72dp"
-        android:text="@string/phone_info_internal"
-        android:textSize="16sp"
-        android:background="@drawable/gel_btn_outline_selector"
-        android:textColor="@color/gel_btn_text_white"
-        android:layout_margin="4dp"
-        android:singleLine="true"
-        android:ellipsize="end" />
+    android:id="@+id/btnPhoneInfoInternal"
+    android:layout_width="0dp"
+    android:layout_weight="1"
+    android:layout_height="60dp"
+    android:text="@string/phone_info_internal"
+    android:textSize="18sp"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:textColor="@color/gel_btn_text_white"
+    android:layout_margin="4dp"
+    android:singleLine="true"
+    android:ellipsize="end" />
 
-    <Button
-        android:id="@+id/btnPhoneInfoPeripherals"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="72dp"
-        android:text="@string/phone_info_peripherals"
-        android:textSize="16sp"
-        android:background="@drawable/gel_btn_outline_selector"
-        android:textColor="@color/gel_btn_text_white"
-        android:layout_margin="4dp"
-        android:singleLine="true"
-        android:ellipsize="end" />
+<Button
+    android:id="@+id/btnPhoneInfoPeripherals"
+    android:layout_width="0dp"
+    android:layout_weight="1"
+    android:layout_height="60dp"
+    android:text="@string/phone_info_peripherals"
+    android:textSize="18sp"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:textColor="@color/gel_btn_text_white"
+    android:layout_margin="4dp"
+    android:singleLine="true"
+    android:ellipsize="end" />
 </LinearLayout>
 
         <!-- CPU/RAM LIVE -->

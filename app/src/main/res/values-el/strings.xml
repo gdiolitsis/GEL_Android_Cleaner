@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GEL Cleaner</string>
+    <string name="app_name">GEL Android Doctor</string>
 
     <!-- Ενότητες UI -->
     <string name="system">🛠 Σύστημα</string>
@@ -19,8 +19,8 @@
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
     <!-- PHONE INFO (Internal / Peripherals) -->
-    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n    (Περιφερειακά)</string>
+    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Περιφερειακά)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>

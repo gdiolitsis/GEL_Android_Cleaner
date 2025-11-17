@@ -239,19 +239,21 @@
             android:paddingLeft="6dp"/>
 
         <!-- DIAGNOSTICS -->
-        <Button
-            android:id="@+id/btnDiagnostics"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/diagnostics"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:textColor="#00FFBF"
-            android:textStyle="bold"
-            android:textSize="22sp"
-            android:layout_margin="4dp"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:drawableLeft="@null"/>
+<Button
+    android:id="@+id/btnDiagnostics"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:text="@string/diagnostics"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:textColor="#00FFBF"
+    android:textStyle="bold"
+    android:textSize="22sp"
+    android:layout_margin="4dp"
+    android:singleLine="true"
+    android:ellipsize="end"
+    android:drawableLeft="@drawable/medical"
+    android:drawablePadding="12dp"/>
+        
         <!-- LOGS -->
         <TextView
             android:id="@+id/txtLogs"

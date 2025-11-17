@@ -18,12 +18,18 @@ android {
 
     buildTypes {
         release {
+            // 🟩 MINIFY + SHRINK (όπως το θέλεις)
             minifyEnabled true
             shrinkResources true
+
+            // 🟦 Ασφαλές debug flags (no change)
             debuggable false
             jniDebuggable false
             renderscriptDebuggable false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // 🛡️ Σταθερό R8 (όπως είχαμε)
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                           'proguard-rules.pro'
         }
 
         debug {
@@ -42,13 +48,13 @@ android {
         }
     }
 
-    /** ✅ JDK compatibility */
+    /** ⬆ GEL Cleaner: Java 1.8 compatibility */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    /** ✅ MIUI / legacy lib handling */
+    /** 🩻 MIUI / Legacy lib compatibility */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true

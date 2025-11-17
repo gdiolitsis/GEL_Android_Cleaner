@@ -117,6 +117,7 @@
     android:text="@string/phone_info_internal"
     android:background="@drawable/gel_btn_outline_selector"
     android:textColor="@color/gel_btn_text_white"
+    android:gravity="center"
     android:layout_margin="4dp"
     android:singleLine="true"
     android:ellipsize="end" />
@@ -129,6 +130,7 @@
     android:text="@string/phone_info_peripherals"
     android:background="@drawable/gel_btn_outline_selector"
     android:textColor="@color/gel_btn_text_white"
+    android:gravity="center"
     android:layout_margin="4dp"
     android:singleLine="true"
     android:ellipsize="end" />

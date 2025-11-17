@@ -33,7 +33,7 @@
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->
-    <string name="diagnostics">🩺 GEL Phone Diagnosis</string>
+    <string name="diagnostics">GEL Phone Diagnosis</string>
 
     <!-- Permission prompts -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>

@@ -31,16 +31,16 @@
                 android:layout_marginRight="4dp" />
 
             <TextView
-    android:id="@+id/txtTitle"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:gravity="center"
-    android:text="@string/app_name"
-    android:textColor="#00FFC8"
-    android:textStyle="bold"
-    android:textSize="22sp"
-    android:singleLine="true" />
+                android:id="@+id/txtTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/app_name"
+                android:textColor="#00FFC8"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:singleLine="true" />
 
             <!-- LANG FLAGS -->
             <LinearLayout
@@ -104,36 +104,35 @@
             android:layout_marginTop="18dp"/>
 
         <!-- PHONE INFO ROW -->
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btnPhoneInfoInternal"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="60dp"
-        android:text="@string/phone_info_internal"
-        android:background="@drawable/gel_btn_outline_selector"
-        android:textColor="#FFFFFF"
-        android:layout_margin="4dp"
-        android:singleLine="true"
-        android:ellipsize="end" />
+            <Button
+                android:id="@+id/btnPhoneInfoInternal"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="@string/phone_info_internal"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="#FFFFFF"
+                android:layout_margin="4dp"
+                android:singleLine="true"
+                android:ellipsize="end" />
 
-    <Button
-        android:id="@+id/btnPhoneInfoPeripherals"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="60dp"
-        android:text="@string/phone_info_peripherals"
-        android:background="@drawable/gel_btn_outline_selector"
-        android:textColor="#FFFFFF"
-        android:layout_margin="4dp"
-        android:singleLine="true"
-        android:ellipsize="end" />
-</LinearLayout>
-</LinearLayout>
+            <Button
+                android:id="@+id/btnPhoneInfoPeripherals"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:text="@string/phone_info_peripherals"
+                android:background="@drawable/gel_btn_outline_selector"
+                android:textColor="#FFFFFF"
+                android:layout_margin="4dp"
+                android:singleLine="true"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <!-- CPU/RAM LIVE -->
         <Button
@@ -240,21 +239,21 @@
             android:paddingLeft="6dp"/>
 
         <!-- DIAGNOSTICS -->
-<Button
-    android:id="@+id/btnDiagnostics"
-    android:layout_width="match_parent"
-    android:layout_height="60dp"
-    android:text="@string/diagnostics"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:textColor="#00FFBF"
-    android:textStyle="bold"
-    android:textSize="22sp"
-    android:layout_margin="4dp"
-    android:singleLine="true"
-    android:ellipsize="end"
-    android:drawableLeft="@drawable/medical"
-    android:drawablePadding="12dp"/>
-        
+        <Button
+            android:id="@+id/btnDiagnostics"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/diagnostics"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="#00FFBF"
+            android:textStyle="bold"
+            android:textSize="22sp"
+            android:layout_margin="4dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:drawableLeft="@drawable/medical"
+            android:drawablePadding="12dp"/>
+
         <!-- LOGS -->
         <TextView
             android:id="@+id/txtLogs"

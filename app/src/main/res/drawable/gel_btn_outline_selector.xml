@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- PRESSED -->
+    <!-- ============================================================
+         PRESSED STATE
+         Darker black background + gold outline
+         ============================================================ -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/gel_bg_pressed"/>   <!-- Darker press -->
+            <solid android:color="@color/gel_bg_pressed"/>
             <stroke
                 android:width="2dp"
                 android:color="@color/gel_gold"/>
@@ -17,10 +20,13 @@
         </shape>
     </item>
 
-    <!-- DEFAULT -->
+    <!-- ============================================================
+         DEFAULT STATE
+         Black background + gold outline
+         ============================================================ -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/gel_bg"/>           <!-- Black background -->
+            <solid android:color="@color/gel_bg"/>
             <stroke
                 android:width="2dp"
                 android:color="@color/gel_gold"/>

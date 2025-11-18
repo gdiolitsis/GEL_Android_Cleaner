@@ -2,8 +2,13 @@ package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -14,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.List;
 
@@ -147,7 +153,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     .append("\n");
         }
 
-        // AR / advanced
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             sb.append("Level 3 / Advanced (approx): ")
                     .append(pm.hasSystemFeature("android.hardware.camera.level.full") ? "YES" : "NO")
@@ -182,7 +187,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             sb.append("Iris recognition: ").append(hasIris ? "YES" : "NO").append("\n");
         }
 
-        // Υπόδειξη για τύπο (υποθετικά, χωρίς permissions)
         sb.append("\nBiometrics summary:\n");
         sb.append("• Strong biometric: ");
         if (hasFingerprint) {
@@ -286,6 +290,14 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     .append("\n");
         }
 
+        // προαιρετικά ethernet / wifi aware αν υπάρχουν
+        sb.append("Ethernet (hardware): ")
+                .append(pm.hasSystemFeature("android.hardware.ethernet") ? "YES" : "NO")
+                .append("\n");
+        sb.append("Wi-Fi Aware: ")
+                .append(pm.hasSystemFeature("android.hardware.wifi.aware") ? "YES" : "NO")
+                .append("\n");
+
         txtConnectivityContent.setText(sb.toString());
 
         // =====================================================
@@ -299,6 +311,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         sb.append("Network location: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "YES" : "NO")
                 .append("\n");
+        sb.append("Fused provider (Play Services based): POSSIBLE\n");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             sb.append("GNSS: ")
                     .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "YES" : "NO")
@@ -308,7 +321,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtLocationContent.setText(sb.toString());
 
         // =====================================================
-        // OTHER PERIPHERALS (IO, Vibrator κ.λπ.)
+        // OTHER PERIPHERALS (IO, Audio, Thermal κ.λπ.)
         // =====================================================
         sb = new StringBuilder();
         sb.append("── OTHER PERIPHERALS ──\n");
@@ -319,7 +332,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
 
-        // Microphone & audio
         boolean hasMic = pm.hasSystemFeature(PackageManager.FEATURE_MICROPHONE);
         sb.append("Microphone: ").append(hasMic ? "YES" : "NO").append("\n");
 
@@ -328,6 +340,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append("\n");
         sb.append("Low-latency audio: ")
                 .append(pm.hasSystemFeature("android.hardware.audio.low_latency") ? "YES" : "NO")
+                .append("\n");
+        sb.append("Pro audio: ")
+                .append(pm.hasSystemFeature("android.hardware.audio.pro") ? "YES" : "NO")
                 .append("\n");
 
         // Vibrator
@@ -339,6 +354,34 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     .append(vib.hasAmplitudeControl() ? "YES" : "NO")
                     .append("\n");
         }
+
+        // Advanced hardware capabilities
+        sb.append("\n── ADVANCED HARDWARE ──\n");
+        sb.append("OpenGL ES AEP (3.x+ features): ")
+                .append(pm.hasSystemFeature("android.hardware.opengles.aep") ? "YES" : "NO/Unknown")
+                .append("\n");
+        sb.append("Vulkan support: ")
+                .append(pm.hasSystemFeature("android.hardware.vulkan.level") ? "YES" : "NO/Unknown")
+                .append("\n");
+        sb.append("Neural Networks API: ")
+                .append(pm.hasSystemFeature("android.hardware.neuralnetworks") ? "YES" : "NO")
+                .append("\n");
+
+        // Thermal / Temperature
+        sb.append("\n── THERMAL / TEMPERATURE (best effort) ──\n");
+        float battC = getBatteryTemperatureC();
+        if (!Float.isNaN(battC)) {
+            sb.append("Battery: ")
+                    .append(String.format("%.1f °C", battC))
+                    .append("\n");
+        } else {
+            sb.append("Battery: N/A\n");
+        }
+        sb.append(getThermalSummary());
+
+        // Audio codecs summary
+        sb.append("\n── AUDIO CODECS (summary) ──\n");
+        sb.append(getAudioCodecSummary());
 
         txtOtherContent.setText(sb.toString());
 
@@ -446,4 +489,130 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         }
         return "none";
     }
+
+    // ========== BATTERY / THERMAL HELPERS ==========
+
+    private float getBatteryTemperatureC() {
+        try {
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+            if (batteryStatus == null) return Float.NaN;
+            int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+            if (temp == Integer.MIN_VALUE) return Float.NaN;
+            return temp / 10f;
+        } catch (Throwable t) {
+            return Float.NaN;
+        }
+    }
+
+    private String getThermalSummary() {
+        StringBuilder out = new StringBuilder();
+        try {
+            File dir = new File("/sys/class/thermal");
+            if (!dir.exists() || !dir.isDirectory()) {
+                out.append("Thermal info: /sys/class/thermal not available.\n");
+                return out.toString();
+            }
+            File[] zones = dir.listFiles();
+            if (zones == null || zones.length == 0) {
+                out.append("Thermal info: no thermal zones found.\n");
+                return out.toString();
+            }
+            int count = 0;
+            for (File z : zones) {
+                if (!z.getName().startsWith("thermal_zone")) continue;
+                File typeFile = new File(z, "type");
+                File tempFile = new File(z, "temp");
+                String type = readFirstLine(typeFile);
+                String tempStr = readFirstLine(tempFile);
+                if (tempStr == null) continue;
+
+                try {
+                    tempStr = tempStr.trim();
+                    if (tempStr.isEmpty()) continue;
+                    float cVal = Float.parseFloat(tempStr);
+                    if (cVal > 1000f) cVal = cVal / 1000f;
+                    out.append("• ")
+                            .append(type != null ? type : z.getName())
+                            .append(": ")
+                            .append(String.format("%.1f °C", cVal))
+                            .append("\n");
+                    count++;
+                    if (count >= 6) break; // περιορίζουμε λίγο για να μην γίνει τεράστιο
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            if (count == 0) {
+                out.append("Thermal zones present but temperatures not readable.\n");
+            }
+        } catch (Throwable t) {
+            out.append("Thermal info error: ").append(t.getMessage()).append("\n");
+        }
+        return out.toString();
+    }
+
+    private String readFirstLine(File f) {
+        if (f == null || !f.exists()) return null;
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(f));
+            return br.readLine();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    }
+
+    // ========== AUDIO CODEC SUMMARY ==========
+    private String getAudioCodecSummary() {
+        StringBuilder out = new StringBuilder();
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                MediaCodecList mcl = new MediaCodecList(MediaCodecList.ALL_CODECS);
+                MediaCodecInfo[] codecs = mcl.getCodecInfos();
+                int decoders = 0;
+                int encoders = 0;
+                int listed = 0;
+
+                out.append("Audio decoders (sample):\n");
+                for (MediaCodecInfo info : codecs) {
+                    String[] types = info.getSupportedTypes();
+                    boolean isAudio = false;
+                    if (types != null) {
+                        for (String t : types) {
+                            if (t != null && t.startsWith("audio/")) {
+                                isAudio = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isAudio) continue;
+
+                    if (info.isEncoder()) {
+                        encoders++;
+                    } else {
+                        decoders++;
+                        if (listed < 6) {
+                            out.append("• ").append(info.getName()).append("\n");
+                            listed++;
+                        }
+                    }
+                }
+                out.append("Total audio decoders: ").append(decoders).append("\n");
+                out.append("Total audio encoders: ").append(encoders).append("\n");
+            } else {
+                out.append("Audio codec list: N/A (API < 21)\n");
+            }
+        } catch (Throwable t) {
+            out.append("Audio codec info error: ").append(t.getMessage()).append("\n");
+        }
+        return out.toString();
+    }
 }
+```0

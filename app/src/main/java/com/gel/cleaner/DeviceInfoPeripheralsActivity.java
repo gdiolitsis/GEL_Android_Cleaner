@@ -142,16 +142,16 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append("\n");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            sb.append("Manual sensor controls: ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR) ? "YES" : "NO")
-                    .append("\n");
-            sb.append("RAW capture: ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_RAW) ? "YES" : "NO")
-                    .append("\n");
-            sb.append("Depth output: ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_DEPTH_OUTPUT) ? "YES" : "NO")
-                    .append("\n");
-        }
+    sb.append("Manual sensor controls: ")
+            .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR) ? "YES" : "NO")
+            .append("\n");
+    sb.append("RAW capture: ")
+            .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_RAW) ? "YES" : "NO")
+            .append("\n");
+    sb.append("Depth output: ")
+            .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_DEPTH_OUTPUT) ? "YES" : "NO")
+            .append("\n");
+}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             sb.append("Level 3 / Advanced (approx): ")

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollDeviceInfo"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -22,7 +21,7 @@
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="10dp" />
 
         <!-- SECTION HEADER -->
         <TextView
@@ -35,362 +34,415 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="10dp" />
 
+        <!-- ========================================================= -->
         <!-- SYSTEM -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxSystem"
+            android:id="@+id/headerSystem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerSystem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtSystemTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="System &amp; Hardware"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconSystemToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtSystemContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="System & Hardware"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconSystemToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtSystemContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- ANDROID -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxAndroid"
+            android:id="@+id/headerAndroid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerAndroid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtAndroidTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Android / OS"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconAndroidToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtAndroidContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="Android / OS"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconAndroidToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtAndroidContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- CPU -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxCpu"
+            android:id="@+id/headerCpu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerCpu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtCpuTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="CPU / ABI Info"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconCpuToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtCpuContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="CPU / ABI Info"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconCpuToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtCpuContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
+        <!-- GPU (NEW) -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerGpu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="GPU Info"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconGpuToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtGpuContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
+        <!-- THERMAL (NEW) -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerThermal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Thermal Sensors"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconThermalToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtThermalContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- RAM -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxRam"
+            android:id="@+id/headerRam"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerRam"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtRamTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="RAM &amp; Memory"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconRamToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtRamContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="RAM & Memory"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconRamToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtRamContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- STORAGE -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxStorage"
+            android:id="@+id/headerStorage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerStorage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtStorageTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Internal Storage"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconStorageToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtStorageContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="Internal Storage"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconStorageToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtStorageContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- SCREEN -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxScreen"
+            android:id="@+id/headerScreen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerScreen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtScreenTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Screen &amp; Display"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconScreenToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtScreenContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="Screen & Display"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconScreenToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtScreenContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
+        <!-- CONNECTIVITY (NEW) -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerConnectivity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Connectivity"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconConnectivityToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtConnectivityContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
+
+        <!-- ========================================================= -->
         <!-- ROOT -->
+        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/boxRoot"
+            android:id="@+id/headerRoot"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerRoot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtRootTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Root Extras"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconRootToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/txtRootContent"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
+                android:layout_weight="1"
+                android:text="Root Extras"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconRootToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtRootContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:padding="12dp" />
 
     </LinearLayout>
 </ScrollView>

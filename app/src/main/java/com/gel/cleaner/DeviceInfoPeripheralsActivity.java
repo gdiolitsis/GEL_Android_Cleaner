@@ -148,9 +148,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
     sb.append("RAW capture: ")
             .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_RAW) ? "YES" : "NO")
             .append("\n");
-    sb.append("Depth output: ")
-            .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_DEPTH_OUTPUT) ? "YES" : "NO")
-            .append("\n");
 }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

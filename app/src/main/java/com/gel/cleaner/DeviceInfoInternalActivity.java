@@ -590,4 +590,3 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         return sb.toString();
     }
 }
-```0

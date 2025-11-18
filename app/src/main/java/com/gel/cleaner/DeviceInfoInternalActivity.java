@@ -67,7 +67,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         // ========== data build ==========
         isRooted = isDeviceRooted();
 
-        // SYSTEM
+        // ===========================
+        // SYSTEM / HARDWARE
+        // ===========================
         StringBuilder sys = new StringBuilder();
         sys.append("── SYSTEM ──\n");
         sys.append("Brand: ").append(Build.BRAND).append("\n");
@@ -77,9 +79,17 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         sys.append("Product: ").append(Build.PRODUCT).append("\n");
         sys.append("Board: ").append(Build.BOARD).append("\n");
         sys.append("Hardware: ").append(Build.HARDWARE).append("\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            sys.append("SoC Manufacturer: ").append(Build.SOC_MANUFACTURER).append("\n");
+            sys.append("SoC Model: ").append(Build.SOC_MODEL).append("\n");
+        }
+        sys.append("Fingerprint: ").append(Build.FINGERPRINT).append("\n");
+        sys.append("Build Time: ").append(Build.TIME).append(" (ms)\n");
         txtSystemContent.setText(sys.toString());
 
+        // ===========================
         // ANDROID / OS
+        // ===========================
         StringBuilder os = new StringBuilder();
         os.append("── ANDROID ──\n");
         os.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
@@ -90,10 +100,12 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         os.append("Build ID: ").append(Build.ID).append("\n");
         os.append("Build Type: ").append(Build.TYPE).append("\n");
         os.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
-        os.append("Kernel: ").append(System.getProperty("os.version")).append("\n");
+        os.append("Kernel (os.version): ").append(System.getProperty("os.version")).append("\n");
         txtAndroidContent.setText(os.toString());
 
+        // ===========================
         // CPU
+        // ===========================
         StringBuilder cpu = new StringBuilder();
         cpu.append("── CPU ──\n");
         String[] abis = Build.SUPPORTED_ABIS;
@@ -108,9 +120,31 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             }
         }
         cpu.append("\n");
+        cpu.append("Logical cores: ").append(Runtime.getRuntime().availableProcessors()).append("\n");
+
+        // μικρή προσπάθεια για /proc/cpuinfo (δεν σπάει αν αποτύχει)
+        try {
+            Process p = Runtime.getRuntime().exec("cat /proc/cpuinfo");
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            String hardwareLine = null;
+            while ((line = br.readLine()) != null) {
+                if (line.toLowerCase().contains("hardware")) {
+                    hardwareLine = line.trim();
+                }
+            }
+            br.close();
+            if (hardwareLine != null) {
+                cpu.append(hardwareLine).append("\n");
+            }
+        } catch (Exception ignored) {
+            // δεν μας νοιάζει, απλά δεν δείχνουμε extra info
+        }
         txtCpuContent.setText(cpu.toString());
 
+        // ===========================
         // RAM
+        // ===========================
         StringBuilder ram = new StringBuilder();
         ram.append("── RAM ──\n");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -125,12 +159,18 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             ram.append("Used RAM: ").append(usedMb).append(" MB\n");
             ram.append("Free RAM: ").append(availMb).append(" MB\n");
             ram.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n");
+            if (mi.threshold > 0) {
+                long thresholdMb = mi.threshold / (1024L * 1024L);
+                ram.append("Low RAM threshold: ").append(thresholdMb).append(" MB\n");
+            }
         } else {
             ram.append("Memory info: N/A\n");
         }
         txtRamContent.setText(ram.toString());
 
-        // STORAGE
+        // ===========================
+        // INTERNAL STORAGE
+        // ===========================
         StringBuilder st = new StringBuilder();
         st.append("── INTERNAL STORAGE ──\n");
         try {
@@ -144,22 +184,52 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             st.append("Total: ").append(totalGb).append(" GB\n");
             st.append("Used: ").append(usedGb).append(" GB\n");
             st.append("Free: ").append(freeGb).append(" GB\n");
+            st.append("\nRaw bytes total: ").append(totalBytes).append("\n");
+            st.append("Raw bytes free: ").append(freeBytes).append("\n");
         } catch (Throwable t) {
             st.append("Storage info: N/A (").append(t.getMessage()).append(")\n");
         }
         txtStorageContent.setText(st.toString());
 
-        // SCREEN
+        // ===========================
+        // SCREEN / DISPLAY
+        // ===========================
         StringBuilder sc = new StringBuilder();
         sc.append("── SCREEN ──\n");
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        sc.append("Resolution: ").append(dm.widthPixels)
-                .append(" x ").append(dm.heightPixels).append(" px\n");
+        sc.append("Resolution: ")
+                .append(dm.widthPixels)
+                .append(" x ")
+                .append(dm.heightPixels)
+                .append(" px\n");
         sc.append("Density: ").append(dm.densityDpi).append(" dpi\n");
         sc.append("Scaled density: ").append(dm.scaledDensity).append("\n");
+
+        // Υπολογισμός περίπου διαγωνίου σε ίντσες (best effort)
+        try {
+            float xInches = dm.widthPixels / dm.xdpi;
+            float yInches = dm.heightPixels / dm.ydpi;
+            double diagonal = Math.sqrt(xInches * xInches + yInches * yInches);
+            sc.append("Approx. diagonal: ")
+                    .append(String.format("%.1f", diagonal))
+                    .append(" inches\n");
+        } catch (Throwable ignored) {
+        }
+
+        // Refresh rate (best effort, μπορεί να διαφέρει ανά συσκευή)
+        try {
+            float refresh = getWindowManager().getDefaultDisplay().getRefreshRate();
+            sc.append("Refresh rate: ")
+                    .append(String.format("%.1f", refresh))
+                    .append(" Hz\n");
+        } catch (Throwable ignored) {
+        }
+
         txtScreenContent.setText(sc.toString());
 
+        // ===========================
         // ROOT EXTRAS
+        // ===========================
         StringBuilder rootSb = new StringBuilder();
         rootSb.append("── ROOT EXTRAS ──\n");
         if (isRooted) {
@@ -191,9 +261,12 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
     }
 
     private void toggleSection(TextView contentToOpen, TextView iconToUpdate) {
+        if (allContents == null || allIcons == null) return;
+
         for (int i = 0; i < allContents.length; i++) {
             TextView c = allContents[i];
             TextView ic = allIcons[i];
+            if (c == null || ic == null) continue;
             if (c == contentToOpen) continue;
             c.setVisibility(View.GONE);
             ic.setText("＋");

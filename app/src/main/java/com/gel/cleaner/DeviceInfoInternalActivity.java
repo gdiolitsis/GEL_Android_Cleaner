@@ -2,25 +2,23 @@ package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.opengl.GLES20;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StatFs;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.util.Locale;
 
 public class DeviceInfoInternalActivity extends AppCompatActivity {
 
@@ -48,66 +46,85 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         // ===========================
         isRooted = isDeviceRooted();
 
-        StringBuilder s = new StringBuilder();
+        // Θα χτίσουμε ξεχωριστά sections για να τα δέσουμε με tabs
+        StringBuilder secSystem      = new StringBuilder();
+        StringBuilder secAndroid     = new StringBuilder();
+        StringBuilder secCpuRam      = new StringBuilder();
+        StringBuilder secStorage     = new StringBuilder();
+        StringBuilder secScreen      = new StringBuilder();
+        StringBuilder secBattery     = new StringBuilder();
+        StringBuilder secRuntimeFs   = new StringBuilder();
+        StringBuilder secRootExtras  = new StringBuilder();
+
+        DecimalFormat df1 = new DecimalFormat("0.0");
 
         // ===========================
         // SYSTEM
         // ===========================
-        s.append("── SYSTEM ──\n");
-        s.append("Brand: ").append(Build.BRAND).append("\n");
-        s.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
-        s.append("Model: ").append(Build.MODEL).append("\n");
-        s.append("Device: ").append(Build.DEVICE).append("\n");
-        s.append("Product: ").append(Build.PRODUCT).append("\n");
-        s.append("Board: ").append(Build.BOARD).append("\n");
-        s.append("Hardware: ").append(Build.HARDWARE).append("\n\n");
+        secSystem.append("── SYSTEM ──\n");
+        secSystem.append("Brand: ").append(Build.BRAND).append("\n");
+        secSystem.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
+        secSystem.append("Model: ").append(Build.MODEL).append("\n");
+        secSystem.append("Device: ").append(Build.DEVICE).append("\n");
+        secSystem.append("Product: ").append(Build.PRODUCT).append("\n");
+        secSystem.append("Board: ").append(Build.BOARD).append("\n");
+        secSystem.append("Hardware: ").append(Build.HARDWARE).append("\n");
+        secSystem.append("Build Type: ").append(Build.TYPE).append("\n");
+        secSystem.append("Build ID: ").append(Build.ID).append("\n");
+        secSystem.append("\n");
 
         // ===========================
-        // ANDROID
+        // ANDROID / KERNEL
         // ===========================
-        s.append("── ANDROID ──\n");
-        s.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
-        s.append("API Level: ").append(Build.VERSION.SDK_INT).append("\n");
+        secAndroid.append("── ANDROID ──\n");
+        secAndroid.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
+        secAndroid.append("API Level: ").append(Build.VERSION.SDK_INT).append("\n");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            s.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+            secAndroid.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
         }
-        s.append("Build ID: ").append(Build.ID).append("\n");
-        s.append("Build Type: ").append(Build.TYPE).append("\n");
-        s.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
-        s.append("Kernel: ").append(System.getProperty("os.version")).append("\n\n");
+        secAndroid.append("Fingerprint: ").append(Build.FINGERPRINT).append("\n");
+        secAndroid.append("Tags: ").append(Build.TAGS).append("\n");
+        secAndroid.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
+        secAndroid.append("Kernel (Linux): ").append(System.getProperty("os.version")).append("\n");
+        secAndroid.append("\n");
 
         // ===========================
-        // UPTIME
+        // CPU INFO
         // ===========================
-        s.append("── UPTIME ──\n");
-        long uptime = SystemClock.elapsedRealtime();
-        s.append("Device Uptime: ").append(formatDuration(uptime)).append("\n\n");
-
-        // ===========================
-        // CPU
-        // ===========================
-        s.append("── CPU ──\n");
+        secCpuRam.append("── CPU ──\n");
         String[] abis = Build.SUPPORTED_ABIS;
         if (abis != null && abis.length > 0) {
-            s.append("Primary ABI: ").append(abis[0]).append("\n");
+            secCpuRam.append("Primary ABI: ").append(abis[0]).append("\n");
         }
-        s.append("CPU ABIs: ");
+        secCpuRam.append("CPU ABIs: ");
         if (abis != null) {
             for (int i = 0; i < abis.length; i++) {
-                s.append(abis[i]);
-                if (i < abis.length - 1) s.append(", ");
+                secCpuRam.append(abis[i]);
+                if (i < abis.length - 1) secCpuRam.append(", ");
             }
         }
-        s.append("\n");
+        secCpuRam.append("\n");
 
-        // CPU Frequencies snapshot
-        s.append("\n[CPU Frequencies]\n");
-        s.append(getCpuFrequenciesSnapshot());
+        // Προσπάθεια ανάγνωσης /proc/cpuinfo (όπου επιτρέπεται)
+        try {
+            File cpuInfoFile = new File("/proc/cpuinfo");
+            if (cpuInfoFile.canRead()) {
+                BufferedReader br = new BufferedReader(new FileReader(cpuInfoFile));
+                String line;
+                int lines = 0;
+                while ((line = br.readLine()) != null && lines < 15) {
+                    secCpuRam.append(line).append("\n");
+                    lines++;
+                }
+                br.close();
+            }
+        } catch (Throwable ignored) {}
+        secCpuRam.append("\n");
 
         // ===========================
         // RAM
         // ===========================
-        s.append("\n── RAM ──\n");
+        secCpuRam.append("── RAM ──\n");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -116,79 +133,207 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             long availMb = mi.availMem / (1024L * 1024L);
             long usedMb  = totalMb - availMb;
 
-            s.append("Total RAM: ").append(totalMb).append(" MB\n");
-            s.append("Used RAM: ").append(usedMb).append(" MB\n");
-            s.append("Free RAM: ").append(availMb).append(" MB\n");
-            s.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n\n");
+            secCpuRam.append("Total RAM: ").append(totalMb).append(" MB\n");
+            secCpuRam.append("Used RAM: ").append(usedMb).append(" MB\n");
+            secCpuRam.append("Free RAM: ").append(availMb).append(" MB\n");
+            secCpuRam.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n");
+        } else {
+            secCpuRam.append("ActivityManager: N/A\n");
         }
+        secCpuRam.append("\n");
 
         // ===========================
-        // INTERNAL STORAGE
+        // STORAGE (INTERNAL + EXTERNAL)
         // ===========================
-        s.append("── INTERNAL STORAGE ──\n");
+        secStorage.append("── INTERNAL STORAGE ──\n");
         try {
             File dataDir = Environment.getDataDirectory();
-            long[] stats = getStorageStats(dataDir);
-            long totalGb = stats[0];
-            long usedGb  = stats[1];
-            long freeGb  = stats[2];
+            long totalBytes = dataDir.getTotalSpace();
+            long freeBytes  = dataDir.getFreeSpace();
+            long totalGb = totalBytes / (1024L * 1024L * 1024L);
+            long freeGb  = freeBytes / (1024L * 1024L * 1024L);
+            long usedGb  = totalGb - freeGb;
 
-            s.append("Total: ").append(totalGb).append(" GB\n");
-            s.append("Used: ").append(usedGb).append(" GB\n");
-            s.append("Free: ").append(freeGb).append(" GB\n\n");
+            secStorage.append("Total: ").append(totalGb).append(" GB\n");
+            secStorage.append("Used: ").append(usedGb).append(" GB\n");
+            secStorage.append("Free: ").append(freeGb).append(" GB\n");
         } catch (Throwable t) {
-            s.append("Storage info: N/A (").append(t.getMessage()).append(")\n\n");
+            secStorage.append("Internal Storage: N/A (").append(t.getMessage()).append(")\n");
         }
+        secStorage.append("\n");
 
-        // ===========================
-        // I/O SPEED SNAPSHOT
-        // ===========================
-        s.append("── STORAGE SPEED (SNAPSHOT) ──\n");
-        s.append(getIoSpeedSnapshot()).append("\n");
+        secStorage.append("── EXTERNAL STORAGE ──\n");
+        try {
+            File ext = Environment.getExternalStorageDirectory();
+            if (ext != null && ext.exists()) {
+                long totalBytes = ext.getTotalSpace();
+                long freeBytes  = ext.getFreeSpace();
+                double totalGbD = totalBytes / (1024d * 1024d * 1024d);
+                double freeGbD  = freeBytes / (1024d * 1024d * 1024d);
+                double usedGbD  = totalGbD - freeGbD;
+
+                secStorage.append("Path: ").append(ext.getAbsolutePath()).append("\n");
+                secStorage.append("Total: ").append(df1.format(totalGbD)).append(" GB\n");
+                secStorage.append("Used: ").append(df1.format(usedGbD)).append(" GB\n");
+                secStorage.append("Free: ").append(df1.format(freeGbD)).append(" GB\n");
+            } else {
+                secStorage.append("External storage: Not available\n");
+            }
+        } catch (Throwable t) {
+            secStorage.append("External Storage: N/A (").append(t.getMessage()).append(")\n");
+        }
+        secStorage.append("\n");
 
         // ===========================
         // SCREEN
         // ===========================
-        s.append("\n── SCREEN ──\n");
+        secScreen.append("── SCREEN ──\n");
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        s.append("Resolution: ").append(dm.widthPixels)
+        secScreen.append("Resolution: ").append(dm.widthPixels)
                 .append(" x ").append(dm.heightPixels).append(" px\n");
-        s.append("Density: ").append(dm.densityDpi).append(" dpi\n");
-        s.append("Scaled density: ").append(dm.scaledDensity).append("\n\n");
+        secScreen.append("Density: ").append(dm.densityDpi).append(" dpi\n");
+        secScreen.append("Scaled density: ").append(dm.scaledDensity).append("\n");
+        secScreen.append("Xdpi: ").append(df1.format(dm.xdpi)).append("\n");
+        secScreen.append("Ydpi: ").append(df1.format(dm.ydpi)).append("\n");
+        secScreen.append("\n");
 
         // ===========================
-        // GPU
+        // BATTERY (BASIC HEALTH INFO)
         // ===========================
-        s.append("── GPU ──\n");
-        s.append(getGpuInfo()).append("\n");
+        secBattery.append("── BATTERY ──\n");
+        try {
+            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+            if (bm != null) {
+                int level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                secBattery.append("Level: ").append(level).append(" %\n");
+            } else {
+                secBattery.append("BatteryManager: N/A\n");
+            }
+        } catch (Throwable t) {
+            secBattery.append("Battery info: N/A (").append(t.getMessage()).append(")\n");
+        }
+        secBattery.append("\n");
 
         // ===========================
-        // BATTERY
+        // RUNTIME / UPTIME / FS
         // ===========================
-        s.append("── BATTERY ──\n");
-        s.append(getBatteryInfo()).append("\n");
+        secRuntimeFs.append("── RUNTIME ──\n");
+        long upMs = SystemClock.elapsedRealtime();
+        long upSec = upMs / 1000;
+        long upMin = upSec / 60;
+        long upH   = upMin / 60;
+        long upD   = upH / 24;
 
-        // ===========================
-        // THERMAL ZONES
-        // ===========================
-        s.append("── THERMAL SENSORS ──\n");
-        s.append(getThermalInfo()).append("\n");
+        secRuntimeFs.append("Uptime: ")
+                .append(upD).append("d ")
+                .append(upH % 24).append("h ")
+                .append(upMin % 60).append("m\n");
+        secRuntimeFs.append("\n");
+
+        secRuntimeFs.append("── FILESYSTEM DIRECTORIES ──\n");
+        secRuntimeFs.append("Data dir: ").append(Environment.getDataDirectory().getAbsolutePath()).append("\n");
+        secRuntimeFs.append("Root dir: ").append(Environment.getRootDirectory().getAbsolutePath()).append("\n");
+        secRuntimeFs.append("Download cache: ").append(Environment.getDownloadCacheDirectory().getAbsolutePath()).append("\n");
+        File extDir = Environment.getExternalStorageDirectory();
+        if (extDir != null) {
+            secRuntimeFs.append("External: ").append(extDir.getAbsolutePath()).append("\n");
+        }
+        secRuntimeFs.append("\n");
 
         // ===========================
         // ROOT EXTRAS (ONLY IF ROOTED)
         // ===========================
         if (isRooted) {
-            s.append("── ROOT MODE ACTIVE ──\n");
-            s.append("Build Tags: ").append(Build.TAGS).append("\n");
-            s.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
-            s.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
-            s.append("SELinux: ").append(getSelinux()).append("\n");
-            s.append("su paths: ").append(checkSuPaths()).append("\n");
+            secRootExtras.append("── ROOT MODE EXTRA ──\n");
+            secRootExtras.append("Build Tags: ").append(Build.TAGS).append("\n");
+            secRootExtras.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+            secRootExtras.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+            secRootExtras.append("SELinux: ").append(getSelinux()).append("\n");
+            secRootExtras.append("su paths: ").append(checkSuPaths()).append("\n");
+            secRootExtras.append("\n");
         }
 
+        // ===========================
+        // FULL TEXT (ALL SECTIONS)
+        // ===========================
+        final String textSystem     = secSystem.toString();
+        final String textAndroid    = secAndroid.toString();
+        final String textCpuRam     = secCpuRam.toString();
+        final String textStorage    = secStorage.toString();
+        final String textScreen     = secScreen.toString();
+        final String textBattery    = secBattery.toString();
+        final String textRuntimeFs  = secRuntimeFs.toString();
+        final String textRootExtras = secRootExtras.toString();
+
+        final String textAll =
+                textSystem +
+                textAndroid +
+                textCpuRam +
+                textStorage +
+                textScreen +
+                textBattery +
+                textRuntimeFs +
+                textRootExtras;
+
         if (info != null) {
-            info.setText(s.toString());
+            info.setText(textAll);
         }
+
+        // ===========================
+        // TABS / BUTTON FILTERS
+        // ===========================
+        setupTabsInternal(textAll, textSystem, textAndroid, textCpuRam,
+                textStorage, textScreen, textBattery, textRuntimeFs, textRootExtras);
+    }
+
+    // ------------------------------------------------------------
+    // TAB BUTTONS HANDLER (INTERNAL INFO)
+    // ------------------------------------------------------------
+    private void setupTabsInternal(String all,
+                                   String system,
+                                   String androidInfo,
+                                   String cpuRam,
+                                   String storage,
+                                   String screen,
+                                   String battery,
+                                   String runtimeFs,
+                                   String rootExtras) {
+
+        final TextView info = findViewById(R.id.txtDeviceInfo);
+        if (info == null) return;
+
+        Button tabAll      = findViewById(R.id.btnTabAllInternal);
+        Button tabSystem   = findViewById(R.id.btnTabSystemInternal);
+        Button tabAndroid  = findViewById(R.id.btnTabAndroidInternal);
+        Button tabCpuRam   = findViewById(R.id.btnTabCpuRamInternal);
+        Button tabStorage  = findViewById(R.id.btnTabStorageInternal);
+        Button tabScreen   = findViewById(R.id.btnTabScreenInternal);
+        Button tabBattery  = findViewById(R.id.btnTabBatteryInternal);
+        Button tabRuntime  = findViewById(R.id.btnTabRuntimeInternal);
+        Button tabRoot     = findViewById(R.id.btnTabRootInternal);
+
+        // Αν δεν υπάρχουν στο XML, απλά δεν κάνουμε τίποτα (fallback = full text)
+        if (tabAll == null) return;
+
+        View.OnClickListener lAll = v -> info.setText(all);
+        View.OnClickListener lSystem = v -> info.setText(system);
+        View.OnClickListener lAndroid = v -> info.setText(androidInfo);
+        View.OnClickListener lCpuRam = v -> info.setText(cpuRam);
+        View.OnClickListener lStorage = v -> info.setText(storage);
+        View.OnClickListener lScreen = v -> info.setText(screen);
+        View.OnClickListener lBattery = v -> info.setText(battery);
+        View.OnClickListener lRuntime = v -> info.setText(runtimeFs);
+        View.OnClickListener lRoot = v -> info.setText(rootExtras.isEmpty() ? "No extra root info.\n" : rootExtras);
+
+        tabAll.setOnClickListener(lAll);
+        if (tabSystem  != null) tabSystem.setOnClickListener(lSystem);
+        if (tabAndroid != null) tabAndroid.setOnClickListener(lAndroid);
+        if (tabCpuRam  != null) tabCpuRam.setOnClickListener(lCpuRam);
+        if (tabStorage != null) tabStorage.setOnClickListener(lStorage);
+        if (tabScreen  != null) tabScreen.setOnClickListener(lScreen);
+        if (tabBattery != null) tabBattery.setOnClickListener(lBattery);
+        if (tabRuntime != null) tabRuntime.setOnClickListener(lRuntime);
+        if (tabRoot    != null) tabRoot.setOnClickListener(lRoot);
     }
 
     // ============================================================
@@ -253,340 +398,5 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             if (new File(p).exists()) return p;
         }
         return "none";
-    }
-
-    // ============================================================
-    // STORAGE HELPERS
-    // ============================================================
-    private long[] getStorageStats(File dir) {
-        long[] out = new long[3];
-        StatFs statFs = new StatFs(dir.getAbsolutePath());
-        long blockSize, totalBlocks, availableBlocks;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = statFs.getBlockSizeLong();
-            totalBlocks = statFs.getBlockCountLong();
-            availableBlocks = statFs.getAvailableBlocksLong();
-        } else {
-            blockSize = statFs.getBlockSize();
-            totalBlocks = statFs.getBlockCount();
-            availableBlocks = statFs.getAvailableBlocks();
-        }
-
-        long totalBytes = totalBlocks * blockSize;
-        long freeBytes = availableBlocks * blockSize;
-        long totalGb = totalBytes / (1024L * 1024L * 1024L);
-        long freeGb = freeBytes / (1024L * 1024L * 1024L);
-        long usedGb = totalGb - freeGb;
-
-        out[0] = totalGb;
-        out[1] = usedGb;
-        out[2] = freeGb;
-        return out;
-    }
-
-    // ============================================================
-    // I/O SPEED SNAPSHOT
-    // ============================================================
-    private String getIoSpeedSnapshot() {
-        File cacheDir = getCacheDir();
-        File testFile = new File(cacheDir, "gel_io_test.bin");
-        int sizeKb = 256; // 256 KB
-        byte[] buffer = new byte[sizeKb * 1024];
-
-        long writeMs = -1;
-        long readMs = -1;
-
-        try {
-            long start = SystemClock.elapsedRealtime();
-            FileOutputStream fos = new FileOutputStream(testFile);
-            fos.write(buffer);
-            fos.flush();
-            fos.close();
-            writeMs = SystemClock.elapsedRealtime() - start;
-        } catch (Throwable t) {
-            return "I/O test: N/A (" + t.getMessage() + ")";
-        }
-
-        try {
-            long start = SystemClock.elapsedRealtime();
-            FileInputStream fis = new FileInputStream(testFile);
-            while (fis.read(buffer) != -1) {
-                // read loop
-            }
-            fis.close();
-            readMs = SystemClock.elapsedRealtime() - start;
-        } catch (Throwable t) {
-            // ignore read error
-        }
-
-        testFile.delete();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Test size: ").append(sizeKb).append(" KB\n");
-        if (writeMs >= 0) {
-            sb.append("Write time: ").append(writeMs).append(" ms\n");
-        } else {
-            sb.append("Write time: N/A\n");
-        }
-
-        if (readMs >= 0) {
-            sb.append("Read time: ").append(readMs).append(" ms");
-        } else {
-            sb.append("Read time: N/A");
-        }
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // GPU INFO
-    // ============================================================
-    private String getGpuInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            String renderer = GLES20.glGetString(GLES20.GL_RENDERER);
-            String vendor   = GLES20.glGetString(GLES20.GL_VENDOR);
-            String version  = GLES20.glGetString(GLES20.GL_VERSION);
-
-            sb.append("Renderer: ").append(renderer != null ? renderer : "N/A").append("\n");
-            sb.append("Vendor: ").append(vendor != null ? vendor : "N/A").append("\n");
-            sb.append("OpenGL ES: ").append(version != null ? version : "N/A");
-        } catch (Throwable t) {
-            sb.append("GPU info: N/A (").append(t.getMessage()).append(")");
-        }
-        return sb.toString();
-    }
-
-    // ============================================================
-    // BATTERY INFO
-    // ============================================================
-    private String getBatteryInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = registerReceiver(null, ifilter);
-            if (batteryStatus != null) {
-                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
-
-                int percent = -1;
-                if (level >= 0 && scale > 0) {
-                    percent = (int) ((level * 100f) / scale);
-                }
-
-                sb.append("Level: ").append(percent >= 0 ? percent + " %" : "N/A").append("\n");
-                sb.append("Status: ").append(getBatteryStatusString(status)).append("\n");
-                sb.append("Plugged: ").append(getBatteryPluggedString(plugged)).append("\n");
-                sb.append("Health: ").append(getBatteryHealthString(health)).append("\n");
-            } else {
-                sb.append("Battery broadcast: N/A\n");
-            }
-
-            // Battery capacity (best-effort)
-            long capacityMah = getBatteryCapacityMah();
-            if (capacityMah > 0) {
-                sb.append("Design Capacity: ").append(capacityMah).append(" mAh");
-            } else {
-                sb.append("Design Capacity: N/A");
-            }
-
-        } catch (Throwable t) {
-            sb.append("Battery info: N/A (").append(t.getMessage()).append(")");
-        }
-        return sb.toString();
-    }
-
-    private String getBatteryStatusString(int status) {
-        switch (status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-                return "Charging";
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                return "Discharging";
-            case BatteryManager.BATTERY_STATUS_FULL:
-                return "Full";
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                return "Not Charging";
-            case BatteryManager.BATTERY_STATUS_UNKNOWN:
-            default:
-                return "Unknown";
-        }
-    }
-
-    private String getBatteryPluggedString(int plugged) {
-        switch (plugged) {
-            case BatteryManager.BATTERY_PLUGGED_AC:
-                return "AC";
-            case BatteryManager.BATTERY_PLUGGED_USB:
-                return "USB";
-            case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                return "Wireless";
-            default:
-                return "No";
-        }
-    }
-
-    private String getBatteryHealthString(int health) {
-        switch (health) {
-            case BatteryManager.BATTERY_HEALTH_COLD:
-                return "Cold";
-            case BatteryManager.BATTERY_HEALTH_DEAD:
-                return "Dead";
-            case BatteryManager.BATTERY_HEALTH_GOOD:
-                return "Good";
-            case BatteryManager.BATTERY_HEALTH_OVERHEAT:
-                return "Overheat";
-            case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
-                return "Over Voltage";
-            case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
-                return "Failure";
-            case BatteryManager.BATTERY_HEALTH_UNKNOWN:
-            default:
-                return "Unknown";
-        }
-    }
-
-    private long getBatteryCapacityMah() {
-        // best-effort: read common sysfs paths
-        String[] candidates = {
-                "/sys/class/power_supply/battery/charge_full_design",
-                "/sys/class/power_supply/battery/charge_full",
-                "/sys/class/power_supply/battery/energy_full_design",
-                "/sys/class/power_supply/battery/energy_full"
-        };
-
-        for (String path : candidates) {
-            try {
-                String line = readFirstLine(path);
-                if (line == null) continue;
-                long raw = Long.parseLong(line.trim());
-
-                // Heuristic: some paths are in uAh or uWh
-                if (raw > 100000) {
-                    long mah = raw / 1000L;
-                    if (mah > 0 && mah < 20000) {
-                        return mah;
-                    }
-                } else if (raw > 100 && raw < 20000) {
-                    return raw;
-                }
-            } catch (Throwable ignored) {
-            }
-        }
-
-        return -1;
-    }
-
-    private String readFirstLine(String path) {
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
-            return br.readLine();
-        } catch (Throwable ignored) {
-            return null;
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored2) {
-            }
-        }
-    }
-
-    // ============================================================
-    // THERMAL INFO
-    // ============================================================
-    private String getThermalInfo() {
-        StringBuilder sb = new StringBuilder();
-        File base = new File("/sys/class/thermal");
-        if (!base.exists() || !base.isDirectory()) {
-            sb.append("No thermal sensors directory.");
-            return sb.toString();
-        }
-
-        File[] zones = base.listFiles();
-        if (zones == null || zones.length == 0) {
-            sb.append("No thermal zones found.");
-            return sb.toString();
-        }
-
-        for (File f : zones) {
-            if (!f.getName().startsWith("thermal_zone")) continue;
-            try {
-                String type = readFirstLine(new File(f, "type").getAbsolutePath());
-                String tempStr = readFirstLine(new File(f, "temp").getAbsolutePath());
-                if (tempStr == null) continue;
-                tempStr = tempStr.trim();
-                if (tempStr.isEmpty()) continue;
-
-                float tempC;
-                if (tempStr.length() > 3) {
-                    tempC = Float.parseFloat(tempStr) / 1000f;
-                } else {
-                    tempC = Float.parseFloat(tempStr);
-                }
-
-                sb.append(type != null ? type : f.getName())
-                        .append(": ")
-                        .append(String.format("%.1f °C", tempC))
-                        .append("\n");
-            } catch (Throwable ignored) {
-            }
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Thermal sensors: N/A");
-        }
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // CPU FREQ SNAPSHOT
-    // ============================================================
-    private String getCpuFrequenciesSnapshot() {
-        StringBuilder sb = new StringBuilder();
-        int cores = Runtime.getRuntime().availableProcessors();
-        if (cores <= 0) cores = 1;
-
-        for (int i = 0; i < cores; i++) {
-            String path = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_cur_freq";
-            try {
-                String line = readFirstLine(path);
-                if (line == null) continue;
-                long khz = Long.parseLong(line.trim());
-                long mhz = khz / 1000L;
-                sb.append("CPU").append(i).append(": ").append(mhz).append(" MHz\n");
-            } catch (Throwable ignored) {
-            }
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Current frequencies: N/A\n");
-        }
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // TIME FORMAT
-    // ============================================================
-    private String formatDuration(long millis) {
-        long seconds = millis / 1000L;
-        long days = seconds / (24 * 3600);
-        seconds %= (24 * 3600);
-        long hours = seconds / 3600;
-        seconds %= 3600;
-        long minutes = seconds / 60;
-        seconds %= 60;
-
-        StringBuilder sb = new StringBuilder();
-        if (days > 0) sb.append(days).append("d ");
-        if (hours > 0 || days > 0) sb.append(hours).append("h ");
-        if (minutes > 0 || hours > 0 || days > 0) sb.append(minutes).append("m ");
-        sb.append(seconds).append("s");
-        return sb.toString();
     }
 }

@@ -615,4 +615,3 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         return out.toString();
     }
 }
-```0

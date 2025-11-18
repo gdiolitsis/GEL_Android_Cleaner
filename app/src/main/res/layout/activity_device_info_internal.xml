@@ -35,7 +35,7 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="10dp" />
 
-        <!-- ========== SYSTEM ========= -->
+        <!-- SYSTEM -->
         <LinearLayout
             android:id="@+id/boxSystem"
             android:layout_width="match_parent"
@@ -86,7 +86,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== ANDROID / OS ========= -->
+        <!-- ANDROID -->
         <LinearLayout
             android:id="@+id/boxAndroid"
             android:layout_width="match_parent"
@@ -137,7 +137,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== CPU ========= -->
+        <!-- CPU -->
         <LinearLayout
             android:id="@+id/boxCpu"
             android:layout_width="match_parent"
@@ -188,7 +188,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== RAM ========= -->
+        <!-- RAM -->
         <LinearLayout
             android:id="@+id/boxRam"
             android:layout_width="match_parent"
@@ -239,7 +239,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== STORAGE ========= -->
+        <!-- STORAGE -->
         <LinearLayout
             android:id="@+id/boxStorage"
             android:layout_width="match_parent"
@@ -290,7 +290,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== SCREEN ========= -->
+        <!-- SCREEN -->
         <LinearLayout
             android:id="@+id/boxScreen"
             android:layout_width="match_parent"
@@ -341,7 +341,7 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
 
-        <!-- ========== ROOT EXTRAS ========= -->
+        <!-- ROOT -->
         <LinearLayout
             android:id="@+id/boxRoot"
             android:layout_width="match_parent"

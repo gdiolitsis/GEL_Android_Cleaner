@@ -17,9 +17,9 @@ import java.io.InputStreamReader;
 
 public class DeviceInfoInternalActivity extends AppCompatActivity {
 
+    // FULL UPGRADE MODE — 7 SECTIONS + 3 NEW + ROOT MODE
     private boolean isRooted = false;
 
-    // για το "άνοιξε ένα-ένα"
     private TextView[] allContents;
     private TextView[] allIcons;
 
@@ -34,73 +34,68 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         setContentView(R.layout.activity_device_info_internal);
 
         TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) {
+        if (title != null)
             title.setText(getString(R.string.phone_info_internal));
-        }
 
-        // ========== refs ==========
-        TextView txtSystemContent   = findViewById(R.id.txtSystemContent);
-        TextView txtAndroidContent  = findViewById(R.id.txtAndroidContent);
-        TextView txtCpuContent      = findViewById(R.id.txtCpuContent);
-        TextView txtRamContent      = findViewById(R.id.txtRamContent);
-        TextView txtStorageContent  = findViewById(R.id.txtStorageContent);
-        TextView txtScreenContent   = findViewById(R.id.txtScreenContent);
-        TextView txtRootContent     = findViewById(R.id.txtRootContent);
+        // ============================
+        // REFERENCES (ALL 10 SECTIONS)
+        // ============================
 
-        TextView iconSystem   = findViewById(R.id.iconSystemToggle);
-        TextView iconAndroid  = findViewById(R.id.iconAndroidToggle);
-        TextView iconCpu      = findViewById(R.id.iconCpuToggle);
-        TextView iconRam      = findViewById(R.id.iconRamToggle);
-        TextView iconStorage  = findViewById(R.id.iconStorageToggle);
-        TextView iconScreen   = findViewById(R.id.iconScreenToggle);
-        TextView iconRoot     = findViewById(R.id.iconRootToggle);
+        TextView txtSystemContent      = findViewById(R.id.txtSystemContent);
+        TextView txtAndroidContent     = findViewById(R.id.txtAndroidContent);
+        TextView txtCpuContent         = findViewById(R.id.txtCpuContent);
+        TextView txtGpuContent         = findViewById(R.id.txtGpuContent);        // NEW
+        TextView txtThermalContent     = findViewById(R.id.txtThermalContent);    // NEW
+        TextView txtRamContent         = findViewById(R.id.txtRamContent);
+        TextView txtStorageContent     = findViewById(R.id.txtStorageContent);
+        TextView txtScreenContent      = findViewById(R.id.txtScreenContent);
+        TextView txtConnectivityContent= findViewById(R.id.txtConnectivityContent); // NEW
+        TextView txtRootContent        = findViewById(R.id.txtRootContent);
 
+        // ICON REFS
+        TextView iconSystem        = findViewById(R.id.iconSystemToggle);
+        TextView iconAndroid       = findViewById(R.id.iconAndroidToggle);
+        TextView iconCpu           = findViewById(R.id.iconCpuToggle);
+        TextView iconGpu           = findViewById(R.id.iconGpuToggle);
+        TextView iconThermal       = findViewById(R.id.iconThermalToggle);
+        TextView iconRam           = findViewById(R.id.iconRamToggle);
+        TextView iconStorage       = findViewById(R.id.iconStorageToggle);
+        TextView iconScreen        = findViewById(R.id.iconScreenToggle);
+        TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);
+        TextView iconRoot          = findViewById(R.id.iconRootToggle);
+
+        // Store all for one-open mode
         allContents = new TextView[]{
                 txtSystemContent, txtAndroidContent, txtCpuContent,
-                txtRamContent, txtStorageContent, txtScreenContent, txtRootContent
+                txtGpuContent, txtThermalContent, txtRamContent,
+                txtStorageContent, txtScreenContent, txtConnectivityContent,
+                txtRootContent
         };
+
         allIcons = new TextView[]{
                 iconSystem, iconAndroid, iconCpu,
-                iconRam, iconStorage, iconScreen, iconRoot
+                iconGpu, iconThermal, iconRam,
+                iconStorage, iconScreen, iconConnectivity,
+                iconRoot
         };
 
-        // ========== data build ==========
+        // Root detection
         isRooted = isDeviceRooted();
 
-        // ===========================
-        // SYSTEM / HARDWARE
-        // ===========================
-        StringBuilder sys = new StringBuilder();
-        sys.append("── SYSTEM ──\n");
-        sys.append("Brand: ").append(Build.BRAND).append("\n");
-        sys.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
-        sys.append("Model: ").append(Build.MODEL).append("\n");
-        sys.append("Device: ").append(Build.DEVICE).append("\n");
-        sys.append("Product: ").append(Build.PRODUCT).append("\n");
-        sys.append("Board: ").append(Build.BOARD).append("\n");
-        sys.append("Hardware: ").append(Build.HARDWARE).append("\n");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            sys.append("SoC Manufacturer: ").append(Build.SOC_MANUFACTURER).append("\n");
-            sys.append("SoC Model: ").append(Build.SOC_MODEL).append("\n");
-        }
-        sys.append("Fingerprint: ").append(Build.FINGERPRINT).append("\n");
-        sys.append("Build Time: ").append(Build.TIME).append(" (ms)\n");
-        txtSystemContent.setText(sys.toString());
-
-        // ===========================
+    // ===========================
         // ANDROID / OS
         // ===========================
         StringBuilder os = new StringBuilder();
-        os.append("── ANDROID ──\n");
+        os.append("── ANDROID / OS ──\n");
         os.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
         os.append("API Level: ").append(Build.VERSION.SDK_INT).append("\n");
+        os.append("Build ID: ").append(Build.ID).append("\n");
+        os.append("Build Type: ").append(Build.TYPE).append("\n");
+        os.append("Build Tags: ").append(Build.TAGS).append("\n");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             os.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
         }
-        os.append("Build ID: ").append(Build.ID).append("\n");
-        os.append("Build Type: ").append(Build.TYPE).append("\n");
-        os.append("Bootloader: ").append(Build.BOOTLOADER).append("\n");
-        os.append("Kernel (os.version): ").append(System.getProperty("os.version")).append("\n");
+        os.append("Kernel: ").append(System.getProperty("os.version")).append("\n");
         txtAndroidContent.setText(os.toString());
 
         // ===========================
@@ -108,11 +103,11 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         // ===========================
         StringBuilder cpu = new StringBuilder();
         cpu.append("── CPU ──\n");
+
         String[] abis = Build.SUPPORTED_ABIS;
-        if (abis != null && abis.length > 0) {
-            cpu.append("Primary ABI: ").append(abis[0]).append("\n");
-        }
-        cpu.append("CPU ABIs: ");
+        cpu.append("Primary ABI: ").append((abis != null && abis.length > 0) ? abis[0] : "N/A").append("\n");
+
+        cpu.append("Supported ABIs: ");
         if (abis != null) {
             for (int i = 0; i < abis.length; i++) {
                 cpu.append(abis[i]);
@@ -120,26 +115,12 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             }
         }
         cpu.append("\n");
-        cpu.append("Logical cores: ").append(Runtime.getRuntime().availableProcessors()).append("\n");
 
-        // μικρή προσπάθεια για /proc/cpuinfo (δεν σπάει αν αποτύχει)
-        try {
-            Process p = Runtime.getRuntime().exec("cat /proc/cpuinfo");
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            String hardwareLine = null;
-            while ((line = br.readLine()) != null) {
-                if (line.toLowerCase().contains("hardware")) {
-                    hardwareLine = line.trim();
-                }
-            }
-            br.close();
-            if (hardwareLine != null) {
-                cpu.append(hardwareLine).append("\n");
-            }
-        } catch (Exception ignored) {
-            // δεν μας νοιάζει, απλά δεν δείχνουμε extra info
-        }
+        cpu.append("Logical Cores: ").append(Runtime.getRuntime().availableProcessors()).append("\n");
+
+        cpu.append("CPU Info (/proc/cpuinfo):\n");
+        cpu.append(readCpuInfo()).append("\n");
+
         txtCpuContent.setText(cpu.toString());
 
         // ===========================
@@ -147,25 +128,24 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         // ===========================
         StringBuilder ram = new StringBuilder();
         ram.append("── RAM ──\n");
+
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
-            long totalMb = mi.totalMem / (1024L * 1024L);
-            long availMb = mi.availMem / (1024L * 1024L);
-            long usedMb  = totalMb - availMb;
 
-            ram.append("Total RAM: ").append(totalMb).append(" MB\n");
-            ram.append("Used RAM: ").append(usedMb).append(" MB\n");
-            ram.append("Free RAM: ").append(availMb).append(" MB\n");
-            ram.append("Low RAM device: ").append(mi.lowMemory ? "YES" : "NO").append("\n");
-            if (mi.threshold > 0) {
-                long thresholdMb = mi.threshold / (1024L * 1024L);
-                ram.append("Low RAM threshold: ").append(thresholdMb).append(" MB\n");
-            }
+            long total = mi.totalMem / (1024L * 1024L);
+            long free = mi.availMem / (1024L * 1024L);
+            long used = total - free;
+
+            ram.append("Total RAM: ").append(total).append(" MB\n");
+            ram.append("Used RAM: ").append(used).append(" MB\n");
+            ram.append("Free RAM: ").append(free).append(" MB\n");
+            ram.append("Low RAM Device: ").append(mi.lowMemory ? "YES" : "NO").append("\n");
         } else {
-            ram.append("Memory info: N/A\n");
+            ram.append("RAM info unavailable\n");
         }
+
         txtRamContent.setText(ram.toString());
 
         // ===========================
@@ -173,169 +153,186 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         // ===========================
         StringBuilder st = new StringBuilder();
         st.append("── INTERNAL STORAGE ──\n");
-        try {
-            File dataDir = Environment.getDataDirectory();
-            long totalBytes = dataDir.getTotalSpace();
-            long freeBytes  = dataDir.getFreeSpace();
-            long totalGb = totalBytes / (1024L * 1024L * 1024L);
-            long freeGb  = freeBytes  / (1024L * 1024L * 1024L);
-            long usedGb  = totalGb - freeGb;
 
-            st.append("Total: ").append(totalGb).append(" GB\n");
-            st.append("Used: ").append(usedGb).append(" GB\n");
-            st.append("Free: ").append(freeGb).append(" GB\n");
-            st.append("\nRaw bytes total: ").append(totalBytes).append("\n");
-            st.append("Raw bytes free: ").append(freeBytes).append("\n");
-        } catch (Throwable t) {
-            st.append("Storage info: N/A (").append(t.getMessage()).append(")\n");
+        try {
+            File dir = Environment.getDataDirectory();
+            long total = dir.getTotalSpace();
+            long free  = dir.getFreeSpace();
+            long used  = total - free;
+
+            st.append("Total: ").append(total / (1024L*1024L*1024L)).append(" GB\n");
+            st.append("Used: ").append(used / (1024L*1024L*1024L)).append(" GB\n");
+            st.append("Free: ").append(free / (1024L*1024L*1024L)).append(" GB\n");
+        } catch (Exception e) {
+            st.append("Storage info unavailable\n");
         }
+
         txtStorageContent.setText(st.toString());
 
-        // ===========================
-        // SCREEN / DISPLAY
-        // ===========================
-        StringBuilder sc = new StringBuilder();
-        sc.append("── SCREEN ──\n");
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        sc.append("Resolution: ")
-                .append(dm.widthPixels)
-                .append(" x ")
-                .append(dm.heightPixels)
-                .append(" px\n");
-        sc.append("Density: ").append(dm.densityDpi).append(" dpi\n");
-        sc.append("Scaled density: ").append(dm.scaledDensity).append("\n");
+    // ===========================
+    // STORAGE
+    // ===========================
+    StringBuilder st = new StringBuilder();
+    st.append("── INTERNAL STORAGE ──\n");
+    try {
+        File dataDir = Environment.getDataDirectory();
+        long totalBytes = dataDir.getTotalSpace();
+        long freeBytes  = dataDir.getFreeSpace();
 
-        // Υπολογισμός περίπου διαγωνίου σε ίντσες (best effort)
-        try {
-            float xInches = dm.widthPixels / dm.xdpi;
-            float yInches = dm.heightPixels / dm.ydpi;
-            double diagonal = Math.sqrt(xInches * xInches + yInches * yInches);
-            sc.append("Approx. diagonal: ")
-                    .append(String.format("%.1f", diagonal))
-                    .append(" inches\n");
-        } catch (Throwable ignored) {
-        }
+        long totalGb = totalBytes / (1024L * 1024L * 1024L);
+        long freeGb  = freeBytes  / (1024L * 1024L * 1024L);
+        long usedGb  = totalGb - freeGb;
 
-        // Refresh rate (best effort, μπορεί να διαφέρει ανά συσκευή)
-        try {
-            float refresh = getWindowManager().getDefaultDisplay().getRefreshRate();
-            sc.append("Refresh rate: ")
-                    .append(String.format("%.1f", refresh))
-                    .append(" Hz\n");
-        } catch (Throwable ignored) {
-        }
+        st.append("Total: ").append(totalGb).append(" GB\n");
+        st.append("Used: ").append(usedGb).append(" GB\n");
+        st.append("Free: ").append(freeGb).append(" GB\n");
+        st.append("\nRaw total bytes: ").append(totalBytes).append("\n");
+        st.append("Raw free bytes: ").append(freeBytes).append("\n");
 
-        txtScreenContent.setText(sc.toString());
+    } catch (Throwable e) {
+        st.append("Storage info: N/A\n");
+    }
+    txtStorageContent.setText(st.toString());
 
-        // ===========================
-        // ROOT EXTRAS
-        // ===========================
-        StringBuilder rootSb = new StringBuilder();
-        rootSb.append("── ROOT EXTRAS ──\n");
-        if (isRooted) {
-            rootSb.append("Device appears ROOTED.\n\n");
-            rootSb.append("Build Tags: ").append(Build.TAGS).append("\n");
-            rootSb.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
-            rootSb.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
-            rootSb.append("SELinux: ").append(getSelinux()).append("\n");
-            rootSb.append("su paths: ").append(checkSuPaths()).append("\n");
-        } else {
-            rootSb.append("Device appears NOT rooted.\n");
-            rootSb.append("Extra low-level debug info is disabled.\n");
-        }
-        txtRootContent.setText(rootSb.toString());
+    // ===========================
+    // SCREEN
+    // ===========================
+    DisplayMetrics dm = getResources().getDisplayMetrics();
+    StringBuilder sc = new StringBuilder();
+    sc.append("── SCREEN ──\n");
+    sc.append("Resolution: ").append(dm.widthPixels).append(" x ").append(dm.heightPixels).append(" px\n");
+    sc.append("Density: ").append(dm.densityDpi).append(" dpi\n");
+    sc.append("Scaled Density: ").append(dm.scaledDensity).append("\n");
 
-        // ========== expand / collapse listeners ==========
-        setupSection(findViewById(R.id.headerSystem),   txtSystemContent,   iconSystem);
-        setupSection(findViewById(R.id.headerAndroid),  txtAndroidContent,  iconAndroid);
-        setupSection(findViewById(R.id.headerCpu),      txtCpuContent,      iconCpu);
-        setupSection(findViewById(R.id.headerRam),      txtRamContent,      iconRam);
-        setupSection(findViewById(R.id.headerStorage),  txtStorageContent,  iconStorage);
-        setupSection(findViewById(R.id.headerScreen),   txtScreenContent,   iconScreen);
-        setupSection(findViewById(R.id.headerRoot),     txtRootContent,     iconRoot);
+    try {
+        float xInches = dm.widthPixels / dm.xdpi;
+        float yInches = dm.heightPixels / dm.ydpi;
+        double diagonal = Math.sqrt(xInches * xInches + yInches * yInches);
+        sc.append("Diagonal: ").append(String.format("%.1f", diagonal)).append(" inches\n");
+    } catch (Exception ignored) {}
+
+    try {
+        float refreshRate = getWindowManager().getDefaultDisplay().getRefreshRate();
+        sc.append("Refresh Rate: ").append(String.format("%.1f", refreshRate)).append(" Hz\n");
+    } catch (Exception ignored) {}
+
+    txtScreenContent.setText(sc.toString());
+
+    // ===========================
+    // ROOT EXTRAS
+    // ===========================
+    StringBuilder root = new StringBuilder();
+    root.append("── ROOT EXTRAS ──\n");
+
+    if (isRooted) {
+        root.append("Device: ROOTED\n\n");
+        root.append("Build Tags: ").append(Build.TAGS).append("\n");
+        root.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+        root.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+        root.append("SELinux: ").append(getSelinux()).append("\n");
+        root.append("su path: ").append(checkSuPaths()).append("\n");
+    } else {
+        root.append("Device appears NOT rooted\n");
+        root.append("Root-level debugging is disabled\n");
     }
 
-    // ανοίγει μόνο ένα section κάθε φορά
-    private void setupSection(View header, final TextView content, final TextView icon) {
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
+    txtRootContent.setText(root.toString());
 
-    private void toggleSection(TextView contentToOpen, TextView iconToUpdate) {
-        if (allContents == null || allIcons == null) return;
+    // ===========================
+    // EXPANDABLE SECTIONS
+    // ===========================
+    setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
+    setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
+    setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
+    setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
+    setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
+    setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
+    setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+}
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-            if (c == null || ic == null) continue;
-            if (c == contentToOpen) continue;
-            c.setVisibility(View.GONE);
-            ic.setText("＋");
-        }
+private void setupSection(View header, TextView content, TextView icon) {
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
 
-        if (contentToOpen.getVisibility() == View.VISIBLE) {
-            contentToOpen.setVisibility(View.GONE);
-            iconToUpdate.setText("＋");
-        } else {
-            contentToOpen.setVisibility(View.VISIBLE);
-            iconToUpdate.setText("−");
-        }
-    }
-
-    // ===== ROOT UTILS (ίδια λογική με πριν) =====
-    private boolean isDeviceRooted() {
-        String tags = Build.TAGS;
-        if (tags != null && tags.contains("test-keys")) return true;
-
-        String[] paths = {
-                "/system/bin/su",
-                "/system/xbin/su",
-                "/sbin/su",
-                "/system/su"
-        };
-        for (String p : paths) {
-            if (new File(p).exists()) return true;
-        }
-
-        String debuggable = getProp("ro.debuggable");
-        String secure = getProp("ro.secure");
-
-        return "1".equals(debuggable) || "0".equals(secure);
-    }
-
-    private String getProp(String key) {
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = br.readLine();
-            br.close();
-            return line != null ? line.trim() : "[empty]";
-        } catch (Exception e) {
-            return "[error]";
+private void toggleSection(TextView open, TextView icon) {
+    for (int i = 0; i < allContents.length; i++) {
+        if (allContents[i] != open) {
+            allContents[i].setVisibility(View.GONE);
+            allIcons[i].setText("＋");
         }
     }
 
-    private String getSelinux() {
-        try {
-            Process p = Runtime.getRuntime().exec("getenforce");
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = br.readLine();
-            br.close();
-            return line != null ? line.trim() : "unknown";
-        } catch (Exception e) {
-            return "unknown";
-        }
-    }
+    boolean visible = open.getVisibility() == View.VISIBLE;
+    open.setVisibility(visible ? View.GONE : View.VISIBLE);
+    icon.setText(visible ? "＋" : "−");
+}
 
-    private String checkSuPaths() {
-        String[] paths = {
-                "/system/bin/su",
-                "/system/xbin/su",
-                "/sbin/su",
-                "/system/su"
-        };
-        for (String p : paths) {
-            if (new File(p).exists()) return p;
+// ========== CPU INFO ==========
+private String readCpuInfo() {
+    try {
+        Process p = Runtime.getRuntime().exec("cat /proc/cpuinfo");
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        while ((line = br.readLine()) != null) {
+            sb.append(line).append("\n");
         }
-        return "none";
+        br.close();
+        return sb.toString();
+    } catch (Exception e) {
+        return "[unavailable]";
     }
 }
+
+// ========== ROOT CHECK ==========
+private boolean isDeviceRooted() {
+    if (Build.TAGS != null && Build.TAGS.contains("test-keys"))
+        return true;
+
+    String[] paths = {
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su"
+    };
+
+    for (String p : paths) {
+        if (new File(p).exists()) return true;
+    }
+
+    return "1".equals(getProp("ro.debuggable")) || "0".equals(getProp("ro.secure"));
+}
+
+private String getProp(String key) {
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line : "";
+    } catch (Exception e) {
+        return "";
+    }
+}
+
+private String getSelinux() {
+    try {
+        Process p = Runtime.getRuntime().exec("getenforce");
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line : "unknown";
+    } catch (Exception e) {
+        return "unknown";
+    }
+}
+
+private String checkSuPaths() {
+    String[] paths = {
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su"
+    };
+    for (String p : paths) {
+        if (new File(p).exists()) return p;
+    }
+    return "none";
+}
+}
+

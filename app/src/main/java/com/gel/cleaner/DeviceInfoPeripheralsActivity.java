@@ -447,4 +447,3 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         return "none";
     }
 }
-```0

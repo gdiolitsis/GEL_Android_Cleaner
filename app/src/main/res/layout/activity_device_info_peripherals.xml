@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollDeviceInfo"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -12,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- TITLE -->
         <TextView
             android:id="@+id/txtTitleDevice"
             android:layout_width="match_parent"
@@ -22,375 +20,71 @@
             android:textSize="20sp"
             android:textColor="@color/gel_text_primary"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="10dp" />
 
-        <!-- SECTION HEADER -->
         <TextView
-            android:id="@+id/txtSectionHeaderPeriph"
+            android:id="@+id/txtSectionHeaderPeripherals"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📂 PERIPHERALS REPORT — Camera / Sensors / IO"
+            android:text="📂 PERIPHERALS REPORT — Full Device Capability Map"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="10dp" />
 
-        <!-- CAMERA -->
-        <LinearLayout
-            android:id="@+id/boxCamera"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
+        <!-- TEMPLATE FOR ALL SECTIONS -->
+        <!-- HEADER + CONTENT (gone) -->
 
-            <LinearLayout
-                android:id="@+id/headerCamera"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
+        <!-- 1 CAMERA -->
+        <include layout="@layout/gel_section_camera" />
 
-                <TextView
-                    android:id="@+id/txtCameraTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Camera"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
+        <!-- 2 BIOMETRICS -->
+        <include layout="@layout/gel_section_biometrics" />
 
-                <TextView
-                    android:id="@+id/iconCameraToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+        <!-- 3 SENSORS -->
+        <include layout="@layout/gel_section_sensors" />
 
-            <TextView
-                android:id="@+id/txtCameraContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
+        <!-- 4 CONNECTIVITY -->
+        <include layout="@layout/gel_section_connectivity" />
 
-        <!-- BIOMETRICS -->
-        <LinearLayout
-            android:id="@+id/boxBiometrics"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
+        <!-- 5 LOCATION -->
+        <include layout="@layout/gel_section_location" />
 
-            <LinearLayout
-                android:id="@+id/headerBiometrics"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
+        <!-- 6 OTHER PERIPHERALS -->
+        <include layout="@layout/gel_section_other" />
 
-                <TextView
-                    android:id="@+id/txtBiometricsTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Biometrics"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
+        <!-- 7 BLUETOOTH -->
+        <include layout="@layout/gel_section_bluetooth" />
 
-                <TextView
-                    android:id="@+id/iconBiometricsToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+        <!-- 8 NFC -->
+        <include layout="@layout/gel_section_nfc" />
 
-            <TextView
-                android:id="@+id/txtBiometricsContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
+        <!-- 9 ROOT -->
+        <include layout="@layout/gel_section_root" />
 
-        <!-- SENSORS -->
-        <LinearLayout
-            android:id="@+id/boxSensors"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
+        <!-- 🔥 NEW SECTIONS BELOW -->
 
-            <LinearLayout
-                android:id="@+id/headerSensors"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
+        <!-- 10 BATTERY HEALTH -->
+        <include layout="@layout/gel_section_battery" />
 
-                <TextView
-                    android:id="@+id/txtSensorsTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Sensors"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
+        <!-- 11 UWB -->
+        <include layout="@layout/gel_section_uwb" />
 
-                <TextView
-                    android:id="@+id/iconSensorsToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
+        <!-- 12 HAPTICS -->
+        <include layout="@layout/gel_section_haptics" />
 
-            <TextView
-                android:id="@+id/txtSensorsContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
+        <!-- 13 GNSS CONSTELLATIONS -->
+        <include layout="@layout/gel_section_gnss" />
 
-        <!-- CONNECTIVITY -->
-        <LinearLayout
-            android:id="@+id/boxConnectivity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
+        <!-- 14 USB SPEED -->
+        <include layout="@layout/gel_section_usb" />
 
-            <LinearLayout
-                android:id="@+id/headerConnectivity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
+        <!-- 15 MICROPHONES -->
+        <include layout="@layout/gel_section_mics" />
 
-                <TextView
-                    android:id="@+id/txtConnectivityTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Connectivity"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconConnectivityToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txtConnectivityContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
-
-        <!-- LOCATION -->
-        <LinearLayout
-            android:id="@+id/boxLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerLocation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtLocationTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Location"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconLocationToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txtLocationContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
-
-        <!-- OTHER -->
-        <LinearLayout
-            android:id="@+id/boxOther"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerOther"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtOtherTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Other Peripherals"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconOtherToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txtOtherContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
-
-        <!-- ROOT EXTRAS -->
-        <LinearLayout
-            android:id="@+id/boxRoot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:id="@+id/headerRoot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:padding="12dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/txtRootTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Root Extras"
-                    android:textColor="#00FFBF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/iconRootToggle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="＋"
-                    android:textColor="#00FFBF"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txtRootContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textColor="@color/gel_text_secondary"
-                android:textSize="14sp"
-                android:typeface="monospace"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
+        <!-- 16 AUDIO HAL -->
+        <include layout="@layout/gel_section_audiohal" />
 
     </LinearLayout>
+
 </ScrollView>

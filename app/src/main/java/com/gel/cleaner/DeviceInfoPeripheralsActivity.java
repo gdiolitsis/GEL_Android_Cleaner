@@ -41,6 +41,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         isRooted = isDeviceRooted();
 
         PackageManager pm = getPackageManager();
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
         StringBuilder s = new StringBuilder();
 
         // =====================================================
@@ -50,12 +53,32 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         s.append("Any camera: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ? "YES" : "NO")
                 .append("\n");
-        s.append("Flash: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH) ? "YES" : "NO")
+        s.append("Rear camera: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA) ? "YES" : "NO")
                 .append("\n");
         s.append("Front camera: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) ? "YES" : "NO")
-                .append("\n\n");
+                .append("\n");
+        s.append("Flash: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH) ? "YES" : "NO")
+                .append("\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            s.append("Full camera2 support: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR)
+                            ? "YES" : "NO")
+                    .append("\n");
+        }
+        s.append("\n");
+
+        // =====================================================
+        // AUDIO
+        // =====================================================
+        s.append("── AUDIO ──\n");
+        s.append("Microphone: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) ? "YES" : "NO")
+                .append("\n");
+        s.append("Audio output (speaker/headset): YES\n");
+        s.append("\n");
 
         // =====================================================
         // BIOMETRICS
@@ -72,18 +95,48 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                             || pm.hasSystemFeature("android.hardware.biometrics.face");
             s.append("Face unlock: ").append(hasFace ? "YES" : "NO").append("\n");
         }
+
+        boolean hasIris =
+                pm.hasSystemFeature("android.hardware.biometrics.iris")
+                        || pm.hasSystemFeature("com.samsung.android.bio.iris");
+        s.append("Iris scanner: ").append(hasIris ? "YES" : "NO").append("\n\n");
+
+        // =====================================================
+        // SENSORS (SUMMARY)
+        // =====================================================
+        s.append("── SENSORS (SUMMARY) ──\n");
+        if (sm != null) {
+            s.append("Accelerometer: ")
+                    .append(hasSensor(sm, Sensor.TYPE_ACCELEROMETER) ? "YES" : "NO").append("\n");
+            s.append("Gyroscope: ")
+                    .append(hasSensor(sm, Sensor.TYPE_GYROSCOPE) ? "YES" : "NO").append("\n");
+            s.append("Proximity: ")
+                    .append(hasSensor(sm, Sensor.TYPE_PROXIMITY) ? "YES" : "NO").append("\n");
+            s.append("Light: ")
+                    .append(hasSensor(sm, Sensor.TYPE_LIGHT) ? "YES" : "NO").append("\n");
+            s.append("Magnetometer: ")
+                    .append(hasSensor(sm, Sensor.TYPE_MAGNETIC_FIELD) ? "YES" : "NO").append("\n");
+            s.append("Barometer: ")
+                    .append(hasSensor(sm, Sensor.TYPE_PRESSURE) ? "YES" : "NO").append("\n");
+            s.append("Step counter: ")
+                    .append(hasSensor(sm, Sensor.TYPE_STEP_COUNTER) ? "YES" : "NO").append("\n");
+            s.append("Heart rate: ")
+                    .append(hasSensor(sm, Sensor.TYPE_HEART_RATE) ? "YES" : "NO").append("\n");
+        } else {
+            s.append("SensorManager not available\n");
+        }
         s.append("\n");
 
         // =====================================================
-        // SENSORS
+        // SENSORS (FULL LIST)
         // =====================================================
-        s.append("── SENSORS ──\n");
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        s.append("── SENSORS (FULL LIST) ──\n");
         if (sm != null) {
             List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
             if (sensors != null && !sensors.isEmpty()) {
                 for (Sensor sensor : sensors) {
-                    s.append("• ").append(sensor.getName()).append("\n");
+                    s.append("• ").append(sensor.getName())
+                            .append(" [type ").append(sensor.getType()).append("]\n");
                 }
             } else {
                 s.append("No sensors reported\n");
@@ -97,8 +150,11 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         // CONNECTIVITY
         // =====================================================
         s.append("── CONNECTIVITY ──\n");
-        s.append("NFC: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
+        s.append("Wi-Fi: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
+                .append("\n");
+        s.append("Wi-Fi Direct: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
                 .append("\n");
         s.append("Bluetooth: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) ? "YES" : "NO")
@@ -106,11 +162,23 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         s.append("BLE: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
                 .append("\n");
-        s.append("Wi-Fi: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
+        s.append("NFC: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
                 .append("\n");
-        s.append("5G: ")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            s.append("NFC payment (HCE): ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
+                            ? "YES" : "NO")
+                    .append("\n");
+        }
+        s.append("Telephony (SIM): ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
+                .append("\n");
+        s.append("5G capable: ")
                 .append(pm.hasSystemFeature("android.hardware.telephony.5g") ? "YES" : "NO")
+                .append("\n");
+        s.append("Ethernet: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
                 .append("\n\n");
 
         // =====================================================
@@ -122,6 +190,26 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append("\n");
         s.append("Network location: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "YES" : "NO")
+                .append("\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            s.append("GNSS dual-band: ")
+                    .append(pm.hasSystemFeature("android.hardware.location.gnss") ? "YES" : "NO")
+                    .append("\n");
+        }
+        s.append("\n");
+
+        // =====================================================
+        // INPUT / GAME / EXTRAS
+        // =====================================================
+        s.append("── INPUT & GAME ──\n");
+        s.append("Hardware keyboard: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_HARDWARE_KEYBOARD) ? "YES" : "NO")
+                .append("\n");
+        s.append("Gamepad support: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_GAMEPAD) ? "YES" : "NO")
+                .append("\n");
+        s.append("VR mode: ")
+                .append(pm.hasSystemFeature("android.hardware.vr.high_performance") ? "YES" : "NO")
                 .append("\n\n");
 
         // =====================================================
@@ -134,11 +222,14 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         s.append("USB accessory: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY) ? "YES" : "NO")
                 .append("\n");
-
-        // Vibrator
-        Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         boolean hasVib = vib != null && vib.hasVibrator();
-        s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n\n");
+        s.append("Vibrator: ").append(hasVib ? "YES" : "NO").append("\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            s.append("Advanced vibration effects: ")
+                    .append(hasVib && vib.hasAmplitudeControl() ? "YES" : "NO")
+                    .append("\n");
+        }
+        s.append("\n");
 
         // =====================================================
         // EXTRA PERIPHERALS INFO FOR ROOTED DEVICES
@@ -156,6 +247,14 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         if (info != null) {
             info.setText(s.toString());
         }
+    }
+
+    // ============================================================
+    // SENSOR HELPER
+    // ============================================================
+    private boolean hasSensor(SensorManager sm, int type) {
+        if (sm == null) return false;
+        return sm.getDefaultSensor(type) != null;
     }
 
     // ============================================================
@@ -222,3 +321,4 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         return "none";
     }
 }
+```0

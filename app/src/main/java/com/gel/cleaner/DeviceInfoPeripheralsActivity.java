@@ -1,10 +1,11 @@
 package com.gel.cleaner;
 
-// PERIPHERALS REPORT v6.1 — Professional Edition
+// PERIPHERALS REPORT v6.2 — SERVICE-PRO EDITION (GEL)
 // Camera / Biometrics / Sensors / Connectivity / Location / Other / BT / NFC / Root
-// + Battery Health / UWB / Vibrator Amplitude / Haptics Class / GNSS Constellations
-// + USB OTG Speed Modes / Microphone Count / Audio HAL Level
-// + WiFi 6/6E/7 / VoLTE-IMS / 5G NR flag / IR / Barometer / Steps / HR Sensor
+// + Battery Health / Temperature / Charging Type / UWB / Vibrator Amplitude / Haptics Class
+// + GNSS Constellations + L5 hint / USB OTG Speed Modes (SuperSpeed flag) / Microphone Count
+// + Audio HAL Level (multi-source) / WiFi 6/6E (standard + band) / VoLTE-IMS / VoWiFi / 5G NR flag
+// + IR / Barometer / Steps / HR Sensor
 // Ολόκληρο κελί έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 import android.app.ActivityManager;
@@ -182,6 +183,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     }
                     if (level != null) {
                         cam.append("Camera2 HW level: ").append(level).append("\n");
+                        cam.append("Camera2 class: ").append(describeCamera2Level(level)).append("\n");
                     }
                 }
             } catch (Throwable ignored) {}
@@ -303,12 +305,15 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
                     conn.append("Frequency: ").append(freq).append(" MHz\n");
 
+                    // BAND (2.4 / 5 / 6 GHz)
+                    conn.append("Band: ").append(describeWifiBand(freq)).append("\n");
+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         int std = wi.getWifiStandard();
                         String stdStr;
                         switch (std) {
                             case 1:  // Legacy a/b/g
-                                stdStr = "Legacy (a/b/g)";
+                                stdStr = "Legacy (11a/b/g)";
                                 break;
                             case 4:  // WiFi 4 (11n)
                                 stdStr = "WiFi 4 (11n)";
@@ -324,6 +329,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                                 break;
                         }
                         conn.append("WiFi standard: ").append(stdStr).append("\n");
+                        conn.append("PHY mode hint: ").append(describeWifiPhy(std)).append("\n");
                     } else {
                         conn.append("WiFi standard: [API < 30]\n");
                     }
@@ -336,6 +342,25 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             }
         } catch (Throwable t) {
             conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
+        }
+
+        // Baseband / VoLTE / VoWiFi
+        String baseband = getProp("gsm.version.baseband");
+        if (!isEmptySafe(baseband)) {
+            conn.append("\n[Modem]\n");
+            conn.append("Baseband: ").append(baseband).append("\n");
+        }
+
+        String volteProv  = getVolteStatus();
+        String vowifiProv = getVowifiStatus();
+        if (!isEmptySafe(volteProv) || !isEmptySafe(vowifiProv)) {
+            conn.append("[IMS Provisioning]\n");
+            if (!isEmptySafe(volteProv)) {
+                conn.append("VoLTE: ").append(volteProv).append("\n");
+            }
+            if (!isEmptySafe(vowifiProv)) {
+                conn.append("VoWiFi: ").append(vowifiProv).append("\n");
+            }
         }
 
         txtConnectivityContent.setText(conn.toString());
@@ -434,6 +459,10 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             String codecProp = getProp("persist.bluetooth.a2dp_offload.cap");
             if (!isEmptySafe(codecProp)) {
                 bt.append("A2DP offload caps: ").append(codecProp).append("\n");
+                String codecList = parseBtCodecs(codecProp);
+                if (!isEmptySafe(codecList)) {
+                    bt.append("Audio codecs hint: ").append(codecList).append("\n");
+                }
             }
 
         } catch (Throwable t) {
@@ -605,6 +634,32 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     float pct = (level * 100f / scale);
                     sb.append("Current level: ").append(String.format("%.0f", pct)).append(" %\n");
                 }
+
+                // Temperature
+                int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+                if (temp != Integer.MIN_VALUE) {
+                    float c = temp / 10f;
+                    sb.append("Temperature: ").append(String.format("%.1f", c)).append(" °C\n");
+                }
+
+                // Charging type
+                int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+                String pluggedStr;
+                switch (plugged) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                        pluggedStr = "AC charger";
+                        break;
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                        pluggedStr = "USB power";
+                        break;
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        pluggedStr = "Wireless charging";
+                        break;
+                    default:
+                        pluggedStr = "Not charging / battery only";
+                        break;
+                }
+                sb.append("Charging type: ").append(pluggedStr).append("\n");
             }
 
             String base = "/sys/class/power_supply/battery";
@@ -696,6 +751,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
 
     private String readGnssConstellations() {
         StringBuilder sb = new StringBuilder();
+        boolean found = false;
+        boolean hasL5Hint = false;
         try {
             String[] paths = {
                     "/system/etc/gps.conf",
@@ -703,7 +760,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     "/system/etc/gnss.conf",
                     "/vendor/etc/gnss.conf"
             };
-            boolean found = false;
             for (String p : paths) {
                 File f = new File(p);
                 if (!f.exists()) continue;
@@ -716,11 +772,17 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                         sb.append(line).append("\n");
                         found = true;
                     }
+                    if (lower.contains("l5") || lower.contains("e5") || lower.contains("b2a")) {
+                        hasL5Hint = true;
+                    }
                 }
                 br.close();
             }
             if (!found) sb.append("No constellations listed\n");
-        } catch (Throwable ignored) {}
+            if (hasL5Hint) sb.append("L5/E5 band hints present in config\n");
+        } catch (Throwable ignored) {
+            if (!found) sb.append("No constellations listed\n");
+        }
         return sb.toString();
     }
 
@@ -735,6 +797,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         };
         boolean anyProp = false;
         boolean anySpeed = false;
+        boolean hasSuperSpeed = false;
 
         // Properties
         for (String k : keys) {
@@ -762,12 +825,22 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                                         .append(sp.trim())
                                         .append(" Mb/s\n");
                                 anySpeed = true;
+                                try {
+                                    double val = Double.parseDouble(sp.trim());
+                                    if (val > 480.0) {
+                                        hasSuperSpeed = true; // πάνω από USB2.0 High-Speed
+                                    }
+                                } catch (Exception ignored) {}
                             }
                         }
                     }
                 }
             }
         } catch (Throwable ignored) {}
+
+        if (hasSuperSpeed) {
+            sb.append("SuperSpeed link detected (> 480 Mb/s)\n");
+        }
 
         if (!anyProp && !anySpeed) {
             sb.append("No USB speed info\n");
@@ -880,5 +953,110 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         };
         for (String p : paths) if (new File(p).exists()) return p;
         return "none";
+    }
+
+    // ===========================
+    // EXTRA HELPERS (SERVICE-PRO)
+    // ===========================
+
+    private String describeCamera2Level(int level) {
+        switch (level) {
+            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
+                return "LEGACY (limited Camera2, HAL1-style)";
+            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
+                return "LIMITED (partial Camera2)";
+            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
+                return "FULL (full Camera2, good for manual controls)";
+            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
+                return "LEVEL_3 (advanced features, YUV_420_888, RAW, etc.)";
+            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL:
+                return "EXTERNAL (USB / external cameras)";
+            default:
+                return "Unknown level";
+        }
+    }
+
+    private String describeWifiBand(int freqMHz) {
+        if (freqMHz >= 2400 && freqMHz < 2500) return "2.4 GHz";
+        if (freqMHz >= 4900 && freqMHz < 5900) return "5 GHz";
+        if (freqMHz >= 5925 && freqMHz < 7125) return "6 GHz";
+        return "Unknown";
+    }
+
+    private String describeWifiPhy(int std) {
+        switch (std) {
+            case 1:
+                return "Legacy 11a/b/g (20 MHz)";
+            case 4:
+                return "HT (WiFi 4, 20/40 MHz)";
+            case 5:
+                return "VHT (WiFi 5, 20/40/80 MHz)";
+            case 6:
+                return "HE (WiFi 6/6E, up to 160 MHz)";
+            default:
+                return "Unknown / vendor-specific";
+        }
+    }
+
+    private String getVolteStatus() {
+        // Common debug / vendor flags
+        String[] keys = {
+                "persist.dbg.volte_avail_ovr",
+                "persist.dbg.vt_avail_ovr",
+                "persist.dbg.ims_avail_ovr",
+                "persist.vendor.dbg.volte_avail_ovr"
+        };
+        boolean any = false;
+        boolean on = false;
+        StringBuilder dbg = new StringBuilder();
+        for (String k : keys) {
+            String v = getProp(k);
+            if (!isEmptySafe(v)) {
+                any = true;
+                dbg.append(k).append("=").append(v).append(" ");
+                if ("1".equals(v) || "true".equalsIgnoreCase(v)) {
+                    on = true;
+                }
+            }
+        }
+        if (!any) return "";
+        if (on) return "Enabled (dbg flags: " + dbg.toString().trim() + ")";
+        return "Present flags: " + dbg.toString().trim();
+    }
+
+    private String getVowifiStatus() {
+        String[] keys = {
+                "persist.dbg.wfc_avail_ovr",
+                "persist.vendor.dbg.wfc_avail_ovr"
+        };
+        boolean any = false;
+        boolean on = false;
+        StringBuilder dbg = new StringBuilder();
+        for (String k : keys) {
+            String v = getProp(k);
+            if (!isEmptySafe(v)) {
+                any = true;
+                dbg.append(k).append("=").append(v).append(" ");
+                if ("1".equals(v) || "true".equalsIgnoreCase(v)) {
+                    on = true;
+                }
+            }
+        }
+        if (!any) return "";
+        if (on) return "Enabled (dbg flags: " + dbg.toString().trim() + ")";
+        return "Present flags: " + dbg.toString().trim();
+    }
+
+    private String parseBtCodecs(String caps) {
+        String lower = caps.toLowerCase();
+        StringBuilder out = new StringBuilder();
+        if (lower.contains("sbc"))  out.append("SBC, ");
+        if (lower.contains("aac"))  out.append("AAC, ");
+        if (lower.contains("aptx")) out.append("aptX, ");
+        if (lower.contains("ldac")) out.append("LDAC, ");
+        if (lower.contains("lhdc")) out.append("LHDC, ");
+        if (out.length() == 0) return "";
+        // remove last comma+space
+        return out.substring(0, out.length() - 2);
     }
 }

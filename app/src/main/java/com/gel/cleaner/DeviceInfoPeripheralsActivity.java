@@ -535,7 +535,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
         setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
         setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
-        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
         setupSection(findViewById(R.id.headerBluetooth), txtBluetoothContent, iconBluetooth);
         setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
         setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
@@ -546,6 +545,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
         setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);
         setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
+        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
 
     private void setupSection(View header, final TextView content, final TextView icon) {

@@ -1,13 +1,15 @@
 package com.gel.cleaner;
 
-// PERIPHERALS REPORT v6.2 — SERVICE-PRO EDITION (GEL)
+// PERIPHERALS REPORT v6.3 — SERVICE-PRO EDITION (GEL)
 // Camera / Biometrics / Sensors / Connectivity / Location / Other / BT / NFC / Root
 // + Battery Health / Temperature / Charging Type / UWB / Vibrator Amplitude / Haptics Class
 // + GNSS Constellations + L5 hint / USB OTG Speed Modes (SuperSpeed flag) / Microphone Count
 // + Audio HAL Level (multi-source) / WiFi 6/6E (standard + band) / VoLTE-IMS / VoWiFi / 5G NR flag
 // + IR / Barometer / Steps / HR Sensor
-// Ολόκληρο κελί έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// FULL PACK + Android 10+/12+ safe WiFi / BT permissions.
+// Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -44,8 +46,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
+
+    private static final int REQ_WIFI_PERM = 901;
 
     private boolean isRooted = false;
 
@@ -217,22 +223,28 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             sens.append("Total sensors: ")
                     .append(sm.getSensorList(Sensor.TYPE_ALL).size()).append("\n");
 
-            Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            Sensor gyr = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            Sensor mag = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            Sensor acc  = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            Sensor gyr  = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            Sensor mag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
             Sensor prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            Sensor light = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+            Sensor light= sm.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-            sens.append("Accelerometer: ").append(acc != null ? "YES" : "NO").append("\n");
-            sens.append("Gyroscope: ").append(gyr != null ? "YES" : "NO").append("\n");
-            sens.append("Magnetometer: ").append(mag != null ? "YES" : "NO").append("\n");
-            sens.append("Proximity: ").append(prox != null ? "YES" : "NO").append("\n");
+            sens.append("Accelerometer: ").append(acc  != null ? "YES" : "NO").append("\n");
+            sens.append("Gyroscope: ").append(gyr      != null ? "YES" : "NO").append("\n");
+            sens.append("Magnetometer: ").append(mag   != null ? "YES" : "NO").append("\n");
+            sens.append("Proximity: ").append(prox     != null ? "YES" : "NO").append("\n");
             sens.append("Light sensor: ").append(light != null ? "YES" : "NO").append("\n");
         } else {
             sens.append("SensorManager: [unavailable]\n");
         }
 
         txtSensorsContent.setText(sens.toString());
+
+        // ===============================
+        // RUNTIME PERMISSIONS (WiFi / Location)
+        // Required for Android 10+ (API 29+)
+        // ===============================
+        ensureWifiPermissions();
 
         // ===========================
         // CONNECTIVITY
@@ -399,38 +411,34 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtLocationContent.setText(loc.toString());
 
         // ===========================
-// OTHER PERIPHERALS
-// ===========================
-StringBuilder other = new StringBuilder();
-other.append("── OTHER PERIPHERALS ──\n");
-
-other.append("IR blaster: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
-        .append("\n");
-
-other.append("Barometer: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
-        .append("\n");
-
-other.append("Step counter: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
-        .append("\n");
-
-other.append("Step detector: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
-        .append("\n");
-
-other.append("Heart-rate sensor: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
-        .append("\n");
-
-other.append("Ambient temperature sensor: ")
-        .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
-        .append("\n");
-
-txtOtherPeripherals.setText(other.toString());
+        // OTHER PERIPHERALS
         // ===========================
-        // BLUETOOTH
+        StringBuilder other = new StringBuilder();
+        other.append("── OTHER PERIPHERALS ──\n");
+
+        other.append("IR blaster: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
+                .append("\n");
+        other.append("Barometer: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
+                .append("\n");
+        other.append("Step counter: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
+                .append("\n");
+        other.append("Step detector: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
+                .append("\n");
+        other.append("Heart-rate sensor: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
+                .append("\n");
+        other.append("Ambient temperature sensor: ")
+                .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
+                .append("\n");
+
+        txtOtherPeripherals.setText(other.toString());
+
+        // ===========================
+        // BLUETOOTH (Android 12+ safe)
         // ===========================
         StringBuilder bt = new StringBuilder();
         bt.append("── BLUETOOTH ──\n");
@@ -448,9 +456,23 @@ txtOtherPeripherals.setText(other.toString());
                 bt.append("Adapter: [none]\n");
             } else {
                 bt.append("Enabled: ").append(ba.isEnabled() ? "YES" : "NO").append("\n");
-                bt.append("Name: ").append(safe(ba.getName())).append("\n");
+
+                String name;
+                try {
+                    name = ba.getName();
+                } catch (SecurityException e) {
+                    name = "[permission denied]";
+                }
+                bt.append("Name: ").append(safe(name)).append("\n");
+
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                    bt.append("Address: ").append(safe(ba.getAddress())).append("\n");
+                    String addr;
+                    try {
+                        addr = ba.getAddress();
+                    } catch (SecurityException e) {
+                        addr = "[permission denied]";
+                    }
+                    bt.append("Address: ").append(safe(addr)).append("\n");
                 } else {
                     bt.append("Address: [hidden on Android 12+]\n");
                 }
@@ -476,7 +498,7 @@ txtOtherPeripherals.setText(other.toString());
         txtBluetoothContent.setText(bt.toString());
 
         // ===========================
-        // NFC
+        // NFC (HW + HCE)
         // ===========================
         StringBuilder nfc = new StringBuilder();
         nfc.append("── NFC ──\n");
@@ -639,14 +661,12 @@ txtOtherPeripherals.setText(other.toString());
                     sb.append("Current level: ").append(String.format("%.0f", pct)).append(" %\n");
                 }
 
-                // Temperature
                 int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
                 if (temp != Integer.MIN_VALUE) {
                     float c = temp / 10f;
                     sb.append("Temperature: ").append(String.format("%.1f", c)).append(" °C\n");
                 }
 
-                // Charging type
                 int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
                 String pluggedStr;
                 switch (plugged) {
@@ -667,9 +687,9 @@ txtOtherPeripherals.setText(other.toString());
             }
 
             String base = "/sys/class/power_supply/battery";
-            String cycleStr = readSmallFile(new File(base, "cycle_count"));
-            String fullStr  = readSmallFile(new File(base, "charge_full"));
-            String designStr= readSmallFile(new File(base, "charge_full_design"));
+            String cycleStr  = readSmallFile(new File(base, "cycle_count"));
+            String fullStr   = readSmallFile(new File(base, "charge_full"));
+            String designStr = readSmallFile(new File(base, "charge_full_design"));
 
             if (cycleStr != null)
                 sb.append("Cycle count: ").append(cycleStr.trim()).append("\n");
@@ -721,7 +741,6 @@ txtOtherPeripherals.setText(other.toString());
                         ? "Supported (programmable)"
                         : "Present (fixed strength)";
             }
-            // API < 26: δεν υπάρχει amplitude API, αλλά ο δονητής είναι παρών
             return "Present (API < 26)";
         } catch (Throwable t) {
             return "Error";
@@ -729,19 +748,19 @@ txtOtherPeripherals.setText(other.toString());
     }
 
     private String detectHapticsClass() {
-        // Προσπαθούμε από διάφορα system properties
         String[] keys = {
                 "ro.product.haptics_level",
                 "ro.vibrator.haptic.feedback",
                 "ro.vendor.vibrator.haptic",
-                "ro.vendor.product.haptics_level"
+                "ro.vendor.product.haptics_level",
+                "ro.vendor.vibrator.haptics.impl",
+                "ro.product.vibrator.haptics"
         };
         for (String k : keys) {
             String v = getProp(k);
             if (!isEmptySafe(v)) return v;
         }
 
-        // Fallback: έλεγχος ύπαρξης vibrator στο sysfs
         try {
             File f1 = new File("/sys/class/leds/vibrator");
             File f2 = new File("/sys/class/timed_output/vibrator");
@@ -803,7 +822,6 @@ txtOtherPeripherals.setText(other.toString());
         boolean anySpeed = false;
         boolean hasSuperSpeed = false;
 
-        // Properties
         for (String k : keys) {
             String v = getProp(k);
             if (!isEmptySafe(v)) {
@@ -812,7 +830,6 @@ txtOtherPeripherals.setText(other.toString());
             }
         }
 
-        // Sysfs: live USB device speeds (αν υπάρχει κάτι συνδεδεμένο)
         try {
             File bus = new File("/sys/bus/usb/devices");
             if (bus.exists() && bus.isDirectory()) {
@@ -832,7 +849,7 @@ txtOtherPeripherals.setText(other.toString());
                                 try {
                                     double val = Double.parseDouble(sp.trim());
                                     if (val > 480.0) {
-                                        hasSuperSpeed = true; // πάνω από USB2.0 High-Speed
+                                        hasSuperSpeed = true;
                                     }
                                 } catch (Exception ignored) {}
                             }
@@ -1003,7 +1020,6 @@ txtOtherPeripherals.setText(other.toString());
     }
 
     private String getVolteStatus() {
-        // Common debug / vendor flags
         String[] keys = {
                 "persist.dbg.volte_avail_ovr",
                 "persist.dbg.vt_avail_ovr",
@@ -1060,7 +1076,44 @@ txtOtherPeripherals.setText(other.toString());
         if (lower.contains("ldac")) out.append("LDAC, ");
         if (lower.contains("lhdc")) out.append("LHDC, ");
         if (out.length() == 0) return "";
-        // remove last comma+space
         return out.substring(0, out.length() - 2);
+    }
+
+    // ===========================
+    // RUNTIME PERMISSIONS HELPERS
+    // ===========================
+    private void ensureWifiPermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return;
+        }
+
+        List<String> required = new ArrayList<>();
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            required.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                required.add(Manifest.permission.NEARBY_WIFI_DEVICES);
+            }
+        }
+
+        if (!required.isEmpty()) {
+            requestPermissions(required.toArray(new String[0]), REQ_WIFI_PERM);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_WIFI_PERM) {
+            // Even if denied, continue – GEL returns clean info instead of crashing.
+        }
     }
 }

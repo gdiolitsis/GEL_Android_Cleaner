@@ -1,6 +1,6 @@
 package com.gel.cleaner;
 
-// FULL UPGRADE MODE — INTERNAL REPORT v2.0 (GPU ADV + THERMAL MIXED VIEW)
+// FULL UPGRADE MODE — INTERNAL REPORT v3.0 (GPU ADV + THERMAL SPLIT VIEW)
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 import android.app.ActivityManager;
@@ -48,30 +48,38 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         }
 
         // ============================
-        // REFERENCES (ALL 10 SECTIONS)
+        // REFERENCES (14 SECTIONS)
         // ============================
-        TextView txtSystemContent       = findViewById(R.id.txtSystemContent);
-        TextView txtAndroidContent      = findViewById(R.id.txtAndroidContent);
-        TextView txtCpuContent          = findViewById(R.id.txtCpuContent);
-        TextView txtGpuContent          = findViewById(R.id.txtGpuContent);          // GPU ADV
-        TextView txtThermalContent      = findViewById(R.id.txtThermalContent);      // THERMAL MIXED
-        TextView txtRamContent          = findViewById(R.id.txtRamContent);
-        TextView txtStorageContent      = findViewById(R.id.txtStorageContent);
-        TextView txtScreenContent       = findViewById(R.id.txtScreenContent);
-        TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
-        TextView txtRootContent         = findViewById(R.id.txtRootContent);
+        TextView txtSystemContent           = findViewById(R.id.txtSystemContent);
+        TextView txtAndroidContent          = findViewById(R.id.txtAndroidContent);
+        TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
+        TextView txtGpuContent              = findViewById(R.id.txtGpuContent);
+        TextView txtThermalContent          = findViewById(R.id.txtThermalContent);
+        TextView txtThermalZonesContent     = findViewById(R.id.txtThermalZonesContent);
+        TextView txtVulkanContent           = findViewById(R.id.txtVulkanContent);
+        TextView txtThermalProfilesContent  = findViewById(R.id.txtThermalProfilesContent);
+        TextView txtFpsGovernorContent      = findViewById(R.id.txtFpsGovernorContent);
+        TextView txtRamContent              = findViewById(R.id.txtRamContent);
+        TextView txtStorageContent          = findViewById(R.id.txtStorageContent);
+        TextView txtScreenContent           = findViewById(R.id.txtScreenContent);
+        TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
+        TextView txtRootContent             = findViewById(R.id.txtRootContent);
 
         // ICONS
-        TextView iconSystem       = findViewById(R.id.iconSystemToggle);
-        TextView iconAndroid      = findViewById(R.id.iconAndroidToggle);
-        TextView iconCpu          = findViewById(R.id.iconCpuToggle);
-        TextView iconGpu          = findViewById(R.id.iconGpuToggle);
-        TextView iconThermal      = findViewById(R.id.iconThermalToggle);
-        TextView iconRam          = findViewById(R.id.iconRamToggle);
-        TextView iconStorage      = findViewById(R.id.iconStorageToggle);
-        TextView iconScreen       = findViewById(R.id.iconScreenToggle);
-        TextView iconConnectivity = findViewById(R.id.iconConnectivityToggle);
-        TextView iconRoot         = findViewById(R.id.iconRootToggle);
+        TextView iconSystem           = findViewById(R.id.iconSystemToggle);
+        TextView iconAndroid          = findViewById(R.id.iconAndroidToggle);
+        TextView iconCpu              = findViewById(R.id.iconCpuToggle);
+        TextView iconGpu              = findViewById(R.id.iconGpuToggle);
+        TextView iconThermal          = findViewById(R.id.iconThermalToggle);
+        TextView iconThermalZones     = findViewById(R.id.iconThermalZonesToggle);
+        TextView iconVulkan           = findViewById(R.id.iconVulkanToggle);
+        TextView iconThermalProfiles  = findViewById(R.id.iconThermalProfilesToggle);
+        TextView iconFpsGovernor      = findViewById(R.id.iconFpsGovernorToggle);
+        TextView iconRam              = findViewById(R.id.iconRamToggle);
+        TextView iconStorage          = findViewById(R.id.iconStorageToggle);
+        TextView iconScreen           = findViewById(R.id.iconScreenToggle);
+        TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
+        TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
         // για το "μόνο ένα ανοιχτό κάθε φορά"
         allContents = new TextView[]{
@@ -80,6 +88,10 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
                 txtCpuContent,
                 txtGpuContent,
                 txtThermalContent,
+                txtThermalZonesContent,
+                txtVulkanContent,
+                txtThermalProfilesContent,
+                txtFpsGovernorContent,
                 txtRamContent,
                 txtStorageContent,
                 txtScreenContent,
@@ -93,6 +105,10 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
                 iconCpu,
                 iconGpu,
                 iconThermal,
+                iconThermalZones,
+                iconVulkan,
+                iconThermalProfiles,
+                iconFpsGovernor,
                 iconRam,
                 iconStorage,
                 iconScreen,
@@ -179,20 +195,52 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         txtCpuContent.setText(cpu.toString());
 
         // ===========================
-        // GPU ADVANCED (Vulkan / Driver / Clocks)
+        // GPU ADVANCED (family + driver + basic clocks)
         // ===========================
         StringBuilder gpu = new StringBuilder();
-        gpu.append("── GPU ADVANCED ──\n");
+        gpu.append("── GPU INFO ──\n");
         gpu.append(readGpuAdvanced());
         txtGpuContent.setText(gpu.toString());
 
         // ===========================
-        // THERMAL (MIXED VIEW)
+        // THERMAL SENSORS (PRIMARY)
         // ===========================
         StringBuilder thermal = new StringBuilder();
-        thermal.append("── THERMAL ──\n");
-        thermal.append(readThermalSummary());
+        thermal.append("── THERMAL SENSORS ──\n");
+        thermal.append(readThermalPrimary());
         txtThermalContent.setText(thermal.toString());
+
+        // ===========================
+        // THERMAL ZONES (FULL VIEW)
+        // ===========================
+        StringBuilder thermalZones = new StringBuilder();
+        thermalZones.append("── THERMAL ZONES ──\n");
+        thermalZones.append(readThermalZonesFull());
+        txtThermalZonesContent.setText(thermalZones.toString());
+
+        // ===========================
+        // VULKAN / GPU DRIVER INFO
+        // ===========================
+        StringBuilder vk = new StringBuilder();
+        vk.append("── VULKAN / GPU DRIVER ──\n");
+        vk.append(readVulkanInfo());
+        txtVulkanContent.setText(vk.toString());
+
+        // ===========================
+        // THERMAL ENGINE PROFILES
+        // ===========================
+        StringBuilder thermProfiles = new StringBuilder();
+        thermProfiles.append("── THERMAL ENGINE PROFILES ──\n");
+        thermProfiles.append(readThermalProfiles());
+        txtThermalProfilesContent.setText(thermProfiles.toString());
+
+        // ===========================
+        // FPS / GPU GOVERNOR & CLOCKS
+        // ===========================
+        StringBuilder fpsGov = new StringBuilder();
+        fpsGov.append("── FPS / GPU GOVERNOR & CLOCKS ──\n");
+        fpsGov.append(readFpsAndClocksSummary());
+        txtFpsGovernorContent.setText(fpsGov.toString());
 
         // ===========================
         // RAM
@@ -341,18 +389,22 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         txtRootContent.setText(rootSb.toString());
 
         // ===========================
-        // EXPANDABLE HEADERS
+        // EXPANDABLE HEADERS (14)
         // ===========================
-        setupSection(findViewById(R.id.headerSystem),       txtSystemContent,        iconSystem);
-        setupSection(findViewById(R.id.headerAndroid),      txtAndroidContent,       iconAndroid);
-        setupSection(findViewById(R.id.headerCpu),          txtCpuContent,           iconCpu);
-        setupSection(findViewById(R.id.headerGpu),          txtGpuContent,           iconGpu);
-        setupSection(findViewById(R.id.headerThermal),      txtThermalContent,       iconThermal);
-        setupSection(findViewById(R.id.headerRam),          txtRamContent,           iconRam);
-        setupSection(findViewById(R.id.headerStorage),      txtStorageContent,       iconStorage);
-        setupSection(findViewById(R.id.headerScreen),       txtScreenContent,        iconScreen);
-        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent,  iconConnectivity);
-        setupSection(findViewById(R.id.headerRoot),         txtRootContent,          iconRoot);
+        setupSection(findViewById(R.id.headerSystem),          txtSystemContent,          iconSystem);
+        setupSection(findViewById(R.id.headerAndroid),         txtAndroidContent,         iconAndroid);
+        setupSection(findViewById(R.id.headerCpu),             txtCpuContent,             iconCpu);
+        setupSection(findViewById(R.id.headerGpu),             txtGpuContent,             iconGpu);
+        setupSection(findViewById(R.id.headerThermal),         txtThermalContent,         iconThermal);
+        setupSection(findViewById(R.id.headerThermalZones),    txtThermalZonesContent,    iconThermalZones);
+        setupSection(findViewById(R.id.headerVulkan),          txtVulkanContent,          iconVulkan);
+        setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
+        setupSection(findViewById(R.id.headerFpsGovernor),     txtFpsGovernorContent,     iconFpsGovernor);
+        setupSection(findViewById(R.id.headerRam),             txtRamContent,             iconRam);
+        setupSection(findViewById(R.id.headerStorage),         txtStorageContent,         iconStorage);
+        setupSection(findViewById(R.id.headerScreen),          txtScreenContent,          iconScreen);
+        setupSection(findViewById(R.id.headerConnectivity),    txtConnectivityContent,    iconConnectivity);
+        setupSection(findViewById(R.id.headerRoot),            txtRootContent,            iconRoot);
     }
 
     // ===========================
@@ -409,15 +461,12 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         }
     }
 
-    // GPU advanced πληροφορίες (Vulkan / Driver / FPS governor / Clocks)
+    // GPU advanced πληροφορίες (Vulkan / Driver / basic clocks)
     private String readGpuAdvanced() {
         StringBuilder sb = new StringBuilder();
 
         String soc          = getProp("ro.board.platform");
         String egl          = getProp("ro.hardware.egl");
-        String vulkanHw     = getProp("ro.hardware.vulkan");
-        String vulkanVendor = getProp("ro.vendor.vulkan.version");
-        String vulkanSys    = getProp("ro.vulkan.version");
         String glEs         = getProp("ro.opengles.version");
         String gfxDriver0   = getProp("ro.gfx.driver.0");
         String gfxVendor    = getProp("ro.gfx.vendor");
@@ -426,28 +475,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
 
         sb.append("SoC / board: ").append(isEmptySafe(soc) ? "N/A" : soc).append("\n");
         sb.append("EGL hardware: ").append(isEmptySafe(egl) ? "N/A" : egl).append("\n");
-
-        sb.append("\n[Vulkan]\n");
-        sb.append("Hardware tag: ")
-                .append(isEmptySafe(vulkanHw) ? "N/A" : vulkanHw)
-                .append("\n");
-        if (!isEmptySafe(vulkanVendor) || !isEmptySafe(vulkanSys)) {
-            sb.append("Version (vendor): ")
-                    .append(isEmptySafe(vulkanVendor) ? "N/A" : vulkanVendor)
-                    .append("\n");
-            sb.append("Version (system): ")
-                    .append(isEmptySafe(vulkanSys) ? "N/A" : vulkanSys)
-                    .append("\n");
-        } else {
-            sb.append("Version: [no explicit properties]\n");
-        }
-
-        sb.append("\n[OpenGL ES]\n");
-        sb.append("ro.opengles.version: ")
+        sb.append("OpenGL ES (ro.opengles.version): ")
                 .append(isEmptySafe(glEs) ? "N/A" : glEs)
                 .append("\n");
-
-        sb.append("\n[Driver / Renderer]\n");
         sb.append("GPU driver (ro.gfx.driver.0): ")
                 .append(isEmptySafe(gfxDriver0) ? "N/A" : gfxDriver0)
                 .append("\n");
@@ -463,19 +493,12 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
 
         String gpuFamily = detectGpuFamily(egl, gfxVendor, soc);
         if (!isEmptySafe(gpuFamily)) {
-            sb.append("\nGPU family: ").append(gpuFamily).append("\n");
+            sb.append("GPU family: ").append(gpuFamily).append("\n");
         }
 
-        String fpsGov   = readFpsGovernor();
-        String gpuClock = readGpuClocks();
-        if (!isEmptySafe(fpsGov) || !isEmptySafe(gpuClock)) {
-            sb.append("\n[Performance hints]\n");
-            if (!isEmptySafe(fpsGov)) {
-                sb.append("FPS governor: ").append(fpsGov).append("\n");
-            }
-            if (!isEmptySafe(gpuClock)) {
-                sb.append("GPU clocks: ").append(gpuClock).append("\n");
-            }
+        String clocks = readGpuClocks();
+        if (!isEmptySafe(clocks)) {
+            sb.append("Base GPU clocks: ").append(clocks).append("\n");
         }
 
         return sb.toString();
@@ -504,6 +527,289 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             return "Intel GPU";
         }
         return "";
+    }
+
+    // ===== THERMAL HELPERS =====
+
+    // Primary sensors view (CPU/GPU/Battery/Modem etc.)
+    private String readThermalPrimary() {
+        StringBuilder out = new StringBuilder();
+        try {
+            File base = new File("/sys/class/thermal");
+            if (!base.exists() || !base.isDirectory()) {
+                out.append("Thermal info: not available on this device\n");
+                return out.toString();
+            }
+
+            File[] zones = base.listFiles();
+            if (zones == null || zones.length == 0) {
+                out.append("Thermal zones: none visible\n");
+                return out.toString();
+            }
+
+            List<String> primary = new ArrayList<>();
+
+            for (File z : zones) {
+                String name = z.getName();
+                if (!name.startsWith("thermal_zone")) continue;
+
+                File typeFile = new File(z, "type");
+                File tempFile = new File(z, "temp");
+                if (!typeFile.exists() || !tempFile.exists()) continue;
+
+                String type = readSmallFile(typeFile);
+                String tempRaw = readSmallFile(tempFile);
+                if (type == null || tempRaw == null) continue;
+
+                type = type.trim();
+                tempRaw = tempRaw.trim();
+
+                Double celsius = parseThermalTemp(tempRaw);
+                if (celsius == null) continue;
+
+                // sanity check
+                if (celsius < -10 || celsius > 150) continue;
+
+                String lower = type.toLowerCase();
+                if (!isPrimaryThermal(lower)) continue;
+
+                String entry = type + " : " + String.format("%.1f", celsius) + " °C";
+                primary.add(entry);
+            }
+
+            if (primary.isEmpty()) {
+                out.append("No primary thermal sensors readable\n");
+                return out.toString();
+            }
+
+            for (String s : primary) {
+                out.append("• ").append(s).append("\n");
+            }
+
+        } catch (Throwable t) {
+            out.append("Thermal info error: ").append(t.getMessage()).append("\n");
+        }
+        return out.toString();
+    }
+
+    // Full zones listing (names + temperatures)
+    private String readThermalZonesFull() {
+        StringBuilder out = new StringBuilder();
+        try {
+            File base = new File("/sys/class/thermal");
+            if (!base.exists() || !base.isDirectory()) {
+                out.append("Thermal info: not available on this device\n");
+                return out.toString();
+            }
+
+            File[] zones = base.listFiles();
+            if (zones == null || zones.length == 0) {
+                out.append("Thermal zones: none visible\n");
+                return out.toString();
+            }
+
+            int shown = 0;
+            for (File z : zones) {
+                String name = z.getName();
+                if (!name.startsWith("thermal_zone")) continue;
+
+                File typeFile = new File(z, "type");
+                File tempFile = new File(z, "temp");
+
+                String type = typeFile.exists() ? readSmallFile(typeFile) : null;
+                String tempRaw = tempFile.exists() ? readSmallFile(tempFile) : null;
+
+                if (type == null && tempRaw == null) continue;
+
+                String typeLabel = (type != null) ? type.trim() : "[no type]";
+                String tempLabel = "[no temp]";
+
+                if (tempRaw != null) {
+                    tempRaw = tempRaw.trim();
+                    Double celsius = parseThermalTemp(tempRaw);
+                    if (celsius != null && !(celsius < -10 || celsius > 150)) {
+                        tempLabel = String.format("%.1f °C", celsius);
+                    } else {
+                        tempLabel = tempRaw;
+                    }
+                }
+
+                out.append(name)
+                        .append(" — ")
+                        .append(typeLabel)
+                        .append(" : ")
+                        .append(tempLabel)
+                        .append("\n");
+
+                shown++;
+                if (shown >= 24) break; // κόφτης για να μην ξεφεύγει
+            }
+
+            if (shown == 0) {
+                out.append("No readable thermal zones\n");
+            }
+
+        } catch (Throwable t) {
+            out.append("Thermal zones error: ").append(t.getMessage()).append("\n");
+        }
+        return out.toString();
+    }
+
+    private Double parseThermalTemp(String raw) {
+        try {
+            long v = Long.parseLong(raw.trim());
+            if (v == 0L) return null;
+            if (v > 1000L) {
+                return v / 1000.0; // συνήθως millidegrees
+            } else {
+                return (double) v;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean isPrimaryThermal(String typeLower) {
+        if (typeLower == null) return false;
+        return typeLower.contains("cpu")
+                || typeLower.contains("gpu")
+                || typeLower.contains("battery")
+                || typeLower.contains("batt")
+                || typeLower.contains("xo_therm")
+                || typeLower.contains("xo-therm")
+                || typeLower.contains("modem")
+                || typeLower.contains("pa-therm")
+                || typeLower.contains("wlan")
+                || typeLower.contains("wifi")
+                || typeLower.contains("usbc")
+                || typeLower.contains("chg")
+                || typeLower.contains("charger");
+    }
+
+    // ===== VULKAN / THERMAL PROFILES / FPS GOV =====
+
+    private String readVulkanInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        String vulkanHw     = getProp("ro.hardware.vulkan");
+        String vulkanVendor = getProp("ro.vendor.vulkan.version");
+        String vulkanSys    = getProp("ro.vulkan.version");
+        String eglHw        = getProp("ro.hardware.egl");
+        String gfxDriver0   = getProp("ro.gfx.driver.0");
+        String gpuVendor    = getProp("ro.gfx.vendor");
+        String board        = getProp("ro.board.platform");
+
+        sb.append("Hardware tag: ")
+                .append(isEmptySafe(vulkanHw) ? "N/A" : vulkanHw)
+                .append("\n");
+
+        sb.append("Vulkan version (vendor): ")
+                .append(isEmptySafe(vulkanVendor) ? "N/A" : vulkanVendor)
+                .append("\n");
+        sb.append("Vulkan version (system): ")
+                .append(isEmptySafe(vulkanSys) ? "N/A" : vulkanSys)
+                .append("\n");
+
+        sb.append("EGL hardware: ")
+                .append(isEmptySafe(eglHw) ? "N/A" : eglHw)
+                .append("\n");
+        sb.append("GPU driver 0: ")
+                .append(isEmptySafe(gfxDriver0) ? "N/A" : gfxDriver0)
+                .append("\n");
+        sb.append("GPU vendor/tag: ")
+                .append(isEmptySafe(gpuVendor) ? "N/A" : gpuVendor)
+                .append("\n");
+
+        if (!isEmptySafe(board)) {
+            sb.append("Board platform: ").append(board).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String readThermalProfiles() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            File[] roots = new File[]{
+                    new File("/vendor/etc"),
+                    new File("/system/etc")
+            };
+
+            boolean anyFile = false;
+
+            for (File root : roots) {
+                if (!root.exists() || !root.isDirectory()) continue;
+
+                File[] files = root.listFiles();
+                if (files == null) continue;
+
+                for (File f : files) {
+                    String name = f.getName().toLowerCase();
+                    if (!name.startsWith("thermal") || !name.endsWith(".conf")) continue;
+
+                    anyFile = true;
+                    sb.append("File: ").append(f.getAbsolutePath()).append("\n");
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                        String line;
+                        int printed = 0;
+                        while ((line = br.readLine()) != null && printed < 30) {
+                            String lower = line.toLowerCase();
+                            if (lower.contains("profile")
+                                    || lower.contains("trip")
+                                    || lower.contains("algo")
+                                    || lower.contains("sensor")
+                                    || lower.contains("cluster")
+                                    || lower.contains("cpu")
+                                    || lower.contains("gpu")) {
+
+                                sb.append("  ").append(line.trim()).append("\n");
+                                printed++;
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                        sb.append("  [error reading]\n");
+                    }
+
+                    sb.append("\n");
+                }
+            }
+
+            if (!anyFile) {
+                sb.append("No thermal-engine config files found\n");
+            }
+
+        } catch (Throwable t) {
+            sb.append("Thermal profiles error: ").append(t.getMessage()).append("\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No thermal profile data\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String readFpsAndClocksSummary() {
+        StringBuilder sb = new StringBuilder();
+
+        String gov = readFpsGovernor();
+        String clocks = readGpuClocks();
+
+        if (isEmptySafe(gov) && isEmptySafe(clocks)) {
+            sb.append("No FPS governor or GPU clock info exposed via sysfs\n");
+            return sb.toString();
+        }
+
+        if (!isEmptySafe(gov)) {
+            sb.append("Governor: ").append(gov).append("\n");
+        }
+        if (!isEmptySafe(clocks)) {
+            sb.append("GPU clocks: ").append(clocks).append("\n");
+        }
+
+        return sb.toString();
     }
 
     private String readFpsGovernor() {
@@ -560,111 +866,6 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         } catch (Exception e) {
             return -1;
         }
-    }
-
-    // Thermal info (MIXED MODE: primary sensors + other zones)
-    private String readThermalSummary() {
-        StringBuilder out = new StringBuilder();
-        try {
-            File base = new File("/sys/class/thermal");
-            if (!base.exists() || !base.isDirectory()) {
-                out.append("Thermal info: not available on this device\n");
-                return out.toString();
-            }
-
-            File[] zones = base.listFiles();
-            if (zones == null || zones.length == 0) {
-                out.append("Thermal zones: none visible\n");
-                return out.toString();
-            }
-
-            List<String> primary = new ArrayList<>();
-            List<String> others  = new ArrayList<>();
-
-            for (File z : zones) {
-                String name = z.getName();
-                if (!name.startsWith("thermal_zone")) continue;
-
-                File typeFile = new File(z, "type");
-                File tempFile = new File(z, "temp");
-                if (!typeFile.exists() || !tempFile.exists()) continue;
-
-                String type = readSmallFile(typeFile);
-                String tempRaw = readSmallFile(tempFile);
-                if (type == null || tempRaw == null) continue;
-
-                type = type.trim();
-                tempRaw = tempRaw.trim();
-
-                double celsius;
-                try {
-                    long v = Long.parseLong(tempRaw);
-                    if (v > 1000) {
-                        celsius = v / 1000.0;
-                    } else {
-                        celsius = v;
-                    }
-                } catch (NumberFormatException nfe) {
-                    continue;
-                }
-
-                // απλό sanity check: αγνοούμε προφανώς λάθος τιμές
-                if (celsius < -10 || celsius > 150) continue;
-
-                String entry = type + " : " + String.format("%.1f", celsius) + " °C";
-                String lower = type.toLowerCase();
-
-                if (isPrimaryThermal(lower)) {
-                    primary.add(entry);
-                } else {
-                    others.add(entry);
-                }
-            }
-
-            if (primary.isEmpty() && others.isEmpty()) {
-                out.append("Thermal zones present, but no readable temperatures\n");
-                return out.toString();
-            }
-
-            if (!primary.isEmpty()) {
-                out.append("Primary sensors (CPU / GPU / battery / radio):\n");
-                for (String s : primary) {
-                    out.append("• ").append(s).append("\n");
-                }
-            }
-
-            if (!others.isEmpty()) {
-                if (!primary.isEmpty()) out.append("\n");
-                out.append("Other thermal zones:\n");
-                int shown = 0;
-                for (String s : others) {
-                    out.append("• ").append(s).append("\n");
-                    shown++;
-                    if (shown >= 12) break; // δεν χρειάζεται άπειρη λίστα
-                }
-            }
-
-        } catch (Throwable t) {
-            out.append("Thermal info error: ").append(t.getMessage()).append("\n");
-        }
-        return out.toString();
-    }
-
-    private boolean isPrimaryThermal(String typeLower) {
-        if (typeLower == null) return false;
-        return typeLower.contains("cpu")
-                || typeLower.contains("gpu")
-                || typeLower.contains("battery")
-                || typeLower.contains("batt")
-                || typeLower.contains("xo_therm")
-                || typeLower.contains("xo-therm")
-                || typeLower.contains("modem")
-                || typeLower.contains("pa-therm")
-                || typeLower.contains("wlan")
-                || typeLower.contains("wifi")
-                || typeLower.contains("usbc")
-                || typeLower.contains("chg")
-                || typeLower.contains("charger");
     }
 
     private String readSmallFile(File f) {

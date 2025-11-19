@@ -620,4 +620,35 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             return "unknown";
         }
     }
+
+    // ============================================================
+    // UWB SUPPORT CHECK  (NEW)
+    // ============================================================
+    private String detectUwbSupport(PackageManager pm) {
+        try {
+            // Official Android 14+ flag
+            if (pm.hasSystemFeature("android.hardware.uwb")) {
+                return "UWB hardware: YES\n";
+            }
+
+            // Vendor props (Samsung / Xiaomi / Oppo / Nothing)
+            String[] props = {
+                    "ro.boot.uwb",
+                    "ro.vendor.uwb",
+                    "persist.vendor.uwb.enable"
+            };
+
+            for (String p : props) {
+                String v = getProp(p);
+                if (v != null && !v.isEmpty() && !v.equals("0")) {
+                    return "UWB hardware: YES (" + p + ")\n";
+                }
+            }
+
+            return "UWB hardware: NO\n";
+
+        } catch (Throwable t) {
+            return "UWB detection error\n";
+        }
+    }
 }

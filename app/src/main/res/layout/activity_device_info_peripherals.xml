@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- TITLE -->
         <TextView
             android:id="@+id/txtTitleDevice"
             android:layout_width="match_parent"
@@ -22,6 +23,7 @@
             android:gravity="center"
             android:layout_marginBottom="10dp" />
 
+        <!-- HEADER -->
         <TextView
             android:id="@+id/txtSectionHeaderPeripherals"
             android:layout_width="match_parent"
@@ -32,59 +34,548 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="10dp" />
 
-        <!-- TEMPLATE FOR ALL SECTIONS -->
-        <!-- HEADER + CONTENT (gone) -->
+        <!-- ========================================================= -->
+        <!-- TEMPLATE: EACH SECTION = HEADER + CONTENT (gone) -->
+        <!-- ========================================================= -->
 
-        <!-- 1 CAMERA -->
-        <include layout="@layout/gel_section_camera" />
+        <!-- CAMERA -->
+        <LinearLayout
+            android:id="@+id/headerCamera"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Camera Capabilities"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/iconCameraToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtCameraContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_secondary"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp" />
 
-        <!-- 2 BIOMETRICS -->
-        <include layout="@layout/gel_section_biometrics" />
+        <!-- BIOMETRICS -->
+        <LinearLayout
+            android:id="@+id/headerBiometrics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Biometric Hardware"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconBiometricsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtBiometricsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_secondary"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 3 SENSORS -->
-        <include layout="@layout/gel_section_sensors" />
+        <!-- SENSORS -->
+        <LinearLayout
+            android:id="@+id/headerSensors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sensor List"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconSensorsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtSensorsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 4 CONNECTIVITY -->
-        <include layout="@layout/gel_section_connectivity" />
+        <!-- CONNECTIVITY -->
+        <LinearLayout
+            android:id="@+id/headerConnectivity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:clickable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Connectivity"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconConnectivityToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtConnectivityContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 5 LOCATION -->
-        <include layout="@layout/gel_section_location" />
+        <!-- LOCATION -->
+        <LinearLayout
+            android:id="@+id/headerLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Location / GPS"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconLocationToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtLocationContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 6 OTHER PERIPHERALS -->
-        <include layout="@layout/gel_section_other" />
+        <!-- OTHER -->
+        <LinearLayout
+            android:id="@+id/headerOther"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Other Peripherals"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconOtherToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtOtherContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 7 BLUETOOTH -->
-        <include layout="@layout/gel_section_bluetooth" />
+        <!-- BLUETOOTH -->
+        <LinearLayout
+            android:id="@+id/headerBluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Bluetooth Details"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconBluetoothToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtBluetoothContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 8 NFC -->
-        <include layout="@layout/gel_section_nfc" />
+        <!-- NFC -->
+        <LinearLayout
+            android:id="@+id/headerNfc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="NFC Details"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconNfcToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtNfcContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 9 ROOT -->
-        <include layout="@layout/gel_section_root" />
+        <!-- ROOT -->
+        <LinearLayout
+            android:id="@+id/headerRoot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Root Extras"
+                android:textColor="#00FFBF"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/iconRootToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtRootContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 🔥 NEW SECTIONS BELOW -->
+        <!-- BATTERY -->
+        <LinearLayout
+            android:id="@+id/headerBattery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Battery Health"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconBatteryToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtBatteryContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 10 BATTERY HEALTH -->
-        <include layout="@layout/gel_section_battery" />
+        <!-- UWB -->
+        <LinearLayout
+            android:id="@+id/headerUwb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="UWB Support"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconUwbToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtUwbContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 11 UWB -->
-        <include layout="@layout/gel_section_uwb" />
+        <!-- HAPTICS -->
+        <LinearLayout
+            android:id="@+id/headerHaptics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Haptics"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconHapticsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtHapticsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 12 HAPTICS -->
-        <include layout="@layout/gel_section_haptics" />
+        <!-- GNSS -->
+        <LinearLayout
+            android:id="@+id/headerGnss"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="GNSS Constellations"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconGnssToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtGnssContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 13 GNSS CONSTELLATIONS -->
-        <include layout="@layout/gel_section_gnss" />
+        <!-- USB -->
+        <LinearLayout
+            android:id="@+id/headerUsb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="USB / OTG Speed"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconUsbToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtUsbContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 14 USB SPEED -->
-        <include layout="@layout/gel_section_usb" />
+        <!-- MICROPHONES -->
+        <LinearLayout
+            android:id="@+id/headerMics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Microphones"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconMicsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtMicsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- 15 MICROPHONES -->
-        <include layout="@layout/gel_section_mics" />
-
-        <!-- 16 AUDIO HAL -->
-        <include layout="@layout/gel_section_audiohal" />
+        <!-- AUDIO HAL -->
+        <LinearLayout
+            android:id="@+id/headerAudioHal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Audio HAL Level"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/iconAudioHalToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/txtAudioHalContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
     </LinearLayout>
-
 </ScrollView>

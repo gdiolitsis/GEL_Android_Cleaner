@@ -662,6 +662,9 @@ allIcons.add(findViewById(R.id.iconVulkanToggle));
 allIcons.add(findViewById(R.id.iconThermalProfilesToggle));
     }
 
+    // ===========================
+    // EXPANDER LOGIC (open one at a time)
+    // ===========================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
         header.setOnClickListener(v -> toggleSection(content, icon));
@@ -670,18 +673,22 @@ allIcons.add(findViewById(R.id.iconThermalProfilesToggle));
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
         if (allContents == null || allIcons == null) return;
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
+        // Κλείνουμε όλα τα άλλα sections
+        for (int i = 0; i < allContents.size(); i++) {
+            TextView c  = allContents.get(i);
+            TextView ic = allIcons.get(i);
             if (c == null || ic == null) continue;
-            if (c == toOpen) continue;
+            if (c == toOpen) continue;   // μην κλείσεις αυτό που ανοίγουμε τώρα
+
             c.setVisibility(View.GONE);
             ic.setText("＋");
         }
 
+        // Τoggle για το επιλεγμένο
         boolean visible = (toOpen.getVisibility() == View.VISIBLE);
         toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
         iconToUpdate.setText(visible ? "＋" : "−");
+    }
     }
 
     private String safe(String v) {

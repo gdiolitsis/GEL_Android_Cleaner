@@ -623,6 +623,27 @@ setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent
         txtAudioHalContent.setText("── AUDIO HAL ──\n" + detectAudioHalLevel());
 
         // ===========================
+// THERMAL ZONES
+// ===========================
+txtThermalZonesContent.setText(
+        "── THERMAL ZONES ──\n" + readThermalZones()
+);
+
+// ===========================
+// VULKAN / GPU INFO
+// ===========================
+txtVulkanContent.setText(
+        "── VULKAN / GPU INFO ──\n" + readVulkanInfo()
+);
+
+// ===========================
+// THERMAL ENGINE PROFILES
+// ===========================
+txtThermalProfilesContent.setText(
+        "── THERMAL ENGINE PROFILES ──\n" + readThermalProfiles()
+);
+
+        // ===========================
         // EXPANDERS
         // ===========================
         setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);

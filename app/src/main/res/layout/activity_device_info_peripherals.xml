@@ -584,7 +584,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="10dp"
-    android:background="@color/gel_card"
+    android:background="@color/gel_bg_dark"
     android:gravity="center_vertical">
 
     <TextView
@@ -613,7 +613,7 @@
     android:textSize="14sp"
     android:visibility="gone"
     android:padding="10dp"
-    android:background="@color/gel_card_dark"
+    android:background="@color/gel_bg_pressed"
     android:layout_marginBottom="10dp" />
 
     </LinearLayout>

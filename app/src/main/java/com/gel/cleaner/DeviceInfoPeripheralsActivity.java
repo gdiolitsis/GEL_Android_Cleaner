@@ -233,108 +233,114 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtSensorsContent.setText(sens.toString());
 
         // ===========================
-        // CONNECTIVITY
-        // ===========================
-        StringBuilder conn = new StringBuilder();
-        conn.append("── CONNECTIVITY ──\n");
+// CONNECTIVITY
+// ===========================
+StringBuilder conn = new StringBuilder();
+conn.append("── CONNECTIVITY ──\n");
 
-        // Basic feature flags
-        conn.append("Telephony: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
-                .append("\n");
-        conn.append("5G NR flag: ")
-                .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
-                .append("\n");
-        conn.append("IMS / VoLTE flag: ")
-                .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
-                .append("\n");
-        conn.append("WiFi: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
-                .append("\n");
-        conn.append("WiFi Direct: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
-                .append("\n");
-        conn.append("Ethernet: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
-                .append("\n");
+// Basic feature flags
+conn.append("Telephony: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
+        .append("\n");
+conn.append("5G NR flag: ")
+        .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
+        .append("\n");
+conn.append("IMS / VoLTE flag: ")
+        .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
+        .append("\n");
+conn.append("WiFi: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
+        .append("\n");
+conn.append("WiFi Direct: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
+        .append("\n");
+conn.append("Ethernet: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
+        .append("\n");
 
-        // Active network info
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                    if (caps != null) {
-                        boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                        boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-                        boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+// Active network info
+try {
+    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    if (cm != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+            if (caps != null) {
+                boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
 
-                        conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
-                        conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
-                        conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
-                    } else {
-                        conn.append("Active network: [none]\n");
-                    }
-                } else {
-                    @SuppressWarnings("deprecation")
-                    NetworkInfo ni = cm.getActiveNetworkInfo();
-                    if (ni != null && ni.isConnected()) {
-                        conn.append("Active type: ").append(ni.getTypeName()).append("\n");
-                    } else {
-                        conn.append("Active network: [none]\n");
-                    }
-                }
+                conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
+                conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
+                conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
             } else {
-                conn.append("ConnectivityManager: [unavailable]\n");
+                conn.append("Active network: [none]\n");
             }
-        } catch (Throwable t) {
-            conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
-        }
-
-        // WiFi details
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                if (wi != null) {
-                    int linkSpeed = wi.getLinkSpeed(); // Mbps
-                    int freq = wi.getFrequency();      // MHz
-                    conn.append("\n[WiFi link]\n");
-                    conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
-                    conn.append("Frequency: ").append(freq).append(" MHz\n");
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        int std = wi.getWifiStandard();
-                        String stdStr;
-                        switch (std) {
-                            case WifiInfo.WIFI_STANDARD_11AC:
-                                stdStr = "WiFi 5 (11ac)";
-                                break;
-                            case WifiInfo.WIFI_STANDARD_11AX:
-                                stdStr = "WiFi 6/6E (11ax)";
-                                break;
-                            case WifiInfo.WIFI_STANDARD_11N:
-                                stdStr = "WiFi 4 (11n)";
-                                break;
-                            default:
-                                stdStr = "Unknown/Legacy";
-                                break;
-                        }
-                        conn.append("WiFi standard: ").append(stdStr).append("\n");
-                    } else {
-                        conn.append("WiFi standard: [API < 30]\n");
-                    }
-                } else {
-                    conn.append("\n[WiFi] No connection info\n");
-                }
+        } else {
+            @SuppressWarnings("deprecation")
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if (ni != null && ni.isConnected()) {
+                conn.append("Active type: ").append(ni.getTypeName()).append("\n");
             } else {
-                conn.append("\n[WiFi] WifiManager unavailable\n");
+                conn.append("Active network: [none]\n");
             }
-        } catch (Throwable t) {
-            conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
         }
+    } else {
+        conn.append("ConnectivityManager: [unavailable]\n");
+    }
+} catch (Throwable t) {
+    conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
+}
 
-        txtConnectivityContent.setText(conn.toString());
+// WiFi details
+try {
+    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    if (wm != null) {
+        WifiInfo wi = wm.getConnectionInfo();
+        if (wi != null) {
+            int linkSpeed = wi.getLinkSpeed(); // Mbps
+            int freq = wi.getFrequency();      // MHz
+            conn.append("\n[WiFi link]\n");
+            conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
+            conn.append("Frequency: ").append(freq).append(" MHz\n");
+
+            // ========= FIXED PART HERE =========
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                int std = wi.getWifiStandard();
+                String stdStr;
+                switch (std) {
+                    case 1:  // Legacy a/b/g
+                        stdStr = "Legacy (a/b/g)";
+                        break;
+                    case 4:  // WiFi 4 (11n)
+                        stdStr = "WiFi 4 (11n)";
+                        break;
+                    case 5:  // WiFi 5 (11ac)
+                        stdStr = "WiFi 5 (11ac)";
+                        break;
+                    case 6:  // WiFi 6/6E (11ax)
+                        stdStr = "WiFi 6/6E (11ax)";
+                        break;
+                    default:
+                        stdStr = "Unknown";
+                        break;
+                }
+                conn.append("WiFi standard: ").append(stdStr).append("\n");
+            } else {
+                conn.append("WiFi standard: [API < 30]\n");
+            }
+            // ==================================
+
+        } else {
+            conn.append("\n[WiFi] No connection info\n");
+        }
+    } else {
+        conn.append("\n[WiFi] WifiManager unavailable\n");
+    }
+} catch (Throwable t) {
+    conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
+}
+
+txtConnectivityContent.setText(conn.toString());
 
         // ===========================
         // LOCATION

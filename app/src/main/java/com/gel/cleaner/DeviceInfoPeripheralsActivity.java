@@ -1,6 +1,6 @@
 package com.gel.cleaner;
 
-// PERIPHERALS REPORT v6.0 — Professional Edition
+// PERIPHERALS REPORT v6.1 — Professional Edition
 // Camera / Biometrics / Sensors / Connectivity / Location / Other / BT / NFC / Root
 // + Battery Health / UWB / Vibrator Amplitude / Haptics Class / GNSS Constellations
 // + USB OTG Speed Modes / Microphone Count / Audio HAL Level
@@ -233,114 +233,112 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtSensorsContent.setText(sens.toString());
 
         // ===========================
-// CONNECTIVITY
-// ===========================
-StringBuilder conn = new StringBuilder();
-conn.append("── CONNECTIVITY ──\n");
+        // CONNECTIVITY
+        // ===========================
+        StringBuilder conn = new StringBuilder();
+        conn.append("── CONNECTIVITY ──\n");
 
-// Basic feature flags
-conn.append("Telephony: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
-        .append("\n");
-conn.append("5G NR flag: ")
-        .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
-        .append("\n");
-conn.append("IMS / VoLTE flag: ")
-        .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
-        .append("\n");
-conn.append("WiFi: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
-        .append("\n");
-conn.append("WiFi Direct: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
-        .append("\n");
-conn.append("Ethernet: ")
-        .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
-        .append("\n");
+        // Basic feature flags
+        conn.append("Telephony: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
+                .append("\n");
+        conn.append("5G NR flag: ")
+                .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
+                .append("\n");
+        conn.append("IMS / VoLTE flag: ")
+                .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
+                .append("\n");
+        conn.append("WiFi: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
+                .append("\n");
+        conn.append("WiFi Direct: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
+                .append("\n");
+        conn.append("Ethernet: ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
+                .append("\n");
 
-// Active network info
-try {
-    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-    if (cm != null) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-            if (caps != null) {
-                boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-                boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+        // Active network info
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                    if (caps != null) {
+                        boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                        boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                        boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
 
-                conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
-                conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
-                conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
-            } else {
-                conn.append("Active network: [none]\n");
-            }
-        } else {
-            @SuppressWarnings("deprecation")
-            NetworkInfo ni = cm.getActiveNetworkInfo();
-            if (ni != null && ni.isConnected()) {
-                conn.append("Active type: ").append(ni.getTypeName()).append("\n");
-            } else {
-                conn.append("Active network: [none]\n");
-            }
-        }
-    } else {
-        conn.append("ConnectivityManager: [unavailable]\n");
-    }
-} catch (Throwable t) {
-    conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
-}
-
-// WiFi details
-try {
-    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-    if (wm != null) {
-        WifiInfo wi = wm.getConnectionInfo();
-        if (wi != null) {
-            int linkSpeed = wi.getLinkSpeed(); // Mbps
-            int freq = wi.getFrequency();      // MHz
-            conn.append("\n[WiFi link]\n");
-            conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
-            conn.append("Frequency: ").append(freq).append(" MHz\n");
-
-            // ========= FIXED PART HERE =========
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                int std = wi.getWifiStandard();
-                String stdStr;
-                switch (std) {
-                    case 1:  // Legacy a/b/g
-                        stdStr = "Legacy (a/b/g)";
-                        break;
-                    case 4:  // WiFi 4 (11n)
-                        stdStr = "WiFi 4 (11n)";
-                        break;
-                    case 5:  // WiFi 5 (11ac)
-                        stdStr = "WiFi 5 (11ac)";
-                        break;
-                    case 6:  // WiFi 6/6E (11ax)
-                        stdStr = "WiFi 6/6E (11ax)";
-                        break;
-                    default:
-                        stdStr = "Unknown";
-                        break;
+                        conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
+                        conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
+                        conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
+                    } else {
+                        conn.append("Active network: [none]\n");
+                    }
+                } else {
+                    @SuppressWarnings("deprecation")
+                    NetworkInfo ni = cm.getActiveNetworkInfo();
+                    if (ni != null && ni.isConnected()) {
+                        conn.append("Active type: ").append(ni.getTypeName()).append("\n");
+                    } else {
+                        conn.append("Active network: [none]\n");
+                    }
                 }
-                conn.append("WiFi standard: ").append(stdStr).append("\n");
             } else {
-                conn.append("WiFi standard: [API < 30]\n");
+                conn.append("ConnectivityManager: [unavailable]\n");
             }
-            // ==================================
-
-        } else {
-            conn.append("\n[WiFi] No connection info\n");
+        } catch (Throwable t) {
+            conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
         }
-    } else {
-        conn.append("\n[WiFi] WifiManager unavailable\n");
-    }
-} catch (Throwable t) {
-    conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
-}
 
-txtConnectivityContent.setText(conn.toString());
+        // WiFi details
+        try {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wm != null) {
+                WifiInfo wi = wm.getConnectionInfo();
+                if (wi != null) {
+                    int linkSpeed = wi.getLinkSpeed(); // Mbps
+                    int freq = wi.getFrequency();      // MHz
+                    conn.append("\n[WiFi link]\n");
+                    conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
+                    conn.append("Frequency: ").append(freq).append(" MHz\n");
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        int std = wi.getWifiStandard();
+                        String stdStr;
+                        switch (std) {
+                            case 1:  // Legacy a/b/g
+                                stdStr = "Legacy (a/b/g)";
+                                break;
+                            case 4:  // WiFi 4 (11n)
+                                stdStr = "WiFi 4 (11n)";
+                                break;
+                            case 5:  // WiFi 5 (11ac)
+                                stdStr = "WiFi 5 (11ac)";
+                                break;
+                            case 6:  // WiFi 6/6E (11ax)
+                                stdStr = "WiFi 6/6E (11ax)";
+                                break;
+                            default:
+                                stdStr = "Unknown";
+                                break;
+                        }
+                        conn.append("WiFi standard: ").append(stdStr).append("\n");
+                    } else {
+                        conn.append("WiFi standard: [API < 30]\n");
+                    }
+
+                } else {
+                    conn.append("\n[WiFi] No connection info\n");
+                }
+            } else {
+                conn.append("\n[WiFi] WifiManager unavailable\n");
+            }
+        } catch (Throwable t) {
+            conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
+        }
+
+        txtConnectivityContent.setText(conn.toString());
 
         // ===========================
         // LOCATION
@@ -659,18 +657,41 @@ txtConnectivityContent.setText(conn.toString());
         try {
             Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (vib == null) return "No vibrator service";
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                return vib.hasAmplitudeControl() ? "Supported" : "Not supported";
-            return "API < 26 (unknown)";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                return vib.hasAmplitudeControl()
+                        ? "Supported (programmable)"
+                        : "Present (fixed strength)";
+            }
+            // API < 26: δεν υπάρχει amplitude API, αλλά ο δονητής είναι παρών
+            return "Present (API < 26)";
         } catch (Throwable t) {
             return "Error";
         }
     }
 
     private String detectHapticsClass() {
-        String h = getProp("ro.product.haptics_level");
-        if (isEmptySafe(h)) h = getProp("ro.vibrator.haptic.feedback");
-        return isEmptySafe(h) ? "Unknown" : h;
+        // Προσπαθούμε από διάφορα system properties
+        String[] keys = {
+                "ro.product.haptics_level",
+                "ro.vibrator.haptic.feedback",
+                "ro.vendor.vibrator.haptic",
+                "ro.vendor.product.haptics_level"
+        };
+        for (String k : keys) {
+            String v = getProp(k);
+            if (!isEmptySafe(v)) return v;
+        }
+
+        // Fallback: έλεγχος ύπαρξης vibrator στο sysfs
+        try {
+            File f1 = new File("/sys/class/leds/vibrator");
+            File f2 = new File("/sys/class/timed_output/vibrator");
+            if (f1.exists() || f2.exists()) {
+                return "Basic haptics (sysfs)";
+            }
+        } catch (Throwable ignored) {}
+
+        return "Unknown";
     }
 
     private String readGnssConstellations() {
@@ -712,16 +733,46 @@ txtConnectivityContent.setText(conn.toString());
                 "ro.usb_speed",
                 "ro.vendor.usb.speed"
         };
-        boolean any = false;
+        boolean anyProp = false;
+        boolean anySpeed = false;
+
+        // Properties
         for (String k : keys) {
             String v = getProp(k);
             if (!isEmptySafe(v)) {
                 sb.append(k).append(" = ").append(v).append("\n");
-                any = true;
+                anyProp = true;
             }
         }
-        if (!any)
+
+        // Sysfs: live USB device speeds (αν υπάρχει κάτι συνδεδεμένο)
+        try {
+            File bus = new File("/sys/bus/usb/devices");
+            if (bus.exists() && bus.isDirectory()) {
+                File[] devs = bus.listFiles();
+                if (devs != null) {
+                    for (File d : devs) {
+                        File speedFile = new File(d, "speed");
+                        if (speedFile.exists()) {
+                            String sp = readSmallFile(speedFile);
+                            if (!isEmptySafe(sp)) {
+                                sb.append("Device ")
+                                        .append(d.getName())
+                                        .append(" speed: ")
+                                        .append(sp.trim())
+                                        .append(" Mb/s\n");
+                                anySpeed = true;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        if (!anyProp && !anySpeed) {
             sb.append("No USB speed info\n");
+        }
+
         return sb.toString();
     }
 
@@ -768,9 +819,17 @@ txtConnectivityContent.setText(conn.toString());
     }
 
     private String detectAudioHalLevel() {
-        String v = getProp("ro.audio.hal.version");
-        if (isEmptySafe(v)) v = getProp("audio_hal.version");
-        return isEmptySafe(v) ? "Unknown" : v;
+        String[] keys = {
+                "ro.vendor.audio.hal.version",
+                "ro.audio.hal.version",
+                "audio_hal.version",
+                "ro.odm.audio.hal.version"
+        };
+        for (String k : keys) {
+            String v = getProp(k);
+            if (!isEmptySafe(v)) return v;
+        }
+        return "Unknown";
     }
 
     private boolean isDeviceRooted() {

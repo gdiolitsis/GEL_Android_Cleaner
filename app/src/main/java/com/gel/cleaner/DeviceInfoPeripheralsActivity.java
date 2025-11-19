@@ -3,13 +3,12 @@ package com.gel.cleaner;
 // PERIPHERALS REPORT v6.3 — SERVICE-PRO EDITION (GEL)
 // Camera / Biometrics / Sensors / Connectivity / Location / Other / BT / NFC / Root
 // + Battery Health / Temperature / Charging Type / UWB / Vibrator Amplitude / Haptics Class
-// + GNSS Constellations + L5 hint / USB OTG Speed Modes (SuperSpeed flag) / Microphone Count
-// + Audio HAL Level (multi-source) / WiFi 6/6E (standard + band) / VoLTE-IMS / VoWiFi / 5G NR flag
+// + GNSS Constellations + L5 hint / USB OTG Speed Modes (SuperSpeed flag) / Microphone Map
+// + Audio HAL Level (multi-source: props + audio_policy_configuration.xml)
+// + WiFi 6/6E (standard + band) / VoLTE-IMS / VoWiFi / 5G NR flag
 // + IR / Barometer / Steps / HR Sensor
-// FULL PACK + Android 10+/12+ safe WiFi / BT permissions.
-// Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// Ολόκληρο κελί έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -46,12 +45,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
-
-    private static final int REQ_WIFI_PERM = 901;
 
     private boolean isRooted = false;
 
@@ -223,28 +218,22 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             sens.append("Total sensors: ")
                     .append(sm.getSensorList(Sensor.TYPE_ALL).size()).append("\n");
 
-            Sensor acc  = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            Sensor gyr  = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            Sensor mag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            Sensor gyr = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            Sensor mag = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
             Sensor prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            Sensor light= sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+            Sensor light = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-            sens.append("Accelerometer: ").append(acc  != null ? "YES" : "NO").append("\n");
-            sens.append("Gyroscope: ").append(gyr      != null ? "YES" : "NO").append("\n");
-            sens.append("Magnetometer: ").append(mag   != null ? "YES" : "NO").append("\n");
-            sens.append("Proximity: ").append(prox     != null ? "YES" : "NO").append("\n");
+            sens.append("Accelerometer: ").append(acc != null ? "YES" : "NO").append("\n");
+            sens.append("Gyroscope: ").append(gyr != null ? "YES" : "NO").append("\n");
+            sens.append("Magnetometer: ").append(mag != null ? "YES" : "NO").append("\n");
+            sens.append("Proximity: ").append(prox != null ? "YES" : "NO").append("\n");
             sens.append("Light sensor: ").append(light != null ? "YES" : "NO").append("\n");
         } else {
             sens.append("SensorManager: [unavailable]\n");
         }
 
         txtSensorsContent.setText(sens.toString());
-
-        // ===============================
-        // RUNTIME PERMISSIONS (WiFi / Location)
-        // Required for Android 10+ (API 29+)
-        // ===============================
-        ensureWifiPermissions();
 
         // ===========================
         // CONNECTIVITY
@@ -419,18 +408,23 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         other.append("IR blaster: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
                 .append("\n");
+
         other.append("Barometer: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
                 .append("\n");
+
         other.append("Step counter: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
                 .append("\n");
+
         other.append("Step detector: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
                 .append("\n");
+
         other.append("Heart-rate sensor: ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
                 .append("\n");
+
         other.append("Ambient temperature sensor: ")
                 .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
                 .append("\n");
@@ -438,7 +432,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtOtherPeripherals.setText(other.toString());
 
         // ===========================
-        // BLUETOOTH (Android 12+ safe)
+        // BLUETOOTH
         // ===========================
         StringBuilder bt = new StringBuilder();
         bt.append("── BLUETOOTH ──\n");
@@ -456,23 +450,13 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 bt.append("Adapter: [none]\n");
             } else {
                 bt.append("Enabled: ").append(ba.isEnabled() ? "YES" : "NO").append("\n");
-
-                String name;
                 try {
-                    name = ba.getName();
-                } catch (SecurityException e) {
-                    name = "[permission denied]";
+                    bt.append("Name: ").append(safe(ba.getName())).append("\n");
+                } catch (SecurityException se) {
+                    bt.append("Name: [permission denied]\n");
                 }
-                bt.append("Name: ").append(safe(name)).append("\n");
-
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                    String addr;
-                    try {
-                        addr = ba.getAddress();
-                    } catch (SecurityException e) {
-                        addr = "[permission denied]";
-                    }
-                    bt.append("Address: ").append(safe(addr)).append("\n");
+                    bt.append("Address: ").append(safe(ba.getAddress())).append("\n");
                 } else {
                     bt.append("Address: [hidden on Android 12+]\n");
                 }
@@ -498,7 +482,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtBluetoothContent.setText(bt.toString());
 
         // ===========================
-        // NFC (HW + HCE)
+        // NFC
         // ===========================
         StringBuilder nfc = new StringBuilder();
         nfc.append("── NFC ──\n");
@@ -661,12 +645,14 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     sb.append("Current level: ").append(String.format("%.0f", pct)).append(" %\n");
                 }
 
+                // Temperature
                 int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
                 if (temp != Integer.MIN_VALUE) {
                     float c = temp / 10f;
                     sb.append("Temperature: ").append(String.format("%.1f", c)).append(" °C\n");
                 }
 
+                // Charging type
                 int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
                 String pluggedStr;
                 switch (plugged) {
@@ -687,9 +673,9 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             }
 
             String base = "/sys/class/power_supply/battery";
-            String cycleStr  = readSmallFile(new File(base, "cycle_count"));
-            String fullStr   = readSmallFile(new File(base, "charge_full"));
-            String designStr = readSmallFile(new File(base, "charge_full_design"));
+            String cycleStr = readSmallFile(new File(base, "cycle_count"));
+            String fullStr  = readSmallFile(new File(base, "charge_full"));
+            String designStr= readSmallFile(new File(base, "charge_full_design"));
 
             if (cycleStr != null)
                 sb.append("Cycle count: ").append(cycleStr.trim()).append("\n");
@@ -741,6 +727,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                         ? "Supported (programmable)"
                         : "Present (fixed strength)";
             }
+            // API < 26: δεν υπάρχει amplitude API, αλλά ο δονητής είναι παρών
             return "Present (API < 26)";
         } catch (Throwable t) {
             return "Error";
@@ -748,19 +735,23 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
     }
 
     private String detectHapticsClass() {
+        // Προσπαθούμε πρώτα από διάφορα system properties
         String[] keys = {
                 "ro.product.haptics_level",
                 "ro.vibrator.haptic.feedback",
                 "ro.vendor.vibrator.haptic",
-                "ro.vendor.product.haptics_level",
-                "ro.vendor.vibrator.haptics.impl",
-                "ro.product.vibrator.haptics"
+                "ro.vendor.product.haptics_level"
         };
         for (String k : keys) {
             String v = getProp(k);
             if (!isEmptySafe(v)) return v;
         }
 
+        // Προσπαθούμε να βρούμε τύπο από sysfs (ERM / LRA κ.λπ.)
+        String sysfsType = detectHapticsFromSysfs();
+        if (!isEmptySafe(sysfsType)) return sysfsType;
+
+        // Fallback: έλεγχος ύπαρξης vibrator στο sysfs
         try {
             File f1 = new File("/sys/class/leds/vibrator");
             File f2 = new File("/sys/class/timed_output/vibrator");
@@ -772,10 +763,48 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         return "Unknown";
     }
 
+    private String detectHapticsFromSysfs() {
+        try {
+            String[] candidates = {
+                    "/sys/class/leds/vibrator/device/type",
+                    "/sys/class/leds/vibrator/device/vibrator_type",
+                    "/sys/class/leds/vibrator/vibrator_type",
+                    "/sys/class/timed_output/vibrator/device/type"
+            };
+            for (String path : candidates) {
+                File f = new File(path);
+                if (!f.exists()) continue;
+                String val = readSmallFile(f);
+                if (isEmptySafe(val)) continue;
+                String lower = val.toLowerCase();
+                if (lower.contains("lra")) {
+                    return "LRA haptics (" + val.trim() + ")";
+                }
+                if (lower.contains("erm")) {
+                    return "ERM haptics (" + val.trim() + ")";
+                }
+                return val.trim();
+            }
+        } catch (Throwable ignored) {}
+        return "";
+    }
+
     private String readGnssConstellations() {
         StringBuilder sb = new StringBuilder();
         boolean found = false;
         boolean hasL5Hint = false;
+
+        // Hardware feature summary
+        try {
+            PackageManager pm = getPackageManager();
+            sb.append("HW GNSS feature: ")
+                    .append(pm.hasSystemFeature("android.hardware.location.gnss") ? "YES" : "NO")
+                    .append("\n");
+            sb.append("Legacy GPS flag: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "YES" : "NO")
+                    .append("\n\n");
+        } catch (Throwable ignored) {}
+
         try {
             String[] paths = {
                     "/system/etc/gps.conf",
@@ -791,7 +820,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 while ((line = br.readLine()) != null) {
                     String lower = line.toLowerCase();
                     if (lower.contains("glonass") || lower.contains("bds")
-                            || lower.contains("galileo") || lower.contains("qzss")) {
+                            || lower.contains("galileo") || lower.contains("qzss")
+                            || lower.contains("gps")) {
                         sb.append(line).append("\n");
                         found = true;
                     }
@@ -811,17 +841,26 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
 
     private String detectUsbSpeedModes() {
         StringBuilder sb = new StringBuilder();
+        PackageManager pm = getPackageManager();
+
+        // Capabilities
+        boolean host = pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST);
+        boolean accessory = pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY);
+
+        sb.append("USB host mode: ").append(host ? "YES" : "NO").append("\n");
+        sb.append("USB accessory mode: ").append(accessory ? "YES" : "NO").append("\n");
+
+        // Common USB-related properties
         String[] keys = {
                 "sys.usb.speed",
                 "sys.usb.controller",
                 "vendor.usb.speed",
                 "ro.usb_speed",
-                "ro.vendor.usb.speed"
+                "ro.vendor.usb.speed",
+                "sys.usb.typec.mode",
+                "sys.usb.config"
         };
         boolean anyProp = false;
-        boolean anySpeed = false;
-        boolean hasSuperSpeed = false;
-
         for (String k : keys) {
             String v = getProp(k);
             if (!isEmptySafe(v)) {
@@ -830,6 +869,10 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             }
         }
 
+        boolean anySpeed = false;
+        boolean hasSuperSpeed = false;
+
+        // Sysfs: live USB device speeds (αν υπάρχει κάτι συνδεδεμένο)
         try {
             File bus = new File("/sys/bus/usb/devices");
             if (bus.exists() && bus.isDirectory()) {
@@ -849,7 +892,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                                 try {
                                     double val = Double.parseDouble(sp.trim());
                                     if (val > 480.0) {
-                                        hasSuperSpeed = true;
+                                        hasSuperSpeed = true; // πάνω από USB2.0 High-Speed
                                     }
                                 } catch (Exception ignored) {}
                             }
@@ -861,6 +904,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
 
         if (hasSuperSpeed) {
             sb.append("SuperSpeed link detected (> 480 Mb/s)\n");
+        } else if (anySpeed) {
+            sb.append("Only USB2.x speeds observed so far\n");
         }
 
         if (!anyProp && !anySpeed) {
@@ -880,12 +925,16 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             if (inputs == null || inputs.length == 0) return "No input devices\n";
 
             int builtIn = 0, bt = 0, usb = 0, other = 0;
+            boolean hasTelephony = false;
 
             for (AudioDeviceInfo d : inputs) {
                 switch (d.getType()) {
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
+                        builtIn++;
+                        break;
                     case AudioDeviceInfo.TYPE_TELEPHONY:
                         builtIn++;
+                        hasTelephony = true;
                         break;
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
@@ -901,10 +950,12 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 }
             }
 
+            sb.append("Total input devices: ").append(inputs.length).append("\n");
             sb.append("Built-in mics: ").append(builtIn).append("\n");
             sb.append("Bluetooth: ").append(bt).append("\n");
             sb.append("USB: ").append(usb).append("\n");
             sb.append("Other: ").append(other).append("\n");
+            sb.append("Telephony-capable input: ").append(hasTelephony ? "YES" : "NO").append("\n");
 
         } catch (Throwable t) {
             sb.append("Mic error\n");
@@ -921,9 +972,40 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         };
         for (String k : keys) {
             String v = getProp(k);
-            if (!isEmptySafe(v)) return v;
+            if (!isEmptySafe(v)) return "Property " + k + " = " + v;
         }
+
+        String cfg = readAudioHalFromConfig();
+        if (!isEmptySafe(cfg)) return cfg;
+
         return "Unknown";
+    }
+
+    private String readAudioHalFromConfig() {
+        try {
+            String[] paths = {
+                    "/odm/etc/audio_policy_configuration.xml",
+                    "/vendor/etc/audio_policy_configuration.xml",
+                    "/system/etc/audio_policy_configuration.xml"
+            };
+            for (String p : paths) {
+                File f = new File(p);
+                if (!f.exists()) continue;
+                BufferedReader br = new BufferedReader(new FileReader(f));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String lower = line.toLowerCase();
+                    if (lower.contains("audio_hal_version")
+                            || lower.contains("halversion")
+                            || lower.contains("version=\"")) {
+                        br.close();
+                        return "From " + p + ": " + line.trim();
+                    }
+                }
+                br.close();
+            }
+        } catch (Throwable ignored) {}
+        return "";
     }
 
     private boolean isDeviceRooted() {
@@ -1020,6 +1102,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
     }
 
     private String getVolteStatus() {
+        // Common debug / vendor flags
         String[] keys = {
                 "persist.dbg.volte_avail_ovr",
                 "persist.dbg.vt_avail_ovr",
@@ -1076,44 +1159,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         if (lower.contains("ldac")) out.append("LDAC, ");
         if (lower.contains("lhdc")) out.append("LHDC, ");
         if (out.length() == 0) return "";
+        // remove last comma+space
         return out.substring(0, out.length() - 2);
-    }
-
-    // ===========================
-    // RUNTIME PERMISSIONS HELPERS
-    // ===========================
-    private void ensureWifiPermissions() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return;
-        }
-
-        List<String> required = new ArrayList<>();
-
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            required.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                required.add(Manifest.permission.NEARBY_WIFI_DEVICES);
-            }
-        }
-
-        if (!required.isEmpty()) {
-            requestPermissions(required.toArray(new String[0]), REQ_WIFI_PERM);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_WIFI_PERM) {
-            // Even if denied, continue – GEL returns clean info instead of crashing.
-        }
     }
 }

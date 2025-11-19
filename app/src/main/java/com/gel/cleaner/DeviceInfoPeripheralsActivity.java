@@ -72,82 +72,132 @@ private ArrayList<TextView> allIcons = new ArrayList<>();
         }
 
         // ============================
-        // REFERENCES (16 SECTIONS)
-        // ============================
-        TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
-        TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
-        TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
-        TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);
-        TextView txtLocationContent      = findViewById(R.id.txtLocationContent);
-        TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);
-        TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
-        TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
-        TextView txtRootContent          = findViewById(R.id.txtRootContent);
+// REFERENCES (19 SECTIONS)
+// ============================
+TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
+TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
+TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
+TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);
+TextView txtLocationContent      = findViewById(R.id.txtLocationContent);
+TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);
+TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
+TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
+TextView txtRootContent          = findViewById(R.id.txtRootContent);
 
-        TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-        TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
-        TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
-        TextView txtGnssContent          = findViewById(R.id.txtGnssContent);
-        TextView txtUsbContent           = findViewById(R.id.txtUsbContent);
-        TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
-        TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
+TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
+TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
+TextView txtGnssContent          = findViewById(R.id.txtGnssContent);
+TextView txtUsbContent           = findViewById(R.id.txtUsbContent);
+TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
+TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
 
-        // ICONS
-        TextView iconCamera        = findViewById(R.id.iconCameraToggle);
-        TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
-        TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
-        TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);
-        TextView iconLocation      = findViewById(R.id.iconLocationToggle);
-        TextView iconOther         = findViewById(R.id.iconOtherPeripheralsToggle);
-        TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);
-        TextView iconNfc           = findViewById(R.id.iconNfcToggle);
-        TextView iconRoot          = findViewById(R.id.iconRootToggle);
+// NEW 3 SECTIONS
+TextView txtThermalZonesContent   = findViewById(R.id.txtThermalZonesContent);
+TextView txtVulkanContent         = findViewById(R.id.txtVulkanContent);
+TextView txtThermalProfilesContent= findViewById(R.id.txtThermalProfilesContent);
 
-        TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
-        TextView iconUwb           = findViewById(R.id.iconUwbToggle);
-        TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);
-        TextView iconGnss          = findViewById(R.id.iconGnssToggle);
-        TextView iconUsb           = findViewById(R.id.iconUsbToggle);
-        TextView iconMics          = findViewById(R.id.iconMicsToggle);
-        TextView iconAudioHal      = findViewById(R.id.iconAudioHalToggle);
+// ============================
+// ICONS
+// ============================
+TextView iconCamera        = findViewById(R.id.iconCameraToggle);
+TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
+TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
+TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);
+TextView iconLocation      = findViewById(R.id.iconLocationToggle);
+TextView iconOther         = findViewById(R.id.iconOtherPeripheralsToggle);
+TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);
+TextView iconNfc           = findViewById(R.id.iconNfcToggle);
+TextView iconRoot          = findViewById(R.id.iconRootToggle);
 
-        allContents = new TextView[]{
-                txtCameraContent,
-                txtBiometricsContent,
-                txtSensorsContent,
-                txtConnectivityContent,
-                txtLocationContent,
-                txtOtherPeripherals,
-                txtBluetoothContent,
-                txtNfcContent,
-                txtRootContent,
-                txtBatteryContent,
-                txtUwbContent,
-                txtHapticsContent,
-                txtGnssContent,
-                txtUsbContent,
-                txtMicsContent,
-                txtAudioHalContent
-        };
+TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
+TextView iconUwb           = findViewById(R.id.iconUwbToggle);
+TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);
+TextView iconGnss          = findViewById(R.id.iconGnssToggle);
+TextView iconUsb           = findViewById(R.id.iconUsbToggle);
+TextView iconMics          = findViewById(R.id.iconMicsToggle);
+TextView iconAudioHal      = findViewById(R.id.iconAudioHalToggle);
 
-        allIcons = new TextView[]{
-                iconCamera,
-                iconBiometrics,
-                iconSensors,
-                iconConnectivity,
-                iconLocation,
-                iconOther,
-                iconBluetooth,
-                iconNfc,
-                iconRoot,
-                iconBattery,
-                iconUwb,
-                iconHaptics,
-                iconGnss,
-                iconUsb,
-                iconMics,
-                iconAudioHal
-        };
+// NEW 3 ICONS
+TextView iconThermalZones   = findViewById(R.id.iconThermalZonesToggle);
+TextView iconVulkan         = findViewById(R.id.iconVulkanToggle);
+TextView iconThermalProfiles= findViewById(R.id.iconThermalProfilesToggle);
+
+// ============================
+// BUILD ARRAYLISTS
+// ============================
+allContents.clear();
+allIcons.clear();
+
+allContents.add(txtCameraContent);
+allContents.add(txtBiometricsContent);
+allContents.add(txtSensorsContent);
+allContents.add(txtConnectivityContent);
+allContents.add(txtLocationContent);
+allContents.add(txtOtherPeripherals);
+allContents.add(txtBluetoothContent);
+allContents.add(txtNfcContent);
+allContents.add(txtRootContent);
+allContents.add(txtBatteryContent);
+allContents.add(txtUwbContent);
+allContents.add(txtHapticsContent);
+allContents.add(txtGnssContent);
+allContents.add(txtUsbContent);
+allContents.add(txtMicsContent);
+allContents.add(txtAudioHalContent);
+
+// NEW 3
+allContents.add(txtThermalZonesContent);
+allContents.add(txtVulkanContent);
+allContents.add(txtThermalProfilesContent);
+
+allIcons.add(iconCamera);
+allIcons.add(iconBiometrics);
+allIcons.add(iconSensors);
+allIcons.add(iconConnectivity);
+allIcons.add(iconLocation);
+allIcons.add(iconOther);
+allIcons.add(iconBluetooth);
+allIcons.add(iconNfc);
+allIcons.add(iconRoot);
+allIcons.add(iconBattery);
+allIcons.add(iconUwb);
+allIcons.add(iconHaptics);
+allIcons.add(iconGnss);
+allIcons.add(iconUsb);
+allIcons.add(iconMics);
+allIcons.add(iconAudioHal);
+
+// NEW 3
+allIcons.add(iconThermalZones);
+allIcons.add(iconVulkan);
+allIcons.add(iconThermalProfiles);
+
+// ============================
+// EXPANDERS (19)
+// ============================
+setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
+setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
+setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
+setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+setupSection(findViewById(R.id.headerBluetooth), txtBluetoothContent, iconBluetooth);
+setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
+setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);
+setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
+setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
+setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
+setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
+setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);
+setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
+
+// NEW 3
+setupSection(findViewById(R.id.headerThermalZones), txtThermalZonesContent, iconThermalZones);
+setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
+setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
+        
 
         // ROOT detection
         isRooted = isDeviceRooted();

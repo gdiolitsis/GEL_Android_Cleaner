@@ -689,7 +689,6 @@ allIcons.add(findViewById(R.id.iconThermalProfilesToggle));
         toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
         iconToUpdate.setText(visible ? "＋" : "−");
     }
-    }
 
     private String safe(String v) {
         if (v == null) return "[n/a]";

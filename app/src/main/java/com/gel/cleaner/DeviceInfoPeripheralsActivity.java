@@ -399,32 +399,36 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         txtLocationContent.setText(loc.toString());
 
         // ===========================
-        // OTHER PERIPHERALS
-        // ===========================
-        StringBuilder other = new StringBuilder();
-        other.append("── OTHER PERIPHERALS ──\n");
+// OTHER PERIPHERALS
+// ===========================
+StringBuilder other = new StringBuilder();
+other.append("── OTHER PERIPHERALS ──\n");
 
-        other.append("IR blaster: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
-                .append("\n");
-        other.append("Barometer: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
-                .append("\n");
-        other.append("Step counter: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
-                .append("\n");
-        other.append("Step detector: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
-                .append("\n");
-        other.append("Heart-rate sensor: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
-                .append("\n");
-        other.append("Ambient temperature sensor: ")
-                .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature) ? "YES" : "NO")
-                .append("\n");
+other.append("IR blaster: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
+        .append("\n");
 
-        txtOtherPeripherals.setText(other.toString());
+other.append("Barometer: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
+        .append("\n");
 
+other.append("Step counter: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
+        .append("\n");
+
+other.append("Step detector: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
+        .append("\n");
+
+other.append("Heart-rate sensor: ")
+        .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
+        .append("\n");
+
+other.append("Ambient temperature sensor: ")
+        .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
+        .append("\n");
+
+txtOtherPeripherals.setText(other.toString());
         // ===========================
         // BLUETOOTH
         // ===========================

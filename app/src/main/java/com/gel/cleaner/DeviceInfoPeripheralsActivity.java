@@ -1162,4 +1162,191 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         // remove last comma+space
         return out.substring(0, out.length() - 2);
     }
+    // ===========================
+// THERMAL ZONES (ULTRA DIAG)
+// ===========================
+private String readThermalZones() {
+    StringBuilder sb = new StringBuilder();
+    try {
+        File base = new File("/sys/class/thermal");
+        if (!base.exists() || !base.isDirectory()) {
+            sb.append("Thermal sysfs: [not available]\n");
+            return sb.toString();
+        }
+
+        File[] zones = base.listFiles();
+        if (zones == null || zones.length == 0) {
+            sb.append("No thermal zones listed\n");
+            return sb.toString();
+        }
+
+        for (File z : zones) {
+            if (!z.getName().startsWith("thermal_zone")) continue;
+
+            File typeFile = new File(z, "type");
+            File tempFile = new File(z, "temp");
+
+            String type = readSmallFile(typeFile);
+            String tempRaw = readSmallFile(tempFile);
+
+            if (type == null && tempRaw == null) continue;
+
+            sb.append(z.getName()).append(" — ");
+            if (type != null) {
+                sb.append(type.trim());
+            } else {
+                sb.append("[no type]");
+            }
+
+            if (tempRaw != null) {
+                tempRaw = tempRaw.trim();
+                try {
+                    double val = Double.parseDouble(tempRaw);
+                    // Συνήθως σε millidegrees (π.χ. 42000 = 42.0 °C)
+                    if (val > 1000) {
+                        val = val / 1000.0;
+                    }
+                    sb.append(" : ").append(String.format("%.1f", val)).append(" °C");
+                } catch (Throwable ignored) {
+                    sb.append(" : ").append(tempRaw);
+                }
+            }
+            sb.append("\n");
+        }
+    } catch (Throwable t) {
+        sb.append("Thermal read error: ").append(t.getMessage()).append("\n");
+    }
+
+    if (sb.length() == 0) {
+        sb.append("No thermal zones listed\n");
+    }
+
+    return sb.toString();
+}
+    // =====================================
+// VULKAN / GPU EXTRA (DRIVER & TAGS)
+// =====================================
+private String readVulkanInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    try {
+        sb.append("Hardware Vulkan: ")
+                .append(safe(getProp("ro.hardware.vulkan")))
+                .append("\n");
+
+        String verVendor = getProp("ro.vendor.vulkan.version");
+        String verSys    = getProp("ro.vulkan.version");
+
+        if (!isEmptySafe(verVendor) || !isEmptySafe(verSys)) {
+            sb.append("Vulkan version (vendor): ")
+                    .append(isEmptySafe(verVendor) ? "[n/a]" : verVendor)
+                    .append("\n");
+            sb.append("Vulkan version (system): ")
+                    .append(isEmptySafe(verSys) ? "[n/a]" : verSys)
+                    .append("\n");
+        } else {
+            sb.append("Vulkan version: [no props]\n");
+        }
+
+        // GPU / renderer hints
+        String eglHw   = getProp("ro.hardware.egl");
+        String gfxDrv0 = getProp("ro.gfx.driver.0");
+        String gpuName = getProp("ro.gfx.vendor");
+
+        if (!isEmptySafe(eglHw) || !isEmptySafe(gfxDrv0) || !isEmptySafe(gpuName)) {
+            sb.append("EGL hardware: ")
+                    .append(isEmptySafe(eglHw) ? "[n/a]" : eglHw)
+                    .append("\n");
+            sb.append("GPU driver 0: ")
+                    .append(isEmptySafe(gfxDrv0) ? "[n/a]" : gfxDrv0)
+                    .append("\n");
+            sb.append("GPU vendor/tag: ")
+                    .append(isEmptySafe(gpuName) ? "[n/a]" : gpuName)
+                    .append("\n");
+        }
+
+        // Board / SoC hint
+        String board = getProp("ro.board.platform");
+        if (!isEmptySafe(board)) {
+            sb.append("Board platform: ").append(board).append("\n");
+        }
+
+    } catch (Throwable t) {
+        sb.append("Vulkan info error: ").append(t.getMessage()).append("\n");
+    }
+
+    if (sb.length() == 0) {
+        sb.append("No Vulkan / GPU info\n");
+    }
+
+    return sb.toString();
+}
+    // ======================================
+// THERMAL ENGINE PROFILES (CONFIG SCAN)
+// ======================================
+private String readThermalProfiles() {
+    StringBuilder sb = new StringBuilder();
+
+    try {
+        // Συνήθεις διαδρομές vendor / system
+        File[] roots = new File[] {
+                new File("/vendor/etc"),
+                new File("/system/etc")
+        };
+
+        boolean anyFile = false;
+
+        for (File root : roots) {
+            if (!root.exists() || !root.isDirectory()) continue;
+
+            File[] files = root.listFiles();
+            if (files == null) continue;
+
+            for (File f : files) {
+                String name = f.getName().toLowerCase();
+                if (!name.startsWith("thermal") || !name.endsWith(".conf")) continue;
+
+                anyFile = true;
+                sb.append("File: ").append(f.getAbsolutePath()).append("\n");
+
+                // Διαβάζουμε λίγες πρώτες “significant” γραμμές
+                try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                    String line;
+                    int printed = 0;
+                    while ((line = br.readLine()) != null && printed < 30) {
+                        String lower = line.toLowerCase();
+                        if (lower.contains("profile")
+                                || lower.contains("trip")
+                                || lower.contains("algo")
+                                || lower.contains("sensor")
+                                || lower.contains("cluster")
+                                || lower.contains("cpu")
+                                || lower.contains("gpu")) {
+
+                            sb.append("  ").append(line.trim()).append("\n");
+                            printed++;
+                        }
+                    }
+                } catch (Throwable ignored) {
+                    sb.append("  [error reading]\n");
+                }
+
+                sb.append("\n");
+            }
+        }
+
+        if (!anyFile) {
+            sb.append("No thermal-engine config files found\n");
+        }
+
+    } catch (Throwable t) {
+        sb.append("Thermal profiles error: ").append(t.getMessage()).append("\n");
+    }
+
+    if (sb.length() == 0) {
+        sb.append("No thermal profile data\n");
+    }
+
+    return sb.toString();
+}
 }

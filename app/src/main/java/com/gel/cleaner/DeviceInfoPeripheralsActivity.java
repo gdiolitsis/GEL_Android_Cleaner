@@ -51,8 +51,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
     private boolean isRooted = false;
 
     // για το "άνοιγε μόνο ένα-ένα"
-    private TextView[] allContents;
-    private TextView[] allIcons;
+    private ArrayList<TextView> allContents = new ArrayList<>();
+private ArrayList<TextView> allIcons = new ArrayList<>();
 
     @Override
     protected void attachBaseContext(Context base) {

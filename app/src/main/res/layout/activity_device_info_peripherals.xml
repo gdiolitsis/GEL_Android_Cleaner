@@ -551,7 +551,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="@color/gel_bg_dark"
+            android:background="@drawable/gel_btn_outline_selector"
             android:gravity="center_vertical">
 
             <TextView

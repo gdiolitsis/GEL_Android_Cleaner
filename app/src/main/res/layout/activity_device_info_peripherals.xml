@@ -35,7 +35,7 @@
             android:layout_marginBottom="10dp" />
 
         <!-- ========================================================= -->
-        <!-- TEMPLATE: EACH SECTION = HEADER + CONTENT (gone) -->
+        <!-- TEMPLATE: EACH SECTION = HEADER + CONTENT -->
         <!-- ========================================================= -->
 
         <!-- CAMERA -->
@@ -206,39 +206,6 @@
         </LinearLayout>
         <TextView
             android:id="@+id/txtLocationContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:typeface="monospace"
-            android:textColor="@color/gel_text_secondary"
-            android:textSize="14sp"
-            android:padding="12dp"/>
-
-        <!-- OTHER -->
-        <LinearLayout
-            android:id="@+id/headerOther"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Other Peripherals"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-            <TextView
-                android:id="@+id/iconOtherToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-        <TextView
-            android:id="@+id/txtOtherContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -576,45 +543,45 @@
             android:textColor="@color/gel_text_secondary"
             android:textSize="14sp"
             android:padding="12dp"/>
-        
-        <!-- 6 OTHER PERIPHERALS -->
-<LinearLayout
-    android:id="@+id/headerOtherPeripherals"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp"
-    android:background="@color/gel_bg_dark"
-    android:gravity="center_vertical">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="OTHER PERIPHERALS"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:textColor="@color/gel_text_primary" />
+        <!-- OTHER PERIPHERALS — FINAL & ONLY VERSION -->
+        <LinearLayout
+            android:id="@+id/headerOtherPeripherals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:background="@color/gel_bg_dark"
+            android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/iconOtherPeripheralsToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textSize="22sp"
-        android:textColor="@color/gel_gold" />
-</LinearLayout>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="OTHER PERIPHERALS"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/gel_text_primary" />
 
-<TextView
-    android:id="@+id/txtOtherPeripheralsContent"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="@color/gel_text_secondary"
-    android:textSize="14sp"
-    android:visibility="gone"
-    android:padding="10dp"
-    android:background="@color/gel_bg_pressed"
-    android:layout_marginBottom="10dp" />
+            <TextView
+                android:id="@+id/iconOtherPeripheralsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textSize="22sp"
+                android:textColor="@color/gel_gold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtOtherPeripheralsContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_secondary"
+            android:textSize="14sp"
+            android:visibility="gone"
+            android:padding="10dp"
+            android:background="@color/gel_bg_pressed"
+            android:layout_marginBottom="10dp" />
 
     </LinearLayout>
 </ScrollView>

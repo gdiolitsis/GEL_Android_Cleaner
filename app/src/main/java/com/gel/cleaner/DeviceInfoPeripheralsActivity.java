@@ -420,7 +420,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
                 .append("\n");
         other.append("Ambient temperature sensor: ")
-                .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
+                .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature) ? "YES" : "NO")
                 .append("\n");
 
         txtOtherPeripherals.setText(other.toString());

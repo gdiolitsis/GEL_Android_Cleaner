@@ -582,6 +582,120 @@
             android:padding="10dp"
             android:background="@color/gel_bg_pressed"
             android:layout_marginBottom="10dp" />
+        <!-- THERMAL ZONES -->
+<LinearLayout
+    android:id="@+id/headerThermalZones"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Thermal Zones (CPU / GPU / Battery)"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/iconThermalZonesToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="＋"
+        android:textColor="#00FFBF"
+        android:textSize="18sp" />
+</LinearLayout>
+
+<TextView
+    android:id="@+id/txtThermalZonesContent"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:typeface="monospace"
+    android:textColor="@color/gel_text_secondary"
+    android:textSize="14sp"
+    android:padding="12dp" />
+
+        <!-- VULKAN / GPU -->
+<LinearLayout
+    android:id="@+id/headerVulkan"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:clickable="true">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Vulkan / GPU Driver Info"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/iconVulkanToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="＋"
+        android:textColor="#00FFBF"
+        android:textSize="18sp" />
+</LinearLayout>
+
+<TextView
+    android:id="@+id/txtVulkanContent"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:typeface="monospace"
+    android:textColor="@color/gel_text_secondary"
+    android:textSize="14sp"
+    android:padding="12dp" />
+
+        <!-- THERMAL PROFILES -->
+<LinearLayout
+    android:id="@+id/headerThermalProfiles"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:clickable="true">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Thermal Engine Profiles (vendor configs)"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/iconThermalProfilesToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="＋"
+        android:textColor="#00FFBF"
+        android:textSize="18sp" />
+</LinearLayout>
+
+<TextView
+    android:id="@+id/txtThermalProfilesContent"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:typeface="monospace"
+    android:textColor="@color/gel_text_secondary"
+    android:textSize="14sp"
+    android:padding="12dp" />
 
     </LinearLayout>
 </ScrollView>

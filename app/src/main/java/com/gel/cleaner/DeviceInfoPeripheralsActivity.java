@@ -589,6 +589,25 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);
         setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
         setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+        setupSection(findViewById(R.id.headerThermalZones),
+             findViewById(R.id.txtThermalZonesContent),
+             findViewById(R.id.iconThermalZonesToggle));
+
+setupSection(findViewById(R.id.headerVulkan),
+             findViewById(R.id.txtVulkanContent),
+             findViewById(R.id.iconVulkanToggle));
+
+setupSection(findViewById(R.id.headerThermalProfiles),
+             findViewById(R.id.txtThermalProfilesContent),
+             findViewById(R.id.iconThermalProfilesToggle));
+
+allContents.add(findViewById(R.id.txtThermalZonesContent));
+allContents.add(findViewById(R.id.txtVulkanContent));
+allContents.add(findViewById(R.id.txtThermalProfilesContent));
+
+allIcons.add(findViewById(R.id.iconThermalZonesToggle));
+allIcons.add(findViewById(R.id.iconVulkanToggle));
+allIcons.add(findViewById(R.id.iconThermalProfilesToggle));
     }
 
     private void setupSection(View header, final TextView content, final TextView icon) {

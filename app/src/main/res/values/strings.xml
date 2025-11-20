@@ -39,7 +39,7 @@
     <string name="toast_storage_access">Please grant Storage Access to continue</string>
     <string name="toast_usage_access">Please enable Usage Access to continue</string>
     <string name="toast_accessibility">Optional: Enable Accessibility Service for full cleaning</string>
-    <string name="toast_done">✅ Permissions granted</string>
+    <string name="toast_done">Permissions granted</string>
 
     <!-- ===================================== -->
     <!-- GEL SERVICE LAB -->
@@ -47,30 +47,22 @@
 
     <!-- Titles -->
     <string name="gel_service_lab">GEL Service Lab</string>
-    <string name="gel_service_lab_sub">
-        Professional device diagnostics\nAuto + Manual tests + Export report
-    </string>
+    <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
 
     <!-- Auto Diagnosis -->
     <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
     <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
-    <string name="gel_phone_diag_desc">
-        Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
-    </string>
+    <string name="gel_phone_diag_desc">Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…</string>
 
     <!-- Manual Tests -->
     <string name="manual_tests">MANUAL TESTS</string>
     <string name="manual_tests_title">Manual Tests</string>
-    <string name="manual_tests_desc">
-        Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
-    </string>
+    <string name="manual_tests_desc">Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.</string>
 
     <!-- Service Report -->
     <string name="service_report">SERVICE REPORT</string>
     <string name="export_report_title">Export Service Report</string>
-    <string name="export_report_desc">
-        Final report for the customer (PDF or TXT) + automatic reset
-    </string>
+    <string name="export_report_desc">Final report for the customer (PDF or TXT) + automatic reset</string>
 
     <!-- REPORT STRINGS -->
     <string name="report_title">GEL Service Report</string>
@@ -82,13 +74,10 @@
     <string name="report_no_entries">[No diagnostic entries found]</string>
     <string name="report_end">--- End of Report ---</string>
     <string name="report_signature">Technician Signature:</string>
-    <string name="preview_empty">
-        No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.
-    </string>
+    <string name="preview_empty">No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.</string>
 
     <!-- DAMAGE CHECKLIST (EN) -->
     <string name="damage_title">Damage Inspection</string>
-
     <string name="damage_screen">Broken screen</string>
     <string name="damage_pixels">Dead Pixels / Burn marks</string>
     <string name="damage_amoled">Burn-in / AMOLED damage</string>
@@ -97,7 +86,6 @@
     <string name="damage_mic">Microphone</string>
     <string name="damage_battery">Battery (health / swelling)</string>
     <string name="damage_water">Water damage / corrosion</string>
-
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
 </resources>

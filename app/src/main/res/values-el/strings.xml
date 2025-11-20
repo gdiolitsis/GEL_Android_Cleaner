@@ -72,7 +72,7 @@
         Τελική αναφορά για τον πελάτη (PDF ή TXT) + αυτόματο καθάρισμα δεδομένων
     </string>
 
-    <!-- REPORT BODY STRINGS (χρησιμοποιούνται στο PDF/TXT) -->
+    <!-- REPORT BODY STRINGS -->
     <string name="report_title">GEL Αναφορά Service</string>
     <string name="report_dev_line">GDiolitsis Engine Lab (GEL) — Author &amp; Developer</string>
     <string name="report_date">Ημερομηνία</string>
@@ -97,7 +97,7 @@
     <string name="damage_speaker">Ηχείο / Ακουστικό</string>
     <string name="damage_mic">Μικρόφωνο</string>
     <string name="damage_battery">Μπαταρία (υγεία / φούσκωμα)</string>
-    <string name="damage_water">Υγρασία / corrosion</string>
+    <string name="damage_water">Υγρασία / διάβρωση</string>
 
     <string name="damage_yes_no">[   ] ΝΑΙ   [   ] ΟΧΙ</string>
 

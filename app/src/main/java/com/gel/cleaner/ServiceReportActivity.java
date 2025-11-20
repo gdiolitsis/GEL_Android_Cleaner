@@ -31,19 +31,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-// ============================================================
-// ServiceReportActivity — GEL LAB OFFICIAL EDITION v3
-// TXT + PDF Export (Multi-Page, Unicode, GEL Logo)
-// + Damage checklist (8 ζημιές) με ΝΑΙ/ΟΧΙ ή YES/NO
-// ============================================================
 public class ServiceReportActivity extends AppCompatActivity {
 
     private static final int REQ_WRITE = 9911;
     private TextView txtPreview;
 
-    // ------------------------------------------------------------
-    // LocaleHelper για να ακολουθεί το GR / EN mode του app
-    // ------------------------------------------------------------
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
@@ -62,7 +54,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010);
 
-        // TITLE (χρησιμοποιεί μεταφραζόμενο string)
+        // TITLE
         TextView title = new TextView(this);
         title.setText("📄 " + getString(R.string.export_report_title));
         title.setTextSize(22f);
@@ -70,7 +62,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
-        // SUBTITLE (σταθερή υπογραφή + περιγραφή από strings)
+        // SUBTITLE
         TextView sub = new TextView(this);
         sub.setText(
                 getString(R.string.report_dev_line) + "\n" +
@@ -95,17 +87,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER_HORIZONTAL);
 
-        Button btnTxt = new Button(this);
-        btnTxt.setText("💾 Export TXT");
-        btnTxt.setAllCaps(false);
-        btnTxt.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        btnTxt.setTextColor(0xFFFFFFFF);
-        LinearLayout.LayoutParams lp1 =
-                new LinearLayout.LayoutParams(0, dp(48), 1f);
-        lp1.setMargins(0, dp(8), dp(4), dp(8));
-        btnTxt.setLayoutParams(lp1);
-        btnTxt.setOnClickListener(v -> exportWithCheck(false));
-
         Button btnPdf = new Button(this);
         btnPdf.setText("📄 Export PDF");
         btnPdf.setAllCaps(false);
@@ -113,11 +94,10 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setTextColor(0xFFFFFFFF);
         LinearLayout.LayoutParams lp2 =
                 new LinearLayout.LayoutParams(0, dp(48), 1f);
-        lp2.setMargins(dp(4), dp(8), 0, dp(8));
+        lp2.setMargins(dp(4), dp(8), dp(4), dp(8));
         btnPdf.setLayoutParams(lp2);
         btnPdf.setOnClickListener(v -> exportWithCheck(true));
 
-        btnRow.addView(btnTxt);
         btnRow.addView(btnPdf);
         root.addView(btnRow);
 
@@ -125,9 +105,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         setContentView(scroll);
     }
 
-    // ------------------------------------------------------------
-    // PERMISSION CHECK
-    // ------------------------------------------------------------
     private void exportWithCheck(boolean pdf) {
 
         if (GELServiceLog.isEmpty()) {
@@ -135,7 +112,6 @@ public class ServiceReportActivity extends AppCompatActivity {
             return;
         }
 
-        // Android 10 και πίσω -> χρειάζεται WRITE_EXTERNAL_STORAGE
         if (Build.VERSION.SDK_INT <= 29) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -150,37 +126,7 @@ public class ServiceReportActivity extends AppCompatActivity {
             }
         }
 
-        if (pdf) exportPdf();
-        else exportTxt();
-    }
-
-    // ------------------------------------------------------------
-    // TXT EXPORT
-    // ------------------------------------------------------------
-    private void exportTxt() {
-        try {
-            File outDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS);
-            if (!outDir.exists()) outDir.mkdirs();
-
-            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            File out = new File(outDir, "GEL_Service_Report_" + time + ".txt");
-
-            String body = buildReportBody();
-            FileOutputStream fos = new FileOutputStream(out);
-            fos.write(body.getBytes(StandardCharsets.UTF_8));
-            fos.close();
-
-            Toast.makeText(this,
-                    "TXT " + getString(R.string.toast_done) + "\n" + out.getAbsolutePath(),
-                    Toast.LENGTH_LONG).show();
-
-            GELServiceLog.clear();
-            txtPreview.setText(getPreviewText());
-
-        } catch (Exception e) {
-            Toast.makeText(this, "TXT error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+        exportPdf();
     }
 
     // ------------------------------------------------------------
@@ -200,13 +146,12 @@ public class ServiceReportActivity extends AppCompatActivity {
             PdfDocument pdf = new PdfDocument();
             Paint paint = new Paint();
 
-            int pageWidth = 595;  // A4 72dpi
+            int pageWidth = 595;
             int pageHeight = 842;
             int margin = 40;
             int y;
 
             String[] lines = body.split("\n");
-
             int currentLine = 0;
             int pageNumber = 1;
 
@@ -219,7 +164,6 @@ public class ServiceReportActivity extends AppCompatActivity {
 
                 y = margin;
 
-                // ----- LOGO -----
                 try {
                     Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
                     if (logo != null) {
@@ -272,9 +216,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         }
     }
 
-    // ------------------------------------------------------------
-    // Safe Unicode wrap (χωρίς να κόβει ελληνικά στη μέση)
-    // ------------------------------------------------------------
     private String unicodeWrap(String text, int width) {
         if (text.length() <= width) return text;
 
@@ -289,9 +230,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    // ------------------------------------------------------------
-    // BUILD FULL REPORT BODY (με damage checklist)
-    // ------------------------------------------------------------
     private String buildReportBody() {
         StringBuilder sb = new StringBuilder();
 
@@ -312,7 +250,6 @@ public class ServiceReportActivity extends AppCompatActivity {
                 .append(Build.VERSION.RELEASE)
                 .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
-        // DAMAGE CHECKLIST (πάντα 8 γραμμές)
         sb.append(getString(R.string.damage_title)).append("\n");
         appendDamageLine(sb, R.string.damage_screen);
         appendDamageLine(sb, R.string.damage_pixels);

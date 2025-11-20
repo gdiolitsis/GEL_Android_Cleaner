@@ -31,10 +31,9 @@ import java.util.Date;
 import java.util.Locale;
 
 // ============================================================
-// ServiceReportActivity — GEL LAB OFFICIAL EDITION v2
+// ServiceReportActivity — GEL LAB OFFICIAL EDITION v3
 // TXT + PDF Export with Multi-Page, Unicode Wrap & GEL Logo
-// + Damage checklist (8 ζημιές) με ΝΑΙ / ΟΧΙ
-// Πάντα δίνουμε ΟΛΟΚΛΗΡΟ το αρχείο έτοιμο για copy-paste.
+// + Damage checklist (8 ζημιές) με ΝΑΙ / ΟΧΙ, μετά το ServiceLog
 // ============================================================
 public class ServiceReportActivity extends AppCompatActivity {
 
@@ -54,7 +53,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010);
 
-        // TITLE (χρησιμοποιεί string πόρους για multi-lang τίτλο)
+        // TITLE (multi-lang από strings)
         TextView title = new TextView(this);
         title.setText("📄 " + getString(R.string.export_report_title));
         title.setTextSize(22f);
@@ -62,7 +61,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
-        // SUBTITLE (σταθερή υπογραφή + μεταφραζόμενο description)
+        // SUBTITLE (υπογραφή + περιγραφή από strings)
         TextView sub = new TextView(this);
         sub.setText(
                 "GDiolitsis Engine Lab (GEL) — Author & Developer\n" +
@@ -123,7 +122,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     private void exportWithCheck(boolean pdf) {
 
         if (GELServiceLog.isEmpty()) {
-            Toast.makeText(this, "Δεν υπάρχει Service Log για export.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -223,10 +222,11 @@ public class ServiceReportActivity extends AppCompatActivity {
 
                 paint.setColor(0xFF000000);
                 paint.setTextSize(14f);
-                canvas.drawText("GEL Service Report", margin + 80, y + 25, paint);
+                // Διπλός τίτλος EN + GR
+                canvas.drawText("GEL Service Report / Αναφορά Service", margin + 80, y + 25, paint);
 
                 paint.setTextSize(10f);
-                canvas.drawText("GDiolitsis Engine Lab (GEL)", margin + 80, y + 45, paint);
+                canvas.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer", margin + 80, y + 45, paint);
 
                 y += 90;
                 paint.setTextSize(9f);
@@ -270,6 +270,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     // Safe Unicode wrap (χωρίς να κόβει ελληνικά στη μέση)
     // ------------------------------------------------------------
     private String unicodeWrap(String text, int width) {
+        if (text == null) return "";
         if (text.length() <= width) return text;
 
         StringBuilder sb = new StringBuilder();
@@ -284,51 +285,109 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ------------------------------------------------------------
-// BUILD FULL REPORT BODY
-// ------------------------------------------------------------
-private String buildReportBody() {
-    StringBuilder sb = new StringBuilder();
+    // BUILD FULL REPORT BODY
+    // ------------------------------------------------------------
+    private String buildReportBody() {
+        StringBuilder sb = new StringBuilder();
 
-    sb.append(getString(R.string.report_title)).append("\n");
-    sb.append(getString(R.string.report_dev_line)).append("\n");
-    sb.append("----------------------------------------\n");
+        // Header
+        sb.append(getString(R.string.report_title)).append("\n");
+        sb.append(getString(R.string.report_dev_line)).append("\n");
+        sb.append("----------------------------------------\n");
 
-    sb.append(getString(R.string.report_date)).append(": ")
-            .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                    .format(new Date()))
-            .append("\n\n");
+        // Date
+        sb.append(getString(R.string.report_date)).append(": ")
+                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                        .format(new Date()))
+                .append("\n\n");
 
-    sb.append(getString(R.string.report_device)).append(": ")
-            .append(Build.MANUFACTURER).append(" ")
-            .append(Build.MODEL).append("\n");
+        // Device
+        sb.append(getString(R.string.report_device)).append(": ")
+                .append(Build.MANUFACTURER).append(" ")
+                .append(Build.MODEL).append("\n");
 
-    sb.append(getString(R.string.report_android)).append(": ")
-            .append(Build.VERSION.RELEASE)
-            .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
+        // Android
+        sb.append(getString(R.string.report_android)).append(": ")
+                .append(Build.VERSION.RELEASE)
+                .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
-    sb.append(getString(R.string.report_diag_header)).append("\n\n");
+        // Diagnostics header
+        sb.append(getString(R.string.report_diag_header)).append("\n\n");
 
-    if (GELServiceLog.isEmpty()) {
-        sb.append(getString(R.string.report_no_entries)).append("\n");
-    } else {
-        sb.append(GELServiceLog.getAll()).append("\n");
+        // ServiceLog (Auto + Manual)
+        if (GELServiceLog.isEmpty()) {
+            sb.append(getString(R.string.report_no_entries)).append("\n");
+        } else {
+            sb.append(GELServiceLog.getAll()).append("\n");
+        }
+
+        // =======================
+        // DAMAGE CHECKLIST (8)
+        // =======================
+        sb.append("\n");
+        sb.append(getString(R.string.damage_title)).append("\n");
+        sb.append("----------------------------------------\n");
+
+        sb.append(getString(R.string.damage_screen))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_pixels))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_amoled))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_charge_port))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_speaker))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_mic))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_battery))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        sb.append(getString(R.string.damage_water))
+                .append(": ")
+                .append(getString(R.string.damage_yes_no))
+                .append("\n");
+
+        // Footer
+        sb.append("\n").append(getString(R.string.report_end)).append("\n");
+        sb.append(getString(R.string.report_signature))
+                .append(" __________________________\n");
+
+        return sb.toString();
     }
 
-    sb.append("\n").append(getString(R.string.report_end)).append("\n");
-    sb.append(getString(R.string.report_signature))
-            .append(" __________________________\n");
-
-    return sb.toString();
-}
-
-private String getPreviewText() {
-    if (GELServiceLog.isEmpty()) {
-        return getString(R.string.preview_empty);
+    // ------------------------------------------------------------
+    // PREVIEW TEXT (μόνο ServiceLog, χωρίς checklist)
+    // ------------------------------------------------------------
+    private String getPreviewText() {
+        if (GELServiceLog.isEmpty()) {
+            return getString(R.string.preview_empty);
+        }
+        return GELServiceLog.getAll();
     }
-    return GELServiceLog.getAll();
-}
 
-private int dp(int v) {
-    float d = getResources().getDisplayMetrics().density;
-    return (int) (v * d + 0.5f);
+    private int dp(int v) {
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
+    }
 }

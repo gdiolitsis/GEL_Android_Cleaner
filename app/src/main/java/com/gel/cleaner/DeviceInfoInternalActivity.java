@@ -29,6 +29,8 @@ import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.TextView;
+import android.net.Network;
+import android.nfc.NfcManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 

@@ -17,7 +17,6 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # Install Gradle
       - name: Install Gradle
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
@@ -25,30 +24,25 @@ jobs:
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
-      # Enable AndroidX
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      # Decode keystore
       - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # Build release
       - name: Build Release
         run: gradle assembleRelease
 
-      # Install zipalign + apksigner
       - name: Install Android Build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
 
-      # Align + Sign APK
       - name: Align + Sign APK
         run: |
           cd app/build/outputs/apk/release
@@ -61,7 +55,7 @@ jobs:
           zipalign -f 4 "$unsigned" aligned.apk
 
           apksigner sign \
-            --ks ../../../gel-keystore.jks \
+            --ks $GITHUB_WORKSPACE/gel-keystore.jks \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
@@ -74,7 +68,6 @@ jobs:
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # Upload
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

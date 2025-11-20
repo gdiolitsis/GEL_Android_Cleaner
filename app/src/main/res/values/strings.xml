@@ -78,7 +78,7 @@
     <string name="report_signature">Technician Signature:</string>
     <string name="preview_empty">No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.</string>
 
-    <!-- DAMAGE CHECKLIST (EN) -->
+    <!-- DAMAGE CHECKLIST -->
     <string name="damage_title">Damage Inspection</string>
     <string name="damage_screen">Broken screen</string>
     <string name="damage_pixels">Dead Pixels / Burn marks</string>
@@ -90,10 +90,9 @@
     <string name="damage_water">Water damage / corrosion</string>
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
-
-    <!-- ====================================================== -->
-    <!-- 🔥 MANUAL TESTS — HOSPITAL EDITION (FULL EN SECTION) -->
-    <!-- ====================================================== -->
+    <!-- ======================================== -->
+    <!-- 🔥 MANUAL TESTS — HOSPITAL EDITION (EN) -->
+    <!-- ======================================== -->
 
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 

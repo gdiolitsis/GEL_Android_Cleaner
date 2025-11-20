@@ -340,29 +340,6 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         txtScreenContent.setText(sc.toString());
 
         // ===========================
-        // CONNECTIVITY (v5.0 FULL MAP)
-        // ===========================
-        txtConnectivityContent.setText(buildConnectivityInfo());
-
-        // ===========================
-        // ROOT EXTRAS
-        // ===========================
-        StringBuilder rootSb = new StringBuilder();
-        rootSb.append("── ROOT EXTRAS ──\n");
-        if (isRooted) {
-            rootSb.append("Device appears ROOTED\n\n");
-            rootSb.append("Build Tags: ").append(Build.TAGS).append("\n");
-            rootSb.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
-            rootSb.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
-            rootSb.append("SELinux: ").append(getSelinux()).append("\n");
-            rootSb.append("su path: ").append(checkSuPaths()).append("\n");
-        } else {
-            rootSb.append("Device appears NOT rooted\n");
-            rootSb.append("Root-level debug info disabled\n");
-        }
-        txtRootContent.setText(rootSb.toString());
-
-        // ===========================
         // EXPANDABLE HEADERS (14)
         // ===========================
         setupSection(findViewById(R.id.headerSystem),          txtSystemContent,          iconSystem);

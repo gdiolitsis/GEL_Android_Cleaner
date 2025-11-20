@@ -1,4 +1,4 @@
-name: Manual Build — GEL Android Doctor v4
+name: Manual Build — GEL Android Cleaner v4
 
 on:
   workflow_dispatch:
@@ -17,53 +17,66 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      # ✅ Install Gradle 8.2.1
-      - name: Install Gradle 8.2.1
+      # Install Gradle
+      - name: Install Gradle
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
           unzip gradle-8.2.1-bin.zip
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
+      # Enable AndroidX
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      # ✅ Decode Keystore
+      # Decode keystore
       - name: Decode Keystore
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > gel-keystore.jks
+          echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # ✅ Build APK
+      # Build release
       - name: Build Release
         run: gradle assembleRelease
 
-      # ✅ Sign APK (όπως παλιά, από το root, με το ίδιο keystore path)
-      - name: Sign APK
+      # Install zipalign + apksigner
+      - name: Install Android Build tools
         run: |
-          SDK_ROOT=$ANDROID_HOME
-          BUILD_TOOLS=$(ls "$SDK_ROOT/build-tools" | sort -V | tail -n 1)
-          APK_FILE=$(find app/build/outputs/apk/release -name "*-release-unsigned.apk" | head -n 1)
-          echo ">>> Using build-tools: $BUILD_TOOLS"
-          echo ">>> Found APK: $APK_FILE"
-          "$SDK_ROOT/build-tools/$BUILD_TOOLS/apksigner" sign \
-            --ks gel-keystore.jks \
+          sudo apt-get update
+          sudo apt-get install -y zipalign apksigner
+
+      # Align + Sign APK
+      - name: Align + Sign APK
+        run: |
+          cd app/build/outputs/apk/release
+          echo ">>> Found APK:"
+          ls -1 *.apk
+          
+          unsigned=$(ls *-unsigned.apk | head -n 1)
+          echo ">>> Signing: $unsigned"
+
+          zipalign -f 4 "$unsigned" aligned.apk
+
+          apksigner sign \
+            --ks ../../../gel-keystore.jks \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
-            --out GEL_Android_Doctor_v4.3.apk \
-            "$APK_FILE"
+            --out signed.apk \
+            aligned.apk
+
+          mv signed.apk GEL_Android_Cleaner_v4.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # ✅ Upload
+      # Upload
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Android_Doctor_Release_APK_v4_3
-          path: GEL_Android_Doctor_v4.3.apk
+          name: GEL_Android_Cleaner_Release_APK_v4
+          path: app/build/outputs/apk/release/GEL_Android_Cleaner_v4.apk

@@ -97,102 +97,101 @@ sec1.setGravity(Gravity.CENTER_HORIZONTAL);
 sec1.setPadding(0, dp(10), 0, dp(6));
 root.addView(sec1);
 
-        // ========== SECTION 1: AUDIO & VIBRATION — LABS 1–5 ==========
-        LinearLayout body1 = makeSectionBody();
-        Button header1 = makeSectionHeader("Audio & Vibration — Manual Labs 1–5", body1);
-        root.addView(header1);
-        root.addView(body1);
+// ========== SECTION 1: AUDIO & VIBRATION — LABS 1–5 ==========
+LinearLayout body1 = makeSectionBody();
+Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);
+root.addView(header1);
+root.addView(body1);
 
-        body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
-        body1.addView(makeTestButton("2. Speaker Frequency Sweep", this::lab2SpeakerSweep));
-        body1.addView(makeTestButton("3. Earpiece Call Check (manual)", this::lab3EarpieceManual));
-        body1.addView(makeTestButton("4. Microphone Recording Check (manual)", this::lab4MicManual));
-        body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
+body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
+body1.addView(makeTestButton("2. Speaker Frequency Sweep", this::lab2SpeakerSweep));
+body1.addView(makeTestButton("3. Earpiece Call Check (manual)", this::lab3EarpieceManual));
+body1.addView(makeTestButton("4. Microphone Recording Check (manual)", this::lab4MicManual));
+body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
 
-        // ========== SECTION 2: DISPLAY & SENSORS — LABS 6–10 ==========
-        LinearLayout body2 = makeSectionBody();
-        Button header2 = makeSectionHeader("Display & Sensors — Manual Labs 6–10", body2);
-        root.addView(header2);
-        root.addView(body2);
+// ========== SECTION 2: DISPLAY & SENSORS — LABS 6–10 ==========
+LinearLayout body2 = makeSectionBody();
+Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
+root.addView(header2);
+root.addView(body2);
 
-        body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
-        body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check (manual)", this::lab7RotationManual));
-        body2.addView(makeTestButton("8. Proximity During Call (manual)", this::lab8ProximityCall));
-        body2.addView(makeTestButton("9. Sensors Quick Presence Check", this::lab9SensorsQuick));
-        body2.addView(makeTestButton("10. Full Sensor List for Report", this::lab10FullSensorList));
+body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
+body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check (manual)", this::lab7RotationManual));
+body2.addView(makeTestButton("8. Proximity During Call (manual)", this::lab8ProximityCall));
+body2.addView(makeTestButton("9. Sensors Quick Presence Check", this::lab9SensorsQuick));
+body2.addView(makeTestButton("10. Full Sensor List for Report", this::lab10FullSensorList));
 
-        // ========== SECTION 3: WIRELESS & CONNECTIVITY — LABS 11–14 ==========
-        LinearLayout body3 = makeSectionBody();
-        Button header3 = makeSectionHeader("Wireless & Connectivity — Manual Labs 11–14", body3);
-        root.addView(header3);
-        root.addView(body3);
+// ========== SECTION 3: WIRELESS & CONNECTIVITY — LABS 11–14 ==========
+LinearLayout body3 = makeSectionBody();
+Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
+root.addView(header3);
+root.addView(body3);
 
-        body3.addView(makeTestButton("11. Wi-Fi Link & RSSI Snapshot", this::lab11WifiSnapshot));
-        body3.addView(makeTestButton("12. Mobile Data / Airplane Mode Checklist", this::lab12MobileDataChecklist));
-        body3.addView(makeTestButton("13. Basic Call Test Guidelines", this::lab13CallGuidelines));
-        body3.addView(makeTestButton("14. Internet Access Quick Check", this::lab14InternetQuickCheck));
+body3.addView(makeTestButton("11. Wi-Fi Link & RSSI Snapshot", this::lab11WifiSnapshot));
+body3.addView(makeTestButton("12. Mobile Data / Airplane Mode Checklist", this::lab12MobileDataChecklist));
+body3.addView(makeTestButton("13. Basic Call Test Guidelines", this::lab13CallGuidelines));
+body3.addView(makeTestButton("14. Internet Access Quick Check", this::lab14InternetQuickCheck));
 
-        // ========== SECTION 4: BATTERY & THERMAL — LABS 15–18 ==========
-        LinearLayout body4 = makeSectionBody();
-        Button header4 = makeSectionHeader("Battery & Thermal — Manual Labs 15–18", body4);
-        root.addView(header4);
-        root.addView(body4);
+// ========== SECTION 4: BATTERY & THERMAL — LABS 15–18 ==========
+LinearLayout body4 = makeSectionBody();
+Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
+root.addView(header4);
+root.addView(body4);
 
-        body4.addView(makeTestButton("15. Battery Level / Status Snapshot", this::lab15BatterySnapshot));
-        body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));
-        body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));
-        body4.addView(makeTestButton("18. Heat Under Load (manual questionnaire)", this::lab18ThermalQuestionnaire));
+body4.addView(makeTestButton("15. Battery Level / Status Snapshot", this::lab15BatterySnapshot));
+body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));
+body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));
+body4.addView(makeTestButton("18. Heat Under Load (manual questionnaire)", this::lab18ThermalQuestionnaire));
 
-        // ========== SECTION 5: STORAGE & PERFORMANCE — LABS 19–22 ==========
-        LinearLayout body5 = makeSectionBody();
-        Button header5 = makeSectionHeader("Storage & Performance — Manual Labs 19–22", body5);
-        root.addView(header5);
-        root.addView(body5);
+// ========== SECTION 5: STORAGE & PERFORMANCE — LABS 19–22 ==========
+LinearLayout body5 = makeSectionBody();
+Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
+root.addView(header5);
+root.addView(body5);
 
-        body5.addView(makeTestButton("19. Internal Storage Snapshot", this::lab19StorageSnapshot));
-        body5.addView(makeTestButton("20. Installed Apps Footprint", this::lab20AppsFootprint));
-        body5.addView(makeTestButton("21. Live RAM Snapshot", this::lab21RamSnapshot));
-        body5.addView(makeTestButton("22. Uptime / Reboot History Hints", this::lab22UptimeHints));
+body5.addView(makeTestButton("19. Internal Storage Snapshot", this::lab19StorageSnapshot));
+body5.addView(makeTestButton("20. Installed Apps Footprint", this::lab20AppsFootprint));
+body5.addView(makeTestButton("21. Live RAM Snapshot", this::lab21RamSnapshot));
+body5.addView(makeTestButton("22. Uptime / Reboot History Hints", this::lab22UptimeHints));
 
-        // ========== SECTION 6: SECURITY & SYSTEM HEALTH — LABS 23–26 ==========
-        LinearLayout body6 = makeSectionBody();
-        Button header6 = makeSectionHeader("Security & System Health — Manual Labs 23–26", body6);
-        root.addView(header6);
-        root.addView(body6);
+// ========== SECTION 6: SECURITY & SYSTEM HEALTH — LABS 23–26 ==========
+LinearLayout body6 = makeSectionBody();
+Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
+root.addView(header6);
+root.addView(body6);
 
-        body6.addView(makeTestButton("23. Screen Lock / Biometrics Checklist", this::lab23ScreenLock));
-        body6.addView(makeTestButton("24. Security Patch & Play Protect (manual)", this::lab24SecurityPatchManual));
-        body6.addView(makeTestButton("25. Developer Options / ADB Risk Note", this::lab25DevOptions));
-        body6.addView(makeTestButton("26. Root / Bootloader Suspicion Checklist", this::lab26RootSuspicion));
+body6.addView(makeTestButton("23. Screen Lock / Biometrics Checklist", this::lab23ScreenLock));
+body6.addView(makeTestButton("24. Security Patch & Play Protect (manual)", this::lab24SecurityPatchManual));
+body6.addView(makeTestButton("25. Developer Options / ADB Risk Note", this::lab25DevOptions));
+body6.addView(makeTestButton("26. Root / Bootloader Suspicion Checklist", this::lab26RootSuspicion));
 
-        // ========== SECTION 7: ADVANCED / LOGS — LABS 27–30 ==========
-        LinearLayout body7 = makeSectionBody();
-        Button header7 = makeSectionHeader("Advanced / Logs — Manual Labs 27–30", body7);
-        root.addView(header7);
-        root.addView(body7);
+// ========== SECTION 7: ADVANCED / LOGS — LABS 27–30 ==========
+LinearLayout body7 = makeSectionBody();
+Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
+root.addView(header7);
+root.addView(body7);
 
-        body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));
-        body7.addView(makeTestButton("28. App Permissions & Privacy (manual)", this::lab28PermissionsPrivacy));
-        body7.addView(makeTestButton("29. Combine Auto + Manual Findings", this::lab29CombineFindings));
-        body7.addView(makeTestButton("30. Final Service Notes for Report", this::lab30FinalNotes));
+body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));
+body7.addView(makeTestButton("28. App Permissions & Privacy (manual)", this::lab28PermissionsPrivacy));
+body7.addView(makeTestButton("29. Combine Auto + Manual Findings", this::lab29CombineFindings));
+body7.addView(makeTestButton("30. Final Service Notes for Report", this::lab30FinalNotes));
 
-        // LOG AREA
+// LOG AREA
 txtLog = new TextView(this);
 txtLog.setTextSize(13f);
 txtLog.setTextColor(0xFFEEEEEE);
 txtLog.setPadding(0, dp(16), 0, dp(8));
 txtLog.setMovementMethod(new ScrollingMovementMethod());
 
-// ➜ Title from strings.xml
 txtLog.setText(
-    Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>")
+        Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>")
 );
 
 root.addView(txtLog);
 scroll.addView(root);
 setContentView(scroll);
 
-// ➜ Description (first log entry) from strings.xml
+// First log entry
 GELServiceLog.clear();
 logInfo(getString(R.string.manual_log_desc));
     // ============================================================

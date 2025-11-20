@@ -1530,86 +1530,111 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
     // ===========================
     private String describeWifiStandard(int std) {
         switch (std) {
-            case 1:  return "Legacy (11a/b/g)";
-            case 4:  return "Wi-Fi 4 (11n)";
-            case 5:  return "Wi-Fi 5 (11ac)";
-            case 6:  return "Wi-Fi 6/6E (11ax)";
-            case 7:  return "Wi-Fi 7 (11be)";
-            default: return "Unknown";
+// ===========================
+        // CONNECTIVITY (FULL MAP)
+        // ===========================
+        txtConnectivityContent.setText(buildConnectivityInfo());
+
+        // ===========================
+        // ROOT EXTRAS
+        // ===========================
+        StringBuilder rootSb = new StringBuilder();
+        rootSb.append("── ROOT EXTRAS ──\n");
+        if (isRooted) {
+            rootSb.append("Device appears ROOTED\n\n");
+            rootSb.append("Build Tags: ").append(Build.TAGS).append("\n");
+            rootSb.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+            rootSb.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+            rootSb.append("SELinux: ").append(getSelinux()).append("\n");
+            rootSb.append("su path: ").append(checkSuPaths()).append("\n");
+        } else {
+            rootSb.append("Device appears NOT rooted\n");
+            rootSb.append("Root-level debug info disabled\n");
+        }
+        txtRootContent.setText(rootSb.toString());
+
+        // ===========================
+        // EXPANDABLE HEADERS (14)
+        // ===========================
+        setupSection(findViewById(R.id.headerSystem),          txtSystemContent,          iconSystem);
+        setupSection(findViewById(R.id.headerAndroid),         txtAndroidContent,         iconAndroid);
+        setupSection(findViewById(R.id.headerCpu),             txtCpuContent,             iconCpu);
+        setupSection(findViewById(R.id.headerGpu),             txtGpuContent,             iconGpu);
+        setupSection(findViewById(R.id.headerThermal),         txtThermalContent,         iconThermal);
+        setupSection(findViewById(R.id.headerThermalZones),    txtThermalZonesContent,    iconThermalZones);
+        setupSection(findViewById(R.id.headerVulkan),          txtVulkanContent,          iconVulkan);
+        setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
+        setupSection(findViewById(R.id.headerFpsGovernor),     txtFpsGovernorContent,     iconFpsGovernor);
+        setupSection(findViewById(R.id.headerRam),             txtRamContent,             iconRam);
+        setupSection(findViewById(R.id.headerStorage),         txtStorageContent,         iconStorage);
+        setupSection(findViewById(R.id.headerScreen),          txtScreenContent,          iconScreen);
+        setupSection(findViewById(R.id.headerConnectivity),    txtConnectivityContent,    iconConnectivity);
+        setupSection(findViewById(R.id.headerRoot),            txtRootContent,            iconRoot);
+    }
+
+    // ===========================
+    // ONE-OPEN-ONLY LOGIC
+    // ===========================
+    private void setupSection(View header, final TextView content, final TextView icon) {
+        if (header == null || content == null || icon == null) return;
+        header.setOnClickListener(v -> toggleSection(content, icon));
+    }
+
+    private void toggleSection(TextView toOpen, TextView iconToUpdate) {
+        if (allContents == null || allIcons == null) return;
+
+        // κλείνουμε όλα τα άλλα
+        for (int i = 0; i < allContents.length; i++) {
+            TextView c = allContents[i];
+            TextView ic = allIcons[i];
+            if (c == null || ic == null) continue;
+            if (c == toOpen) continue;
+            c.setVisibility(View.GONE);
+            ic.setText("＋");
+        }
+
+        boolean visible = (toOpen.getVisibility() == View.VISIBLE);
+        toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
+        iconToUpdate.setText(visible ? "＋" : "−");
+    }
+
+    // ===========================
+    // GENERIC HELPERS
+    // ===========================
+    private boolean isEmptySafe(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    private String safe(String s) {
+        if (s == null) return "[n/a]";
+        if ("02:00:00:00:00:00".equals(s)) return "[masked]";
+        return s.trim();
+    }
+
+    private String readSmallFile(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            return br.readLine();
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    private String describeWifiBand(int freqMHz) {
-        if (freqMHz >= 2400 && freqMHz < 2500) return "2.4 GHz";
-        if (freqMHz >= 4900 && freqMHz < 5900) return "5 GHz";
-        if (freqMHz >= 5925 && freqMHz < 7125) return "6 GHz";
-        return "Unknown";
-    }
-
-    private String describeWifiPhy(int std) {
-        switch (std) {
-            case 1:
-                return "Legacy 20 MHz";
-            case 4:
-                return "HT (20/40 MHz)";
-            case 5:
-                return "VHT (20/40/80 MHz)";
-            case 6:
-            case 7:
-                return "HE/EHT (up to 160 MHz)";
-            default:
-                return "Unknown / vendor-specific";
+    private String readFileAll(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    private String networkTypeToString(int type) {
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_GSM:
-                return "2G";
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-                return "3G";
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                return "4G / LTE";
-            case TelephonyManager.NETWORK_TYPE_NR:
-                return "5G NR";
-            default:
-                return "Unknown(" + type + ")";
-        }
-    }
-
-    // ===== LTE band από EARFCN (basic map) =====
-    private String lteBandFromEarfcn(int earfcn) {
-        if (earfcn < 0) return "Unknown";
-        // Common EU bands
-        if (earfcn >= 0 && earfcn <= 599)    return "1 (2100 MHz)";
-        if (earfcn >= 1200 && earfcn <= 1949) return "3 (1800 MHz)";
-        if (earfcn >= 2750 && earfcn <= 3449) return "7 (2600 MHz)";
-        if (earfcn >= 6150 && earfcn <= 6449) return "20 (800 MHz)";
-        if (earfcn >= 9210 && earfcn <= 9659) return "28 (700 MHz)";
-        return "Unknown (EARFCN " + earfcn + ")";
-    }
-
-    // ===== NR band από NR-ARFCN (coarse map) =====
-    private String nrBandFromNrarfcn(long nrarfcn) {
-        if (nrarfcn < 0) return "Unknown";
-        // Πολύ χοντρικό map για κοινές ζώνες
-        if (nrarfcn >= 422000 && nrarfcn <= 434000) return "n3 (1800 MHz)";
-        if (nrarfcn >= 151600 && nrarfcn <= 160600) return "n28 (700 MHz)";
-        if (nrarfcn >= 620000 && nrarfcn <= 653333) return "n78 (3.5 GHz)";
-        if (nrarfcn >= 693334 && nrarfcn <= 733333) return "n79 (4.7 GHz)";
-        return "Unknown (NR-ARFCN " + nrarfcn + ")";
-    }
-
-    // ===== ROOT UTILS =====
+    // ===========================
+    // ROOT UTILS
+    // ===========================
     private boolean isDeviceRooted() {
         String tags = Build.TAGS;
         if (tags != null && tags.contains("test-keys")) return true;

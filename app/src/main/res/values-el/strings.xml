@@ -19,8 +19,8 @@
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
     <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 Πληροφορίες Συσκευής\n(Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 Πληροφορίες Συσκευής\n(Περιφερειακά)</string>
+    <string name="phone_info_internal">📱 Πληρ. Συσκευής\n (Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n. (Περιφερειακά)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>

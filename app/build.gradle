@@ -16,18 +16,32 @@ android {
         multiDexEnabled true
     }
 
+    /* ----------------------------------------
+       🟩 PLAY STORE — OFFICIAL RELEASE SIGNING
+       ---------------------------------------- */
+    signingConfigs {
+        release {
+            storeFile file("../gel-keystore.jks")
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_ALIAS_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
-            // 🟩 MINIFY + SHRINK (όπως το θέλεις)
+            signingConfig signingConfigs.release
+
+            // 🟩 MINIFY + SHRINK
             minifyEnabled true
             shrinkResources true
 
-            // 🟦 Ασφαλές debug flags (no change)
+            // 🟦 Aσφαλείς ρυθμίσεις
             debuggable false
             jniDebuggable false
             renderscriptDebuggable false
 
-            // 🛡️ Σταθερό R8 (όπως είχαμε)
+            // 🛡️ R8
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                            'proguard-rules.pro'
         }
@@ -38,7 +52,16 @@ android {
         }
     }
 
-    /** ✅ UNIVERSAL APK SPLITS */
+    /* ----------------------------------------
+       📦 AAB + APK OUTPUTS
+       ---------------------------------------- */
+    bundle {
+        storeArchive {
+            enable = true
+        }
+    }
+
+    /** UNIVERSAL APK SPLITS */
     splits {
         abi {
             enable true
@@ -48,13 +71,13 @@ android {
         }
     }
 
-    /** ⬆ GEL Cleaner: Java 1.8 compatibility */
+    /** Java 1.8 */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    /** 🩻 MIUI / Legacy lib compatibility */
+    /** Legacy libs */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true

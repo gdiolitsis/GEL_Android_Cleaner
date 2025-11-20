@@ -194,9 +194,11 @@ setContentView(scroll);
 // First log entry
 GELServiceLog.clear();
 logInfo(getString(R.string.manual_log_desc));
-    // ============================================================
-    // UI HELPERS
-    // ============================================================
+}   // ← ΚΛΕΙΝΕΙ ΤΟ onCreate()
+
+// ============================================================
+// UI HELPERS
+// ============================================================
     private LinearLayout makeSectionBody() {
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);

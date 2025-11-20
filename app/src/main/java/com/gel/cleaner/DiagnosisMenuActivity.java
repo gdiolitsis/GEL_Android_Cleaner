@@ -12,132 +12,136 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 // ============================================================
-// GEL Service Lab — Main Diagnosis Menu (UI Fix: Center + White Text)
+// GEL Service Lab — Multi-Language Diagnosis Menu v2
 // ============================================================
 public class DiagnosisMenuActivity extends AppCompatActivity {
 
-@Override  
-protected void onCreate(@Nullable Bundle savedInstanceState) {  
-    super.onCreate(savedInstanceState);  
+    @Override
+    protected void attachBaseContext(android.content.Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 
-    ScrollView scroll = new ScrollView(this);  
-    scroll.setFillViewport(true);  
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    int pad = dp(16);  
-    root.setPadding(pad, pad, pad, pad);  
-    root.setBackgroundColor(0xFF101010);  
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
 
-    // TITLE  
-    TextView title = new TextView(this);  
-    title.setText("🔬 GEL Service Lab");  
-    title.setTextSize(22f);  
-    title.setTextColor(0xFFFFFFFF);        // 🔥 White title  
-    title.setGravity(Gravity.CENTER_HORIZONTAL);   // 🔥 Center  
-    title.setPadding(0, 0, 0, dp(8));  
-    root.addView(title);  
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(16);
+        root.setPadding(pad, pad, pad, pad);
+        root.setBackgroundColor(0xFF101010);
 
-    // SUBTITLE  
-    TextView sub = new TextView(this);  
-    sub.setText("Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report");  
-    sub.setTextSize(14f);  
-    sub.setTextColor(0xFFCCCCCC);  
-    sub.setGravity(Gravity.CENTER_HORIZONTAL);     // 🔥 Center  
-    sub.setPadding(0, 0, 0, dp(16));  
-    root.addView(sub);  
+        // TITLE
+        TextView title = new TextView(this);
+        title.setText(getString(R.string.gel_service_lab));
+        title.setTextSize(22f);
+        title.setTextColor(0xFFFFFFFF);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        title.setPadding(0, 0, 0, dp(8));
+        root.addView(title);
 
-    // =========================  
-    // 🟦 AUTO DIAGNOSIS  
-    //=========================  
-    root.addView(sectionLabel("AUTO DIAGNOSIS"));  
+        // SUBTITLE
+        TextView sub = new TextView(this);
+        sub.setText(getString(R.string.gel_service_lab_sub));
+        sub.setTextSize(14f);
+        sub.setTextColor(0xFFCCCCCC);
+        sub.setGravity(Gravity.CENTER_HORIZONTAL);
+        sub.setPadding(0, 0, 0, dp(16));
+        root.addView(sub);
 
-    View autoBtn = makeBlockButton(  
-            "📊 GEL Phone Diagnosis",  
-            "Πλήρης αυτόματη διάγνωση 20 εργαστηριακών ελέγχων\nHardware • RAM • Storage • Battery • Network • Sensors…"  
-    );  
-    autoBtn.setOnClickListener(v ->  
-            startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));  
-    root.addView(autoBtn);  
+        // =========================
+        // AUTO DIAGNOSIS
+        // =========================
+        root.addView(sectionLabel(getString(R.string.auto_diagnosis)));
 
-    // =========================  
-    // 🟩 MANUAL TESTS  
-    //==========================  
-    root.addView(sectionLabel("MANUAL TESTS"));  
+        View autoBtn = makeBlockButton(
+                getString(R.string.gel_phone_diag_title),
+                getString(R.string.gel_phone_diag_desc)
+        );
+        autoBtn.setOnClickListener(v ->
+                startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
+        root.addView(autoBtn);
 
-    View manualBtn = makeBlockButton(  
-            "🧪 Manual Tests",  
-            "Στοχευμένα tests για service:\nΗχεία, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ."  
-    );  
-    manualBtn.setOnClickListener(v ->  
-            startActivity(new Intent(this, ManualTestsActivity.class)));  
-    root.addView(manualBtn);  
+        // =========================
+        // MANUAL TESTS
+        // =========================
+        root.addView(sectionLabel(getString(R.string.manual_tests)));
 
-    // =========================  
-    // 🟨 EXPORT REPORT  
-    //==========================  
-    root.addView(sectionLabel("SERVICE REPORT"));  
+        View manualBtn = makeBlockButton(
+                getString(R.string.manual_tests_title),
+                getString(R.string.manual_tests_desc)
+        );
+        manualBtn.setOnClickListener(v ->
+                startActivity(new Intent(this, ManualTestsActivity.class)));
+        root.addView(manualBtn);
 
-    View exportBtn = makeBlockButton(  
-            "📄 Export Service Report",  
-            "Τελικό Report για τον πελάτη (PDF ή TXT) + αυτόματο reset"  
-    );  
-    exportBtn.setOnClickListener(v ->  
-            startActivity(new Intent(this, ServiceReportActivity.class)));  
-    root.addView(exportBtn);  
+        // =========================
+        // SERVICE REPORT
+        // =========================
+        root.addView(sectionLabel(getString(R.string.service_report)));
 
-    scroll.addView(root);  
-    setContentView(scroll);  
-}  
+        View exportBtn = makeBlockButton(
+                getString(R.string.export_report_title),
+                getString(R.string.export_report_desc)
+        );
+        exportBtn.setOnClickListener(v ->
+                startActivity(new Intent(this, ServiceReportActivity.class)));
+        root.addView(exportBtn);
 
-private TextView sectionLabel(String txt) {  
-    TextView tv = new TextView(this);  
-    tv.setText(txt);  
-    tv.setTextSize(16f);  
-    tv.setTextColor(0xFFEEEEEE);  
-    tv.setGravity(Gravity.CENTER_HORIZONTAL);     // 🔥 Center section label  
-    tv.setPadding(0, dp(12), 0, dp(6));  
-    return tv;  
-}  
+        scroll.addView(root);
+        setContentView(scroll);
+    }
 
-private View makeBlockButton(String title, String subtitle) {  
-    LinearLayout card = new LinearLayout(this);  
-    card.setOrientation(LinearLayout.VERTICAL);  
-    card.setPadding(dp(12), dp(12), dp(12), dp(12));  
-    card.setGravity(Gravity.CENTER_HORIZONTAL);   // 🔥 Center inside button  
+    private TextView sectionLabel(String txt) {
+        TextView tv = new TextView(this);
+        tv.setText(txt);
+        tv.setTextSize(16f);
+        tv.setTextColor(0xFFEEEEEE);
+        tv.setGravity(Gravity.CENTER_HORIZONTAL);
+        tv.setPadding(0, dp(12), 0, dp(6));
+        return tv;
+    }
 
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(  
-            LinearLayout.LayoutParams.MATCH_PARENT,  
-            LinearLayout.LayoutParams.WRAP_CONTENT  
-    );  
-    lp.setMargins(0, dp(6), 0, dp(6));  
-    card.setLayoutParams(lp);  
+    private View makeBlockButton(String title, String subtitle) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(12), dp(12), dp(12), dp(12));
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
 
-    card.setBackgroundResource(R.drawable.gel_btn_outline_selector);  
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(0, dp(6), 0, dp(6));
+        card.setLayoutParams(lp);
 
-    TextView t = new TextView(this);  
-    t.setText(title);  
-    t.setTextSize(16f);  
-    t.setTextColor(0xFFFFFFFF);           // 🔥 White button text  
-    t.setGravity(Gravity.CENTER_HORIZONTAL);  
-    t.setPadding(0, 0, 0, dp(4));  
-    card.addView(t);  
+        card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-    TextView s = new TextView(this);  
-    s.setText(subtitle);  
-    s.setTextSize(13f);  
-    s.setTextColor(0xFFAAAAAA);  
-    s.setGravity(Gravity.CENTER_HORIZONTAL);  
-    card.addView(s);  
+        TextView t = new TextView(this);
+        t.setText(title);
+        t.setTextSize(16f);
+        t.setTextColor(0xFFFFFFFF);
+        t.setGravity(Gravity.CENTER_HORIZONTAL);
+        t.setPadding(0, 0, 0, dp(4));
+        card.addView(t);
 
-    card.setClickable(true);  
-    card.setFocusable(true);  
-    return card;  
-}  
+        TextView s = new TextView(this);
+        s.setText(subtitle);
+        s.setTextSize(13f);
+        s.setTextColor(0xFFAAAAAA);
+        s.setGravity(Gravity.CENTER_HORIZONTAL);
+        card.addView(s);
 
-private int dp(int v) {  
-    float d = getResources().getDisplayMetrics().density;  
-    return (int) (v * d + 0.5f);  
-}
+        card.setClickable(true);
+        card.setFocusable(true);
+        return card;
+    }
 
+    private int dp(int v) {
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
+    }
 }

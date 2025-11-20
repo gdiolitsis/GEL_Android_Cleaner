@@ -41,4 +41,33 @@
     <string name="toast_accessibility">Optional: Enable Accessibility Service for full cleaning</string>
     <string name="toast_done">✅ Permissions granted</string>
 
+    <!-- ===================================== -->
+    <!-- GEL SERVICE LAB — NEW MULTI-LANG TEXTS -->
+    <!-- ===================================== -->
+
+    <!-- Titles -->
+    <string name="gel_service_lab">GEL Service Lab</string>
+    <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
+
+    <!-- Auto Diagnosis -->
+    <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
+    <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
+    <string name="gel_phone_diag_desc">
+        Full automatic diagnosis of 20 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
+    </string>
+
+    <!-- Manual Tests -->
+    <string name="manual_tests">MANUAL TESTS</string>
+    <string name="manual_tests_title">Manual Tests</string>
+    <string name="manual_tests_desc">
+        Targeted tests for service:\nSound, vibration, display, sensors, live RAM, WiFi, etc.
+    </string>
+
+    <!-- Service Report -->
+    <string name="service_report">SERVICE REPORT</string>
+    <string name="export_report_title">Export Service Report</string>
+    <string name="export_report_desc">
+        Final report for customer (PDF or TXT) + automatic reset
+    </string>
+
 </resources>

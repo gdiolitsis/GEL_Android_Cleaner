@@ -284,71 +284,51 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ------------------------------------------------------------
-    // BUILD FULL REPORT BODY
-    // ------------------------------------------------------------
-    private String buildReportBody() {
-        StringBuilder sb = new StringBuilder();
+// BUILD FULL REPORT BODY
+// ------------------------------------------------------------
+private String buildReportBody() {
+    StringBuilder sb = new StringBuilder();
 
-        sb.append("GEL Service Report\n");
-        sb.append("GDiolitsis Engine Lab (GEL) — Author & Developer\n");
-        sb.append("----------------------------------------\n");
-        sb.append("Ημερομηνία: ")
-                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                        .format(new Date()))
-                .append("\n\n");
+    sb.append(getString(R.string.report_title)).append("\n");
+    sb.append(getString(R.string.report_dev_line)).append("\n");
+    sb.append("----------------------------------------\n");
 
-        sb.append("Συσκευή: ")
-                .append(Build.MANUFACTURER).append(" ")
-                .append(Build.MODEL).append("\n");
+    sb.append(getString(R.string.report_date)).append(": ")
+            .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                    .format(new Date()))
+            .append("\n\n");
 
-        sb.append("Android: ")
-                .append(Build.VERSION.RELEASE)
-                .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
+    sb.append(getString(R.string.report_device)).append(": ")
+            .append(Build.MANUFACTURER).append(" ")
+            .append(Build.MODEL).append("\n");
 
-        // ===== ΖΗΜΙΕΣ — ΟΠΤΙΚΟΣ ΕΛΕΓΧΟΣ (για συμπλήρωση με στυλό) =====
-        sb.append("=== Ζημιές / Οπτικός έλεγχος (συμπληρώνεται με στυλό) ===\n");
-        sb.append("1. Σπασμένη οθόνη: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("2. Καμένη οθόνη (μαύρα στίγματα): [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("3. Dead pixels / φωτεινά σημεία: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("4. Burn-in / ghost image: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("5. Ραγισμένη πλάτη συσκευής: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("6. Φθορά θύρας φόρτισης: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("7. Φθορά ηχείου / μικροφώνου: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("8. Ζημιά αποθηκευτικού χώρου (bad sectors): [   ] ΝΑΙ   [   ] ΟΧΙ\n");
-        sb.append("\n");
+    sb.append(getString(R.string.report_android)).append(": ")
+            .append(Build.VERSION.RELEASE)
+            .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
-        // Χώρος για χειρόγραφες σημειώσεις τεχνικού
-        sb.append("Σημειώσεις τεχνικού (χειρόγραφα):\n");
-        sb.append("__________________________________________________\n");
-        sb.append("__________________________________________________\n");
-        sb.append("__________________________________________________\n\n");
+    sb.append(getString(R.string.report_diag_header)).append("\n\n");
 
-        // ===== AUTO + MANUAL DIAGNOSTICS LOG =====
-        sb.append("=== Service Lab Diagnostics ===\n\n");
-
-        if (GELServiceLog.isEmpty()) {
-            sb.append("[Δεν υπάρχουν καταχωρημένες διαγνώσεις.]\n");
-        } else {
-            sb.append(GELServiceLog.getAll()).append("\n");
-        }
-
-        sb.append("\n--- Τέλος Report ---\n");
-        sb.append("Υπογραφή Τεχνικού: __________________________\n");
-
-        return sb.toString();
+    if (GELServiceLog.isEmpty()) {
+        sb.append(getString(R.string.report_no_entries)).append("\n");
+    } else {
+        sb.append(GELServiceLog.getAll()).append("\n");
     }
 
-    private String getPreviewText() {
-        if (GELServiceLog.isEmpty()) {
-            return "Δεν υπάρχουν ακόμη διαγνώσεις.\n" +
-                    "Τρέξε Auto Diagnosis ή Manual Tests\n" +
-                    "και μετά κάνε Export.";
-        }
-        return GELServiceLog.getAll();
-    }
+    sb.append("\n").append(getString(R.string.report_end)).append("\n");
+    sb.append(getString(R.string.report_signature))
+            .append(" __________________________\n");
 
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
+    return sb.toString();
+}
+
+private String getPreviewText() {
+    if (GELServiceLog.isEmpty()) {
+        return getString(R.string.preview_empty);
     }
+    return GELServiceLog.getAll();
+}
+
+private int dp(int v) {
+    float d = getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
 }

@@ -32,7 +32,11 @@
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/gel_gold"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="14dp" />
+
+        <!-- ========================================================= -->
+        <!-- TEMPLATE FOR ALL HEADERS -->
+        <!-- ========================================================= -->
 
         <!-- ========================================================= -->
         <!-- SYSTEM -->
@@ -44,6 +48,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -70,7 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -85,6 +90,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -111,7 +117,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -126,6 +132,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -152,7 +159,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -167,6 +174,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -193,13 +201,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
 
         <!-- ========================================================= -->
-        <!-- THERMAL SENSORS -->
+        <!-- THERMAL -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerThermal"
@@ -208,6 +216,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -234,13 +243,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
 
         <!-- ========================================================= -->
-        <!-- THERMAL ZONES (NEW) -->
+        <!-- THERMAL ZONES -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerThermalZones"
@@ -249,6 +258,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -275,13 +285,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
 
         <!-- ========================================================= -->
-        <!-- VULKAN / GPU DRIVER (NEW) -->
+        <!-- VULKAN -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerVulkan"
@@ -290,6 +300,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -316,13 +327,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
 
         <!-- ========================================================= -->
-        <!-- THERMAL ENGINE PROFILES (NEW) -->
+        <!-- THERMAL PROFILES -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerThermalProfiles"
@@ -331,6 +342,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -357,13 +369,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
 
         <!-- ========================================================= -->
-        <!-- FPS / GPU GOVERNOR (NEW) -->
+        <!-- FPS GOVERNOR -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerFpsGovernor"
@@ -372,6 +384,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -398,7 +411,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -413,6 +426,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -439,7 +453,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -454,6 +468,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -480,7 +495,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -495,6 +510,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -521,7 +537,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -536,6 +552,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -562,7 +579,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />
@@ -577,6 +594,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
 
@@ -603,7 +621,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:textColor="@color/gel_text_secondary"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:typeface="monospace"
             android:padding="12dp" />

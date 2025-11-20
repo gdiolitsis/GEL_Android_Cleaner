@@ -8,59 +8,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "temurin"
 
-      # Install Gradle 8.2.1
       - name: Install Gradle 8.2.1
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
           unzip gradle-8.2.1-bin.zip
+          echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
-      # Enable AndroidX
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      # Decode Keystore
       - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # Build APK
       - name: Build Release
         run: gradle assembleRelease
 
-      # Install zipalign & apksigner
-      - name: Install Android Build Tools
+      - name: Install Android Build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
 
-      # ⭐ AUTO-DETECT APK + ZIPALIGN + SIGN ⭐
-      - name: Sign APK (Universal Auto-Detect)
+      - name: Align + Sign APK
         run: |
           cd app/build/outputs/apk/release
+          APK=$(ls *-release-unsigned.apk | head -n 1)
 
-          # Find ANY release APK (universal or ABI)
-          APK_FILE=$(ls *release*.apk | head -n 1)
+          echo ">>> Found APK: $APK"
 
-          echo ">>> Found APK: $APK_FILE"
-
-          # Align
-          zipalign -f 4 "$APK_FILE" unsigned-aligned.apk
+          zipalign -f 4 "$APK" aligned.apk
 
           echo ">>> Signing APK..."
           apksigner sign \
@@ -68,16 +58,17 @@ jobs:
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
-            --out ../../../GEL_Android_Doctor_v4.3.apk \
-            unsigned-aligned.apk
+            --out signed.apk \
+            aligned.apk
+
+          mv signed.apk GEL_Android_Doctor_v4.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # Upload final APK
-      - name: Upload Final APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Android_Doctor_v4.3
-          path: GEL_Android_Doctor_v4.3.apk
+          name: GEL_Android_Doctor_Release_v4
+          path: app/build/outputs/apk/release/GEL_Android_Doctor_v4.apk

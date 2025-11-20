@@ -1,4 +1,4 @@
-name: Manual Build — GEL Android Cleaner v4
+name: Manual Build — GEL Android Doctor v4
 
 on:
   workflow_dispatch:
@@ -8,24 +8,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------------------
-      # CHECKOUT
-      # ----------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ----------------------------------------
-      # JDK 17
-      # ----------------------------------------
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "temurin"
 
-      # ----------------------------------------
-      # GRADLE 8.2.1
-      # ----------------------------------------
+      # ✅ Install Gradle 8.2.1
       - name: Install Gradle 8.2.1
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
@@ -33,72 +25,55 @@ jobs:
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
-      # ----------------------------------------
-      # ANDROIDX
-      # ----------------------------------------
       - name: Enable AndroidX
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-      # ----------------------------------------
-      # KEYSTORE
-      # ----------------------------------------
+      # ✅ Decode Keystore
       - name: Decode Keystore
         run: |
           echo "$KEYSTORE_B64" | base64 --decode > gel-keystore.jks
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # ----------------------------------------
-      # FIX: Increase Heap for R8 & Resource Packaging
-      # ----------------------------------------
-      - name: Increase Java Heap for Gradle
-        run: |
-          echo "org.gradle.jvmargs=-Xmx4g -XX:+HeapDumpOnOutOfMemoryError" >> gradle.properties
-
-      # ----------------------------------------
-      # BUILD APK (RELEASE)
-      # ----------------------------------------
+      # ✅ Build APK
       - name: Build Release
         run: gradle assembleRelease
 
-      # ----------------------------------------
-      # BUILD TOOLS (zipalign + apksigner)
-      # ----------------------------------------
+      # ✅ Install Zipalign + Apksigner
       - name: Install Android Build Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
 
-      # ----------------------------------------
-      # ALIGN + SIGN (FINAL PLAY STORE APK)
-      # ----------------------------------------
-      - name: Align & Sign APK
+      # ✅ Align + Sign APK (V2)
+      - name: Align + Sign APK
         run: |
           cd app/build/outputs/apk/release
-          APK=$(ls *.apk | head -n 1)
-          echo "Found APK: $APK"
+          for f in *.apk; do
+            echo ">>> ZIPALIGN $f"
+            zipalign -f 4 "$f" aligned.apk
 
-          zipalign -f 4 "$APK" aligned.apk
+            echo ">>> SIGNING aligned.apk"
+            apksigner sign \
+              --ks ../../../gel-keystore.jks \
+              --ks-pass pass:"$KEYSTORE_PASSWORD" \
+              --key-pass pass:"$KEY_ALIAS_PASSWORD" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --out signed.apk \
+              aligned.apk
 
-          apksigner sign \
-            --ks ../../../gel-keystore.jks \
-            --ks-pass pass:"$KEYSTORE_PASSWORD" \
-            --key-pass pass:"$KEY_ALIAS_PASSWORD" \
-            --ks-key-alias "$KEY_ALIAS" \
-            --out ../../../GEL_Android_Cleaner_v4.apk \
-            aligned.apk
+            mv signed.apk GEL_Android_Doctor_v4.apk
+          done
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      # ----------------------------------------
-      # UPLOAD ARTIFACT
-      # ----------------------------------------
-      - name: Upload APK Artifact
+      # ✅ Upload final APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_Android_Cleaner_v4
-          path: GEL_Android_Cleaner_v4.apk
+          name: GEL_Android_Doctor_Release_APK_v4
+          path: app/build/outputs/apk/release/GEL_Android_Doctor_v4.apk

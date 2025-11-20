@@ -45,23 +45,24 @@ android {
         }
     }
 
-    /** ⬆ Java 1.8 compatibility */
+    /** ⬆ GEL Cleaner: Java 1.8 compatibility */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    /** 🩻 MIUI / Legacy lib compatibility */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
         }
     }
 
-    /** ⭐ CUSTOM APK OUTPUT NAME */
+    /** ✅ FIX: FORCE APK NAME (ΛΥΝΕΙ ΤΟ GITHUB ERROR) */
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
             if (variant.buildType.name == "release") {
-                output.outputFileName = "GEL_Android_Doctor_v${defaultConfig.versionName}.apk"
+                output.outputFileName = "GEL_Android_Doctor_v${variant.versionName}.apk"
             }
         }
     }

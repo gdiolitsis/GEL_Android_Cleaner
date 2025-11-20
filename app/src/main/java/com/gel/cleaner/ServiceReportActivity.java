@@ -88,7 +88,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnRow.setGravity(Gravity.CENTER_HORIZONTAL);
 
         Button btnPdf = new Button(this);
-        btnPdf.setText("📄 Export PDF");
+        btnPdf.setText(getString(R.string.export_pdf_button));    // FIXED
         btnPdf.setAllCaps(false);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
         btnPdf.setTextColor(0xFFFFFFFF);
@@ -212,7 +212,9 @@ public class ServiceReportActivity extends AppCompatActivity {
             txtPreview.setText(getPreviewText());
 
         } catch (Exception e) {
-            Toast.makeText(this, "PDF error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    getString(R.string.export_pdf_error) + ": " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();      // FIXED
         }
     }
 

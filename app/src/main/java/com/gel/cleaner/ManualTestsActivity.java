@@ -177,21 +177,24 @@ root.addView(sec1);
         body7.addView(makeTestButton("30. Final Service Notes for Report", this::lab30FinalNotes));
 
         // LOG AREA
-        txtLog = new TextView(this);
-        txtLog.setTextSize(13f);
-        txtLog.setTextColor(0xFFEEEEEE);
-        txtLog.setPadding(0, dp(16), 0, dp(8));
-        txtLog.setMovementMethod(new ScrollingMovementMethod());
-        txtLog.setText(Html.fromHtml("<b>Manual Tests Log</b><br>"));
-        root.addView(txtLog);
+txtLog = new TextView(this);
+txtLog.setTextSize(13f);
+txtLog.setTextColor(0xFFEEEEEE);
+txtLog.setPadding(0, dp(16), 0, dp(8));
+txtLog.setMovementMethod(new ScrollingMovementMethod());
 
-        scroll.addView(root);
-        setContentView(scroll);
+// ➜ Title from strings.xml
+txtLog.setText(
+    Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>")
+);
 
-        GELServiceLog.clear(); // start fresh log section for manual tests
-        logInfo("GEL Manual Tests — ready. Open a category above and run the required labs.");
-    }
+root.addView(txtLog);
+scroll.addView(root);
+setContentView(scroll);
 
+// ➜ Description (first log entry) from strings.xml
+GELServiceLog.clear();
+logInfo(getString(R.string.manual_log_desc));
     // ============================================================
     // UI HELPERS
     // ============================================================

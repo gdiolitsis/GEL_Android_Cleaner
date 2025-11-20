@@ -31,8 +31,10 @@ import java.util.Date;
 import java.util.Locale;
 
 // ============================================================
-// ServiceReportActivity — GEL LAB OFFICIAL EDITION
+// ServiceReportActivity — GEL LAB OFFICIAL EDITION v2
 // TXT + PDF Export with Multi-Page, Unicode Wrap & GEL Logo
+// + Damage checklist (8 ζημιές) με ΝΑΙ / ΟΧΙ
+// Πάντα δίνουμε ΟΛΟΚΛΗΡΟ το αρχείο έτοιμο για copy-paste.
 // ============================================================
 public class ServiceReportActivity extends AppCompatActivity {
 
@@ -52,17 +54,19 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010);
 
+        // TITLE (χρησιμοποιεί string πόρους για multi-lang τίτλο)
         TextView title = new TextView(this);
-        title.setText("📄 GEL Service Report");
+        title.setText("📄 " + getString(R.string.export_report_title));
         title.setTextSize(22f);
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
 
+        // SUBTITLE (σταθερή υπογραφή + μεταφραζόμενο description)
         TextView sub = new TextView(this);
         sub.setText(
                 "GDiolitsis Engine Lab (GEL) — Author & Developer\n" +
-                "Τελικό Report για τον πελάτη (Auto + Manual)"
+                        getString(R.string.export_report_desc).trim()
         );
         sub.setTextSize(13f);
         sub.setTextColor(0xFFCCCCCC);
@@ -301,6 +305,25 @@ public class ServiceReportActivity extends AppCompatActivity {
                 .append(Build.VERSION.RELEASE)
                 .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
+        // ===== ΖΗΜΙΕΣ — ΟΠΤΙΚΟΣ ΕΛΕΓΧΟΣ (για συμπλήρωση με στυλό) =====
+        sb.append("=== Ζημιές / Οπτικός έλεγχος (συμπληρώνεται με στυλό) ===\n");
+        sb.append("1. Σπασμένη οθόνη: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("2. Καμένη οθόνη (μαύρα στίγματα): [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("3. Dead pixels / φωτεινά σημεία: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("4. Burn-in / ghost image: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("5. Ραγισμένη πλάτη συσκευής: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("6. Φθορά θύρας φόρτισης: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("7. Φθορά ηχείου / μικροφώνου: [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("8. Ζημιά αποθηκευτικού χώρου (bad sectors): [   ] ΝΑΙ   [   ] ΟΧΙ\n");
+        sb.append("\n");
+
+        // Χώρος για χειρόγραφες σημειώσεις τεχνικού
+        sb.append("Σημειώσεις τεχνικού (χειρόγραφα):\n");
+        sb.append("__________________________________________________\n");
+        sb.append("__________________________________________________\n");
+        sb.append("__________________________________________________\n\n");
+
+        // ===== AUTO + MANUAL DIAGNOSTICS LOG =====
         sb.append("=== Service Lab Diagnostics ===\n\n");
 
         if (GELServiceLog.isEmpty()) {
@@ -318,8 +341,8 @@ public class ServiceReportActivity extends AppCompatActivity {
     private String getPreviewText() {
         if (GELServiceLog.isEmpty()) {
             return "Δεν υπάρχουν ακόμη διαγνώσεις.\n" +
-                   "Τρέξε Auto Diagnosis ή Manual Tests\n" +
-                   "και μετά κάνε Export.";
+                    "Τρέξε Auto Diagnosis ή Manual Tests\n" +
+                    "και μετά κάνε Export.";
         }
         return GELServiceLog.getAll();
     }

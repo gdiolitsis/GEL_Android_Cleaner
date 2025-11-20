@@ -72,4 +72,17 @@
         Τελική αναφορά για τον πελάτη (PDF ή TXT) + αυτόματο καθάρισμα δεδομένων
     </string>
 
+    <string name="damage_title">Έλεγχος Ζημιών</string>
+
+<string name="damage_screen">Σπασμένη οθόνη</string>
+<string name="damage_pixels">Dead Pixels / Καμμένα σημεία</string>
+<string name="damage_amoled">Καμένο AMOLED / φωτεινότητα</string>
+<string name="damage_charge_port">Βύσμα φόρτισης / Board flex</string>
+<string name="damage_speaker">Ηχείο / Ακουστικό</string>
+<string name="damage_mic">Μικρόφωνο</string>
+<string name="damage_battery">Μπαταρία (υγεία / φούσκωμα)</string>
+<string name="damage_water">Υγρασία / corrosion</string>
+
+<string name="damage_yes_no">[   ] ΝΑΙ   [   ] ΟΧΙ</string>
+
 </resources>

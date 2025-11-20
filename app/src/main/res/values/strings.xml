@@ -63,6 +63,8 @@
     <string name="service_report">SERVICE REPORT</string>
     <string name="export_report_title">Export Service Report</string>
     <string name="export_report_desc">Final report for the customer (PDF or TXT) + automatic reset</string>
+    <string name="export_pdf_button">📄 Export PDF</string>
+    <string name="export_pdf_error">PDF export error</string>
 
     <!-- REPORT STRINGS -->
     <string name="report_title">GEL Service Report</string>

@@ -16,32 +16,15 @@ android {
         multiDexEnabled true
     }
 
-    /* ----------------------------------------
-       🟩 PLAY STORE — OFFICIAL RELEASE SIGNING
-       ---------------------------------------- */
-    signingConfigs {
-        release {
-            storeFile file("../gel-keystore.jks")
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_ALIAS_PASSWORD")
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig signingConfigs.release
-
-            // 🟩 MINIFY + SHRINK
             minifyEnabled true
             shrinkResources true
 
-            // 🟦 Aσφαλείς ρυθμίσεις
             debuggable false
             jniDebuggable false
             renderscriptDebuggable false
 
-            // 🛡️ R8
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                            'proguard-rules.pro'
         }
@@ -52,16 +35,7 @@ android {
         }
     }
 
-    /* ----------------------------------------
-       📦 AAB + APK OUTPUTS
-       ---------------------------------------- */
-    bundle {
-        storeArchive {
-            enable = true
-        }
-    }
-
-    /** UNIVERSAL APK SPLITS */
+    /** ✅ UNIVERSAL APK SPLITS */
     splits {
         abi {
             enable true
@@ -71,16 +45,24 @@ android {
         }
     }
 
-    /** Java 1.8 */
+    /** ⬆ Java 1.8 compatibility */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    /** Legacy libs */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
+        }
+    }
+
+    /** ⭐ CUSTOM APK OUTPUT NAME */
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.buildType.name == "release") {
+                output.outputFileName = "GEL_Android_Doctor_v${defaultConfig.versionName}.apk"
+            }
         }
     }
 }

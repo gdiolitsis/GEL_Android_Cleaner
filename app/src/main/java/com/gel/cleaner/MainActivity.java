@@ -2,6 +2,7 @@ package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
+        applySavedLanguage();   // 🔥 auto-apply saved language
         setupLangButtons();
         setupDonate();
         setupButtons();
@@ -49,15 +51,27 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null) bGR.setOnClickListener(v -> {
-            LocaleHelper.set(this, "el");
-            recreate();
-        });
+        if (bGR != null)
+            bGR.setOnClickListener(v -> changeLang("el"));
 
-        if (bEN != null) bEN.setOnClickListener(v -> {
-            LocaleHelper.set(this, "en");
-            recreate();
-        });
+        if (bEN != null)
+            bEN.setOnClickListener(v -> changeLang("en"));
+    }
+
+    private void changeLang(String code) {
+        // save language
+        SharedPreferences sp = getSharedPreferences("gel_lang", MODE_PRIVATE);
+        sp.edit().putString("lang", code).apply();
+
+        // apply & reload
+        LocaleHelper.set(this, code);
+        recreate();
+    }
+
+    private void applySavedLanguage() {
+        SharedPreferences sp = getSharedPreferences("gel_lang", MODE_PRIVATE);
+        String code = sp.getString("lang", "en");
+        LocaleHelper.set(this, code);
     }
 
     /* =========================================================
@@ -111,9 +125,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // =====================================================
-        // 🟦 GEL DIAGNOSIS BUTTON FIXED (FULL MENU RESTORED)
-        // =====================================================
+        // DIAGNOSIS MAIN MENU
         bind(R.id.btnDiagnostics,
                 () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
     }

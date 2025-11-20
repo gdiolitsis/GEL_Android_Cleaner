@@ -18,7 +18,7 @@
     <string name="cpu_ram_info">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
-    <!-- PHONE INFO (Internal / Peripherals) -->
+    <!-- PHONE INFO -->
     <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Εσωτερικά)</string>
     <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Περιφερειακά)</string>
 
@@ -32,7 +32,7 @@
     <string name="app_cache_btn">🧽 Cache Εφαρμογών</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
-    <!-- PERFORMANCE (μόνο 1 κουμπί πλέον) -->
+    <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Διάγνωση Συσκευής</string>
 
     <!-- Μηνύματα Αδειών -->
@@ -40,5 +40,36 @@
     <string name="toast_usage_access">Ενεργοποίησε την πρόσβαση στη χρήση εφαρμογών</string>
     <string name="toast_accessibility">Προαιρετικό: Ενεργοποίησε την Υπηρεσία Προσβασιμότητας για πλήρη καθαρισμό</string>
     <string name="toast_done">✅ Οι άδειες παραχωρήθηκαν</string>
+
+    <!-- ===================================== -->
+    <!-- GEL SERVICE LAB — NEW STRINGS (GR) -->
+    <!-- ===================================== -->
+
+    <!-- Τίτλοι -->
+    <string name="gel_service_lab">GEL Service Lab</string>
+    <string name="gel_service_lab_sub">
+        Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report
+    </string>
+
+    <!-- Auto Diagnosis -->
+    <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
+    <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
+    <string name="gel_phone_diag_desc">
+        Πλήρης αυτόματη διάγνωση 20 εργαστηριακών ελέγχων\nHardware · RAM · Storage · Battery · Network · Sensors…
+    </string>
+
+    <!-- Manual Tests -->
+    <string name="manual_tests">MANUAL TESTS</string>
+    <string name="manual_tests_title">Manual Tests</string>
+    <string name="manual_tests_desc">
+        Στοχευμένα tests για service:\nΗχεία, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.
+    </string>
+
+    <!-- Service Report -->
+    <string name="service_report">SERVICE REPORT</string>
+    <string name="export_report_title">Export Service Report</string>
+    <string name="export_report_desc">
+        Τελικό Report για τον πελάτη (PDF ή TXT) + αυτόματο reset
+    </string>
 
 </resources>

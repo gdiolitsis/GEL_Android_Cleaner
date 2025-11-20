@@ -987,41 +987,170 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         } catch (Throwable t) {
             sb.append("\n[NFC] State: Unknown\n");
         }
+// ===========================
+// CONNECTIVITY
+// ===========================
+private String buildConnectivityInfo() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("── CONNECTIVITY ──\n");
 
-        // ===== AIRPLANE MODE =====
-        try {
-            boolean airplaneOn =
-                    Settings.Global.getInt(getContentResolver(),
-                            Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
-            sb.append("Airplane mode: ").append(airplaneOn ? "ON" : "OFF").append("\n");
-        } catch (Throwable t) {
-            sb.append("Airplane mode: Unknown\n");
+    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    Network active = cm.getActiveNetwork();
+    NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+
+    // ------ Active transport ------
+    if (caps != null) {
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            sb.append("Active: Wi-Fi\n");
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            sb.append("Active: Mobile\n");
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            sb.append("Active: Ethernet\n");
+        } else {
+            sb.append("Active: Unknown\n");
         }
 
-        // ===== HOTSPOT (Wi-Fi Tethering) =====
-        try {
-            int apState = Settings.Global.getInt(
-                    getContentResolver(), "wifi_ap_state", 0);
-            String apStr;
-            // Οι τιμές είναι vendor-specific, αλλά 12 συνήθως = ENABLED
-            if (apState == 12) {
-                apStr = "ON";
-            } else if (apState == 11) {
-                apStr = "OFF";
-            } else {
-                apStr = "State " + apState;
-            }
-            sb.append("Hotspot: ").append(apStr).append("\n");
-        } catch (Throwable t) {
-            sb.append("Hotspot: Unknown\n");
-        }
-
-        // ===== MOBILE / 4G / 5G / CA =====
-        appendMobileRadioInfo(sb);
-
-        return sb.toString();
+        boolean metered = cm.isActiveNetworkMetered();
+        sb.append("Metered: ").append(metered ? "YES" : "NO").append("\n\n");
+    } else {
+        sb.append("Active: None\n\n");
     }
 
+    // ===========================
+    // WIFI SECTION (UNIVERSAL FIX)
+    // ===========================
+    sb.append("[Wi-Fi]\n");
+
+    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    if (wm != null) {
+
+        WifiInfo wi = wm.getConnectionInfo();
+        boolean reallyConnected =
+                (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+
+        if (!reallyConnected) {
+            sb.append("Not connected\n\n");
+        } else {
+            sb.append("State: CONNECTED\n");
+
+            // Android 12+ restriction-safe SSID
+            String ssid = wi.getSSID();
+            if (ssid == null || ssid.equals("<unknown ssid>") || ssid.equals("0x")) {
+                ssid = "[restricted by Android]";
+            }
+
+            // Android 12+ BSSID restriction
+            String bssid = wi.getBSSID();
+            if (bssid == null) bssid = "[restricted]";
+
+            sb.append("SSID: ").append(ssid).append("\n");
+            sb.append("BSSID: ").append(bssid).append("\n");
+
+            int speed = wi.getLinkSpeed();
+            sb.append("Link speed: ").append(speed > 0 ? speed + " Mbps" : "n/a").append("\n");
+
+            int freq = wi.getFrequency();
+            sb.append("Band: ").append(describeWifiBand(freq)).append("\n");
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                int std = wi.getWifiStandard();
+                sb.append("Standard: ").append(describeWifiStandard(std)).append("\n");
+            } else {
+                sb.append("Standard: Legacy (Android <11)\n");
+            }
+
+            sb.append("\n");
+        }
+    } else {
+        sb.append("Wi-Fi manager unavailable\n\n");
+    }
+
+    // ===========================
+    // BLUETOOTH
+    // ===========================
+    sb.append("[Bluetooth]\n");
+    try {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+        if (bt == null) {
+            sb.append("Not supported\n\n");
+        } else {
+            sb.append("Enabled: ").append(bt.isEnabled() ? "YES" : "NO").append("\n");
+
+            String name;
+            try {
+                name = bt.getName();
+            } catch (Exception e) {
+                name = "[permission denied]";
+            }
+            sb.append("Name: ").append(name).append("\n");
+
+            sb.append("BLE support: ")
+                    .append(getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
+                    .append("\n\n");
+        }
+    } catch (Exception e) {
+        sb.append("Bluetooth error\n\n");
+    }
+
+    // ===========================
+    // NFC
+    // ===========================
+    sb.append("[NFC]\n");
+    try {
+        NfcManager nfcMgr = (NfcManager) getSystemService(Context.NFC_SERVICE);
+        NfcAdapter nfc = nfcMgr != null ? nfcMgr.getDefaultAdapter() : null;
+        if (nfc == null) {
+            sb.append("State: Not available\n");
+        } else {
+            sb.append("State: ").append(nfc.isEnabled() ? "ON" : "OFF").append("\n");
+        }
+    } catch (Exception e) {
+        sb.append("State: Unknown\n");
+    }
+    sb.append("\n");
+
+    // ===========================
+    // AIRPLANE / HOTSPOT
+    // ===========================
+    try {
+        boolean airplaneOn = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
+        sb.append("Airplane mode: ").append(airplaneOn ? "ON" : "OFF").append("\n");
+    } catch (Exception e) {
+        sb.append("Airplane mode: Unknown\n");
+    }
+
+    try {
+        int hotspot = Settings.Global.getInt(
+                getContentResolver(),
+                "tether_dun_required", 0);
+        sb.append("Hotspot: State ").append(hotspot).append("\n");
+    } catch (Exception e) {
+        sb.append("Hotspot: Unknown\n");
+    }
+
+    sb.append("\n");
+
+    // ===========================
+    // MOBILE RADIO
+    // ===========================
+    sb.append("[Mobile Radio]\n");
+    try {
+        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        if (tm == null) {
+            sb.append("Not available\n");
+        } else {
+            sb.append("SIM state: ").append(tm.getSimState()).append("\n");
+            sb.append("Operator: ").append(tm.getNetworkOperatorName()).append("\n");
+            sb.append("Roaming: ").append(tm.isNetworkRoaming() ? "YES" : "NO").append("\n");
+        }
+    } catch (Exception e) {
+        sb.append("Mobile radio error\n");
+    }
+
+    return sb.toString();
+}
     // =====================================
     // MOBILE / LTE / 5G DETAIL SECTION
     // =====================================

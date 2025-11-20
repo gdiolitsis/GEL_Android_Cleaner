@@ -23,6 +23,12 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+// imports (πρόσθεσέ τα αν δεν υπάρχουν ήδη)
+import android.bluetooth.BluetoothAdapter;
+import android.net.Network;
+import android.net.wifi.WifiManager;
+import android.nfc.NfcAdapter;
+import android.provider.Settings;
 
 public class DeviceInfoInternalActivity extends AppCompatActivity {
 
@@ -369,6 +375,97 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         }
 
         txtConnectivityContent.setText(conn.toString());
+
+        // ============================================================
+// CONNECTIVITY REPORT (Active + Radios)
+// ============================================================
+private String buildConnectivityInfo() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("──  CONNECTIVITY  ──\n");
+
+    ConnectivityManager cm =
+            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    Network active = (cm != null) ? cm.getActiveNetwork() : null;
+    NetworkCapabilities caps =
+            (cm != null && active != null) ? cm.getNetworkCapabilities(active) : null;
+
+    String activeType = "NONE";
+    if (caps != null) {
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            activeType = "Wi-Fi";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            activeType = "Cellular";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            activeType = "Ethernet";
+        } else {
+            activeType = "Other";
+        }
+    }
+
+    sb.append("Active: ").append(activeType).append("\n");
+
+    if (cm != null) {
+        boolean metered = cm.isActiveNetworkMetered();
+        sb.append("Metered: ").append(metered ? "YES" : "NO").append("\n");
+    }
+
+    // Wi-Fi state
+    try {
+        WifiManager wifi = (WifiManager)
+                getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        String wifiState = "Unknown";
+        if (wifi != null) {
+            wifiState = wifi.isWifiEnabled() ? "ON" : "OFF";
+        }
+        sb.append("\nWi-Fi: ").append(wifiState);
+    } catch (Exception e) {
+        sb.append("\nWi-Fi: Unknown");
+    }
+
+    // Bluetooth state
+    try {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+        String btState;
+        if (bt == null) {
+            btState = "Not available";
+        } else if (bt.isEnabled()) {
+            btState = "ON";
+        } else {
+            btState = "OFF";
+        }
+        sb.append("\nBluetooth: ").append(btState);
+    } catch (Exception e) {
+        sb.append("\nBluetooth: Unknown");
+    }
+
+    // NFC state
+    try {
+        NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
+        String nfcState;
+        if (nfc == null) {
+            nfcState = "Not available";
+        } else if (nfc.isEnabled()) {
+            nfcState = "ON";
+        } else {
+            nfcState = "OFF";
+        }
+        sb.append("\nNFC: ").append(nfcState);
+    } catch (Exception e) {
+        sb.append("\nNFC: Unknown");
+    }
+
+    // Airplane mode
+    try {
+        boolean airplaneOn =
+                Settings.Global.getInt(getContentResolver(),
+                        Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
+        sb.append("\nAirplane mode: ").append(airplaneOn ? "ON" : "OFF");
+    } catch (Exception e) {
+        sb.append("\nAirplane mode: Unknown");
+    }
+
+    return sb.toString();
+}
 
         // ===========================
         // ROOT EXTRAS

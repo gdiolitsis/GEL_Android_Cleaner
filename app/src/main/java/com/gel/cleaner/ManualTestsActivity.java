@@ -70,42 +70,32 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010); // GEL black
 
-        // ============================
         // TITLE
-        // ============================
-        TextView title = new TextView(this);
-        title.setText("🧪 GEL Manual Tests — Hospital Edition");
-        title.setTextSize(20f);
-        title.setTextColor(0xFFFFD700);  // GEL gold
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setPadding(0, 0, 0, dp(6));
-        root.addView(title);
+TextView title = new TextView(this);
+title.setText(getString(R.string.manual_hospital_title));
+title.setTextSize(20f);
+title.setTextColor(0xFFFFD700);
+title.setGravity(Gravity.CENTER_HORIZONTAL);
+title.setPadding(0, 0, 0, dp(6));
+root.addView(title);
 
-        // ============================
-        // SUBTITLE
-        // ============================
-        TextView sub = new TextView(this);
-        sub.setText(
-                "Professional service tools.\n"
-                        + "Each manual lab writes detailed results below (OK / WARN / ERROR)\n"
-                        + "and is included in the final Service Report."
-        );
-        sub.setTextSize(13f);
-        sub.setTextColor(0xFF39FF14);  // NEON GREEN
-        sub.setGravity(Gravity.CENTER_HORIZONTAL);
-        sub.setPadding(0, 0, 0, dp(12));
-        root.addView(sub);
+// SUBTITLE
+TextView sub = new TextView(this);
+sub.setText(getString(R.string.manual_hospital_sub));
+sub.setTextSize(13f);
+sub.setTextColor(0xFF39FF14);
+sub.setGravity(Gravity.CENTER_HORIZONTAL);
+sub.setPadding(0, 0, 0, dp(12));
+root.addView(sub);
 
-        // ============================
-        // SECTION 1 TITLE (start of UI)
-        // ============================
-        TextView sec1 = new TextView(this);
-        sec1.setText("📂 SECTION 1 — System & Hardware Tests");
-        sec1.setTextSize(17f);
-        sec1.setTextColor(0xFFFFD700); // Gold
-        sec1.setGravity(Gravity.CENTER_HORIZONTAL);
-        sec1.setPadding(0, dp(10), 0, dp(6));
-        root.addView(sec1);
+// SECTION TITLE
+TextView sec1 = new TextView(this);
+sec1.setText(getString(R.string.manual_section1));
+sec1.setTextSize(17f);
+sec1.setTextColor(0xFFFFD700);
+sec1.setGravity(Gravity.CENTER_HORIZONTAL);
+sec1.setPadding(0, dp(10), 0, dp(6));
+root.addView(sec1);
 
         // ========== SECTION 1: AUDIO & VIBRATION — LABS 1–5 ==========
         LinearLayout body1 = makeSectionBody();

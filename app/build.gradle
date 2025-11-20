@@ -18,13 +18,16 @@ android {
 
     buildTypes {
         release {
+            // ΟΚ για Play Store
             minifyEnabled true
             shrinkResources true
 
+            // Debug off
             debuggable false
             jniDebuggable false
             renderscriptDebuggable false
 
+            // Proguard / R8
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                            'proguard-rules.pro'
         }
@@ -35,35 +38,26 @@ android {
         }
     }
 
-    /** ✅ UNIVERSAL APK SPLITS */
+    /** UNIVERSAL APK SPLITS */
     splits {
         abi {
             enable true
             reset()
             include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
-            universalApk true
+            universalApk true   // Το GitHub θα το πιάσει και θα το μετονομάσει
         }
     }
 
-    /** ⬆ GEL Cleaner: Java 1.8 compatibility */
+    /** Java 1.8 */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    /** 🩻 MIUI / Legacy lib compatibility */
+    /** MIUI / Legacy libs */
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
-        }
-    }
-
-    /** ✅ FIX: FORCE APK NAME (ΛΥΝΕΙ ΤΟ GITHUB ERROR) */
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            if (variant.buildType.name == "release") {
-                output.outputFileName = "GEL_Android_Doctor_v${variant.versionName}.apk"
-            }
         }
     }
 }
@@ -74,4 +68,4 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.multidex:multidex:2.0.1'
-}
+}l

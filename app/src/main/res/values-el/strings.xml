@@ -69,6 +69,8 @@
     <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
     <string name="export_report_title">Εξαγωγή Αναφοράς Service</string>
     <string name="export_report_desc">
+    <string name="export_pdf_button">📄 Εξαγωγή PDF</string>
+    <string name="export_pdf_error">Σφάλμα εξαγωγής PDF</string>
         Τελική αναφορά για τον πελάτη (PDF ή TXT) + αυτόματο καθάρισμα δεδομένων
     </string>
 

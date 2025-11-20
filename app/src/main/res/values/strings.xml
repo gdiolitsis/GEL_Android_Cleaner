@@ -88,4 +88,28 @@
     <string name="damage_water">Water damage / corrosion</string>
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
+
+    <!-- ====================================================== -->
+    <!-- 🔥 MANUAL TESTS — HOSPITAL EDITION (FULL EN SECTION) -->
+    <!-- ====================================================== -->
+
+    <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
+
+    <string name="manual_hospital_sub">
+        Professional service tools.\nEach manual lab writes detailed results below (OK / WARN / ERROR)\nand is included in the final Service Report.
+    </string>
+
+    <string name="manual_section1">SECTION 1 — System &amp; Hardware Tests</string>
+
+    <string name="manual_cat_1">Audio &amp; Vibration — Manual Labs 1–5</string>
+    <string name="manual_cat_2">Display &amp; Sensors — Manual Labs 6–10</string>
+    <string name="manual_cat_3">Wireless &amp; Connectivity — Manual Labs 11–14</string>
+    <string name="manual_cat_4">Battery &amp; Thermal — Manual Labs 15–18</string>
+    <string name="manual_cat_5">Storage &amp; Performance — Manual Labs 19–22</string>
+    <string name="manual_cat_6">Security &amp; System Health — Manual Labs 23–26</string>
+    <string name="manual_cat_7">Advanced / Logs — Manual Labs 27–30</string>
+
+    <string name="manual_log_title">Manual Tests Log</string>
+    <string name="manual_log_desc">ℹ️ GEL Manual Tests — ready. Open a category above and run the required labs.</string>
+
 </resources>

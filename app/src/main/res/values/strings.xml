@@ -74,7 +74,7 @@
 
     <!-- REPORT STRINGS -->
     <string name="report_title">GEL Service Report</string>
-    <string name="report_dev_line">GDiolitsis Engine Lab (GEL) — Author & Developer</string>
+    <string name="report_dev_line">GDiolitsis Engine Lab (GEL) — Author &amp; Developer</string>
     <string name="report_date">Date</string>
     <string name="report_device">Device</string>
     <string name="report_android">Android</string>

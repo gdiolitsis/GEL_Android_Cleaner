@@ -18,7 +18,6 @@ android {
 
     buildTypes {
         release {
-            // ✔ Play Store ready
             minifyEnabled true
             shrinkResources true
 
@@ -36,7 +35,6 @@ android {
         }
     }
 
-    // ✔ Universal APK + individual ABIs
     splits {
         abi {
             enable true
@@ -46,26 +44,14 @@ android {
         }
     }
 
-    // ✔ Java 1.8 (full compatibility)
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    // ✔ MIUI / Legacy libs OK
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
-        }
-    }
-
-    // ✔ FIX: Force correct final APK name (GitHub-safe)
-    applicationVariants.all { variant ->
-        if (variant.buildType.name == "release") {
-            variant.outputs.all { output ->
-                output.outputFileName =
-                        "GEL_Android_Doctor_v${variant.versionName}.apk"
-            }
         }
     }
 }

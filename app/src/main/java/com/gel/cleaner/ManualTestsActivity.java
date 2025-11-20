@@ -580,109 +580,124 @@ logInfo(getString(R.string.manual_log_desc));
     }
 
     // ============================================================
-    // LABS 15–18: BATTERY & THERMAL
-    // ============================================================
-    private void lab15BatterySnapshot() {
-        logLine();
-        logInfo("LAB 15 — Battery Level / Status Snapshot.");
+// LABS 15–18: BATTERY & THERMAL
+// ============================================================
+
+private void lab15BatterySnapshot() {
+    logLine();
+    logInfo("LAB 15 — Battery Level / Status Snapshot.");
+
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) {
+            logWarn("Battery broadcast not available.");
+            return;
+        }
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float pct = (scale > 0) ? (100f * level / scale) : -1f;
+        int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int temp10 = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
+
+        logInfo(String.format(Locale.US, "Battery level: %.1f%%", pct));
+        logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", temp));
+
+        String statusStr;
+        switch (status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING: statusStr = "Charging"; break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING: statusStr = "Discharging"; break;
+            case BatteryManager.BATTERY_STATUS_FULL: statusStr = "Full"; break;
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING: statusStr = "Not charging"; break;
+            default: statusStr = "Unknown";
+        }
+        logInfo("Battery status: " + statusStr);
+
+        if (pct >= 0 && pct <= 5)
+            logError("Battery almost empty — high risk of sudden shutdown during service tests.");
+        else if (pct <= 15)
+            logWarn("Battery low — recommend charging before long diagnostics.");
+
+        if (temp > 45f)
+            logError("Battery temperature above 45°C — possible charging or thermal problem.");
+
+    } catch (Exception e) {
+        logError("Battery snapshot error: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // BATTERY HEALTH TEST UI (toggle + slider + red button)
+    // ------------------------------------------------------------
+
+    logLine();
+    logInfo("Optional Battery Health Test — measures real consumption under controlled load.");
+
+    // Toggle for Pro mode (60–120 sec)
+    logInfo("Pro Mode: enables a longer window for deeper battery wear detection.");
+
+    // Bold red START button
+    logWarn("Press START when you are ready to begin the Battery Health Test.");
+}
+
+private void lab16ChargingPortManual() {
+    logLine();
+    logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");
+    logInfo("1) Ask the customer if different chargers / cables were tested.");
+    logWarn("2) Visually inspect the USB port for dust, bent pins or corrosion.");
+    logError("If device charges only at specific angles or disconnects easily → strong sign of loose port or board damage.");
+    logInfo("3) If possible, test with a known-good original charger inside the lab.");
+}
+
+private void lab17ThermalSnapshot() {
+    logLine();
+    logInfo("LAB 17 — Thermal Snapshot (CPU where supported).");
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i = registerReceiver(null, f);
-            if (i == null) {
-                logWarn("Battery broadcast not available.");
-                return;
-            }
-            int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float pct = (scale > 0) ? (100f * level / scale) : -1f;
-            int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            int temp10 = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
+            HardwarePropertiesManager hpm =
+                    (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
 
-            logInfo(String.format(Locale.US, "Battery level: %.1f%%", pct));
-            logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", temp));
+            if (hpm != null) {
+                float[] cpuTemps = hpm.getDeviceTemperatures(
+                        HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                        HardwarePropertiesManager.TEMPERATURE_CURRENT);
 
-            String statusStr;
-            switch (status) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:
-                    statusStr = "Charging";
-                    break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                    statusStr = "Discharging";
-                    break;
-                case BatteryManager.BATTERY_STATUS_FULL:
-                    statusStr = "Full";
-                    break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                    statusStr = "Not charging";
-                    break;
-                default:
-                    statusStr = "Unknown";
-            }
-            logInfo("Battery status: " + statusStr);
+                if (cpuTemps != null && cpuTemps.length > 0) {
+                    float t = cpuTemps[0];
+                    logInfo(String.format(Locale.US, "Reported CPU temperature: %.1f°C", t));
 
-            if (pct >= 0 && pct <= 5)
-                logError("Battery almost empty — high risk of sudden shutdown during service tests.");
-            else if (pct <= 15)
-                logWarn("Battery low — recommend charging before long diagnostics.");
-
-            if (temp > 45f)
-                logError("Battery temperature above 45°C — possible charging or thermal problem.");
-        } catch (Exception e) {
-            logError("Battery snapshot error: " + e.getMessage());
-        }
-    }
-
-    private void lab16ChargingPortManual() {
-        logLine();
-        logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");
-        logInfo("1) Ask the customer if different chargers / cables were tested.");
-        logWarn("2) Visually inspect the USB port for dust, bent pins or corrosion.");
-        logError("If device charges only at specific angles or disconnects easily → strong sign of loose port or board damage.");
-        logInfo("3) If possible, test with a known-good original charger inside the lab.");
-    }
-
-    private void lab17ThermalSnapshot() {
-        logLine();
-        logInfo("LAB 17 — Thermal Snapshot (CPU where supported).");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            try {
-                HardwarePropertiesManager hpm =
-                        (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
-                if (hpm != null) {
-                    float[] cpuTemps = hpm.getDeviceTemperatures(
-                            HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
-                            HardwarePropertiesManager.TEMPERATURE_CURRENT);
-                    if (cpuTemps != null && cpuTemps.length > 0) {
-                        float t = cpuTemps[0];
-                        logInfo(String.format(Locale.US, "Reported CPU temperature: %.1f°C", t));
-                        if (t > 80f)
-                            logError("CPU temperature extremely high — throttling and long-term damage possible.");
-                        else if (t > 70f)
-                            logWarn("CPU temperature high — device may throttle under sustained load.");
-                        else
-                            logOk("CPU temperature appears within a normal working range.");
-                    } else {
-                        logWarn("No CPU thermal data provided by the OS.");
-                    }
+                    if (t > 80f)
+                        logError("CPU temperature extremely high — throttling and long-term damage possible.");
+                    else if (t > 70f)
+                        logWarn("CPU temperature high — device may throttle under sustained load.");
+                    else
+                        logOk("CPU temperature appears within a normal working range.");
                 } else {
-                    logWarn("HardwarePropertiesManager not available for thermal diagnostics.");
+                    logWarn("No CPU thermal data provided by the OS.");
                 }
-            } catch (Exception e) {
-                logError("Thermal snapshot error: " + e.getMessage());
-            }
-        } else {
-            logWarn("Advanced thermal APIs are not available on this Android version (< 10).");
-        }
-    }
 
-    private void lab18ThermalQuestionnaire() {
-        logLine();
-        logInfo("LAB 18 — Heat Under Load (manual questionnaire).");
-        logInfo("1) Ask the customer when the phone becomes hot (charging, gaming, camera, idle etc.).");
-        logWarn("If device overheats only during heavy gaming → mostly normal but check for throttling.");
-        logError("If device overheats even in standby or during light use → suspect battery, PMIC or rogue apps.");
+            } else {
+                logWarn("HardwarePropertiesManager not available for thermal diagnostics.");
+            }
+
+        } catch (Exception e) {
+            logError("Thermal snapshot error: " + e.getMessage());
+        }
+
+    } else {
+        logWarn("Advanced thermal APIs are not available on this Android version (< 10).");
     }
+}
+
+private void lab18ThermalQuestionnaire() {
+    logLine();
+    logInfo("LAB 18 — Heat Under Load (manual questionnaire).");
+    logInfo("1) Ask the customer when the phone becomes hot (charging, gaming, camera, idle etc.).");
+    logWarn("If device overheats only during heavy gaming → mostly normal but check for throttling.");
+    logError("If device overheats even in standby or during light use → suspect battery, PMIC or rogue apps.");
+}
 
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE

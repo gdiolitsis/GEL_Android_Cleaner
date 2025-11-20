@@ -771,7 +771,6 @@ private String nrBandFromNrarfcn(long nrarfcn) {
     if (nrarfcn >= 693334 && nrarfcn <= 733333) return "n79 (4.7 GHz)";
     return "Unknown (NR-ARFCN " + nrarfcn + ")";
 }
-}
 
         // ===========================
         // ROOT EXTRAS

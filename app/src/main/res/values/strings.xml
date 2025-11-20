@@ -53,7 +53,7 @@
     <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
     <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
     <string name="gel_phone_diag_desc">
-        Full automatic diagnosis of 20 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
+        Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
     </string>
 
     <!-- Manual Tests -->

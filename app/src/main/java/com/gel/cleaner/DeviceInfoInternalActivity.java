@@ -4,13 +4,29 @@ package com.gel.cleaner;
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 import android.app.ActivityManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.nfc.NfcAdapter;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
+import android.telephony.CellIdentity;
+import android.telephony.CellIdentityLte;
+import android.telephony.CellIdentityNr;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoLte;
+import android.telephony.CellInfoNr;
+import android.telephony.ServiceState;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.TextView;
@@ -23,31 +39,6 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-// imports (πρόσθεσέ τα αν δεν υπάρχουν ήδη)
-import android.bluetooth.BluetoothAdapter;
-import android.net.Network;
-import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
-import android.provider.Settings;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
-import android.os.Build;
-import android.provider.Settings;
-import android.telephony.CellIdentity;
-import android.telephony.CellIdentityLte;
-import android.telephony.CellIdentityNr;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoLte;
-import android.telephony.CellInfoNr;
-import android.telephony.ServiceState;
-import android.telephony.TelephonyManager;
 
 public class DeviceInfoInternalActivity extends AppCompatActivity {
 
@@ -350,427 +341,9 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
         txtScreenContent.setText(sc.toString());
 
         // ===========================
-        // CONNECTIVITY
+        // CONNECTIVITY (FULL MAP)
         // ===========================
-        StringBuilder conn = new StringBuilder();
-        conn.append("── CONNECTIVITY ──\n");
-
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (cm != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                if (caps != null) {
-                    boolean wifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                    boolean cellular = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-                    boolean ethernet = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
-
-                    conn.append("Active: ");
-                    if (wifi) conn.append("Wi-Fi ");
-                    if (cellular) conn.append("Mobile ");
-                    if (ethernet) conn.append("Ethernet ");
-                    if (!wifi && !cellular && !ethernet) conn.append("None");
-                    conn.append("\n");
-
-                    conn.append("Metered: ")
-                            .append(cm.isActiveNetworkMetered() ? "YES" : "NO")
-                            .append("\n");
-                } else {
-                    conn.append("Active network: None\n");
-                }
-            } else {
-                @SuppressWarnings("deprecation")
-                NetworkInfo ni = cm.getActiveNetworkInfo();
-                if (ni != null && ni.isConnected()) {
-                    conn.append("Active type: ").append(ni.getTypeName()).append("\n");
-                    conn.append("Roaming: ").append(ni.isRoaming() ? "YES" : "NO").append("\n");
-                } else {
-                    conn.append("Active network: None\n");
-                }
-            }
-        } else {
-            conn.append("Connectivity info: N/A\n");
-        }
-
-        txtConnectivityContent.setText(conn.toString());
-
-        // ===========================
-// CONNECTIVITY v5.0 (Full Map)
-// ===========================
-private String buildConnectivityInfo() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("── CONNECTIVITY ──\n");
-
-    ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-    WifiManager wm =
-            (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-    PackageManager pm = getPackageManager();
-
-    // ACTIVE NETWORK (Wi-Fi / Mobile / Ethernet / None)
-    try {
-        if (cm == null) {
-            sb.append("Active: [no ConnectivityManager]\n");
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-            if (caps == null) {
-                sb.append("Active: NONE\n");
-            } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                sb.append("Active: Wi-Fi\n");
-            } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                sb.append("Active: Mobile Data\n");
-            } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                sb.append("Active: Ethernet\n");
-            } else {
-                sb.append("Active: Other\n");
-            }
-        } else {
-            @SuppressWarnings("deprecation")
-            NetworkInfo ni = cm.getActiveNetworkInfo();
-            if (ni != null && ni.isConnected()) {
-                sb.append("Active: ").append(ni.getTypeName()).append("\n");
-            } else {
-                sb.append("Active: NONE\n");
-            }
-        }
-    } catch (Throwable t) {
-        sb.append("Active: Unknown\n");
-    }
-
-    // METERED
-    try {
-        if (cm != null) {
-            boolean metered = cm.isActiveNetworkMetered();
-            sb.append("Metered: ").append(metered ? "YES" : "NO").append("\n");
-        } else {
-            sb.append("Metered: Unknown\n");
-        }
-    } catch (Throwable t) {
-        sb.append("Metered: Unknown\n");
-    }
-
-    // ===== Wi-Fi DETAILS =====
-    try {
-        if (wm != null) {
-            WifiInfo wi = wm.getConnectionInfo();
-            if (wi != null && wi.getNetworkId() != -1) {
-                sb.append("\n[Wi-Fi]\n");
-                sb.append("SSID: ").append(wi.getSSID()).append("\n");
-                sb.append("Link speed: ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                int freq = wi.getFrequency();
-                sb.append("Frequency: ").append(freq).append(" MHz\n");
-                sb.append("Band: ").append(describeWifiBand(freq)).append("\n");
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    int std = wi.getWifiStandard();
-                    sb.append("Standard: ").append(describeWifiStandard(std)).append("\n");
-                    sb.append("PHY mode: ").append(describeWifiPhy(std)).append("\n");
-                }
-            } else {
-                sb.append("\n[Wi-Fi] Not connected\n");
-            }
-        } else {
-            sb.append("\n[Wi-Fi] WifiManager unavailable\n");
-        }
-    } catch (Throwable t) {
-        sb.append("\n[Wi-Fi] Error: ").append(t.getMessage()).append("\n");
-    }
-
-    // ===== BLUETOOTH =====
-    try {
-        BluetoothAdapter bt;
-        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bm != null) {
-            bt = bm.getAdapter();
-        } else {
-            bt = BluetoothAdapter.getDefaultAdapter();
-        }
-
-        sb.append("\n[Bluetooth]\n");
-        if (bt == null) {
-            sb.append("Adapter: Not available\n");
-        } else {
-            sb.append("Enabled: ").append(bt.isEnabled() ? "YES" : "NO").append("\n");
-            try {
-                sb.append("Name: ").append(bt.getName()).append("\n");
-            } catch (SecurityException se) {
-                sb.append("Name: [permission denied]\n");
-            }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                sb.append("Address: ").append(bt.getAddress()).append("\n");
-            } else {
-                sb.append("Address: [hidden on Android 12+]\n");
-            }
-            sb.append("BLE support: ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
-                    .append("\n");
-        }
-    } catch (Throwable t) {
-        sb.append("\n[Bluetooth] Error: ").append(t.getMessage()).append("\n");
-    }
-
-    // ===== NFC =====
-    try {
-        NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
-        String nfcState;
-        if (nfc == null) {
-            nfcState = "Not available";
-        } else if (nfc.isEnabled()) {
-            nfcState = "ON";
-        } else {
-            nfcState = "OFF";
-        }
-        sb.append("\n[NFC] State: ").append(nfcState).append("\n");
-    } catch (Throwable t) {
-        sb.append("\n[NFC] State: Unknown\n");
-    }
-
-    // ===== AIRPLANE MODE =====
-    try {
-        boolean airplaneOn =
-                Settings.Global.getInt(getContentResolver(),
-                        Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
-        sb.append("Airplane mode: ").append(airplaneOn ? "ON" : "OFF").append("\n");
-    } catch (Throwable t) {
-        sb.append("Airplane mode: Unknown\n");
-    }
-
-    // ===== HOTSPOT (Wi-Fi Tethering) =====
-    try {
-        int apState = Settings.Global.getInt(
-                getContentResolver(), "wifi_ap_state", 0);
-        String apStr;
-        // Οι τιμές είναι vendor-specific, αλλά 12 συνήθως = ENABLED
-        if (apState == 12) {
-            apStr = "ON";
-        } else if (apState == 11) {
-            apStr = "OFF";
-        } else {
-            apStr = "State " + apState;
-        }
-        sb.append("Hotspot: ").append(apStr).append("\n");
-    } catch (Throwable t) {
-        sb.append("Hotspot: Unknown\n");
-    }
-
-    // ===== MOBILE / 4G / 5G / CA =====
-    appendMobileRadioInfo(sb);
-
-    return sb.toString();
-}
-
-// =====================================
-// MOBILE / LTE / 5G DETAIL SECTION
-// =====================================
-private void appendMobileRadioInfo(StringBuilder sb) {
-    sb.append("\n[Mobile Radio]\n");
-    try {
-        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        if (tm == null) {
-            sb.append("TelephonyManager: [unavailable]\n");
-            return;
-        }
-
-        // Data network type (2G/3G/4G/5G)
-        int dataType = tm.getDataNetworkType();
-        sb.append("Data network: ").append(networkTypeToString(dataType)).append("\n");
-
-        // ServiceState / NR state (Android 11+)
-        ServiceState ss = tm.getServiceState();
-        if (ss != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                int nrState = ss.getNrState();
-                String nrDesc;
-                switch (nrState) {
-                    case ServiceState.NR_STATE_NONE:
-                        nrDesc = "NR: NONE";
-                        break;
-                    case ServiceState.NR_STATE_RESTRICTED:
-                        nrDesc = "NR: RESTRICTED";
-                        break;
-                    case ServiceState.NR_STATE_NOT_RESTRICTED:
-                        nrDesc = "NR: NOT RESTRICTED (anchor ready)";
-                        break;
-                    case ServiceState.NR_STATE_CONNECTED:
-                        nrDesc = "NR: CONNECTED";
-                        break;
-                    default:
-                        nrDesc = "NR: Unknown state " + nrState;
-                        break;
-                }
-                sb.append(nrDesc).append("\n");
-            }
-        }
-
-        // CELL INFO (LTE / NR, bands, EARFCN, NR-ARFCN)
-        appendCellInfoDetails(sb, tm);
-
-    } catch (Throwable t) {
-        sb.append("Mobile radio error: ").append(t.getMessage()).append("\n");
-    }
-}
-
-@SuppressWarnings("MissingPermission")
-private void appendCellInfoDetails(StringBuilder sb, TelephonyManager tm) {
-    try {
-        List<CellInfo> cells = tm.getAllCellInfo();
-        if (cells == null || cells.isEmpty()) {
-            sb.append("Cells: [no cell info or permission]\n");
-            return;
-        }
-
-        int regLte = 0;
-        int regNr = 0;
-
-        for (CellInfo ci : cells) {
-            if (ci == null) continue;
-
-            boolean registered = ci.isRegistered();
-            if (ci instanceof CellInfoLte) {
-                CellInfoLte lte = (CellInfoLte) ci;
-                CellIdentityLte id = lte.getCellIdentity();
-                int earfcn = (id != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                        ? id.getEarfcn() : -1;
-                String band = (earfcn >= 0) ? lteBandFromEarfcn(earfcn) : "Unknown band";
-
-                if (registered) regLte++;
-
-                sb.append("LTE cell")
-                        .append(registered ? " [REG] " : " ")
-                        .append(": EARFCN=")
-                        .append(earfcn >= 0 ? earfcn : "[n/a]")
-                        .append(" → Band ")
-                        .append(band)
-                        .append("\n");
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && ci instanceof CellInfoNr) {
-                CellInfoNr nr = (CellInfoNr) ci;
-                CellIdentity id = nr.getCellIdentity();
-                long nrarfcn = -1L;
-                if (id instanceof CellIdentityNr) {
-                    CellIdentityNr nid = (CellIdentityNr) id;
-                    nrarfcn = nid.getNrarfcn();
-                }
-                String band = (nrarfcn >= 0) ? nrBandFromNrarfcn(nrarfcn) : "Unknown band";
-
-                if (registered) regNr++;
-
-                sb.append("NR cell")
-                        .append(registered ? " [REG] " : " ")
-                        .append(": NR-ARFCN=")
-                        .append(nrarfcn >= 0 ? nrarfcn : "[n/a]")
-                        .append(" → Band ")
-                        .append(band)
-                        .append("\n");
-            }
-        }
-
-        // Simple CA / multi-carrier hint
-        if (regLte > 1) {
-            sb.append("LTE CA: probable YES (")
-                    .append(regLte)
-                    .append(" registered LTE carriers)\n");
-        } else {
-            sb.append("LTE CA: not detected (single LTE carrier)\n");
-        }
-
-        if (regNr > 0) {
-            sb.append("5G NR: ACTIVE (")
-                    .append(regNr)
-                    .append(" registered NR cells)\n");
-        }
-
-    } catch (SecurityException se) {
-        sb.append("Cells: permission denied (needs location)\n");
-    } catch (Throwable t) {
-        sb.append("Cells error: ").append(t.getMessage()).append("\n");
-    }
-}
-
-// ===========================
-// HELPERS (Wi-Fi / RAT / BANDS)
-// ===========================
-private String describeWifiStandard(int std) {
-    switch (std) {
-        case 1:  return "Legacy (11a/b/g)";
-        case 4:  return "Wi-Fi 4 (11n)";
-        case 5:  return "Wi-Fi 5 (11ac)";
-        case 6:  return "Wi-Fi 6/6E (11ax)";
-        case 7:  return "Wi-Fi 7 (11be)";
-        default: return "Unknown";
-    }
-}
-
-private String describeWifiBand(int freqMHz) {
-    if (freqMHz >= 2400 && freqMHz < 2500) return "2.4 GHz";
-    if (freqMHz >= 4900 && freqMHz < 5900) return "5 GHz";
-    if (freqMHz >= 5925 && freqMHz < 7125) return "6 GHz";
-    return "Unknown";
-}
-
-private String describeWifiPhy(int std) {
-    switch (std) {
-        case 1:
-            return "Legacy 20 MHz";
-        case 4:
-            return "HT (20/40 MHz)";
-        case 5:
-            return "VHT (20/40/80 MHz)";
-        case 6:
-        case 7:
-            return "HE/EHT (up to 160 MHz)";
-        default:
-            return "Unknown / vendor-specific";
-    }
-}
-
-private String networkTypeToString(int type) {
-    switch (type) {
-        case TelephonyManager.NETWORK_TYPE_GPRS:
-        case TelephonyManager.NETWORK_TYPE_EDGE:
-        case TelephonyManager.NETWORK_TYPE_GSM:
-            return "2G";
-        case TelephonyManager.NETWORK_TYPE_UMTS:
-        case TelephonyManager.NETWORK_TYPE_HSPA:
-        case TelephonyManager.NETWORK_TYPE_HSPAP:
-        case TelephonyManager.NETWORK_TYPE_EVDO_0:
-        case TelephonyManager.NETWORK_TYPE_EVDO_A:
-        case TelephonyManager.NETWORK_TYPE_EVDO_B:
-        case TelephonyManager.NETWORK_TYPE_EHRPD:
-        case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-            return "3G";
-        case TelephonyManager.NETWORK_TYPE_LTE:
-        case TelephonyManager.NETWORK_TYPE_LTE_CA:
-            return "4G / LTE";
-        case TelephonyManager.NETWORK_TYPE_NR:
-            return "5G NR";
-        default:
-            return "Unknown(" + type + ")";
-    }
-}
-
-// ===== LTE band από EARFCN (basic map) =====
-private String lteBandFromEarfcn(int earfcn) {
-    if (earfcn < 0) return "Unknown";
-    // Common EU bands
-    if (earfcn >= 0 && earfcn <= 599)    return "1 (2100 MHz)";
-    if (earfcn >= 1200 && earfcn <= 1949) return "3 (1800 MHz)";
-    if (earfcn >= 2750 && earfcn <= 3449) return "7 (2600 MHz)";
-    if (earfcn >= 6150 && earfcn <= 6449) return "20 (800 MHz)";
-    if (earfcn >= 9210 && earfcn <= 9659) return "28 (700 MHz)";
-    return "Unknown (EARFCN " + earfcn + ")";
-}
-
-// ===== NR band από NR-ARFCN (coarse map) =====
-private String nrBandFromNrarfcn(long nrarfcn) {
-    if (nrarfcn < 0) return "Unknown";
-    // Πολύ χοντρικό map για κοινές ζώνες
-    if (nrarfcn >= 422000 && nrarfcn <= 434000) return "n3 (1800 MHz)";
-    if (nrarfcn >= 151600 && nrarfcn <= 160600) return "n28 (700 MHz)";
-    if (nrarfcn >= 620000 && nrarfcn <= 653333) return "n78 (3.5 GHz)";
-    if (nrarfcn >= 693334 && nrarfcn <= 733333) return "n79 (4.7 GHz)";
-    return "Unknown (NR-ARFCN " + nrarfcn + ")";
-}
+        txtConnectivityContent.setText(buildConnectivityInfo());
 
         // ===========================
         // ROOT EXTRAS
@@ -836,9 +409,8 @@ private String nrBandFromNrarfcn(long nrarfcn) {
     }
 
     // ===========================
-    // HELPERS
+    // GENERIC HELPERS
     // ===========================
-
     private boolean isEmptySafe(String s) {
         return s == null || s.trim().isEmpty();
     }
@@ -1285,8 +857,384 @@ private String nrBandFromNrarfcn(long nrarfcn) {
         }
     }
 
-    // ===== ROOT UTILS =====
+    // ===========================
+    // CONNECTIVITY v5.0 (Full Map)
+    // ===========================
+    private String buildConnectivityInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("── CONNECTIVITY ──\n");
 
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        WifiManager wm =
+                (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        PackageManager pm = getPackageManager();
+
+        // ACTIVE NETWORK (Wi-Fi / Mobile / Ethernet / None)
+        try {
+            if (cm == null) {
+                sb.append("Active: [no ConnectivityManager]\n");
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                if (caps == null) {
+                    sb.append("Active: NONE\n");
+                } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    sb.append("Active: Wi-Fi\n");
+                } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    sb.append("Active: Mobile Data\n");
+                } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    sb.append("Active: Ethernet\n");
+                } else {
+                    sb.append("Active: Other\n");
+                }
+            } else {
+                @SuppressWarnings("deprecation")
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                if (ni != null && ni.isConnected()) {
+                    sb.append("Active: ").append(ni.getTypeName()).append("\n");
+                } else {
+                    sb.append("Active: NONE\n");
+                }
+            }
+        } catch (Throwable t) {
+            sb.append("Active: Unknown\n");
+        }
+
+        // METERED
+        try {
+            if (cm != null) {
+                boolean metered = cm.isActiveNetworkMetered();
+                sb.append("Metered: ").append(metered ? "YES" : "NO").append("\n");
+            } else {
+                sb.append("Metered: Unknown\n");
+            }
+        } catch (Throwable t) {
+            sb.append("Metered: Unknown\n");
+        }
+
+        // ===== Wi-Fi DETAILS =====
+        try {
+            if (wm != null) {
+                WifiInfo wi = wm.getConnectionInfo();
+                if (wi != null && wi.getNetworkId() != -1) {
+                    sb.append("\n[Wi-Fi]\n");
+                    sb.append("SSID: ").append(wi.getSSID()).append("\n");
+                    sb.append("Link speed: ").append(wi.getLinkSpeed()).append(" Mbps\n");
+                    int freq = wi.getFrequency();
+                    sb.append("Frequency: ").append(freq).append(" MHz\n");
+                    sb.append("Band: ").append(describeWifiBand(freq)).append("\n");
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        int std = wi.getWifiStandard();
+                        sb.append("Standard: ").append(describeWifiStandard(std)).append("\n");
+                        sb.append("PHY mode: ").append(describeWifiPhy(std)).append("\n");
+                    }
+                } else {
+                    sb.append("\n[Wi-Fi] Not connected\n");
+                }
+            } else {
+                sb.append("\n[Wi-Fi] WifiManager unavailable\n");
+            }
+        } catch (Throwable t) {
+            sb.append("\n[Wi-Fi] Error: ").append(t.getMessage()).append("\n");
+        }
+
+        // ===== BLUETOOTH =====
+        try {
+            BluetoothAdapter bt;
+            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (bm != null) {
+                bt = bm.getAdapter();
+            } else {
+                bt = BluetoothAdapter.getDefaultAdapter();
+            }
+
+            sb.append("\n[Bluetooth]\n");
+            if (bt == null) {
+                sb.append("Adapter: Not available\n");
+            } else {
+                sb.append("Enabled: ").append(bt.isEnabled() ? "YES" : "NO").append("\n");
+                try {
+                    sb.append("Name: ").append(bt.getName()).append("\n");
+                } catch (SecurityException se) {
+                    sb.append("Name: [permission denied]\n");
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                    sb.append("Address: ").append(bt.getAddress()).append("\n");
+                } else {
+                    sb.append("Address: [hidden on Android 12+]\n");
+                }
+                sb.append("BLE support: ")
+                        .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
+                        .append("\n");
+            }
+        } catch (Throwable t) {
+            sb.append("\n[Bluetooth] Error: ").append(t.getMessage()).append("\n");
+        }
+
+        // ===== NFC =====
+        try {
+            NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
+            String nfcState;
+            if (nfc == null) {
+                nfcState = "Not available";
+            } else if (nfc.isEnabled()) {
+                nfcState = "ON";
+            } else {
+                nfcState = "OFF";
+            }
+            sb.append("\n[NFC] State: ").append(nfcState).append("\n");
+        } catch (Throwable t) {
+            sb.append("\n[NFC] State: Unknown\n");
+        }
+
+        // ===== AIRPLANE MODE =====
+        try {
+            boolean airplaneOn =
+                    Settings.Global.getInt(getContentResolver(),
+                            Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
+            sb.append("Airplane mode: ").append(airplaneOn ? "ON" : "OFF").append("\n");
+        } catch (Throwable t) {
+            sb.append("Airplane mode: Unknown\n");
+        }
+
+        // ===== HOTSPOT (Wi-Fi Tethering) =====
+        try {
+            int apState = Settings.Global.getInt(
+                    getContentResolver(), "wifi_ap_state", 0);
+            String apStr;
+            // Οι τιμές είναι vendor-specific, αλλά 12 συνήθως = ENABLED
+            if (apState == 12) {
+                apStr = "ON";
+            } else if (apState == 11) {
+                apStr = "OFF";
+            } else {
+                apStr = "State " + apState;
+            }
+            sb.append("Hotspot: ").append(apStr).append("\n");
+        } catch (Throwable t) {
+            sb.append("Hotspot: Unknown\n");
+        }
+
+        // ===== MOBILE / 4G / 5G / CA =====
+        appendMobileRadioInfo(sb);
+
+        return sb.toString();
+    }
+
+    // =====================================
+    // MOBILE / LTE / 5G DETAIL SECTION
+    // =====================================
+    private void appendMobileRadioInfo(StringBuilder sb) {
+        sb.append("\n[Mobile Radio]\n");
+        try {
+            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+            if (tm == null) {
+                sb.append("TelephonyManager: [unavailable]\n");
+                return;
+            }
+
+            // Data network type (2G/3G/4G/5G)
+            int dataType = tm.getDataNetworkType();
+            sb.append("Data network: ").append(networkTypeToString(dataType)).append("\n");
+
+            // ServiceState / NR state (Android 11+)
+            ServiceState ss = tm.getServiceState();
+            if (ss != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    int nrState = ss.getNrState();
+                    String nrDesc;
+                    switch (nrState) {
+                        case ServiceState.NR_STATE_NONE:
+                            nrDesc = "NR: NONE";
+                            break;
+                        case ServiceState.NR_STATE_RESTRICTED:
+                            nrDesc = "NR: RESTRICTED";
+                            break;
+                        case ServiceState.NR_STATE_NOT_RESTRICTED:
+                            nrDesc = "NR: NOT RESTRICTED (anchor ready)";
+                            break;
+                        case ServiceState.NR_STATE_CONNECTED:
+                            nrDesc = "NR: CONNECTED";
+                            break;
+                        default:
+                            nrDesc = "NR: Unknown state " + nrState;
+                            break;
+                    }
+                    sb.append(nrDesc).append("\n");
+                }
+            }
+
+            // CELL INFO (LTE / NR, bands, EARFCN, NR-ARFCN)
+            appendCellInfoDetails(sb, tm);
+
+        } catch (Throwable t) {
+            sb.append("Mobile radio error: ").append(t.getMessage()).append("\n");
+        }
+    }
+
+    @SuppressWarnings("MissingPermission")
+    private void appendCellInfoDetails(StringBuilder sb, TelephonyManager tm) {
+        try {
+            List<CellInfo> cells = tm.getAllCellInfo();
+            if (cells == null || cells.isEmpty()) {
+                sb.append("Cells: [no cell info or permission]\n");
+                return;
+            }
+
+            int regLte = 0;
+            int regNr = 0;
+
+            for (CellInfo ci : cells) {
+                if (ci == null) continue;
+
+                boolean registered = ci.isRegistered();
+                if (ci instanceof CellInfoLte) {
+                    CellInfoLte lte = (CellInfoLte) ci;
+                    CellIdentityLte id = lte.getCellIdentity();
+                    int earfcn = (id != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                            ? id.getEarfcn() : -1;
+                    String band = (earfcn >= 0) ? lteBandFromEarfcn(earfcn) : "Unknown band";
+
+                    if (registered) regLte++;
+
+                    sb.append("LTE cell")
+                            .append(registered ? " [REG] " : " ")
+                            .append(": EARFCN=")
+                            .append(earfcn >= 0 ? earfcn : "[n/a]")
+                            .append(" → Band ")
+                            .append(band)
+                            .append("\n");
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && ci instanceof CellInfoNr) {
+                    CellInfoNr nr = (CellInfoNr) ci;
+                    CellIdentity id = nr.getCellIdentity();
+                    long nrarfcn = -1L;
+                    if (id instanceof CellIdentityNr) {
+                        CellIdentityNr nid = (CellIdentityNr) id;
+                        nrarfcn = nid.getNrarfcn();
+                    }
+                    String band = (nrarfcn >= 0) ? nrBandFromNrarfcn(nrarfcn) : "Unknown band";
+
+                    if (registered) regNr++;
+
+                    sb.append("NR cell")
+                            .append(registered ? " [REG] " : " ")
+                            .append(": NR-ARFCN=")
+                            .append(nrarfcn >= 0 ? nrarfcn : "[n/a]")
+                            .append(" → Band ")
+                            .append(band)
+                            .append("\n");
+                }
+            }
+
+            // Simple CA / multi-carrier hint
+            if (regLte > 1) {
+                sb.append("LTE CA: probable YES (")
+                        .append(regLte)
+                        .append(" registered LTE carriers)\n");
+            } else {
+                sb.append("LTE CA: not detected (single LTE carrier)\n");
+            }
+
+            if (regNr > 0) {
+                sb.append("5G NR: ACTIVE (")
+                        .append(regNr)
+                        .append(" registered NR cells)\n");
+            }
+
+        } catch (SecurityException se) {
+            sb.append("Cells: permission denied (needs location)\n");
+        } catch (Throwable t) {
+            sb.append("Cells error: ").append(t.getMessage()).append("\n");
+        }
+    }
+
+    // ===========================
+    // HELPERS (Wi-Fi / RAT / BANDS)
+    // ===========================
+    private String describeWifiStandard(int std) {
+        switch (std) {
+            case 1:  return "Legacy (11a/b/g)";
+            case 4:  return "Wi-Fi 4 (11n)";
+            case 5:  return "Wi-Fi 5 (11ac)";
+            case 6:  return "Wi-Fi 6/6E (11ax)";
+            case 7:  return "Wi-Fi 7 (11be)";
+            default: return "Unknown";
+        }
+    }
+
+    private String describeWifiBand(int freqMHz) {
+        if (freqMHz >= 2400 && freqMHz < 2500) return "2.4 GHz";
+        if (freqMHz >= 4900 && freqMHz < 5900) return "5 GHz";
+        if (freqMHz >= 5925 && freqMHz < 7125) return "6 GHz";
+        return "Unknown";
+    }
+
+    private String describeWifiPhy(int std) {
+        switch (std) {
+            case 1:
+                return "Legacy 20 MHz";
+            case 4:
+                return "HT (20/40 MHz)";
+            case 5:
+                return "VHT (20/40/80 MHz)";
+            case 6:
+            case 7:
+                return "HE/EHT (up to 160 MHz)";
+            default:
+                return "Unknown / vendor-specific";
+        }
+    }
+
+    private String networkTypeToString(int type) {
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_GSM:
+                return "2G";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
+                return "3G";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+            case TelephonyManager.NETWORK_TYPE_LTE_CA:
+                return "4G / LTE";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5G NR";
+            default:
+                return "Unknown(" + type + ")";
+        }
+    }
+
+    // ===== LTE band από EARFCN (basic map) =====
+    private String lteBandFromEarfcn(int earfcn) {
+        if (earfcn < 0) return "Unknown";
+        // Common EU bands
+        if (earfcn >= 0 && earfcn <= 599)    return "1 (2100 MHz)";
+        if (earfcn >= 1200 && earfcn <= 1949) return "3 (1800 MHz)";
+        if (earfcn >= 2750 && earfcn <= 3449) return "7 (2600 MHz)";
+        if (earfcn >= 6150 && earfcn <= 6449) return "20 (800 MHz)";
+        if (earfcn >= 9210 && earfcn <= 9659) return "28 (700 MHz)";
+        return "Unknown (EARFCN " + earfcn + ")";
+    }
+
+    // ===== NR band από NR-ARFCN (coarse map) =====
+    private String nrBandFromNrarfcn(long nrarfcn) {
+        if (nrarfcn < 0) return "Unknown";
+        // Πολύ χοντρικό map για κοινές ζώνες
+        if (nrarfcn >= 422000 && nrarfcn <= 434000) return "n3 (1800 MHz)";
+        if (nrarfcn >= 151600 && nrarfcn <= 160600) return "n28 (700 MHz)";
+        if (nrarfcn >= 620000 && nrarfcn <= 653333) return "n78 (3.5 GHz)";
+        if (nrarfcn >= 693334 && nrarfcn <= 733333) return "n79 (4.7 GHz)";
+        return "Unknown (NR-ARFCN " + nrarfcn + ")";
+    }
+
+    // ===== ROOT UTILS =====
     private boolean isDeviceRooted() {
         String tags = Build.TAGS;
         if (tags != null && tags.contains("test-keys")) return true;

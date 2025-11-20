@@ -26,10 +26,10 @@
     <string name="clean_all">🧹 GEL Cleaner ALL</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 BROWSER CACHE</string>
-    <string name="app_cache">🧽 APP CACHE</string>
+    <string name="browser_cache">🌐 Browser Cache</string>
+    <string name="app_cache">🧽 App Cache</string>
     <string name="app_cache_title">Select app to clear cache</string>
-    <string name="app_cache_btn">🧽 APP CACHE</string>
+    <string name="app_cache_btn">🧽 App Cache</string>
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->
@@ -47,7 +47,9 @@
 
     <!-- Titles -->
     <string name="gel_service_lab">GEL Service Lab</string>
-    <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
+    <string name="gel_service_lab_sub">
+        Professional device diagnostics\nAuto + Manual tests + Export report
+    </string>
 
     <!-- Auto Diagnosis -->
     <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
@@ -60,14 +62,14 @@
     <string name="manual_tests">MANUAL TESTS</string>
     <string name="manual_tests_title">Manual Tests</string>
     <string name="manual_tests_desc">
-        Targeted tests for service:\nSound, vibration, display, sensors, live RAM, WiFi, etc.
+        Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
     </string>
 
     <!-- Service Report -->
     <string name="service_report">SERVICE REPORT</string>
     <string name="export_report_title">Export Service Report</string>
     <string name="export_report_desc">
-        Final report for customer (PDF or TXT) + automatic reset
+        Final report for the customer (PDF or TXT) + automatic reset
     </string>
 
 </resources>

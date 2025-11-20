@@ -65,24 +65,40 @@
         Στοχευμένοι έλεγχοι για service:\nΉχος, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.
     </string>
 
-    <!-- Service Report -->
+    <!-- Service Report (UI) -->
     <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
     <string name="export_report_title">Εξαγωγή Αναφοράς Service</string>
     <string name="export_report_desc">
         Τελική αναφορά για τον πελάτη (PDF ή TXT) + αυτόματο καθάρισμα δεδομένων
     </string>
 
+    <!-- REPORT BODY STRINGS (χρησιμοποιούνται στο PDF/TXT) -->
+    <string name="report_title">GEL Αναφορά Service</string>
+    <string name="report_dev_line">GDiolitsis Engine Lab (GEL) — Author &amp; Developer</string>
+    <string name="report_date">Ημερομηνία</string>
+    <string name="report_device">Συσκευή</string>
+    <string name="report_android">Android</string>
+    <string name="report_diag_header">=== Διαγνώσεις Service Lab ===</string>
+    <string name="report_no_entries">[Δεν υπάρχουν καταχωρημένες διαγνώσεις]</string>
+    <string name="report_end">--- Τέλος Αναφοράς ---</string>
+    <string name="report_signature">Υπογραφή Τεχνικού:</string>
+
+    <string name="preview_empty">
+        Δεν υπάρχουν ακόμη διαγνώσεις.\nΤρέξε Auto Diagnosis ή Manual Tests\nκαι μετά κάνε Export.
+    </string>
+
+    <!-- DAMAGE CHECKLIST (GR) -->
     <string name="damage_title">Έλεγχος Ζημιών</string>
 
-<string name="damage_screen">Σπασμένη οθόνη</string>
-<string name="damage_pixels">Dead Pixels / Καμμένα σημεία</string>
-<string name="damage_amoled">Καμένο AMOLED / φωτεινότητα</string>
-<string name="damage_charge_port">Βύσμα φόρτισης / Board flex</string>
-<string name="damage_speaker">Ηχείο / Ακουστικό</string>
-<string name="damage_mic">Μικρόφωνο</string>
-<string name="damage_battery">Μπαταρία (υγεία / φούσκωμα)</string>
-<string name="damage_water">Υγρασία / corrosion</string>
+    <string name="damage_screen">Σπασμένη οθόνη</string>
+    <string name="damage_pixels">Dead Pixels / Καμμένα σημεία</string>
+    <string name="damage_amoled">Καμένο AMOLED / φωτεινότητα</string>
+    <string name="damage_charge_port">Βύσμα φόρτισης / Board flex</string>
+    <string name="damage_speaker">Ηχείο / Ακουστικό</string>
+    <string name="damage_mic">Μικρόφωνο</string>
+    <string name="damage_battery">Μπαταρία (υγεία / φούσκωμα)</string>
+    <string name="damage_water">Υγρασία / corrosion</string>
 
-<string name="damage_yes_no">[   ] ΝΑΙ   [   ] ΟΧΙ</string>
+    <string name="damage_yes_no">[   ] ΝΑΙ   [   ] ΟΧΙ</string>
 
 </resources>

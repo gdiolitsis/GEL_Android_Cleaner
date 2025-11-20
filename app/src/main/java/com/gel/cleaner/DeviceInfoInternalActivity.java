@@ -922,47 +922,53 @@ public class DeviceInfoInternalActivity extends AppCompatActivity {
             sb.append("Metered: Unknown\n");
         }
 
-        // ===== Wi-Fi DETAILS =====
-        try {
-            sb.append("\n[Wi-Fi]\n");
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                boolean reallyConnected =
-                        (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+        // ===== Wi-Fi (UNIVERSAL ANDROID 12+ SAFE FIX) =====
+sb.append("\n[Wi-Fi]\n");
+try {
+    if (wm == null) {
+        sb.append("Wi-Fi manager unavailable\n");
+    } else {
+        boolean wifiActive = (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+        WifiInfo wi = wm.getConnectionInfo();
 
-                if (wi != null && wi.getNetworkId() != -1 && reallyConnected) {
-                    sb.append("State: CONNECTED\n");
+        if (wifiActive) {
+            sb.append("State: CONNECTED\n");
 
-                    String ssid = wi.getSSID();
-                    if (ssid == null || ssid.equals("<unknown ssid>") || ssid.equals("0x")) {
-                        ssid = "[restricted by Android]";
-                    }
-
-                    String bssid = wi.getBSSID();
-                    if (bssid == null) bssid = "[restricted]";
-
-                    sb.append("SSID: ").append(ssid).append("\n");
-                    sb.append("BSSID: ").append(bssid).append("\n");
-
-                    sb.append("Link speed: ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    int freq = wi.getFrequency();
-                    sb.append("Frequency: ").append(freq).append(" MHz\n");
-                    sb.append("Band: ").append(describeWifiBand(freq)).append("\n");
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        int std = wi.getWifiStandard();
-                        sb.append("Standard: ").append(describeWifiStandard(std)).append("\n");
-                        sb.append("PHY mode: ").append(describeWifiPhy(std)).append("\n");
-                    }
-                } else {
-                    sb.append("Not connected\n");
-                }
-            } else {
-                sb.append("WifiManager unavailable\n");
+            // SSID safe read
+            String ssid = (wi != null) ? wi.getSSID() : null;
+            if (ssid == null || ssid.equals("<unknown ssid>") || ssid.equals("0x")) {
+                ssid = "[restricted on Android 12+]";
             }
-        } catch (Throwable t) {
-            sb.append("Error: ").append(t.getMessage()).append("\n");
+
+            // BSSID safe read
+            String bssid = (wi != null) ? wi.getBSSID() : null;
+            if (bssid == null) bssid = "[restricted]";
+
+            sb.append("SSID: ").append(ssid).append("\n");
+            sb.append("BSSID: ").append(bssid).append("\n");
+
+            int speed = (wi != null) ? wi.getLinkSpeed() : -1;
+            sb.append("Link speed: ")
+                    .append(speed > 0 ? speed + " Mbps" : "n/a")
+                    .append("\n");
+
+            int freq = (wi != null) ? wi.getFrequency() : -1;
+            sb.append("Band: ").append(freq > 0 ? describeWifiBand(freq) : "Unknown").append("\n");
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && wi != null) {
+                int std = wi.getWifiStandard();
+                sb.append("Standard: ").append(describeWifiStandard(std)).append("\n");
+            } else {
+                sb.append("Standard: Legacy (Android <11)\n");
+            }
+
+        } else {
+            sb.append("State: NOT CONNECTED\n");
         }
+    }
+} catch (Throwable t) {
+    sb.append("Wi-Fi error: ").append(t.getMessage()).append("\n");
+}
 
         // ===== BLUETOOTH =====
         try {

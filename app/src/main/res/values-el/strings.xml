@@ -15,12 +15,12 @@
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
 
     <!-- SYSTEM -->
-    <string name="cpu_ram_info">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ</string>
+    <string name="cpu_ram_info">📱 Πληροφορίες Συσκευής</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE</string>
 
     <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n  (Περιφερειακά)</string>
+    <string name="phone_info_internal">📱 Πληροφορίες Συσκευής\n(Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 Πληροφορίες Συσκευής\n(Περιφερειακά)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>
@@ -42,34 +42,34 @@
     <string name="toast_done">✅ Οι άδειες παραχωρήθηκαν</string>
 
     <!-- ===================================== -->
-    <!-- GEL SERVICE LAB — NEW STRINGS (GR) -->
+    <!-- GEL SERVICE LAB — STRINGS (GR) -->
     <!-- ===================================== -->
 
     <!-- Τίτλοι -->
     <string name="gel_service_lab">GEL Service Lab</string>
     <string name="gel_service_lab_sub">
-        Επαγγελματική διάγνωση συσκευής\nAuto + Manual tests + Export report
+        Επαγγελματική διάγνωση συσκευής\nΑυτόματα + Χειροκίνητα Tests + Εξαγωγή Αναφοράς
     </string>
 
     <!-- Auto Diagnosis -->
-    <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
-    <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
+    <string name="auto_diagnosis">ΑΥΤΟΜΑΤΗ ΔΙΑΓΝΩΣΗ</string>
+    <string name="gel_phone_diag_title">GEL Διάγνωση Συσκευής</string>
     <string name="gel_phone_diag_desc">
         Πλήρης αυτόματη διάγνωση 30 εργαστηριακών ελέγχων\nHardware · RAM · Storage · Battery · Network · Sensors…
     </string>
 
     <!-- Manual Tests -->
-    <string name="manual_tests">MANUAL TESTS</string>
-    <string name="manual_tests_title">Manual Tests</string>
+    <string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS</string>
+    <string name="manual_tests_title">Χειροκίνητα Tests</string>
     <string name="manual_tests_desc">
-        Στοχευμένα tests για service:\nΗχεία, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.
+        Στοχευμένοι έλεγχοι για service:\nΉχος, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.
     </string>
 
     <!-- Service Report -->
-    <string name="service_report">SERVICE REPORT</string>
-    <string name="export_report_title">Export Service Report</string>
+    <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
+    <string name="export_report_title">Εξαγωγή Αναφοράς Service</string>
     <string name="export_report_desc">
-        Τελικό Report για τον πελάτη (PDF ή TXT) + αυτόματο reset
+        Τελική αναφορά για τον πελάτη (PDF ή TXT) + αυτόματο καθάρισμα δεδομένων
     </string>
 
 </resources>

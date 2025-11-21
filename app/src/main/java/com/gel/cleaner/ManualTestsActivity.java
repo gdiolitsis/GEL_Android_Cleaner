@@ -520,14 +520,21 @@ private void lab11WifiSnapshot() {
             logWarn("Wi-Fi enabled but not connected to any access point.");
             return;
         }
+
         int rssi = info.getRssi();
         int linkSpeed = info.getLinkSpeed();
+
         logInfo("SSID: " + info.getSSID());
         logInfo("RSSI: " + rssi + " dBm");
         logInfo("Link speed: " + linkSpeed + " Mbps");
-        if (rssi > -65) logOk("Wi-Fi signal is strong for normal use.");
-        else if (rssi > -80) logWarn("Wi-Fi signal is moderate — possible instability further away.");
-        else logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
+
+        if (rssi > -65)
+            logOk("Wi-Fi signal is strong for normal use.");
+        else if (rssi > -80)
+            logWarn("Wi-Fi signal is moderate — possible instability further away.");
+        else
+            logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
+
     } catch (Exception e) {
         logError("Wi-Fi snapshot error: " + e.getMessage());
     }
@@ -560,6 +567,7 @@ private void lab14InternetQuickCheck() {
             logError("ConnectivityManager not available.");
             return;
         }
+
         boolean hasInternet = false;
         String transport = "UNKNOWN";
 
@@ -568,8 +576,10 @@ private void lab14InternetQuickCheck() {
             NetworkCapabilities caps = cm.getNetworkCapabilities(n);
             if (caps != null) {
                 hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) transport = "Wi-Fi";
-                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) transport = "Cellular";
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                    transport = "Wi-Fi";
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                    transport = "Cellular";
             }
         } else {
             @SuppressWarnings("deprecation")
@@ -580,14 +590,15 @@ private void lab14InternetQuickCheck() {
             }
         }
 
-        if (!hasInternet) logError("No active Internet connection detected at OS level.");
-        else logOk("Internet connectivity is reported as active (" + transport + ").");
+        if (!hasInternet)
+            logError("No active Internet connection detected at OS level.");
+        else
+            logOk("Internet connectivity is reported as active (" + transport + ").");
 
     } catch (Exception e) {
         logError("Internet quick check error: " + e.getMessage());
     }
- }   
-
+}
 // ============================================================
 // LABS 15–18: BATTERY & THERMAL  (GEL Edition + Battery Health %)
 // ============================================================

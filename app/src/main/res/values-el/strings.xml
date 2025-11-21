@@ -20,7 +20,7 @@
 
     <!-- PHONE INFO -->
     <string name="phone_info_internal">📱 Πληρ. Συσκευής\n (Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 Πληρ    Συσκευής\n. (Περιφερειακά)</string>
+    <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n   (Περιφερειακά)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Cleaner ALL</string>

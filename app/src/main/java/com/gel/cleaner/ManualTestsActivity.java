@@ -906,13 +906,78 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void lab12MobileDataChecklist() {
-        logLine();
-        logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist (manual).");
-        logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");
-        logInfo("2) Ensure a valid SIM with active data plan is inserted.");
-        logWarn("If the device shows signal bars but mobile data never works -> APN/carrier/modem issue.");
-        logError("If there is no mobile network at all in known-good coverage -> SIM, antenna or baseband problem.");
+    logLine();
+    logInfo("LAB 12 — Mobile Data / SIM Detection & Airplane Mode Check.");
+
+    try {
+        // 1) Airplane mode
+        boolean airplane = false;
+        try {
+            airplane = Settings.Global.getInt(
+                    getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
+        } catch (Exception ignored) {}
+
+        logInfo("Airplane mode: " + (airplane ? "ON" : "OFF"));
+        if (airplane) {
+            logError("Airplane mode is ON — mobile data will not work.");
+            return;
+        }
+
+        // 2) SIM detection
+        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if (tm == null) {
+            logError("TelephonyManager not available.");
+            return;
+        }
+
+        int simState = tm.getSimState();
+        switch (simState) {
+            case TelephonyManager.SIM_STATE_READY:
+                logOk("SIM detected and ready.");
+                break;
+
+            case TelephonyManager.SIM_STATE_ABSENT:
+                logError("No SIM card detected.");
+                return;
+
+            case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+            case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+                logWarn("SIM requires PIN/PUK unlock.");
+                return;
+
+            case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+                logWarn("SIM is network-locked — check carrier.");
+                break;
+
+            default:
+                logWarn("SIM state: " + simState + " (device-specific).");
+                break;
+        }
+
+        // 3) Carrier / network service status
+        ServiceState ss = tm.getServiceState();
+        if (ss != null) {
+            int state = ss.getState();
+            if (state == ServiceState.STATE_IN_SERVICE) {
+                logOk("Mobile network: IN SERVICE.");
+            } else if (state == ServiceState.STATE_OUT_OF_SERVICE) {
+                logError("Mobile network: OUT OF SERVICE — no signal.");
+            } else if (state == ServiceState.STATE_EMERGENCY_ONLY) {
+                logWarn("Mobile network: EMERGENCY ONLY — no registration.");
+            } else if (state == ServiceState.STATE_POWER_OFF) {
+                logError("Radio is OFF — check airplane or modem.");
+            }
+        } else {
+            logWarn("ServiceState unavailable.");
+        }
+
+        logInfo("Checklist: If mobile data still fails -> APN/carrier/modem issue.");
+
+    } catch (Exception e) {
+        logError("LAB 12 error: " + e.getMessage());
     }
+}
 
     private void lab13CallGuidelines() {
         logLine();

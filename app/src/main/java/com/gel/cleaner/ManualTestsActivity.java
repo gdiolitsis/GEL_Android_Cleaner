@@ -649,82 +649,77 @@ public class ManualTestsActivity extends AppCompatActivity {
     // ============================================================
     // LABS 11–14: WIRELESS & CONNECTIVITY
     // GEL FORCE MODE v3.0
-    // ============================================================
-    private void lab11WifiSnapshot() {
-        logLine();
-        logInfo("LAB 11 — Wi-Fi Link, RSSI, Password (QR) & DeepScan (GEL FORCE MODE).");
+    // ====================// ============================================================
+// LAB 11 — Wi-Fi DeepScan + QR Password Extractor (GEL v3.1)
+// ============================================================
+private void lab11WifiSnapshot() {
+    logLine();
+    logInfo("📡 LAB 11 — Wi-Fi DeepScan v3.1 started…");
 
-        // 1) Check Wi-Fi transport from ConnectivityManager (MOST RELIABLE)
-        boolean wifiActive = isWifiTransportActive();
-        if (!wifiActive) {
-            logWarn("Wi-Fi transport not detected by OS. If you are connected, OEM may delay reporting — retry in 2–3 sec.");
+    try {
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (wm == null) {
+            logError("WifiManager not available.");
+            return;
+        }
+
+        if (!wm.isWifiEnabled()) {
+            logWarn("Wi-Fi is OFF — enable Wi-Fi and retry.");
+            return;
+        }
+
+        WifiInfo info = wm.getConnectionInfo();
+        if (info == null || info.getNetworkId() == -1) {
+            logWarn("Wi-Fi enabled but NOT connected.");
+            return;
+        }
+
+        // ===================== BASIC LINK INFO =====================
+        String ssid = cleanSsid(info.getSSID());
+        int freq = info.getFrequency();
+        String band = (freq > 3000) ? "5 GHz" : "2.4 GHz";
+
+        logOk("SSID: " + ssid);
+        logInfo("BSSID: " + info.getBSSID());
+        logInfo("Frequency: " + freq + " MHz (" + band + ")");
+        logInfo("Link speed: " + info.getLinkSpeed() + " Mbps");
+        logInfo("RSSI: " + info.getRssi() + " dBm");
+
+        // RSSI interpretation
+        int rssi = info.getRssi();
+        if (rssi > -60) logOk("Signal strength: STRONG");
+        else if (rssi > -75) logWarn("Signal strength: MODERATE");
+        else logError("Signal strength: WEAK");
+
+        // ===================== NETWORK CONFIG =====================
+        DhcpInfo dh = wm.getDhcpInfo();
+        if (dh != null) {
+            logInfo("IP address: " + formatIp(dh.ipAddress));
+            logInfo("Gateway: " + formatIp(dh.gateway));
+            logInfo("DNS1: " + formatIp(dh.dns1));
+            logInfo("DNS2: " + formatIp(dh.dns2));
+        }
+
+        // ============================================================
+        // PASSWORD EXTRACTION
+        // — Android 10+ → QR Scan ONLY
+        // — Android ≤ 9 → direct Wi-Fi config
+        // ============================================================
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            extractWifiPasswordLegacy(wm, ssid);
         } else {
-            logOk("OS reports active Wi-Fi transport.");
-        }
-
-        // 2) Ensure permissions for SSID on Android 8+
-        if (!hasWifiSsidPermissions()) {
-            logWarn("SSID/RSSI access needs Location permission on Android 8+. Requesting now...");
-            requestWifiSsidPermissions();
-            logInfo("Grant permission then rerun LAB 11.");
-            // still continue with what we can
-        }
-
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            if (wm == null) {
-                logError("WifiManager not available.");
-                return;
-            }
-
-            if (!wm.isWifiEnabled()) {
-                logWarn("Wi-Fi is OFF. Please enable and retry.");
-                return;
-            }
-
-            WifiInfo info = wm.getConnectionInfo(); // may be partial on MIUI
-            String ssid = safeSsid(info != null ? info.getSSID() : null);
-            int rssi = (info != null) ? info.getRssi() : Integer.MIN_VALUE;
-            int speed = (info != null) ? info.getLinkSpeed() : -1;
-            int freq = (info != null) ? info.getFrequency() : -1;
-
-            // 3) Extra fallback: if ssid unknown but wifi transport active, DON'T FAIL
-            if ("<unknown ssid>".equalsIgnoreCase(ssid) || "unknown".equalsIgnoreCase(ssid)) {
-                String cmSsid = getSsidFromConnectivity();
-                if (!TextUtils.isEmpty(cmSsid)) ssid = cmSsid;
-            }
-
-            logInfo("SSID: " + (TextUtils.isEmpty(ssid) ? "(hidden/unknown)" : ssid));
-
-            if (freq > 0) {
-                String band = (freq > 3000) ? "5 GHz" : "2.4 GHz";
-                logInfo("Band: " + band + " (" + freq + " MHz)");
-            }
-
-            if (speed > 0) logInfo("Link speed: " + speed + " Mbps");
-
-            if (rssi != Integer.MIN_VALUE) {
-                logInfo("RSSI: " + rssi + " dBm");
-
-                if (rssi > -65) logOk("Wi-Fi signal is strong.");
-                else if (rssi > -80) logWarn("Moderate Wi-Fi signal.");
-                else logError("Very weak Wi-Fi signal — expect drops.");
-            } else {
-                logWarn("RSSI not readable on this OEM without permission.");
-            }
-
-            // 4) PASSWORD via QR only (safe cross-device method)
-            logInfo("Password extraction is OS-restricted on Android 10+.");
-            logInfo("→ Use QR Scan: open Wi-Fi settings → Share network (QR) → scan here.");
+            logWarn("Direct password extraction blocked by Android 10+.");
+            logInfo("📸 Launching QR password scan (ZXing Embedded)…");
             startQrScanForWifi();
-
-            // 5) DeepScan always runs if Wi-Fi transport is active OR WifiManager says enabled
-            runWifiDeepScan();
-
-        } catch (Throwable e) {
-            logError("Wi-Fi snapshot error: " + e.getMessage());
         }
+
+        // ===================== RUN DEEPSCAN =====================
+        runWifiDeepScan();
+
+    } catch (Exception e) {
+        logError("Wi-Fi DeepScan error: " + e.getMessage());
     }
+}
 
     private void lab12MobileDataChecklist() {
         logLine();

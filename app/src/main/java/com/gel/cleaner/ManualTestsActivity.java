@@ -71,6 +71,14 @@ public class ManualTestsActivity extends AppCompatActivity {
     private float oldWindowBrightness = -2f; // sentinel
     private boolean oldKeepScreenOn = false;
 
+    /* =========================================================
+     *  FIX: APPLY SAVED LANGUAGE TO THIS ACTIVITY
+     * ========================================================= */
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +93,6 @@ public class ManualTestsActivity extends AppCompatActivity {
         int pad = dp(16);
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010); // GEL black
-
         // TITLE
         TextView title = new TextView(this);
         title.setText(getString(R.string.manual_hospital_title));

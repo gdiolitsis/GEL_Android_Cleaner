@@ -586,7 +586,7 @@ private void lab14InternetQuickCheck() {
     } catch (Exception e) {
         logError("Internet quick check error: " + e.getMessage());
     }
-    
+ }   
 
 // ============================================================
 // LABS 15–18: BATTERY & THERMAL  (GEL Edition + Battery Health %)

@@ -2,17 +2,17 @@
 // ManualTestsActivity
 // GEL Manual Tests — Hospital Edition (30 Manual Labs)
 // Single-screen Accordion UI + detailed English service logs
-// NOTE: Whole file is ready for copy-paste (GEL rule).
+// NOTE (GEL RULE): Whole file is ready for copy-paste. Do NOT edit line-by-line.
 // ============================================================
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -21,8 +21,12 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -35,16 +39,16 @@ import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.provider.Settings;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Patterns;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -54,7 +58,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -93,6 +102,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         int pad = dp(16);
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010); // GEL black
+
         // TITLE
         TextView title = new TextView(this);
         title.setText(getString(R.string.manual_hospital_title));
@@ -150,7 +160,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.addView(header3);
         root.addView(body3);
 
-        body3.addView(makeTestButton("11. Wi-Fi Link & RSSI Snapshot", this::lab11WifiSnapshot));
+        body3.addView(makeTestButton("11. Wi-Fi Link, Password (QR) & DeepScan (GEL C)", this::lab11WifiSnapshot));
         body3.addView(makeTestButton("12. Mobile Data / Airplane Mode Checklist", this::lab12MobileDataChecklist));
         body3.addView(makeTestButton("13. Basic Call Test Guidelines", this::lab13CallGuidelines));
         body3.addView(makeTestButton("14. Internet Access Quick Check", this::lab14InternetQuickCheck));
@@ -161,7 +171,6 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.addView(header4);
         root.addView(body4);
 
-        // LAB 15 special button style (dark red, white text, gold border)
         body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
         body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));
         body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));
@@ -206,16 +215,12 @@ public class ManualTestsActivity extends AppCompatActivity {
         txtLog.setTextColor(0xFFEEEEEE);
         txtLog.setPadding(0, dp(16), 0, dp(8));
         txtLog.setMovementMethod(new ScrollingMovementMethod());
-
-        txtLog.setText(
-                Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>")
-        );
+        txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
 
         root.addView(txtLog);
         scroll.addView(root);
         setContentView(scroll);
 
-        // First log entry
         GELServiceLog.clear();
         logInfo(getString(R.string.manual_log_desc));
     }   // onCreate ends here
@@ -236,8 +241,9 @@ public class ManualTestsActivity extends AppCompatActivity {
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(15f);
-        b.setTextColor(0xFF39FF14); // neon green
+        b.setTextColor(0xFF39FF14);
         b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -245,6 +251,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         lp.setMargins(0, dp(6), 0, dp(4));
         b.setLayoutParams(lp);
         b.setGravity(Gravity.CENTER);
+
         b.setOnClickListener(v -> {
             if (bodyToToggle.getVisibility() == View.VISIBLE) {
                 bodyToToggle.setVisibility(View.GONE);
@@ -261,8 +268,9 @@ public class ManualTestsActivity extends AppCompatActivity {
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(14f);
-        b.setTextColor(0xFFFFFFFF); // white
+        b.setTextColor(0xFFFFFFFF);
         b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -274,19 +282,18 @@ public class ManualTestsActivity extends AppCompatActivity {
         return b;
     }
 
-    // Special red/gold button for LAB 15
     private Button makeTestButtonRedGold(String text, Runnable action) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(14f);
-        b.setTextColor(0xFFFFFFFF); // white
+        b.setTextColor(0xFFFFFFFF);
         b.setTypeface(null, Typeface.BOLD);
 
         GradientDrawable redBtn = new GradientDrawable();
-        redBtn.setColor(0xFF8B0000); // dark red
+        redBtn.setColor(0xFF8B0000);
         redBtn.setCornerRadius(dp(12));
-        redBtn.setStroke(dp(3), 0xFFFFD700); // gold border
+        redBtn.setStroke(dp(3), 0xFFFFD700);
         b.setBackground(redBtn);
 
         LinearLayout.LayoutParams lp =
@@ -433,67 +440,64 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void lab5Vibration() {
-    logLine();
-    logInfo("LAB 5 — Vibration Motor Test (strong pattern).");
-
-    try {
-        Vibrator v;
-
-        // Android 12+ default vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            android.os.VibratorManager vm =
-                    (android.os.VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-            v = (vm != null) ? vm.getDefaultVibrator() : null;
-        } else {
-            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        }
-
-        if (v == null) {
-            logError("No Vibrator service reported — framework issue.");
-            return;
-        }
-
-        if (!v.hasVibrator()) {
-            logError("Device reports NO vibrator hardware.");
-            return;
-        }
-
-        // --- Read a few system states that may block vibration ---
-        try {
-            int haptic = Settings.System.getInt(getContentResolver(),
-                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
-            if (haptic == 0)
-                logWarn("System haptic feedback is OFF (some OEMs block app vibration).");
-        } catch (Exception ignored) {}
+        logLine();
+        logInfo("LAB 5 — Vibration Motor Test (strong pattern).");
 
         try {
-            android.app.NotificationManager nm =
-                    (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null && nm.getCurrentInterruptionFilter()
-                    != android.app.NotificationManager.INTERRUPTION_FILTER_ALL) {
-                logWarn("Do Not Disturb is ON — may suppress vibration on some devices.");
+            Vibrator v;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager vm =
+                        (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                v = (vm != null) ? vm.getDefaultVibrator() : null;
+            } else {
+                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             }
-        } catch (Exception ignored) {}
 
-        // --- Strong waveform vibration ---
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            long[] pattern = {0, 300, 150, 300, 150, 450}; // strong multi-hit
-            int[] amps = {0, 255, 0, 255, 0, 255};
-            v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
-        } else {
-            //noinspection deprecation
-            long[] pattern = {0, 300, 150, 300, 150, 450};
-            //noinspection deprecation
-            v.vibrate(pattern, -1);
+            if (v == null) {
+                logError("No Vibrator service reported — framework issue.");
+                return;
+            }
+
+            if (!v.hasVibrator()) {
+                logError("Device reports NO vibrator hardware.");
+                return;
+            }
+
+            try {
+                int haptic = Settings.System.getInt(getContentResolver(),
+                        Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+                if (haptic == 0)
+                    logWarn("System haptic feedback is OFF (some OEMs block app vibration).");
+            } catch (Exception ignored) {}
+
+            try {
+                NotificationManager nm =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm != null && nm.getCurrentInterruptionFilter()
+                        != NotificationManager.INTERRUPTION_FILTER_ALL) {
+                    logWarn("Do Not Disturb is ON — may suppress vibration on some devices.");
+                }
+            } catch (Exception ignored) {}
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                long[] pattern = {0, 300, 150, 300, 150, 450};
+                int[] amps = {0, 255, 0, 255, 0, 255};
+                v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
+            } else {
+                //noinspection deprecation
+                long[] pattern = {0, 300, 150, 300, 150, 450};
+                //noinspection deprecation
+                v.vibrate(pattern, -1);
+            }
+
+            logOk("If strong pulses were felt clearly, vibrator motor + driver are OK.");
+            logWarn("If vibration is weak/intermittent, suspect worn motor or OEM suppression modes.");
+
+        } catch (Exception e) {
+            logError("Vibration Test error: " + e.getMessage());
         }
-
-        logOk("If strong pulses were felt clearly, vibrator motor + driver are OK.");
-        logWarn("If vibration is weak/intermittent, suspect worn motor or OEM suppression modes.");
-
-    } catch (Exception e) {
-        logError("Vibration Test error: " + e.getMessage());
     }
-}
 
     // ============================================================
     // LABS 6–10: DISPLAY & SENSORS
@@ -548,199 +552,406 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void lab10FullSensorList() {
-    logLine();
-    logInfo("LAB 10 — Full Sensor List for Report.");
-
-    try {
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sm == null) {
-            logError("SensorManager not available.");
-            return;
-        }
-
-        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-        if (sensors == null || sensors.isEmpty()) {
-            logError("No sensors reported by the system.");
-            return;
-        }
-
-        // ===================== RAW LIST =====================
-        for (Sensor s : sensors) {
-            String line = "• type=" + s.getType()
-                    + " | name=" + s.getName()
-                    + " | vendor=" + s.getVendor();
-            logInfo(line);
-        }
-
-        // ============================================================
-        // INTELLIGENT SENSOR INTERPRETATION (Xiaomi / QTI / Bosch / Rohm)
-        // ============================================================
-
-        boolean hasVirtualGyro = false;
-        boolean hasDualALS = false;
-        int alsCount = 0;
-        boolean hasSAR = false;
-        boolean hasPickup = false;
-        boolean hasLargeTouch = false;
-        boolean hasGameRotation = false;
-
-        for (Sensor s : sensors) {
-            String name = s.getName() != null ? s.getName().toLowerCase(Locale.US) : "";
-            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
-
-            // Xiaomi Virtual Gyroscope
-            if (name.contains("virtual_gyro") ||
-                (name.contains("gyroscope") && vendor.contains("xiaomi")))
-                hasVirtualGyro = true;
-
-            // Ambient Light – count for dual ALS detection
-            if (name.contains("ambient light"))
-                alsCount++;
-
-            // SAR detectors
-            if (name.contains("sar") || name.contains("rf"))
-                hasSAR = true;
-
-            // Pickup sensor (lift-to-wake)
-            if (name.contains("pickup"))
-                hasPickup = true;
-
-            // Large Area Touch sensor
-            if (name.contains("touch") && name.contains("large"))
-                hasLargeTouch = true;
-
-            // Game Rotation Vector sensor
-            if (name.contains("game rotation"))
-                hasGameRotation = true;
-        }
-
-        if (alsCount >= 2) hasDualALS = true;
-
-        // ===================== INTERPRETATION LOG =====================
         logLine();
-        logInfo("Sensor Interpretation Summary:");
+        logInfo("LAB 10 — Full Sensor List for Report.");
 
-        if (hasVirtualGyro)
-            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+        try {
+            SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+            if (sm == null) {
+                logError("SensorManager not available.");
+                return;
+            }
 
-        if (hasDualALS)
-            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
-        else
-            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+            List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+            if (sensors == null || sensors.isEmpty()) {
+                logError("No sensors reported by the system.");
+                return;
+            }
 
-        if (hasSAR)
-            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+            for (Sensor s : sensors) {
+                String line = "• type=" + s.getType()
+                        + " | name=" + s.getName()
+                        + " | vendor=" + s.getVendor();
+                logInfo(line);
+            }
 
-        if (hasPickup)
-            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+            boolean hasVirtualGyro = false;
+            boolean hasDualALS = false;
+            int alsCount = 0;
+            boolean hasSAR = false;
+            boolean hasPickup = false;
+            boolean hasLargeTouch = false;
+            boolean hasGameRotation = false;
 
-        if (hasLargeTouch)
-            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+            for (Sensor s : sensors) {
+                String name = s.getName() != null ? s.getName().toLowerCase(Locale.US) : "";
+                String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
 
-        if (hasGameRotation)
-            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+                if (name.contains("virtual_gyro") ||
+                        (name.contains("gyroscope") && vendor.contains("xiaomi")))
+                    hasVirtualGyro = true;
 
-        logOk("Sensor suite appears complete and healthy for this device.");
+                if (name.contains("ambient light"))
+                    alsCount++;
 
-    } catch (Exception e) {
-        logError("Full Sensor List error: " + e.getMessage());
+                if (name.contains("sar") || name.contains("rf"))
+                    hasSAR = true;
+
+                if (name.contains("pickup"))
+                    hasPickup = true;
+
+                if (name.contains("touch") && name.contains("large"))
+                    hasLargeTouch = true;
+
+                if (name.contains("game rotation"))
+                    hasGameRotation = true;
+            }
+
+            if (alsCount >= 2) hasDualALS = true;
+
+            logLine();
+            logInfo("Sensor Interpretation Summary:");
+
+            if (hasVirtualGyro)
+                logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+
+            if (hasDualALS)
+                logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
+            else
+                logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+
+            if (hasSAR)
+                logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+
+            if (hasPickup)
+                logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+
+            if (hasLargeTouch)
+                logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+
+            if (hasGameRotation)
+                logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+
+            logOk("Sensor suite appears complete and healthy for this device.");
+
+        } catch (Exception e) {
+            logError("Full Sensor List error: " + e.getMessage());
+        }
     }
-}
+
+    private void checkSensor(SensorManager sm, int type, String name) {
+        boolean ok = sm.getDefaultSensor(type) != null;
+        if (ok) logOk(name + " is reported as available.");
+        else logWarn(name + " is NOT reported — features depending on it will be limited or missing.");
+    }
 
     // ============================================================
-    // LABS 11–14: WIRELESS & CONNECTIVITY
+    // LAB 11 — Wi-Fi Link + Password (QR) + GEL DeepScan
     // ============================================================
-    // ============================================================
-// ============================================================
-// LAB 11 — Wi-Fi Link & RSSI Snapshot + Password + DeepScan
-// GEL Network v3.0 (ZXing QR + Ping + DNS + Gateway + SpeedSim)
-// ============================================================
-private void lab11WifiSnapshot() {
-    logLine();
-    logInfo("LAB 11 — Wi-Fi Link, RSSI, Password (if possible) & DeepScan.");
+    private void lab11WifiSnapshot() {
+        logLine();
+        logInfo("LAB 11 — Wi-Fi Link, RSSI, Password (if possible) & DeepScan.");
 
-    try {
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        if (wm == null) {
-            logError("WifiManager not available.");
-            return;
-        }
+        try {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            if (wm == null) {
+                logError("WifiManager not available.");
+                return;
+            }
 
-        if (!wm.isWifiEnabled()) {
-            logWarn("Wi-Fi is OFF. Please enable and retry.");
-            return;
-        }
+            if (!wm.isWifiEnabled()) {
+                logWarn("Wi-Fi is OFF. Please enable and retry.");
+                return;
+            }
 
-        WifiInfo info = wm.getConnectionInfo();
-        if (info == null || info.getNetworkId() == -1) {
-            logWarn("Wi-Fi enabled but not connected to any network.");
-            return;
-        }
+            WifiInfo info = wm.getConnectionInfo();
+            if (info == null || info.getNetworkId() == -1) {
+                logWarn("Wi-Fi enabled but not connected to any network.");
+                return;
+            }
 
-        // BASIC INFO
-        String ssid = info.getSSID();
-        int rssi  = info.getRssi();
-        int speed = info.getLinkSpeed();
-        String freqBand = (info.getFrequency() > 3000) ? "5 GHz" : "2.4 GHz";
+            String ssidRaw = info.getSSID();
+            String ssid = safeSsid(ssidRaw);
+            int rssi  = info.getRssi();
+            int speed = info.getLinkSpeed();
+            String freqBand = (info.getFrequency() > 3000) ? "5 GHz" : "2.4 GHz";
 
-        logInfo("SSID: " + ssid);
-        logInfo("Band: " + freqBand);
-        logInfo("RSSI: " + rssi + " dBm");
-        logInfo("Link speed: " + speed + " Mbps");
+            logInfo("SSID: " + ssid);
+            logInfo("Band: " + freqBand);
+            logInfo("BSSID: " + info.getBSSID());
+            logInfo("RSSI: " + rssi + " dBm");
+            logInfo("Link speed: " + speed + " Mbps");
+            logInfo("Supplicant: " + info.getSupplicantState());
 
-        if (rssi > -65)
-            logOk("Wi-Fi signal is strong.");
-        else if (rssi > -80)
-            logWarn("Moderate Wi-Fi signal.");
-        else
-            logError("Very weak Wi-Fi signal — expect drops.");
+            if (info.getSupplicantState() == SupplicantState.COMPLETED) {
+                logOk("Wi-Fi connection state: COMPLETED.");
+            } else {
+                logWarn("Wi-Fi state not fully completed — may be unstable.");
+            }
 
-        // ============================================================
-        // PASSWORD EXTRACTION (ANDROID 9 OR LOWER)
-        // Android 10+ blocks this → only QR fallback
-        // ============================================================
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            try {
-                List<WifiConfiguration> configs = wm.getConfiguredNetworks();
-                if (configs != null) {
-                    for (WifiConfiguration c : configs) {
-                        if (("\"" + c.SSID + "\"").equals(ssid)) {
-                            String pass = c.preSharedKey;
-                            if (pass != null) {
-                                pass = pass.replace("\"", "");
-                                logOk("Saved Wi-Fi Password: " + pass);
-                            } else {
-                                logWarn("Password is empty / not readable.");
+            if (rssi > -65)
+                logOk("Wi-Fi signal is strong.");
+            else if (rssi > -80)
+                logWarn("Moderate Wi-Fi signal.");
+            else
+                logError("Very weak Wi-Fi signal — expect drops.");
+
+            // Password extraction ONLY for Android 9 or lower
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                try {
+                    List<WifiConfiguration> configs = wm.getConfiguredNetworks();
+                    if (configs != null) {
+                        for (WifiConfiguration c : configs) {
+                            String cSsid = c.SSID != null ? c.SSID.replace("\"", "") : "";
+                            if (cSsid.equals(ssid)) {
+                                String pass = c.preSharedKey;
+                                if (pass != null) {
+                                    pass = pass.replace("\"", "");
+                                    logOk("Saved Wi-Fi Password: " + pass);
+                                } else {
+                                    logWarn("Password is empty / not readable.");
+                                }
                             }
                         }
+                    } else {
+                        logWarn("Cannot read Wi-Fi configuration list.");
                     }
-                } else {
-                    logWarn("Cannot read Wi-Fi configuration list.");
+                } catch (Exception ex) {
+                    logWarn("Password extraction blocked: " + ex.getMessage());
                 }
-            } catch (Exception ex) {
-                logWarn("Password extraction blocked: " + ex.getMessage());
+            } else {
+                logWarn("Direct password extraction blocked on Android 10+.");
+                logInfo("→ Use QR Scan to retrieve password visually.");
             }
-        } else {
-            logWarn("Direct password extraction blocked on Android 10+.");
-            logInfo("→ Use QR Scan to retrieve password visually.");
+
+            // QR scan for Wi-Fi password (user provided QR)
+            logInfo("Starting QR scan for Wi-Fi password (ZXing Embedded)...");
+            startQrScanForWifi();
+
+            // DeepScan
+            runWifiDeepScan();
+
+        } catch (Exception e) {
+            logError("Wi-Fi snapshot error: " + e.getMessage());
         }
-
-        // ============================================================
-        // OFFER QR SCAN FOR PASSWORD (ALL DEVICES)
-        // ============================================================
-        logInfo("Starting QR scan for Wi-Fi password (ZXing Embedded)...");
-        startQrScanForWifi();
-
-        // ============================================================
-        // NETWORK DEEPSCAN
-        // Ping → DNS → Gateway → SpeedSim
-        // ============================================================
-        runWifiDeepScan();
-
-    } catch (Exception e) {
-        logError("Wi-Fi snapshot error: " + e.getMessage());
     }
-}
+
+    private String safeSsid(String ssid) {
+        if (ssid == null) return "unknown";
+        ssid = ssid.replace("\"", "");
+        if ("<unknown ssid>".equals(ssid)) return "unknown";
+        return ssid;
+    }
+
+    // ============================================================
+    // GEL Network DeepScan (Ping, DNS, Gateway, SpeedSim)
+    // ============================================================
+    private void runWifiDeepScan() {
+        new Thread(() -> {
+            try {
+                logLine();
+                logInfo("DeepScan: starting (Ping, DNS, Gateway, SpeedSim).");
+
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+                if (wm == null) {
+                    logError("DeepScan: WifiManager not available.");
+                    return;
+                }
+
+                DhcpInfo dhcp = wm.getDhcpInfo();
+                String ip = dhcp != null ? intToIp(dhcp.ipAddress) : "n/a";
+                String gw = dhcp != null ? intToIp(dhcp.gateway) : "n/a";
+                String dns1 = dhcp != null ? intToIp(dhcp.dns1) : "n/a";
+                String dns2 = dhcp != null ? intToIp(dhcp.dns2) : "n/a";
+
+                logInfo("DeepScan: IP=" + ip);
+                logInfo("DeepScan: Gateway=" + gw);
+                logInfo("DeepScan: DNS1=" + dns1);
+                logInfo("DeepScan: DNS2=" + dns2);
+
+                if (!"n/a".equals(gw)) {
+                    long tGw = pingMs(gw, 1200);
+                    if (tGw >= 0) logOk("Ping gateway: " + tGw + " ms");
+                    else logWarn("Ping gateway failed.");
+                }
+
+                long tPub = pingMs("8.8.8.8", 1500);
+                if (tPub >= 0) logOk("Ping 8.8.8.8: " + tPub + " ms");
+                else logWarn("Ping 8.8.8.8 failed (no internet or ICMP blocked).");
+
+                long dnsMs = dnsResolveMs("google.com");
+                if (dnsMs >= 0) logOk("DNS resolve google.com: " + dnsMs + " ms");
+                else logWarn("DNS resolve failed.");
+
+                float mbps = speedSimMbps();
+                if (mbps > 0) {
+                    if (mbps >= 25) logOk(String.format(Locale.US, "SpeedSim: %.1f Mbps (strong)", mbps));
+                    else if (mbps >= 8) logWarn(String.format(Locale.US, "SpeedSim: %.1f Mbps (moderate)", mbps));
+                    else logError(String.format(Locale.US, "SpeedSim: %.1f Mbps (weak)", mbps));
+                } else {
+                    logWarn("SpeedSim: not available (no internet / blocked).");
+                }
+
+                if (Patterns.IP_ADDRESS.matcher(gw).matches()) {
+                    logInfo("Router probe: open http://" + gw + " in browser to verify router status.");
+                }
+
+                logOk("DeepScan complete.");
+
+            } catch (Exception e) {
+                logError("DeepScan error: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    private long pingMs(String host, int timeoutMs) {
+        try {
+            long start = SystemClock.elapsedRealtime();
+            InetAddress a = InetAddress.getByName(host);
+            boolean ok = a.isReachable(timeoutMs);
+            if (!ok) return -1;
+            return SystemClock.elapsedRealtime() - start;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private long dnsResolveMs(String host) {
+        try {
+            long start = SystemClock.elapsedRealtime();
+            InetAddress.getByName(host);
+            return SystemClock.elapsedRealtime() - start;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private float speedSimMbps() {
+        HttpURLConnection c = null;
+        InputStream in = null;
+        try {
+            URL url = new URL("https://speed.hetzner.de/1MB.bin");
+            c = (HttpURLConnection) url.openConnection();
+            c.setConnectTimeout(3000);
+            c.setReadTimeout(3000);
+            c.setUseCaches(false);
+
+            long start = SystemClock.elapsedRealtime();
+            in = new BufferedInputStream(c.getInputStream());
+            byte[] buf = new byte[64 * 1024];
+            int total = 0;
+            int r;
+            while ((r = in.read(buf)) != -1) {
+                total += r;
+                if (total >= 512 * 1024) break;
+            }
+            long dt = SystemClock.elapsedRealtime() - start;
+            if (dt <= 0) return -1f;
+
+            float bits = (total * 8f);
+            float sec = dt / 1000f;
+            return (bits / sec) / 1_000_000f;
+
+        } catch (Exception e) {
+            return -1f;
+        } finally {
+            try { if (in != null) in.close(); } catch (Exception ignored) {}
+            if (c != null) c.disconnect();
+        }
+    }
+
+    private String intToIp(int i) {
+        return (i & 0xFF) + "." +
+                ((i >> 8) & 0xFF) + "." +
+                ((i >> 16) & 0xFF) + "." +
+                ((i >> 24) & 0xFF);
+    }
+
+    // ============================================================
+    // QR Scan for Wi-Fi password (ZXing embedded if present)
+    // ============================================================
+    private void startQrScanForWifi() {
+        try {
+            logLine();
+            logInfo("QR Scanner: starting (scan Wi-Fi QR).");
+
+            Class<?> viewCls = Class.forName("com.journeyapps.barcodescanner.DecoratedBarcodeView");
+            Object view = viewCls.getConstructor(Context.class).newInstance(this);
+
+            Method init = viewCls.getMethod("initializeFromIntent", Intent.class);
+            init.invoke(view, new Intent());
+
+            Class<?> cbCls = Class.forName("com.journeyapps.barcodescanner.BarcodeCallback");
+            Method decodeCont = viewCls.getMethod("decodeContinuous", cbCls);
+
+            Object callback = java.lang.reflect.Proxy.newProxyInstance(
+                    cbCls.getClassLoader(),
+                    new Class[]{cbCls},
+                    (proxy, method, args) -> {
+                        if ("barcodeResult".equals(method.getName()) && args != null && args.length > 0) {
+                            Object res = args[0];
+                            Method getText = res.getClass().getMethod("getText");
+                            String txt = (String) getText.invoke(res);
+
+                            if (txt != null && txt.startsWith("WIFI:")) {
+                                ParsedWifiQr p = parseWifiQr(txt);
+                                if (p != null) {
+                                    logOk("Wi-Fi QR scanned.");
+                                    logInfo("QR SSID: " + p.ssid);
+                                    logInfo("QR Security: " + p.type);
+                                    logOk("QR Password: " + (TextUtils.isEmpty(p.pass) ? "(empty/open)" : p.pass));
+                                } else {
+                                    logWarn("QR looked like WIFI but could not parse.");
+                                }
+                                Method pause = viewCls.getMethod("pause");
+                                pause.invoke(view);
+                            }
+                        }
+                        return null;
+                    });
+
+            decodeCont.invoke(view, callback);
+
+            AlertDialog.Builder b = new AlertDialog.Builder(this);
+            b.setView((View) view);
+            b.setCancelable(true);
+            AlertDialog d = b.create();
+            d.show();
+
+        } catch (Throwable e) {
+            logWarn("QR Scanner not available in this build (dependency missing).");
+            logWarn("If you want QR scan, add JourneyApps ZXing dependency + CAMERA permission.");
+        }
+    }
+
+    private static class ParsedWifiQr {
+        String ssid;
+        String type;
+        String pass;
+    }
+
+    private ParsedWifiQr parseWifiQr(String raw) {
+        try {
+            ParsedWifiQr p = new ParsedWifiQr();
+            String body = raw.substring(5);
+            String[] parts = body.split(";");
+            for (String part : parts) {
+                if (part.startsWith("S:")) p.ssid = part.substring(2);
+                else if (part.startsWith("T:")) p.type = part.substring(2);
+                else if (part.startsWith("P:")) p.pass = part.substring(2);
+            }
+            if (p.ssid == null) return null;
+            if (p.type == null) p.type = "unknown";
+            if (p.pass == null) p.pass = "";
+            return p;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // ============================================================
+    // LABS 12–14: WIRELESS & CONNECTIVITY
+    // ============================================================
     private void lab12MobileDataChecklist() {
         logLine();
         logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist (manual).");
@@ -773,7 +984,7 @@ private void lab11WifiSnapshot() {
             String transport = "UNKNOWN";
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                android.net.Network n = cm.getActiveNetwork();
+                Network n = cm.getActiveNetwork();
                 NetworkCapabilities caps = cm.getNetworkCapabilities(n);
                 if (caps != null) {
                     hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
@@ -808,9 +1019,6 @@ private void lab11WifiSnapshot() {
         showBatteryHealthTestDialog();
     }
 
-    // ============================================================
-    // BATTERY HEALTH STRESS TEST POPUP
-    // ============================================================
     private void showBatteryHealthTestDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
@@ -841,7 +1049,7 @@ private void lab11WifiSnapshot() {
         layout.addView(durValue);
 
         final SeekBar seek = new SeekBar(this);
-        seek.setMax(110); // 10..120 sec
+        seek.setMax(110);
         layout.addView(seek);
 
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -891,13 +1099,6 @@ private void lab11WifiSnapshot() {
         dialog.show();
     }
 
-    // ============================================================
-    // Real GEL C-Mode Stress Test
-    // - Max brightness (window)
-    // - Keep screen on
-    // - CPU burn threads
-    // - Health % derived ONLY from observed drain
-    // ============================================================
     private void runBatteryHealthTest_C_Mode(int durationSec) {
         float startPct = getCurrentBatteryPercent();
         if (startPct < 0f) {
@@ -912,12 +1113,10 @@ private void lab11WifiSnapshot() {
 
         long startTime = SystemClock.elapsedRealtime();
 
-        // Apply stress
         applyMaxBrightnessAndKeepOn();
         startCpuBurn_C_Mode();
 
         ui.postDelayed(() -> {
-            // Stop stress
             stopCpuBurn();
             restoreBrightnessAndKeepOn();
 
@@ -938,7 +1137,6 @@ private void lab11WifiSnapshot() {
                     "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                     startPct, endPct, delta, dtMs / 1000f));
 
-            // Health % from drain only (heuristic)
             int healthPct = estimateHealthFromDrain(perHour);
 
             if (healthPct >= 90) {
@@ -964,9 +1162,6 @@ private void lab11WifiSnapshot() {
         }, durationSec * 1000L);
     }
 
-    // Baseline model for GEL C stress:
-    // New/healthy phone under this burn ~12%/hour.
-    // HealthPct = clamp(12 / perHour * 100)
     private int estimateHealthFromDrain(float perHour) {
         if (perHour <= 0f) return 100;
         float baseline = 12f;
@@ -978,16 +1173,13 @@ private void lab11WifiSnapshot() {
 
     private void applyMaxBrightnessAndKeepOn() {
         try {
-            // Save old window brightness and keep-screen flag
             WindowManager.LayoutParams lp = getWindow().getAttributes();
             oldWindowBrightness = lp.screenBrightness;
-            oldKeepScreenOn = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
+            oldKeepScreenOn =
+                    (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
 
-            // Max brightness via window (no permission needed)
             lp.screenBrightness = 1f;
             getWindow().setAttributes(lp);
-
-            // Keep screen on
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
             logInfo("Stress: brightness set to MAX and screen locked ON.");
@@ -1015,11 +1207,11 @@ private void lab11WifiSnapshot() {
     }
 
     private void startCpuBurn_C_Mode() {
-        stopCpuBurn(); // safety reset
+        stopCpuBurn();
         cpuBurnRunning = true;
 
         int cores = Runtime.getRuntime().availableProcessors();
-        int threadsToRun = Math.min(8, cores); // GEL C Mode target
+        int threadsToRun = Math.min(8, cores);
         logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
 
         cpuBurnThreads.clear();
@@ -1027,7 +1219,6 @@ private void lab11WifiSnapshot() {
             Thread t = new Thread(() -> {
                 double x = 1.000001;
                 while (cpuBurnRunning) {
-                    // Heavy float + trig mix (aggressive)
                     x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
                     if (x > 1e9) x = 1.000001;
                 }
@@ -1041,9 +1232,7 @@ private void lab11WifiSnapshot() {
     private void stopCpuBurn() {
         cpuBurnRunning = false;
         for (Thread t : cpuBurnThreads) {
-            try {
-                t.join(50);
-            } catch (Exception ignored) {}
+            try { t.join(50); } catch (Exception ignored) {}
         }
         cpuBurnThreads.clear();
         logInfo("Stress: CPU burn stopped.");
@@ -1078,8 +1267,7 @@ private void lab11WifiSnapshot() {
     }
 
     // ============================================================
-    // LAB 17 — Thermal Snapshot (CPU where available)
-    // (Reflection to avoid compile SDK issues)
+    // LAB 17 — Thermal Snapshot (Reflection)
     // ============================================================
     private void lab17ThermalSnapshot() {
         logLine();
@@ -1118,9 +1306,6 @@ private void lab11WifiSnapshot() {
         }
     }
 
-    // ============================================================
-    // LAB 18 — Heat Under Load (manual questionnaire)
-    // ============================================================
     private void lab18ThermalQuestionnaire() {
         logLine();
         logInfo("LAB 18 — Heat Under Load (manual questionnaire).");

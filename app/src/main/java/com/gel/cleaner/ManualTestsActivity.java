@@ -499,94 +499,94 @@ logInfo(getString(R.string.manual_log_desc));
     }
 
     // ============================================================
-    // LABS 11–14: WIRELESS & CONNECTIVITY
-    // ============================================================
-    private void lab11WifiSnapshot() {
-        logLine();
-        logInfo("LAB 11 — Wi-Fi Link & RSSI Snapshot.");
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            if (wm == null) {
-                logError("WifiManager not available.");
-                return;
-            }
-            if (!wm.isWifiEnabled()) {
-                logWarn("Wi-Fi is currently disabled.");
-                return;
-            }
-            WifiInfo info = wm.getConnectionInfo();
-            if (info == null || info.getNetworkId() == -1) {
-                logWarn("Wi-Fi enabled but not connected to any access point.");
-                return;
-            }
-            int rssi = info.getRssi();
-            int linkSpeed = info.getLinkSpeed();
-            logInfo("SSID: " + info.getSSID());
-            logInfo("RSSI: " + rssi + " dBm");
-            logInfo("Link speed: " + linkSpeed + " Mbps");
-            if (rssi > -65) logOk("Wi-Fi signal is strong for normal use.");
-            else if (rssi > -80) logWarn("Wi-Fi signal is moderate — possible instability further away.");
-            else logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
-        } catch (Exception e) {
-            logError("Wi-Fi snapshot error: " + e.getMessage());
+// LABS 11–14: WIRELESS & CONNECTIVITY
+// ============================================================
+
+private void lab11WifiSnapshot() {
+    logLine();
+    logInfo("LAB 11 — Wi-Fi Link & RSSI Snapshot.");
+    try {
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (wm == null) {
+            logError("WifiManager not available.");
+            return;
         }
-    }
-
-    private void lab12MobileDataChecklist() {
-        logLine();
-        logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist (manual).");
-        logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");
-        logInfo("2) Ensure a valid SIM with active data plan is inserted.");
-        logWarn("If the device shows signal bars but mobile data never works → APN / carrier or modem issue.");
-        logError("If there is no mobile network at all in known-good coverage → SIM, antenna or baseband problem.");
-    }
-
-    private void lab13CallGuidelines() {
-        logLine();
-        logInfo("LAB 13 — Basic Call Test Guidelines (manual).");
-        logInfo("1) Place a normal call to a known-good number.");
-        logInfo("2) Verify both directions: you hear the remote side AND they hear you clearly.");
-        logWarn("If only one direction fails → isolate between earpiece vs microphone path.");
-        logError("If calls always drop or never connect while data works → core telephony / carrier registration issue.");
-    }
-
-    private void lab14InternetQuickCheck() {
-        logLine();
-        logInfo("LAB 14 — Internet Access Quick Check.");
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) {
-                logError("ConnectivityManager not available.");
-                return;
-            }
-            boolean hasInternet = false;
-            String transport = "UNKNOWN";
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                android.net.Network n = cm.getActiveNetwork();
-                NetworkCapabilities caps = cm.getNetworkCapabilities(n);
-                if (caps != null) {
-                    hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) transport = "Wi-Fi";
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) transport = "Cellular";
-                }
-            } else {
-                @SuppressWarnings("deprecation")
-                NetworkInfo ni = cm.getActiveNetworkInfo();
-                if (ni != null && ni.isConnected()) {
-                    hasInternet = true;
-                    transport = ni.getTypeName();
-                }
-            }
-            if (!hasInternet) {
-                logError("No active Internet connection detected at OS level.");
-            } else {
-                logOk("Internet connectivity is reported as active (" + transport + ").");
-            }
-        } catch (Exception e) {
-            logError("Internet quick check error: " + e.getMessage());
+        if (!wm.isWifiEnabled()) {
+            logWarn("Wi-Fi is currently disabled.");
+            return;
         }
+        WifiInfo info = wm.getConnectionInfo();
+        if (info == null || info.getNetworkId() == -1) {
+            logWarn("Wi-Fi enabled but not connected to any access point.");
+            return;
+        }
+        int rssi = info.getRssi();
+        int linkSpeed = info.getLinkSpeed();
+        logInfo("SSID: " + info.getSSID());
+        logInfo("RSSI: " + rssi + " dBm");
+        logInfo("Link speed: " + linkSpeed + " Mbps");
+        if (rssi > -65) logOk("Wi-Fi signal is strong for normal use.");
+        else if (rssi > -80) logWarn("Wi-Fi signal is moderate — possible instability further away.");
+        else logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
+    } catch (Exception e) {
+        logError("Wi-Fi snapshot error: " + e.getMessage());
     }
+}
 
+private void lab12MobileDataChecklist() {
+    logLine();
+    logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist (manual).");
+    logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");
+    logInfo("2) Ensure a valid SIM with active data plan is inserted.");
+    logWarn("If the device shows signal bars but mobile data never works → APN / carrier or modem issue.");
+    logError("If there is no mobile network at all in known-good coverage → SIM, antenna or baseband problem.");
+}
+
+private void lab13CallGuidelines() {
+    logLine();
+    logInfo("LAB 13 — Basic Call Test Guidelines (manual).");
+    logInfo("1) Place a normal call to a known-good number.");
+    logInfo("2) Verify both directions: you hear the remote side AND they hear you clearly.");
+    logWarn("If only one direction fails → isolate between earpiece vs microphone path.");
+    logError("If calls always drop or never connect while data works → core telephony / carrier registration issue.");
+}
+
+private void lab14InternetQuickCheck() {
+    logLine();
+    logInfo("LAB 14 — Internet Access Quick Check.");
+    try {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            logError("ConnectivityManager not available.");
+            return;
+        }
+        boolean hasInternet = false;
+        String transport = "UNKNOWN";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            android.net.Network n = cm.getActiveNetwork();
+            NetworkCapabilities caps = cm.getNetworkCapabilities(n);
+            if (caps != null) {
+                hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) transport = "Wi-Fi";
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) transport = "Cellular";
+            }
+        } else {
+            @SuppressWarnings("deprecation")
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if (ni != null && ni.isConnected()) {
+                hasInternet = true;
+                transport = ni.getTypeName();
+            }
+        }
+
+        if (!hasInternet) logError("No active Internet connection detected at OS level.");
+        else logOk("Internet connectivity is reported as active (" + transport + ").");
+
+    } catch (Exception e) {
+        logError("Internet quick check error: " + e.getMessage());
+    }
+}
     
 // ============================================================
 // LABS 15–18: BATTERY & THERMAL

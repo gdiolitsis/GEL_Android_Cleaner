@@ -9,7 +9,8 @@ package com.gel.cleaner;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ColorDrawable;
-
+import android.widget.CheckBox;
+import android.content.res.ColorStateList;
 import android.widget.SeekBar;
 import android.widget.CompoundButton;
 import androidx.appcompat.app.AlertDialog;

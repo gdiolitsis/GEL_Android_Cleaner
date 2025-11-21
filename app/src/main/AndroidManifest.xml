@@ -33,9 +33,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- ============================================================
+         SIM & MOBILE NETWORK STATE (LAB 12)
+         ============================================================ -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- ============================================================
          WIFI DIAGNOSTICS (LAB 11)
          ============================================================ -->
-    <!-- Get WiFi state (SSID/BSSID/RSSI/Frequency/LinkSpeed) -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
@@ -116,7 +122,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- 🟨 NEW UPDATED LAB ACTIVITY -->
+        <!-- MANUAL LABS -->
         <activity android:name=".ManualTestsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

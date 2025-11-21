@@ -651,47 +651,157 @@ public class ManualTestsActivity extends AppCompatActivity {
     // LABS 11–14: WIRELESS & CONNECTIVITY
     // ============================================================
     // ============================================================
-// LAB 11 — Wi-Fi Saved Password Extractor (Universal, No-Root)
+// LAB 11 — Wi-Fi Link & RSSI Snapshot  +  Saved Passwords
+// + Embedded QR Scanner (ZXing, offline, no intents)
+// GEL Edition v3.1
 // ============================================================
-private void lab11WifiPasswordExtractor() {
+private void lab11WifiSnapshot() {
     logLine();
-    logInfo("LAB 11 — Wi-Fi Saved Password Extractor (Universal).");
-    logInfo("Launching system Wi-Fi Share UI…");
+    logInfo("LAB 11 — Wi-Fi Link & RSSI Snapshot + Saved Networks + QR Tools.");
 
     try {
-        String brand = Build.BRAND == null ? "" : Build.BRAND.toLowerCase(Locale.US);
-        Intent intent = null;
-
-        // -----------------------------
-        // AUTO-DETECT BRAND (A-MODE)
-        // -----------------------------
-        if (brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")) {
-            intent = new Intent("android.settings.WIFI_SHARE_SETTINGS");
-        }
-        else if (brand.contains("samsung")) {
-            intent = new Intent();
-            intent.setClassName(
-                    "com.samsung.android.settings.wifi",
-                    "com.samsung.android.settings.wifi.details.WifiNetworkDetailsActivity"
-            );
-        }
-        else if (brand.contains("huawei") || brand.contains("honor")) {
-            intent = new Intent("android.settings.WIFI_SHARE");
-        }
-        else {
-            // FALLBACK → standard Wi-Fi details
-            intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (wm == null) {
+            logError("WifiManager not available.");
+            return;
         }
 
-        // Try to launch
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivityForResult(intent, 9911);
+        // ---------- WIFI STATUS ----------
+        if (!wm.isWifiEnabled()) {
+            logWarn("Wi-Fi is currently disabled.");
+        } else {
+            WifiInfo info = wm.getConnectionInfo();
+            if (info != null && info.getNetworkId() != -1) {
+                logOk("Connected SSID: " + info.getSSID());
+                logInfo("BSSID: " + info.getBSSID());
+                logInfo("IP: " + formatIp(info.getIpAddress()));
+                logInfo("RSSI: " + info.getRssi() + " dBm");
+                logInfo("Link speed: " + info.getLinkSpeed() + " Mbps");
+            } else {
+                logWarn("Wi-Fi enabled but not connected to any network.");
+            }
+        }
+
+        // ============================================================
+        // SAVED NETWORKS + PASSWORDS (Android 10+ uses official API)
+        // ============================================================
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WifiManager wifi = (WifiManager) getSystemService(WIFI_SERVICE);
+            List<WifiManager.WifiNetworkSuggestion> suggestions =
+                    wifi.getNetworkSuggestions();
+
+            if (suggestions != null && !suggestions.isEmpty()) {
+                logInfo("Saved Wi-Fi networks (Android R+):");
+
+                for (WifiManager.WifiNetworkSuggestion s : suggestions) {
+                    String ssid = s.getSsid();
+                    String pass = (s.getWpa2Passphrase() != null ?
+                            s.getWpa2Passphrase() :
+                            (s.getWpa3Passphrase() != null ?
+                                    s.getWpa3Passphrase() :
+                                    "(Unknown / Hidden)"));
+
+                    logOk("SSID: " + ssid + " | Password: " + pass);
+
+                    // QR Code export
+                    String qr = buildWifiQR(ssid, pass);
+                    logInfo("QR: " + qr);
+                }
+            } else {
+                logWarn("No saved networks reported by OS (R+ API).");
+            }
+        } else {
+            logWarn("Saved password extraction requires Android 11+ (OS restriction).");
+        }
+
+        // ------------------------------------------------------------
+        // SHOW POPUP FOR QR SCANNER
+        // ------------------------------------------------------------
+        showWifiQRTools();
 
     } catch (Exception e) {
-        logError("Cannot open Wi-Fi Share screen: " + e.getMessage());
+        logError("Wi-Fi snapshot error: " + e.getMessage());
     }
+}
 
-    logInfo("After QR appears, scan it using GEL QR Engine to extract the password.");
+// Format IP int
+private String formatIp(int ip) {
+    return String.format(Locale.US, "%d.%d.%d.%d",
+            (ip & 0xff), (ip >> 8 & 0xff),
+            (ip >> 16 & 0xff), (ip >> 24 & 0xff));
+}
+
+// Build Wi-Fi QR Text
+private String buildWifiQR(String ssid, String pass) {
+    return "WIFI:T:WPA;S:" + ssid + ";P:" + pass + ";;";
+}
+
+// ============================================================
+// POPUP: Wi-Fi QR Tools (Show QR + Embedded QR Scanner)
+// ============================================================
+private void showWifiQRTools() {
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setCancelable(true);
+    b.setTitle("Wi-Fi QR Tools (GEL)");
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    root.setPadding(pad, pad, pad, pad);
+
+    TextView t = new TextView(this);
+    t.setText("• Generate Wi-Fi QR codes\n• Scan Wi-Fi QR codes\n(Offline, no apps needed)");
+    t.setTextSize(14f);
+    t.setTextColor(0xFFFFFFFF);
+    root.addView(t);
+
+    // BUTTON: Scan QR
+    Button scan = new Button(this);
+    scan.setText("Scan Wi-Fi QR Code");
+    scan.setTextColor(0xFFFFFFFF);
+    scan.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    scan.setOnClickListener(v -> {
+        AlertDialog d = (AlertDialog) scan.getTag();
+        if (d != null) d.dismiss();
+        startEmbeddedQRScanner();
+    });
+    root.addView(scan);
+
+    AlertDialog dialog = b.setView(root).create();
+
+    scan.setTag(dialog);
+    dialog.show();
+}
+
+// ============================================================
+// EMBEDDED QR SCANNER (ZXing core, offline, GEL Edition)
+// ============================================================
+private void startEmbeddedQRScanner() {
+
+    logInfo("QR Scanner started…");
+
+    try {
+        com.journeyapps.barcodescanner.DecoratedBarcodeView view =
+                new com.journeyapps.barcodescanner.DecoratedBarcodeView(this);
+
+        view.initializeFromIntent(new Intent());
+        view.decodeContinuous(result -> {
+            String txt = result.getText();
+            if (txt != null && txt.startsWith("WIFI:")) {
+                logOk("Wi-Fi QR scanned: " + txt);
+                view.pause();
+            }
+        });
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setView(view);
+        b.setCancelable(true);
+        AlertDialog d = b.create();
+        d.show();
+
+    } catch (Exception e) {
+        logError("QR scanner error: " + e.getMessage());
+    }
 }
 
     private void lab12MobileDataChecklist() {

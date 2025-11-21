@@ -1282,144 +1282,304 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     // ============================================================
-// LAB 17 — Thermal LIVE Monitor (Battery always + CPU if supported)
+// LAB 17 — Thermal Snapshot (UPGRADED)
+// Multi-zone thermal read from /sys/class/thermal
+// Colored status + ASCII sparkline + Full compatibility fallback
+// Works on ALL devices (best-effort, silent skip if unsupported)
 // ============================================================
 private void lab17ThermalSnapshot() {
     logLine();
-    logInfo("LAB 17 — Thermal LIVE Monitor started (battery + CPU where supported).");
+    logInfo("LAB 17 — Thermal Snapshot (Multi-Sensor + Live Sparkline).");
 
+    // Scan zones once; if none, fallback to battery only
+    final List<GELThermalZone> zones = scanThermalZones();
+
+    if (zones.isEmpty()) {
+        float battC = readBatteryTempC();
+        if (battC > 0) {
+            logInfo("Battery temp: " + String.format(Locale.US, "%.1f°C", battC) + " " + thermalBadge(battC));
+            logWarn("No readable thermal zones found in /sys/class/thermal (OEM restriction).");
+        } else {
+            logWarn("No readable thermal sensors found on this device.");
+        }
+        return;
+    }
+
+    // Show a Live popup with sparkline histories
+    startThermalLivePopup(zones);
+}
+
+// ============================================================
+// LIVE POPUP (no libraries, native ASCII sparkline)
+// ============================================================
+private void startThermalLivePopup(final List<GELThermalZone> zones) {
     try {
-        // Live dialog UI
-        final TextView live = new TextView(this);
-        live.setTextSize(14f);
-        live.setTextColor(0xFF39FF14);
-        live.setPadding(dp(16), dp(16), dp(16), dp(16));
-        live.setText("Reading temperatures...\n");
+        final TextView tv = new TextView(this);
+        tv.setTextSize(14f);
+        tv.setTextColor(0xFFFFFFFF);
+        tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+        tv.setTypeface(null, Typeface.NORMAL);
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Thermal LIVE Snapshot");
+        b.setView(tv);
+        b.setCancelable(true);
+        b.setNegativeButton("CLOSE", (d, w) -> { /* handled by dismiss */ });
+
+        final AlertDialog dlg = b.create();
+        if (dlg.getWindow() != null)
+            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
 
         final boolean[] running = {true};
 
-        AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("Thermal LIVE Monitor")
-                .setView(live)
-                .setCancelable(true)
-                .create();
-
-        d.setOnDismissListener(x -> running[0] = false);
-
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-
-        d.show();
-
         Runnable tick = new Runnable() {
             @Override public void run() {
-                if (!running[0]) return;
+                if (!running[0] || !dlg.isShowing()) return;
 
-                String report = buildThermalLiveReport();
-                live.setText(report);
+                // Refresh temps
+                for (GELThermalZone z : zones) {
+                    float c = readZoneTempC(z.tempPath);
+                    if (c > -200f) {
+                        z.tempC = c;
+                        z.pushHistory(c);
+                    }
+                }
 
-                ui.postDelayed(this, 1000); // 1 sec refresh
+                // Build render text
+                StringBuilder sb = new StringBuilder();
+                sb.append("Sensors detected: ").append(zones.size()).append("\n\n");
+
+                // Group by friendly labels, show only supported
+                for (GELThermalZone z : zones) {
+                    if (z.tempC <= -200f) continue; // unreadable now
+                    String badge = thermalBadge(z.tempC);
+                    String spark = z.sparkline();
+                    sb.append(z.label).append(": ")
+                      .append(String.format(Locale.US, "%.1f°C", z.tempC))
+                      .append("  ").append(badge);
+                    if (!spark.isEmpty()) sb.append("  ").append(spark);
+                    sb.append("\n");
+                }
+
+                sb.append("\nThermal summary:\n");
+                for (GELThermalZone z : zones) {
+                    if (z.tempC <= -200f) continue;
+                    sb.append("• ").append(z.label).append(": ")
+                      .append(String.format(Locale.US, "%.1f°C", z.tempC))
+                      .append(" (").append(thermalLevel(z.tempC)).append(")")
+                      .append("\n");
+                }
+
+                sb.append("\nRefresh: 1 sec. Close dialog to stop.");
+                tv.setText(sb.toString());
+
+                ui.postDelayed(this, 1000);
             }
         };
 
+        dlg.setOnDismissListener(x -> running[0] = false);
+        dlg.show();
+
+        logOk("Thermal LIVE popup opened.");
         ui.post(tick);
 
     } catch (Exception e) {
-        logWarn("Thermal live monitor not supported: " + e.getMessage());
+        logWarn("Thermal LIVE popup failed: " + e.getMessage());
     }
 }
 
-
-// ------------------------------------------------------------
-// Helper: build live report string
-// ------------------------------------------------------------
-private String buildThermalLiveReport() {
-    StringBuilder sb = new StringBuilder();
-
-    // Battery temperature (most reliable on all phones)
-    float battC = getBatteryTempC();
-    if (battC > -100f) {
-        sb.append(String.format(Locale.US, "Battery temp: %.1f°C\n", battC));
-        if (battC >= 45f) sb.append("⚠️ Battery is HOT (>=45°C)\n");
-        else if (battC >= 40f) sb.append("⚠️ Battery warm (>=40°C)\n");
-        else sb.append("✅ Battery temp normal.\n");
-    } else {
-        sb.append("Battery temp: not available\n");
-    }
-
-    sb.append("\n");
-
-    // CPU temperatures (many OEMs block this -> may be null)
-    float[] cpuTemps = getCpuTempsSafe();
-    if (cpuTemps != null && cpuTemps.length > 0) {
-        float max = cpuTemps[0], sum = 0f;
-        for (float t : cpuTemps) {
-            sum += t;
-            if (t > max) max = t;
-        }
-        float avg = sum / cpuTemps.length;
-
-        sb.append(String.format(Locale.US,
-                "CPU temps: avg %.1f°C | max %.1f°C | cores=%d\n",
-                avg, max, cpuTemps.length));
-
-        if (max >= 80f) sb.append("❌ CPU extremely hot (>=80°C)\n");
-        else if (max >= 70f) sb.append("⚠️ CPU hot (>=70°C)\n");
-        else sb.append("✅ CPU temp OK.\n");
-
-    } else {
-        sb.append("CPU temps: not supported on this device.\n");
-    }
-
-    sb.append("\nRefresh: 1 sec. Close dialog to stop.");
-    return sb.toString();
-}
-
-
-// ------------------------------------------------------------
-// Helper: Battery temperature in °C
-// EXTRA_TEMPERATURE is tenths of degree C
-// ------------------------------------------------------------
-private float getBatteryTempC() {
+// ============================================================
+// THERMAL ZONE SCANNER (compatibility mode)
+// Reads /sys/class/thermal/thermal_zone*/temp + type
+// Labels zones by type heuristics; keeps only sane zones
+// ============================================================
+private List<GELThermalZone> scanThermalZones() {
+    List<GELThermalZone> out = new ArrayList<>();
     try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent i = registerReceiver(null, f);
-        if (i == null) return -999f;
+        java.io.File dir = new java.io.File("/sys/class/thermal");
+        java.io.File[] files = dir.listFiles();
+        if (files == null) return out;
 
-        int t = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
-        if (t == Integer.MIN_VALUE) return -999f;
+        for (java.io.File f : files) {
+            if (f == null) continue;
+            String name = f.getName();
+            if (!name.startsWith("thermal_zone")) continue;
 
-        return t / 10f;
+            java.io.File typeFile = new java.io.File(f, "type");
+            java.io.File tempFile = new java.io.File(f, "temp");
+            if (!tempFile.exists()) continue;
+
+            String type = readFirstLine(typeFile.getAbsolutePath());
+            String label = normalizeZoneLabel(type, name);
+
+            float c = readZoneTempC(tempFile.getAbsolutePath());
+            // Keep only plausible temps (avoid bogus 0 / 1000)
+            if (c < -50f || c > 130f) {
+                // still keep but mark unreadable now
+                c = -999f;
+            }
+
+            GELThermalZone z = new GELThermalZone(label, type, tempFile.getAbsolutePath());
+            z.tempC = c;
+
+            // Filter duplicates by label (keep first)
+            boolean dup = false;
+            for (GELThermalZone e : out) {
+                if (e.label.equals(z.label)) { dup = true; break; }
+            }
+            if (!dup) out.add(z);
+        }
+
+        // Always add Battery temp if not present
+        boolean hasBattery = false;
+        for (GELThermalZone z : out) {
+            if (z.label.toLowerCase(Locale.US).contains("battery")) { hasBattery = true; break; }
+        }
+        if (!hasBattery) {
+            float battC = readBatteryTempC();
+            if (battC > 0) {
+                GELThermalZone bzone = new GELThermalZone("Battery", "battery_intent", "");
+                bzone.tempC = battC;
+                bzone.pushHistory(battC);
+                out.add(bzone);
+            }
+        }
+
+    } catch (Exception ignored) {}
+    return out;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+private float readZoneTempC(String path) {
+    if (path == null || path.isEmpty()) return -999f;
+    try {
+        String s = readFirstLine(path);
+        if (s == null) return -999f;
+        s = s.trim();
+        if (s.isEmpty()) return -999f;
+        float raw = Float.parseFloat(s);
+
+        // Most kernels report millidegrees
+        if (raw > 200f) raw = raw / 1000f;
+        return raw;
     } catch (Exception e) {
         return -999f;
     }
 }
 
-
-// ------------------------------------------------------------
-// Helper: CPU temps via HardwarePropertiesManager (Android 7+)
-// Returns null if OEM blocks it
-// ------------------------------------------------------------
-private float[] getCpuTempsSafe() {
+private float readBatteryTempC() {
     try {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return null;
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent bi = registerReceiver(null, f);
+        if (bi == null) return -1f;
+        int t10 = bi.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        if (t10 <= 0) return -1f;
+        return t10 / 10f;
+    } catch (Exception e) {
+        return -1f;
+    }
+}
 
-        Object hpm = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
-        if (hpm == null) return null;
-
-        Class<?> cls = Class.forName("android.os.HardwarePropertiesManager");
-        Method getTemps = cls.getMethod("getDeviceTemperatures", int.class, int.class);
-
-        int DEVICE_TEMPERATURE_CPU = cls.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
-        int TEMPERATURE_CURRENT = cls.getField("TEMPERATURE_CURRENT").getInt(null);
-
-        float[] temps = (float[]) getTemps.invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
-
-        if (temps == null || temps.length == 0) return null;
-        return temps;
-
-    } catch (Throwable ignored) {
+private String readFirstLine(String path) {
+    try (java.io.BufferedReader br =
+                 new java.io.BufferedReader(new java.io.FileReader(path))) {
+        return br.readLine();
+    } catch (Exception e) {
         return null;
+    }
+}
+
+// Label heuristics for 95% OEMs
+private String normalizeZoneLabel(String type, String zoneName) {
+    String t = (type == null ? "" : type.toLowerCase(Locale.US).trim());
+
+    // Common exacts
+    if (t.contains("cpu") || t.contains("soc") || t.contains("aptherm")
+            || t.contains("tsens") || t.contains("mtktscpu")
+            || t.contains("big") || t.contains("little")
+            || t.contains("cpu-thermal") || t.contains("cpu_thermal"))
+        return "CPU/SoC";
+
+    if (t.contains("gpu") || t.contains("gpu-thermal"))
+        return "GPU";
+
+    if (t.contains("battery"))
+        return "Battery";
+
+    if (t.contains("skin") || t.contains("case") || t.contains("shell"))
+        return "Skin";
+
+    if (t.contains("xo") || t.contains("xo-therm"))
+        return "XO";
+
+    if (t.contains("pmic") || t.contains("charger") || t.contains("power"))
+        return "PMIC/Charger";
+
+    // Fallback: show raw type/zone
+    if (!t.isEmpty()) return t.toUpperCase(Locale.US);
+    return zoneName.toUpperCase(Locale.US);
+}
+
+private String thermalLevel(float c) {
+    if (c < 42f) return "normal";
+    if (c < 50f) return "elevated";
+    return "danger";
+}
+
+private String thermalBadge(float c) {
+    if (c < 42f) return "🟩 OK";
+    if (c < 50f) return "🟨 Warning";
+    return "🟥 Danger";
+}
+
+// ============================================================
+// MINI CLASS FOR HISTORY + SPARKLINE
+// ============================================================
+private static class GELThermalZone {
+    final String label;
+    final String type;
+    final String tempPath;
+    float tempC = -999f;
+
+    // Keep last 8 samples for sparkline
+    final float[] hist = new float[8];
+    int histN = 0;
+
+    GELThermalZone(String label, String type, String tempPath) {
+        this.label = label == null ? "THERM" : label;
+        this.type = type == null ? "" : type;
+        this.tempPath = tempPath == null ? "" : tempPath;
+    }
+
+    void pushHistory(float c) {
+        if (c <= -200f) return;
+        if (histN < hist.length) {
+            hist[histN++] = c;
+        } else {
+            // shift left
+            for (int i = 1; i < hist.length; i++) hist[i - 1] = hist[i];
+            hist[hist.length - 1] = c;
+        }
+    }
+
+    String sparkline() {
+        if (histN <= 1) return "";
+        float min = hist[0], max = hist[0];
+        for (int i = 0; i < histN; i++) {
+            min = Math.min(min, hist[i]);
+            max = Math.max(max, hist[i]);
+        }
+        float span = Math.max(0.5f, max - min);
+        final char[] blocks = {'▁','▂','▃','▄','▅','▆','▇','█'};
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < histN; i++) {
+            float v = (hist[i] - min) / span; // 0..1
+            int idx = Math.min(blocks.length - 1, Math.max(0, Math.round(v * (blocks.length - 1))));
+            sb.append(blocks[idx]);
+        }
+        return sb.toString();
     }
 }
     // ============================================================

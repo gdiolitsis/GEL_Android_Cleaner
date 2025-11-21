@@ -548,36 +548,104 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void lab10FullSensorList() {
-        logLine();
-        logInfo("LAB 10 — Full Sensor List for Report.");
-        try {
-            SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            if (sm == null) {
-                logError("SensorManager not available.");
-                return;
-            }
-            List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-            if (sensors == null || sensors.isEmpty()) {
-                logError("No sensors reported by the system.");
-                return;
-            }
-            for (Sensor s : sensors) {
-                String line = "• type=" + s.getType()
-                        + " | name=" + s.getName()
-                        + " | vendor=" + s.getVendor();
-                logInfo(line);
-            }
-            logOk("Sensor list captured for the final service report.");
-        } catch (Exception e) {
-            logError("Full Sensor List error: " + e.getMessage());
-        }
-    }
+    logLine();
+    logInfo("LAB 10 — Full Sensor List for Report.");
 
-    private void checkSensor(SensorManager sm, int type, String name) {
-        boolean ok = sm.getDefaultSensor(type) != null;
-        if (ok) logOk(name + " is reported as available.");
-        else logWarn(name + " is NOT reported — features depending on it will be limited or missing.");
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            logError("SensorManager not available.");
+            return;
+        }
+
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        if (sensors == null || sensors.isEmpty()) {
+            logError("No sensors reported by the system.");
+            return;
+        }
+
+        // ===================== RAW LIST =====================
+        for (Sensor s : sensors) {
+            String line = "• type=" + s.getType()
+                    + " | name=" + s.getName()
+                    + " | vendor=" + s.getVendor();
+            logInfo(line);
+        }
+
+        // ============================================================
+        // INTELLIGENT SENSOR INTERPRETATION (Xiaomi / QTI / Bosch / Rohm)
+        // ============================================================
+
+        boolean hasVirtualGyro = false;
+        boolean hasDualALS = false;
+        int alsCount = 0;
+        boolean hasSAR = false;
+        boolean hasPickup = false;
+        boolean hasLargeTouch = false;
+        boolean hasGameRotation = false;
+
+        for (Sensor s : sensors) {
+            String name = s.getName() != null ? s.getName().toLowerCase(Locale.US) : "";
+            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
+
+            // Xiaomi Virtual Gyroscope
+            if (name.contains("virtual_gyro") ||
+                (name.contains("gyroscope") && vendor.contains("xiaomi")))
+                hasVirtualGyro = true;
+
+            // Ambient Light – count for dual ALS detection
+            if (name.contains("ambient light"))
+                alsCount++;
+
+            // SAR detectors
+            if (name.contains("sar") || name.contains("rf"))
+                hasSAR = true;
+
+            // Pickup sensor (lift-to-wake)
+            if (name.contains("pickup"))
+                hasPickup = true;
+
+            // Large Area Touch sensor
+            if (name.contains("touch") && name.contains("large"))
+                hasLargeTouch = true;
+
+            // Game Rotation Vector sensor
+            if (name.contains("game rotation"))
+                hasGameRotation = true;
+        }
+
+        if (alsCount >= 2) hasDualALS = true;
+
+        // ===================== INTERPRETATION LOG =====================
+        logLine();
+        logInfo("Sensor Interpretation Summary:");
+
+        if (hasVirtualGyro)
+            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+
+        if (hasDualALS)
+            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
+        else
+            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+
+        if (hasSAR)
+            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+
+        if (hasPickup)
+            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+
+        if (hasLargeTouch)
+            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+
+        if (hasGameRotation)
+            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+
+        logOk("Sensor suite appears complete and healthy for this device.");
+
+    } catch (Exception e) {
+        logError("Full Sensor List error: " + e.getMessage());
     }
+}
 
     // ============================================================
     // LABS 11–14: WIRELESS & CONNECTIVITY

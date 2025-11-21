@@ -843,112 +843,293 @@ public class ManualTestsActivity extends AppCompatActivity {
                 for (int g : grantResults) {
                     if (g == PackageManager.PERMISSION_GRANTED) {
                         granted = true;
-                        break;
+// ============================================================
+// LAB 11 — Wi-Fi Link Snapshot + SSID (Location Fix) + DeepScan + SAFE QR
+// GEL Hospital Edition — Final Build
+// ============================================================
+private void lab11WifiSnapshot() {
+    logLine();
+    logInfo("LAB 11 — Wi-Fi Link Snapshot + SSID Fix + DeepScan + Optional QR.");
+
+    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+    if (wm == null) {
+        logError("WifiManager not available.");
+        return;
+    }
+
+    if (!wm.isWifiEnabled()) {
+        logWarn("Wi-Fi is OFF — please enable and retry.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 1) CHECK LOCATION PERMISSION — REQUIRED FOR SSID ON ANDROID 10+
+    // ------------------------------------------------------------
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            logWarn("Location permission required to read SSID (Android security policy).");
+            logWarn("Opening system Location Settings...");
+
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            try { startActivity(intent); } catch (Exception ignored) {}
+
+            logInfo("After enabling Location + granting permission, re-run Lab 11.");
+            return;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) READ BASIC WIFI INFO
+    // ------------------------------------------------------------
+    WifiInfo info = wm.getConnectionInfo();
+    if (info == null) {
+        logError("Wi-Fi info not available.");
+        return;
+    }
+
+    String rawSsid = info.getSSID();
+    String ssid = cleanSsid(rawSsid);
+    String bssid = info.getBSSID();
+    int rssi = info.getRssi();
+    int speed = info.getLinkSpeed();
+
+    int freqMhz = 0;
+    try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}
+
+    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
+
+    logInfo("SSID: " + ssid);
+    if (bssid != null) logInfo("BSSID: " + bssid);
+    logInfo("Band: " + band + (freqMhz > 0 ? (" (" + freqMhz + " MHz)") : ""));
+    logInfo("Link speed: " + speed + " Mbps");
+    logInfo("RSSI: " + rssi + " dBm");
+
+    if (rssi > -65)        logOk("Wi-Fi signal is strong.");
+    else if (rssi > -80)   logWarn("Moderate Wi-Fi signal.");
+    else                   logError("Very weak Wi-Fi signal — expect drops.");
+
+    // ------------------------------------------------------------
+    // 3) DHCP NETWORK DETAILS
+    // ------------------------------------------------------------
+    try {
+        DhcpInfo dh = wm.getDhcpInfo();
+        if (dh != null) {
+            logInfo("IP: " + ipToStr(dh.ipAddress));
+            logInfo("Gateway: " + ipToStr(dh.gateway));
+            logInfo("DNS1: " + ipToStr(dh.dns1));
+            logInfo("DNS2: " + ipToStr(dh.dns2));
+        } else {
+            logWarn("DHCP info not available.");
+        }
+    } catch (Exception e) {
+        logWarn("DHCP read failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 4) OPTIONAL QR SCAN (NO PASSWORD)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("QR Scan available (SAFE MODE — no password extraction).");
+    logInfo("Open Wi-Fi settings → Share → Show QR → press OK to scan.");
+
+    startQrScanForWifi();  // SAFE QR
+
+    // ------------------------------------------------------------
+    // 5) GEL Network DeepScan v3.0
+    // ------------------------------------------------------------
+    runWifiDeepScan(wm);
+}
+
+
+// ======================================================================
+// SAFE QR SCAN — NO PASSWORD, ONLY SSID INFORMATION
+// ======================================================================
+private void startQrScanForWifi() {
+    Runnable start = () -> {
+        try {
+            logInfo("QR Scanner started… point camera to Wi-Fi Share QR.");
+
+            DecoratedBarcodeView view = new DecoratedBarcodeView(this);
+            view.getBarcodeView().setDecoderFactory(new com.journeyapps.barcodescanner.DefaultDecoderFactory());
+            view.resume();
+
+            BarcodeCallback cb = new BarcodeCallback() {
+                @Override
+                public void barcodeResult(BarcodeResult result) {
+                    if (result == null) return;
+                    String txt = result.getText();
+                    if (txt == null) return;
+
+                    if (txt.startsWith("WIFI:")) {
+                        logOk("Wi-Fi QR scanned: " + parseWifiQr(txt));
+                        view.pause();
+                    } else {
+                        logWarn("QR scanned but not Wi-Fi format.");
                     }
                 }
-            }
+            };
 
-            if (granted) {
-                logOk("Location permission granted.");
-                if (pendingLab11AfterPermission != null) {
-                    Runnable r = pendingLab11AfterPermission;
-                    pendingLab11AfterPermission = null;
-                    r.run();
-                }
-            } else {
-                logWarn("Location permission denied — SSID may stay Unknown.");
-                logInfo("LAB 11 still works for signal, IP, DNS, gateway and DeepScan.");
-            }
-            pendingLab11AfterPermission = null;
+            view.decodeContinuous(cb);
+
+            AlertDialog.Builder b = new AlertDialog.Builder(this);
+            b.setView(view);
+            b.setCancelable(true);
+            b.setOnDismissListener(x -> {
+                try { view.pause(); } catch (Exception ignored) {}
+            });
+
+            AlertDialog d = b.create();
+            if (d.getWindow() != null)
+                d.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
+            d.show();
+
+        } catch (Exception e) {
+            logError("QR scanner error: " + e.getMessage());
         }
-    }
+    };
 
-    private void runWifiDeepScan(WifiManager wm) {
-        new Thread(() -> {
+    if (ContextCompat.checkSelfPermission(this,
+            Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
+        logWarn("Camera permission required for QR scan.");
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CAMERA},
+                REQ_CAMERA_LAB11);
+        pendingQrAfterPermission = start;
+    } else {
+        start.run();
+    }
+}
+
+private String parseWifiQr(String txt) {
+    try {
+        String ssid = null, type = null;
+        String body = txt.substring(5); // after WIFI:
+        String[] parts = body.split(";");
+        for (String p : parts) {
+            if (p.startsWith("S:")) ssid = p.substring(2);
+            else if (p.startsWith("T:")) type = p.substring(2);
+        }
+        return "SSID=" + (ssid != null ? ssid : "?") +
+                " | Type=" + (type != null ? type : "?");
+    } catch (Exception e) {
+        return txt;
+    }
+}
+
+@Override
+public void onRequestPermissionsResult(int code, String[] p, int[] r) {
+    super.onRequestPermissionsResult(code, p, r);
+    if (code == REQ_CAMERA_LAB11) {
+        boolean ok = r != null && r.length > 0 &&
+                r[0] == PackageManager.PERMISSION_GRANTED;
+
+        if (ok) {
+            logOk("Camera permission granted.");
+            if (pendingQrAfterPermission != null) pendingQrAfterPermission.run();
+        } else {
+            logWarn("Camera permission denied. QR scanning disabled.");
+        }
+        pendingQrAfterPermission = null;
+    }
+}
+
+
+// ======================================================================
+// GEL DEEPSCAN v3.0 (Ping, DNS, Gateway, SpeedSim)
+// ======================================================================
+private void runWifiDeepScan(WifiManager wm) {
+    new Thread(() -> {
+        try {
+            logLine();
+            logInfo("GEL Network DeepScan v3.0 started...");
+
+            // Gateway
+            String gateway = null;
             try {
-                logLine();
-                logInfo("GEL Network DeepScan v3.0 started...");
+                DhcpInfo dh = wm.getDhcpInfo();
+                if (dh != null) gateway = ipToStr(dh.gateway);
+            } catch (Exception ignored) {}
 
-                String gatewayStr = null;
-                try {
-                    DhcpInfo dh = wm.getDhcpInfo();
-                    if (dh != null) gatewayStr = ipToStr(dh.gateway);
-                } catch (Exception ignored) {}
+            // PING GOOGLE DNS (TCP)
+            float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
+            if (pingMs > 0)
+                logOk(String.format(Locale.US, "Ping 8.8.8.8 latency: %.1f ms", pingMs));
+            else
+                logWarn("Ping test failed (blocked).");
 
-                // 1) Ping latency to 8.8.8.8 using TCP connect (works non-root)
-                float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
-                if (pingMs > 0)
-                    logOk(String.format(Locale.US, "Ping latency to 8.8.8.8: %.1f ms", pingMs));
+            // DNS RESOLVE
+            float dnsMs = dnsResolveMs("google.com");
+            if (dnsMs > 0)
+                logOk(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));
+            else
+                logWarn("DNS resolve failed.");
+
+            // GATEWAY
+            if (gateway != null) {
+                float gwMs = tcpLatencyMs(gateway, 80, 1200);
+                if (gwMs > 0)
+                    logOk(String.format(Locale.US, "Gateway ping (%s): %.1f ms", gateway, gwMs));
                 else
-                    logWarn("Ping latency test failed (network blocked?).");
-
-                // 2) DNS resolve time
-                float dnsMs = dnsResolveMs("google.com");
-                if (dnsMs > 0)
-                    logOk(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));
-                else
-                    logWarn("DNS resolve failed.");
-
-                // 3) Gateway ping (TCP to 80)
-                if (gatewayStr != null) {
-                    float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);
-                    if (gwMs > 0)
-                        logOk(String.format(Locale.US, "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));
-                    else
-                        logWarn("Gateway ping failed.");
-                } else {
-                    logWarn("Gateway not detected.");
-                }
-
-                // 4) SpeedSim heuristic
-                WifiInfo info = wm.getConnectionInfo();
-                int link = info != null ? info.getLinkSpeed() : 0;
-                int rssi = info != null ? info.getRssi() : -80;
-                float speedSim = estimateSpeedSimMbps(link, rssi);
-                logOk(String.format(Locale.US, "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
-
-                logOk("DeepScan finished.");
-
-            } catch (Exception e) {
-                logError("DeepScan error: " + e.getMessage());
+                    logWarn("Gateway unreachable.");
+            } else {
+                logWarn("Gateway unknown.");
             }
-        }).start();
-    }
 
-    private float tcpLatencyMs(String host, int port, int timeoutMs) {
-        long t0 = SystemClock.elapsedRealtime();
-        Socket s = new Socket();
-        try {
-            s.connect(new InetSocketAddress(host, port), timeoutMs);
-            long t1 = SystemClock.elapsedRealtime();
-            return (t1 - t0);
+            // SPEEDSIM
+            WifiInfo info = wm.getConnectionInfo();
+            int link = info != null ? info.getLinkSpeed() : 72;
+            int rssi = info != null ? info.getRssi() : -70;
+
+            float speedSim = estimateSpeedSimMbps(link, rssi);
+            logOk(String.format(Locale.US, "SpeedSim: ~%.2f Mbps", speedSim));
+
+            logOk("DeepScan finished.");
+
         } catch (Exception e) {
-            return -1f;
-        } finally {
-            try { s.close(); } catch (Exception ignored) {}
+            logError("DeepScan error: " + e.getMessage());
         }
-    }
+    }).start();
+}
 
-    private float dnsResolveMs(String host) {
-        long t0 = SystemClock.elapsedRealtime();
-        try {
-            InetAddress.getByName(host);
-            long t1 = SystemClock.elapsedRealtime();
-            return (t1 - t0);
-        } catch (Exception e) {
-            return -1f;
-        }
-    }
 
-    private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
-        if (linkSpeedMbps <= 0) linkSpeedMbps = 72;
-        float rssiFactor;
-        if (rssiDbm > -55) rssiFactor = 1.2f;
-        else if (rssiDbm > -65) rssiFactor = 1.0f;
-        else if (rssiDbm > -75) rssiFactor = 0.7f;
-        else rssiFactor = 0.4f;
-        return Math.max(5f, linkSpeedMbps * rssiFactor);
+// ======================================================================
+// NETWORK UTILITIES
+// ======================================================================
+private float tcpLatencyMs(String host, int port, int timeout) {
+    long t0 = SystemClock.elapsedRealtime();
+    Socket s = new Socket();
+    try {
+        s.connect(new InetSocketAddress(host, port), timeout);
+        return SystemClock.elapsedRealtime() - t0;
+    } catch (Exception e) {
+        return -1f;
+    } finally {
+        try { s.close(); } catch (Exception ignored) {}
     }
+}
+
+private float dnsResolveMs(String host) {
+    long t0 = SystemClock.elapsedRealtime();
+    try {
+        InetAddress.getByName(host);
+        return SystemClock.elapsedRealtime() - t0;
+    } catch (Exception e) {
+        return -1f;
+    }
+}
+
+private float estimateSpeedSimMbps(int link, int rssi) {
+    if (link <= 0) link = 72;
+    float f;
+    if (rssi > -55) f = 1.2f;
+    else if (rssi > -65) f = 1.0f;
+    else if (rssi > -75) f = 0.7f;
+    else f = 0.4f;
+    return Math.max(5f, link * f);
+}
 
     private void lab12MobileDataChecklist() {
         logLine();

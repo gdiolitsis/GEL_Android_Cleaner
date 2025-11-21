@@ -1322,7 +1322,11 @@ private void startThermalLivePopup(final List<GELThermalZone> zones) {
 
         AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setTitle("Thermal LIVE Snapshot");
-        b.setView(tv);
+        ScrollView sv = new ScrollView(this);
+        sv.setPadding(dp(6), dp(6), dp(6), dp(6));
+        sv.addView(tv);
+
+        b.setView(sv);
         b.setCancelable(true);
         b.setNegativeButton("CLOSE", (d, w) -> { /* handled by dismiss */ });
 

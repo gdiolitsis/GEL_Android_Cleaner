@@ -45,19 +45,22 @@
     <!-- GEL SERVICE LAB -->
     <!-- ===================================== -->
 
-    <!-- Titles -->
     <string name="gel_service_lab">GEL Service Lab</string>
     <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
 
     <!-- Auto Diagnosis -->
     <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
     <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
-    <string name="gel_phone_diag_desc">Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…</string>
+    <string name="gel_phone_diag_desc">
+        Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
+    </string>
 
     <!-- Manual Tests -->
     <string name="manual_tests">MANUAL TESTS</string>
     <string name="manual_tests_title">Manual Tests</string>
-    <string name="manual_tests_desc">Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.</string>
+    <string name="manual_tests_desc">
+        Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
+    </string>
 
     <!-- Service Report -->
     <string name="service_report">SERVICE REPORT</string>
@@ -76,7 +79,10 @@
     <string name="report_no_entries">[No diagnostic entries found]</string>
     <string name="report_end">--- End of Report ---</string>
     <string name="report_signature">Technician Signature:</string>
-    <string name="preview_empty">No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.</string>
+
+    <string name="preview_empty">
+        No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.
+    </string>
 
     <!-- DAMAGE CHECKLIST -->
     <string name="damage_title">Damage Inspection</string>
@@ -90,18 +96,22 @@
     <string name="damage_water">Water damage / corrosion</string>
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
-    <!-- ======================================== -->
-    <!-- 🔥 MANUAL TESTS — HOSPITAL EDITION (EN) -->
-    <!-- ======================================== -->
+    <!-- ===================================== -->
+    <!-- MANUAL TESTS — HOSPITAL EDITION -->
+    <!-- ===================================== -->
 
+    <!-- TITLE ALWAYS ENGLISH -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
+    <!-- SUBTITLE -->
     <string name="manual_hospital_sub">
         Professional service tools.\nEach manual lab writes detailed results below (OK / WARN / ERROR)\nand is included in the final Service Report.
     </string>
 
+    <!-- SECTION HEADER -->
     <string name="manual_section1">SECTION 1 — System &amp; Hardware Tests</string>
 
+    <!-- 7 CATEGORIES -->
     <string name="manual_cat_1">Audio &amp; Vibration — Manual Labs 1–5</string>
     <string name="manual_cat_2">Display &amp; Sensors — Manual Labs 6–10</string>
     <string name="manual_cat_3">Wireless &amp; Connectivity — Manual Labs 11–14</string>
@@ -110,7 +120,10 @@
     <string name="manual_cat_6">Security &amp; System Health — Manual Labs 23–26</string>
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 27–30</string>
 
+    <!-- LOG -->
     <string name="manual_log_title">Manual Tests Log</string>
-    <string name="manual_log_desc">ℹ️ ℹ️ GEL Manual Tests — ready.\nOpen a category above and run the required labs.</string>
+    <string name="manual_log_desc">
+        ℹ️ GEL Manual Tests — ready.\nOpen a category above and run the required labs.
+    </string>
 
 </resources>

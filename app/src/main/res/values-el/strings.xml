@@ -105,14 +105,18 @@
     <!-- MANUAL TESTS — HOSPITAL EDITION -->
     <!-- ===================================== -->
 
+    <!-- ΤΙΤΛΟΣ ΠΑΝΤΑ ΑΓΓΛΙΚΑ -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
+    <!-- SUBTITLE -->
     <string name="manual_hospital_sub">
         Επαγγελματικά εργαλεία service.\nΚάθε χειροκίνητο test γράφει αναλυτικά αποτελέσματα παρακάτω (OK / WARN / ERROR)\nκαι συμπεριλαμβάνεται στην τελική Αναφορά Service.
     </string>
 
+    <!-- ΕΝΟΤΗΤΑ -->
     <string name="manual_section1">ΕΝΟΤΗΤΑ 1 — Έλεγχοι Συστήματος &amp; Hardware</string>
 
+    <!-- 7 ΚΑΤΗΓΟΡΙΕΣ -->
     <string name="manual_cat_1">Ήχος &amp; Δόνηση — Manual Labs 1–5</string>
     <string name="manual_cat_2">Οθόνη &amp; Αισθητήρες — Manual Labs 6–10</string>
     <string name="manual_cat_3">Ασύρματα &amp; Συνδεσιμότητα — Manual Labs 11–14</string>
@@ -121,7 +125,10 @@
     <string name="manual_cat_6">Ασφάλεια &amp; Υγεία Συστήματος — Manual Labs 23–26</string>
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 27–30</string>
 
+    <!-- LOG -->
     <string name="manual_log_title">Καταγραφή Manual Tests</string>
-    <string name="manual_log_desc">ℹ️ GEL Manual Tests — έτοιμο. Άνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.</string>
+    <string name="manual_log_desc">
+        ℹ️ GEL Manual Tests — έτοιμο.\nΆνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.
+    </string>
 
 </resources>

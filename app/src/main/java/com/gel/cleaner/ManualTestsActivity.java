@@ -41,6 +41,7 @@ import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -53,6 +54,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,6 +64,12 @@ public class ManualTestsActivity extends AppCompatActivity {
     private ScrollView scroll;
     private TextView txtLog;
     private Handler ui;
+
+    // Battery stress internals
+    private volatile boolean cpuBurnRunning = false;
+    private final List<Thread> cpuBurnThreads = new ArrayList<>();
+    private float oldWindowBrightness = -2f; // sentinel
+    private boolean oldKeepScreenOn = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -145,7 +154,8 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.addView(header4);
         root.addView(body4);
 
-        body4.addView(makeTestButton("15. Battery Level / Status Snapshot", this::lab15BatterySnapshot));
+        // LAB 15 special button style (dark red, white text, gold border)
+        body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
         body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));
         body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));
         body4.addView(makeTestButton("18. Heat Under Load (manual questionnaire)", this::lab18ThermalQuestionnaire));
@@ -190,16 +200,18 @@ public class ManualTestsActivity extends AppCompatActivity {
         txtLog.setPadding(0, dp(16), 0, dp(8));
         txtLog.setMovementMethod(new ScrollingMovementMethod());
 
-        txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
-        root.addView(txtLog);
+        txtLog.setText(
+                Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>")
+        );
 
+        root.addView(txtLog);
         scroll.addView(root);
         setContentView(scroll);
 
         // First log entry
         GELServiceLog.clear();
         logInfo(getString(R.string.manual_log_desc));
-    } // end onCreate
+    }   // onCreate ends here
 
     // ============================================================
     // UI HELPERS
@@ -212,23 +224,20 @@ public class ManualTestsActivity extends AppCompatActivity {
         return body;
     }
 
-    // Expandable headers: neon green + centered
     private Button makeSectionHeader(String text, LinearLayout bodyToToggle) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(15f);
-        b.setTextColor(0xFF39FF14);
+        b.setTextColor(0xFF39FF14); // neon green
         b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0, dp(6), 0, dp(4));
         b.setLayoutParams(lp);
         b.setGravity(Gravity.CENTER);
-
         b.setOnClickListener(v -> {
             if (bodyToToggle.getVisibility() == View.VISIBLE) {
                 bodyToToggle.setVisibility(View.GONE);
@@ -240,23 +249,46 @@ public class ManualTestsActivity extends AppCompatActivity {
         return b;
     }
 
-    // Test buttons: white text + centered
     private Button makeTestButton(String text, Runnable action) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(14f);
-        b.setTextColor(0xFFFFFFFF);
+        b.setTextColor(0xFFFFFFFF); // white
         b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(48)
-        );
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(48));
         lp.setMargins(0, dp(4), 0, dp(4));
         b.setLayoutParams(lp);
         b.setGravity(Gravity.CENTER);
+        b.setOnClickListener(v -> action.run());
+        return b;
+    }
 
+    // Special red/gold button for LAB 15
+    private Button makeTestButtonRedGold(String text, Runnable action) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextSize(14f);
+        b.setTextColor(0xFFFFFFFF); // white
+        b.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable redBtn = new GradientDrawable();
+        redBtn.setColor(0xFF8B0000); // dark red
+        redBtn.setCornerRadius(dp(12));
+        redBtn.setStroke(dp(3), 0xFFFFD700); // gold border
+        b.setBackground(redBtn);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52));
+        lp.setMargins(0, dp(6), 0, dp(6));
+        b.setLayoutParams(lp);
+        b.setGravity(Gravity.CENTER);
         b.setOnClickListener(v -> action.run());
         return b;
     }
@@ -379,8 +411,8 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("LAB 3 — Earpiece Call Check (manual instructions).");
         logInfo("1) Place a normal voice call or listen to a voicemail without loudspeaker.");
         logInfo("2) Hold the phone to the ear using the top earpiece only.");
-        logWarn("If volume is very low or muffled while speakerphone is OK → possible clogged mesh or earpiece wear.");
-        logError("If there is absolutely no sound in earpiece but speakerphone works → earpiece or audio path fault.");
+        logWarn("If volume is very low or muffled while speakerphone is OK -> possible clogged mesh or earpiece wear.");
+        logError("If there is absolutely no sound in earpiece but speakerphone works -> earpiece or audio path fault.");
     }
 
     private void lab4MicManual() {
@@ -389,8 +421,8 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("1) Open a voice recorder or send a voice message (WhatsApp / Viber etc.).");
         logInfo("2) Speak normally near the main microphone (bottom edge of the phone).");
         logInfo("3) Play back the recording and compare with a reference device if possible.");
-        logWarn("If sound is very low / noisy / 'underwater' → suspect microphone hole clogged, mesh or early mic damage.");
-        logError("If recording is totally silent on all apps → strong indication of microphone / audio IC / flex failure.");
+        logWarn("If sound is very low / noisy / underwater -> suspect microphone hole clogged, mesh or early mic damage.");
+        logError("If recording is totally silent on all apps -> strong indication of microphone / audio IC / flex failure.");
     }
 
     private void lab5Vibration() {
@@ -424,7 +456,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("1) Open a plain white or grey image full-screen.");
         logWarn("2) Look for yellow / purple tint, burn-in, strong shadows or vertical lines — possible panel damage.");
         logWarn("3) Slowly drag a finger across the entire screen (top to bottom, left to right).");
-        logError("If there are dead touch zones or ghost touches → digitizer / touch controller problem.");
+        logError("If there are dead touch zones or ghost touches -> digitizer / touch controller problem.");
     }
 
     private void lab7RotationManual() {
@@ -432,8 +464,8 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("LAB 7 — Rotation / Auto-Rotate Check (manual).");
         logInfo("1) Make sure Auto-Rotate is enabled in Quick Settings.");
         logInfo("2) Open an app that supports rotation (gallery, browser, YouTube).");
-        logWarn("If the UI never rotates despite Auto-Rotate ON → suspect accelerometer failure or sensor-service bug.");
-        logInfo("If rotation works only after reboot → possible software/ROM issue, not pure hardware.");
+        logWarn("If the UI never rotates despite Auto-Rotate ON -> suspect accelerometer failure or sensor-service bug.");
+        logInfo("If rotation works only after reboot -> possible software/ROM issue, not pure hardware.");
     }
 
     private void lab8ProximityCall() {
@@ -441,8 +473,8 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("LAB 8 — Proximity During Call (manual).");
         logInfo("1) Start a normal call and bring the phone to the ear.");
         logInfo("2) The display MUST turn off when the proximity area is covered.");
-        logError("If the screen stays ON near the ear → proximity sensor or glass / protector alignment problem.");
-        logWarn("If the screen turns off but sometimes does not wake properly → mix of software and sensor edge-cases.");
+        logError("If the screen stays ON near the ear -> proximity sensor or glass / protector alignment problem.");
+        logWarn("If the screen turns off but sometimes does not wake properly -> software/sensor edge cases.");
     }
 
     private void lab9SensorsQuick() {
@@ -454,7 +486,6 @@ public class ManualTestsActivity extends AppCompatActivity {
                 logError("SensorManager not available — framework issue.");
                 return;
             }
-
             List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
             logInfo("Total sensors reported: " + (all == null ? 0 : all.size()));
 
@@ -477,13 +508,11 @@ public class ManualTestsActivity extends AppCompatActivity {
                 logError("SensorManager not available.");
                 return;
             }
-
             List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
             if (sensors == null || sensors.isEmpty()) {
                 logError("No sensors reported by the system.");
                 return;
             }
-
             for (Sensor s : sensors) {
                 String line = "• type=" + s.getType()
                         + " | name=" + s.getName()
@@ -531,9 +560,12 @@ public class ManualTestsActivity extends AppCompatActivity {
             logInfo("RSSI: " + rssi + " dBm");
             logInfo("Link speed: " + linkSpeed + " Mbps");
 
-            if (rssi > -65) logOk("Wi-Fi signal is strong for normal use.");
-            else if (rssi > -80) logWarn("Wi-Fi signal is moderate — possible instability further away.");
-            else logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
+            if (rssi > -65)
+                logOk("Wi-Fi signal is strong for normal use.");
+            else if (rssi > -80)
+                logWarn("Wi-Fi signal is moderate — possible instability further away.");
+            else
+                logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
 
         } catch (Exception e) {
             logError("Wi-Fi snapshot error: " + e.getMessage());
@@ -545,17 +577,17 @@ public class ManualTestsActivity extends AppCompatActivity {
         logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist (manual).");
         logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");
         logInfo("2) Ensure a valid SIM with active data plan is inserted.");
-        logWarn("If the device shows signal bars but mobile data never works → APN / carrier or modem issue.");
-        logError("If there is no mobile network at all in known-good coverage → SIM, antenna or baseband problem.");
+        logWarn("If the device shows signal bars but mobile data never works -> APN/carrier/modem issue.");
+        logError("If there is no mobile network at all in known-good coverage -> SIM, antenna or baseband problem.");
     }
 
     private void lab13CallGuidelines() {
         logLine();
         logInfo("LAB 13 — Basic Call Test Guidelines (manual).");
         logInfo("1) Place a normal call to a known-good number.");
-        logInfo("2) Verify both directions: you hear the remote side AND they hear you clearly.");
-        logWarn("If only one direction fails → isolate between earpiece vs microphone path.");
-        logError("If calls always drop or never connect while data works → core telephony / carrier registration issue.");
+        logInfo("2) Verify both directions: you hear them AND they hear you clearly.");
+        logWarn("If only one direction fails -> isolate earpiece vs microphone path.");
+        logError("If calls always drop or never connect while data works -> telephony/carrier registration issue.");
     }
 
     private void lab14InternetQuickCheck() {
@@ -576,8 +608,10 @@ public class ManualTestsActivity extends AppCompatActivity {
                 NetworkCapabilities caps = cm.getNetworkCapabilities(n);
                 if (caps != null) {
                     hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) transport = "Wi-Fi";
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) transport = "Cellular";
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                        transport = "Wi-Fi";
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                        transport = "Cellular";
                 }
             } else {
                 @SuppressWarnings("deprecation")
@@ -588,8 +622,10 @@ public class ManualTestsActivity extends AppCompatActivity {
                 }
             }
 
-            if (!hasInternet) logError("No active Internet connection detected at OS level.");
-            else logOk("Internet connectivity is reported as active (" + transport + ").");
+            if (!hasInternet)
+                logError("No active Internet connection detected at OS level.");
+            else
+                logOk("Internet connectivity is reported as active (" + transport + ").");
 
         } catch (Exception e) {
             logError("Internet quick check error: " + e.getMessage());
@@ -597,94 +633,19 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // LABS 15–18: BATTERY & THERMAL (Battery Health % + Stress Test)
+    // LAB 15 — Battery Health Stress Test (GEL C Mode)
     // ============================================================
-    private void lab15BatterySnapshot() {
-        logLine();
-        logInfo("LAB 15 — Battery Level / Status / Health Snapshot.");
-
-        try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i = registerReceiver(null, f);
-            if (i == null) {
-                logWarn("Battery broadcast not available.");
-                return;
-            }
-
-            int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float pct = (scale > 0) ? (100f * level / scale) : -1f;
-
-            int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            int temp10 = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
-
-            logInfo(String.format(Locale.US, "Battery level: %.1f%%", pct));
-            logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", temp));
-
-            String statusStr;
-            switch (status) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:      statusStr = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:   statusStr = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:          statusStr = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  statusStr = "Not charging"; break;
-                default: statusStr = "Unknown";
-            }
-            logInfo("Battery status: " + statusStr);
-
-            int healthPct = getBatteryHealthPercent();
-            if (healthPct > 0) {
-                if (healthPct >= 90) logOk("Estimated Battery Health: " + healthPct + "% (Excellent)");
-                else if (healthPct >= 80) logOk("Estimated Battery Health: " + healthPct + "% (Normal)");
-                else if (healthPct >= 60) logWarn("Estimated Battery Health: " + healthPct + "% (Worn)");
-                else logError("Estimated Battery Health: " + healthPct + "% (Poor)");
-            } else {
-                logWarn("Battery Health % not supported on this device.");
-            }
-
-            if (pct >= 0 && pct <= 5) logError("Battery almost empty — high risk of sudden shutdown.");
-            else if (pct <= 15) logWarn("Battery low — recommend charging before diagnostics.");
-
-            if (temp > 45f) logError("Battery temperature above 45°C — possible thermal problem.");
-
-            // Popup for live drain test
-            showBatteryHealthTestDialog();
-
-        } catch (Exception e) {
-            logError("Battery snapshot error: " + e.getMessage());
-        }
+    private void lab15BatteryHealthStressTest() {
+        showBatteryHealthTestDialog();
     }
 
-    // Battery Health Calculator (GEL method)
-    private int getBatteryHealthPercent() {
-        try {
-            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-            if (bm == null) return -1;
-
-            long chargeCounter = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-            long capacityPct = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-            if (chargeCounter <= 0 || capacityPct <= 0) return -1;
-
-            float fullMah = (chargeCounter / (capacityPct / 100f));
-
-            long designMah = bm.getLongProperty(0x00000008); // hidden OEM id, works on many devices
-            if (designMah <= 0) designMah = (long) fullMah;
-
-            int est = (int) ((fullMah / designMah) * 100f);
-            if (est > 100) est = 100;
-            if (est < 1) est = 1;
-
-            return est;
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    // Battery Health Stress Test Popup
+    // ============================================================
+    // BATTERY HEALTH STRESS TEST POPUP
+    // ============================================================
     private void showBatteryHealthTestDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
-        builder.setTitle("Start Battery Health Test");
+        builder.setTitle("Battery Health Stress Test");
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -692,36 +653,11 @@ public class ManualTestsActivity extends AppCompatActivity {
         layout.setPadding(pad, pad, pad, pad);
 
         TextView info = new TextView(this);
-        info.setText("This live test watches battery % while the screen stays ON.\n"
-                + "Use STANDARD for quick checks, PRO for deeper checks.");
+        info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");
         info.setTextSize(13f);
         info.setTextColor(0xFFFFFFFF);
         info.setPadding(0, 0, 0, dp(8));
         layout.addView(info);
-
-        TextView modeLabel = new TextView(this);
-        modeLabel.setText("Select mode:");
-        modeLabel.setTextSize(13f);
-        modeLabel.setTextColor(0xFFFFD700);
-        layout.addView(modeLabel);
-
-        LinearLayout modeRow = new LinearLayout(this);
-        modeRow.setOrientation(LinearLayout.HORIZONTAL);
-
-        final CheckBox chkStandard = new CheckBox(this);
-        chkStandard.setText("STANDARD 10–60 sec");
-        chkStandard.setTextColor(0xFFFFFFFF);
-        chkStandard.setButtonTintList(ColorStateList.valueOf(0xFFFFD700));
-        chkStandard.setChecked(true);
-        modeRow.addView(chkStandard);
-
-        final CheckBox chkPro = new CheckBox(this);
-        chkPro.setText("PRO 60–120 sec");
-        chkPro.setTextColor(0xFFFFFFFF);
-        chkPro.setButtonTintList(ColorStateList.valueOf(0xFFFFD700));
-        modeRow.addView(chkPro);
-
-        layout.addView(modeRow);
 
         TextView durLabel = new TextView(this);
         durLabel.setText("Duration (seconds):");
@@ -736,50 +672,23 @@ public class ManualTestsActivity extends AppCompatActivity {
         layout.addView(durValue);
 
         final SeekBar seek = new SeekBar(this);
-        seek.setMax(50);
+        seek.setMax(110); // 10..120 sec
         layout.addView(seek);
-
-        final boolean[] proMode = new boolean[]{false};
-
-        CompoundButton.OnCheckedChangeListener modeListener = (btn, isChecked) -> {
-            if (!isChecked) {
-                if (!chkStandard.isChecked() && !chkPro.isChecked()) {
-                    btn.setChecked(true);
-                    return;
-                }
-            }
-
-            if (btn == chkStandard && isChecked) {
-                chkPro.setChecked(false);
-                proMode[0] = false;
-                seek.setMax(50);
-                if (seek.getProgress() == 0) seek.setProgress(20);
-            } else if (btn == chkPro && isChecked) {
-                chkStandard.setChecked(false);
-                proMode[0] = true;
-                seek.setMax(60);
-                if (seek.getProgress() == 0) seek.setProgress(30);
-            }
-
-            updateDurationLabelForSeek(seek, durValue, proMode[0]);
-        };
-
-        chkStandard.setOnCheckedChangeListener(modeListener);
-        chkPro.setOnCheckedChangeListener(modeListener);
 
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                updateDurationLabelForSeek(sb, durValue, proMode[0]);
+                int seconds = 10 + progress;
+                durValue.setText("Selected: " + seconds + " sec (10–120 sec)");
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
         });
 
         seek.setProgress(20);
-        updateDurationLabelForSeek(seek, durValue, false);
+        durValue.setText("Selected: 30 sec (10–120 sec)");
 
         Button start = new Button(this);
-        start.setText("Start Battery Health Test");
+        start.setText("Start Stress Test (GEL C Mode)");
         start.setAllCaps(false);
         start.setTextSize(15f);
         start.setTextColor(0xFFFFFFFF);
@@ -795,49 +704,57 @@ public class ManualTestsActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
         lp.setMargins(0, dp(12), 0, 0);
         start.setLayoutParams(lp);
+
         layout.addView(start);
 
         builder.setView(layout);
         AlertDialog dialog = builder.create();
 
-        if (dialog.getWindow() != null) {
+        if (dialog.getWindow() != null)
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-        }
 
         start.setOnClickListener(v -> {
-            int progress = seek.getProgress();
-            int durationSec = proMode[0] ? (60 + progress) : (10 + progress);
+            int durationSec = 10 + seek.getProgress();
             dialog.dismiss();
-            runBatteryHealthTest(durationSec, proMode[0]);
+            runBatteryHealthTest_C_Mode(durationSec);
         });
 
         dialog.show();
     }
 
-    private void updateDurationLabelForSeek(SeekBar seek, TextView label, boolean proMode) {
-        int progress = seek.getProgress();
-        int seconds = proMode ? (60 + progress) : (10 + progress);
-        String range = proMode ? "60–120 seconds (pro mode)" : "10–60 seconds (standard mode)";
-        label.setText("Selected: " + seconds + " sec\n" + range);
-    }
-
-    private void runBatteryHealthTest(int durationSec, boolean proMode) {
+    // ============================================================
+    // Real GEL C-Mode Stress Test
+    // - Max brightness (window)
+    // - Keep screen on
+    // - CPU burn threads
+    // - Health % derived ONLY from observed drain
+    // ============================================================
+    private void runBatteryHealthTest_C_Mode(int durationSec) {
         float startPct = getCurrentBatteryPercent();
         if (startPct < 0f) {
-            logWarn("Battery Health Test: unable to read initial battery level.");
+            logWarn("Battery Stress Test: unable to read initial battery level.");
             return;
         }
 
+        logLine();
+        logInfo("LAB 15 — Battery Health Stress Test started.");
+        logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
+        logInfo("Duration: " + durationSec + " seconds.");
+
         long startTime = SystemClock.elapsedRealtime();
 
-        logLine();
-        logInfo("Battery Health Test started for " + durationSec + " seconds "
-                + (proMode ? "(PRO mode)." : "(standard mode)."));
+        // Apply stress
+        applyMaxBrightnessAndKeepOn();
+        startCpuBurn_C_Mode();
 
         ui.postDelayed(() -> {
+            // Stop stress
+            stopCpuBurn();
+            restoreBrightnessAndKeepOn();
+
             float endPct = getCurrentBatteryPercent();
             if (endPct < 0f) {
-                logWarn("Battery Health Test: unable to read final battery level.");
+                logWarn("Battery Stress Test: unable to read final battery level.");
                 return;
             }
 
@@ -849,20 +766,118 @@ public class ManualTestsActivity extends AppCompatActivity {
             float perHour = (delta * 3600000f) / dtMs;
 
             logInfo(String.format(Locale.US,
-                    "Battery test: start=%.1f%%, end=%.1f%%, Δ=%.2f%% over %.1f sec.",
+                    "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                     startPct, endPct, delta, dtMs / 1000f));
 
-            if (delta <= 0.1f) {
-                logOk("Almost zero drain — battery looks normal.");
-            } else if (perHour <= 10f) {
-                logOk(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — acceptable.", perHour));
-            } else if (perHour <= 20f) {
-                logWarn(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — borderline.", perHour));
+            // Health % from drain only (heuristic)
+            int healthPct = estimateHealthFromDrain(perHour);
+
+            if (healthPct >= 90) {
+                logOk("Estimated Battery Health from stress: " + healthPct + "% (Excellent)");
+            } else if (healthPct >= 80) {
+                logOk("Estimated Battery Health from stress: " + healthPct + "% (Normal)");
+            } else if (healthPct >= 60) {
+                logWarn("Estimated Battery Health from stress: " + healthPct + "% (Worn)");
             } else {
-                logError(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — heavy load or battery wear.", perHour));
+                logError("Estimated Battery Health from stress: " + healthPct + "% (Poor)");
+            }
+
+            if (delta <= 0.1f) {
+                logOk("Almost zero drain in stress window — battery behavior looks strong.");
+            } else if (perHour <= 12f) {
+                logOk(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));
+            } else if (perHour <= 20f) {
+                logWarn(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));
+            } else {
+                logError(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
             }
 
         }, durationSec * 1000L);
+    }
+
+    // Baseline model for GEL C stress:
+    // New/healthy phone under this burn ~12%/hour.
+    // HealthPct = clamp(12 / perHour * 100)
+    private int estimateHealthFromDrain(float perHour) {
+        if (perHour <= 0f) return 100;
+        float baseline = 12f;
+        int est = Math.round((baseline / perHour) * 100f);
+        if (est > 100) est = 100;
+        if (est < 1) est = 1;
+        return est;
+    }
+
+    private void applyMaxBrightnessAndKeepOn() {
+        try {
+            // Save old window brightness and keep-screen flag
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            oldWindowBrightness = lp.screenBrightness;
+            oldKeepScreenOn = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
+
+            // Max brightness via window (no permission needed)
+            lp.screenBrightness = 1f;
+            getWindow().setAttributes(lp);
+
+            // Keep screen on
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            logInfo("Stress: brightness set to MAX and screen locked ON.");
+        } catch (Exception e) {
+            logWarn("Stress: brightness/keep-on failed: " + e.getMessage());
+        }
+    }
+
+    private void restoreBrightnessAndKeepOn() {
+        try {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            if (oldWindowBrightness != -2f) {
+                lp.screenBrightness = oldWindowBrightness;
+                getWindow().setAttributes(lp);
+            }
+
+            if (!oldKeepScreenOn) {
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+
+            logInfo("Stress: brightness and screen flags restored.");
+        } catch (Exception e) {
+            logWarn("Stress: restore brightness failed: " + e.getMessage());
+        }
+    }
+
+    private void startCpuBurn_C_Mode() {
+        stopCpuBurn(); // safety reset
+        cpuBurnRunning = true;
+
+        int cores = Runtime.getRuntime().availableProcessors();
+        int threadsToRun = Math.min(8, cores); // GEL C Mode target
+        logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
+
+        cpuBurnThreads.clear();
+        for (int i = 0; i < threadsToRun; i++) {
+            Thread t = new Thread(() -> {
+                double x = 1.000001;
+                while (cpuBurnRunning) {
+                    // Heavy float + trig mix (aggressive)
+                    x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
+                    if (x > 1e9) x = 1.000001;
+                }
+            });
+            t.setPriority(Thread.MAX_PRIORITY);
+            t.start();
+            cpuBurnThreads.add(t);
+        }
+    }
+
+    private void stopCpuBurn() {
+        cpuBurnRunning = false;
+        for (Thread t : cpuBurnThreads) {
+            try {
+                t.join(50);
+            } catch (Exception ignored) {}
+        }
+        cpuBurnThreads.clear();
+        logInfo("Stress: CPU burn stopped.");
     }
 
     private float getCurrentBatteryPercent() {
@@ -876,81 +891,75 @@ public class ManualTestsActivity extends AppCompatActivity {
             if (level < 0 || scale <= 0) return -1f;
 
             return 100f * level / scale;
+
         } catch (Exception e) {
             return -1f;
         }
     }
 
-    // LAB 16: Charging port checklist (manual)
+    // ============================================================
+    // LAB 16 — Charging Port & Charger Inspection (manual)
+    // ============================================================
     private void lab16ChargingPortManual() {
         logLine();
         logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");
         logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");
-        logWarn("If the cable fits loosely or disconnects easily → worn port or bent contacts.");
-        logError("If the device does not charge with known-good chargers → possible port or board-level power issue.");
+        logWarn("If the cable fits loosely or disconnects easily -> worn port or bent contacts.");
+        logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");
     }
 
     // ============================================================
-// LAB 17 — Thermal Snapshot (CPU where available)
-// (GitHub Actions Safe Version — no HardwarePropertiesManager)
-// ============================================================
-private void lab17ThermalSnapshot() {
-    logLine();
-    logInfo("LAB 17 — Thermal Snapshot (CPU).");
+    // LAB 17 — Thermal Snapshot (CPU where available)
+    // (Reflection to avoid compile SDK issues)
+    // ============================================================
+    private void lab17ThermalSnapshot() {
+        logLine();
+        logInfo("LAB 17 — Thermal Snapshot (CPU).");
 
-    try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-
-            // Try loading class dynamically (GitHub runner does NOT have it)
-            try {
-                Class<?> hpmClass = Class.forName("android.hardware.HardwarePropertiesManager");
-                Object hpm = getSystemService((String) hpmClass
-                        .getField("HARDWARE_PROPERTIES_SERVICE").get(null));
-
-                if (hpm == null) {
-                    logWarn("Thermal API not available on this device.");
-                    return;
-                }
-
-                int DEVICE_TEMPERATURE_CPU =
-                        hpmClass.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
-                int TEMPERATURE_CURRENT =
-                        hpmClass.getField("TEMPERATURE_CURRENT").getInt(null);
-
-                float[] temps = (float[]) hpmClass
-                        .getMethod("getDeviceTemperatures", int.class, int.class)
-                        .invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
-
-                if (temps != null && temps.length > 0) {
-                    for (float t : temps) {
-                        logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
-                    }
-                } else {
-                    logWarn("CPU temperatures not available.");
-                }
-
-            } catch (ClassNotFoundException e) {
-                logWarn("Thermal API not supported on this ROM / emulator.");
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                logWarn("CPU thermal API requires Android 7+.");
+                return;
             }
 
-        } else {
-            logWarn("CPU thermal API requires Android 7+.");
+            Object hpm = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+            if (hpm == null) {
+                logWarn("HardwareProperties service not available.");
+                return;
+            }
+
+            Class<?> cls = Class.forName("android.os.HardwarePropertiesManager");
+            Method getTemps = cls.getMethod("getDeviceTemperatures", int.class, int.class);
+
+            int DEVICE_TEMPERATURE_CPU = cls.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
+            int TEMPERATURE_CURRENT = cls.getField("TEMPERATURE_CURRENT").getInt(null);
+
+            float[] temps = (float[]) getTemps.invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
+
+            if (temps != null && temps.length > 0) {
+                for (float t : temps) {
+                    logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
+                }
+            } else {
+                logWarn("CPU temperatures not available on this device.");
+            }
+
+        } catch (Throwable e) {
+            logWarn("Thermal snapshot not supported: " + e.getMessage());
         }
-
-    } catch (Exception e) {
-        logError("Thermal snapshot error: " + e.getMessage());
     }
-}
 
-    // LAB 18: Heat under load questionnaire
+    // ============================================================
+    // LAB 18 — Heat Under Load (manual questionnaire)
+    // ============================================================
     private void lab18ThermalQuestionnaire() {
         logLine();
         logInfo("LAB 18 — Heat Under Load (manual questionnaire).");
         logInfo("Ask the customer:");
         logInfo("• Does the phone get hot during normal use (browsing, calls)?");
         logInfo("• Does it get very hot during charging?");
-        logWarn("If heating happens even on idle → possible rogue app or failing battery.");
-        logError("If heating is extreme during light tasks → suspect board-level power/PMIC issues.");
+        logWarn("If heating happens even on idle -> possible rogue app or failing battery.");
+        logError("If heating is extreme during light tasks -> suspect board-level power/PMIC issues.");
     }
 
     // ============================================================
@@ -969,9 +978,12 @@ private void lab17ThermalSnapshot() {
             logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
                     + " (free " + humanBytes(free) + ", " + pctFree + "%).");
 
-            if (pctFree < 5) logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");
-            else if (pctFree < 10) logWarn("Free space below 10% — performance and update issues likely.");
-            else logOk("Internal storage level is acceptable for daily usage.");
+            if (pctFree < 5)
+                logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");
+            else if (pctFree < 10)
+                logWarn("Free space below 10% — performance and update issues likely.");
+            else
+                logOk("Internal storage level is acceptable for daily usage.");
         } catch (Exception e) {
             logError("Storage snapshot error: " + e.getMessage());
         }
@@ -997,9 +1009,12 @@ private void lab17ThermalSnapshot() {
             logInfo("System apps: " + systemApps);
             logInfo("Total packages: " + apps.size());
 
-            if (userApps > 120) logError("Very high number of user apps — strong risk of background drain and lag.");
-            else if (userApps > 80) logWarn("High number of user apps — possible performance impact.");
-            else logOk("App footprint is within a normal range.");
+            if (userApps > 120)
+                logError("Very high number of user apps — strong risk of background drain and lag.");
+            else if (userApps > 80)
+                logWarn("High number of user apps — possible performance impact.");
+            else
+                logOk("App footprint is within a normal range.");
         } catch (Exception e) {
             logError("Apps footprint error: " + e.getMessage());
         }
@@ -1019,12 +1034,13 @@ private void lab17ThermalSnapshot() {
             long free = mi.availMem;
             long total = mi.totalMem;
             int pct = (int) ((free * 100L) / total);
-
             logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");
-
-            if (pct < 10) logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");
-            else if (pct < 20) logWarn("Low free RAM (10–20%) — borderline under load.");
-            else logOk("RAM level is acceptable for normal usage at this moment.");
+            if (pct < 10)
+                logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");
+            else if (pct < 20)
+                logWarn("Low free RAM (10–20%) — borderline under load.");
+            else
+                logOk("RAM level is acceptable for normal usage at this moment.");
         } catch (Exception e) {
             logError("RAM snapshot error: " + e.getMessage());
         }
@@ -1036,9 +1052,8 @@ private void lab17ThermalSnapshot() {
         long upMs = SystemClock.elapsedRealtime();
         String upStr = formatUptime(upMs);
         logInfo("System uptime: " + upStr);
-
         if (upMs < 2 * 60 * 60 * 1000L) {
-            logWarn("Device was rebooted recently (<2 hours) — some issues may be masked.");
+            logWarn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");
         } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
             logWarn("Uptime above 7 days — recommend a reboot before deep diagnostics.");
         } else {
@@ -1053,16 +1068,16 @@ private void lab17ThermalSnapshot() {
         logLine();
         logInfo("LAB 23 — Screen Lock / Biometrics Checklist (manual).");
         logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");
-        logWarn("If the device is left with no lock → higher risk for data and account theft.");
-        logInfo("2) Test fingerprint / face unlock if configured.");
+        logWarn("If the device is left with no lock at all — higher risk for data and account theft.");
+        logInfo("2) Test fingerprint / face unlock if configured, to confirm sensors respond consistently.");
     }
 
     private void lab24SecurityPatchManual() {
         logLine();
         logInfo("LAB 24 — Security Patch & Play Protect (manual).");
-        logInfo("1) Settings → About phone → Android version → Security patch level.");
-        logWarn("If patch level is very old → increased vulnerability risk.");
-        logInfo("2) Play Store → Play Protect → verify scanning is enabled and up to date.");
+        logInfo("1) Open Android settings -> About phone -> Android version -> Security patch level.");
+        logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");
+        logInfo("2) In Google Play Store -> Play Protect -> verify scanning is enabled and up to date.");
     }
 
     private void lab25DevOptions() {
@@ -1073,7 +1088,8 @@ private void lab17ThermalSnapshot() {
             int dev = Settings.Global.getInt(getContentResolver(), Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0);
             logInfo("ADB enabled flag: " + (adb == 1));
             logInfo("Developer options enabled flag: " + (dev == 1));
-            if (adb == 1) logWarn("ADB is enabled — use only in trusted environments.");
+            if (adb == 1)
+                logWarn("ADB is enabled — only recommended for trusted environments and service use.");
         } catch (Exception e) {
             logWarn("Could not read Developer / ADB flags — OEM restrictions possible.");
         }
@@ -1083,9 +1099,9 @@ private void lab17ThermalSnapshot() {
         logLine();
         logInfo("LAB 26 — Root / Bootloader Suspicion Checklist (manual).");
         logInfo("Use this together with the automatic root labs:");
-        logWarn("• Look for Magisk / SuperSU / custom recovery apps.");
-        logWarn("• Check if boot logo/animation is non-stock.");
-        logError("If Play Integrity fails and root tools are visible → treat device as modified/rooted.");
+        logWarn("• Look for Magisk / SuperSU / custom recovery apps installed.");
+        logWarn("• Check if boot animation or splash logo is non-stock for this model.");
+        logError("If Play Integrity fails and root tools are visible — treat device as modified / rooted.");
     }
 
     // ============================================================
@@ -1095,36 +1111,36 @@ private void lab17ThermalSnapshot() {
         logLine();
         logInfo("LAB 27 — Crash / Freeze History (interview).");
         logInfo("Ask the customer:");
-        logInfo("• How often does the phone reboot or freeze?");
-        logInfo("• Does it happen only in specific apps or randomly?");
-        logWarn("Frequent reboots in heavy apps only → thermal or RAM pressure.");
-        logError("Random reboots even on idle → deeper board / power / storage issues.");
+        logInfo("• How often does the phone reboot or freeze per day/week?");
+        logInfo("• Does it happen only in specific apps (camera, games, calls) or randomly?");
+        logWarn("Frequent reboots in heavy apps only — could be thermal or RAM pressure.");
+        logError("Random reboots even on idle — suspect deeper board / power / storage issues.");
     }
 
     private void lab28PermissionsPrivacy() {
         logLine();
         logInfo("LAB 28 — App Permissions & Privacy (manual).");
-        logInfo("1) Settings → Privacy/Permissions: review apps with location/mic/camera access.");
-        logWarn("Unknown apps with broad permissions can cause drain/lag and privacy risks.");
-        logInfo("2) Recommend uninstalling unused or suspicious apps.");
+        logInfo("1) In Settings -> Privacy / Permissions, review apps with access to location, microphone and camera.");
+        logWarn("Unknown apps with broad permissions can cause drain, slowdowns and privacy concerns.");
+        logInfo("2) Recommend uninstalling unused or clearly suspicious apps.");
     }
 
     private void lab29CombineFindings() {
         logLine();
         logInfo("LAB 29 — Combine Auto-Diagnosis and Manual Labs.");
-        logInfo("Correlate:");
+        logInfo("Use this step to correlate:");
         logInfo("• Auto-Diagnosis hardware flags (RAM, storage, battery, root, thermals)");
         logInfo("• Manual tests (audio, sensors, display, wireless, charger, user history).");
-        logOk("More labs = stronger hospital-grade conclusion.");
+        logOk("The more labs you run, the closer the final diagnosis gets to a hospital-grade conclusion.");
     }
 
     private void lab30FinalNotes() {
         logLine();
         logInfo("LAB 30 — Final Service Notes for Report (manual).");
-        logInfo("Write technician notes in exported PDF/TXT:");
+        logInfo("Write technician notes directly in the exported PDF/TXT:");
         logInfo("• Main findings (OK / WARN / ERROR).");
-        logInfo("• Suspected faulty modules.");
-        logInfo("• Recommended actions (cleaning, reset, parts, board repair).");
-        logOk("30 Manual Labs complete. Use with Auto-Diagnosis for full GEL workflow.");
+        logInfo("• Suspected faulty modules (board, battery, display, speaker, mic, sensors).");
+        logInfo("• Recommended actions (cleaning, reset, part replacement, full board repair).");
+        logOk("This completes the 30 Manual Labs set. Use it with Auto-Diagnosis for full GEL workflow.");
     }
 }

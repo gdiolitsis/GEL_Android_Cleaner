@@ -1591,199 +1591,174 @@ private static class GELThermalZone {
         return sb.toString();
     }
 }
-    // ============================================================
-// LAB 18 — Heat Under Load (manual) + Charging Thermal LIVE Monitor
-// ============================================================
-private Handler lab18Handler = new Handler();
-private boolean lab18Running = false;
+    /* -------------------------------------------------------------
+ * LAB 18 — Charging Thermal LIVE Monitor (popup window)
+ * ------------------------------------------------------------- */
+private void lab18ChargingThermalMonitor() {
 
-private void lab18Start() {
     logLine();
-    logInfo("LAB 18 — Charging Thermal Stress Test (manual + LIVE).");
-    logInfo("The device will be evaluated automatically using the charging thermal engine.");
-    logInfo("Real-time readings will appear in a popup window when charging.");
+    logInfo("LAB 18 — Charging Thermal LIVE Monitor (battery + PMIC).");
 
-    boolean charging = isDeviceCharging();
+    boolean isCharging = false;
 
-    if (!charging) {
-        logGreen("⚠️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
-        showLab18ChargingPopup(false); // show popup but disabled START
+    try {
+        IntentFilter ifilt = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilt);
+        int status = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+        isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
+    } catch (Exception ignored) {}
+
+    if (!isCharging) {
+        logWarn("⚠️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
         return;
     }
 
-    showLab18ChargingPopup(true); // charging → allow START
-}
+    // ---------- Popup Window ----------
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setCancelable(false);
 
-// ============================================================
-// Detect if device is charging
-// ============================================================
-private boolean isDeviceCharging() {
-    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-    Intent batteryStatus = registerReceiver(null, ifilter);
-
-    int status = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-
-    return status == BatteryManager.BATTERY_STATUS_CHARGING ||
-           status == BatteryManager.BATTERY_STATUS_FULL;
-}
-
-// ============================================================
-// Gold popup window — START thermal LIVE
-// ============================================================
-private void showLab18ChargingPopup(boolean allowStart) {
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setCancelable(false);
-
-    // ===== GOLD TITLE =====
-    TextView title = new TextView(this);
-    title.setText("Press START for Live Testing");
-    title.setPadding(dp(20), dp(20), dp(20), dp(10));
-    title.setTextSize(22);
-    title.setTextColor(Color.parseColor("#FFD700")); // gold
-    title.setTypeface(Typeface.DEFAULT_BOLD);
-
-    b.setCustomTitle(title);
-
-    // ===== MAIN LAYOUT (black with gold border) =====
+    // Layout base
     LinearLayout layout = new LinearLayout(this);
     layout.setOrientation(LinearLayout.VERTICAL);
-    layout.setPadding(dp(25), dp(25), dp(25), dp(25));
-
-    GradientDrawable border = new GradientDrawable();
-    border.setColor(Color.BLACK);
-    border.setStroke(6, Color.parseColor("#FFD700"));
-    layout.setBackground(border);
-
-    TextView tv = new TextView(this);
-    tv.setTextColor(Color.WHITE);
-    tv.setTextSize(18);
-
-    if (allowStart) {
-        tv.setText("Charging detected.\nLive thermal monitoring is ready.");
-    } else {
-        tv.setText("Device is not charging.\nConnect charger to enable LIVE thermal monitor.");
-    }
-
-    layout.addView(tv);
-    b.setView(layout);
-
-    b.setNegativeButton("CANCEL", (d, w) -> d.dismiss());
-
-    if (allowStart) {
-        b.setPositiveButton("START", (d, w) -> startLab18ThermalLive());
-    }
-
-    b.show();
-}
-
-// ============================================================
-// Start Thermal LIVE Monitor (while charging)
-// ============================================================
-private void startLab18ThermalLive() {
-    lab18Running = true;
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setCancelable(false);
-
-    // Live popup UI
-    LinearLayout layout = new LinearLayout(this);
-    layout.setOrientation(LinearLayout.VERTICAL);
-    layout.setPadding(dp(25), dp(25), dp(25), dp(25));
+    layout.setPadding(dp(14), dp(14), dp(14), dp(14));
     layout.setBackgroundColor(Color.BLACK);
 
+    // Golden border
     GradientDrawable border = new GradientDrawable();
     border.setColor(Color.BLACK);
     border.setStroke(6, Color.parseColor("#FFD700"));
     layout.setBackground(border);
 
+    // Title
     TextView title = new TextView(this);
-    title.setText("Charging Thermal Monitor — LIVE");
+    title.setText("🔶 Charging Thermal Monitor — LIVE");
     title.setTextColor(Color.parseColor("#FFD700"));
-    title.setTextSize(20);
-    title.setTypeface(Typeface.DEFAULT_BOLD);
+    title.setTextSize(20f);
+    title.setPadding(0, 0, 0, dp(10));
     layout.addView(title);
 
+    // Live text
     TextView liveText = new TextView(this);
     liveText.setTextColor(Color.WHITE);
-    liveText.setTextSize(17);
-    liveText.setPadding(0, dp(15), 0, 0);
+    liveText.setTextSize(16f);
+    liveText.setPadding(0, dp(6), 0, 0);
     layout.addView(liveText);
 
-    b.setView(layout);
+    builder.setView(layout);
 
-    b.setNegativeButton("STOP", (d, w) -> {
-        lab18Running = false;
+    builder.setNegativeButton("CLOSE", (d, w) -> {
+        stopLab18 = true;
         d.dismiss();
     });
 
-    AlertDialog dialog = b.create();
-    dialog.show();
+    AlertDialog dlg = builder.create();
+    dlg.show();
 
-    // ===== LIVE UPDATE LOOP =====
-    lab18Handler.post(new Runnable() {
-        @Override
-        public void run() {
-            if (!lab18Running || !dialog.isShowing()) return;
+    stopLab18 = false;
+
+    // ---------- Update Thread ----------
+    new Thread(() -> {
+        while (!stopLab18) {
 
             StringBuilder sb = new StringBuilder();
+            sb.append("Battery / PMIC / CPU thermals (charging):\n\n");
 
-            sb.append("Battery: ").append(readThermal("battery")).append("°C\n");
-            sb.append("PMIC / Charger: ").append(readThermal("pmic")).append("°C\n");
-            sb.append("CPU: ").append(readThermal("cpu")).append("°C\n");
-            sb.append("Skin: ").append(readThermal("skin")).append("°C\n");
-
-            liveText.setText(sb.toString());
-
-            lab18Handler.postDelayed(this, 1000); // refresh every 1 sec
-        }
-    });
-}
-
-// ============================================================
-// Read thermal zones by keyword (simple matcher)
-// ============================================================
-private float readThermal(String key) {
-    try {
-        File dir = new File("/sys/class/thermal/");
-        File[] files = dir.listFiles();
-        if (files == null) return -1;
-
-        for (File f : files) {
-            if (f.getName().startsWith("thermal_zone")) {
-                File typeFile = new File(f, "type");
-                File tempFile = new File(f, "temp");
-
-                if (typeFile.exists() && tempFile.exists()) {
-                    String type = readFile(typeFile).toLowerCase();
-
-                    if (type.contains(key)) {
-                        String raw = readFile(tempFile).trim();
-                        float val = Float.parseFloat(raw) / 1000f;
-                        return val;
-                    }
-                }
+            // Battery
+            try {
+                IntentFilter ifilt2 = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent bs = registerReceiver(null, ifilt2);
+                int temp = bs != null ? bs.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) : 0;
+                float tC = temp / 10f;
+                sb.append("• Battery: ").append(tC).append("°C  ").append(statusColor(tC)).append("\n");
+            } catch (Exception e) {
+                sb.append("• Battery: N/A\n");
             }
+
+            // PMIC / thermal zones
+            try {
+                Map<String, Float> zones = readThermalZones();
+                Float pmic = zones.get("pmic");
+                if (pmic != null) {
+                    sb.append("• PMIC/Charger: ").append(pmic).append("°C  ").append(statusColor(pmic)).append("\n");
+                }
+
+                Float cpu = zones.get("cpu");
+                if (cpu != null) {
+                    sb.append("• CPU/SoC: ").append(cpu).append("°C  ").append(statusColor(cpu)).append("\n");
+                }
+
+            } catch (Exception e) {
+                sb.append("• PMIC/CPU thermal: N/A\n");
+            }
+
+            sb.append("\nRefreshing… (1 sec)");
+
+            runOnUiThread(() -> liveText.setText(sb.toString()));
+
+            try { Thread.sleep(1000); } catch (Exception ignored) {}
         }
-    } catch (Exception ignored) {}
-    return -1;
+    }).start();
 }
 
-private String readFile(File f) throws IOException {
+
+/* ----- Helper: Thermal zone reader (CPU + PMIC only) ----- */
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+
+    File dir = new File("/sys/class/thermal/");
+    File[] files = dir.listFiles();
+    if (files == null) return out;
+
+    for (File f : files) {
+        try {
+            File typeFile = new File(f, "type");
+            File tempFile = new File(f, "temp");
+
+            if (!typeFile.exists() || !tempFile.exists()) continue;
+
+            String type = readOneLine(typeFile).toLowerCase();
+            String raw = readOneLine(tempFile);
+
+            float tempC;
+            if (raw.length() > 3) tempC = Integer.parseInt(raw) / 1000f;
+            else tempC = Float.parseFloat(raw);
+
+            if (type.contains("pmic") || type.contains("charger"))
+                out.put("pmic", tempC);
+
+            if (type.contains("cpu") || type.contains("soc"))
+                out.put("cpu", tempC);
+
+        } catch (Exception ignored) {}
+    }
+    return out;
+}
+
+
+/* ----- Read a single line from a file ----- */
+private String readOneLine(File f) throws Exception {
     BufferedReader br = new BufferedReader(new FileReader(f));
-    String s = br.readLine();
+    String line = br.readLine();
     br.close();
-    return s;
+    return line == null ? "" : line.trim();
 }
 
-// ============================================================
-// dp converter
-// ============================================================
+
+/* ----- Status color (OK / Warning / Danger) ----- */
+private String statusColor(float t) {
+    if (t < 42) return "🟩 OK";
+    if (t < 50) return "🟨 Warning";
+    return "🟥 Hot";
+}
+
+
+/* ----- dp() (only ONE copy — keep this) ----- */
 private int dp(int v) {
     return Math.round(v * getResources().getDisplayMetrics().density);
 }
 
-
+/* Control flag */
+private boolean stopLab18 = false;
 
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE

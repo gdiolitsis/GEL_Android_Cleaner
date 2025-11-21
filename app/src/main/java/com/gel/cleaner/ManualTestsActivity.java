@@ -1286,45 +1286,146 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // LAB 17 — Thermal Snapshot (CPU where available)
-    // ============================================================
-    private void lab17ThermalSnapshot() {
-        logLine();
-        logInfo("LAB 17 — Thermal Snapshot (CPU).");
+// LAB 17 — Thermal LIVE Monitor (Battery always + CPU if supported)
+// ============================================================
+private void lab17ThermalSnapshot() {
+    logLine();
+    logInfo("LAB 17 — Thermal LIVE Monitor started (battery + CPU where supported).");
 
-        try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                logWarn("CPU thermal API requires Android 7+.");
-                return;
+    try {
+        // Live dialog UI
+        final TextView live = new TextView(this);
+        live.setTextSize(14f);
+        live.setTextColor(0xFF39FF14);
+        live.setPadding(dp(16), dp(16), dp(16), dp(16));
+        live.setText("Reading temperatures...\n");
+
+        final boolean[] running = {true};
+
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setTitle("Thermal LIVE Monitor")
+                .setView(live)
+                .setCancelable(true)
+                .create();
+
+        d.setOnDismissListener(x -> running[0] = false);
+
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
+
+        d.show();
+
+        Runnable tick = new Runnable() {
+            @Override public void run() {
+                if (!running[0]) return;
+
+                String report = buildThermalLiveReport();
+                live.setText(report);
+
+                ui.postDelayed(this, 1000); // 1 sec refresh
             }
+        };
 
-            Object hpm = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
-            if (hpm == null) {
-                logWarn("HardwareProperties service not available.");
-                return;
-            }
+        ui.post(tick);
 
-            Class<?> cls = Class.forName("android.os.HardwarePropertiesManager");
-            Method getTemps = cls.getMethod("getDeviceTemperatures", int.class, int.class);
+    } catch (Exception e) {
+        logWarn("Thermal live monitor not supported: " + e.getMessage());
+    }
+}
 
-            int DEVICE_TEMPERATURE_CPU = cls.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
-            int TEMPERATURE_CURRENT = cls.getField("TEMPERATURE_CURRENT").getInt(null);
 
-            float[] temps = (float[]) getTemps.invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
+// ------------------------------------------------------------
+// Helper: build live report string
+// ------------------------------------------------------------
+private String buildThermalLiveReport() {
+    StringBuilder sb = new StringBuilder();
 
-            if (temps != null && temps.length > 0) {
-                for (float t : temps) {
-                    logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
-                }
-            } else {
-                logWarn("CPU temperatures not available on this device.");
-            }
-
-        } catch (Throwable e) {
-            logWarn("Thermal snapshot not supported: " + e.getMessage());
-        }
+    // Battery temperature (most reliable on all phones)
+    float battC = getBatteryTempC();
+    if (battC > -100f) {
+        sb.append(String.format(Locale.US, "Battery temp: %.1f°C\n", battC));
+        if (battC >= 45f) sb.append("⚠️ Battery is HOT (>=45°C)\n");
+        else if (battC >= 40f) sb.append("⚠️ Battery warm (>=40°C)\n");
+        else sb.append("✅ Battery temp normal.\n");
+    } else {
+        sb.append("Battery temp: not available\n");
     }
 
+    sb.append("\n");
+
+    // CPU temperatures (many OEMs block this -> may be null)
+    float[] cpuTemps = getCpuTempsSafe();
+    if (cpuTemps != null && cpuTemps.length > 0) {
+        float max = cpuTemps[0], sum = 0f;
+        for (float t : cpuTemps) {
+            sum += t;
+            if (t > max) max = t;
+        }
+        float avg = sum / cpuTemps.length;
+
+        sb.append(String.format(Locale.US,
+                "CPU temps: avg %.1f°C | max %.1f°C | cores=%d\n",
+                avg, max, cpuTemps.length));
+
+        if (max >= 80f) sb.append("❌ CPU extremely hot (>=80°C)\n");
+        else if (max >= 70f) sb.append("⚠️ CPU hot (>=70°C)\n");
+        else sb.append("✅ CPU temp OK.\n");
+
+    } else {
+        sb.append("CPU temps: not supported on this device.\n");
+    }
+
+    sb.append("\nRefresh: 1 sec. Close dialog to stop.");
+    return sb.toString();
+}
+
+
+// ------------------------------------------------------------
+// Helper: Battery temperature in °C
+// EXTRA_TEMPERATURE is tenths of degree C
+// ------------------------------------------------------------
+private float getBatteryTempC() {
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return -999f;
+
+        int t = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+        if (t == Integer.MIN_VALUE) return -999f;
+
+        return t / 10f;
+    } catch (Exception e) {
+        return -999f;
+    }
+}
+
+
+// ------------------------------------------------------------
+// Helper: CPU temps via HardwarePropertiesManager (Android 7+)
+// Returns null if OEM blocks it
+// ------------------------------------------------------------
+private float[] getCpuTempsSafe() {
+    try {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return null;
+
+        Object hpm = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+        if (hpm == null) return null;
+
+        Class<?> cls = Class.forName("android.os.HardwarePropertiesManager");
+        Method getTemps = cls.getMethod("getDeviceTemperatures", int.class, int.class);
+
+        int DEVICE_TEMPERATURE_CPU = cls.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
+        int TEMPERATURE_CURRENT = cls.getField("TEMPERATURE_CURRENT").getInt(null);
+
+        float[] temps = (float[]) getTemps.invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
+
+        if (temps == null || temps.length == 0) return null;
+        return temps;
+
+    } catch (Throwable ignored) {
+        return null;
+    }
+}
     // ============================================================
     // LAB 18 — Heat Under Load (manual questionnaire)
     // ============================================================

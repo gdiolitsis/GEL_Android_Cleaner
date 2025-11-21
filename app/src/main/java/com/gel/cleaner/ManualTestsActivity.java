@@ -891,39 +891,57 @@ public class ManualTestsActivity extends AppCompatActivity {
         logError("If the device does not charge with known-good chargers → possible port or board-level power issue.");
     }
 
-    // LAB 17: Thermal snapshot
-    private void lab17ThermalSnapshot() {
-        logLine();
-        logInfo("LAB 17 — Thermal Snapshot (CPU).");
+    // ============================================================
+// LAB 17 — Thermal Snapshot (CPU where available)
+// (GitHub Actions Safe Version — no HardwarePropertiesManager)
+// ============================================================
+private void lab17ThermalSnapshot() {
+    logLine();
+    logInfo("LAB 17 — Thermal Snapshot (CPU).");
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                HardwarePropertiesManager hpm =
-                        (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 
-                if (hpm != null) {
-                    float[] temps = hpm.getDeviceTemperatures(
-                            HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
-                            HardwarePropertiesManager.TEMPERATURE_CURRENT
-                    );
+            // Try loading class dynamically (GitHub runner does NOT have it)
+            try {
+                Class<?> hpmClass = Class.forName("android.hardware.HardwarePropertiesManager");
+                Object hpm = getSystemService((String) hpmClass
+                        .getField("HARDWARE_PROPERTIES_SERVICE").get(null));
 
-                    if (temps != null && temps.length > 0) {
-                        for (float t : temps) {
-                            logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
-                        }
-                    } else {
-                        logWarn("CPU temperatures not available on this device.");
+                if (hpm == null) {
+                    logWarn("Thermal API not available on this device.");
+                    return;
+                }
+
+                int DEVICE_TEMPERATURE_CPU =
+                        hpmClass.getField("DEVICE_TEMPERATURE_CPU").getInt(null);
+                int TEMPERATURE_CURRENT =
+                        hpmClass.getField("TEMPERATURE_CURRENT").getInt(null);
+
+                float[] temps = (float[]) hpmClass
+                        .getMethod("getDeviceTemperatures", int.class, int.class)
+                        .invoke(hpm, DEVICE_TEMPERATURE_CPU, TEMPERATURE_CURRENT);
+
+                if (temps != null && temps.length > 0) {
+                    for (float t : temps) {
+                        logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
                     }
                 } else {
-                    logWarn("HardwarePropertiesManager not available.");
+                    logWarn("CPU temperatures not available.");
                 }
-            } else {
-                logWarn("CPU thermal API requires Android 7+.");
+
+            } catch (ClassNotFoundException e) {
+                logWarn("Thermal API not supported on this ROM / emulator.");
             }
-        } catch (Exception e) {
-            logError("Thermal snapshot error: " + e.getMessage());
+
+        } else {
+            logWarn("CPU thermal API requires Android 7+.");
         }
+
+    } catch (Exception e) {
+        logError("Thermal snapshot error: " + e.getMessage());
     }
+}
 
     // LAB 18: Heat under load questionnaire
     private void lab18ThermalQuestionnaire() {

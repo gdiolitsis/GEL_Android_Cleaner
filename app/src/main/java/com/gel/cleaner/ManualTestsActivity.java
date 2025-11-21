@@ -6,6 +6,13 @@
 // ============================================================
 package com.gel.cleaner;
 
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ColorDrawable;
+
+import android.widget.SeekBar;
+import android.widget.CompoundButton;
+import androidx.appcompat.app.AlertDialog;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;

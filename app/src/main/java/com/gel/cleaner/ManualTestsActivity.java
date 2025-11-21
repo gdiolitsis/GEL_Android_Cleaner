@@ -767,6 +767,172 @@ private void showBatteryHealthTestDialog() {
             }
         }
 
+// ============================================================
+// LABS 15–18: BATTERY & THERMAL  (GEL Edition + Battery Health %)
+// ============================================================
+private void lab15BatterySnapshot() {
+    logLine();
+    logInfo("LAB 15 — Battery Level / Status / Health Snapshot.");
+
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) {
+            logWarn("Battery broadcast not available.");
+            return;
+        }
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float pct = (scale > 0) ? (100f * level / scale) : -1f;
+
+        int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int temp10 = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        float temp = (temp10 > 0) ? (temp10 / 10f) : -1f;
+
+        logInfo(String.format(Locale.US, "Battery level: %.1f%%", pct));
+        logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", temp));
+
+        String statusStr;
+        switch (status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:      statusStr = "Charging"; break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:   statusStr = "Discharging"; break;
+            case BatteryManager.BATTERY_STATUS_FULL:          statusStr = "Full"; break;
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  statusStr = "Not charging"; break;
+            default: statusStr = "Unknown";
+        }
+        logInfo("Battery status: " + statusStr);
+
+        // --- BATTERY HEALTH % (NEW GEL METHOD) ---
+        int healthPct = getBatteryHealthPercent();
+        if (healthPct > 0) {
+            if (healthPct >= 90)
+                logOk("Estimated Battery Health: " + healthPct + "% (Excellent)");
+            else if (healthPct >= 80)
+                logOk("Estimated Battery Health: " + healthPct + "% (Normal)");
+            else if (healthPct >= 60)
+                logWarn("Estimated Battery Health: " + healthPct + "% (Worn)");
+            else
+                logError("Estimated Battery Health: " + healthPct + "% (Poor)");
+        } else {
+            logWarn("Battery Health % not supported on this device.");
+        }
+
+        if (pct >= 0 && pct <= 5)
+            logError("Battery almost empty — high risk of sudden shutdown.");
+        else if (pct <= 15)
+            logWarn("Battery low — recommend charging before diagnostics.");
+
+        if (temp > 45f)
+            logError("Battery temperature above 45°C — possible thermal problem.");
+
+        // UI Popup for live drain test
+        showBatteryHealthTestDialog();
+
+    } catch (Exception e) {
+        logError("Battery snapshot error: " + e.getMessage());
+    }
+}
+
+// ============================================================
+// INTERNAL: Battery Health Calculator (GEL Formula)
+// ============================================================
+private int getBatteryHealthPercent() {
+    try {
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (bm == null) return -1;
+
+        long chargeCounter = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+        long capacityPct = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+
+        if (chargeCounter <= 0 || capacityPct <= 0) return -1;
+
+        float fullMah = (chargeCounter / (capacityPct / 100f));
+
+        long designMah = bm.getLongProperty(0x00000008); // Hidden API (works in many OEMs)
+        if (designMah <= 0) designMah = (long) fullMah;
+
+        int est = (int) ((fullMah / designMah) * 100f);
+        if (est > 100) est = 100;
+        if (est < 1) est = 1;
+
+        return est;
+
+    } catch (Exception e) {
+        return -1;
+    }
+}
+
+// ============================================================
+// BATTERY HEALTH STRESS TEST POPUP
+// ============================================================
+private void showBatteryHealthTestDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setCancelable(true);
+    builder.setTitle("Start Battery Health Test");
+
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    layout.setPadding(pad, pad, pad, pad);
+
+    TextView info = new TextView(this);
+    info.setText("This live test watches battery % while the screen stays ON.\nUse STANDARD for quick checks, PRO for deeper checks.");
+    info.setTextSize(13f);
+    info.setTextColor(0xFFFFFFFF);
+    info.setPadding(0, 0, 0, dp(8));
+    layout.addView(info);
+
+    TextView modeLabel = new TextView(this);
+    modeLabel.setText("Select mode:");
+    modeLabel.setTextSize(13f);
+    modeLabel.setTextColor(0xFFFFD700);
+    layout.addView(modeLabel);
+
+    LinearLayout modeRow = new LinearLayout(this);
+    modeRow.setOrientation(LinearLayout.HORIZONTAL);
+
+    final CheckBox chkStandard = new CheckBox(this);
+    chkStandard.setText("STANDARD 10–60 sec");
+    chkStandard.setTextColor(0xFFFFFFFF);
+    chkStandard.setButtonTintList(ColorStateList.valueOf(0xFFFFD700));
+    chkStandard.setChecked(true);
+    modeRow.addView(chkStandard);
+
+    final CheckBox chkPro = new CheckBox(this);
+    chkPro.setText("PRO 60–120 sec");
+    chkPro.setTextColor(0xFFFFFFFF);
+    chkPro.setButtonTintList(ColorStateList.valueOf(0xFFFFD700));
+    modeRow.addView(chkPro);
+
+    layout.addView(modeRow);
+
+    TextView durLabel = new TextView(this);
+    durLabel.setText("Duration (seconds):");
+    durLabel.setTextSize(13f);
+    durLabel.setTextColor(0xFFFFD700);
+    durLabel.setPadding(0, dp(8), 0, 0);
+    layout.addView(durLabel);
+
+    final TextView durValue = new TextView(this);
+    durValue.setTextSize(13f);
+    durValue.setTextColor(0xFF39FF14);
+    layout.addView(durValue);
+
+    final SeekBar seek = new SeekBar(this);
+    seek.setMax(50);
+    layout.addView(seek);
+
+    final boolean[] proMode = new boolean[]{false};
+
+    CompoundButton.OnCheckedChangeListener modeListener = (btn, isChecked) -> {
+        if (!isChecked) {
+            if (!chkStandard.isChecked() && !chkPro.isChecked()) {
+                btn.setChecked(true);
+                return;
+            }
+        }
+
         if (btn == chkStandard && isChecked) {
             chkPro.setChecked(false);
             proMode[0] = false;
@@ -796,7 +962,6 @@ private void showBatteryHealthTestDialog() {
     seek.setProgress(20);
     updateDurationLabelForSeek(seek, durValue, false);
 
-    // --- START BTN
     Button start = new Button(this);
     start.setText("Start Battery Health Test");
     start.setAllCaps(false);
@@ -900,6 +1065,65 @@ private float getCurrentBatteryPercent() {
     }
 }
 
+// ============================================================
+// LAB 16 — Charging Port & Charger Inspection (manual)
+// ============================================================
+private void lab16ChargingPortManual() {
+    logLine();
+    logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");
+    logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");
+    logWarn("If the cable fits loosely or disconnects easily → worn port or bent contacts.");
+    logError("If the device does not charge with known-good chargers → possible port or board-level power issue.");
+}
+
+// ============================================================
+// LAB 17 — Thermal Snapshot (CPU where available)
+// ============================================================
+private void lab17ThermalSnapshot() {
+    logLine();
+    logInfo("LAB 17 — Thermal Snapshot (CPU).");
+
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            HardwarePropertiesManager hpm =
+                    (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+
+            if (hpm != null) {
+                float[] temps = hpm.getDeviceTemperatures(
+                        HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                        HardwarePropertiesManager.TEMPERATURE_CURRENT);
+
+                if (temps != null && temps.length > 0) {
+                    for (float t : temps) {
+                        logInfo(String.format(Locale.US, "CPU core temp: %.1f°C", t));
+                    }
+                } else {
+                    logWarn("CPU temperatures not available on this device.");
+                }
+            } else {
+                logWarn("HardwarePropertiesManager not available.");
+            }
+        } else {
+            logWarn("CPU thermal API requires Android 7+.");
+        }
+
+    } catch (Exception e) {
+        logError("Thermal snapshot error: " + e.getMessage());
+    }
+}
+
+// ============================================================
+// LAB 18 — Heat Under Load (manual questionnaire)
+// ============================================================
+private void lab18ThermalQuestionnaire() {
+    logLine();
+    logInfo("LAB 18 — Heat Under Load (manual questionnaire).");
+    logInfo("Ask the customer:");
+    logInfo("• Does the phone get hot during normal use (browsing, calls)?");
+    logInfo("• Does it get very hot during charging?");
+    logWarn("If heating happens even on idle → possible rogue app or failing battery.");
+    logError("If heating is extreme during light tasks → suspect board-level power/PMIC issues.");
+}
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE
     // ============================================================

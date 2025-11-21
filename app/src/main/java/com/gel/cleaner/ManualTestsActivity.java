@@ -1617,7 +1617,7 @@ private void logGreen(String msg) {
 private void logYellow(String msg) {
     GELServiceLog.warn(msg);
     appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
-}===================================================
+}
     
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE

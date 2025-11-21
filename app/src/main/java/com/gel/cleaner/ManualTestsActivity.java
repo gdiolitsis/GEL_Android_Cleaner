@@ -1289,516 +1289,190 @@ public class ManualTestsActivity extends AppCompatActivity {
         logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");
     }
 
-    // ============================================================
-// LAB 17 — Full Thermal Snapshot (Battery + CPU + GPU + Skin + PMIC)
-// GEL Dark-Gold Edition — Universal Thermal Engine
-// ============================================================
-private void lab17ThermalSnapshot() {
+    // ===========================================================
+// LAB 17 — Thermal Map (FULL)
+// ===========================================================
+private void lab17ThermalMap() {
     logLine();
-    logInfo("LAB 17 — Full Thermal Snapshot (Battery + CPU + GPU + Skin + PMIC)");
+    logInfo("LAB 17 — Full Thermal Map");
 
-    // Collect thermal zones
-    Map<String, Float> zones = readThermalZones17();
-
-    // If a device has absolutely no thermal zones → fallback to battery
-    if (zones.isEmpty()) {
-        float bat = readBatteryTempC17();
-        if (bat > 0) {
-            logYellow("Device does not expose thermal zones — using battery only.");
-            logInfo(String.format(Locale.US, "Battery temp: %.1f°C %s", bat, zoneTag17(bat)));
-        } else {
-            logError("No thermal data available on this device.");
-        }
+    Map<String, Float> zones = readThermalZones();
+    if (zones.size() == 0) {
+        logYellow("Device does not expose thermal zones — using battery only.");
+        float batTemp = getBatteryTemperature();
+        logInfo("Battery: " + batTemp + "°C");
         return;
     }
 
-    // Extract specific sensors (auto-detected per manufacturer)
-    Float cpu  = pickZone(zones, "cpu", "soc", "ap", "big", "little", "mtktscpu", "tsens");
-    Float gpu  = pickZone(zones, "gpu");
-    Float bat  = pickZone(zones, "battery");
-    Float skin = pickZone(zones, "skin");
-    Float pmic = pickZone(zones, "pmic", "charger", "xo", "power");
+    Float cpu = pickZone(zones, "cpu", "cpu-thermal", "aptherm", "BIG", "LITTLE", "tsens_tz_sensor0");
+    Float gpu = pickZone(zones, "gpu", "gpu-thermal");
+    Float batt = pickZone(zones, "battery", "bat");
+    Float skin = pickZone(zones, "skin", "xo-therm");
+    Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal");
 
-    logInfo("Thermal Summary:");
+    logOk("Thermal Zones Found: " + zones.size());
 
-    if (cpu != null)
-        logInfo("• CPU / SoC: " + String.format(Locale.US, "%.1f°C", cpu) + " " + zoneTag17(cpu));
-    if (gpu != null)
-        logInfo("• GPU: " + String.format(Locale.US, "%.1f°C", gpu) + " " + zoneTag17(gpu));
-    if (bat != null)
-        logInfo("• Battery: " + String.format(Locale.US, "%.1f°C", bat) + " " + zoneTag17(bat));
-    if (skin != null)
-        logInfo("• Skin: " + String.format(Locale.US, "%.1f°C", skin) + " " + zoneTag17(skin));
-    if (pmic != null)
-        logInfo("• PMIC / Charger IC: " + String.format(Locale.US, "%.1f°C", pmic) + " " + zoneTag17(pmic));
+    if (cpu != null) logInfo("CPU: " + colorTemp(cpu));
+    if (gpu != null) logInfo("GPU: " + colorTemp(gpu));
+    if (batt != null) logInfo("Battery: " + colorTemp(batt));
+    if (skin != null) logInfo("Skin: " + colorTemp(skin));
+    if (pmic != null) logInfo("PMIC: " + colorTemp(pmic));
 
-    // If nothing meaningful detected
-    if (cpu == null && gpu == null && bat == null && skin == null && pmic == null) {
-        logError("Device reports thermal zones, but none contain valid temperatures.");
-    }
-
-    // ASCII spark-preview (quick visualization)
     logLine();
-    logInfo("Mini Thermal Sparkline:");
-
-    if (cpu != null) logInfo("CPU : " + spark17(cpu));
-    if (gpu != null) logInfo("GPU : " + spark17(gpu));
-    if (bat != null) logInfo("BAT : " + spark17(bat));
-    if (pmic != null) logInfo("PMIC: " + spark17(pmic));
+    logInfo("Thermal Summary:");
+    if (cpu != null) logInfo("• CPU → " + categoryTemp(cpu));
+    if (gpu != null) logInfo("• GPU → " + categoryTemp(gpu));
+    if (batt != null) logInfo("• Battery → " + categoryTemp(batt));
+    if (skin != null) logInfo("• Skin → " + categoryTemp(skin));
+    if (pmic != null) logInfo("• PMIC → " + categoryTemp(pmic));
 }
 
-// ------------------------------------------------------------
-// Helper: Pick best matching thermal zone (universal)
-// ------------------------------------------------------------
-private Float pickZone(Map<String, Float> zones, String... keys) {
-    if (zones == null || zones.isEmpty()) return null;
-    for (String k : keys) {
-        if (k == null) continue;
-        String key = k.toLowerCase(Locale.US);
-        for (String type : zones.keySet()) {
-            if (type.contains(key)) return zones.get(type);
+// ===========================================================
+// READ THERMAL ZONES
+// ===========================================================
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    try {
+        File dir = new File("/sys/class/thermal/");
+        File[] files = dir.listFiles();
+        if (files == null) return out;
+
+        for (File f : files) {
+            if (!f.getName().startsWith("thermal_zone")) continue;
+
+            File typeFile = new File(f, "type");
+            File tempFile = new File(f, "temp");
+
+            if (!typeFile.exists() || !tempFile.exists()) continue;
+
+            String type = readFile(typeFile).toLowerCase(Locale.ROOT).trim();
+            String vStr = readFile(tempFile).trim();
+            float temp = Float.parseFloat(vStr) / 1000f;
+            out.put(type, temp);
         }
+    } catch (Exception ignored) {}
+    return out;
+}
+
+private String readFile(File f) throws Exception {
+    BufferedReader br = new BufferedReader(new FileReader(f));
+    String s = br.readLine();
+    br.close();
+    return s;
+}
+
+// ===========================================================
+// PICK ZONE
+// ===========================================================
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    for (String k : keys) {
+        if (zones.containsKey(k)) return zones.get(k);
     }
     return null;
 }
 
-// ------------------------------------------------------------
-// Helper: Temperature severity tag
-// ------------------------------------------------------------
-private String zoneTag17(float c) {
-    if (c < 42) return "🟩 OK";
-    if (c < 50) return "🟨 WARNING";
-    return "🟥 DANGER";
+// ===========================================================
+// TEMP UTILITIES
+// ===========================================================
+private String colorTemp(float t) {
+    if (t < 42) return "🟩 " + t + "°C";
+    if (t < 50) return "🟨 " + t + "°C";
+    return "🟥 " + t + "°C";
 }
 
-// ------------------------------------------------------------
-// Helper: ASCII miniature graph
-// ------------------------------------------------------------
-private String spark17(float temp) {
-    if (temp < 35) return "▂▂▄";
-    if (temp < 40) return "▃▄▅";
-    if (temp < 45) return "▄▅▆";
-    if (temp < 50) return "▅▆█";
-    return "███";
+private String categoryTemp(float t) {
+    if (t < 42) return "Normal";
+    if (t < 50) return "Warning (warm)";
+    return "Danger (hot)";
 }
 
-// ------------------------------------------------------------
-// Helper: Read battery temperature only (fallback)
-// ------------------------------------------------------------
-private float readBatteryTempC17() {
-    try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent i = registerReceiver(null, f);
-        if (i == null) return -1f;
-        int t = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-        return (t > 0) ? t / 10f : -1f;
-    } catch (Exception e) {
-        return -1f;
-    }
-}
-
-// ------------------------------------------------------------
-// Helper: Read ALL thermal zones from /sys/class/thermal
-// ------------------------------------------------------------
-private Map<String, Float> readThermalZones17() {
-    Map<String, Float> out = new java.util.HashMap<>();
-
-    try {
-        java.io.File dir = new java.io.File("/sys/class/thermal/");
-        java.io.File[] list = dir.listFiles();
-        if (list == null) return out;
-
-        for (java.io.File zone : list) {
-            if (zone == null) continue;
-            if (!zone.getName().startsWith("thermal_zone")) continue;
-
-            java.io.File typeFile = new java.io.File(zone, "type");
-            java.io.File tempFile = new java.io.File(zone, "temp");
-
-            if (!typeFile.exists() || !tempFile.exists()) continue;
-
-            String type = readFirst17(typeFile);
-            String raw  = readFirst17(tempFile);
-            if (type == null || raw == null) continue;
-
-            float c = parseTemp17(raw);
-            if (c <= 0 || c > 150) continue;
-
-            out.put(type.trim().toLowerCase(Locale.US), c);
-        }
-
-    } catch (Exception ignored) {}
-
-    return out;
-}
-
-private String readFirst17(java.io.File f) {
-    java.io.BufferedReader br = null;
-    try {
-        br = new java.io.BufferedReader(new java.io.FileReader(f));
-        return br.readLine();
-    } catch (Exception e) { 
-        return null;
-    } finally {
-        try { if (br != null) br.close(); } catch (Exception ignored) {}
-    }
-}
-
-private float parseTemp17(String s) {
-    try {
-        s = s.trim();
-        float v = Float.parseFloat(s);
-        if (v > 1000f) v /= 1000f;
-        return v;
-    } catch (Exception e) {
-        return -1f;
-    }
+private float getBatteryTemperature() {
+    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    int temp = i != null ? i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) : 0;
+    return temp / 10f;
 }
     
-    // ============================================================
-// LAB 18 — Charging Thermal Stress (LIVE + Manual Mode B)
-// GEL Dark-Gold Edition — Hospital Build
-// Paste this whole block in ManualTestsActivity (replaces old Lab 18).
-// No extra imports needed (uses fully-qualified java.io / java.util).
-// ============================================================
-
-private void lab18ThermalQuestionnaire() {
-    lab18ChargingThermalStress();
-}
-
-private void lab18ChargingThermalStress() {
+    // ===========================================================
+// LAB 18 — Thermal Stress Test (FULL)
+// ===========================================================
+private void lab18ThermalTest() {
     logLine();
-    logInfo("LAB 18 — Charging Thermal Stress Indicator (LIVE + Manual B Mode).");
+    logInfo("LAB 18 — Charging Thermal Stress Analysis");
 
-    boolean charging = isDeviceChargingNow();
-
+    boolean charging = isDeviceCharging();
     if (!charging) {
-        // Neon green line requested
-        logNeon18("⚠️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
-
-        // Manual mode still runs
-        logLine();
-        logInfo("Manual Mode (customer interview) — use if Live Test can't run:");
-        logInfo("• Does the phone get hot during normal use (browsing, calls)?");
-        logInfo("• Does it get very hot during charging?");
-        logInfo("• Does it throttle / lag when charging?");
-        logWarn("If heating happens even on idle -> possible rogue app or failing battery.");
-        logError("If heating is extreme during light tasks -> suspect PMIC / charger IC / board-level issues.");
+        logGreen("⚠ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
         return;
     }
 
-    // Charging -> offer Live popup
-    showLab18LivePopup();
+    showLiveThermalPopup();
 }
 
-private void showLab18LivePopup() {
-    try {
-        android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
-        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
-        layout.setPadding(dp(14), dp(14), dp(14), dp(14));
-        layout.setBackgroundColor(0xFF000000); // black
+// Check charging state
+private boolean isDeviceCharging() {
+    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+    return status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+}
 
-        android.graphics.drawable.GradientDrawable border = new android.graphics.drawable.GradientDrawable();
-        border.setColor(0xFF000000);
-        border.setCornerRadius(dp(14));
-        border.setStroke(dp(3), 0xFFFFD700); // gold
-        layout.setBackground(border);
+// Popup Window
+private void showLiveThermalPopup() {
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+    layout.setBackgroundColor(Color.BLACK);
 
-        android.widget.TextView title = new android.widget.TextView(this);
-        title.setText("LAB 18 — LIVE Charging Thermal Stress");
-        title.setTextSize(16f);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setTextColor(0xFFFFD700);
-        title.setPadding(0, 0, 0, dp(6));
-        title.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
-        layout.addView(title);
+    GradientDrawable border = new GradientDrawable();
+    border.setColor(Color.BLACK);
+    border.setStroke(6, Color.parseColor("#FFD700"));
+    layout.setBackground(border);
 
-        android.widget.TextView hint = new android.widget.TextView(this);
-        hint.setText("Press Start for Live Testing");
-        hint.setTextSize(13f);
-        hint.setTextColor(0xFF39FF14); // neon green
-        hint.setPadding(0, 0, 0, dp(8));
-        hint.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
-        layout.addView(hint);
+    TextView title = new TextView(this);
+    title.setText("Heat Under Load — Live Monitor");
+    title.setTextColor(Color.parseColor("#FFD700"));
+    title.setTextSize(20);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(10));
 
-        final android.widget.TextView liveText = new android.widget.TextView(this);
-        liveText.setTextSize(13f);
-        liveText.setTextColor(0xFFFFFFFF);
-        liveText.setPadding(dp(6), dp(6), dp(6), dp(6));
-        liveText.setText("Waiting…");
-        layout.addView(liveText);
+    TextView liveText = new TextView(this);
+    liveText.setTextColor(Color.WHITE);
+    liveText.setTextSize(16);
 
-        android.widget.Button startBtn = new android.widget.Button(this);
-        startBtn.setText("START LIVE THERMAL TEST");
-        startBtn.setAllCaps(false);
-        startBtn.setTextSize(14f);
-        startBtn.setTypeface(null, android.graphics.Typeface.BOLD);
-        startBtn.setTextColor(0xFFFFFFFF);
+    layout.addView(title);
+    layout.addView(liveText);
 
-        android.graphics.drawable.GradientDrawable redGold = new android.graphics.drawable.GradientDrawable();
-        redGold.setColor(0xFF8B0000);
-        redGold.setCornerRadius(dp(10));
-        redGold.setStroke(dp(2), 0xFFFFD700);
-        startBtn.setBackground(redGold);
+    b.setView(layout);
+    b.setCancelable(true);
 
-        android.widget.LinearLayout.LayoutParams lpBtn =
-                new android.widget.LinearLayout.LayoutParams(
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(46));
-        lpBtn.setMargins(0, dp(10), 0, dp(6));
-        startBtn.setLayoutParams(lpBtn);
-        layout.addView(startBtn);
+    AlertDialog d = b.create();
+    d.show();
 
-        androidx.appcompat.app.AlertDialog.Builder b = new androidx.appcompat.app.AlertDialog.Builder(this);
-        b.setView(layout);
-        b.setCancelable(true);
+    Handler handler = new Handler();
+    Runnable r = new Runnable() {
+        @Override public void run() {
+            Map<String, Float> zones = readThermalZones();
 
-        final androidx.appcompat.app.AlertDialog dialog = b.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xCC000000));
-        }
+            Float cpu = pickZone(zones, "cpu", "cpu-thermal", "BIG", "LITTLE");
+            Float batt = pickZone(zones, "battery");
+            Float pmic = pickZone(zones, "pmic", "pmic-therm");
 
-        final boolean[] running = {false};
-        final long[] lastTs = {0L};
-        final java.util.Map<String, Float>[] lastZones = new java.util.Map[]{null};
-        final java.util.List<String> sparkCpu = new java.util.ArrayList<>();
-        final java.util.List<String> sparkGpu = new java.util.ArrayList<>();
-        final java.util.List<String> sparkBat = new java.util.ArrayList<>();
-        final java.util.List<String> sparkPmic = new java.util.ArrayList<>();
-
-        final java.lang.Runnable[] tick = new java.lang.Runnable[1];
-
-        tick[0] = () -> {
-            if (!running[0]) return;
-            if (dialog == null || !dialog.isShowing()) { running[0] = false; return; }
-
-            long now = android.os.SystemClock.elapsedRealtime();
-            float dtSec = (lastTs[0] == 0L) ? 1f : Math.max(0.2f, (now - lastTs[0]) / 1000f);
-            lastTs[0] = now;
-
-            java.util.Map<String, Float> zones = readThermalZones18();
-            if (zones.isEmpty()) {
-                float bat = readBatteryTempC18();
-                zones.put("battery", bat);
-            }
-
-            // categorize
-            Float cpu = pickZone(zones, "cpu", "soc", "ap", "big", "little", "mtktscpu", "tsens");
-            Float gpu = pickZone(zones, "gpu");
-            Float bat = pickZone(zones, "battery");
-            Float skin = pickZone(zones, "skin");
-            Float pmic = pickZone(zones, "pmic", "charger", "xo", "power");
-
-            // trend / overheating detection
             StringBuilder sb = new StringBuilder();
-            sb.append("LIVE THERMALS (updates every 1s)\n\n");
-
-            if (cpu != null) sb.append(line18("CPU/SoC", cpu)).append("\n");
-            if (gpu != null) sb.append(line18("GPU", gpu)).append("\n");
-            if (bat != null) sb.append(line18("Battery", bat)).append("\n");
-            if (skin != null) sb.append(line18("Skin", skin)).append("\n");
-            if (pmic != null) sb.append(line18("PMIC/Charger", pmic)).append("\n");
-
-            // sparklines (ASCII)
-            addSpark(sparkCpu, cpu);
-            addSpark(sparkGpu, gpu);
-            addSpark(sparkBat, bat);
-            addSpark(sparkPmic, pmic);
-
-            sb.append("\nMini Graph (ASCII)\n");
-            if (cpu != null) sb.append("CPU: ").append(cpu.intValue()).append("°C  ").append(joinSpark(sparkCpu)).append("\n");
-            if (gpu != null) sb.append("GPU: ").append(gpu.intValue()).append("°C  ").append(joinSpark(sparkGpu)).append("\n");
-            if (bat != null) sb.append("BAT: ").append(bat.intValue()).append("°C  ").append(joinSpark(sparkBat)).append("\n");
-            if (pmic != null) sb.append("PMIC: ").append(pmic.intValue()).append("°C ").append(joinSpark(sparkPmic)).append("\n");
-
-            // rate warning: any main sensor rising fast
-            if (lastZones[0] != null) {
-                Float lastBat = lastZones[0].get("battery");
-                Float lastPmic = lastZones[0].get("pmic");
-                float maxRise = 0f;
-
-                if (bat != null && lastBat != null) maxRise = Math.max(maxRise, (bat - lastBat) / dtSec);
-                if (pmic != null && lastPmic != null) maxRise = Math.max(maxRise, (pmic - lastPmic) / dtSec);
-
-                if (maxRise >= 2.0f) {
-                    sb.append("\n⚠️ FAST OVERHEAT RISE detected (≥2°C/sec). Stop charging & inspect PMIC/charger!\n");
-                } else if (maxRise >= 1.0f) {
-                    sb.append("\n⚠️ Rapid rise (≥1°C/sec). Watch for fast-charge overheating.\n");
-                }
-            }
-
-            lastZones[0] = zones;
+            sb.append("CPU: ").append(cpu != null ? colorTemp(cpu) : "N/A").append("\n");
+            sb.append("Battery: ").append(batt != null ? colorTemp(batt) : "N/A").append("\n");
+            sb.append("PMIC: ").append(pmic != null ? colorTemp(pmic) : "N/A").append("\n");
 
             liveText.setText(sb.toString());
 
-            ui.postDelayed(tick[0], 1000);
-        };
-
-        startBtn.setOnClickListener(v -> {
-            if (!running[0]) {
-                running[0] = true;
-                lastTs[0] = 0L;
-                lastZones[0] = null;
-                sparkCpu.clear(); sparkGpu.clear(); sparkBat.clear(); sparkPmic.clear();
-                liveText.setText("Starting live sampling…");
-                ui.post(tick[0]);
-            }
-        });
-
-        dialog.setOnDismissListener(x -> running[0] = false);
-        dialog.show();
-
-        // Manual questions in parallel (B mode) — log to main screen
-        logLine();
-        logInfo("Manual Mode questions (run in parallel with Live):");
-        logInfo("• Ask customer if overheating happens during charging, especially fast-charge.");
-        logInfo("• Ask if device throttles / lags while charging.");
-        logWarn("If heating is strong only on fast-charge -> cable/charger/PMIC mismatch or wear.");
-        logError("If heating is extreme even with normal charger -> PMIC/charger IC or battery defect.");
-
-    } catch (Exception e) {
-        logError("Lab 18 popup error: " + e.getMessage());
-    }
-}
-
-// ------------------------------------------------------------
-// Helpers (Lab 18 only)
-// ------------------------------------------------------------
-private String line18(String name, float c) {
-    String zone = tempZoneTag18(c);
-    return name + ": " + String.format(java.util.Locale.US, "%.1f", c) + "°C  " + zone;
-}
-
-private String tempZoneTag18(float c) {
-    if (c < 42f) return "🟩 OK";
-    if (c < 50f) return "🟨 WARNING";
-    return "🟥 DANGER";
-}
-
-private void logNeon18(String msg) {
-    GELServiceLog.info(msg);
-    appendHtml("<font color='#39FF14'>✅ " + escape(msg) + "</font>");
-}
-
-private boolean isDeviceChargingNow() {
-    try {
-        android.content.IntentFilter f = new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED);
-        android.content.Intent i = registerReceiver(null, f);
-        if (i == null) return false;
-        int status = i.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
-        return status == android.os.BatteryManager.BATTERY_STATUS_CHARGING
-                || status == android.os.BatteryManager.BATTERY_STATUS_FULL;
-    } catch (Exception e) {
-        return false;
-    }
-}
-
-private float readBatteryTempC18() {
-    try {
-        android.content.IntentFilter f = new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED);
-        android.content.Intent i = registerReceiver(null, f);
-        if (i == null) return -1f;
-        int t = i.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, -1); // tenths °C
-        if (t <= 0) return -1f;
-        return t / 10f;
-    } catch (Exception e) {
-        return -1f;
-    }
-}
-
-private java.util.Map<String, Float> readThermalZones18() {
-    java.util.Map<String, Float> out = new java.util.HashMap<>();
-    try {
-        java.io.File dir = new java.io.File("/sys/class/thermal/");
-        java.io.File[] files = dir.listFiles();
-        if (files == null) return out;
-
-        for (java.io.File f : files) {
-            if (f == null) continue;
-            String n = f.getName();
-            if (!n.startsWith("thermal_zone")) continue;
-
-            java.io.File typeFile = new java.io.File(f, "type");
-            java.io.File tempFile = new java.io.File(f, "temp");
-            if (!typeFile.exists() || !tempFile.exists()) continue;
-
-            String type = readFirstLine18(typeFile);
-            String tempRaw = readFirstLine18(tempFile);
-            if (type == null || tempRaw == null) continue;
-
-            type = type.trim().toLowerCase(java.util.Locale.US);
-            float c = parseTempC18(tempRaw);
-            if (c <= 0f || c > 150f) continue;
-
-            out.put(type, c);
+            if (d.isShowing())
+                handler.postDelayed(this, 1000);
         }
-    } catch (Exception ignored) {}
-    return out;
+    };
+    handler.post(r);
 }
 
-private String readFirstLine18(java.io.File f) {
-    java.io.BufferedReader br = null;
-    try {
-        br = new java.io.BufferedReader(new java.io.FileReader(f));
-        return br.readLine();
-    } catch (Exception e) {
-        return null;
-    } finally {
-        try { if (br != null) br.close(); } catch (Exception ignored) {}
-    }
-}
-
-private float parseTempC18(String raw) {
-    try {
-        raw = raw.trim();
-        if (raw.length() == 0) return -1f;
-        float v = Float.parseFloat(raw);
-        // many kernels report milli-°C
-        if (v > 1000f) v /= 1000f;
-        return v;
-    } catch (Exception e) {
-        return -1f;
-    }
-}
-
-private Float pickZone(java.util.Map<String, Float> zones, String... keys) {
-    if (zones == null || zones.isEmpty() || keys == null) return null;
-
-    // direct match any key substring
-    for (String k : keys) {
-        if (k == null) continue;
-        String kk = k.toLowerCase(java.util.Locale.US);
-
-        for (String type : zones.keySet()) {
-            if (type == null) continue;
-            if (type.contains(kk)) return zones.get(type);
-        }
-    }
-
-    return null;
-}
-
-// ASCII sparkline helpers
-private void addSpark(java.util.List<String> s, Float temp) {
-    if (temp == null) return;
-    String ch;
-    float t = temp;
-    if (t < 35f) ch = "▂";
-    else if (t < 40f) ch = "▃";
-    else if (t < 45f) ch = "▄";
-    else if (t < 50f) ch = "▅";
-    else if (t < 55f) ch = "▆";
-    else ch = "█";
-
-    s.add(ch);
-    if (s.size() > 8) s.remove(0);
-}
-
-private String joinSpark(java.util.List<String> s) {
-    if (s == null || s.isEmpty()) return "";
-    StringBuilder b = new StringBuilder();
-    for (String x : s) b.append(x);
-    return b.toString();
+private int dp(int v) {
+    return (int) (v * getResources().getDisplayMetrics().density);
 }
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE

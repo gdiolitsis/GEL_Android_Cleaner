@@ -433,26 +433,67 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     private void lab5Vibration() {
-        logLine();
-        logInfo("LAB 5 — Vibration Motor Test (short one-shot).");
-        try {
-            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            if (v == null) {
-                logError("No Vibrator service reported — either missing hardware or framework issue.");
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(800, VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                //noinspection deprecation
-                v.vibrate(800);
-            }
-            logOk("If a strong vibration was felt, motor and driver are basically OK.");
-            logError("If no vibration was felt at all, suspect vibrator motor, contacts or flex damage.");
-        } catch (Exception e) {
-            logError("Vibration Test error: " + e.getMessage());
+    logLine();
+    logInfo("LAB 5 — Vibration Motor Test (strong pattern).");
+
+    try {
+        Vibrator v;
+
+        // Android 12+ default vibrator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            android.os.VibratorManager vm =
+                    (android.os.VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            v = (vm != null) ? vm.getDefaultVibrator() : null;
+        } else {
+            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         }
+
+        if (v == null) {
+            logError("No Vibrator service reported — framework issue.");
+            return;
+        }
+
+        if (!v.hasVibrator()) {
+            logError("Device reports NO vibrator hardware.");
+            return;
+        }
+
+        // --- Read a few system states that may block vibration ---
+        try {
+            int haptic = Settings.System.getInt(getContentResolver(),
+                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+            if (haptic == 0)
+                logWarn("System haptic feedback is OFF (some OEMs block app vibration).");
+        } catch (Exception ignored) {}
+
+        try {
+            android.app.NotificationManager nm =
+                    (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && nm.getCurrentInterruptionFilter()
+                    != android.app.NotificationManager.INTERRUPTION_FILTER_ALL) {
+                logWarn("Do Not Disturb is ON — may suppress vibration on some devices.");
+            }
+        } catch (Exception ignored) {}
+
+        // --- Strong waveform vibration ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            long[] pattern = {0, 300, 150, 300, 150, 450}; // strong multi-hit
+            int[] amps = {0, 255, 0, 255, 0, 255};
+            v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
+        } else {
+            //noinspection deprecation
+            long[] pattern = {0, 300, 150, 300, 150, 450};
+            //noinspection deprecation
+            v.vibrate(pattern, -1);
+        }
+
+        logOk("If strong pulses were felt clearly, vibrator motor + driver are OK.");
+        logWarn("If vibration is weak/intermittent, suspect worn motor or OEM suppression modes.");
+
+    } catch (Exception e) {
+        logError("Vibration Test error: " + e.getMessage());
     }
+}
 
     // ============================================================
     // LABS 6–10: DISPLAY & SENSORS

@@ -1587,198 +1587,198 @@ private static class GELThermalZone {
     }
 }
     // ============================================================
-// LAB 18 — Heat Under Load (manual questionnaire)
-// + LIVE "Charging Thermal Stress" Indicator (Popup, Manual Mode)
+// LAB 18 — Heat Under Load (manual) + Charging Thermal LIVE Monitor
 // ============================================================
-private void lab18ThermalQuestionnaire() {
+private Handler lab18Handler = new Handler();
+private boolean lab18Running = false;
+
+private void lab18Start() {
     logLine();
-    logInfo("LAB 18 — Heat Under Load (manual questionnaire).");
-    logInfo("Ask the customer:");
-    logInfo("• Does the phone get hot during normal use (browsing, calls)?");
-    logInfo("• Does it get very hot during charging?");
-    logWarn("If heating happens even on idle -> possible rogue app or failing battery.");
-    logError("If heating is extreme during light tasks -> suspect board-level power/PMIC issues.");
+    logInfo("LAB 18 — Charging Thermal Stress Test (manual + LIVE).");
+    logInfo("The device will be evaluated automatically using the charging thermal engine.");
+    logInfo("Real-time readings will appear in a popup window when charging.");
 
-    // Manual option to run LIVE Charging Thermal Monitor
-    logLine();
-    logInfo("Press OK to start Charging Thermal LIVE Monitor (popup window).");
-    showChargingThermalStartDialog();
-}
+    boolean charging = isDeviceCharging();
 
-private void showChargingThermalStartDialog() {
-    try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent bi = registerReceiver(null, f);
-        boolean isCharging = false;
-        if (bi != null) {
-            int status = bi.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_STATUS_FULL);
-        }
-
-        if (!isCharging) {
-            logWarn("Device is NOT charging now. Plug charger and re-run Lab 18 for LIVE thermal stress.");
-            return;
-        }
-
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle("Charging Thermal LIVE Monitor");
-        b.setMessage("Device is charging.\nPress START to open LIVE thermal popup.\nClose popup to stop.");
-        b.setCancelable(true);
-
-        b.setPositiveButton("START", (d, w) -> startChargingThermalLivePopup());
-        b.setNegativeButton("CANCEL", (d, w) -> {
-            logInfo("Charging Thermal LIVE Monitor canceled by technician.");
-        });
-
-        AlertDialog dlg = b.create();
-        if (dlg.getWindow() != null)
-            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-        dlg.show();
-
-    } catch (Exception e) {
-        logWarn("Charging thermal start dialog failed: " + e.getMessage());
+    if (!charging) {
+        logGreen("⚠️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
+        showLab18ChargingPopup(false); // show popup but disabled START
+        return;
     }
+
+    showLab18ChargingPopup(true); // charging → allow START
 }
 
-private void startChargingThermalLivePopup() {
+// ============================================================
+// Detect if device is charging
+// ============================================================
+private boolean isDeviceCharging() {
+    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    Intent batteryStatus = registerReceiver(null, ifilter);
+
+    int status = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+
+    return status == BatteryManager.BATTERY_STATUS_CHARGING ||
+           status == BatteryManager.BATTERY_STATUS_FULL;
+}
+
+// ============================================================
+// Gold popup window — START thermal LIVE
+// ============================================================
+private void showLab18ChargingPopup(boolean allowStart) {
+
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setCancelable(false);
+
+    // ===== GOLD TITLE =====
+    TextView title = new TextView(this);
+    title.setText("Press START for Live Testing");
+    title.setPadding(dp(20), dp(20), dp(20), dp(10));
+    title.setTextSize(22);
+    title.setTextColor(Color.parseColor("#FFD700")); // gold
+    title.setTypeface(Typeface.DEFAULT_BOLD);
+
+    b.setCustomTitle(title);
+
+    // ===== MAIN LAYOUT (black with gold border) =====
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    layout.setPadding(dp(25), dp(25), dp(25), dp(25));
+
+    GradientDrawable border = new GradientDrawable();
+    border.setColor(Color.BLACK);
+    border.setStroke(6, Color.parseColor("#FFD700"));
+    layout.setBackground(border);
+
+    TextView tv = new TextView(this);
+    tv.setTextColor(Color.WHITE);
+    tv.setTextSize(18);
+
+    if (allowStart) {
+        tv.setText("Charging detected.\nLive thermal monitoring is ready.");
+    } else {
+        tv.setText("Device is not charging.\nConnect charger to enable LIVE thermal monitor.");
+    }
+
+    layout.addView(tv);
+    b.setView(layout);
+
+    b.setNegativeButton("CANCEL", (d, w) -> d.dismiss());
+
+    if (allowStart) {
+        b.setPositiveButton("START", (d, w) -> startLab18ThermalLive());
+    }
+
+    b.show();
+}
+
+// ============================================================
+// Start Thermal LIVE Monitor (while charging)
+// ============================================================
+private void startLab18ThermalLive() {
+    lab18Running = true;
+
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setCancelable(false);
+
+    // Live popup UI
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    layout.setPadding(dp(25), dp(25), dp(25), dp(25));
+    layout.setBackgroundColor(Color.BLACK);
+
+    GradientDrawable border = new GradientDrawable();
+    border.setColor(Color.BLACK);
+    border.setStroke(6, Color.parseColor("#FFD700"));
+    layout.setBackground(border);
+
+    TextView title = new TextView(this);
+    title.setText("Charging Thermal Monitor — LIVE");
+    title.setTextColor(Color.parseColor("#FFD700"));
+    title.setTextSize(20);
+    title.setTypeface(Typeface.DEFAULT_BOLD);
+    layout.addView(title);
+
+    TextView liveText = new TextView(this);
+    liveText.setTextColor(Color.WHITE);
+    liveText.setTextSize(17);
+    liveText.setPadding(0, dp(15), 0, 0);
+    layout.addView(liveText);
+
+    b.setView(layout);
+
+    b.setNegativeButton("STOP", (d, w) -> {
+        lab18Running = false;
+        d.dismiss();
+    });
+
+    AlertDialog dialog = b.create();
+    dialog.show();
+
+    // ===== LIVE UPDATE LOOP =====
+    lab18Handler.post(new Runnable() {
+        @Override
+        public void run() {
+            if (!lab18Running || !dialog.isShowing()) return;
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("Battery: ").append(readThermal("battery")).append("°C\n");
+            sb.append("PMIC / Charger: ").append(readThermal("pmic")).append("°C\n");
+            sb.append("CPU: ").append(readThermal("cpu")).append("°C\n");
+            sb.append("Skin: ").append(readThermal("skin")).append("°C\n");
+
+            liveText.setText(sb.toString());
+
+            lab18Handler.postDelayed(this, 1000); // refresh every 1 sec
+        }
+    });
+}
+
+// ============================================================
+// Read thermal zones by keyword (simple matcher)
+// ============================================================
+private float readThermal(String key) {
     try {
-        final TextView tv = new TextView(this);
-        tv.setTextSize(14f);
-        tv.setTextColor(0xFF39FF14);
-        tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-        tv.setTypeface(null, Typeface.BOLD);
+        File dir = new File("/sys/class/thermal/");
+        File[] files = dir.listFiles();
+        if (files == null) return -1;
 
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle("Charging Thermal Stress — LIVE");
-        b.setView(tv);
-        b.setCancelable(true);
-        b.setNegativeButton("CLOSE", (d, w) -> { /* handled by onDismiss */ });
+        for (File f : files) {
+            if (f.getName().startsWith("thermal_zone")) {
+                File typeFile = new File(f, "type");
+                File tempFile = new File(f, "temp");
 
-        final AlertDialog dlg = b.create();
-        if (dlg.getWindow() != null)
-            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
+                if (typeFile.exists() && tempFile.exists()) {
+                    String type = readFile(typeFile).toLowerCase();
 
-        final boolean[] running = {true};
-        final float[] lastTemp = {-999f};
-        final long[] lastTs = {0L};
-
-        Runnable tick = new Runnable() {
-            @Override public void run() {
-                if (!running[0] || !dlg.isShowing()) return;
-
-                try {
-                    IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                    Intent bi = registerReceiver(null, f);
-
-                    float battC = -1f;
-                    boolean isCharging = false;
-                    String plugStr = "UNKNOWN";
-                    int chargeWatt = -1;
-                    float curmA = -1f;
-                    float voltV = -1f;
-
-                    if (bi != null) {
-                        int t10 = bi.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-                        if (t10 > 0) battC = t10 / 10f;
-
-                        int status = bi.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                        isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                                status == BatteryManager.BATTERY_STATUS_FULL);
-
-                        int plug = bi.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-                        if (plug == BatteryManager.BATTERY_PLUGGED_AC) plugStr = "AC";
-                        else if (plug == BatteryManager.BATTERY_PLUGGED_USB) plugStr = "USB";
-                        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
-                                && plug == BatteryManager.BATTERY_PLUGGED_WIRELESS)
-                            plugStr = "WIRELESS";
-                        else plugStr = "UNPLUGGED";
-
-                        int mv = bi.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-                        if (mv > 0) voltV = mv / 1000f;
+                    if (type.contains(key)) {
+                        String raw = readFile(tempFile).trim();
+                        float val = Float.parseFloat(raw) / 1000f;
+                        return val;
                     }
-
-                    BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-                    if (bm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        try {
-                            int curNow = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-                            if (curNow != Integer.MIN_VALUE) {
-                                // OEMs may report negative while charging, take abs
-                                curmA = Math.abs(curNow) / 1000f;
-                            }
-                        } catch (Exception ignored) {}
-
-                        try {
-                            int uWh = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
-                            if (uWh != Integer.MIN_VALUE && voltV > 0 && curmA > 0) {
-                                // rough live power estimation (mW)
-                                chargeWatt = Math.round((voltV * curmA) / 1000f);
-                            }
-                        } catch (Exception ignored) {}
-                    }
-
-                    long now = SystemClock.elapsedRealtime();
-                    float dC = 0f;
-                    float rate = 0f;
-
-                    if (battC > 0 && lastTemp[0] > -900f && lastTs[0] > 0) {
-                        float dtSec = Math.max(1f, (now - lastTs[0]) / 1000f);
-                        dC = battC - lastTemp[0];
-                        rate = dC / dtSec;
-                    }
-
-                    lastTemp[0] = battC;
-                    lastTs[0] = now;
-
-                    boolean fastCharge = (curmA >= 1500f); // heuristic threshold
-                    String fastStr = fastCharge ? "FAST-CHARGE LIKELY" : "Normal charge";
-
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("Battery temp: ").append(battC > 0 ? String.format(Locale.US, "%.1f°C", battC) : "N/A").append("\n");
-                    sb.append("Charging: ").append(isCharging ? "YES" : "NO").append(" (").append(plugStr).append(")\n");
-                    sb.append("Charge current: ").append(curmA > 0 ? String.format(Locale.US, "%.0f mA", curmA) : "N/A").append("\n");
-                    if (voltV > 0) sb.append("Voltage: ").append(String.format(Locale.US, "%.2f V", voltV)).append("\n");
-                    sb.append("Mode: ").append(fastStr).append("\n\n");
-
-                    sb.append("ΔTemp (1s): ").append(String.format(Locale.US, "%.2f°C", dC)).append("\n");
-                    sb.append("Heat rate: ").append(String.format(Locale.US, "%.2f°C/sec", rate)).append("\n\n");
-
-                    // PMIC / Charger IC temp placeholder (best-effort)
-                    sb.append("PMIC/Charger IC temp: not exposed on this device.\n\n");
-
-                    if (!isCharging) {
-                        sb.append("⚠️ Charger disconnected during monitor.\n");
-                    } else if (rate >= 2.0f) {
-                        sb.append("❌ DANGEROUS overheating rate (>2°C/sec).\n");
-                    } else if (rate >= 1.0f) {
-                        sb.append("⚠️ Rapid temperature rise (>1°C/sec).\n");
-                    } else if (battC >= 45f) {
-                        sb.append("⚠️ Battery temp high (≥45°C).\n");
-                    } else {
-                        sb.append("✅ Temperature looks stable.\n");
-                    }
-
-                    sb.append("\nRefresh: 1 sec. Close dialog to stop.");
-                    tv.setText(sb.toString());
-
-                } catch (Exception e) {
-                    tv.setText("Thermal monitor error: " + e.getMessage() + "\nClose dialog to stop.");
                 }
-
-                ui.postDelayed(this, 1000);
             }
-        };
-
-        dlg.setOnDismissListener(x -> running[0] = false);
-        dlg.show();
-
-        logInfo("LAB 18 — Charging Thermal LIVE Monitor started (popup).");
-        ui.post(tick);
-
-    } catch (Exception e) {
-        logWarn("Charging Thermal LIVE Popup failed: " + e.getMessage());
-    }
+        }
+    } catch (Exception ignored) {}
+    return -1;
 }
+
+private String readFile(File f) throws IOException {
+    BufferedReader br = new BufferedReader(new FileReader(f));
+    String s = br.readLine();
+    br.close();
+    return s;
+}
+
+// ============================================================
+// dp converter
+// ============================================================
+private int dp(int v) {
+    return Math.round(v * getResources().getDisplayMetrics().density);
+}
+
+
 
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE

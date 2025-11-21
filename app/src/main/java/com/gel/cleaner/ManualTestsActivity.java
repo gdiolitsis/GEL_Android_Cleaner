@@ -650,43 +650,49 @@ public class ManualTestsActivity extends AppCompatActivity {
     // ============================================================
     // LABS 11–14: WIRELESS & CONNECTIVITY
     // ============================================================
-    private void lab11WifiSnapshot() {
-        logLine();
-        logInfo("LAB 11 — Wi-Fi Link & RSSI Snapshot.");
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            if (wm == null) {
-                logError("WifiManager not available.");
-                return;
-            }
-            if (!wm.isWifiEnabled()) {
-                logWarn("Wi-Fi is currently disabled.");
-                return;
-            }
-            WifiInfo info = wm.getConnectionInfo();
-            if (info == null || info.getNetworkId() == -1) {
-                logWarn("Wi-Fi enabled but not connected to any access point.");
-                return;
-            }
+    // ============================================================
+// LAB 11 — Wi-Fi Saved Password Extractor (Universal, No-Root)
+// ============================================================
+private void lab11WifiPasswordExtractor() {
+    logLine();
+    logInfo("LAB 11 — Wi-Fi Saved Password Extractor (Universal).");
+    logInfo("Launching system Wi-Fi Share UI…");
 
-            int rssi = info.getRssi();
-            int linkSpeed = info.getLinkSpeed();
+    try {
+        String brand = Build.BRAND == null ? "" : Build.BRAND.toLowerCase(Locale.US);
+        Intent intent = null;
 
-            logInfo("SSID: " + info.getSSID());
-            logInfo("RSSI: " + rssi + " dBm");
-            logInfo("Link speed: " + linkSpeed + " Mbps");
-
-            if (rssi > -65)
-                logOk("Wi-Fi signal is strong for normal use.");
-            else if (rssi > -80)
-                logWarn("Wi-Fi signal is moderate — possible instability further away.");
-            else
-                logError("Wi-Fi signal is very weak — disconnections and low speeds expected.");
-
-        } catch (Exception e) {
-            logError("Wi-Fi snapshot error: " + e.getMessage());
+        // -----------------------------
+        // AUTO-DETECT BRAND (A-MODE)
+        // -----------------------------
+        if (brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")) {
+            intent = new Intent("android.settings.WIFI_SHARE_SETTINGS");
         }
+        else if (brand.contains("samsung")) {
+            intent = new Intent();
+            intent.setClassName(
+                    "com.samsung.android.settings.wifi",
+                    "com.samsung.android.settings.wifi.details.WifiNetworkDetailsActivity"
+            );
+        }
+        else if (brand.contains("huawei") || brand.contains("honor")) {
+            intent = new Intent("android.settings.WIFI_SHARE");
+        }
+        else {
+            // FALLBACK → standard Wi-Fi details
+            intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+        }
+
+        // Try to launch
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivityForResult(intent, 9911);
+
+    } catch (Exception e) {
+        logError("Cannot open Wi-Fi Share screen: " + e.getMessage());
     }
+
+    logInfo("After QR appears, scan it using GEL QR Engine to extract the password.");
+}
 
     private void lab12MobileDataChecklist() {
         logLine();

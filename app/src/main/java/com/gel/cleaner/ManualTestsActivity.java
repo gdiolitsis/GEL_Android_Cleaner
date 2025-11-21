@@ -1,4 +1,4 @@
-το// ============================================================
+// ============================================================
 // ManualTestsActivity
 // GEL Manual Tests — Hospital Edition (30 Manual Labs)
 // Single-screen Accordion UI + detailed English service logs

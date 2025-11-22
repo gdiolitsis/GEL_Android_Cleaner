@@ -33,6 +33,8 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.Uri;
+import androidx.core.content.FileProvider;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;

@@ -2492,12 +2492,218 @@ private String readDropBoxEntry(DropBoxManager.Entry ent) {
     }
 }
 
+// ============================================================
+// LAB 28 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// ============================================================
 private void lab28PermissionsPrivacy() {
+
     logLine();
-    logInfo("LAB 28 — App Permissions & Privacy (manual).");
-    logInfo("1) In Settings -> Privacy / Permissions, review apps with access to location, microphone and camera.");
-    logWarn("Unknown apps with broad permissions can cause drain, slowdowns and privacy concerns.");
-    logInfo("2) Recommend uninstalling unused or clearly suspicious apps.");
+    logInfo("LAB 28 — App Permissions & Privacy (AUTO scan)");
+
+    PackageManager pm = getPackageManager();
+    if (pm == null) {
+        logError("PackageManager not available.");
+        return;
+    }
+
+    List<String> details = new ArrayList<>();
+    Map<String, Integer> appRisk = new HashMap<>();
+
+    int totalApps = 0;
+    int flaggedApps = 0;
+
+    // Risk totals
+    int riskTotal = 0;
+    int dangTotal = 0;
+
+    try {
+        List<android.content.pm.PackageInfo> packs;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packs = pm.getInstalledPackages(
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        } else {
+            //noinspection deprecation
+            packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+        }
+
+        if (packs == null) packs = new ArrayList<>();
+
+        for (android.content.pm.PackageInfo p : packs) {
+            if (p == null || p.packageName == null) continue;
+            totalApps++;
+
+            // Skip system apps unless they have highly dangerous perms
+            boolean isSystem = (p.applicationInfo != null) &&
+                    ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
+
+            String[] req = p.requestedPermissions;
+            int[] grant = p.requestedPermissionsFlags;
+
+            if (req == null || req.length == 0) continue;
+
+            int appScore = 0;
+            int appDangerCount = 0;
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < req.length; i++) {
+                String perm = req[i];
+                if (perm == null) continue;
+
+                boolean granted = isGrantedFlag(grant, i);
+
+                int weight = permissionWeight(perm);
+                if (weight <= 0) continue; // ignore harmless
+
+                // count dangerous only if granted
+                if (granted) {
+                    appDangerCount++;
+                    appScore += weight;
+                    sb.append("• ").append(shortPerm(perm)).append(" (granted)\n");
+                }
+            }
+
+            if (appScore > 0) {
+                dangTotal += appDangerCount;
+                riskTotal += appScore;
+
+                // system apps threshold higher
+                int threshold = isSystem ? 25 : 10;
+
+                if (appScore >= threshold) {
+                    flaggedApps++;
+                    appRisk.put(p.packageName, appScore);
+
+                    String appLabel = safeLabel(pm, p.packageName);
+                    String color =
+                            (appScore >= 60) ? "🟥" :
+                            (appScore >= 30) ? "🟧" :
+                            (appScore >= 15) ? "🟨" : "🟩";
+
+                    details.add(color + " " + appLabel + " (" + p.packageName + ")"
+                            + " — Risk=" + appScore + "\n" + sb.toString());
+                }
+            }
+        }
+
+    } catch (SecurityException se) {
+        logWarn("Permissions scan limited by Android package visibility policy.");
+        logWarn("Tip: add QUERY_ALL_PACKAGES if you want full scan on Android 11+.");
+    } catch (Exception e) {
+        logError("Permissions scan error: " + e.getMessage());
+    }
+
+    // ============================================================
+    // SUMMARY + FINAL RISK SCORE
+    // ============================================================
+    int riskPct = Math.min(100, riskTotal); // cap
+    String riskColor =
+            (riskPct <= 20) ? "🟩" :
+            (riskPct <= 50) ? "🟨" :
+            (riskPct <= 80) ? "🟧" : "🟥";
+
+    logInfo("Apps scanned: " + totalApps);
+    logInfo("Dangerous permissions granted (total): " + dangTotal);
+    logInfo("Flagged apps: " + flaggedApps);
+    logInfo(riskColor + " Privacy Risk Score: " + riskPct + "%");
+
+    // ============================================================
+    // TOP OFFENDERS
+    // ============================================================
+    if (!appRisk.isEmpty()) {
+        logLine();
+        logInfo("Top Privacy Offenders:");
+
+        appRisk.entrySet()
+                .stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(8)
+                .forEach(e -> {
+                    String c =
+                            (e.getValue() >= 60) ? "🟥" :
+                            (e.getValue() >= 30) ? "🟧" :
+                            (e.getValue() >= 15) ? "🟨" : "🟩";
+
+                    logInfo(" " + c + " " + safeLabel(pm, e.getKey())
+                            + " — Risk " + e.getValue());
+                });
+    }
+
+    // ============================================================
+    // FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+        logLine();
+        logInfo("Permission Details (flagged apps):");
+        for (String d : details) logInfo(d);
+    } else {
+        logOk("No high-risk permission patterns detected.");
+    }
+
+    logOk("Lab 28 finished.");
+}
+
+// ============================================================
+// INTERNAL helpers for Lab 28 (keep inside same lab block)
+// ============================================================
+
+private boolean isGrantedFlag(int[] flags, int i) {
+    try {
+        if (flags == null || i < 0 || i >= flags.length) return false;
+        return (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
+    } catch (Exception e) {
+        return false;
+    }
+}
+
+private String safeLabel(PackageManager pm, String pkg) {
+    try {
+        ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+        CharSequence cs = pm.getApplicationLabel(ai);
+        return cs != null ? cs.toString() : pkg;
+    } catch (Exception e) {
+        return pkg;
+    }
+}
+
+// Weight per dangerous/sensitive permission
+private int permissionWeight(String p) {
+    if (p == null) return 0;
+
+    // VERY HIGH RISK
+    if (p.equals(Manifest.permission.READ_SMS)) return 25;
+    if (p.equals(Manifest.permission.RECEIVE_SMS)) return 20;
+    if (p.equals(Manifest.permission.SEND_SMS)) return 25;
+    if (p.equals(Manifest.permission.READ_CALL_LOG)) return 25;
+    if (p.equals(Manifest.permission.WRITE_CALL_LOG)) return 25;
+    if (p.equals(Manifest.permission.CALL_PHONE)) return 15;
+
+    // HIGH RISK
+    if (p.equals(Manifest.permission.RECORD_AUDIO)) return 20;
+    if (p.equals(Manifest.permission.CAMERA)) return 18;
+    if (p.equals(Manifest.permission.ACCESS_FINE_LOCATION)) return 18;
+    if (p.equals(Manifest.permission.ACCESS_COARSE_LOCATION)) return 12;
+    if (p.equals(Manifest.permission.READ_CONTACTS)) return 15;
+    if (p.equals(Manifest.permission.WRITE_CONTACTS)) return 15;
+    if (p.equals(Manifest.permission.GET_ACCOUNTS)) return 10;
+
+    // STORAGE (legacy)
+    if (p.equals(Manifest.permission.READ_EXTERNAL_STORAGE)) return 10;
+    if (p.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) return 12;
+
+    // BACKGROUND / SUSPICIOUS
+    if (p.equals(Manifest.permission.REQUEST_INSTALL_PACKAGES)) return 20;
+    if (p.equals(Manifest.permission.SYSTEM_ALERT_WINDOW)) return 15;
+    if (p.equals(Manifest.permission.PACKAGE_USAGE_STATS)) return 15;
+    if (p.equals(Manifest.permission.BIND_ACCESSIBILITY_SERVICE)) return 25;
+
+    return 0;
+}
+
+private String shortPerm(String p) {
+    if (p == null) return "";
+    int i = p.lastIndexOf('.');
+    return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 private void lab29CombineFindings() {

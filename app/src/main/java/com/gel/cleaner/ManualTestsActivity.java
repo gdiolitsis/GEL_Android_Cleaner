@@ -2706,13 +2706,569 @@ private String shortPerm(String p) {
     return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
+// ============================================================
+// LAB 29 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
+// Security + Privacy + Root + Stability into final scores.
+// NOTE (GEL RULE): Whole block ready for copy-paste.
+// ============================================================
 private void lab29CombineFindings() {
     logLine();
-    logInfo("LAB 29 — Combine Auto-Diagnosis and Manual Labs.");
-    logInfo("Use this step to correlate:");
-    logInfo("• Auto-Diagnosis hardware flags (RAM, storage, battery, root, thermals)");
-    logInfo("• Manual tests (audio, sensors, display, wireless, charger, user history).");
-    logOk("The more labs you run, the closer the final diagnosis gets to a hospital-grade conclusion.");
+    logInfo("LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
+
+    // ------------------------------------------------------------
+    // 1) THERMALS (from zones + battery temp)
+    // ------------------------------------------------------------
+    Map<String, Float> zones = null;
+    try { zones = readThermalZones(); } catch (Throwable ignored) {}
+    float battTemp = getBatteryTemperature();
+
+    Float cpu  = null, gpu = null, skin = null, pmic = null;
+    if (zones != null && !zones.isEmpty()) {
+        cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
+        gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
+        skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
+        pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
+    }
+
+    float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);
+    float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);
+
+    int thermalScore = scoreThermals(maxThermal, avgThermal);
+    String thermalFlag = colorFlagFromScore(thermalScore);
+
+    // ------------------------------------------------------------
+    // 2) BATTERY HEALTH (light auto inference)
+    // ------------------------------------------------------------
+    float battPct = getCurrentBatteryPercent();
+    boolean charging = isChargingNow();
+    int batteryScore = scoreBattery(battTemp, battPct, charging);
+    String batteryFlag = colorFlagFromScore(batteryScore);
+
+    // ------------------------------------------------------------
+    // 3) STORAGE HEALTH
+    // ------------------------------------------------------------
+    StorageSnapshot st = readStorageSnapshot();
+    int storageScore = scoreStorage(st.pctFree, st.totalBytes);
+    String storageFlag = colorFlagFromScore(storageScore);
+
+    // ------------------------------------------------------------
+    // 4) APPS FOOTPRINT
+    // ------------------------------------------------------------
+    AppsSnapshot ap = readAppsSnapshot();
+    int appsScore = scoreApps(ap.userApps, ap.totalApps);
+    String appsFlag = colorFlagFromScore(appsScore);
+
+    // ------------------------------------------------------------
+    // 5) RAM HEALTH
+    // ------------------------------------------------------------
+    RamSnapshot rm = readRamSnapshot();
+    int ramScore = scoreRam(rm.pctFree);
+    String ramFlag = colorFlagFromScore(ramScore);
+
+    // ------------------------------------------------------------
+    // 6) UPTIME / STABILITY
+    // ------------------------------------------------------------
+    long upMs = SystemClock.elapsedRealtime();
+    int stabilityScore = scoreStability(upMs);
+    String stabilityFlag = colorFlagFromScore(stabilityScore);
+
+    // ------------------------------------------------------------
+    // 7) SECURITY (lockscreen + patch + adb/dev + root)
+    // ------------------------------------------------------------
+    SecuritySnapshot sec = readSecuritySnapshot();
+    int securityScore = scoreSecurity(sec);
+    String securityFlag = colorFlagFromScore(securityScore);
+
+    // ------------------------------------------------------------
+    // 8) PRIVACY (dangerous granted perms to user apps)
+    // ------------------------------------------------------------
+    PrivacySnapshot pr = readPrivacySnapshot();
+    int privacyScore = scorePrivacy(pr);
+    String privacyFlag = colorFlagFromScore(privacyScore);
+
+    // ------------------------------------------------------------
+    // 9) FINAL SCORES
+    // ------------------------------------------------------------
+    int performanceScore = Math.round(
+            (storageScore * 0.35f) +
+            (ramScore     * 0.35f) +
+            (appsScore    * 0.15f) +
+            (thermalScore * 0.15f)
+    );
+
+    int deviceHealthScore = Math.round(
+            (thermalScore   * 0.25f) +
+            (batteryScore   * 0.25f) +
+            (performanceScore * 0.30f) +
+            (stabilityScore * 0.20f)
+    );
+
+    // ------------------------------------------------------------
+    // PRINT DETAILS
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("AUTO Breakdown:");
+
+    // Thermals
+    logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");
+    if (zones == null || zones.isEmpty()) {
+        logWarn("• No thermal zones readable. Using Battery temp only: " +
+                String.format(Locale.US, "%.1f°C", battTemp));
+    } else {
+        logInfo("• Zones=" + zones.size() +
+                " | max=" + fmt1(maxThermal) + "°C" +
+                " | avg=" + fmt1(avgThermal) + "°C");
+        if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");
+        if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");
+        if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");
+        if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");
+        logInfo("• Battery=" + fmt1(battTemp) + "°C");
+    }
+
+    // Battery
+    logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
+    logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
+            " | Temp=" + fmt1(battTemp) + "°C | Charging=" + charging);
+
+    // Storage
+    logInfo("Storage: " + storageFlag + " " + storageScore + "%");
+    logInfo("• Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +
+            " / " + humanBytes(st.totalBytes));
+
+    // Apps
+    logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");
+    logInfo("• User apps=" + ap.userApps + " | System apps=" + ap.systemApps +
+            " | Total=" + ap.totalApps);
+
+    // RAM
+    logInfo("RAM: " + ramFlag + " " + ramScore + "%");
+    logInfo("• Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +
+            humanBytes(rm.totalBytes) + ")");
+
+    // Stability
+    logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");
+    logInfo("• Uptime=" + formatUptime(upMs));
+    if (upMs < 2 * 60 * 60 * 1000L)
+        logWarn("• Recent reboot detected (<2h) — possible instability masking.");
+    else if (upMs > 7L * 24L * 60L * 60L * 1000L)
+        logWarn("• Long uptime (>7d) — recommend reboot before deep servicing.");
+
+    // Security
+    logInfo("Security: " + securityFlag + " " + securityScore + "%");
+    logInfo("• Lock secure=" + sec.lockSecure);
+    logInfo("• Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));
+    logInfo("• ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +
+            " | DevOptions=" + sec.devOptionsOn);
+    if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");
+    if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");
+
+    // Privacy
+    logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");
+    logInfo("• Dangerous perms on user apps: " +
+            "Location=" + pr.userAppsWithLocation +
+            ", Mic=" + pr.userAppsWithMic +
+            ", Camera=" + pr.userAppsWithCamera +
+            ", SMS=" + pr.userAppsWithSms);
+
+    // ------------------------------------------------------------
+    // FINAL VERDICT
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("FINAL Scores:");
+    logInfo("Device Health Score: " + deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore));
+    logInfo("Performance Score:   " + performanceScore + "% " + colorFlagFromScore(performanceScore));
+    logInfo("Security Score:      " + securityScore + "% " + securityFlag);
+    logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);
+
+    String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);
+    if (verdict.startsWith("🟩")) logOk(verdict);
+    else if (verdict.startsWith("🟨")) logWarn(verdict);
+    else logError(verdict);
+
+    logOk("Lab 29 finished.");
+}
+
+
+// ============================================================
+// ======= LAB 29 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
+// ============================================================
+
+private static class StorageSnapshot {
+    long totalBytes, freeBytes, usedBytes;
+    int pctFree;
+}
+
+private StorageSnapshot readStorageSnapshot() {
+    StorageSnapshot s = new StorageSnapshot();
+    try {
+        StatFs fs = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+        s.totalBytes = fs.getBlockCountLong() * fs.getBlockSizeLong();
+        s.freeBytes  = fs.getAvailableBlocksLong() * fs.getBlockSizeLong();
+        s.usedBytes  = s.totalBytes - s.freeBytes;
+        s.pctFree = (s.totalBytes > 0) ? (int)((s.freeBytes * 100L) / s.totalBytes) : 0;
+    } catch (Throwable ignored) {}
+    return s;
+}
+
+private static class AppsSnapshot {
+    int userApps, systemApps, totalApps;
+}
+
+private AppsSnapshot readAppsSnapshot() {
+    AppsSnapshot a = new AppsSnapshot();
+    try {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        if (apps != null) {
+            a.totalApps = apps.size();
+            for (ApplicationInfo ai : apps) {
+                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) a.systemApps++;
+                else a.userApps++;
+            }
+        }
+    } catch (Throwable ignored) {}
+    return a;
+}
+
+private static class RamSnapshot {
+    long totalBytes, freeBytes;
+    int pctFree;
+}
+
+private RamSnapshot readRamSnapshot() {
+    RamSnapshot r = new RamSnapshot();
+    try {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        if (am != null) {
+            am.getMemoryInfo(mi);
+            r.totalBytes = mi.totalMem;
+            r.freeBytes  = mi.availMem;
+            r.pctFree = (r.totalBytes > 0) ? (int)((r.freeBytes * 100L) / r.totalBytes) : 0;
+        }
+    } catch (Throwable ignored) {}
+    return r;
+}
+
+private static class SecuritySnapshot {
+    boolean lockSecure;
+    boolean adbUsbOn;
+    boolean adbWifiOn;
+    boolean devOptionsOn;
+    boolean rootSuspected;
+    boolean testKeys;
+    String securityPatch;
+}
+
+private SecuritySnapshot readSecuritySnapshot() {
+    SecuritySnapshot s = new SecuritySnapshot();
+
+    // lock secure
+    try {
+        android.app.KeyguardManager km =
+                (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        if (km != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) s.lockSecure = km.isDeviceSecure();
+            else s.lockSecure = km.isKeyguardSecure();
+        }
+    } catch (Throwable ignored) {}
+
+    // patch level
+    try {
+        s.securityPatch = Build.VERSION.SECURITY_PATCH;
+    } catch (Throwable ignored) {}
+
+    // ADB / dev options
+    try {
+        s.adbUsbOn = Settings.Global.getInt(getContentResolver(),
+                Settings.Global.ADB_ENABLED, 0) == 1;
+    } catch (Throwable ignored) {}
+    try {
+        s.devOptionsOn = Settings.Global.getInt(getContentResolver(),
+                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1;
+    } catch (Throwable ignored) {}
+
+    // ADB Wi-Fi (port property)
+    try {
+        String adbPort = System.getProperty("service.adb.tcp.port", "");
+        if (adbPort != null && !adbPort.trim().isEmpty()) {
+            int p = Integer.parseInt(adbPort.trim());
+            s.adbWifiOn = (p > 0);
+        }
+    } catch (Throwable ignored) {}
+
+    // Root suspicion (no root needed)
+    s.rootSuspected = detectRootFast();
+
+    // test-keys check
+    try {
+        String tags = Build.TAGS;
+        s.testKeys = (tags != null && tags.contains("test-keys"));
+    } catch (Throwable ignored) {}
+
+    return s;
+}
+
+private boolean detectRootFast() {
+    try {
+        // SU paths
+        String[] paths = {
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/app/Superuser.apk", "/system/app/Magisk.apk",
+                "/data/adb/magisk", "/vendor/bin/su"
+        };
+        for (String p : paths) if (new File(p).exists()) return true;
+
+        // Magisk / SuperSU packages
+        PackageManager pm = getPackageManager();
+        String[] pkgs = {
+                "com.topjohnwu.magisk",
+                "eu.chainfire.supersu",
+                "com.noshufou.android.su",
+                "com.koushikdutta.superuser"
+        };
+        for (String pkg : pkgs) {
+            try {
+                pm.getPackageInfo(pkg, 0);
+                return true;
+            } catch (Throwable ignored) {}
+        }
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private static class PrivacySnapshot {
+    int userAppsWithLocation;
+    int userAppsWithMic;
+    int userAppsWithCamera;
+    int userAppsWithSms;
+    int totalUserAppsChecked;
+}
+
+private PrivacySnapshot readPrivacySnapshot() {
+    PrivacySnapshot p = new PrivacySnapshot();
+    try {
+        PackageManager pm = getPackageManager();
+        List<android.content.pm.PackageInfo> packs =
+                pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+
+        if (packs == null) return p;
+
+        for (android.content.pm.PackageInfo pi : packs) {
+            if (pi == null || pi.applicationInfo == null) continue;
+            ApplicationInfo ai = pi.applicationInfo;
+
+            // skip system apps
+            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
+
+            p.totalUserAppsChecked++;
+
+            String[] req = pi.requestedPermissions;
+            int[] flags = pi.requestedPermissionsFlags;
+            if (req == null || flags == null) continue;
+
+            boolean loc = false, mic = false, cam = false, sms = false;
+
+            for (int i = 0; i < req.length; i++) {
+                boolean granted = (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
+                if (!granted) continue;
+                String perm = req[i];
+
+                if (perm == null) continue;
+                if (perm.contains("ACCESS_FINE_LOCATION") || perm.contains("ACCESS_COARSE_LOCATION"))
+                    loc = true;
+                if (perm.contains("RECORD_AUDIO"))
+                    mic = true;
+                if (perm.contains("CAMERA"))
+                    cam = true;
+                if (perm.contains("READ_SMS") || perm.contains("RECEIVE_SMS") || perm.contains("SEND_SMS"))
+                    sms = true;
+            }
+
+            if (loc) p.userAppsWithLocation++;
+            if (mic) p.userAppsWithMic++;
+            if (cam) p.userAppsWithCamera++;
+            if (sms) p.userAppsWithSms++;
+        }
+
+    } catch (Throwable ignored) {}
+    return p;
+}
+
+
+// ------------------------- SCORING --------------------------
+
+private int scoreThermals(float maxT, float avgT) {
+    int s = 100;
+    if (maxT >= 70) s -= 60;
+    else if (maxT >= 60) s -= 40;
+    else if (maxT >= 50) s -= 20;
+
+    if (avgT >= 55) s -= 25;
+    else if (avgT >= 45) s -= 10;
+
+    return clampScore(s);
+}
+
+private int scoreBattery(float battTemp, float battPct, boolean charging) {
+    int s = 100;
+
+    if (battTemp >= 55) s -= 55;
+    else if (battTemp >= 45) s -= 30;
+    else if (battTemp >= 40) s -= 15;
+
+    if (!charging && battPct >= 0) {
+        if (battPct < 15) s -= 25;
+        else if (battPct < 30) s -= 10;
+    }
+
+    return clampScore(s);
+}
+
+private int scoreStorage(int pctFree, long totalBytes) {
+    int s = 100;
+    if (pctFree < 5) s -= 60;
+    else if (pctFree < 10) s -= 40;
+    else if (pctFree < 15) s -= 25;
+    else if (pctFree < 20) s -= 10;
+
+    // tiny storage penalty (<32GB)
+    long gb = totalBytes / (1024L * 1024L * 1024L);
+    if (gb > 0 && gb < 32) s -= 10;
+
+    return clampScore(s);
+}
+
+private int scoreApps(int userApps, int totalApps) {
+    int s = 100;
+    if (userApps > 140) s -= 50;
+    else if (userApps > 110) s -= 35;
+    else if (userApps > 80) s -= 20;
+    else if (userApps > 60) s -= 10;
+
+    if (totalApps > 220) s -= 10;
+    return clampScore(s);
+}
+
+private int scoreRam(int pctFree) {
+    int s = 100;
+    if (pctFree < 8) s -= 60;
+    else if (pctFree < 12) s -= 40;
+    else if (pctFree < 18) s -= 20;
+    else if (pctFree < 25) s -= 10;
+    return clampScore(s);
+}
+
+private int scoreStability(long upMs) {
+    int s = 100;
+    if (upMs < 30 * 60 * 1000L) s -= 50;          // <30min uptime
+    else if (upMs < 2 * 60 * 60 * 1000L) s -= 25; // <2h
+    else if (upMs > 10L * 24L * 60L * 60L * 1000L) s -= 10; // >10d
+    return clampScore(s);
+}
+
+private int scoreSecurity(SecuritySnapshot sec) {
+    int s = 100;
+
+    if (!sec.lockSecure) s -= 30;
+
+    // old patch
+    if (sec.securityPatch != null && sec.securityPatch.length() >= 4) {
+        // rough heuristic: if patch year < current year-2 => penalty
+        try {
+            int y = Integer.parseInt(sec.securityPatch.substring(0, 4));
+            int curY = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+            if (y <= curY - 3) s -= 30;
+            else if (y == curY - 2) s -= 15;
+        } catch (Throwable ignored) {}
+    } else {
+        s -= 5; // unknown
+    }
+
+    if (sec.adbUsbOn) s -= 25;
+    if (sec.adbWifiOn) s -= 35;
+    if (sec.devOptionsOn) s -= 10;
+
+    if (sec.rootSuspected) s -= 40;
+    if (sec.testKeys) s -= 15;
+
+    return clampScore(s);
+}
+
+private int scorePrivacy(PrivacySnapshot pr) {
+    int s = 100;
+
+    // weighted dangerous perms on user apps
+    int risk = 0;
+    risk += pr.userAppsWithLocation * 2;
+    risk += pr.userAppsWithMic * 3;
+    risk += pr.userAppsWithCamera * 3;
+    risk += pr.userAppsWithSms * 4;
+
+    if (risk > 80) s -= 60;
+    else if (risk > 50) s -= 40;
+    else if (risk > 25) s -= 20;
+    else if (risk > 10) s -= 10;
+
+    return clampScore(s);
+}
+
+
+// ------------------------- UTIL ----------------------------
+
+private boolean isChargingNow() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+        return (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL);
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private float maxOf(Float a, Float b, Float c, Float d, float e) {
+    float m = e;
+    if (a != null && a > m) m = a;
+    if (b != null && b > m) m = b;
+    if (c != null && c > m) m = c;
+    if (d != null && d > m) m = d;
+    return m;
+}
+
+private float avgOf(Float a, Float b, Float c, Float d, float e) {
+    float sum = e;
+    int n = 1;
+    if (a != null) { sum += a; n++; }
+    if (b != null) { sum += b; n++; }
+    if (c != null) { sum += c; n++; }
+    if (d != null) { sum += d; n++; }
+    return sum / n;
+}
+
+private int clampScore(int s) {
+    if (s < 0) return 0;
+    if (s > 100) return 100;
+    return s;
+}
+
+private String colorFlagFromScore(int s) {
+    if (s >= 80) return "🟩";
+    if (s >= 55) return "🟨";
+    return "🟥";
+}
+
+private String finalVerdict(int health, int sec, int priv, int perf) {
+    int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
+    if (worst >= 80)
+        return "🟩 Device is healthy — no critical issues detected.";
+    if (worst >= 55)
+        return "🟨 Device has moderate risks — recommend service check.";
+    return "🟥 Device is NOT healthy — immediate servicing recommended.";
+}
+
+private String fmt1(float v) {
+    return String.format(Locale.US, "%.1f", v);
 }
 
 private void lab30FinalNotes() {

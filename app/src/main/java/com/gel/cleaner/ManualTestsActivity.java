@@ -1358,32 +1358,29 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars, MONOSPACE-SAFE SYMBOLS, NEVER WRAPS)
+// ASCII BAR (100 chars — no emojis → never wraps)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // 1) Monospace-safe color symbols
-    String icon;
-    if (t < 45)        icon = "[";   // green
-    else if (t < 60)   icon = "~";   // yellow
-    else               icon = "!";   // red
+    // Color icon for the LABEL ONLY (safe – single emoji)
+    String color;
+    if (t < 45)        color = "🟩";
+    else if (t < 60)   color = "🟨";
+    else               color = "🟥";
 
-    // 2) Normalize to 0–100 (full bar at 80°C)
+    // Normalize temperature to 0–100 (max at 80°C)
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
-    int bars = (int)(pct * 100f);
+    int bars = (int)(pct * 100f);  // FULL 100 chars
 
-    // 3) Build EXACT 100-character bar
+    // Build uniform 100-char bar using '█'
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // 4) Convert spaces → no-break spaces (prevents line wrap)
-    String safeBar = sb.toString().replace(" ", "\u202f");
-
-    // 5) Output (safe for your existing log system)
-    logInfo(label + ": " + icon + " " + String.format(Locale.US, "%.1f°C", t));
-    logInfo(safeBar);
+    // 🚫 NO ℹ️ ICON — DIRECT RAW TEXT (never wraps)
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    logInfo(sb.toString());
 }
     
 // ============================================================

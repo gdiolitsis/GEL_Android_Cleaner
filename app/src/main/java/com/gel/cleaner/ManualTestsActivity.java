@@ -1316,17 +1316,18 @@ private float getBatteryTemperature() {
         return 0f;
     }
 }
+    
     // ============================================================
-// LAB 17 — Thermal Snapshot (GEL Universal Edition — SAFE, NO HELPERS INSIDE)
+// LAB 17 — Thermal Snapshot (GEL Universal Edition — SAFE)
 // ============================================================
 private void lab17ThermalSnapshot() {
     logLine();
     logInfo("LAB 17 — Thermal Snapshot (ASCII thermal map)");
 
-    // 1) Read thermal zones (CPU/GPU/PMIC/Skin) — uses EXISTING helper
+    // 1) Read thermal zones (CPU/GPU/PMIC/Skin)
     Map<String, Float> zones = readThermalZones();
 
-    // 2) Battery ALWAYS from BatteryManager — uses EXISTING helper
+    // 2) Battery ALWAYS from BatteryManager
     float batt = getBatteryTemperature();
 
     if (zones == null || zones.isEmpty()) {
@@ -1336,7 +1337,7 @@ private void lab17ThermalSnapshot() {
         return;
     }
 
-    // Auto-detect CPU/GPU/SKIN/PMIC (uses existing pickZone)
+    // Auto-detect CPU/GPU/SKIN/PMIC
     Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
     Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
     Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
@@ -1344,11 +1345,11 @@ private void lab17ThermalSnapshot() {
 
     logOk("Thermal Zones found: " + zones.size());
 
-    // Print snapshot
+    // Snapshot print
     if (cpu  != null) printZoneAscii("CPU", cpu);
     if (gpu  != null) printZoneAscii("GPU", gpu);
 
-    // Battery ALWAYS printed even if no thermal zone
+    // Battery ALWAYS printed
     printZoneAscii("Battery", batt);
 
     if (skin != null) printZoneAscii("Skin", skin);
@@ -1358,12 +1359,11 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars — fits in ONE line — small monospace)
-// Uses ONLY existing appendHtml/escape/logInfo
+// ASCII BAR (100 chars — 5sp monospace via HTML)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // Color icon (keeps your info marker line)
+    // Color icon
     String color;
     if (t < 45)        color = "🟩";
     else if (t < 60)   color = "🟨";
@@ -1372,19 +1372,17 @@ private void printZoneAscii(String label, float t) {
     // Temperature scale → 0–100 chars
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
-    int bars = (int)(pct * 100f);
+    int bars = (int)(pct * 100);
 
-    // Build exactly 100 chars bar (filled + spaces)
     StringBuilder sb = new StringBuilder(100);
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Header line (normal size)
+    // Header line
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // BAR line (small + monospace, never wraps)
-    // <tt> => monospace, <small> => ~7sp look
-    appendHtml("<small><tt>" + escape(sb.toString()) + "</tt></small>");
+    // BAR line (5sp monospace via <small><small><tt>>)
+    appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
 }
     
 // ============================================================

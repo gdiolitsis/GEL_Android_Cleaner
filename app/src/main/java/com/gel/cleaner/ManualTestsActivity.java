@@ -1354,105 +1354,40 @@ private void printZoneAscii(String label, float t) {
     logInfo(sb.toString());
 }
 
-
-
 // ============================================================
-// LAB 18 — Battery-ONLY Live Thermal Monitor (ASCII, scrollable)
+// LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire)
 // ============================================================
-private AlertDialog lab18Dialog;
-private Handler lab18Handler = new Handler(Looper.getMainLooper());
-private boolean lab18Running = false;
-
-private void lab18ThermalQuestionnaire() {
-    lab18();
-}
+private void lab18ThermalQuestionnaire() { lab18(); }
 
 private void lab18() {
 
     logLine();
-    logInfo("LAB 18 — Battery Live Temperature Test");
+    logSection("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
 
-    // check charging state
-    IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-    Intent i = registerReceiver(null, f);
+    // Battery charging check
+    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
     boolean charging =
             (status == BatteryManager.BATTERY_STATUS_CHARGING ||
              status == BatteryManager.BATTERY_STATUS_FULL);
 
+    // ALWAYS SHOW FULL MANUAL SECTION — regardless of charging
     if (!charging) {
-        logWarn("Device is NOT charging — plug charger and re-run Lab 18.");
-        return;
+        logGreen("✔️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
     }
 
-    // show popup
-    showLab18ChargingPopup();
+    logInfo("ℹ️ Manual Mode started.");
+    logInfo("ℹ️ 1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
+    logInfo("ℹ️ 2) While charging, watch if device becomes hot or throttles.");
+    logWarn("⚠️ If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
+    logRed("❌ If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
+    logGreen("✔️ Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
+
+    // If charging → popup
+    if (charging) {
+        showLab18ChargingPopup();
+    }
 }
-
-
-// popup
-private void showLab18ChargingPopup() {
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(25), dp(25), dp(25), dp(25));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(Color.BLACK);
-    bg.setCornerRadius(dp(20));
-    bg.setStroke(dp(4), Color.parseColor("#FFD700")); // gold border
-    root.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("Press START for Battery Thermal Test");
-    title.setTextColor(Color.parseColor("#FFD700"));
-    title.setGravity(Gravity.CENTER);
-    title.setTextSize(18f);
-    title.setPadding(0, 0, 0, dp(20));
-    root.addView(title);
-
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.END);
-
-    TextView btnCancel = new TextView(this);
-    btnCancel.setText("CANCEL");
-    btnCancel.setTextSize(16f);
-    btnCancel.setTextColor(Color.parseColor("#00E5FF"));
-    btnCancel.setPadding(dp(20), dp(10), dp(20), dp(10));
-    row.addView(btnCancel);
-
-    View sp = new View(this);
-    row.addView(sp, new LinearLayout.LayoutParams(dp(30), dp(1)));
-
-    TextView btnStart = new TextView(this);
-    btnStart.setText("START");
-    btnStart.setTextSize(16f);
-    btnStart.setTextColor(Color.parseColor("#00E5FF"));
-    btnStart.setPadding(dp(20), dp(10), dp(20), dp(10));
-    row.addView(btnStart);
-
-    root.addView(row);
-
-    b.setView(root);
-    lab18Dialog = b.create();
-
-    if (lab18Dialog.getWindow() != null)
-        lab18Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-    btnCancel.setOnClickListener(v -> lab18Dialog.dismiss());
-    btnStart.setOnClickListener(v -> {
-        lab18Dialog.dismiss();
-        showBatteryLiveMonitor();  // new live monitor
-    });
-
-    lab18Dialog.show();
-}
-
-
-
 // LIVE MONITOR (battery-only)
 private void showBatteryLiveMonitor() {
 

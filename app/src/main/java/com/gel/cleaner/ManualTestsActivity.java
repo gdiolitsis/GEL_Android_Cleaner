@@ -1712,7 +1712,7 @@ private String asciiBar(float t) {
         logInfo("LAB 28 — App Permissions & Privacy (manual).");
         logInfo("1) In Settings -> Privacy / Permissions, review apps with access to location, microphone and camera.");
         logWarn("Unknown apps with broad permissions can cause drain, slowdowns and privacy concerns.");
-        logInfo("2) Recommend uninstalling unused or clearly suspicious apps.");
+        logInfo("2) Recommend uninstalling unused or suspicious apps.");
     }
 
     private void lab29CombineFindings() {
@@ -1733,4 +1733,76 @@ private String asciiBar(float t) {
         logInfo("• Recommended actions (cleaning, reset, part replacement, full board repair).");
         logOk("This completes the 30 Manual Labs set. Use it with Auto-Diagnosis for full GEL workflow.");
     }
-}
+
+
+    // ============================================================
+    // === THERMAL HELPERS — FULL BLOCK (FIXES BUILD ERRORS) ======
+    // ============================================================
+
+    private Map<String, Float> readThermalZones() {
+        Map<String, Float> out = new HashMap<>();
+        File base = new File("/sys/class/thermal");
+        File[] zones = base.listFiles();
+        if (zones == null) return out;
+
+        for (File f : zones) {
+            if (f == null) continue;
+            String name = f.getName();
+            if (!name.startsWith("thermal_zone")) continue;
+
+            File typeFile = new File(f, "type");
+            File tempFile = new File(f, "temp");
+            if (!tempFile.exists()) continue;
+
+            String type = name;
+            try {
+                if (typeFile.exists()) {
+                    type = readFirstLine(typeFile);
+                    if (type == null || type.trim().isEmpty()) type = name;
+                }
+                String tRaw = readFirstLine(tempFile);
+                if (tRaw == null) continue;
+                tRaw = tRaw.trim();
+                if (tRaw.isEmpty()) continue;
+
+                float v = Float.parseFloat(tRaw);
+                if (Math.abs(v) > 1000f) v = v / 1000f; // millidegree kernel → Celsius
+
+                out.put(type.toLowerCase(Locale.US), v);
+            } catch (Throwable ignore) {}
+        }
+        return out;
+    }
+
+    private Float pickZone(Map<String, Float> zones, String... keys) {
+        if (zones == null || zones.isEmpty()) return null;
+
+        List<String> normalized = new ArrayList<>();
+        for (String k : keys) {
+            if (k != null) {
+                String key = k.trim().toLowerCase(Locale.US);
+                if (!key.isEmpty()) normalized.add(key);
+            }
+        }
+
+        for (Map.Entry<String, Float> e : zones.entrySet()) {
+            String zone = e.getKey().toLowerCase(Locale.US);
+            for (String k : normalized) {
+                if (zone.equals(k) || zone.contains(k))
+                    return e.getValue();
+            }
+        }
+        return null;
+    }
+
+    private String readFirstLine(File file) throws IOException {
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(file));
+            return br.readLine();
+        } finally {
+            if (br != null) try { br.close(); } catch (Throwable ignore) {}
+        }
+    }
+
+}  // <<< END OF CLASS ManualTestsActivity

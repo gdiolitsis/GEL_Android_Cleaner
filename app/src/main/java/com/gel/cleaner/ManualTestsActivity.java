@@ -1355,48 +1355,54 @@ private void printZoneAscii(String label, float t) {
 }
 
 // ============================================================
-// LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire)
+// LAB 18 — Heat Under Load (LIVE + MANUAL)
 // ============================================================
 
 private boolean lab18Running = false;
 private final Handler lab18Handler = new Handler(Looper.getMainLooper());
 
+// ============================================================
+// ENTRY POINT
+// ============================================================
 private void lab18ThermalQuestionnaire() { lab18(); }
 
 private void lab18() {
 
     logLine();
-    logInfo("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
+    logSection("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
 
-    // ================================
-    // CHARGING CHECK
-    // ================================
+    // Charging check
     Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-    int st = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+    int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
     boolean charging =
-            (st == BatteryManager.BATTERY_STATUS_CHARGING ||
-             st == BatteryManager.BATTERY_STATUS_FULL);
+            (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+             status == BatteryManager.BATTERY_STATUS_FULL);
 
-    // ================================
-    // ALWAYS print full MANUAL MODE section (like your screenshot)
-    // ================================
-    if (!charging) {
-        logOk("✔ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
+    // ------------------------------------------------------------
+    // MANUAL MODE (ALWAYS SHOWN) — EXACTLY AS OLD VERSION
+    // ------------------------------------------------------------
+    logInfo("ℹ️ Manual Mode started.");
+    logInfo("ℹ️ 1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
+    logInfo("ℹ️ 2) While charging, observe if device becomes hot or throttles.");
+    logWarn("⚠️ If UI stutters, apps close, or phone becomes very hot → thermal throttling / PMIC stress.");
+    logRed("❌ If device shuts down or reboots under load → battery/PMIC/board heat fault suspected.");
+    logGreen("✔️ Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
+
+    // ------------------------------------------------------------
+    // POPUP ONLY WHEN CHARGING
+    // ------------------------------------------------------------
+    if (charging) {
+        showLab18ChargingPopup();
     }
-
-    logInfo("ℹ Manual Mode started.");
-    logInfo("ℹ 1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
-    logInfo("ℹ 2) While charging, check if device becomes hot or throttles.");
-    logWarn("⚠ If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
-    logError("❌ If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
-    logOk("✔ Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
-
-    // IF CHARGING → popup
-    if (charging) showLab18ChargingPopup();
 }
 
+
+
+
 // ============================================================
-// POPUP: Press START for Battery Thermal Test
+// POPUP WHEN CHARGING — TWO BUTTONS ONLY
+// Title: "Press START for battery thermal test"
+// Buttons: START / CANCEL
 // ============================================================
 private void showLab18ChargingPopup() {
 
@@ -1404,63 +1410,64 @@ private void showLab18ChargingPopup() {
 
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(25), dp(25), dp(25), dp(25));
+    root.setPadding(dp(20), dp(20), dp(20), dp(20));
+    root.setGravity(Gravity.CENTER);
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(Color.BLACK);
     bg.setCornerRadius(dp(20));
-    bg.setStroke(dp(4), Color.parseColor("#FFD700")); // gold
+    bg.setStroke(dp(4), Color.parseColor("#FFD700"));
     root.setBackground(bg);
 
+    // TITLE (only text, exactly as you wanted)
     TextView title = new TextView(this);
-    title.setText("Press START for Battery Thermal Test");
+    title.setText("Press START for battery thermal test");
     title.setTextColor(Color.parseColor("#FFD700"));
+    title.setTextSize(17f);
     title.setGravity(Gravity.CENTER);
-    title.setTextSize(18f);
     title.setPadding(0, 0, 0, dp(20));
     root.addView(title);
 
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.END);
+    // START BUTTON
+    Button btnStart = new Button(this);
+    btnStart.setText("START");
+    btnStart.setAllCaps(false);
+    btnStart.setTextSize(16f);
+    btnStart.setTextColor(Color.BLACK);
+    btnStart.setBackgroundColor(Color.parseColor("#FFD700"));
+    root.addView(btnStart, new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(45)));
 
-    TextView cancel = new TextView(this);
-    cancel.setText("CANCEL");
-    cancel.setTextColor(Color.parseColor("#00E5FF"));
-    cancel.setTextSize(16f);
-    cancel.setPadding(dp(18), dp(10), dp(18), dp(10));
-    row.addView(cancel);
-
-    View sp = new View(this);
-    row.addView(sp, new LinearLayout.LayoutParams(dp(30), dp(1)));
-
-    TextView start = new TextView(this);
-    start.setText("START");
-    start.setTextColor(Color.parseColor("#00E5FF"));
-    start.setTextSize(16f);
-    start.setPadding(dp(18), dp(10), dp(18), dp(10));
-    row.addView(start);
-
-    root.addView(row);
+    // CANCEL BUTTON (bottom-right)
+    TextView btnCancel = new TextView(this);
+    btnCancel.setText("CANCEL");
+    btnCancel.setTextSize(16f);
+    btnCancel.setTextColor(Color.parseColor("#00E5FF"));
+    btnCancel.setGravity(Gravity.END);
+    btnCancel.setPadding(0, dp(10), 0, 0);
+    root.addView(btnCancel);
 
     b.setView(root);
-    AlertDialog dlg = b.create();
+    AlertDialog dialog = b.create();
 
-    if (dlg.getWindow() != null)
-        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    if (dialog.getWindow() != null)
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-    cancel.setOnClickListener(v -> dlg.dismiss());
+    dialog.show();
 
-    start.setOnClickListener(v -> {
-        dlg.dismiss();
+    btnStart.setOnClickListener(v -> {
+        dialog.dismiss();
         showBatteryLiveMonitor();
     });
 
-    dlg.show();
+    btnCancel.setOnClickListener(v -> dialog.dismiss());
 }
 
+
+
+
 // ============================================================
-// LIVE BATTERY TEMPERATURE (ASCII BARS)
+// BATTERY-ONLY LIVE MONITOR (ASCII)
 // ============================================================
 private void showBatteryLiveMonitor() {
 
@@ -1484,22 +1491,23 @@ private void showBatteryLiveMonitor() {
     root.addView(title);
 
     ScrollView sc = new ScrollView(this);
-    LinearLayout inner = new LinearLayout(this);
-    inner.setOrientation(LinearLayout.VERTICAL);
-    inner.setPadding(0, dp(10), 0, dp(10));
-    sc.addView(inner);
+    TextView txt = new TextView(this);
+    txt.setTextColor(Color.WHITE);
+    txt.setTextSize(14f);
+    txt.setPadding(0, dp(15), 0, 0);
+    sc.addView(txt);
     root.addView(sc, new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             dp(260)
     ));
 
-    TextView stop = new TextView(this);
-    stop.setText("STOP");
-    stop.setTextColor(Color.parseColor("#00E5FF"));
-    stop.setGravity(Gravity.END);
-    stop.setTextSize(16f);
-    stop.setPadding(0, dp(10), 0, 0);
-    root.addView(stop);
+    TextView btnStop = new TextView(this);
+    btnStop.setText("STOP");
+    btnStop.setTextSize(16f);
+    btnStop.setTextColor(Color.parseColor("#00E5FF"));
+    btnStop.setGravity(Gravity.END);
+    btnStop.setPadding(0, dp(15), 0, 0);
+    root.addView(btnStop);
 
     b.setView(root);
     AlertDialog dlg = b.create();
@@ -1507,28 +1515,24 @@ private void showBatteryLiveMonitor() {
     if (dlg.getWindow() != null)
         dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-    stop.setOnClickListener(v -> {
+    lab18Running = true;
+
+    btnStop.setOnClickListener(v -> {
         lab18Running = false;
         dlg.dismiss();
     });
 
     dlg.show();
 
-    lab18Running = true;
-
     lab18Handler.post(new Runnable() {
         @Override public void run() {
             if (!lab18Running) return;
 
             float t = getBatteryTemperature();
+            String line = String.format(Locale.US,
+                    "Battery: %.1f°C\n%s\n\n", t, asciiBar(t));
 
-            TextView line = new TextView(ManualTestsActivity.this);
-            line.setTextColor(Color.WHITE);
-            line.setTextSize(14f);
-            line.setText(String.format(Locale.US,
-                    "Battery: %.1f°C\n%s\n", t, asciiBar(t)));
-
-            inner.addView(line);
+            txt.append(line);
             sc.post(() -> sc.fullScroll(View.FOCUS_DOWN));
 
             lab18Handler.postDelayed(this, 1000);
@@ -1536,19 +1540,21 @@ private void showBatteryLiveMonitor() {
     });
 }
 
+
+
 // ============================================================
-// HELPERS (όλα εδώ για να μην ξανασκάσει build error)
+// SUPPORT HELPERS (LOCAL ONLY FOR LAB 18)
 // ============================================================
 private float getBatteryTemperature() {
     try {
         Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int t = i != null ? i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) : 0;
-        return t / 10f;
+        int temp = i != null ? i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) : 0;
+        return temp / 10f;
     } catch (Exception e) { return 0f; }
 }
 
 private String asciiBar(float t) {
-    int bars = Math.max(1, Math.min(50, (int)t));
+    int bars = Math.max(1, Math.min(50, (int)(t)));
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
     return sb.toString();

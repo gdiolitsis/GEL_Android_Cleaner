@@ -2330,14 +2330,141 @@ private String lab26_readOneLine(String path) {
 // LABS 27–30: ADVANCED / LOGS
 // ============================================================
 
+// ============================================================
+// LAB 27 — AUTO Crash / Freeze History (FULL AUTO EDITION)
+// ============================================================
 private void lab27CrashHistory() {
     logLine();
-    logInfo("LAB 27 — Crash / Freeze History (interview).");
-    logInfo("Ask the customer:");
-    logInfo("• How often does the phone reboot or freeze per day/week?");
-    logInfo("• Does it happen only in specific apps (camera, games, calls) or randomly?");
-    logWarn("Frequent reboots in heavy apps only — could be thermal or RAM pressure.");
-    logError("Random reboots even on idle — suspect deeper board / power / storage issues.");
+    logInfo("LAB 27 — Crash / Freeze History (AUTO).");
+
+    int crashCount = 0;
+    int anrCount = 0;
+    int systemCount = 0;
+
+    List<String> details = new ArrayList<>();
+
+    // ============================================================
+    // (A) Android 11+ — Process Exit Reasons (BEST SOURCE)
+    // ============================================================
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();
+                if (errs != null) {
+                    for (ActivityManager.ProcessErrorStateInfo e : errs) {
+                        if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
+                            crashCount++;
+                            details.add("CRASH: " + e.processName + " — " + e.shortMsg);
+                        } else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                            anrCount++;
+                            details.add("ANR: " + e.processName + " — " + e.shortMsg);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (Exception ignored) {}
+
+
+    // ============================================================
+    // (B) OLD Android — DropBox Crash Logs
+    // ============================================================
+    try {
+        DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
+
+        if (db != null) {
+            String[] tags = {
+                    "system_app_crash", "data_app_crash",
+                    "system_app_anr", "data_app_anr",
+                    "system_server_crash", "system_server_wtf",
+                    "system_server_anr"
+            };
+
+            for (String tag : tags) {
+                DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
+                while (ent != null) {
+                    if (tag.contains("crash")) crashCount++;
+                    if (tag.contains("anr")) anrCount++;
+                    if (tag.contains("server")) systemCount++;
+
+                    String txt = readDropBoxEntry(ent);
+                    details.add(tag.toUpperCase(Locale.US) + ": " + (txt != null ? txt : "(no text)"));
+
+                    ent = db.getNextEntry(tag, ent.getTimeMillis());
+                }
+            }
+        }
+
+    } catch (Exception ignored) {}
+
+
+    // ============================================================
+    // SUMMARY + RISK SCORE
+    // ============================================================
+    int risk = 0;
+
+    if (crashCount == 0 && anrCount == 0 && systemCount == 0) {
+        logOk("No crash history found — system stability appears strong.");
+        logOk("Lab 27 finished.");
+        return;
+    }
+
+    if (crashCount > 0) risk += crashCount * 5;
+    if (anrCount > 0) risk += anrCount * 8;
+    if (systemCount > 0) risk += systemCount * 15;
+
+    // CAP RISK 0–100
+    if (risk > 100) risk = 100;
+
+    if (risk <= 20)
+        logOk("Stability Risk: " + risk + "% (Good)");
+    else if (risk <= 50)
+        logWarn("Stability Risk: " + risk + "% (Moderate)");
+    else if (risk <= 80)
+        logWarn("Stability Risk: " + risk + "% (High)");
+    else
+        logError("Stability Risk: " + risk + "% (Critical)");
+
+    logInfo("Crash events: " + crashCount);
+    logInfo("ANR events: " + anrCount);
+    logInfo("System-level faults: " + systemCount);
+
+    logLine();
+    logInfo("Detailed Events:");
+
+    for (String d : details) {
+        logInfo(d);
+    }
+
+    logOk("Lab 27 finished.");
+}
+
+
+// ============================================================
+// READ DROPBOX TEXT
+// (tiny helper inside the same block → allowed)
+// ============================================================
+private String readDropBoxEntry(DropBoxManager.Entry ent) {
+    try {
+        if (ent == null) return null;
+        InputStream is = ent.getInputStream();
+        if (is == null) return null;
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        int count = 0;
+
+        while ((line = br.readLine()) != null && count < 10) { // only first 10 lines
+            sb.append(line).append("\n");
+            count++;
+        }
+        br.close();
+        return sb.toString();
+    } catch (Exception e) {
+        return null;
+    }
 }
 
 private void lab28PermissionsPrivacy() {

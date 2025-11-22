@@ -3296,46 +3296,22 @@ private String fmt1(float v) {
 
 // ============================================================
 // LAB 30 — AUTO Final Service Notes (PDF Export Trigger)
-// This lab now simply opens ServiceReportActivity,
-// without writing anything to GELServiceLog when empty.
+// Clean version — no addLog(), no dependencies.
 // ============================================================
 private void lab30FinalServiceNotes() {
 
-    // ------------------------------------------------------------
-    // DO NOT add any logs if no diagnostics exist.
-    // This allows ServiceReportActivity to show:
-    // "No diagnostics yet. Run Manual Tests and then export."
-    // ------------------------------------------------------------
-    if (GELServiceLog.isEmpty()) {
-        // No logs at all → do NOT write anything.
-        // Just open the export screen (ServiceReportActivity).
-        try {
-            Intent i = new Intent(this, ServiceReportActivity.class);
-            startActivity(i);
-        } catch (Exception e) {
-            Toast.makeText(this,
-                    "Error opening report: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
-        }
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // If logs DO exist → add the usual entries
-    // ------------------------------------------------------------
-    addLog("INFO", "LAB 30 — Final Service Notes (OPEN REPORT EXPORT)");
-
-    // Finish & open export
     try {
         Intent i = new Intent(this, ServiceReportActivity.class);
         startActivity(i);
-        addLog("OK", "Lab 30 finished.");
     } catch (Exception e) {
-        Toast.makeText(this,
+        Toast.makeText(
+                this,
                 "Error opening report: " + e.getMessage(),
-                Toast.LENGTH_LONG).show();
+                Toast.LENGTH_LONG
+        ).show();
     }
 }
+
     
 // ============================================================
 // END OF CLASS

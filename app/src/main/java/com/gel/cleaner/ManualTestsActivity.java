@@ -1427,196 +1427,101 @@ private float getBatteryTemperature() {
     }
 }
 
-// ===========================================================
-// LAB 18 — Heat Under Load (LIVE + Manual mode)
-// (matches button: lab18ThermalQuestionnaire)
-// ===========================================================
-private void lab18ThermalQuestionnaire() {
+// ============================================================
+// LAB 18 — Heat Under Load (manual + LIVE charging popup)
+// ============================================================
+private void lab18ThermalTest() {
     logLine();
-    logInfo("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
+    logInfo("LAB 18 — Heat Under Load (manual + charging test).");
 
-    boolean charging = isDeviceCharging();
-
-    if (!charging) {
-        // neon-green text request
-        logGreen("⚠️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
-        // keep manual mode even if not charging
-        showLab18ManualDialog();
+    if (!isDeviceCharging()) {
+        // ΟΤΑΝ ΔΕΝ ΦΟΡΤΙΖΕΙ → ΜΟΝΟ log (όπως αριστερή φωτό)
+        logWarn("Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
+        logInfo("Manual Mode started.");
+        logInfo("1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
+        logWarn("If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
+        logError("If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
+        logOk("Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
         return;
     }
 
-    // Charging -> offer LIVE or Manual
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setTitle("Lab 18 — Heat Under Load");
-    b.setMessage("Device is charging.\nChoose mode:");
-
-    b.setPositiveButton("Start LIVE Thermal Monitor", (d, w) -> {
-        d.dismiss();
-        showLiveThermalPopup();
-    });
-
-    b.setNeutralButton("Manual Questionnaire", (d, w) -> {
-        d.dismiss();
-        showLab18ManualDialog();
-    });
-
-    b.setNegativeButton("Cancel", (d, w) -> d.dismiss());
-    AlertDialog dialog = b.create();
-    if (dialog.getWindow() != null)
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-    dialog.show();
+    // ΟΤΑΝ ΦΟΡΤΙΖΕΙ → ΑΝΟΙΓΕΙ ΠΑΛΙΟ POPUP (2 κουμπιά, χρυσό περίγραμμα)
+    showChargingThermalPopup();
 }
 
-// Check charging state
-private boolean isDeviceCharging() {
-    try {
-        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-        return status == BatteryManager.BATTERY_STATUS_CHARGING
-                || status == BatteryManager.BATTERY_STATUS_FULL;
-    } catch (Exception e) {
-        return false;
-    }
-}
-
-// Manual Mode dialog (kept because you said YES)
-private void showLab18ManualDialog() {
-    logInfo("Manual Mode started.");
-    logInfo("1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
-    logInfo("2) While charging, watch if device becomes hot or throttles.");
-    logWarn("If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
-    logError("If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
-    logOk("Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
-}
-
-// Popup LIVE Window (gold border + header + Start button inside)
-private void showLiveThermalPopup() {
+// ============================================================
+// POPUP: Charging Thermal Test (2 κουμπιά, χρυσό περίγραμμα)
+// ============================================================
+private void showChargingThermalPopup() {
     AlertDialog.Builder b = new AlertDialog.Builder(this);
 
     LinearLayout layout = new LinearLayout(this);
     layout.setOrientation(LinearLayout.VERTICAL);
-    layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+    layout.setPadding(dp(20), dp(20), dp(20), dp(20));
 
+    // Χρυσό περίγραμμα
     GradientDrawable border = new GradientDrawable();
     border.setColor(Color.BLACK);
+    border.setStroke(dp(4), Color.parseColor("#FFD700"));  // gold
     border.setCornerRadius(dp(12));
-    border.setStroke(dp(3), Color.parseColor("#FFD700")); // gold outline
     layout.setBackground(border);
 
-    TextView head = new TextView(this);
-    head.setText("Press Start for Live Testing");
-    head.setTextColor(Color.parseColor("#FFD700"));
-    head.setTextSize(18f);
-    head.setTypeface(null, Typeface.BOLD);
-    head.setGravity(Gravity.CENTER);
-    head.setPadding(0, 0, 0, dp(10));
+    // Τίτλος
+    TextView title = new TextView(this);
+    title.setText("Press START for Charging Thermal Test");
+    title.setTextColor(Color.parseColor("#FFD700"));   // gold
+    title.setTextSize(18);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(18));
 
-    TextView liveText = new TextView(this);
-    liveText.setTextColor(Color.WHITE);
-    liveText.setTextSize(16f);
-    liveText.setPadding(0, 0, 0, dp(10));
+    layout.addView(title);
 
-    Button startBtn = new Button(this);
-    startBtn.setAllCaps(false);
-    startBtn.setText("Start LIVE Monitor");
-    startBtn.setTextColor(Color.WHITE);
-    startBtn.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    // ΚΟΥΜΠΙΑ — ΜΟΝΟ 2 (START + CANCEL)
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.END);
 
-    layout.addView(head);
-    layout.addView(liveText);
-    layout.addView(startBtn);
+    // CANCEL
+    Button cancel = new Button(this);
+    cancel.setText("CANCEL");
+    cancel.setAllCaps(true);
+    cancel.setTextColor(Color.parseColor("#00CCCC"));  // cyan
+    cancel.setBackgroundColor(Color.TRANSPARENT);
+    cancel.setOnClickListener(v -> dialog.dismiss());
+
+    // START
+    Button start = new Button(this);
+    start.setText("START");
+    start.setAllCaps(true);
+    start.setTextColor(Color.parseColor("#00CCCC"));   // cyan
+    start.setBackgroundColor(Color.TRANSPARENT);
+    start.setOnClickListener(v -> {
+        dialog.dismiss();
+        showLiveThermalPopup();   // το κανονικό live thermal monitor
+    });
+
+    buttons.addView(cancel);
+    buttons.addView(start);
+
+    layout.addView(buttons);
 
     b.setView(layout);
     b.setCancelable(true);
 
-    AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-    d.show();
-
-    Handler handler = new Handler(Looper.getMainLooper());
-
-    final float[] lastPmic = {Float.NaN};
-    final float[] lastBatt = {Float.NaN};
-    final long[] lastTs = {0L};
-    final boolean[] running = {false};
-
-    Runnable r = new Runnable() {
-        @Override public void run() {
-            if (!d.isShowing() || !running[0]) return;
-
-            Map<String, Float> zones = readThermalZones();
-
-            Float cpu  = pickZone(zones, "cpu", "cpu-thermal", "big", "little", "aptherm", "tsens");
-            Float gpu  = pickZone(zones, "gpu", "gpu-thermal");
-            Float batt = pickZone(zones, "battery", "bat", "batt");
-            Float pmic = pickZone(zones, "pmic", "pmic-therm", "charger", "chg", "power-thermal");
-            Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("CPU: ").append(cpu != null ? colorTemp(cpu) : "N/A").append("\n");
-            sb.append("GPU: ").append(gpu != null ? colorTemp(gpu) : "N/A").append("\n");
-            sb.append("Battery: ").append(batt != null ? colorTemp(batt) : "N/A").append("\n");
-            sb.append("Skin: ").append(skin != null ? colorTemp(skin) : "N/A").append("\n");
-            sb.append("PMIC/Charger: ").append(pmic != null ? colorTemp(pmic) : "N/A").append("\n");
-
-            // Thermal stress rise detector (1–2°C/sec)
-            long now = SystemClock.elapsedRealtime();
-            if (lastTs[0] > 0) {
-                float dtSec = (now - lastTs[0]) / 1000f;
-                if (dtSec > 0.5f) {
-                    if (pmic != null && !Float.isNaN(lastPmic[0])) {
-                        float rate = (pmic - lastPmic[0]) / dtSec;
-                        if (rate >= 1.0f) {
-                            sb.append("\n⚠️ FAST CHARGE HEAT RISE on PMIC: ")
-                              .append(String.format(Locale.US, "%.2f°C/sec", rate));
-                        }
-                    }
-                    if (batt != null && !Float.isNaN(lastBatt[0])) {
-                        float rateB = (batt - lastBatt[0]) / dtSec;
-                        if (rateB >= 1.0f) {
-                            sb.append("\n⚠️ FAST HEAT RISE on Battery: ")
-                              .append(String.format(Locale.US, "%.2f°C/sec", rateB));
-                        }
-                    }
-                }
-            }
-            lastTs[0] = now;
-            if (pmic != null) lastPmic[0] = pmic;
-            if (batt != null) lastBatt[0] = batt;
-
-            liveText.setText(sb.toString());
-
-            handler.postDelayed(this, 1000);
-        }
-    };
-
-    startBtn.setOnClickListener(v -> {
-        running[0] = true;
-        lastTs[0] = 0L;
-        lastPmic[0] = Float.NaN;
-        lastBatt[0] = Float.NaN;
-        handler.removeCallbacksAndMessages(null);
-        handler.post(r);
-    });
-
-    d.setOnDismissListener(x -> {
-        running[0] = false;
-        handler.removeCallbacksAndMessages(null);
-    });
+    dialog = b.create(); // save so cancel works
+    dialog.show();
 }
 
-// ===========================================================
-// Missing color log wrappers (so build passes)
-// ===========================================================
-private void logGreen(String msg) {
-    GELServiceLog.ok(msg);
-    appendHtml("<font color='#39FF14'>✅ " + escape(msg) + "</font>");
-}
+private AlertDialog dialog;
 
-private void logYellow(String msg) {
-    GELServiceLog.warn(msg);
-    appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+// ============================================================
+// Χρησιμοποιεί την παλιά σου live thermal window
+// ============================================================
+private boolean isDeviceCharging() {
+    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+    return status == BatteryManager.BATTERY_STATUS_CHARGING ||
+           status == BatteryManager.BATTERY_STATUS_FULL;
 }
     
     // ============================================================

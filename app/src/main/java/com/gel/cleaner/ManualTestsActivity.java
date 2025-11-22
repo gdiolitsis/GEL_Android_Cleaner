@@ -16,7 +16,9 @@
 // ============================================================
 package com.gel.cleaner;
 
-import android.graphics.pdf.PdfDocument;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.pdf.PdfDocument; σε
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.Manifest;
@@ -68,6 +70,7 @@ import android.os.VibratorManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.telephony.ServiceState;
+import java.text.SimpleDateFormat;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -94,6 +97,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Collections;

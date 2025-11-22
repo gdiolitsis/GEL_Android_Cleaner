@@ -3271,14 +3271,148 @@ private String fmt1(float v) {
     return String.format(Locale.US, "%.1f", v);
 }
 
-private void lab30FinalNotes() {
+// ============================================================
+// LAB 30 — AUTO Final Service Notes (PDF Export)
+// GDiolitsis Engine Lab (GEL) — Final PDF Report Generator
+// ============================================================
+private void lab30FinalServiceNotes() {
     logLine();
-    logInfo("LAB 30 — Final Service Notes for Report (manual).");
-    logInfo("Write technician notes directly in the exported PDF/TXT:");
-    logInfo("• Main findings (OK / WARN / ERROR).");
-    logInfo("• Suspected faulty modules (board, battery, display, speaker, mic, sensors).");
-    logInfo("• Recommended actions (cleaning, reset, part replacement, full board repair).");
-    logOk("This completes the 30 Manual Labs set. Use it with Auto-Diagnosis for full GEL workflow.");
+    logInfo("LAB 30 — Final Service Notes (AUTO PDF Generator)");
+
+    try {
+        // --------------------------------------------
+        // 1) Συλλογή δεδομένων από LAB 29
+        // --------------------------------------------
+        String health  = lastScoreHealth;     // από LAB 29
+        String perf    = lastScorePerformance;
+        String sec     = lastScoreSecurity;
+        String priv    = lastScorePrivacy;
+        String verdict = lastFinalVerdict;
+
+        // Safety fallback αν κάτι λείπει
+        if (health == null)  health = "N/A";
+        if (perf == null)    perf = "N/A";
+        if (sec == null)     sec = "N/A";
+        if (priv == null)    priv = "N/A";
+        if (verdict == null) verdict = "N/A";
+
+        // --------------------------------------------
+        // 2) Δημιουργία PDF directory
+        // --------------------------------------------
+        File dir = new File(getExternalFilesDir(null), "GEL_Reports");
+        if (!dir.exists()) dir.mkdirs();
+
+        String fileName = "GEL_Final_Report_" + System.currentTimeMillis() + ".pdf";
+        File file = new File(dir, fileName);
+
+        // --------------------------------------------
+        // 3) Δημιουργία PDF (Android PDFDocument API)
+        // --------------------------------------------
+        PdfDocument pdf = new PdfDocument();
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(16f);
+
+        PdfDocument.PageInfo info =
+                new PdfDocument.PageInfo.Builder(1240, 1754, 1).create();
+        PdfDocument.Page page = pdf.startPage(info);
+        Canvas c = page.getCanvas();
+
+        int y = 80;
+
+        // Header
+        paint.setFakeBoldText(true);
+        paint.setTextSize(28f);
+        c.drawText("GEL — Final Service Report", 70, y, paint);
+        y += 60;
+
+        paint.setTextSize(18f);
+        paint.setFakeBoldText(false);
+        c.drawText("Generated automatically from GEL Auto-Diagnosis", 70, y, paint);
+        y += 40;
+
+        // --------------------------------------------
+        // Report Body
+        // --------------------------------------------
+        paint.setTextSize(20f);
+        paint.setFakeBoldText(true);
+        c.drawText("Device Diagnostic Summary:", 70, y, paint);
+        y += 50;
+
+        paint.setFakeBoldText(false);
+        paint.setTextSize(18f);
+
+        c.drawText("• Device Health Score: " + health, 70, y); y += 35;
+        c.drawText("• Performance Score: "   + perf,   70, y); y += 35;
+        c.drawText("• Security Score: "      + sec,    70, y); y += 35;
+        c.drawText("• Privacy Score: "       + priv,   70, y); y += 50;
+
+        paint.setFakeBoldText(true);
+        c.drawText("Final Verdict:", 70, y); y += 50;
+
+        paint.setFakeBoldText(false);
+        wrapPdfText(c, paint, verdict, 70, y, 1100);
+        y += 120;
+
+        // Technician Notes Footer
+        paint.setFakeBoldText(true);
+        c.drawText("Technician Notes:", 70, y); y += 45;
+
+        paint.setFakeBoldText(false);
+        c.drawText("This report was generated using full GEL Auto-Diagnosis.", 70, y);
+        y += 35;
+        c.drawText("For service: review thermals, battery, board health and logs.", 70, y);
+        y += 35;
+
+        pdf.finishPage(page);
+
+        // --------------------------------------------
+        // 4) Save PDF
+        // --------------------------------------------
+        FileOutputStream fos = new FileOutputStream(file);
+        pdf.writeTo(fos);
+        fos.close();
+        pdf.close();
+
+        logOk("PDF created: " + file.getAbsolutePath());
+
+    } catch (Exception e) {
+        logError("PDF generation error: " + e.getMessage());
+    }
+
+    logOk("Lab 30 finished.");
+}
+
+
+// ============================================================
+// Helper: Wrap long text inside PDF
+// ============================================================
+private void wrapPdfText(Canvas c, Paint p, String text, int x, int startY, int maxWidth) {
+    int y = startY;
+    for (String line : breakTextIntoLines(p, text, maxWidth)) {
+        c.drawText(line, x, y, p);
+        y += 32;
+    }
+}
+
+private List<String> breakTextIntoLines(Paint p, String text, int maxWidth) {
+    List<String> lines = new ArrayList<>();
+    if (text == null) return lines;
+
+    String[] words = text.split(" ");
+    StringBuilder sb = new StringBuilder();
+
+    for (String w : words) {
+        String test = sb + w + " ";
+        if (p.measureText(test) > maxWidth) {
+            lines.add(sb.toString());
+            sb = new StringBuilder();
+        }
+        sb.append(w).append(" ");
+    }
+    if (sb.length() > 0) lines.add(sb.toString());
+
+    return lines;
 }
 
 // ============================================================

@@ -1358,9 +1358,7 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars — never wraps — 7sp via HTML)
-// ============================================================
-// ASCII BAR (100 chars — fits in ONE line @ 7sp)
+// ASCII BAR (100 chars — fits in ONE line @ 7sp monospace)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 

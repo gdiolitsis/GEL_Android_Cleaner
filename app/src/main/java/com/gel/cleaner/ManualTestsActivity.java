@@ -1737,13 +1737,38 @@ private String readFirstLine(File file) throws IOException {
     // ============================================================
     // LABS 23–26: SECURITY & SYSTEM HEALTH
     // ============================================================
-    private void lab23ScreenLock() {
-        logLine();
-        logInfo("LAB 23 — Screen Lock / Biometrics Checklist (manual).");
-        logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");
-        logWarn("If the device is left with no lock at all — higher risk for data and account theft.");
-        logInfo("2) Test fingerprint / face unlock if configured, to confirm sensors respond consistently.");
+    // ============================================================
+// LAB 23 — Screen Lock / Biometrics Checklist (auto-detect + manual)
+// ============================================================
+private void lab23ScreenLock() {
+    logLine();
+    logInfo("LAB 23 — Screen Lock / Biometrics Checklist");
+
+    try {
+        android.app.KeyguardManager km =
+                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+
+        if (km != null) {
+            boolean secure = km.isDeviceSecure();
+
+            if (secure) {
+                logOk("Device reports SECURE lock method (PIN / Pattern / Password).");
+            } else {
+                logError("Device has NO secure lock method — phone is UNPROTECTED!");
+                logWarn("Anyone can access data without authentication.");
+            }
+        } else {
+            logWarn("KeyguardManager not available — cannot read lock status.");
+        }
+    } catch (Exception e) {
+        logWarn("Screen lock detection failed: " + e.getMessage());
     }
+
+    // Manual guidance (kept for technician)
+    logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");
+    logWarn("If the device is left with no lock at all — higher risk for data and account theft.");
+    logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
+}
 
     private void lab24SecurityPatchManual() {
         logLine();

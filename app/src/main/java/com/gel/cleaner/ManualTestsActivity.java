@@ -1318,57 +1318,150 @@ private float getBatteryTemperature() {
 }
     
     // ============================================================
-// LAB 17 — Thermal Snapshot (GEL Auto-Scale Edition)
+// LAB 17 — Thermal Snapshot (GEL Universal Edition)
 // ============================================================
 private void lab17ThermalSnapshot() {
     logLine();
     logInfo("LAB 17 — Thermal Snapshot (ASCII thermal map)");
 
+    // 1) Read thermal zones (CPU/GPU/PMIC/Skin)
     Map<String, Float> zones = readThermalZones();
 
+    // 2) Battery ALWAYS from BatteryManager (universal)
+    float batt = getBatteryTemperature();  // <-- FIXED, 100% accurate everywhere
+
     if (zones == null || zones.isEmpty()) {
-        logWarn("Device exposes NO thermal zones. Using battery only.");
-        float t = getBatteryTemperature();
-        logInfo("Battery: " + formatTemp(t));
+        logWarn("Device exposes NO thermal zones. Printing battery only.");
+        printZoneAscii("Battery", batt);
+        logOk("Lab 17 finished.");
         return;
     }
 
+    // 3) Auto-detect CPU/GPU/SKIN/PMIC from thermal zones
     Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
     Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
-    Float batt = pickZone(zones, "batt", "battery", "battery_thermal", "vbat", "bat");
     Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
     Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
 
     logOk("Thermal Zones found: " + zones.size());
 
+    // 4) Print each zone
     if (cpu  != null) printZoneAscii("CPU", cpu);
     if (gpu  != null) printZoneAscii("GPU", gpu);
-    if (batt != null) printZoneAscii("Battery", batt);
+
+    // Battery ALWAYS shown — even if no thermal zone
+    printZoneAscii("Battery", batt);
+
     if (skin != null) printZoneAscii("Skin", skin);
     if (pmic != null) printZoneAscii("PMIC", pmic);
 
     logOk("Lab 17 finished.");
 }
 
-private String formatTemp(float t) {
-    return String.format(Locale.US, "%.1f°C", t);
-}
-
+// ============================================================
+// ASCII BAR (100 chars) + PRO COLORS
+// ============================================================
 private void printZoneAscii(String label, float t) {
-    int bars = Math.max(1, Math.min(50, (int)(t)));
+
+    // 1) Color logic
+    String color;
+    if (t < 45)        color = "🟩";
+    else if (t < 60)   color = "🟨";
+    else               color = "🟥";
+
+    // 2) Normalize to 0–100 (full bar at 80°C)
+    float maxT = 80f;
+    float pct = Math.min(1f, t / maxT);
+    int bars = (int)(pct * 100f);
+
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
 
-    String color;
-    if (t < 42) color = "🟩";
-    else if (t < 50) color = "🟨";
-    else color = "🟥";
-
-    logInfo(label + ": " + color + " " + formatTemp(t));
+    // 3) Output
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
     logInfo(sb.toString());
 }
 
+// ============================================================
+// UNIVERSAL BATTERY TEMPERATURE
+// ============================================================
+private float getBatteryTemperature() {
+    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    if (i == null) return 0f;
 
+    int milli = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
+
+    // Standard Android → millidegrees (divide by 10)
+    // Example: 320 → 32.0°C
+    return milli / 10f;
+}
+
+// ============================================================
+// UNIVERSAL THERMAL HELPERS (AUTO-SCALE)
+// ============================================================
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    File base = new File("/sys/class/thermal");
+    File[] zones = base.listFiles();
+    if (zones == null) return out;
+
+    for (File f : zones) {
+        if (f == null) continue;
+        String name = f.getName();
+        if (!name.startsWith("thermal_zone")) continue;
+
+        File typeFile = new File(f, "type");
+        File tempFile = new File(f, "temp");
+        if (!tempFile.exists()) continue;
+
+        String type = name;
+        try {
+            if (typeFile.exists()) {
+                type = readFirstLine(typeFile);
+                if (type == null || type.trim().isEmpty()) type = name;
+            }
+
+            String raw = readFirstLine(tempFile);
+            if (raw == null) continue;
+
+            float v = Float.parseFloat(raw.trim());
+
+            // UNIVERSAL AUTO-SCALE
+            if (v > 1000f)       v /= 1000f;   // millidegree
+            else if (v > 200f)   v /= 100f;    // centidegree
+            else if (v > 20f)    v /= 10f;     // deci-degree
+
+            out.put(type.toLowerCase(Locale.US), v);
+
+        } catch (Throwable ignore) {}
+    }
+    return out;
+}
+
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty()) return null;
+
+    List<String> list = new ArrayList<>();
+    for (String k : keys) if (k != null) list.add(k.toLowerCase(Locale.US));
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String z = e.getKey().toLowerCase(Locale.US);
+        for (String k : list)
+            if (z.equals(k) || z.contains(k))
+                return e.getValue();
+    }
+    return null;
+}
+
+private String readFirstLine(File file) throws IOException {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        return br.readLine();
+    } finally {
+        if (br != null) try { br.close(); } catch (Throwable ignore) {}
+    }
+}
 // ============================================================
 // LAB 18 — Heat Under Load (EXACT TEXT + COLORS LIKE PHOTOS)
 // ============================================================

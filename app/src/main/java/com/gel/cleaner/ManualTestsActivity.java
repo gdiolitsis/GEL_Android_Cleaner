@@ -1301,6 +1301,23 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     // ============================================================
+// GEL Battery Temperature Reader (Universal)
+// ============================================================
+private float getBatteryTemperature() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return 0f;
+
+        int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        if (raw <= 0) return 0f;
+
+        return raw / 10f;  // Android gives tenths of °C
+    } catch (Exception e) {
+        return 0f;
+    }
+}
+    
+    // ============================================================
 // LAB 17 — Thermal Snapshot (GEL Auto-Scale Edition)
 // ============================================================
 private void lab17ThermalSnapshot() {

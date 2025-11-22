@@ -16,6 +16,9 @@
 // ============================================================
 package com.gel.cleaner;
 
+import android.graphics.pdf.PdfDocument;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
@@ -30,6 +33,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;

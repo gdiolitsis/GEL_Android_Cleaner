@@ -1358,40 +1358,38 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars, fits in ONE LINE @ 7sp)
+// ASCII BAR (100 chars, stays ONE LINE using 7sp monospace)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // Color icon (keeps the UI style)
+    // Color icon
     String color;
     if (t < 45)        color = "🟩";
     else if (t < 60)   color = "🟨";
     else               color = "🟥";
 
-    // BAR NORMALIZATION (100 chars, full at 80°C)
+    // Temperature → 0–100%
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
-    int bars = (int)(pct * 100f);
+    int bars = (int)(pct * 100);
 
-    StringBuilder sb = new StringBuilder();
+    // Build fixed 100-char bar
+    StringBuilder sb = new StringBuilder(100);
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Print header line with ℹ️
+    // Header line with ℹ️ – stays as-is
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // === SMALL MONOSPACE BAR (7sp, NEVER WRAPS) ===
-    TextView tv = new TextView(this);
-    tv.setText(sb.toString());
-    tv.setTextColor(Color.WHITE);
+    // Second line → small monospace bar using logInfo
+    // 7sp ensures it NEVER wraps
+    String bar = sb.toString();
 
-    tv.setTextSize(7f);                  // 🔥 Requested size → fits all phones
-    tv.setTypeface(Typeface.MONOSPACE);  // ensures 1:1 chars
-    tv.setSingleLine(true);              // 🔥 forces single line
-    tv.setHorizontallyScrolling(true);   // 🔥 prevents wrapping ALWAYS
-    tv.setPadding(10, 0, 10, 10);
+    SpannableString span = new SpannableString(bar);
+    span.setSpan(new TypefaceSpan("monospace"), 0, bar.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    span.setSpan(new AbsoluteSizeSpan(7, true), 0, bar.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-    logContainer.addView(tv);
+    logInfo(span);
 }
     
 // ============================================================

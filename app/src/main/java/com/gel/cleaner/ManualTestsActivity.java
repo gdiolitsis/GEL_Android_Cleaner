@@ -1360,6 +1360,8 @@ private void lab17ThermalSnapshot() {
 // ============================================================
 // ASCII BAR (100 chars — never wraps — 7sp via HTML)
 // ============================================================
+// ASCII BAR (100 chars — fits in ONE line @ 7sp)
+// ============================================================
 private void printZoneAscii(String label, float t) {
 
     // Color icon
@@ -1377,17 +1379,11 @@ private void printZoneAscii(String label, float t) {
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Header line with info icon
+    // Header line (normal font)
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // BAR LINE — HTML monospace + SIZE=1 (≈ 7sp)
-    String html =
-            "<font face='monospace' size='1'>" +  // size 1 ≈ 7sp
-            sb.toString() +
-            "</font>";
-
-    // SAFE: logInfo(String) will auto-render HTML using Html.fromHtml()
-    logInfo(html);
+    // BAR line (7sp monospace → never wraps)
+    logInfoSmall(sb.toString());
 }
     
 // ============================================================

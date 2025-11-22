@@ -3321,10 +3321,10 @@ private void lab30FinalServiceNotes() {
         File file = new File(dir, fileName);
 
         // --------------------------------------------
-        // 3) Δημιουργία PDF (Android PDFDocument API)
+        // 3) Δημιουργία PDF (Android PdfDocument API)
         // --------------------------------------------
         PdfDocument pdf = new PdfDocument();
-        Paint paint = new Paint();
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(Color.BLACK);
         paint.setTextSize(16f);
 
@@ -3333,51 +3333,53 @@ private void lab30FinalServiceNotes() {
         PdfDocument.Page page = pdf.startPage(info);
         Canvas c = page.getCanvas();
 
-        int y = 80;
+        float y = 80f;
 
         // Header
         paint.setFakeBoldText(true);
         paint.setTextSize(28f);
-        c.drawText("GEL — Final Service Report", 70, y, paint);
-        y += 60;
+        c.drawText("GEL — Final Service Report", 70f, y, paint);
+        y += 60f;
 
         paint.setTextSize(18f);
         paint.setFakeBoldText(false);
-        c.drawText("Generated automatically from GEL Auto-Diagnosis", 70, y, paint);
-        y += 40;
+        c.drawText("Generated automatically from GEL Auto-Diagnosis", 70f, y, paint);
+        y += 40f;
 
         // --------------------------------------------
         // Report Body
         // --------------------------------------------
         paint.setTextSize(20f);
         paint.setFakeBoldText(true);
-        c.drawText("Device Diagnostic Summary:", 70, y, paint);
-        y += 50;
+        c.drawText("Device Diagnostic Summary:", 70f, y, paint);
+        y += 50f;
 
         paint.setFakeBoldText(false);
         paint.setTextSize(18f);
 
-        c.drawText("• Device Health Score: " + health, 70, y); y += 35;
-        c.drawText("• Performance Score: "   + perf,   70, y); y += 35;
-        c.drawText("• Security Score: "      + sec,    70, y); y += 35;
-        c.drawText("• Privacy Score: "       + priv,   70, y); y += 50;
+        c.drawText("• Device Health Score: " + health, 70f, y, paint); y += 35f;
+        c.drawText("• Performance Score: "   + perf,   70f, y, paint); y += 35f;
+        c.drawText("• Security Score: "      + sec,    70f, y, paint); y += 35f;
+        c.drawText("• Privacy Score: "       + priv,   70f, y, paint); y += 50f;
 
         paint.setFakeBoldText(true);
-        c.drawText("Final Verdict:", 70, y); y += 50;
+        c.drawText("Final Verdict:", 70f, y, paint); 
+        y += 50f;
 
         paint.setFakeBoldText(false);
-        wrapPdfText(c, paint, verdict, 70, y, 1100);
-        y += 120;
+        y = wrapPdfText(c, paint, verdict, 70f, y, 1100f);
+        y += 60f;
 
         // Technician Notes Footer
         paint.setFakeBoldText(true);
-        c.drawText("Technician Notes:", 70, y); y += 45;
+        c.drawText("Technician Notes:", 70f, y, paint); 
+        y += 45f;
 
         paint.setFakeBoldText(false);
-        c.drawText("This report was generated using full GEL Auto-Diagnosis.", 70, y);
-        y += 35;
-        c.drawText("For service: review thermals, battery, board health and logs.", 70, y);
-        y += 35;
+        c.drawText("This report was generated using full GEL Auto-Diagnosis.", 70f, y, paint);
+        y += 35f;
+        c.drawText("For service: review thermals, battery, board health and logs.", 70f, y, paint);
+        y += 35f;
 
         pdf.finishPage(page);
 
@@ -3401,37 +3403,47 @@ private void lab30FinalServiceNotes() {
 
 // ============================================================
 // Helper: Wrap long text inside PDF
+// Returns last Y position after writing
 // ============================================================
-private void wrapPdfText(Canvas c, Paint p, String text, int x, int startY, int maxWidth) {
-    int y = startY;
-    for (String line : breakTextIntoLines(p, text, maxWidth)) {
-        c.drawText(line, x, y, p);
-        y += 32;
+private float wrapPdfText(Canvas c, Paint p, String text, float x, float startY, float maxWidth) {
+    float y = startY;
+    List<String> lines = breakTextIntoLines(p, text, maxWidth);
+
+    for (String line : lines) {
+        if (line == null) continue;
+        String ln = line.trim();
+        if (ln.isEmpty()) continue;
+        c.drawText(ln, x, y, p);
+        y += 32f;
     }
+    return y;
 }
 
-private List<String> breakTextIntoLines(Paint p, String text, int maxWidth) {
+private List<String> breakTextIntoLines(Paint p, String text, float maxWidth) {
     List<String> lines = new ArrayList<>();
     if (text == null) return lines;
 
-    String[] words = text.split(" ");
+    String[] words = text.trim().split("\\s+");
     StringBuilder sb = new StringBuilder();
 
     for (String w : words) {
-        String test = sb + w + " ";
+        if (w == null) continue;
+
+        String test = sb.length() == 0 ? (w + " ") : (sb.toString() + w + " ");
         if (p.measureText(test) > maxWidth) {
-            lines.add(sb.toString());
-            sb = new StringBuilder();
+            if (sb.length() > 0) {
+                lines.add(sb.toString().trim());
+                sb.setLength(0);
+            }
         }
         sb.append(w).append(" ");
     }
-    if (sb.length() > 0) lines.add(sb.toString());
 
+    if (sb.length() > 0) lines.add(sb.toString().trim());
     return lines;
 }
 
 // ============================================================
 // END OF CLASS
 // ============================================================
-
 }

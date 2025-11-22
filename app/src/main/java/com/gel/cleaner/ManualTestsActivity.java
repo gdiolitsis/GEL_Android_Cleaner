@@ -1770,13 +1770,81 @@ private void lab23ScreenLock() {
     logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
 }
 
-    private void lab24SecurityPatchManual() {
-        logLine();
-        logInfo("LAB 24 — Security Patch & Play Protect (manual).");
-        logInfo("1) Open Android settings -> About phone -> Android version -> Security patch level.");
-        logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");
-        logInfo("2) In Google Play Store -> Play Protect -> verify scanning is enabled and up to date.");
+    // ============================================================
+// LAB 24 — Security Patch & Play Protect (auto + manual)
+// ============================================================
+private void lab24SecurityPatchManual() {
+    logLine();
+    logInfo("LAB 24 — Security Patch & Play Protect Check");
+
+    // ----------------------------
+    // 1) Security Patch Level
+    // ----------------------------
+    try {
+        String patch = android.os.Build.VERSION.SECURITY_PATCH;
+        if (patch != null && !patch.isEmpty()) {
+            logInfo("Security Patch Level: " + patch);
+        } else {
+            logWarn("Security Patch Level not reported by system.");
+        }
+    } catch (Exception e) {
+        logWarn("Security patch read failed: " + e.getMessage());
     }
+
+    // ----------------------------
+    // 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT
+    // ----------------------------
+    try {
+        PackageManager pm = getPackageManager();
+
+        // Check Google Play Services exists
+        boolean gmsPresent = false;
+        try {
+            pm.getPackageInfo("com.google.android.gms", 0);
+            gmsPresent = true;
+        } catch (Exception ignored) {}
+
+        if (!gmsPresent) {
+            logError("Google Play Services missing — Play Protect NOT available.");
+        } else {
+            // Check Verify Apps setting (Google verifier)
+            int verify = -1;
+            try {
+                verify = Settings.Global.getInt(
+                        getContentResolver(),
+                        "package_verifier_enable",
+                        -1
+                );
+            } catch (Exception ignored) {}
+
+            if (verify == 1) {
+                logOk("Play Protect: ON (Google Verify Apps ENABLED).");
+            } else if (verify == 0) {
+                logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");
+            } else {
+                // Fallback — detect if the activity exists
+                Intent protectIntent = new Intent();
+                protectIntent.setClassName(
+                        "com.google.android.gms",
+                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+                );
+
+                if (protectIntent.resolveActivity(pm) != null) {
+                    logOk("Play Protect module detected (activity present).");
+                } else {
+                    logWarn("Play Protect module not fully detected — OEM variant or restricted build.");
+                }
+            }
+        }
+    } catch (Exception e) {
+        logWarn("Play Protect detection error: " + e.getMessage());
+    }
+
+    // MANUAL GUIDANCE (kept for technicians)
+    logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");
+    logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");
+    logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
+}
 
     private void lab25DevOptions() {
         logLine();

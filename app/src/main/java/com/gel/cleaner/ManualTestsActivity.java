@@ -1379,7 +1379,7 @@ private void lab18ThermalQuestionnaire() { lab18(); }
 
 private void lab18() {
     logLine();
-    logInfo("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
+    logInfo("LAB 18 — LIVE + MANUAL thermal stress.");
 
     Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;

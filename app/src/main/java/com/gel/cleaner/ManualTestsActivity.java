@@ -3294,21 +3294,18 @@ private String fmt1(float v) {
     return String.format(Locale.US, "%.1f", v);
 }
 
-// ============================================================
-// LAB 30 — AUTO Final Service Notes (PDF Export Trigger)
-// Clean version — no addLog(), no dependencies.
-// ============================================================
+// ----------------------------------------------------------
+// LAB 30 — FINAL SERVICE NOTES (OPEN EXPORT SCREEN)
+// ----------------------------------------------------------
 private void lab30FinalServiceNotes() {
-
     try {
-        Intent i = new Intent(this, ServiceReportActivity.class);
-        startActivity(i);
+        // Απλά ανοίγουμε το ServiceReportActivity
+        Intent intent = new Intent(this, ServiceReportActivity.class);
+        startActivity(intent);
     } catch (Exception e) {
-        Toast.makeText(
-                this,
-                "Error opening report: " + e.getMessage(),
-                Toast.LENGTH_LONG
-        ).show();
+        Toast.makeText(this,
+                "Error: " + e.getMessage(),
+                Toast.LENGTH_LONG).show();
     }
 }
 

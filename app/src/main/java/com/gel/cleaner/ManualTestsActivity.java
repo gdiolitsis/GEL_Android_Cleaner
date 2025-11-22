@@ -231,7 +231,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         root.addView(body7);
 
         body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));
-        body7.addView(makeTestButton("28. App Permissions & Privacy (manual)", this::lab28PermissionsPrivacy));
+        body7.addView(makeTestButton("28. App Permissions & Privacy (FULL AUTO + RISK SCORE)", this::lab28PermissionsPrivacy));
         body7.addView(makeTestButton("29. AUTO Final Diagnosis Summary", this::lab29CombineFindings));
         body7.addView(makeTestButton("30. AUTO Final Service Notes (PDF Export)", this::lab30FinalNotes));
 

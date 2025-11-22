@@ -18,7 +18,7 @@ package com.gel.cleaner;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.pdf.PdfDocument; σε
+import android.graphics.pdf.PdfDocument;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.Manifest;

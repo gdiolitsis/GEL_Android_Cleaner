@@ -97,7 +97,16 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 
 public class ManualTestsActivity extends AppCompatActivity {
-
+// ============================================================
+    // GLOBAL FINAL SCORE FIELDS (used by Lab 30 PDF Report)
+    // Αυτά γεμίζουν στο Lab 29
+    // ============================================================
+    private String lastScoreHealth     = "N/A";
+    private String lastScorePerformance = "N/A";
+    private String lastScoreSecurity    = "N/A";
+    private String lastScorePrivacy     = "N/A";
+    private String lastFinalVerdict     = "N/A";
+    
     private ScrollView scroll;
     private TextView txtLog;
     private Handler ui;

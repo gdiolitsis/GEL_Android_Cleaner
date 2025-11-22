@@ -1358,7 +1358,7 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars) + PRO COLORS — SAFE VERSION
+// ASCII BAR (100 chars, MONOSPACE, NEVER WRAPS)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
@@ -1373,12 +1373,28 @@ private void printZoneAscii(String label, float t) {
     float pct = Math.min(1f, t / maxT);
     int bars = (int)(pct * 100f);
 
+    // Build the bar
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
+    while (sb.length() < 100) sb.append(" ");   // fill to exactly 100 chars
 
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
-    logInfo(sb.toString());
+    // PRINT WITH MONOSPACE TEXTVIEW
+    printMonospace(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    printMonospace(sb.toString());
 }
+
+// ============================================================
+// LOG WRAPPER WITH MONOSPACE
+// ============================================================
+private void printMonospace(String text) {
+    TextView tv = new TextView(this);
+    tv.setText(text);
+    tv.setTextColor(Color.WHITE);
+    tv.setTextSize(14f);
+    tv.setTypeface(Typeface.MONOSPACE);  // THE MAGIC FIX
+    logContainer.addView(tv);            // same container used by logInfo/logOk
+}
+    
 // ============================================================
 // LAB 18 — Heat Under Load (EXACT TEXT + COLORS LIKE PHOTOS)
 // ============================================================

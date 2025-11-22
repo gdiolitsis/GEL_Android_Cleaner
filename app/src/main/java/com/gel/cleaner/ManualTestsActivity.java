@@ -3295,50 +3295,50 @@ private String fmt1(float v) {
 }
 
 // ============================================================
-// LAB 30 — AUTO Final Service Notes (FULL FINAL AGGREGATOR + PDF)
-// Export must be 100% identical to ServiceReportActivity PDF
-// Saves to /Download
+// LAB 30 — FINAL SERVICE NOTES (FULL PDF EXPORT)
+// Identical export engine to ServiceReportActivity
 // ============================================================
 private void lab30FinalNotes() {
     logLine();
-    logInfo("LAB 30 — Final Service Notes (OPEN REPORT EXPORT)");
+    logInfo("LAB 30 — Final Service Notes (PDF Export)");
 
-    try {
-        // ------------------------------------------------------------
-        // 0) Require Manual Tests data only
-        // ------------------------------------------------------------
-        if (GELServiceLog.isEmpty()) {
-            String msg = "No diagnostic data found. Please run Manual Tests first.";
-            logWarn(msg);
-            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        // ------------------------------------------------------------
-        // 1) Exports PDF identical to ServiceReportActivity
-        // ------------------------------------------------------------
-        exportLab30Pdf();
-
-        logOk("Lab 30 finished.");
-
-    } catch (Exception e) {
-        logError("Lab 30 error: " + e.getMessage());
+    // --- 1) Check if any diagnostic data exists ---
+    if (GELServiceLog.isEmpty()) {
+        logWarn("No diagnostic data found. Run Manual Tests and then export.");
+        Toast.makeText(this,
+                "Run Manual Tests and then export.",
+                Toast.LENGTH_LONG).show();
+        return;
     }
+
+    // --- 2) Run export ---
+    try {
+        exportLab30Pdf();
+    } catch (Exception e) {
+        logError("PDF Export Error: " + e.getMessage());
+    }
+
+    logOk("Lab 30 finished.");
 }
 
-// ------------------------------------------------------------
-// PDF EXPORT — MULTI PAGE + LOGO (IDENTICAL ENGINE)
-// ------------------------------------------------------------
+
+// ============================================================
+// LAB 30 PDF Export — SAME ENGINE AS ServiceReportActivity
+// ============================================================
 private void exportLab30Pdf() {
     try {
+        // Output folder = Downloads
         File outDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS);
+                Environment.DIRECTORY_DOWNLOADS
+        );
         if (!outDir.exists()) outDir.mkdirs();
 
-        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                .format(new Date());
         File out = new File(outDir, "GEL_Service_Report_" + time + ".pdf");
 
-        String body = buildLab30ReportBody();
+        // Build report body (same function as ServiceReportActivity)
+        String body = buildLab30Body();
 
         PdfDocument pdf = new PdfDocument();
         Paint paint = new Paint();
@@ -3361,6 +3361,7 @@ private void exportLab30Pdf() {
 
             y = margin;
 
+            // Try draw GEL logo
             try {
                 Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
                 if (logo != null) {
@@ -3402,26 +3403,22 @@ private void exportLab30Pdf() {
         pdf.close();
 
         Toast.makeText(this,
-                "PDF " + getString(R.string.toast_done) + "\n" + out.getAbsolutePath(),
+                "PDF saved to Downloads\n" + out.getAbsolutePath(),
                 Toast.LENGTH_LONG).show();
 
-        logOk("PDF created: " + out.getAbsolutePath());
-
-        // Reset manual log after export (same behavior)
-        GELServiceLog.clear();
+        logOk("PDF exported: " + out.getAbsolutePath());
 
     } catch (Exception e) {
-        logError("PDF generation error: " + e.getMessage());
         Toast.makeText(this,
-                getString(R.string.export_pdf_error) + ": " + e.getMessage(),
+                "PDF Export Error: " + e.getMessage(),
                 Toast.LENGTH_LONG).show();
     }
 }
 
-// ------------------------------------------------------------
-// Build FULL FINAL AGGREGATED BODY (ALL LABS + SCORES + VERDICT)
-// ------------------------------------------------------------
-private String buildLab30ReportBody() {
+// ============================================================
+// Body Builder — SAME text style as ServiceReportActivity
+// ============================================================
+private String buildLab30Body() {
     StringBuilder sb = new StringBuilder();
 
     sb.append(getString(R.string.report_title)).append("\n");
@@ -3441,56 +3438,38 @@ private String buildLab30ReportBody() {
             .append(Build.VERSION.RELEASE)
             .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
-    // ------------------------------------------------------------
-    // FINAL SCORES FROM LAB 29
-    // ------------------------------------------------------------
-    String health  = (lastScoreHealth != null) ? lastScoreHealth : "N/A";
-    String perf    = (lastScorePerformance != null) ? lastScorePerformance : "N/A";
-    String sec     = (lastScoreSecurity != null) ? lastScoreSecurity : "N/A";
-    String priv    = (lastScorePrivacy != null) ? lastScorePrivacy : "N/A";
-    String verdict = (lastFinalVerdict != null) ? lastFinalVerdict : "N/A";
+    // DAMAGE (Same as ServiceReportActivity)
+    sb.append(getString(R.string.damage_title)).append("\n");
+    appendDamageLine(sb, R.string.damage_screen);
+    appendDamageLine(sb, R.string.damage_pixels);
+    appendDamageLine(sb, R.string.damage_amoled);
+    appendDamageLine(sb, R.string.damage_charge_port);
+    appendDamageLine(sb, R.string.damage_speaker);
+    appendDamageLine(sb, R.string.damage_mic);
+    appendDamageLine(sb, R.string.damage_battery);
+    appendDamageLine(sb, R.string.damage_water);
+    sb.append("\n");
 
-    sb.append("FINAL SCORES (from Device Score Lab 29)\n");
-    sb.append("----------------------------------------\n");
-    sb.append("• Device Health Score: ").append(health).append("\n");
-    sb.append("• Performance Score:   ").append(perf).append("\n");
-    sb.append("• Security Score:      ").append(sec).append("\n");
-    sb.append("• Privacy Score:       ").append(priv).append("\n\n");
+    sb.append(getString(R.string.report_diag_header)).append("\n\n");
 
-    sb.append("FINAL VERDICT\n");
-    sb.append("----------------------------------------\n");
-    sb.append(verdict).append("\n\n");
+    // **Here we use the same diagnostic log as ServiceReportActivity**
+    if (GELServiceLog.isEmpty()) {
+        sb.append(getString(R.string.report_no_entries)).append("\n");
+    } else {
+        sb.append(GELServiceLog.getAll()).append("\n");
+    }
 
-    // ------------------------------------------------------------
-    // FULL OK / WARN / ERROR LIST FROM ALL LABS
-    // ------------------------------------------------------------
-    sb.append(getString(R.string.report_diag_header)).append("\n");
-    sb.append("----------------------------------------\n\n");
-
-    sb.append(GELServiceLog.getAll()).append("\n");
-
-    // ------------------------------------------------------------
-    // TECHNICIAN NOTES
-    // ------------------------------------------------------------
-    sb.append("\nTECHNICIAN NOTES\n");
-    sb.append("----------------------------------------\n");
-    sb.append("• Main findings: _______________________________\n");
-    sb.append("• Suspected faulty modules: _____________________\n");
-    sb.append("• Recommended actions: _________________________\n");
-    sb.append("• Customer notes: ______________________________\n\n");
-
-    sb.append(getString(R.string.report_end)).append("\n");
+    sb.append("\n").append(getString(R.string.report_end)).append("\n");
     sb.append(getString(R.string.report_signature))
             .append(" __________________________\n");
 
     return sb.toString();
 }
 
-// ------------------------------------------------------------
-// Helper: unicode wrap identical to ServiceReportActivity
-// ------------------------------------------------------------
+// ============================================================
+// Utilities (same as ServiceReportActivity)
+// ============================================================
 private String unicodeWrap(String text, int width) {
-    if (text == null) return "";
     if (text.length() <= width) return text;
 
     StringBuilder sb = new StringBuilder();
@@ -3504,6 +3483,14 @@ private String unicodeWrap(String text, int width) {
     return sb.toString();
 }
 
+private void appendDamageLine(StringBuilder sb, int labelRes) {
+    sb.append("- ")
+            .append(getString(labelRes))
+            .append(": ")
+            .append(getString(R.string.damage_yes_no))
+            .append("\n");
+}
+    
 // ============================================================
 // END OF CLASS
 // ============================================================

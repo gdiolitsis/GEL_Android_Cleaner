@@ -1358,29 +1358,40 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars — no emojis → never wraps)
+// ASCII BAR (100 chars, fits in ONE LINE @ 7sp)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // Color icon for the LABEL ONLY (safe – single emoji)
+    // Color icon (keeps the UI style)
     String color;
     if (t < 45)        color = "🟩";
     else if (t < 60)   color = "🟨";
     else               color = "🟥";
 
-    // Normalize temperature to 0–100 (max at 80°C)
+    // BAR NORMALIZATION (100 chars, full at 80°C)
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
-    int bars = (int)(pct * 100f);  // FULL 100 chars
+    int bars = (int)(pct * 100f);
 
-    // Build uniform 100-char bar using '█'
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // 🚫 NO ℹ️ ICON — DIRECT RAW TEXT (never wraps)
+    // Print header line with ℹ️
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
-    logInfo(sb.toString());
+
+    // === SMALL MONOSPACE BAR (7sp, NEVER WRAPS) ===
+    TextView tv = new TextView(this);
+    tv.setText(sb.toString());
+    tv.setTextColor(Color.WHITE);
+
+    tv.setTextSize(7f);                  // 🔥 Requested size → fits all phones
+    tv.setTypeface(Typeface.MONOSPACE);  // ensures 1:1 chars
+    tv.setSingleLine(true);              // 🔥 forces single line
+    tv.setHorizontallyScrolling(true);   // 🔥 prevents wrapping ALWAYS
+    tv.setPadding(10, 0, 10, 10);
+
+    logContainer.addView(tv);
 }
     
 // ============================================================

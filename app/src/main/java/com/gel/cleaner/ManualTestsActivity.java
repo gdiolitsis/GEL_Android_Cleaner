@@ -3295,54 +3295,45 @@ private String fmt1(float v) {
 }
 
 // ============================================================
-// LAB 30 — FINAL SERVICE NOTES (FULL PDF EXPORT)
-// Identical export engine to ServiceReportActivity
+// LAB 30 — AUTO Final Service Notes (PDF Export Trigger)
+// This lab now simply opens ServiceReportActivity,
+// without writing anything to GELServiceLog when empty.
 // ============================================================
-private void lab30FinalNotes() {
-    logLine();
-    logInfo("LAB 30 — Final Service Notes (PDF Export)");
+private void lab30FinalServiceNotes() {
 
-    // --- 1) Check if any diagnostic data exists ---
+    // ------------------------------------------------------------
+    // DO NOT add any logs if no diagnostics exist.
+    // This allows ServiceReportActivity to show:
+    // "No diagnostics yet. Run Manual Tests and then export."
+    // ------------------------------------------------------------
     if (GELServiceLog.isEmpty()) {
-        logWarn("No diagnostic data found. Run Manual Tests and then export.");
-        Toast.makeText(this,
-                "Run Manual Tests and then export.",
-                Toast.LENGTH_LONG).show();
+        // No logs at all → do NOT write anything.
+        // Just open the export screen (ServiceReportActivity).
+        try {
+            Intent i = new Intent(this, ServiceReportActivity.class);
+            startActivity(i);
+        } catch (Exception e) {
+            Toast.makeText(this,
+                    "Error opening report: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
         return;
     }
 
-    // --- 2) Run export ---
-    try {
-        exportLab30Pdf();
-    } catch (Exception e) {
-        logError("PDF Export Error: " + e.getMessage());
-    }
-
-    logOk("Lab 30 finished.");
-}
-
-
-// ============================================================
-// LAB 30 — AUTO Final Service Notes (PDF Export)
-// Χωρίς υπολογισμούς, χωρίς PDF εδώ — απλώς ανοίγει το
-// ServiceReportActivity για πλήρες export report.
-// ============================================================
-
-private void lab30FinalServiceNotes() {
+    // ------------------------------------------------------------
+    // If logs DO exist → add the usual entries
+    // ------------------------------------------------------------
     addLog("INFO", "LAB 30 — Final Service Notes (OPEN REPORT EXPORT)");
-    openServiceReport();
-    addLog("OK", "Lab 30 finished.");
-}
 
-// ------------------------------------------------------------
-// Open ServiceReportActivity (FULL EXPORT PAGE)
-// ------------------------------------------------------------
-private void openServiceReport() {
+    // Finish & open export
     try {
-        Intent intent = new Intent(this, ServiceReportActivity.class);
-        startActivity(intent);
+        Intent i = new Intent(this, ServiceReportActivity.class);
+        startActivity(i);
+        addLog("OK", "Lab 30 finished.");
     } catch (Exception e) {
-        toast("Error opening report: " + e.getMessage());
+        Toast.makeText(this,
+                "Error opening report: " + e.getMessage(),
+                Toast.LENGTH_LONG).show();
     }
 }
     

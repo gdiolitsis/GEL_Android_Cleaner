@@ -1358,17 +1358,17 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars, NEVER WRAPS, FULLY SAFE FOR GEL LOGS)
+// ASCII BAR (100 chars, MONOSPACE-SAFE SYMBOLS, NEVER WRAPS)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // 1) Color logic
-    String color;
-    if (t < 45)        color = "🟩";
-    else if (t < 60)   color = "🟨";
-    else               color = "🟥";
+    // 1) Monospace-safe color symbols
+    String icon;
+    if (t < 45)        icon = "[";   // green
+    else if (t < 60)   icon = "~";   // yellow
+    else               icon = "!";   // red
 
-    // 2) Normalize 0–100 (full bar at 80°C)
+    // 2) Normalize to 0–100 (full bar at 80°C)
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
     int bars = (int)(pct * 100f);
@@ -1378,11 +1378,11 @@ private void printZoneAscii(String label, float t) {
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // 4) Convert spaces to narrow-no-break spaces (NEVER wraps)
+    // 4) Convert spaces → no-break spaces (prevents line wrap)
     String safeBar = sb.toString().replace(" ", "\u202f");
 
-    // 5) Print with existing GEL log system
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    // 5) Output (safe for your existing log system)
+    logInfo(label + ": " + icon + " " + String.format(Locale.US, "%.1f°C", t));
     logInfo(safeBar);
 }
     

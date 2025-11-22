@@ -1358,7 +1358,7 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars, stays ONE LINE using 7sp monospace)
+// ASCII BAR (100 chars — never wraps — 7sp via HTML)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
@@ -1368,28 +1368,26 @@ private void printZoneAscii(String label, float t) {
     else if (t < 60)   color = "🟨";
     else               color = "🟥";
 
-    // Temperature → 0–100%
+    // Temperature scale → 0–100 chars
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
     int bars = (int)(pct * 100);
 
-    // Build fixed 100-char bar
     StringBuilder sb = new StringBuilder(100);
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Header line with ℹ️ – stays as-is
+    // Header line with info icon
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // Second line → small monospace bar using logInfo
-    // 7sp ensures it NEVER wraps
-    String bar = sb.toString();
+    // BAR LINE — HTML monospace + SIZE=1 (≈ 7sp)
+    String html =
+            "<font face='monospace' size='1'>" +  // size 1 ≈ 7sp
+            sb.toString() +
+            "</font>";
 
-    SpannableString span = new SpannableString(bar);
-    span.setSpan(new TypefaceSpan("monospace"), 0, bar.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-    span.setSpan(new AbsoluteSizeSpan(7, true), 0, bar.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-    logInfo(span);
+    // SAFE: logInfo(String) will auto-render HTML using Html.fromHtml()
+    logInfo(html);
 }
     
 // ============================================================

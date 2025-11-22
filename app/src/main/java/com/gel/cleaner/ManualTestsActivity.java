@@ -3296,13 +3296,14 @@ private String fmt1(float v) {
 
 // ============================================================
 // LAB 30 — FINAL DEVICE SUMMARY AGGREGATOR
-// Writes ONLY to GELServiceLog (ServiceReportActivity prints PDF)
-// Compatible with GELServiceLog.add(tag, msg)
+// ============================================================
+// LAB 30 — FINAL DEVICE SUMMARY AGGREGATOR
+// Writes ONLY using public GELServiceLog methods
+// Output is 100% compatible with ServiceReportActivity PDF
 // ============================================================
 private void lab30FinalSummary() {
 
-    logLine();
-    logInfo("LAB 30 — Final Aggregated Summary (AUTO)");
+    GELServiceLog.addLine("===== FINAL DEVICE DIAGNOSIS REPORT =====");
 
     // ------------------------------
     // 1) Scores from Lab 29
@@ -3312,6 +3313,15 @@ private void lab30FinalSummary() {
     String scoreSec     = lastScoreSecurity   != null ? lastScoreSecurity   : "N/A";
     String scorePriv    = lastScorePrivacy    != null ? lastScorePrivacy    : "N/A";
     String finalVerdict = lastFinalVerdict    != null ? lastFinalVerdict    : "N/A";
+
+    GELServiceLog.info("Device Health Score: " + scoreHealth);
+    GELServiceLog.info("Performance Score: "   + scorePerf);
+    GELServiceLog.info("Security Score: "      + scoreSec);
+    GELServiceLog.info("Privacy Score: "       + scorePriv);
+
+    GELServiceLog.addLine("");
+    GELServiceLog.info("Final Verdict: " + finalVerdict);
+    GELServiceLog.addLine("");
 
     // ------------------------------
     // 2) Collect WARNING lines only
@@ -3326,52 +3336,29 @@ private void lab30FinalSummary() {
         if (low.contains("ok")) continue;
         if (low.contains("no issue")) continue;
         if (low.contains("all good")) continue;
-        if (l.trim().isEmpty()) continue;
 
-        warnings.append(l).append("\n");
+        if (low.contains("⚠") || low.contains("error") || low.contains("fail"))
+            warnings.append(l).append("\n");
     }
 
-    // ------------------------------
-    // 3) Clear log — write clean final
-    // ------------------------------
-    GELServiceLog.clear();
-
-    // ------------------------------
-    // 4) FINAL REPORT (tag,msg)
-    // ------------------------------
-    GELServiceLog.add("REPORT", "===== FINAL DEVICE DIAGNOSIS REPORT =====");
-    GELServiceLog.add("REPORT", "");
-
-    GELServiceLog.add("SCORES", "Device Health Score: "      + scoreHealth);
-    GELServiceLog.add("SCORES", "Performance Score: "        + scorePerf);
-    GELServiceLog.add("SCORES", "Security Score: "           + scoreSec);
-    GELServiceLog.add("SCORES", "Privacy Score: "            + scorePriv);
-
-    GELServiceLog.add("REPORT", "");
-    GELServiceLog.add("VERDICT", "Final Verdict:");
-    GELServiceLog.add("VERDICT", finalVerdict);
-    GELServiceLog.add("REPORT", "");
-
-    GELServiceLog.add("DETAILS", "Detailed Findings (Warnings Only):");
+    GELServiceLog.addLine("Detailed Findings (Warnings Only):");
 
     if (warnings.length() == 0) {
-        GELServiceLog.add("DETAILS", "No technician warnings found.");
+        GELServiceLog.ok("No technician warnings found.");
     } else {
         for (String w : warnings.toString().split("\n")) {
             if (!w.trim().isEmpty()) {
-                GELServiceLog.add("WARN", w.trim());
+                GELServiceLog.warn(w.trim());
             }
         }
     }
 
-    GELServiceLog.add("REPORT", "");
-    GELServiceLog.add("NOTES", "Technician Notes:");
-    GELServiceLog.add("NOTES", "Review thermals, battery, logic board and system logs.");
+    GELServiceLog.addLine("");
+    GELServiceLog.info("Technician Notes: Review thermals, battery, logic board and system logs.");
+    GELServiceLog.addLine("");
+    GELServiceLog.addLine("===== END OF REPORT =====");
 
-    GELServiceLog.add("REPORT", "");
-    GELServiceLog.add("REPORT", "===== END OF REPORT =====");
-
-    logOk("Lab 30 completed — Final summary prepared.");
+    Toast.makeText(this, "Lab 30 completed — Final summary prepared.", Toast.LENGTH_LONG).show();
 }
     
 // ============================================================

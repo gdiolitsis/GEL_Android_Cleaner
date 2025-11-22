@@ -3291,149 +3291,35 @@ private String fmt1(float v) {
 }
 
 // ============================================================
-// LAB 30 — FULL FINAL SERVICE REPORT (AGGREGATOR + PDF EXPORT)
-// GEL — Final Report Generator (Manual Tests required)
+// LAB 30 — OPEN SERVICE REPORT EXPORT (NO PDF HERE)
+// GDiolitsis Engine Lab (GEL)
 // ============================================================
 private void lab30FinalServiceNotes() {
-    logLine();
-    logInfo("LAB 30 — Final Service Notes (AUTO PDF Generator)");
 
-    // --------------------------------------------------------
-    // 1) PRECHECK – Να υπάρχουν MANUAL TESTS πριν το export
-    // --------------------------------------------------------
-    String currentLog = txtLog.getText().toString();
-    if (currentLog == null || currentLog.trim().length() < 50) {
-        logError("No diagnostic data found.");
-        Toast.makeText(
-                this,
-                "⚠ No diagnostic data found.\nPlease run Manual Tests first.",
-                Toast.LENGTH_LONG
-        ).show();
-        return;
-    }
+    logLine();
+    logInfo("LAB 30 — Final Service Notes (OPEN REPORT EXPORT)");
 
     try {
-        // --------------------------------------------------------
-        // 2) Φάκελος αποθήκευσης — PUBLIC Download
-        // --------------------------------------------------------
-        File downloads = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS
-        );
-        if (!downloads.exists()) downloads.mkdirs();
 
-        String fileName = "GEL_Final_Report_" + System.currentTimeMillis() + ".pdf";
-        File file = new File(downloads, fileName);
-
-        // --------------------------------------------------------
-        // 3) PDF GENERATION (Android Framework PdfDocument)
-        // --------------------------------------------------------
-        PdfDocument pdf = new PdfDocument();
-        Paint paint = new Paint();
-        paint.setColor(Color.BLACK);
-        paint.setTextSize(22f);
-
-        PdfDocument.PageInfo info =
-                new PdfDocument.PageInfo.Builder(1240, 1754, 1).create();
-        PdfDocument.Page page = pdf.startPage(info);
-        Canvas c = page.getCanvas();
-
-        int y = 80;
-
-        // --------------------------------------------------------
-        // HEADER
-        // --------------------------------------------------------
-        paint.setFakeBoldText(true);
-        paint.setTextSize(32f);
-        c.drawText("GEL — Final Service Report", 70, y, paint);
-        y += 50;
-
-        paint.setFakeBoldText(false);
-        paint.setTextSize(20f);
-        c.drawText("Generated from Manual Tests Log", 70, y, paint);
-        y += 40;
-
-        // --------------------------------------------------------
-        // BODY — FULL LOG EXPORT (wrapped)
-        // --------------------------------------------------------
-        paint.setTextSize(20f);
-        paint.setFakeBoldText(true);
-        c.drawText("Full Diagnostic Log:", 70, y, paint);
-        y += 40;
-
-        paint.setFakeBoldText(false);
-        wrapPdfText(c, paint, currentLog, 70, y, 1100);
-
-        pdf.finishPage(page);
-
-        // --------------------------------------------------------
-        // 4) SAVE PDF
-        // --------------------------------------------------------
-        FileOutputStream fos = new FileOutputStream(file);
-        pdf.writeTo(fos);
-        fos.close();
-        pdf.close();
-
-        logOk("PDF created: " + file.getAbsolutePath());
-
-        // --------------------------------------------------------
-        // 5) SHARE (FileProvider-safe)
-        // --------------------------------------------------------
-        try {
-            Uri uri = FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".provider",
-                    file
-            );
-
-            Intent share = new Intent(Intent.ACTION_SEND);
-            share.setType("application/pdf");
-            share.putExtra(Intent.EXTRA_STREAM, uri);
-            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            startActivity(Intent.createChooser(share, "Share report…"));
-        } catch (Exception e) {
-            logError("Share failed: " + e.getMessage());
+        // Αν δεν υπάρχουν διαγνωστικά δεδομένα → stop
+        if (GELServiceLog.isEmpty()) {
+            logError("No diagnostic data found. Please run Manual Tests first.");
+            Toast.makeText(this,
+                    "No diagnostic data found. Please run Manual Tests first.",
+                    Toast.LENGTH_LONG).show();
+            return;
         }
+
+        // Άνοιγμα του ServiceReportActivity
+        Intent intent = new Intent(this, ServiceReportActivity.class);
+        startActivity(intent);
+
+        logOk("Lab 30 finished.");
 
     } catch (Exception e) {
-        logError("PDF generation error: " + e.getMessage());
+        logError("Lab 30 exception: " + e.getMessage());
     }
-
-    logOk("Lab 30 finished.");
-}
-
-
-
-// ============================================================
-// TEXT WRAP HELPERS
-// ============================================================
-private void wrapPdfText(Canvas c, Paint p, String text, int x, int startY, int maxWidth) {
-    int y = startY;
-    for (String line : breakTextIntoLines(p, text, maxWidth)) {
-        c.drawText(line, x, y, p);
-        y += 32;
-    }
-}
-
-private List<String> breakTextIntoLines(Paint p, String text, int maxWidth) {
-    List<String> lines = new ArrayList<>();
-    if (text == null) return lines;
-
-    String[] words = text.split(" ");
-    StringBuilder sb = new StringBuilder();
-
-    for (String w : words) {
-        String test = sb + w + " ";
-        if (p.measureText(test) > maxWidth) {
-            lines.add(sb.toString());
-            sb = new StringBuilder();
-        }
-        sb.append(w).append(" ");
-    }
-    if (sb.length() > 0) lines.add(sb.toString());
-
-    return lines;
-}                              
+}                               
 
 // ============================================================
 // END OF CLASS

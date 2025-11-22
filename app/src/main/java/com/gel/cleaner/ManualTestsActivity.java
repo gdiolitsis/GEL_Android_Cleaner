@@ -3323,8 +3323,13 @@ private void lab30FinalNotes() {
 
 
 // ============================================================
-// LAB 30 PDF Export — SAME ENGINE AS ServiceReportActivity
+// LAB 30 — FINAL SERVICE NOTES (USE ServiceReportActivity)
 // ============================================================
+private void lab30FinalServiceNotes() {
+    // Απλή κλήση στο ServiceReportActivity
+    Intent i = new Intent(this, ServiceReportActivity.class);
+    startActivity(i);
+}
 private void exportLab30Pdf() {
     try {
         // Output folder = Downloads

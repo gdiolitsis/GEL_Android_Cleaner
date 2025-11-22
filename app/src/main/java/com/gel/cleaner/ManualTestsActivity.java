@@ -3323,177 +3323,27 @@ private void lab30FinalNotes() {
 
 
 // ============================================================
-// LAB 30 — FINAL SERVICE NOTES (USE ServiceReportActivity)
+// LAB 30 — AUTO Final Service Notes (PDF Export)
+// Χωρίς υπολογισμούς, χωρίς PDF εδώ — απλώς ανοίγει το
+// ServiceReportActivity για πλήρες export report.
 // ============================================================
+
 private void lab30FinalServiceNotes() {
-    // Απλή κλήση στο ServiceReportActivity
-    Intent i = new Intent(this, ServiceReportActivity.class);
-    startActivity(i);
+    addLog("INFO", "LAB 30 — Final Service Notes (OPEN REPORT EXPORT)");
+    openServiceReport();
+    addLog("OK", "Lab 30 finished.");
 }
-private void exportLab30Pdf() {
+
+// ------------------------------------------------------------
+// Open ServiceReportActivity (FULL EXPORT PAGE)
+// ------------------------------------------------------------
+private void openServiceReport() {
     try {
-        // Output folder = Downloads
-        File outDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS
-        );
-        if (!outDir.exists()) outDir.mkdirs();
-
-        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                .format(new Date());
-        File out = new File(outDir, "GEL_Service_Report_" + time + ".pdf");
-
-        // Build report body (same function as ServiceReportActivity)
-        String body = buildLab30Body();
-
-        PdfDocument pdf = new PdfDocument();
-        Paint paint = new Paint();
-
-        int pageWidth = 595;
-        int pageHeight = 842;
-        int margin = 40;
-        int y;
-
-        String[] lines = body.split("\n");
-        int currentLine = 0;
-        int pageNumber = 1;
-
-        while (currentLine < lines.length) {
-
-            PdfDocument.PageInfo pageInfo =
-                    new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
-            PdfDocument.Page page = pdf.startPage(pageInfo);
-            Canvas canvas = page.getCanvas();
-
-            y = margin;
-
-            // Try draw GEL logo
-            try {
-                Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
-                if (logo != null) {
-                    Bitmap scaled = Bitmap.createScaledBitmap(logo, 64, 64, true);
-                    canvas.drawBitmap(scaled, margin, y, paint);
-                }
-            } catch (Exception ignored) {}
-
-            paint.setColor(0xFF000000);
-            paint.setTextSize(14f);
-            canvas.drawText(getString(R.string.report_title), margin + 80, y + 25, paint);
-
-            paint.setTextSize(10f);
-            canvas.drawText(getString(R.string.report_dev_line), margin + 80, y + 45, paint);
-
-            y += 90;
-            paint.setTextSize(9f);
-
-            int lineHeight = 12;
-            int maxY = pageHeight - margin;
-
-            while (currentLine < lines.length && y < maxY) {
-                String line = unicodeWrap(lines[currentLine], 85);
-                for (String sub : line.split("\n")) {
-                    if (y >= maxY) break;
-                    canvas.drawText(sub, margin, y, paint);
-                    y += lineHeight;
-                }
-                currentLine++;
-            }
-
-            pdf.finishPage(page);
-            pageNumber++;
-        }
-
-        FileOutputStream fos = new FileOutputStream(out);
-        pdf.writeTo(fos);
-        fos.close();
-        pdf.close();
-
-        Toast.makeText(this,
-                "PDF saved to Downloads\n" + out.getAbsolutePath(),
-                Toast.LENGTH_LONG).show();
-
-        logOk("PDF exported: " + out.getAbsolutePath());
-
+        Intent intent = new Intent(this, ServiceReportActivity.class);
+        startActivity(intent);
     } catch (Exception e) {
-        Toast.makeText(this,
-                "PDF Export Error: " + e.getMessage(),
-                Toast.LENGTH_LONG).show();
+        toast("Error opening report: " + e.getMessage());
     }
-}
-
-// ============================================================
-// Body Builder — SAME text style as ServiceReportActivity
-// ============================================================
-private String buildLab30Body() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(getString(R.string.report_title)).append("\n");
-    sb.append(getString(R.string.report_dev_line)).append("\n");
-    sb.append("----------------------------------------\n");
-
-    sb.append(getString(R.string.report_date)).append(": ")
-            .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                    .format(new Date()))
-            .append("\n\n");
-
-    sb.append(getString(R.string.report_device)).append(": ")
-            .append(Build.MANUFACTURER).append(" ")
-            .append(Build.MODEL).append("\n");
-
-    sb.append(getString(R.string.report_android)).append(": ")
-            .append(Build.VERSION.RELEASE)
-            .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
-
-    // DAMAGE (Same as ServiceReportActivity)
-    sb.append(getString(R.string.damage_title)).append("\n");
-    appendDamageLine(sb, R.string.damage_screen);
-    appendDamageLine(sb, R.string.damage_pixels);
-    appendDamageLine(sb, R.string.damage_amoled);
-    appendDamageLine(sb, R.string.damage_charge_port);
-    appendDamageLine(sb, R.string.damage_speaker);
-    appendDamageLine(sb, R.string.damage_mic);
-    appendDamageLine(sb, R.string.damage_battery);
-    appendDamageLine(sb, R.string.damage_water);
-    sb.append("\n");
-
-    sb.append(getString(R.string.report_diag_header)).append("\n\n");
-
-    // **Here we use the same diagnostic log as ServiceReportActivity**
-    if (GELServiceLog.isEmpty()) {
-        sb.append(getString(R.string.report_no_entries)).append("\n");
-    } else {
-        sb.append(GELServiceLog.getAll()).append("\n");
-    }
-
-    sb.append("\n").append(getString(R.string.report_end)).append("\n");
-    sb.append(getString(R.string.report_signature))
-            .append(" __________________________\n");
-
-    return sb.toString();
-}
-
-// ============================================================
-// Utilities (same as ServiceReportActivity)
-// ============================================================
-private String unicodeWrap(String text, int width) {
-    if (text.length() <= width) return text;
-
-    StringBuilder sb = new StringBuilder();
-    int index = 0;
-
-    while (index < text.length()) {
-        int end = Math.min(index + width, text.length());
-        sb.append(text, index, end).append("\n");
-        index = end;
-    }
-    return sb.toString();
-}
-
-private void appendDamageLine(StringBuilder sb, int labelRes) {
-    sb.append("- ")
-            .append(getString(labelRes))
-            .append(": ")
-            .append(getString(R.string.damage_yes_no))
-            .append("\n");
 }
     
 // ============================================================

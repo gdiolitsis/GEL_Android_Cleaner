@@ -248,32 +248,49 @@ public class ManualTestsActivity extends AppCompatActivity {
         body6.addView(makeTestButton("26. Root / Bootloader Suspicion Checklist (manual)", this::lab26RootSuspicion));
 
         // ========== SECTION 7: ADVANCED / LOGS — LABS 27–30 ==========
-        LinearLayout body7 = makeSectionBody();
-        Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
-        root.addView(header7);
-        root.addView(body7);
+LinearLayout body7 = makeSectionBody();
+Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
+root.addView(header7);
+root.addView(body7);
 
-        body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));
-        body7.addView(makeTestButton("28. App Permissions & Privacy (FULL AUTO + RISK SCORE)", this::lab28PermissionsPrivacy));
-        body7.addView(makeTestButton("29. AUTO Final Diagnosis Summary", this::lab29CombineFindings));
-        body7.addView(makeTestButton("30. AUTO Final Service Notes (PDF Export)", this::lab30FinalServiceNotes));
+body7.addView(makeTestButton(
+        "27. Crash / Freeze History (interview)",
+        this::lab27CrashHistory
+));
 
-        // LOG AREA
-        txtLog = new TextView(this);
-        txtLog.setTextSize(13f);
-        txtLog.setTextColor(0xFFEEEEEE);
-        txtLog.setPadding(0, dp(16), 0, dp(8));
-        txtLog.setMovementMethod(new ScrollingMovementMethod());
-        txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
+body7.addView(makeTestButton(
+        "28. App Permissions & Privacy (FULL AUTO + RISK SCORE)",
+        this::lab28PermissionsPrivacy
+));
 
-        root.addView(txtLog);
-        scroll.addView(root);
-        setContentView(scroll);
+body7.addView(makeTestButton(
+        "29. AUTO Final Diagnosis Summary",
+        this::lab29CombineFindings
+));
 
-        // First log entry
-        GELServiceLog.clear();
-        logInfo(getString(R.string.manual_log_desc));
-    }   // onCreate ends here
+body7.addView(makeTestButton(
+        "30. AUTO Final Service Notes (PDF Export)",
+        this::lab30FinalSummary       // ✔ FIXED
+));
+
+// LOG AREA
+txtLog = new TextView(this);
+txtLog.setTextSize(13f);
+txtLog.setTextColor(0xFFEEEEEE);
+txtLog.setPadding(0, dp(16), 0, dp(8));
+txtLog.setMovementMethod(new ScrollingMovementMethod());
+txtLog.setText(Html.fromHtml(
+        "<b>" + getString(R.string.manual_log_title) + "</b><br>"
+));
+
+root.addView(txtLog);
+scroll.addView(root);
+setContentView(scroll);
+
+// First log entry
+GELServiceLog.clear();
+logInfo(getString(R.string.manual_log_desc));
+}   // onCreate ends here
 
 
     // ============================================================

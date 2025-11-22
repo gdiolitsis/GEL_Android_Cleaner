@@ -2331,20 +2331,22 @@ private String lab26_readOneLine(String path) {
 // ============================================================
 
 // ============================================================
-// LAB 27 — AUTO Crash / Freeze History (FULL AUTO EDITION)
+// LAB 27 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
 private void lab27CrashHistory() {
+
     logLine();
-    logInfo("LAB 27 — Crash / Freeze History (AUTO).");
+    logInfo("LAB 27 — GEL Crash Intelligence (AUTO)");
 
     int crashCount = 0;
     int anrCount = 0;
     int systemCount = 0;
 
+    Map<String, Integer> appEvents = new HashMap<>(); // Group per app
     List<String> details = new ArrayList<>();
 
     // ============================================================
-    // (A) Android 11+ — Process Exit Reasons (BEST SOURCE)
+    // (A) Android 11+ — Process Exit Reasons
     // ============================================================
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -2353,12 +2355,17 @@ private void lab27CrashHistory() {
                 List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();
                 if (errs != null) {
                     for (ActivityManager.ProcessErrorStateInfo e : errs) {
+
+                        String app = e.processName;
+                        appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
+
                         if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
                             crashCount++;
-                            details.add("CRASH: " + e.processName + " — " + e.shortMsg);
-                        } else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                            details.add("CRASH: " + app + " — " + e.shortMsg);
+                        } 
+                        else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
                             anrCount++;
-                            details.add("ANR: " + e.processName + " — " + e.shortMsg);
+                            details.add("ANR: " + app + " — " + e.shortMsg);
                         }
                     }
                 }
@@ -2366,9 +2373,8 @@ private void lab27CrashHistory() {
         }
     } catch (Exception ignored) {}
 
-
     // ============================================================
-    // (B) OLD Android — DropBox Crash Logs
+    // (B) DropBox crash logs — legacy Android sources
     // ============================================================
     try {
         DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
@@ -2383,13 +2389,21 @@ private void lab27CrashHistory() {
 
             for (String tag : tags) {
                 DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
+
                 while (ent != null) {
+
                     if (tag.contains("crash")) crashCount++;
                     if (tag.contains("anr")) anrCount++;
                     if (tag.contains("server")) systemCount++;
 
-                    String txt = readDropBoxEntry(ent);
-                    details.add(tag.toUpperCase(Locale.US) + ": " + (txt != null ? txt : "(no text)"));
+                    String shortTxt = readDropBoxEntry(ent);
+
+                    String clean = tag.toUpperCase(Locale.US).replace("_", " ");
+                    details.add(clean + ": " + shortTxt);
+
+                    // grouping
+                    String key = clean;
+                    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
 
                     ent = db.getNextEntry(tag, ent.getTimeMillis());
                 }
@@ -2398,72 +2412,83 @@ private void lab27CrashHistory() {
 
     } catch (Exception ignored) {}
 
-
     // ============================================================
-    // SUMMARY + RISK SCORE
+    // (C) SUMMARY + RISK SCORE
     // ============================================================
     int risk = 0;
-
-    if (crashCount == 0 && anrCount == 0 && systemCount == 0) {
-        logOk("No crash history found — system stability appears strong.");
-        logOk("Lab 27 finished.");
-        return;
-    }
-
-    if (crashCount > 0) risk += crashCount * 5;
-    if (anrCount > 0) risk += anrCount * 8;
-    if (systemCount > 0) risk += systemCount * 15;
-
-    // CAP RISK 0–100
+    risk += crashCount * 5;
+    risk += anrCount * 8;
+    risk += systemCount * 15;
     if (risk > 100) risk = 100;
 
-    if (risk <= 20)
-        logOk("Stability Risk: " + risk + "% (Good)");
-    else if (risk <= 50)
-        logWarn("Stability Risk: " + risk + "% (Moderate)");
-    else if (risk <= 80)
-        logWarn("Stability Risk: " + risk + "% (High)");
-    else
-        logError("Stability Risk: " + risk + "% (Critical)");
+    // COLOR INDICATOR
+    String riskColor =
+            (risk <= 20) ? "🟩" :
+            (risk <= 50) ? "🟨" :
+            (risk <= 80) ? "🟧" : "🟥";
 
     logInfo("Crash events: " + crashCount);
     logInfo("ANR events: " + anrCount);
     logInfo("System-level faults: " + systemCount);
 
-    logLine();
-    logInfo("Detailed Events:");
+    logInfo(riskColor + " Stability Risk Score: " + risk + "%");
 
-    for (String d : details) {
-        logInfo(d);
+    // ============================================================
+    // (D) HEATMAP (top offenders)
+    // ============================================================
+    if (!appEvents.isEmpty()) {
+        logLine();
+        logInfo("Top Offenders (Heatmap):");
+
+        appEvents.entrySet()
+                .stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(5)
+                .forEach(e -> {
+                    String c = (e.getValue() >= 10) ? "🟥" :
+                               (e.getValue() >= 5)  ? "🟧" :
+                               (e.getValue() >= 2)  ? "🟨" :
+                                                      "🟩";
+                    logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");
+                });
+    }
+
+    // ============================================================
+    // (E) FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+        logLine();
+        logInfo("Detailed Crash Records:");
+        for (String d : details) logInfo(d);
+    } else {
+        logOk("No crash history found.");
     }
 
     logOk("Lab 27 finished.");
 }
 
-
 // ============================================================
-// READ DROPBOX TEXT
-// (tiny helper inside the same block → allowed)
+// SMALL helper inside same block (allowed)
+// Reads first 10 lines of DropBox entry
 // ============================================================
 private String readDropBoxEntry(DropBoxManager.Entry ent) {
     try {
-        if (ent == null) return null;
+        if (ent == null) return "(no text)";
         InputStream is = ent.getInputStream();
-        if (is == null) return null;
+        if (is == null) return "(no text)";
 
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
         String line;
         int count = 0;
-
-        while ((line = br.readLine()) != null && count < 10) { // only first 10 lines
-            sb.append(line).append("\n");
+        while ((line = br.readLine()) != null && count < 10) {
+            sb.append(line).append(" ");
             count++;
         }
         br.close();
-        return sb.toString();
+        return sb.toString().trim();
     } catch (Exception e) {
-        return null;
+        return "(read error)";
     }
 }
 

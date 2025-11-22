@@ -1358,41 +1358,32 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars, MONOSPACE, NEVER WRAPS)
+// ASCII BAR (100 chars, NEVER WRAPS, FULLY SAFE FOR GEL LOGS)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // Color logic
+    // 1) Color logic
     String color;
     if (t < 45)        color = "🟩";
     else if (t < 60)   color = "🟨";
     else               color = "🟥";
 
-    // Normalize to 0–100 (full bar at 80°C)
+    // 2) Normalize 0–100 (full bar at 80°C)
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
     int bars = (int)(pct * 100f);
 
-    // Build the bar
+    // 3) Build EXACT 100-character bar
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
-    while (sb.length() < 100) sb.append(" ");   // fill to exactly 100 chars
+    while (sb.length() < 100) sb.append(" ");
 
-    // PRINT WITH MONOSPACE TEXTVIEW
-    printMonospace(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
-    printMonospace(sb.toString());
-}
+    // 4) Convert spaces to narrow-no-break spaces (NEVER wraps)
+    String safeBar = sb.toString().replace(" ", "\u202f");
 
-// ============================================================
-// LOG WRAPPER WITH MONOSPACE
-// ============================================================
-private void printMonospace(String text) {
-    TextView tv = new TextView(this);
-    tv.setText(text);
-    tv.setTextColor(Color.WHITE);
-    tv.setTextSize(14f);
-    tv.setTypeface(Typeface.MONOSPACE);  // THE MAGIC FIX
-    logContainer.addView(tv);            // same container used by logInfo/logOk
+    // 5) Print with existing GEL log system
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    logInfo(safeBar);
 }
     
 // ============================================================

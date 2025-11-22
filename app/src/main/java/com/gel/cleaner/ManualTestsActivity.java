@@ -1358,11 +1358,12 @@ private void lab17ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars — fits in ONE line @ 7sp monospace)
+// ASCII BAR (100 chars — fits in ONE line — small monospace)
+// Uses ONLY existing appendHtml/escape/logInfo
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-    // Color icon
+    // Color icon (keeps your info marker line)
     String color;
     if (t < 45)        color = "🟩";
     else if (t < 60)   color = "🟨";
@@ -1371,17 +1372,19 @@ private void printZoneAscii(String label, float t) {
     // Temperature scale → 0–100 chars
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
-    int bars = (int)(pct * 100);
+    int bars = (int)(pct * 100f);
 
+    // Build exactly 100 chars bar (filled + spaces)
     StringBuilder sb = new StringBuilder(100);
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Header line (normal font)
+    // Header line (normal size)
     logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // BAR line (7sp monospace → never wraps)
-    logInfoSmall(sb.toString());
+    // BAR line (small + monospace, never wraps)
+    // <tt> => monospace, <small> => ~7sp look
+    appendHtml("<small><tt>" + escape(sb.toString()) + "</tt></small>");
 }
     
 // ============================================================

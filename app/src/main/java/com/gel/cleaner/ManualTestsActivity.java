@@ -1531,7 +1531,7 @@ private String asciiBar(float t) {
 
 
 // ============================================================
-// THERMAL HELPERS (AUTO-SCALE)
+// THERMAL HELPERS (GEL UNIVERSAL AUTO-SCALE — FINAL EDITION)
 // ============================================================
 private Map<String, Float> readThermalZones() {
     Map<String, Float> out = new HashMap<>();
@@ -1550,31 +1550,53 @@ private Map<String, Float> readThermalZones() {
 
         String type = name;
         try {
+            // Read zone type if available
             if (typeFile.exists()) {
                 type = readFirstLine(typeFile);
-                if (type == null || type.trim().isEmpty()) type = name;
+                if (type == null || type.trim().isEmpty())
+                    type = name;
             }
 
+            // Read raw temperature
             String tRaw = readFirstLine(tempFile);
             if (tRaw == null) continue;
+
             float v = Float.parseFloat(tRaw.trim());
 
-            if (v > 10000f) v = v / 1000f;
-            else if (v > 500f) v = v / 10f;
-            else if (v > 200f) v = v / 100f;
+            // ============================================================
+            // GEL UNIVERSAL AUTO-SCALE (fix for ALL Android devices)
+            // ============================================================
+            if (v > 1000f) {
+                // millidegree → Pixel / Samsung / Huawei
+                v = v / 1000f;
+            } 
+            else if (v > 200f) {
+                // centidegree → Xiaomi / Redmi / POCO
+                v = v / 100f;
+            } 
+            else if (v > 20f) {
+                // deci-degree → some MediaTek devices
+                v = v / 10f;
+            }
+            // else → already °C
 
             out.put(type.toLowerCase(Locale.US), v);
 
         } catch (Throwable ignore) {}
     }
+
     return out;
 }
 
+// ============================================================
+// PICK ZONE
+// ============================================================
 private Float pickZone(Map<String, Float> zones, String... keys) {
     if (zones == null || zones.isEmpty()) return null;
 
     List<String> list = new ArrayList<>();
-    for (String k : keys) if (k != null) list.add(k.toLowerCase(Locale.US));
+    for (String k : keys)
+        if (k != null) list.add(k.toLowerCase(Locale.US));
 
     for (Map.Entry<String, Float> e : zones.entrySet()) {
         String z = e.getKey().toLowerCase(Locale.US);
@@ -1585,6 +1607,9 @@ private Float pickZone(Map<String, Float> zones, String... keys) {
     return null;
 }
 
+// ============================================================
+// READ FIRST LINE
+// ============================================================
 private String readFirstLine(File file) throws IOException {
     BufferedReader br = null;
     try {

@@ -3288,7 +3288,7 @@ private String fmt1(float v) {
 }
 
 // ============================================================
-// LAB 30 — AUTO Final Service Notes (PDF Export)
+// LAB 30 — AUTO Final Service Notes (PDF Export + Auto-Share)
 // GDiolitsis Engine Lab (GEL) — Final PDF Report Generator
 // ============================================================
 private void lab30FinalServiceNotes() {
@@ -3299,33 +3299,26 @@ private void lab30FinalServiceNotes() {
         // --------------------------------------------
         // 1) Συλλογή δεδομένων από LAB 29
         // --------------------------------------------
-        String health  = lastScoreHealth;     // από LAB 29
-        String perf    = lastScorePerformance;
-        String sec     = lastScoreSecurity;
-        String priv    = lastScorePrivacy;
-        String verdict = lastFinalVerdict;
-
-        // Safety fallback αν κάτι λείπει
-        if (health == null)  health = "N/A";
-        if (perf == null)    perf = "N/A";
-        if (sec == null)     sec = "N/A";
-        if (priv == null)    priv = "N/A";
-        if (verdict == null) verdict = "N/A";
+        String health  = (lastScoreHealth     == null ? "N/A" : lastScoreHealth);
+        String perf    = (lastScorePerformance == null ? "N/A" : lastScorePerformance);
+        String sec     = (lastScoreSecurity    == null ? "N/A" : lastScoreSecurity);
+        String priv    = (lastScorePrivacy     == null ? "N/A" : lastScorePrivacy);
+        String verdict = (lastFinalVerdict     == null ? "N/A" : lastFinalVerdict);
 
         // --------------------------------------------
-        // 2) Δημιουργία PDF directory
+        // 2) Save directly into public DOWNLOADS folder
         // --------------------------------------------
-        File dir = new File(getExternalFilesDir(null), "GEL_Reports");
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         if (!dir.exists()) dir.mkdirs();
 
         String fileName = "GEL_Final_Report_" + System.currentTimeMillis() + ".pdf";
         File file = new File(dir, fileName);
 
         // --------------------------------------------
-        // 3) Δημιουργία PDF (Android PdfDocument API)
+        // 3) PDF Document
         // --------------------------------------------
         PdfDocument pdf = new PdfDocument();
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        Paint paint = new Paint();
         paint.setColor(Color.BLACK);
         paint.setTextSize(16f);
 
@@ -3334,53 +3327,50 @@ private void lab30FinalServiceNotes() {
         PdfDocument.Page page = pdf.startPage(info);
         Canvas c = page.getCanvas();
 
-        float y = 80f;
+        int y = 80;
 
         // Header
         paint.setFakeBoldText(true);
         paint.setTextSize(28f);
-        c.drawText("GEL — Final Service Report", 70f, y, paint);
-        y += 60f;
+        c.drawText("GEL — Final Service Report", 70, y, paint);
+        y += 60;
 
         paint.setTextSize(18f);
         paint.setFakeBoldText(false);
-        c.drawText("Generated automatically from GEL Auto-Diagnosis", 70f, y, paint);
-        y += 40f;
+        c.drawText("Generated automatically from GEL Auto-Diagnosis", 70, y, paint);
+        y += 40;
 
         // --------------------------------------------
         // Report Body
         // --------------------------------------------
         paint.setTextSize(20f);
         paint.setFakeBoldText(true);
-        c.drawText("Device Diagnostic Summary:", 70f, y, paint);
-        y += 50f;
+        c.drawText("Device Diagnostic Summary:", 70, y, paint);
+        y += 50;
 
         paint.setFakeBoldText(false);
         paint.setTextSize(18f);
 
-        c.drawText("• Device Health Score: " + health, 70f, y, paint); y += 35f;
-        c.drawText("• Performance Score: "   + perf,   70f, y, paint); y += 35f;
-        c.drawText("• Security Score: "      + sec,    70f, y, paint); y += 35f;
-        c.drawText("• Privacy Score: "       + priv,   70f, y, paint); y += 50f;
+        c.drawText("• Device Health Score: " + health, 70, y, paint); y += 35;
+        c.drawText("• Performance Score: "   + perf,   70, y, paint); y += 35;
+        c.drawText("• Security Score: "      + sec,    70, y, paint); y += 35;
+        c.drawText("• Privacy Score: "       + priv,   70, y, paint); y += 50;
 
         paint.setFakeBoldText(true);
-        c.drawText("Final Verdict:", 70f, y, paint); 
-        y += 50f;
+        c.drawText("Final Verdict:", 70, y, paint); y += 50;
 
         paint.setFakeBoldText(false);
-        y = wrapPdfText(c, paint, verdict, 70f, y, 1100f);
-        y += 60f;
+        wrapPdfText(c, paint, verdict, 70, y, 1100);
+        y += 120;
 
         // Technician Notes Footer
         paint.setFakeBoldText(true);
-        c.drawText("Technician Notes:", 70f, y, paint); 
-        y += 45f;
+        c.drawText("Technician Notes:", 70, y, paint); 
+        y += 45;
 
         paint.setFakeBoldText(false);
-        c.drawText("This report was generated using full GEL Auto-Diagnosis.", 70f, y, paint);
-        y += 35f;
-        c.drawText("For service: review thermals, battery, board health and logs.", 70f, y, paint);
-        y += 35f;
+        c.drawText("This report was generated using full GEL Auto-Diagnosis.", 70, y, paint); y += 35;
+        c.drawText("For service: review thermals, battery, board health and logs.", 70, y, paint); y += 35;
 
         pdf.finishPage(page);
 
@@ -3394,6 +3384,11 @@ private void lab30FinalServiceNotes() {
 
         logOk("PDF created: " + file.getAbsolutePath());
 
+        // --------------------------------------------
+        // 5) AUTO SHARE PDF
+        // --------------------------------------------
+        sharePdfFile(file);
+
     } catch (Exception e) {
         logError("PDF generation error: " + e.getMessage());
     }
@@ -3403,44 +3398,57 @@ private void lab30FinalServiceNotes() {
 
 
 // ============================================================
-// Helper: Wrap long text inside PDF
-// Returns last Y position after writing
+// SHARE PDF Helper
 // ============================================================
-private float wrapPdfText(Canvas c, Paint p, String text, float x, float startY, float maxWidth) {
-    float y = startY;
-    List<String> lines = breakTextIntoLines(p, text, maxWidth);
+private void sharePdfFile(File file) {
+    try {
+        Uri uri = FileProvider.getUriForFile(
+                this,
+                getPackageName() + ".provider",
+                file
+        );
 
-    for (String line : lines) {
-        if (line == null) continue;
-        String ln = line.trim();
-        if (ln.isEmpty()) continue;
-        c.drawText(ln, x, y, p);
-        y += 32f;
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(Intent.createChooser(intent, "Share GEL Report"));
+
+    } catch (Exception e) {
+        logError("Share failed: " + e.getMessage());
     }
-    return y;
 }
 
-private List<String> breakTextIntoLines(Paint p, String text, float maxWidth) {
+
+// ============================================================
+// Helpers for text wrapping
+// ============================================================
+private void wrapPdfText(Canvas c, Paint p, String text, int x, int startY, int maxWidth) {
+    int y = startY;
+    for (String line : breakTextIntoLines(p, text, maxWidth)) {
+        c.drawText(line, x, y, p);
+        y += 32;
+    }
+}
+
+private List<String> breakTextIntoLines(Paint p, String text, int maxWidth) {
     List<String> lines = new ArrayList<>();
     if (text == null) return lines;
 
-    String[] words = text.trim().split("\\s+");
+    String[] words = text.split(" ");
     StringBuilder sb = new StringBuilder();
 
     for (String w : words) {
-        if (w == null) continue;
-
-        String test = sb.length() == 0 ? (w + " ") : (sb.toString() + w + " ");
+        String test = sb + w + " ";
         if (p.measureText(test) > maxWidth) {
-            if (sb.length() > 0) {
-                lines.add(sb.toString().trim());
-                sb.setLength(0);
-            }
+            lines.add(sb.toString());
+            sb = new StringBuilder();
         }
         sb.append(w).append(" ");
     }
+    if (sb.length() > 0) lines.add(sb.toString());
 
-    if (sb.length() > 0) lines.add(sb.toString().trim());
     return lines;
 }
 

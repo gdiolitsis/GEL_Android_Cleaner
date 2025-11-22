@@ -1428,59 +1428,63 @@ private float getBatteryTemperature() {
 }
 
 // ===========================================================
-// LAB 18 — HEAT UNDER LOAD (LIVE THERMAL STRESS + MANUAL TEST)
-// ===========================================================
-
-private void lab18() {
-
-    logSection("LAB 18 — Heat Under Load (LIVE thermal stress + manual questionnaire).");
-
-    // 1) Check if device is charging
-    IntentFilter ifilt = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-    Intent batt = registerReceiver(null, ifilt);
-    int status = batt != null ? batt.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-    boolean charging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
-            status == BatteryManager.BATTERY_STATUS_FULL);
-
-    if (!charging) {
-        // NOT CHARGING → SHOW LOG MODE ONLY (LEFT PHOTO)
-        logGreen("✔️ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
-        logInfo("📘 Manual Mode started.");
-        logInfo("📘 1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
-        logWarn("⚠️ If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
-        logRed("❌ If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
-        logGreen("✔️ Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
-        return;
-    }
-
-    // CHARGING → SHOW POPUP (RIGHT PHOTO)
-    showChargingPopupLab18();
-}
-
-
-// ===========================================================
-// POPUP WINDOW (OLD STYLE) – ONLY WHEN CHARGING
+// LAB 18 — HEAT UNDER LOAD (LIVE thermal stress + manual text)
 // ===========================================================
 
 private AlertDialog lab18Dialog;
 
-private void showChargingPopupLab18() {
+private void lab18() {
+
+    // SECTION HEADER
+    logInfo("--------------------------------------------------");
+    logInfo("LAB 18 — Heat Under Load (LIVE thermal stress + manual check)");
+
+    // Check charging state
+    IntentFilter ifilt = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    Intent batt = registerReceiver(null, ifilt);
+    int status = batt != null ? batt.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+    boolean charging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL);
+
+    if (!charging) {
+        // ============================
+        // NOT CHARGING → MANUAL TEXT
+        // ============================
+        logInfo("✔ Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
+        logInfo("📘 Manual Mode started.");
+        logInfo("📘 1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
+        logWarn("⚠ If UI stutters, apps close, or device gets very hot → thermal throttling / PMIC stress.");
+        logError("❌ If device shuts down/reboots under load → battery/PMIC/board heat fault suspected.");
+        logInfo("✔ Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
+        return;
+    }
+
+    // ============================
+    // CHARGING → POPUP WINDOW
+    // ============================
+    showLab18ChargingPopup();
+}
+
+
+// ===========================================================
+// POPUP WINDOW (2 buttons – CANCEL / START)
+// ===========================================================
+
+private void showLab18ChargingPopup() {
 
     AlertDialog.Builder b = new AlertDialog.Builder(this);
 
-    // ROOT LAYOUT
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(25), dp(25), dp(25), dp(25));
 
-    // GOLD BORDER STYLE
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(Color.BLACK);
     bg.setCornerRadius(dp(20));
-    bg.setStroke(dp(4), Color.parseColor("#FFD700"));
+    bg.setStroke(dp(4), Color.parseColor("#FFD700"));   // gold border
     root.setBackground(bg);
 
-    // TITLE ONLY
+    // TITLE
     TextView title = new TextView(this);
     title.setText("Press START for Charging Thermal Test");
     title.setTextColor(Color.parseColor("#FFD700"));
@@ -1494,24 +1498,20 @@ private void showChargingPopupLab18() {
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.END);
 
-    // CANCEL BUTTON
+    // CANCEL
     TextView btnCancel = new TextView(this);
     btnCancel.setText("CANCEL");
-    btnCancel.setAllCaps(false);
     btnCancel.setTextColor(Color.parseColor("#00E5FF"));
     btnCancel.setTextSize(16f);
     btnCancel.setPadding(dp(20), dp(10), dp(20), dp(10));
     row.addView(btnCancel);
 
-    // SPACE
     View space = new View(this);
-    LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(dp(25), dp(1));
-    row.addView(space, sp);
+    row.addView(space, new LinearLayout.LayoutParams(dp(25), dp(1)));
 
-    // START BUTTON
+    // START
     TextView btnStart = new TextView(this);
     btnStart.setText("START");
-    btnStart.setAllCaps(false);
     btnStart.setTextColor(Color.parseColor("#00E5FF"));
     btnStart.setTextSize(16f);
     btnStart.setPadding(dp(20), dp(10), dp(20), dp(10));
@@ -1525,25 +1525,14 @@ private void showChargingPopupLab18() {
     if (lab18Dialog.getWindow() != null)
         lab18Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-    // BUTTON ACTIONS
     btnCancel.setOnClickListener(v -> lab18Dialog.dismiss());
 
     btnStart.setOnClickListener(v -> {
         lab18Dialog.dismiss();
-        showLiveThermalPopup(); // ← THIS STARTS THE REAL LIVE MONITOR
+        showLiveThermalPopup();   // existing method
     });
 
     lab18Dialog.show();
-}
-
-
-// ===========================================================
-// LIVE THERMAL POPUP (NO CHANGE FROM PREVIOUS VERSION)
-// ===========================================================
-
-private void showLiveThermalPopup() {
-    // ΟΛΟ ΤΟ ΥΠΑΡΧΟΝ LIVE WINDOW ΠΟΥ ΕΧΕΙΣ – ΔΕΝ ΑΛΛΑΖΩ ΤΙΠΟΤΑ ΕΔΩ
-    // ΜΟΝΟ το καλείς από το Lab 18.
 }
     
     // ============================================================

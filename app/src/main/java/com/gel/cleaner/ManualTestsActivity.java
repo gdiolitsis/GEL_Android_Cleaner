@@ -3297,25 +3297,25 @@ private String fmt1(float v) {
 // ============================================================
 // LAB 30 — FINAL DEVICE SUMMARY AGGREGATOR
 // Writes ONLY to GELServiceLog (ServiceReportActivity prints PDF)
-// Language: English
+// Compatible with GELServiceLog.add(tag, msg)
 // ============================================================
 private void lab30FinalSummary() {
 
     logLine();
     logInfo("LAB 30 — Final Aggregated Summary (AUTO)");
 
-    // --------------------------------------------------------
-    // 1) Collect scores from Lab 29
-    // --------------------------------------------------------
+    // ------------------------------
+    // 1) Scores from Lab 29
+    // ------------------------------
     String scoreHealth  = lastScoreHealth     != null ? lastScoreHealth     : "N/A";
     String scorePerf    = lastScorePerformance!= null ? lastScorePerformance: "N/A";
     String scoreSec     = lastScoreSecurity   != null ? lastScoreSecurity   : "N/A";
     String scorePriv    = lastScorePrivacy    != null ? lastScorePrivacy    : "N/A";
     String finalVerdict = lastFinalVerdict    != null ? lastFinalVerdict    : "N/A";
 
-    // --------------------------------------------------------
-    // 2) Collect logs from labs (ONLY issues, no OK / NO PROBLEM)
-    // --------------------------------------------------------
+    // ------------------------------
+    // 2) Collect WARNING lines only
+    // ------------------------------
     String full = GELServiceLog.getAll();
     String[] lines = full.split("\n");
     StringBuilder warnings = new StringBuilder();
@@ -3325,47 +3325,54 @@ private void lab30FinalSummary() {
 
         if (low.contains("ok")) continue;
         if (low.contains("no issue")) continue;
-        if (low.trim().isEmpty()) continue;
+        if (low.contains("all good")) continue;
+        if (l.trim().isEmpty()) continue;
 
         warnings.append(l).append("\n");
     }
 
-    // --------------------------------------------------------
-    // 3) Clear log to write clean final report
-    // --------------------------------------------------------
+    // ------------------------------
+    // 3) Clear log — write clean final
+    // ------------------------------
     GELServiceLog.clear();
 
-    // --------------------------------------------------------
-    // 4) Write structured final report
-    // --------------------------------------------------------
-    GELServiceLog.add("===== FINAL DEVICE DIAGNOSIS REPORT =====");
-    GELServiceLog.add("");
-    GELServiceLog.add("SUMMARY SCORES:");
-    GELServiceLog.add("• Health Score: "      + scoreHealth);
-    GELServiceLog.add("• Performance Score: " + scorePerf);
-    GELServiceLog.add("• Security Score: "    + scoreSec);
-    GELServiceLog.add("• Privacy Score: "     + scorePriv);
-    GELServiceLog.add("");
-    GELServiceLog.add("FINAL VERDICT:");
-    GELServiceLog.add(finalVerdict);
-    GELServiceLog.add("");
+    // ------------------------------
+    // 4) FINAL REPORT (tag,msg)
+    // ------------------------------
+    GELServiceLog.add("REPORT", "===== FINAL DEVICE DIAGNOSIS REPORT =====");
+    GELServiceLog.add("REPORT", "");
 
-    GELServiceLog.add("DETAILED FINDINGS (Warnings Only):");
+    GELServiceLog.add("SCORES", "Device Health Score: "      + scoreHealth);
+    GELServiceLog.add("SCORES", "Performance Score: "        + scorePerf);
+    GELServiceLog.add("SCORES", "Security Score: "           + scoreSec);
+    GELServiceLog.add("SCORES", "Privacy Score: "            + scorePriv);
+
+    GELServiceLog.add("REPORT", "");
+    GELServiceLog.add("VERDICT", "Final Verdict:");
+    GELServiceLog.add("VERDICT", finalVerdict);
+    GELServiceLog.add("REPORT", "");
+
+    GELServiceLog.add("DETAILS", "Detailed Findings (Warnings Only):");
+
     if (warnings.length() == 0) {
-        GELServiceLog.add("• No problems detected by the technician.");
+        GELServiceLog.add("DETAILS", "No technician warnings found.");
     } else {
-        GELServiceLog.add(warnings.toString().trim());
+        for (String w : warnings.toString().split("\n")) {
+            if (!w.trim().isEmpty()) {
+                GELServiceLog.add("WARN", w.trim());
+            }
+        }
     }
 
-    GELServiceLog.add("");
-    GELServiceLog.add("Technician Notes:");
-    GELServiceLog.add("• Review thermals, battery, logic board and system logs.");
-    GELServiceLog.add("");
-    GELServiceLog.add("===== END OF REPORT =====");
+    GELServiceLog.add("REPORT", "");
+    GELServiceLog.add("NOTES", "Technician Notes:");
+    GELServiceLog.add("NOTES", "Review thermals, battery, logic board and system logs.");
+
+    GELServiceLog.add("REPORT", "");
+    GELServiceLog.add("REPORT", "===== END OF REPORT =====");
 
     logOk("Lab 30 completed — Final summary prepared.");
 }
-
     
 // ============================================================
 // END OF CLASS

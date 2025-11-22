@@ -1396,9 +1396,6 @@ private void lab18() {
     }
 }
 
-
-
-
 // ============================================================
 // POPUP WHEN CHARGING — TWO BUTTONS ONLY
 // Title: "Press START for battery thermal test"
@@ -1462,9 +1459,6 @@ private void showLab18ChargingPopup() {
 
     btnCancel.setOnClickListener(v -> dialog.dismiss());
 }
-
-
-
 
 // ============================================================
 // BATTERY-ONLY LIVE MONITOR (ASCII)
@@ -1540,8 +1534,6 @@ private void showBatteryLiveMonitor() {
     });
 }
 
-
-
 // ============================================================
 // SUPPORT HELPERS (LOCAL ONLY FOR LAB 18)
 // ============================================================
@@ -1558,10 +1550,6 @@ private String asciiBar(float t) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < bars; i++) sb.append("█");
     return sb.toString();
-}
-
-private int dp(int v) {
-    return Math.round(v * getResources().getDisplayMetrics().density);
 }
 
     // ============================================================

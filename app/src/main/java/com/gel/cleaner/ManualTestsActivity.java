@@ -200,7 +200,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
         body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));
         body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));
-        body4.addView(makeTestButton("18. LAB 18 — LIVE + MANUAL thermal stress", this::lab18ThermalQuestionnaire)); // alias -> lab18()
+        body4.addView(makeTestButton("18. Thermal Stress (LIVE + Manual)", this::lab18ThermalQuestionnaire)); // alias -> lab18()
 
         // ========== SECTION 5: STORAGE & PERFORMANCE — LABS 19–22 ==========
         LinearLayout body5 = makeSectionBody();
@@ -1379,7 +1379,7 @@ private void lab18ThermalQuestionnaire() { lab18(); }
 
 private void lab18() {
     logLine();
-    logInfo("LAB 18 — LIVE + MANUAL thermal stress.");
+    logInfo("18. Thermal Stress (LIVE + Manual)");
 
     Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;

@@ -10,12 +10,13 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class BrowserListActivity extends AppCompatActivity {
+// ============================================================
+// GEL UNIVERSAL SCALING EDITION
+// ============================================================
+public class BrowserListActivity extends GELAutoActivityHook {
 
     private LinearLayout listRoot;
 
@@ -78,7 +79,7 @@ public class BrowserListActivity extends AppCompatActivity {
     }
 
     // --------------------------------------------------------------------
-    // UI ROW FOR EACH BROWSER
+    // UI ROW FOR EACH BROWSER  (GEL AUTO-SCALED)
     // --------------------------------------------------------------------
     private void addBrowserRow(BrowserItem b) {
 
@@ -86,6 +87,22 @@ public class BrowserListActivity extends AppCompatActivity {
 
         TextView name = row.findViewById(R.id.txtBrowserName);
         name.setText(b.label);
+
+        // ============================
+        // SCALE: text + padding + height
+        // ============================
+        name.setTextSize(sp(15f));
+
+        int padV = dp(10);
+        int padH = dp(16);
+        row.setPadding(padH, padV, padH, padV);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lp.bottomMargin = dp(6);
+        row.setLayoutParams(lp);
 
         row.setOnClickListener(v -> openBrowserSettings(b.pkg));
 
@@ -107,12 +124,14 @@ public class BrowserListActivity extends AppCompatActivity {
     }
 
     // --------------------------------------------------------------------
-    // FALLBACK TEXT ROW
+    // FALLBACK TEXT ROW (Auto-scaled)
     // --------------------------------------------------------------------
     private void addText(String t) {
         TextView tv = new TextView(this);
         tv.setText(t);
-        tv.setTextSize(16);
+        tv.setTextSize(sp(16f));
+        tv.setPadding(dp(12), dp(12), dp(12), dp(12));
+
         listRoot.addView(tv);
     }
 }

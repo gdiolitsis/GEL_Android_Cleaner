@@ -29,10 +29,8 @@ public class GELFoldableUIManager {
 
     private final Activity act;
 
-    // last-known state to avoid repeating animations/reflows
     private boolean lastInner = false;
 
-    // Unique tag keys (hardcoded safe ints)
     private static final int TAG_ORIG_TEXT_PX     = 0x7F0A0F01;
     private static final int TAG_ORIG_PAD_LEFT    = 0x7F0A0F02;
     private static final int TAG_ORIG_PAD_TOP     = 0x7F0A0F03;
@@ -48,7 +46,6 @@ public class GELFoldableUIManager {
     // ============================================================
     public void applyUI(boolean isInnerScreen) {
 
-        // Breakpoints based on smallest width dp
         int sw = readSmallestWidthDp();
         int cols = 1;
         if (sw >= 720) cols = 3;
@@ -64,7 +61,6 @@ public class GELFoldableUIManager {
             applyColumnReflow(1);
         }
 
-        // Overshoot only on transition to inner screen
         if (isInnerScreen && !lastInner) {
             playOvershoot();
         }
@@ -73,7 +69,7 @@ public class GELFoldableUIManager {
     }
 
     // ============================================================
-    // FONT SCALE (SAFE + CACHED ORIGINAL PX)
+    // FONT SCALE (SAFE + ORIGINAL PX CACHE)
     // ============================================================
     private void applyFontScale(float factor) {
         View root = act.findViewById(android.R.id.content);
@@ -86,7 +82,6 @@ public class GELFoldableUIManager {
         if (v instanceof TextView) {
             TextView t = (TextView) v;
 
-            // cache original size once
             Object tag = t.getTag(TAG_ORIG_TEXT_PX);
             float origPx;
             if (tag instanceof Float) {
@@ -108,7 +103,7 @@ public class GELFoldableUIManager {
     }
 
     // ============================================================
-    // PADDING SCALE (SAFE + CACHED ORIGINAL PADDING)
+    // PADDING SCALE (SAFE + ORIGINAL PADDING CACHE)
     // ============================================================
     private void applyPaddingScale(float factor) {
         View root = act.findViewById(android.R.id.content);
@@ -146,7 +141,7 @@ public class GELFoldableUIManager {
     }
 
     // ============================================================
-    // SAFE COLUMN REFLOW (1 / 2 / 3 cols)
+    // COLUMN REFLOW ENGINE (1/2/3 COLS)
     // ============================================================
     private void applyColumnReflow(int columns) {
         View root = act.findViewById(android.R.id.content);
@@ -154,7 +149,6 @@ public class GELFoldableUIManager {
 
         ViewGroup parent = (ViewGroup) root;
 
-        // Skip wrapper: ScrollView/NestedScrollView/FrameLayout etc.
         if (parent.getChildCount() == 1 && parent.getChildAt(0) instanceof ViewGroup) {
             parent = (ViewGroup) parent.getChildAt(0);
         }
@@ -171,7 +165,6 @@ public class GELFoldableUIManager {
     // ============================================================
     private void convertToGrid(ViewGroup parent, int cols) {
 
-        // already grid? just update columns
         if (parent instanceof GridLayout) {
             ((GridLayout) parent).setColumnCount(cols);
             return;
@@ -185,7 +178,6 @@ public class GELFoldableUIManager {
         grid.setUseDefaultMargins(true);
         grid.setOrientation(GridLayout.HORIZONTAL);
 
-        // Move children safely
         while (ll.getChildCount() > 0) {
             View c = ll.getChildAt(0);
             ll.removeViewAt(0);
@@ -205,12 +197,9 @@ public class GELFoldableUIManager {
     // ============================================================
     private void restoreLinear(ViewGroup parent) {
 
-        // already linear → enforce vertical
         if (parent instanceof LinearLayout) {
             LinearLayout ll = (LinearLayout) parent;
-            if (ll.getOrientation() != LinearLayout.VERTICAL) {
-                ll.setOrientation(LinearLayout.VERTICAL);
-            }
+            ll.setOrientation(LinearLayout.VERTICAL);
             return;
         }
 
@@ -235,7 +224,7 @@ public class GELFoldableUIManager {
     }
 
     // ============================================================
-    // OVERSHOOT ANIMATION (inner-enter only)
+    // OVERSHOOT ANIMATION FOR INNER SCREEN TRANSITION
     // ============================================================
     private void playOvershoot() {
         try {
@@ -245,16 +234,16 @@ public class GELFoldableUIManager {
             root.setScaleX(0.98f);
             root.setScaleY(0.98f);
             root.animate()
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(260)
-                    .setInterpolator(new OvershootInterpolator(0.9f))
-                    .start();
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setDuration(260)
+                .setInterpolator(new OvershootInterpolator(0.9f))
+                .start();
         } catch (Throwable ignored) {}
     }
 
     // ============================================================
-    // READ SMALLEST WIDTH DP (breakpoints)
+    // READ SMALLEST WIDTH DP
     // ============================================================
     private int readSmallestWidthDp() {
         try {
@@ -263,6 +252,8 @@ public class GELFoldableUIManager {
                 return c.smallestScreenWidthDp;
             }
         } catch (Throwable ignored) {}
-        return 360; // safe fallback baseline
+        return 360;
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

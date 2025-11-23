@@ -23,7 +23,7 @@
     <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n   (Περιφερειακά)</string>
 
     <!-- CLEANER -->
-    <string name="clean_all">🧹 GEL Εκκαθαριστής Όλων</string>
+    <string name="clean_all">🧹 GEL Γενικός Εκκαθαριστής</string>
 
     <!-- JUNK -->
     <string name="browser_cache">🌐 Cache Browser</string>

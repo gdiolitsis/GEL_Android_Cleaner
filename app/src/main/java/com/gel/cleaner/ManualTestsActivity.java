@@ -256,7 +256,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));  
     body7.addView(makeTestButton("28. App Permissions & Privacy (FULL AUTO + RISK SCORE)", this::lab28PermissionsPrivacy));  
     body7.addView(makeTestButton("29. AUTO Final Diagnosis Summary", this::lab29CombineFindings));  
-    body7.addView(makeTestButton("30. AUTO Final Service Notes (PDF Export)", this::lab30FinalServiceNotes));  
+    body7.addView(makeTestButton("30. FINAL TECHNICIAN SUMMARY Notes (PDF Export)", this::lab30FinalSummary));  
 
     // LOG AREA  
     txtLog = new TextView(this);  

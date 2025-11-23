@@ -11,25 +11,25 @@
     <string name="logs">📜 Καταγραφή</string>
     <string name="device_ready">Η συσκευή είναι έτοιμη • Dark-Gold Edition</string>
 
-    <!-- Κουμπιά -->
+    <!-- Δωρεά -->
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
 
     <!-- SYSTEM -->
     <string name="cpu_ram_info">📱 Πληροφορίες Συσκευής</string>
-    <string name="cpu_ram_live">📈 CPU / RAM Ζωντανη Παρακολούθηση</string>
+    <string name="cpu_ram_live">📈 CPU / RAM Ζωντανή Παρακολούθηση</string>
 
     <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 Πληρ. Συσκευής\n (Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n   (Περιφερειακά)</string>
+    <string name="phone_info_internal">📱 Πληρ. Συσκευής\n(Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n(Περιφερειακά)</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Γενικός Εκκαθαριστής</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 Cache Browser\n  Εκκαθαριστής</string>
+    <string name="browser_cache">🌐 Cache Browser\nΕκκαθαριστής</string>
     <string name="app_cache">🧽 Cache Εφαρμογών</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_cache_btn">🧽 Cache Εφαρμογών\n  Εκκαθαριστής</string>
+    <string name="app_cache_btn">🧽 Cache Εφαρμογών\nΕκκαθαριστής</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
     <!-- PERFORMANCE -->

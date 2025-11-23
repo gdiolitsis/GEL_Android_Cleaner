@@ -2023,151 +2023,161 @@ private void lab24SecurityPatchManual() {
 }
 
     // ============================================================
-// LAB 25 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
-// GEL Security v3.1 (Realtime Snapshot)
+// LAB 25 — Developer Options / ADB Risk Note — Logger Edition
 // ============================================================
 private void lab25DevOptions() {
-    logLine();
-    logInfo("LAB 25 — Developer Options / ADB Risk Note (Realtime).");
 
-    int risk = 0;
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 25 — Developer Options / ADB Risk Note (Realtime)");
 
-    // ============================================================
-    // 1) USB DEBUGGING FLAG (ADB_ENABLED)
-    // ============================================================
-    boolean usbDebug = false;
-    try {
-        int adb = Settings.Global.getInt(
-                getContentResolver(),
-                Settings.Global.ADB_ENABLED,
-                0
-        );
-        usbDebug = (adb == 1);
+    new Thread(() -> {
+        int risk = 0;
 
-        logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);
+        // ============================================================
+        // 1) USB DEBUGGING FLAG
+        // ============================================================
+        boolean usbDebug = false;
+        try {
+            int adb = Settings.Global.getInt(
+                    getContentResolver(),
+                    Settings.Global.ADB_ENABLED,
+                    0
+            );
+            usbDebug = (adb == 1);
 
-        if (usbDebug) {
-            logWarn("USB Debugging ENABLED — physical access risk.");
-            risk += 30;
-        } else {
-            logOk("USB Debugging is OFF.");
+            L.info("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);
+
+            if (usbDebug) {
+                L.warn("USB Debugging ENABLED — physical access risk.");
+                risk += 30;
+            } else {
+                L.ok("USB Debugging is OFF.");
+            }
+
+        } catch (Exception e) {
+            L.warn("Could not read USB Debugging flag (OEM restriction).");
+            risk += 5;
         }
 
-    } catch (Exception e) {
-        logWarn("Could not read USB Debugging flag (OEM restriction).");
-        risk += 5;
-    }
 
-    // ============================================================
-    // 2) DEVELOPER OPTIONS FLAG
-    // ============================================================
-    boolean devOpts = false;
-    try {
-        int dev = Settings.Global.getInt(
-                getContentResolver(),
-                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
-                0
-        );
-        devOpts = (dev == 1);
+        // ============================================================
+        // 2) DEVELOPER OPTIONS FLAG
+        // ============================================================
+        boolean devOpts = false;
+        try {
+            int dev = Settings.Global.getInt(
+                    getContentResolver(),
+                    Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
+                    0
+            );
+            devOpts = (dev == 1);
 
-        logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);
+            L.info("Developer Options: " + bubble(devOpts) + " " + devOpts);
 
-        if (devOpts) {
-            logWarn("Developer Options ENABLED.");
-            risk += 20;
-        } else {
-            logOk("Developer Options are OFF.");
+            if (devOpts) {
+                L.warn("Developer Options ENABLED.");
+                risk += 20;
+            } else {
+                L.ok("Developer Options are OFF.");
+            }
+
+        } catch (Exception e) {
+            L.warn("Could not read Developer Options flag.");
+            risk += 5;
         }
 
-    } catch (Exception e) {
-        logWarn("Could not read Developer Options flag.");
-        risk += 5;
-    }
 
-    // ============================================================
-    // 3) ADB OVER WIFI (TCP/IP mode — port 5555)
-    // ============================================================
-    boolean adbWifi = isPortOpen(5555, 200);
+        // ============================================================
+        // 3) ADB OVER WI-FI (TCP/IP mode 5555)
+        // ============================================================
+        boolean adbWifi = isPortOpen(5555, 200);
 
-    logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));
+        L.info("ADB over Wi-Fi (5555): " + bubble(adbWifi) +
+                " " + (adbWifi ? "ACTIVE" : "OFF"));
 
-    if (adbWifi) {
-        logError("ADB over Wi-Fi ACTIVE — remote debugging possible on same network.");
-        risk += 40;
-    } else {
-        logOk("ADB over Wi-Fi is OFF.");
-    }
+        if (adbWifi) {
+            L.error("ADB over Wi-Fi ACTIVE — remote debugging possible on same network.");
+            risk += 40;
+        } else {
+            L.ok("ADB over Wi-Fi is OFF.");
+        }
 
-    // ============================================================
-    // 4) ADB PAIRING MODE (Android 11–14 typical ports)
-    // ============================================================
-    boolean adbPairing =
-            isPortOpen(3700, 200) ||   // some OEM pairing
-            isPortOpen(7460, 200) ||   // pairing service
-            scanPairingPortRange();    // 7460–7490
 
-    logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));
+        // ============================================================
+        // 4) ADB PAIRING MODE (Android 11–14 typical ports)
+        // ============================================================
+        boolean adbPairing =
+                isPortOpen(3700, 200) ||       // common pairing
+                isPortOpen(7460, 200) ||       // service
+                scanPairingPortRange();        // 7460–7490
 
-    if (adbPairing) {
-        logError("ADB Pairing is ACTIVE — device discoverable for pairing.");
-        risk += 25;
-    } else {
-        logOk("ADB Pairing is OFF.");
-    }
+        L.info("ADB Pairing Mode: " + bubble(adbPairing) +
+                " " + (adbPairing ? "ACTIVE" : "OFF"));
 
-    // ============================================================
-    // 5) FINAL RISK SCORE
-    // ============================================================
-    if (risk > 100) risk = 100;
+        if (adbPairing) {
+            L.error("ADB Pairing is ACTIVE — device discoverable for pairing.");
+            risk += 25;
+        } else {
+            L.ok("ADB Pairing is OFF.");
+        }
 
-    String level;
-    if (risk <= 10)       level = "LOW";
-    else if (risk <= 30)  level = "MEDIUM";
-    else if (risk <= 60)  level = "HIGH";
-    else                  level = "CRITICAL";
 
-    logLine();
-    logInfo("Security Risk Score: " + risk + "/100  (" + level + ") " + riskBubble(risk));
+        // ============================================================
+        // 5) FINAL RISK SCORE
+        // ============================================================
+        if (risk > 100) risk = 100;
 
-    // ============================================================
-    // 6) AUTO-FIX / ACTION HINTS
-    // ============================================================
-    logLine();
-    logInfo("Recommended Actions:");
+        String level;
+        if (risk <= 10)       level = "LOW";
+        else if (risk <= 30)  level = "MEDIUM";
+        else if (risk <= 60)  level = "HIGH";
+        else                  level = "CRITICAL";
 
-    if (usbDebug || devOpts) {
-        logWarn("• Disable Developer Options / USB Debugging:");
-        logInfo("  Settings → System → Developer options → OFF");
-        logInfo("  USB debugging → OFF");
-    } else {
-        logOk("• Developer options & USB debugging look safe.");
-    }
+        L.info("Security Risk Score: " + risk + "/100  (" + level + ") " + riskBubble(risk));
 
-    if (adbWifi) {
-        logError("• ADB over Wi-Fi must be disabled:");
-        logInfo("  Developer options → Wireless debugging → OFF");
-        logInfo("  Or reboot to clear tcpip mode.");
-    } else {
-        logOk("• Wireless debugging is not active.");
-    }
 
-    if (adbPairing) {
-        logError("• Turn OFF ADB Pairing / Wireless debugging:");
-        logInfo("  Developer options → Wireless debugging → OFF");
-    } else {
-        logOk("• ADB Pairing is not active.");
-    }
+        // ============================================================
+        // 6) AUTO-FIX / ACTION HINTS
+        // ============================================================
+        L.info("Recommended Actions:");
 
-    if (risk >= 60)
-        logError("⚠ Very high risk — disable ADB features immediately!");
-    else if (risk >= 30)
-        logWarn("⚠ Partial exposure — review ADB settings.");
-    else
-        logOk("✔ Risk level acceptable.");
+        if (usbDebug || devOpts) {
+            L.warn("• Disable Developer Options / USB Debugging:");
+            L.info("  Settings → System → Developer options → OFF");
+            L.info("  USB debugging → OFF");
+        } else {
+            L.ok("• Developer options & USB debugging look safe.");
+        }
+
+        if (adbWifi) {
+            L.error("• ADB over Wi-Fi must be disabled:");
+            L.info("  Developer options → Wireless debugging → OFF");
+            L.info("  Or reboot to clear tcpip mode.");
+        } else {
+            L.ok("• Wireless debugging is not active.");
+        }
+
+        if (adbPairing) {
+            L.error("• Turn OFF ADB Pairing / Wireless debugging:");
+            L.info("  Developer options → Wireless debugging → OFF");
+        } else {
+            L.ok("• ADB Pairing is not active.");
+        }
+
+        if (risk >= 60) {
+            L.error("⚠ Very high risk — disable ADB features immediately!");
+        } else if (risk >= 30) {
+            L.warn("⚠ Partial exposure — review ADB settings.");
+        } else {
+            L.ok("✔ Risk level acceptable.");
+        }
+
+    }).start();
 }
 
+
 // ============================================================
-// UI BUBBLES (GEL)
+// UI BUBBLES (GEL) — no logger needed
 // ============================================================
 private String bubble(boolean on) {
     return on ? "🔴" : "🟢";
@@ -2180,8 +2190,9 @@ private String riskBubble(int risk) {
     return "🔴";
 }
 
+
 // ============================================================
-// HELPERS — PORT CHECK (LOCALHOST)
+// HELPERS — PORT CHECK (LOCALHOST) — unchanged
 // ============================================================
 private boolean isPortOpen(int port, int timeoutMs) {
     Socket s = null;
@@ -2196,7 +2207,6 @@ private boolean isPortOpen(int port, int timeoutMs) {
     }
 }
 
-// Scan pairing port range 7460–7490 (best-effort)
 private boolean scanPairingPortRange() {
     for (int p = 7460; p <= 7490; p++) {
         if (isPortOpen(p, 80)) return true;

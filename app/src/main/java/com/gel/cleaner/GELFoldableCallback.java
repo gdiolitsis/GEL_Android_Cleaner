@@ -7,27 +7,32 @@ import androidx.annotation.NonNull;
 
 /**
  * GELFoldableCallback
- * Step 1 — Callback + Posture enum for foldables.
+ * Step 1 — Unified callback for foldable posture + screen mode.
  */
 public interface GELFoldableCallback {
 
-    enum Posture {
-        HALF_OPEN,   // hinge in mid-angle (book / laptop)
-        TABLE_MODE,  // half-open, stable on table
-        TENT_MODE,   // inverted V (tent mode)
-        FLAT,        // fully open, inner display active
-        CLOSED       // folded shut, outer (cover) screen
+    /**
+     * Unified posture enum for all foldable devices.
+     */
+    enum GELPosture {
+        HALF_OPEN,   // hinge at mid-angle (book/laptop style)
+        TABLETOP,    // L-shape on table (Samsung Flex Mode)
+        TENT,        // inverted V (tent mode)
+        FLAT,        // fully open, inner large screen active
+        CLOSED,      // folded shut, outer/corner display
+        UNKNOWN      // fallback for strange/undetected states
     }
 
     /**
-     * Called whenever foldable posture changes.
+     * Fired whenever the hinge posture changes.
      * @param posture new detected posture
      */
-    void onPostureChanged(@NonNull Posture posture);
+    void onPostureChanged(@NonNull GELPosture posture);
 
     /**
-     * Called whenever display surface changes (outer ↔ inner)
-     * @param isInner true = unfolded large screen, false = cover screen
+     * Fired whenever the UI should switch between:
+     * inner (big) screen ↔ outer (cover) screen
+     * @param isInner true = unfolded large display, false = cover display
      */
     void onScreenChanged(boolean isInner);
 }

@@ -1,5 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CleanerActivity (GEL Auto-Scaling + Locale + Universal UI)
+// CleanerActivity — Foldable Ready (GEL Edition v3.0)
+// GEL Auto-Scaling + Locale + Foldable Engine + Dual Pane UI
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
@@ -10,13 +12,21 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-public class CleanerActivity extends GELAutoActivityHook {
+import androidx.annotation.NonNull;
+
+public class CleanerActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
 
     private TextView txtLog;
 
+    // Foldable core
+    private GELFoldableDetector foldDetector;
+    private GELFoldableUIManager uiManager;
+    private GELFoldableAnimationPack animPack;
+    private DualPaneManager dualPane;
+
     @Override
     protected void attachBaseContext(Context base) {
-        // Locale + AutoDP work together correctly
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
@@ -25,6 +35,17 @@ public class CleanerActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
+        // ============================================================
+        // FOLDABLE ENGINE INIT
+        // ============================================================
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
+
+        // ============================================================
+        // UI BINDING
+        // ============================================================
         txtLog = findViewById(R.id.txtCleanerLog);
         txtLog.setMovementMethod(new ScrollingMovementMethod());
 
@@ -36,30 +57,55 @@ public class CleanerActivity extends GELAutoActivityHook {
 
         log("🧹 GEL Cleaner loaded.\n");
 
-        // Smart RAM Clean
+        // GEL CLEAN ACTIONS
         btnCleanRam.setOnClickListener(v ->
                 GELCleaner.cleanRAM(getBaseContext(), this::log));
 
-        // OEM Deep Clean
         btnDeepClean.setOnClickListener(v ->
                 GELCleaner.deepClean(getBaseContext(), this::log));
 
-        // Temp / Junk Files Cleaner
         btnTempClean.setOnClickListener(v ->
                 GELCleaner.cleanTempFiles(getBaseContext(), this::log));
 
-        // Browser Cache Cleaner
         btnBrowser.setOnClickListener(v ->
                 GELCleaner.browserCache(getBaseContext(), this::log));
 
-        // Running Apps Manager
         btnRunning.setOnClickListener(v ->
                 GELCleaner.openRunningApps(getBaseContext(), this::log));
     }
 
-    // ========================================================================
+    // ============================================================
+    // FOLDABLE LIFE CYCLE
+    // ============================================================
+    @Override
+    protected void onResume() {
+        super.onResume();
+        foldDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        foldDetector.stop();
+        super.onPause();
+    }
+
+    // ============================================================
+    // FOLDABLE CALLBACKS
+    // ============================================================
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {
+        animPack.applyHingePulse(posture);
+    }
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        uiManager.applyUI(isInner);
+        dualPane.dispatchMode(isInner);
+    }
+
+    // ============================================================
     // LOG PRINTER
-    // ========================================================================
+    // ============================================================
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             txtLog.append(msg + "\n");

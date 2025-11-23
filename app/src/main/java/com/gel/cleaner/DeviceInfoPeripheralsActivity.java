@@ -1,3 +1,8 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// DeviceInfoPeripheralsActivity.java — PERIPHERALS REPORT v6.3 (GEL Patched)
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// NOTE2: Θυμήσου τον κανόνα μας: πάντα ένα ενιαίο full-file patch, όχι πολλά γράψε-σβήσε.
+
 package com.gel.cleaner;
 
 // PERIPHERALS REPORT v6.3 — SERVICE-PRO EDITION (GEL)
@@ -7,10 +12,8 @@ package com.gel.cleaner;
 // + Audio HAL Level (multi-source) / WiFi 6/6E (standard + band) / VoLTE-IMS / VoWiFi / 5G NR flag
 // + IR / Barometer / Steps / HR Sensor
 // FULL PACK + Android 10+/12+ safe WiFi / BT permissions.
-// Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 import android.Manifest;
-import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -34,13 +37,9 @@ import android.nfc.NfcManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Vibrator;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,7 +48,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
+// ============================================================
+// GEL UNIVERSAL SCALING ENABLED
+// ============================================================
+public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private static final int REQ_WIFI_PERM = 901;
 
@@ -72,6 +74,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         TextView title = findViewById(R.id.txtTitleDevice);
         if (title != null) {
             title.setText(getString(R.string.phone_info_peripherals));
+            title.setTextSize(sp(20f));
         }
 
         // ============================
@@ -159,432 +162,428 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         // ===========================
         // CAMERA
         // ===========================
-        StringBuilder cam = new StringBuilder();
-        cam.append("── CAMERA ──\n");
-        boolean anyCam   = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
-        boolean backCam  = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
-        boolean frontCam = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
-        boolean extCam   = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_EXTERNAL);
-        boolean flash    = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+        if (txtCameraContent != null) {
+            StringBuilder cam = new StringBuilder();
+            cam.append("── CAMERA ──\n");
+            boolean anyCam   = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+            boolean backCam  = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
+            boolean frontCam = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
+            boolean extCam   = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_EXTERNAL);
+            boolean flash    = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
-        cam.append("Any camera: ").append(anyCam ? "YES" : "NO").append("\n");
-        cam.append("Back camera: ").append(backCam ? "YES" : "NO").append("\n");
-        cam.append("Front camera: ").append(frontCam ? "YES" : "NO").append("\n");
-        cam.append("External camera: ").append(extCam ? "YES" : "NO").append("\n");
-        cam.append("Flash: ").append(flash ? "YES" : "NO").append("\n");
+            cam.append("Any camera: ").append(anyCam ? "YES" : "NO").append("\n");
+            cam.append("Back camera: ").append(backCam ? "YES" : "NO").append("\n");
+            cam.append("Front camera: ").append(frontCam ? "YES" : "NO").append("\n");
+            cam.append("External camera: ").append(extCam ? "YES" : "NO").append("\n");
+            cam.append("Flash: ").append(flash ? "YES" : "NO").append("\n");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                CameraManager cmgr = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-                if (cmgr != null) {
-                    String[] ids = cmgr.getCameraIdList();
-                    Integer level = null;
-                    for (String id : ids) {
-                        CameraCharacteristics c = cmgr.getCameraCharacteristics(id);
-                        Integer facing = c.get(CameraCharacteristics.LENS_FACING);
-                        if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
-                            level = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-                            break;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                try {
+                    CameraManager cmgr = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                    if (cmgr != null) {
+                        String[] ids = cmgr.getCameraIdList();
+                        Integer level = null;
+                        for (String id : ids) {
+                            CameraCharacteristics c = cmgr.getCameraCharacteristics(id);
+                            Integer facing = c.get(CameraCharacteristics.LENS_FACING);
+                            if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                                level = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+                                break;
+                            }
+                        }
+                        if (level != null) {
+                            cam.append("Camera2 HW level: ").append(level).append("\n");
+                            cam.append("Camera2 class: ").append(describeCamera2Level(level)).append("\n");
                         }
                     }
-                    if (level != null) {
-                        cam.append("Camera2 HW level: ").append(level).append("\n");
-                        cam.append("Camera2 class: ").append(describeCamera2Level(level)).append("\n");
-                    }
-                }
-            } catch (Throwable ignored) {}
-        }
+                } catch (Throwable ignored) {}
+            }
 
-        txtCameraContent.setText(cam.toString());
+            txtCameraContent.setText(cam.toString());
+        }
 
         // ===========================
         // BIOMETRICS
         // ===========================
-        StringBuilder bio = new StringBuilder();
-        bio.append("── BIOMETRICS ──\n");
-        boolean fp   = pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-        boolean face = pm.hasSystemFeature("android.hardware.biometrics.face");
-        boolean iris = pm.hasSystemFeature("android.hardware.biometrics.iris");
+        if (txtBiometricsContent != null) {
+            StringBuilder bio = new StringBuilder();
+            bio.append("── BIOMETRICS ──\n");
+            boolean fp   = pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+            boolean face = pm.hasSystemFeature("android.hardware.biometrics.face");
+            boolean iris = pm.hasSystemFeature("android.hardware.biometrics.iris");
 
-        bio.append("Fingerprint sensor: ").append(fp ? "YES" : "NO").append("\n");
-        bio.append("Face unlock HW: ").append(face ? "YES" : "NO").append("\n");
-        bio.append("Iris scanner: ").append(iris ? "YES" : "NO").append("\n");
+            bio.append("Fingerprint sensor: ").append(fp ? "YES" : "NO").append("\n");
+            bio.append("Face unlock HW: ").append(face ? "YES" : "NO").append("\n");
+            bio.append("Iris scanner: ").append(iris ? "YES" : "NO").append("\n");
 
-        txtBiometricsContent.setText(bio.toString());
+            txtBiometricsContent.setText(bio.toString());
+        }
 
         // ===========================
         // SENSORS
         // ===========================
-        StringBuilder sens = new StringBuilder();
-        sens.append("── SENSORS ──\n");
+        if (txtSensorsContent != null) {
+            StringBuilder sens = new StringBuilder();
+            sens.append("── SENSORS ──\n");
 
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sm != null) {
-            sens.append("Total sensors: ")
-                    .append(sm.getSensorList(Sensor.TYPE_ALL).size()).append("\n");
+            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm != null) {
+                sens.append("Total sensors: ")
+                        .append(sm.getSensorList(Sensor.TYPE_ALL).size()).append("\n");
 
-            Sensor acc  = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            Sensor gyr  = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            Sensor mag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-            Sensor prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            Sensor light= sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+                Sensor acc  = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                Sensor gyr  = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                Sensor mag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                Sensor prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+                Sensor light= sm.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-            sens.append("Accelerometer: ").append(acc  != null ? "YES" : "NO").append("\n");
-            sens.append("Gyroscope: ").append(gyr      != null ? "YES" : "NO").append("\n");
-            sens.append("Magnetometer: ").append(mag   != null ? "YES" : "NO").append("\n");
-            sens.append("Proximity: ").append(prox     != null ? "YES" : "NO").append("\n");
-            sens.append("Light sensor: ").append(light != null ? "YES" : "NO").append("\n");
-        } else {
-            sens.append("SensorManager: [unavailable]\n");
+                sens.append("Accelerometer: ").append(acc  != null ? "YES" : "NO").append("\n");
+                sens.append("Gyroscope: ").append(gyr      != null ? "YES" : "NO").append("\n");
+                sens.append("Magnetometer: ").append(mag   != null ? "YES" : "NO").append("\n");
+                sens.append("Proximity: ").append(prox     != null ? "YES" : "NO").append("\n");
+                sens.append("Light sensor: ").append(light != null ? "YES" : "NO").append("\n");
+            } else {
+                sens.append("SensorManager: [unavailable]\n");
+            }
+
+            txtSensorsContent.setText(sens.toString());
         }
-
-        txtSensorsContent.setText(sens.toString());
 
         // ===============================
         // RUNTIME PERMISSIONS (WiFi / Location)
-        // Required for Android 10+ (API 29+)
         // ===============================
         ensureWifiPermissions();
 
         // ===========================
         // CONNECTIVITY
         // ===========================
-        StringBuilder conn = new StringBuilder();
-        conn.append("── CONNECTIVITY ──\n");
+        if (txtConnectivityContent != null) {
+            StringBuilder conn = new StringBuilder();
+            conn.append("── CONNECTIVITY ──\n");
 
-        // Basic feature flags
-        conn.append("Telephony: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
-                .append("\n");
-        conn.append("5G NR flag: ")
-                .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
-                .append("\n");
-        conn.append("IMS / VoLTE flag: ")
-                .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
-                .append("\n");
-        conn.append("WiFi: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
-                .append("\n");
-        conn.append("WiFi Direct: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
-                .append("\n");
-        conn.append("Ethernet: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
-                .append("\n");
+            conn.append("Telephony: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) ? "YES" : "NO")
+                    .append("\n");
+            conn.append("5G NR flag: ")
+                    .append(pm.hasSystemFeature("android.hardware.telephony.nr") ? "YES" : "NO")
+                    .append("\n");
+            conn.append("IMS / VoLTE flag: ")
+                    .append(pm.hasSystemFeature("android.hardware.telephony.ims") ? "YES" : "NO")
+                    .append("\n");
+            conn.append("WiFi: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI) ? "YES" : "NO")
+                    .append("\n");
+            conn.append("WiFi Direct: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "YES" : "NO")
+                    .append("\n");
+            conn.append("Ethernet: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_ETHERNET) ? "YES" : "NO")
+                    .append("\n");
 
-        // Active network info
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                    if (caps != null) {
-                        boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                        boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-                        boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                        if (caps != null) {
+                            boolean hasWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+                            boolean hasCell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+                            boolean hasEth  = caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
 
-                        conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
-                        conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
-                        conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
-                    } else {
-                        conn.append("Active network: [none]\n");
-                    }
-                } else {
-                    @SuppressWarnings("deprecation")
-                    NetworkInfo ni = cm.getActiveNetworkInfo();
-                    if (ni != null && ni.isConnected()) {
-                        conn.append("Active type: ").append(ni.getTypeName()).append("\n");
-                    } else {
-                        conn.append("Active network: [none]\n");
-                    }
-                }
-            } else {
-                conn.append("ConnectivityManager: [unavailable]\n");
-            }
-        } catch (Throwable t) {
-            conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
-        }
-
-        // WiFi details
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                if (wi != null) {
-                    int linkSpeed = wi.getLinkSpeed(); // Mbps
-                    int freq = wi.getFrequency();      // MHz
-                    conn.append("\n[WiFi link]\n");
-                    conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
-                    conn.append("Frequency: ").append(freq).append(" MHz\n");
-
-                    // BAND (2.4 / 5 / 6 GHz)
-                    conn.append("Band: ").append(describeWifiBand(freq)).append("\n");
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        int std = wi.getWifiStandard();
-                        String stdStr;
-                        switch (std) {
-                            case 1:  // Legacy a/b/g
-                                stdStr = "Legacy (11a/b/g)";
-                                break;
-                            case 4:  // WiFi 4 (11n)
-                                stdStr = "WiFi 4 (11n)";
-                                break;
-                            case 5:  // WiFi 5 (11ac)
-                                stdStr = "WiFi 5 (11ac)";
-                                break;
-                            case 6:  // WiFi 6/6E (11ax)
-                                stdStr = "WiFi 6/6E (11ax)";
-                                break;
-                            default:
-                                stdStr = "Unknown";
-                                break;
+                            conn.append("Active (WiFi): ").append(hasWifi ? "YES" : "NO").append("\n");
+                            conn.append("Active (Cellular): ").append(hasCell ? "YES" : "NO").append("\n");
+                            conn.append("Active (Ethernet): ").append(hasEth ? "YES" : "NO").append("\n");
+                        } else {
+                            conn.append("Active network: [none]\n");
                         }
-                        conn.append("WiFi standard: ").append(stdStr).append("\n");
-                        conn.append("PHY mode hint: ").append(describeWifiPhy(std)).append("\n");
                     } else {
-                        conn.append("WiFi standard: [API < 30]\n");
+                        @SuppressWarnings("deprecation")
+                        NetworkInfo ni = cm.getActiveNetworkInfo();
+                        if (ni != null && ni.isConnected()) {
+                            conn.append("Active type: ").append(ni.getTypeName()).append("\n");
+                        } else {
+                            conn.append("Active network: [none]\n");
+                        }
                     }
-
                 } else {
-                    conn.append("\n[WiFi] No connection info\n");
+                    conn.append("ConnectivityManager: [unavailable]\n");
                 }
-            } else {
-                conn.append("\n[WiFi] WifiManager unavailable\n");
+            } catch (Throwable t) {
+                conn.append("Connectivity error: ").append(t.getMessage()).append("\n");
             }
-        } catch (Throwable t) {
-            conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
-        }
 
-        // Baseband / VoLTE / VoWiFi
-        String baseband = getProp("gsm.version.baseband");
-        if (!isEmptySafe(baseband)) {
-            conn.append("\n[Modem]\n");
-            conn.append("Baseband: ").append(baseband).append("\n");
-        }
+            try {
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null) {
+                    WifiInfo wi = wm.getConnectionInfo();
+                    if (wi != null) {
+                        int linkSpeed = wi.getLinkSpeed();
+                        int freq = wi.getFrequency();
+                        conn.append("\n[WiFi link]\n");
+                        conn.append("Link speed: ").append(linkSpeed).append(" Mbps\n");
+                        conn.append("Frequency: ").append(freq).append(" MHz\n");
+                        conn.append("Band: ").append(describeWifiBand(freq)).append("\n");
 
-        String volteProv  = getVolteStatus();
-        String vowifiProv = getVowifiStatus();
-        if (!isEmptySafe(volteProv) || !isEmptySafe(vowifiProv)) {
-            conn.append("[IMS Provisioning]\n");
-            if (!isEmptySafe(volteProv)) {
-                conn.append("VoLTE: ").append(volteProv).append("\n");
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            int std = wi.getWifiStandard();
+                            String stdStr;
+                            switch (std) {
+                                case 1:  stdStr = "Legacy (11a/b/g)"; break;
+                                case 4:  stdStr = "WiFi 4 (11n)";     break;
+                                case 5:  stdStr = "WiFi 5 (11ac)";    break;
+                                case 6:  stdStr = "WiFi 6/6E (11ax)"; break;
+                                case 7:  stdStr = "WiFi 7 (11be)";    break;
+                                default: stdStr = "Unknown";          break;
+                            }
+                            conn.append("WiFi standard: ").append(stdStr).append("\n");
+                            conn.append("PHY mode hint: ").append(describeWifiPhy(std)).append("\n");
+                        } else {
+                            conn.append("WiFi standard: [API < 30]\n");
+                        }
+
+                    } else {
+                        conn.append("\n[WiFi] No connection info\n");
+                    }
+                } else {
+                    conn.append("\n[WiFi] WifiManager unavailable\n");
+                }
+            } catch (Throwable t) {
+                conn.append("\nWiFi error: ").append(t.getMessage()).append("\n");
             }
-            if (!isEmptySafe(vowifiProv)) {
-                conn.append("VoWiFi: ").append(vowifiProv).append("\n");
-            }
-        }
 
-        txtConnectivityContent.setText(conn.toString());
+            String baseband = getProp("gsm.version.baseband");
+            if (!isEmptySafe(baseband)) {
+                conn.append("\n[Modem]\n");
+                conn.append("Baseband: ").append(baseband).append("\n");
+            }
+
+            String volteProv  = getVolteStatus();
+            String vowifiProv = getVowifiStatus();
+            if (!isEmptySafe(volteProv) || !isEmptySafe(vowifiProv)) {
+                conn.append("[IMS Provisioning]\n");
+                if (!isEmptySafe(volteProv)) conn.append("VoLTE: ").append(volteProv).append("\n");
+                if (!isEmptySafe(vowifiProv)) conn.append("VoWiFi: ").append(vowifiProv).append("\n");
+            }
+
+            txtConnectivityContent.setText(conn.toString());
+        }
 
         // ===========================
         // LOCATION
         // ===========================
-        StringBuilder loc = new StringBuilder();
-        loc.append("── LOCATION ──\n");
+        if (txtLocationContent != null) {
+            StringBuilder loc = new StringBuilder();
+            loc.append("── LOCATION ──\n");
 
-        try {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (lm != null) {
-                boolean gpsProv = lm.getProvider(LocationManager.GPS_PROVIDER) != null;
-                boolean netProv = lm.getProvider(LocationManager.NETWORK_PROVIDER) != null;
+            try {
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (lm != null) {
+                    boolean gpsProv = lm.getProvider(LocationManager.GPS_PROVIDER) != null;
+                    boolean netProv = lm.getProvider(LocationManager.NETWORK_PROVIDER) != null;
 
-                loc.append("GPS provider: ").append(gpsProv ? "YES" : "NO").append("\n");
-                loc.append("Network provider: ").append(netProv ? "YES" : "NO").append("\n");
-            } else {
-                loc.append("LocationManager: [unavailable]\n");
+                    loc.append("GPS provider: ").append(gpsProv ? "YES" : "NO").append("\n");
+                    loc.append("Network provider: ").append(netProv ? "YES" : "NO").append("\n");
+                } else {
+                    loc.append("LocationManager: [unavailable]\n");
+                }
+            } catch (Throwable t) {
+                loc.append("Location error: ").append(t.getMessage()).append("\n");
             }
-        } catch (Throwable t) {
-            loc.append("Location error: ").append(t.getMessage()).append("\n");
+
+            loc.append("HW GPS: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "YES" : "NO")
+                    .append("\n");
+            loc.append("Network location: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "YES" : "NO")
+                    .append("\n");
+
+            loc.append("\nGNSS constellations:\n");
+            loc.append(readGnssConstellations());
+
+            txtLocationContent.setText(loc.toString());
         }
-
-        loc.append("HW GPS: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "YES" : "NO")
-                .append("\n");
-        loc.append("Network location: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "YES" : "NO")
-                .append("\n");
-
-        loc.append("\nGNSS constellations:\n");
-        loc.append(readGnssConstellations());
-
-        txtLocationContent.setText(loc.toString());
 
         // ===========================
         // OTHER PERIPHERALS
         // ===========================
-        StringBuilder other = new StringBuilder();
-        other.append("── OTHER PERIPHERALS ──\n");
+        if (txtOtherPeripherals != null) {
+            StringBuilder other = new StringBuilder();
+            other.append("── OTHER PERIPHERALS ──\n");
+            other.append("IR blaster: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
+                    .append("\n");
+            other.append("Barometer: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
+                    .append("\n");
+            other.append("Step counter: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
+                    .append("\n");
+            other.append("Step detector: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
+                    .append("\n");
+            other.append("Heart-rate sensor: ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
+                    .append("\n");
+            other.append("Ambient temperature sensor: ")
+                    .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
+                    .append("\n");
 
-        other.append("IR blaster: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR) ? "YES" : "NO")
-                .append("\n");
-        other.append("Barometer: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_BAROMETER) ? "YES" : "NO")
-                .append("\n");
-        other.append("Step counter: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) ? "YES" : "NO")
-                .append("\n");
-        other.append("Step detector: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR) ? "YES" : "NO")
-                .append("\n");
-        other.append("Heart-rate sensor: ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE) ? "YES" : "NO")
-                .append("\n");
-        other.append("Ambient temperature sensor: ")
-                .append(pm.hasSystemFeature("android.hardware.sensor.ambient_temperature") ? "YES" : "NO")
-                .append("\n");
-
-        txtOtherPeripherals.setText(other.toString());
+            txtOtherPeripherals.setText(other.toString());
+        }
 
         // ===========================
         // BLUETOOTH (Android 12+ safe)
         // ===========================
-        StringBuilder bt = new StringBuilder();
-        bt.append("── BLUETOOTH ──\n");
-        try {
-            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter ba = null;
-            if (bm != null) {
-                ba = bm.getAdapter();
-            }
-            if (ba == null) {
-                ba = BluetoothAdapter.getDefaultAdapter();
-            }
+        if (txtBluetoothContent != null) {
+            StringBuilder bt = new StringBuilder();
+            bt.append("── BLUETOOTH ──\n");
+            try {
+                BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+                BluetoothAdapter ba = (bm != null) ? bm.getAdapter() : BluetoothAdapter.getDefaultAdapter();
 
-            if (ba == null) {
-                bt.append("Adapter: [none]\n");
-            } else {
-                bt.append("Enabled: ").append(ba.isEnabled() ? "YES" : "NO").append("\n");
-
-                String name;
-                try {
-                    name = ba.getName();
-                } catch (SecurityException e) {
-                    name = "[permission denied]";
-                }
-                bt.append("Name: ").append(safe(name)).append("\n");
-
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                    String addr;
-                    try {
-                        addr = ba.getAddress();
-                    } catch (SecurityException e) {
-                        addr = "[permission denied]";
-                    }
-                    bt.append("Address: ").append(safe(addr)).append("\n");
+                if (ba == null) {
+                    bt.append("Adapter: [none]\n");
                 } else {
-                    bt.append("Address: [hidden on Android 12+]\n");
+                    bt.append("Enabled: ").append(ba.isEnabled() ? "YES" : "NO").append("\n");
+
+                    String name;
+                    try { name = ba.getName(); }
+                    catch (SecurityException e) { name = "[permission denied]"; }
+                    bt.append("Name: ").append(safe(name)).append("\n");
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                        String addr;
+                        try { addr = ba.getAddress(); }
+                        catch (SecurityException e) { addr = "[permission denied]"; }
+                        bt.append("Address: ").append(safe(addr)).append("\n");
+                    } else {
+                        bt.append("Address: [hidden on Android 12+]\n");
+                    }
+
+                    bt.append("LE support: ")
+                            .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
+                            .append("\n");
                 }
 
-                bt.append("LE support: ")
-                        .append(pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "YES" : "NO")
-                        .append("\n");
-            }
-
-            String codecProp = getProp("persist.bluetooth.a2dp_offload.cap");
-            if (!isEmptySafe(codecProp)) {
-                bt.append("A2DP offload caps: ").append(codecProp).append("\n");
-                String codecList = parseBtCodecs(codecProp);
-                if (!isEmptySafe(codecList)) {
-                    bt.append("Audio codecs hint: ").append(codecList).append("\n");
+                String codecProp = getProp("persist.bluetooth.a2dp_offload.cap");
+                if (!isEmptySafe(codecProp)) {
+                    bt.append("A2DP offload caps: ").append(codecProp).append("\n");
+                    String codecList = parseBtCodecs(codecProp);
+                    if (!isEmptySafe(codecList)) {
+                        bt.append("Audio codecs hint: ").append(codecList).append("\n");
+                    }
                 }
+
+            } catch (Throwable t) {
+                bt.append("Bluetooth error: ").append(t.getMessage()).append("\n");
             }
 
-        } catch (Throwable t) {
-            bt.append("Bluetooth error: ").append(t.getMessage()).append("\n");
+            txtBluetoothContent.setText(bt.toString());
         }
-
-        txtBluetoothContent.setText(bt.toString());
 
         // ===========================
         // NFC (HW + HCE)
         // ===========================
-        StringBuilder nfc = new StringBuilder();
-        nfc.append("── NFC ──\n");
+        if (txtNfcContent != null) {
+            StringBuilder nfc = new StringBuilder();
+            nfc.append("── NFC ──\n");
 
-        try {
-            NfcManager nfm = (NfcManager) getSystemService(Context.NFC_SERVICE);
-            NfcAdapter na = null;
-            if (nfm != null) {
-                na = nfm.getDefaultAdapter();
+            try {
+                NfcManager nfm = (NfcManager) getSystemService(Context.NFC_SERVICE);
+                NfcAdapter na = (nfm != null) ? nfm.getDefaultAdapter() : null;
+
+                if (na == null) {
+                    nfc.append("NFC adapter: [none]\n");
+                } else {
+                    nfc.append("NFC present: YES\n");
+                    nfc.append("NFC enabled: ").append(na.isEnabled() ? "YES" : "NO").append("\n");
+                }
+
+                nfc.append("Reader/Writer: ")
+                        .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
+                        .append("\n");
+                nfc.append("Host Card Emulation (HCE): ")
+                        .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION) ? "YES" : "NO")
+                        .append("\n");
+
+                String nfcHw = getProp("ro.hardware.nfc");
+                if (!isEmptySafe(nfcHw)) {
+                    nfc.append("NFC hardware: ").append(nfcHw).append("\n");
+                }
+
+            } catch (Throwable t) {
+                nfc.append("NFC error: ").append(t.getMessage()).append("\n");
             }
 
-            if (na == null) {
-                nfc.append("NFC adapter: [none]\n");
-            } else {
-                nfc.append("NFC present: YES\n");
-                nfc.append("NFC enabled: ").append(na.isEnabled() ? "YES" : "NO").append("\n");
-            }
-
-            nfc.append("Reader/Writer: ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC) ? "YES" : "NO")
-                    .append("\n");
-            nfc.append("Host Card Emulation (HCE): ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION) ? "YES" : "NO")
-                    .append("\n");
-
-            String nfcHw = getProp("ro.hardware.nfc");
-            if (!isEmptySafe(nfcHw)) {
-                nfc.append("NFC hardware: ").append(nfcHw).append("\n");
-            }
-
-        } catch (Throwable t) {
-            nfc.append("NFC error: ").append(t.getMessage()).append("\n");
+            txtNfcContent.setText(nfc.toString());
         }
-
-        txtNfcContent.setText(nfc.toString());
 
         // ===========================
         // ROOT
         // ===========================
-        StringBuilder root = new StringBuilder();
-        root.append("── ROOT / SECURITY ──\n");
-        root.append("Rooted (heuristic): ").append(isRooted ? "YES" : "NO").append("\n");
-        root.append("su path: ").append(checkSuPaths()).append("\n");
-        root.append("SELinux: ").append(getSelinux()).append("\n");
-        root.append("Build tags: ").append(safe(Build.TAGS)).append("\n");
-        root.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
-        root.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
+        if (txtRootContent != null) {
+            StringBuilder root = new StringBuilder();
+            root.append("── ROOT / SECURITY ──\n");
+            root.append("Rooted (heuristic): ").append(isRooted ? "YES" : "NO").append("\n");
+            root.append("su path: ").append(checkSuPaths()).append("\n");
+            root.append("SELinux: ").append(getSelinux()).append("\n");
+            root.append("Build tags: ").append(safe(Build.TAGS)).append("\n");
+            root.append("ro.debuggable: ").append(getProp("ro.debuggable")).append("\n");
+            root.append("ro.secure: ").append(getProp("ro.secure")).append("\n");
 
-        txtRootContent.setText(root.toString());
+            txtRootContent.setText(root.toString());
+        }
 
         // ===========================
         // BATTERY
         // ===========================
-        txtBatteryContent.setText("── BATTERY HEALTH ──\n" + readBatteryHealth());
+        if (txtBatteryContent != null) {
+            txtBatteryContent.setText("── BATTERY HEALTH ──\n" + readBatteryHealth());
+        }
 
         // ===========================
         // UWB
         // ===========================
-        txtUwbContent.setText("── UWB ──\n" + detectUwbSupport(pm));
+        if (txtUwbContent != null) {
+            txtUwbContent.setText("── UWB ──\n" + detectUwbSupport(pm));
+        }
 
         // ===========================
         // HAPTICS
         // ===========================
-        txtHapticsContent.setText("── HAPTICS ──\n\nAmplitude: "
-                + detectVibratorAmplitude()
-                + "\nClass: " + detectHapticsClass());
+        if (txtHapticsContent != null) {
+            txtHapticsContent.setText("── HAPTICS ──\n\nAmplitude: "
+                    + detectVibratorAmplitude()
+                    + "\nClass: " + detectHapticsClass());
+        }
 
         // ===========================
         // GNSS
         // ===========================
-        txtGnssContent.setText("── GNSS CONSTELLATIONS ──\n" + readGnssConstellations());
+        if (txtGnssContent != null) {
+            txtGnssContent.setText("── GNSS CONSTELLATIONS ──\n" + readGnssConstellations());
+        }
 
         // ===========================
         // USB SPEED
         // ===========================
-        txtUsbContent.setText("── USB SPEED ──\n" + detectUsbSpeedModes());
+        if (txtUsbContent != null) {
+            txtUsbContent.setText("── USB SPEED ──\n" + detectUsbSpeedModes());
+        }
 
         // ===========================
         // MICROPHONES
         // ===========================
-        txtMicsContent.setText("── MICROPHONES ──\n" + describeMicrophones());
+        if (txtMicsContent != null) {
+            txtMicsContent.setText("── MICROPHONES ──\n" + describeMicrophones());
+        }
 
         // ===========================
         // AUDIO HAL
         // ===========================
-        txtAudioHalContent.setText("── AUDIO HAL ──\n" + detectAudioHalLevel());
+        if (txtAudioHalContent != null) {
+            txtAudioHalContent.setText("── AUDIO HAL ──\n" + detectAudioHalLevel());
+        }
 
         // ===========================
         // EXPANDERS
@@ -670,18 +669,10 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                 int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
                 String pluggedStr;
                 switch (plugged) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                        pluggedStr = "AC charger";
-                        break;
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                        pluggedStr = "USB power";
-                        break;
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        pluggedStr = "Wireless charging";
-                        break;
-                    default:
-                        pluggedStr = "Not charging / battery only";
-                        break;
+                    case BatteryManager.BATTERY_PLUGGED_AC: pluggedStr = "AC charger"; break;
+                    case BatteryManager.BATTERY_PLUGGED_USB: pluggedStr = "USB power"; break;
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS: pluggedStr = "Wireless charging"; break;
+                    default: pluggedStr = "Not charging / battery only"; break;
                 }
                 sb.append("Charging type: ").append(pluggedStr).append("\n");
             }
@@ -691,10 +682,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             String fullStr   = readSmallFile(new File(base, "charge_full"));
             String designStr = readSmallFile(new File(base, "charge_full_design"));
 
-            if (cycleStr != null)
-                sb.append("Cycle count: ").append(cycleStr.trim()).append("\n");
-            else
-                sb.append("Cycle count: [not exposed]\n");
+            if (cycleStr != null) sb.append("Cycle count: ").append(cycleStr.trim()).append("\n");
+            else sb.append("Cycle count: [not exposed]\n");
 
             if (fullStr != null && designStr != null) {
                 try {
@@ -702,14 +691,11 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                     long design = Long.parseLong(designStr.trim());
                     double fullMah   = (full   > 100000) ? (full   / 1000.0) : full;
                     double designMah = (design > 100000) ? (design / 1000.0) : design;
-
                     double healthPct = (designMah > 0) ? (fullMah * 100.0 / designMah) : -1.0;
 
                     sb.append(String.format("Estimated full capacity: %.0f mAh\n", fullMah));
                     sb.append(String.format("Design capacity: %.0f mAh\n", designMah));
-                    if (healthPct > 0) {
-                        sb.append(String.format("Health vs design: %.1f %%\n", healthPct));
-                    }
+                    if (healthPct > 0) sb.append(String.format("Health vs design: %.1f %%\n", healthPct));
                 } catch (Exception ignored) {}
             } else {
                 sb.append("Capacity info: [not exposed]\n");
@@ -764,9 +750,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
         try {
             File f1 = new File("/sys/class/leds/vibrator");
             File f2 = new File("/sys/class/timed_output/vibrator");
-            if (f1.exists() || f2.exists()) {
-                return "Basic haptics (sysfs)";
-            }
+            if (f1.exists() || f2.exists()) return "Basic haptics (sysfs)";
         } catch (Throwable ignored) {}
 
         return "Unknown";
@@ -840,17 +824,12 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                         if (speedFile.exists()) {
                             String sp = readSmallFile(speedFile);
                             if (!isEmptySafe(sp)) {
-                                sb.append("Device ")
-                                        .append(d.getName())
-                                        .append(" speed: ")
-                                        .append(sp.trim())
-                                        .append(" Mb/s\n");
+                                sb.append("Device ").append(d.getName())
+                                        .append(" speed: ").append(sp.trim()).append(" Mb/s\n");
                                 anySpeed = true;
                                 try {
                                     double val = Double.parseDouble(sp.trim());
-                                    if (val > 480.0) {
-                                        hasSuperSpeed = true;
-                                    }
+                                    if (val > 480.0) hasSuperSpeed = true;
                                 } catch (Exception ignored) {}
                             }
                         }
@@ -859,13 +838,8 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             }
         } catch (Throwable ignored) {}
 
-        if (hasSuperSpeed) {
-            sb.append("SuperSpeed link detected (> 480 Mb/s)\n");
-        }
-
-        if (!anyProp && !anySpeed) {
-            sb.append("No USB speed info\n");
-        }
+        if (hasSuperSpeed) sb.append("SuperSpeed link detected (> 480 Mb/s)\n");
+        if (!anyProp && !anySpeed) sb.append("No USB speed info\n");
 
         return sb.toString();
     }
@@ -989,7 +963,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
                 return "FULL (full Camera2, good for manual controls)";
             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                return "LEVEL_3 (advanced features, YUV_420_888, RAW, etc.)";
+                return "LEVEL_3 (advanced features, RAW etc.)";
             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL:
                 return "EXTERNAL (USB / external cameras)";
             default:
@@ -1006,16 +980,12 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
 
     private String describeWifiPhy(int std) {
         switch (std) {
-            case 1:
-                return "Legacy 11a/b/g (20 MHz)";
-            case 4:
-                return "HT (WiFi 4, 20/40 MHz)";
-            case 5:
-                return "VHT (WiFi 5, 20/40/80 MHz)";
-            case 6:
-                return "HE (WiFi 6/6E, up to 160 MHz)";
-            default:
-                return "Unknown / vendor-specific";
+            case 1: return "Legacy 11a/b/g (20 MHz)";
+            case 4: return "HT (WiFi 4, 20/40 MHz)";
+            case 5: return "VHT (WiFi 5, 20/40/80 MHz)";
+            case 6: 
+            case 7: return "HE/EHT (WiFi 6/7, up to 160 MHz)";
+            default: return "Unknown / vendor-specific";
         }
     }
 
@@ -1034,9 +1004,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             if (!isEmptySafe(v)) {
                 any = true;
                 dbg.append(k).append("=").append(v).append(" ");
-                if ("1".equals(v) || "true".equalsIgnoreCase(v)) {
-                    on = true;
-                }
+                if ("1".equals(v) || "true".equalsIgnoreCase(v)) on = true;
             }
         }
         if (!any) return "";
@@ -1057,9 +1025,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
             if (!isEmptySafe(v)) {
                 any = true;
                 dbg.append(k).append("=").append(v).append(" ");
-                if ("1".equals(v) || "true".equalsIgnoreCase(v)) {
-                    on = true;
-                }
+                if ("1".equals(v) || "true".equalsIgnoreCase(v)) on = true;
             }
         }
         if (!any) return "";
@@ -1083,9 +1049,7 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
     // RUNTIME PERMISSIONS HELPERS
     // ===========================
     private void ensureWifiPermissions() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return;
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return;
 
         List<String> required = new ArrayList<>();
 
@@ -1111,9 +1075,6 @@ public class DeviceInfoPeripheralsActivity extends AppCompatActivity {
                                            String[] permissions,
                                            int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_WIFI_PERM) {
-            // Even if denied, continue – GEL returns clean info instead of crashing.
-        }
+        // Even if denied, continue – GEL returns clean info instead of crashing.
     }
 }

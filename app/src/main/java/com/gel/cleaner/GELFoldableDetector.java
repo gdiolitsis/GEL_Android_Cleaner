@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 2 — Auto Foldable Detector (Hinge Angle + Posture Mapper)
+// STEP 2 — Auto Foldable Detector (Hinge Angle + Unified Callback Bridge)
+// v2.1 — Fully Compatible with GELFoldableCallback v1.2
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας Γιώργου).
 
 package com.gel.cleaner;
@@ -31,7 +32,7 @@ public class GELFoldableDetector implements SensorEventListener {
         this.callback = cb;
         this.sm = (SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
 
-        // Android 12L hinge angle sensor
+        // Android 12L+ hinge angle sensor (if exists)
         hingeSensor = sm.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE);
     }
 
@@ -60,17 +61,18 @@ public class GELFoldableDetector implements SensorEventListener {
 
         float angle = event.values[0];
 
-        // Avoid noise
+        // avoid unnecessary noise
         if (angle == lastAngle) return;
         lastAngle = angle;
 
-        // Map angle → posture
-        GELFoldableCallback.Posture posture = mapAngleToPosture(angle);
+        // ------ Unified posture via GEL v1.2 mapper ------
+        GELFoldableCallback.Posture posture =
+                GELFoldableCallback.postureFrom(angle >= 150f, angle);
 
-        // Detect screen mode
-        boolean isInner = angle > 150; // unfolded → inner screen active
+        // ------ Screen mode logic ------
+        boolean isInner = (posture == GELFoldableCallback.Posture.FLAT);
 
-        // FIRE CALLBACKS ONLY IF CHANGED
+        // ------ FIRE CALLBACKS ONLY IF CHANGED ------
         if (posture != lastPosture) {
             lastPosture = posture;
             callback.onPostureChanged(posture);
@@ -84,39 +86,8 @@ public class GELFoldableDetector implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Not used
-    }
-
-    // ============================================================
-    // POSTURE LOGIC
-    // ============================================================
-    private GELFoldableCallback.Posture mapAngleToPosture(float angle) {
-
-        // 0° → Closed
-        if (angle <= 10f) {
-            return GELFoldableCallback.Posture.CLOSED;
-        }
-
-        // 10°–45° → Tent mode
-        if (angle > 10f && angle <= 45f) {
-            return GELFoldableCallback.Posture.TENT;
-        }
-
-        // 45°–110° → Half-open
-        if (angle > 45f && angle <= 110f) {
-            return GELFoldableCallback.Posture.HALF_OPEN;
-        }
-
-        // 110°–150° → Tabletop
-        if (angle > 110f && angle <= 150f) {
-            return GELFoldableCallback.Posture.TABLETOP;
-        }
-
-        // 150°–180° → Flat (unfolded)
-        if (angle > 150f) {
-            return GELFoldableCallback.Posture.FLAT;
-        }
-
-        return GELFoldableCallback.Posture.UNKNOWN;
+        // not used
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

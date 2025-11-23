@@ -1,3 +1,7 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// GELBroadcast v2.0 — Boot + Package Events Handler
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+
 package com.gel.cleaner;
 
 import android.content.BroadcastReceiver;
@@ -20,26 +24,34 @@ public class GELBroadcast extends BroadcastReceiver {
         String action = i.getAction();
         Log.d(TAG, "📩 Received: " + action);
 
-        // ===== BOOT =====
+        // ============================================================
+        // BOOT COMPLETED
+        // ============================================================
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)
                 || Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action)) {
 
             Log.d(TAG, "✅ Boot completed");
-            // Optionally auto-maintenance (ONLY if user enables)
+
+            // Placeholder for future auto-maintenance (only if user enables)
             // GELCleaner.safeClean(ctx, null);
         }
 
-        // ===== PACKAGE EVENTS =====
+        // ============================================================
+        // PACKAGE EVENTS (install / remove / update)
+        // ============================================================
         if (Intent.ACTION_PACKAGE_ADDED.equals(action)
                 || Intent.ACTION_PACKAGE_REMOVED.equals(action)
                 || Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
 
-            String pkg = i.getData() != null ? i.getData().getSchemeSpecificPart() : "unknown";
+            String pkg = (i.getData() != null)
+                    ? i.getData().getSchemeSpecificPart()
+                    : "unknown";
+
             Log.d(TAG, "📦 Package event: " + action + " → " + pkg);
 
-            // Future:
-            //  - auto refresh list
-            //  - recalc junk
+            // Future extensions:
+            // - auto-refresh list
+            // - recalc junk size
         }
     }
 }

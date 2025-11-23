@@ -1,21 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ✅ DARK-GOLD EDITION v4.3 -->
+    <!-- ========================================================= -->
+    <!-- GEL DARK-GOLD EDITION v5.0                               -->
+    <!-- Custom theme for GEL Cleaner / Foldable UI Ready          -->
+    <!-- ========================================================= -->
+
     <style name="Theme.GEL.DarkGold" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Window -->
+        
+        <!-- Background -->
         <item name="android:windowBackground">@color/gel_bg</item>
 
-        <!-- System bars -->
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
-        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <!-- Status & Navigation Bar -->
+        <item name="android:statusBarColor">@color/gel_bg_dark</item>
+        <item name="android:navigationBarColor">@color/gel_bg_dark</item>
 
-        <!-- Icons always white -->
+        <!-- Icons = LIGHT -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
 
-        <!-- Optional future toggles -->
-        <!-- <item name="android:colorAccent">@color/colorAccent</item> -->
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/gel_text_primary</item>
+        <item name="android:textColorSecondary">@color/gel_text_secondary</item>
+
+        <!-- Buttons / interactive elements -->
+        <item name="colorControlNormal">@color/gel_gold</item>
+        <item name="colorControlActivated">@color/gel_gold</item>
+        <item name="colorAccent">@color/gel_gold</item>
+
+        <!-- Remove Android default blue highlights -->
+        <item name="android:colorAccent">@color/gel_gold</item>
+        <item name="android:colorControlHighlight">@color/gel_gold_faint</item>
+
+        <!-- Disable default ripple for consistency -->
+        <item name="android:colorControlActivated">@color/gel_gold</item>
+
+        <!-- Prevent default window inset padding -->
+        <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Buttons elevation -->
+        <item name="android:stateListAnimator">@null</item>
+
     </style>
 
 </resources>

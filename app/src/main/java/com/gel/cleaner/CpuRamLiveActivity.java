@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity (GEL AutoScaling + Foldable Ready + Safe Thread Log)
+// CpuRamLiveActivity (Foldable Ready + GEL AutoScaling + Safe Live Monitor)
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
@@ -8,16 +9,25 @@ import android.content.Context;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
-public class CpuRamLiveActivity extends GELAutoActivityHook {
+public class CpuRamLiveActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
 
     private TextView txtLive;
     private volatile boolean running = true;
     private boolean isRooted = false;
+
+    // Foldable components
+    private GELFoldableDetector foldDetector;
+    private GELFoldableUIManager uiManager;
+    private GELFoldableAnimationPack animPack;
+    private DualPaneManager dualPane;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -29,6 +39,17 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
+        // ============================================================
+        // FOLDABLE ENGINE INIT
+        // ============================================================
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
+
+        // ============================================================
+        // UI INIT
+        // ============================================================
         txtLive = findViewById(R.id.txtLiveInfo);
 
         txtLive.setTextSize(sp(14f));
@@ -42,9 +63,47 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         startLive();
     }
 
-    // ====================================================================================
+    // ============================================================
+    // FOLDABLE LIFE CYCLE
+    // ============================================================
+    @Override
+    protected void onResume() {
+        super.onResume();
+        foldDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        foldDetector.stop();
+        super.onPause();
+    }
+
+    // ============================================================
+    // FOLDABLE CALLBACKS
+    // ============================================================
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {
+        animPack.applyHingePulse(posture);
+    }
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        uiManager.applyUI(isInner);
+        dualPane.dispatchMode(isInner);
+
+        // Tablet mode = larger log panel
+        if (isInner) {
+            txtLive.setTextSize(sp(17f));
+            txtLive.setPadding(dp(18), dp(18), dp(18), dp(18));
+        } else {
+            txtLive.setTextSize(sp(14f));
+            txtLive.setPadding(dp(12), dp(12), dp(12), dp(12));
+        }
+    }
+
+    // ============================================================
     // SAFE LIVE MONITOR LOOP
-    // ====================================================================================
+    // ============================================================
     private void startLive() {
 
         Thread t = new Thread(() -> {
@@ -88,9 +147,7 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
                     if (freq != null) line.append("\nFreq: ").append(freq);
                 }
 
-                String output = line.toString();
-
-                runOnUiThread(() -> appendSafe(output));
+                runOnUiThread(() -> appendSafe(line.toString()));
 
                 i++;
                 try { Thread.sleep(1000); } catch (Exception ignored) {}
@@ -101,15 +158,14 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         t.start();
     }
 
-    // ====================================================================================
-    // SAFE LOG APPEND (keeps only last 300 lines)
-    // ====================================================================================
+    // ============================================================
+    // SAFE LOG APPEND — Keeps last 300 lines
+    // ============================================================
     private void appendSafe(String s) {
         String current = txtLive.getText().toString();
         String[] lines = current.split("\n");
 
         if (lines.length > 300) {
-            // keep last 250 lines
             StringBuilder trimmed = new StringBuilder();
             for (int i = lines.length - 250; i < lines.length; i++) {
                 trimmed.append(lines[i]).append("\n");
@@ -120,9 +176,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         txtLive.append(s + "\n");
     }
 
-    // ====================================================================================
-    // CPU ROOT (true readings)
-    // ====================================================================================
+    // ============================================================
+    // CPU ROOT READINGS
+    // ============================================================
     private double getCpuRootAccurate() {
         try {
             long[] t1 = readCpuStat();
@@ -160,9 +216,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ====================================================================================
-    // GOVERNOR (root)
-    // ====================================================================================
+    // ============================================================
+    // GOVERNOR + FREQ (ROOT)
+    // ============================================================
     private String getCpuGovernor() {
         try {
             File gov = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
@@ -177,9 +233,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ====================================================================================
-    // CPU FREQ (root)
-    // ====================================================================================
     private String getCpuFreqRoot() {
         try {
             File cur = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
@@ -195,9 +248,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ====================================================================================
+    // ============================================================
     // NON-ROOT CPU
-    // ====================================================================================
+    // ============================================================
     private double getCpuTotalAvgPercent() {
         try {
             File[] coresFs = new File("/sys/devices/system/cpu/")
@@ -234,9 +287,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ====================================================================================
+    // ============================================================
     // CPU TEMPERATURE
-    // ====================================================================================
+    // ============================================================
     private String getCpuTemp() {
         String[] paths = new String[]{
                 "/sys/class/thermal/thermal_zone0/temp",
@@ -254,9 +307,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         return "N/A";
     }
 
-    // ====================================================================================
+    // ============================================================
     // ROOT DETECTION
-    // ====================================================================================
+    // ============================================================
     private boolean isDeviceRooted() {
 
         try {
@@ -267,7 +320,7 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
             for (String p : paths) if (new File(p).exists()) return true;
 
             String secure = getProp("ro.secure");
-            String debug = getProp("ro.debuggable");
+            String debug  = getProp("ro.debuggable");
             if ("0".equals(secure) || "1".equals(debug)) return true;
 
         } catch (Exception ignored) {}

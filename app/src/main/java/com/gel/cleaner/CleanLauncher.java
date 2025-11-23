@@ -1,6 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CleanLauncher (GEL Edition)
+// CleanLauncher — Foldable Ready (GEL Edition v2.0)
 // Universal OEM Cleaner Launcher — Safe, Fast, Production Ready
+// NOTE: Full file ready for copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
@@ -9,8 +10,56 @@ import android.content.Intent;
 import android.content.ComponentName;
 import android.os.Build;
 
-public class CleanLauncher {
+// Foldable dependencies
+import androidx.annotation.NonNull;
 
+public class CleanLauncher implements GELFoldableCallback {
+
+    private final Context ctx;
+    private final GELFoldableDetector foldDetector;
+    private final GELFoldableUIManager uiManager;
+    private final GELFoldableAnimationPack animPack;
+    private final DualPaneManager dualPane;
+
+    public CleanLauncher(Context ctx) {
+        this.ctx = ctx;
+
+        // Foldable engine init
+        uiManager    = new GELFoldableUIManager(ctx);
+        animPack     = new GELFoldableAnimationPack(ctx);
+        dualPane     = new DualPaneManager(ctx);
+        foldDetector = new GELFoldableDetector(ctx, this);
+    }
+
+    // ============================================================
+    // START / STOP FOLDABLE LISTENER (call from Activity)
+    // ============================================================
+    public void start() {
+        foldDetector.start();
+    }
+
+    public void stop() {
+        foldDetector.stop();
+    }
+
+    // ============================================================
+    // FOLDABLE CALLBACKS
+    // ============================================================
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {
+        // Light hinge animation only
+        animPack.applyHingePulse(posture);
+    }
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        uiManager.applyUI(isInner);
+        dualPane.dispatchMode(isInner);
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
     private static String low(String s) {
         return (s == null ? "" : s.toLowerCase().trim());
     }
@@ -28,9 +77,9 @@ public class CleanLauncher {
     }
 
     // ============================================================
-    // TEMP STORAGE CLEANER (Used by cleanTempFiles)
+    // TEMP STORAGE CLEANER
     // ============================================================
-    public static boolean openTempStorageCleaner(Context ctx) {
+    public boolean openTempStorageCleaner() {
 
         // Xiaomi
         if (tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity")) return true;
@@ -64,9 +113,9 @@ public class CleanLauncher {
     }
 
     // ============================================================
-    // DEEP CLEAN (Full OEM Cleaner)
+    // DEEP CLEAN
     // ============================================================
-    public static boolean openDeepCleaner(Context ctx) {
+    public boolean openDeepCleaner() {
 
         String brand = low(Build.BRAND);
         String manu  = low(Build.MANUFACTURER);
@@ -137,7 +186,7 @@ public class CleanLauncher {
     // ============================================================
     // SMART CLEAN (RAM Cleaner)
     // ============================================================
-    public static boolean smartClean(Context ctx) {
+    public boolean smartClean() {
 
         String brand = low(Build.BRAND);
         String manu  = low(Build.MANUFACTURER);
@@ -163,7 +212,6 @@ public class CleanLauncher {
                     "com.huawei.systemmanager.optimize.process.ProtectActivity")) return true;
         }
 
-        // Fallback → full OEM cleaner
-        return openDeepCleaner(ctx);
+        return openDeepCleaner();
     }
 }

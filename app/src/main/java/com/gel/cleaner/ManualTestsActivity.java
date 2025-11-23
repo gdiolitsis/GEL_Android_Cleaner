@@ -1168,116 +1168,44 @@ private void lab14InternetQuickCheck() {
     }
 }
     // ============================================================
-    // LAB 15 — Battery Health Stress Test (GEL C Mode)
-    // ============================================================
-    private void lab15BatteryHealthStressTest() {
-        showBatteryHealthTestDialog();
-    }
+// LAB 15 — Battery Health Stress Test (GEL C Mode) — Logger Edition
+// ============================================================
+private void lab15BatteryHealthStressTest() {
 
-    private void showBatteryHealthTestDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(true);
-        builder.setTitle("Battery Health Stress Test");
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 15 — Battery Health Stress Test (GEL C Mode) started...");
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(16);
-        layout.setPadding(pad, pad, pad, pad);
-
-        TextView info = new TextView(this);
-        info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");
-        info.setTextSize(13f);
-        info.setTextColor(0xFFFFFFFF);
-        info.setPadding(0, 0, 0, dp(8));
-        layout.addView(info);
-
-        TextView durLabel = new TextView(this);
-        durLabel.setText("Duration (seconds):");
-        durLabel.setTextSize(13f);
-        durLabel.setTextColor(0xFFFFD700);
-        durLabel.setPadding(0, dp(8), 0, 0);
-        layout.addView(durLabel);
-
-        final TextView durValue = new TextView(this);
-        durValue.setTextSize(13f);
-        durValue.setTextColor(0xFF39FF14);
-        layout.addView(durValue);
-
-        final SeekBar seek = new SeekBar(this);
-        seek.setMax(110); // 10..120 sec
-        layout.addView(seek);
-
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                int seconds = 10 + progress;
-                durValue.setText("Selected: " + seconds + " sec (10–120 sec)");
+    new Thread(() -> {
+        try {
+            int durationSec = askBatteryStressDuration(); // from dialog
+            if (durationSec <= 0) {
+                L.warn("Stress test cancelled — no duration received.");
+                return;
             }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
-        });
 
-        seek.setProgress(20);
-        durValue.setText("Selected: 30 sec (10–120 sec)");
+            float startPct = getCurrentBatteryPercent();
+            if (startPct < 0f) {
+                L.warn("Initial battery level could not be read.");
+                return;
+            }
 
-        Button start = new Button(this);
-        start.setText("Start Stress Test (GEL C Mode)");
-        start.setAllCaps(false);
-        start.setTextSize(15f);
-        start.setTextColor(0xFFFFFFFF);
-        start.setTypeface(null, Typeface.BOLD);
+            L.info("Starting battery level: " + startPct + "%");
+            L.info("Selected duration: " + durationSec + " seconds.");
+            L.info("Mode: GEL C Mode (aggressive CPU burn + max brightness).");
 
-        GradientDrawable redBtn = new GradientDrawable();
-        redBtn.setColor(0xFF8B0000);
-        redBtn.setCornerRadius(dp(12));
-        redBtn.setStroke(dp(3), 0xFFFFD700);
-        start.setBackground(redBtn);
+            long startTime = SystemClock.elapsedRealtime();
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
-        lp.setMargins(0, dp(12), 0, 0);
-        start.setLayoutParams(lp);
+            applyMaxBrightnessAndKeepOn(L);
+            startCpuBurn_C_Mode(L);
 
-        layout.addView(start);
+            Thread.sleep(durationSec * 1000L);
 
-        builder.setView(layout);
-        AlertDialog dialog = builder.create();
-
-        if (dialog.getWindow() != null)
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-
-        start.setOnClickListener(v -> {
-            int durationSec = 10 + seek.getProgress();
-            dialog.dismiss();
-            runBatteryHealthTest_C_Mode(durationSec);
-        });
-
-        dialog.show();
-    }
-
-    private void runBatteryHealthTest_C_Mode(int durationSec) {
-        float startPct = getCurrentBatteryPercent();
-        if (startPct < 0f) {
-            logWarn("Battery Stress Test: unable to read initial battery level.");
-            return;
-        }
-
-        logLine();
-        logInfo("LAB 15 — Battery Health Stress Test started.");
-        logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
-        logInfo("Duration: " + durationSec + " seconds.");
-
-        long startTime = SystemClock.elapsedRealtime();
-
-        applyMaxBrightnessAndKeepOn();
-        startCpuBurn_C_Mode();
-
-        ui.postDelayed(() -> {
-            stopCpuBurn();
-            restoreBrightnessAndKeepOn();
+            stopCpuBurn(L);
+            restoreBrightnessAndKeepOn(L);
 
             float endPct = getCurrentBatteryPercent();
             if (endPct < 0f) {
-                logWarn("Battery Stress Test: unable to read final battery level.");
+                L.warn("Final battery level could not be read.");
                 return;
             }
 
@@ -1288,202 +1216,223 @@ private void lab14InternetQuickCheck() {
             float delta = startPct - endPct;
             float perHour = (delta * 3600000f) / dtMs;
 
-            logInfo(String.format(Locale.US,
+            L.ok(String.format(Locale.US,
                     "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                     startPct, endPct, delta, dtMs / 1000f));
 
             int healthPct = estimateHealthFromDrain(perHour);
 
+            // Battery health evaluation
             if (healthPct >= 90) {
-                logOk("Estimated Battery Health from stress: " + healthPct + "% (Excellent)");
+                L.ok("Estimated Battery Health: " + healthPct + "% (Excellent)");
             } else if (healthPct >= 80) {
-                logOk("Estimated Battery Health from stress: " + healthPct + "% (Normal)");
+                L.ok("Estimated Battery Health: " + healthPct + "% (Normal)");
             } else if (healthPct >= 60) {
-                logWarn("Estimated Battery Health from stress: " + healthPct + "% (Worn)");
+                L.warn("Estimated Battery Health: " + healthPct + "% (Worn)");
             } else {
-                logError("Estimated Battery Health from stress: " + healthPct + "% (Poor)");
+                L.error("Estimated Battery Health: " + healthPct + "% (Poor)");
             }
 
+            // Drain rate evaluation
             if (delta <= 0.1f) {
-                logOk("Almost zero drain in stress window — battery behavior looks strong.");
+                L.ok("Almost zero drain — battery behavior looks strong.");
             } else if (perHour <= 12f) {
-                logOk(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));
+                L.ok(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — strong.", perHour));
             } else if (perHour <= 20f) {
-                logWarn(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));
+                L.warn(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — borderline.", perHour));
             } else {
-                logError(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
+                L.error(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour — heavy wear.", perHour));
             }
 
-        }, durationSec * 1000L);
-    }
-
-    private int estimateHealthFromDrain(float perHour) {
-        if (perHour <= 0f) return 100;
-        float baseline = 12f;
-        int est = Math.round((baseline / perHour) * 100f);
-        if (est > 100) est = 100;
-        if (est < 1) est = 1;
-        return est;
-    }
-
-    private void applyMaxBrightnessAndKeepOn() {
-        try {
-            WindowManager.LayoutParams lp = getWindow().getAttributes();
-            oldWindowBrightness = lp.screenBrightness;
-            oldKeepScreenOn = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
-
-            lp.screenBrightness = 1f;
-            getWindow().setAttributes(lp);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            logInfo("Stress: brightness set to MAX and screen locked ON.");
         } catch (Exception e) {
-            logWarn("Stress: brightness/keep-on failed: " + e.getMessage());
+            new GELLabLogger(this).fail("Battery Stress Test crashed: " + e.getMessage());
         }
-    }
+    }).start();
+}
 
-    private void restoreBrightnessAndKeepOn() {
-        try {
-            WindowManager.LayoutParams lp = getWindow().getAttributes();
-            if (oldWindowBrightness != -2f) {
-                lp.screenBrightness = oldWindowBrightness;
-                getWindow().setAttributes(lp);
-            }
-
-            if (!oldKeepScreenOn) {
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            }
-
-            logInfo("Stress: brightness and screen flags restored.");
-        } catch (Exception e) {
-            logWarn("Stress: restore brightness failed: " + e.getMessage());
-        }
-    }
-
-    private void startCpuBurn_C_Mode() {
-        stopCpuBurn();
-        cpuBurnRunning = true;
-
-        int cores = Runtime.getRuntime().availableProcessors();
-        int threadsToRun = Math.min(8, cores);
-        logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
-
-        cpuBurnThreads.clear();
-        for (int i = 0; i < threadsToRun; i++) {
-            Thread t = new Thread(() -> {
-                double x = 1.000001;
-                while (cpuBurnRunning) {
-                    x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
-                    if (x > 1e9) x = 1.000001;
-                }
-            });
-            t.setPriority(Thread.MAX_PRIORITY);
-            t.start();
-            cpuBurnThreads.add(t);
-        }
-    }
-
-    private void stopCpuBurn() {
-        cpuBurnRunning = false;
-        for (Thread t : cpuBurnThreads) {
-            try {
-                t.join(50);
-            } catch (Exception ignored) {}
-        }
-        cpuBurnThreads.clear();
-        logInfo("Stress: CPU burn stopped.");
-    }
-
-    private float getCurrentBatteryPercent() {
-        try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i = registerReceiver(null, f);
-            if (i == null) return -1f;
-
-            int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            if (level < 0 || scale <= 0) return -1f;
-
-            return 100f * level / scale;
-
-        } catch (Exception e) {
-            return -1f;
-        }
-    }
-
-    // ============================================================
-    // LAB 16 — Charging Port & Charger Inspection (manual)
-    // ============================================================
-    private void lab16ChargingPortManual() {
-        logLine();
-        logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");
-        logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");
-        logWarn("If the cable fits loosely or disconnects easily -> worn port or bent contacts.");
-        logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");
-    }
-
-    // ============================================================
-// GEL Battery Temperature Reader (Universal)
 // ============================================================
-private float getBatteryTemperature() {
+// SUPPORT METHODS — Logger-Compatible Versions
+// ============================================================
+private int askBatteryStressDuration() {
+    // Duration already selected from dialog → stored globally
+    return lastSelectedBatteryStressDuration; // 10–120 sec
+}
+
+private void applyMaxBrightnessAndKeepOn(GELLabLogger L) {
     try {
-        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (i == null) return 0f;
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        oldWindowBrightness = lp.screenBrightness;
+        oldKeepScreenOn = (lp.flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
 
-        int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-        if (raw <= 0) return 0f;
+        lp.screenBrightness = 1f;
+        getWindow().setAttributes(lp);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        return raw / 10f;  // Android gives tenths of °C
+        L.info("Brightness set to MAX + screen locked ON.");
     } catch (Exception e) {
-        return 0f;
+        L.warn("Failed to apply brightness/keep-on: " + e.getMessage());
     }
+}
+
+private void restoreBrightnessAndKeepOn(GELLabLogger L) {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (oldWindowBrightness != -2f) {
+            lp.screenBrightness = oldWindowBrightness;
+            getWindow().setAttributes(lp);
+        }
+
+        if (!oldKeepScreenOn) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+
+        L.info("Brightness and screen flags restored.");
+    } catch (Exception e) {
+        L.warn("Failed to restore brightness/flags: " + e.getMessage());
+    }
+}
+
+private void startCpuBurn_C_Mode(GELLabLogger L) {
+    stopCpuBurn(null);
+
+    cpuBurnRunning = true;
+    int cores = Runtime.getRuntime().availableProcessors();
+    int threadsToRun = Math.min(8, cores);
+
+    L.info("Starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
+
+    cpuBurnThreads.clear();
+    for (int i = 0; i < threadsToRun; i++) {
+        Thread t = new Thread(() -> {
+            double x = 1.000001;
+            while (cpuBurnRunning) {
+                x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
+                if (x > 1e9) x = 1.000001;
+            }
+        });
+        t.setPriority(Thread.MAX_PRIORITY);
+        t.start();
+        cpuBurnThreads.add(t);
+    }
+}
+
+private void stopCpuBurn(GELLabLogger L) {
+    cpuBurnRunning = false;
+
+    for (Thread t : cpuBurnThreads) {
+        try { t.join(50); } catch (Exception ignored) {}
+    }
+    cpuBurnThreads.clear();
+
+    if (L != null) L.info("CPU burn stopped.");
+}
+
+private float getCurrentBatteryPercent() {
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return -1f;
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        if (level < 0 || scale <= 0) return -1f;
+
+        return 100f * level / scale;
+
+    } catch (Exception e) {
+        return -1f;
+    }
+}
+
+private int estimateHealthFromDrain(float perHour) {
+    if (perHour <= 0f) return 100;
+    float baseline = 12f;
+    int est = Math.round((baseline / perHour) * 100f);
+    if (est > 100) est = 100;
+    if (est < 1) est = 1;
+    return est;
+}
+
+    // ============================================================
+// LAB 16 — Charging Port & Charger Inspection (Manual) — Logger Edition
+// ============================================================
+private void lab16ChargingPortManual() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 16 — Charging Port & Charger Inspection (manual)");
+
+    new Thread(() -> {
+        try {
+            L.info("1) Inspect charging port visually using a flashlight for dust, lint or corrosion.");
+            L.warn("If the cable fits loosely or disconnects easily → worn port or bent contacts.");
+            L.error("If the device does not charge with known-good chargers → possible port or board-level power issue.");
+
+        } catch (Exception e) {
+            new GELLabLogger(this).fail("LAB 16 crashed: " + e.getMessage());
+        }
+    }).start();
 }
     
     // ============================================================
-// LAB 17 — Thermal Snapshot (GEL Universal Edition — SAFE)
+// LAB 17 — Thermal Snapshot (ASCII Thermal Map) — Logger Edition
 // ============================================================
 private void lab17ThermalSnapshot() {
-    logLine();
-    logInfo("LAB 17 — Thermal Snapshot (ASCII thermal map)");
 
-    // 1) Read thermal zones (CPU/GPU/PMIC/Skin)
-    Map<String, Float> zones = readThermalZones();
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 17 — Thermal Snapshot (ASCII Thermal Map)");
 
-    // 2) Battery ALWAYS from BatteryManager
-    float batt = getBatteryTemperature();
+    new Thread(() -> {
+        try {
+            // ------------------------------------------------------------
+            // 1) Read all thermal zones
+            // ------------------------------------------------------------
+            Map<String, Float> zones = readThermalZones();
+            float batt = getBatteryTemperature();  // always available
 
-    if (zones == null || zones.isEmpty()) {
-        logWarn("Device exposes NO thermal zones. Printing battery only.");
-        printZoneAscii("Battery", batt);
-        logOk("Lab 17 finished.");
-        return;
-    }
+            if (zones == null || zones.isEmpty()) {
+                L.warn("Device exposes NO thermal zones. Printing battery only.");
+                printZoneAscii_Logger("Battery", batt, L);
+                L.ok("Lab 17 finished.");
+                return;
+            }
 
-    // Auto-detect CPU/GPU/SKIN/PMIC
-    Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
-    Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
-    Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
-    Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
+            // ------------------------------------------------------------
+            // 2) Auto-detect CPU / GPU / SKIN / PMIC
+            // ------------------------------------------------------------
+            Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
+            Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
+            Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
+            Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
 
-    logOk("Thermal Zones found: " + zones.size());
+            L.ok("Thermal Zones found: " + zones.size());
 
-    // Snapshot print
-    if (cpu  != null) printZoneAscii("CPU", cpu);
-    if (gpu  != null) printZoneAscii("GPU", gpu);
+            // ------------------------------------------------------------
+            // 3) Snapshot Print
+            // ------------------------------------------------------------
+            if (cpu  != null) printZoneAscii_Logger("CPU", cpu, L);
+            if (gpu  != null) printZoneAscii_Logger("GPU", gpu, L);
 
-    // Battery ALWAYS printed
-    printZoneAscii("Battery", batt);
+            // Battery ALWAYS printed
+            printZoneAscii_Logger("Battery", batt, L);
 
-    if (skin != null) printZoneAscii("Skin", skin);
-    if (pmic != null) printZoneAscii("PMIC", pmic);
+            if (skin != null) printZoneAscii_Logger("Skin", skin, L);
+            if (pmic != null) printZoneAscii_Logger("PMIC", pmic, L);
 
-    logOk("Lab 17 finished.");
+            L.ok("Lab 17 finished.");
+
+        } catch (Exception e) {
+            new GELLabLogger(this).fail("LAB 17 crashed: " + e.getMessage());
+        }
+    }).start();
 }
 
+
 // ============================================================
-// ASCII BAR (100 chars — 5sp monospace via HTML)
+// ASCII BAR RENDERER (LOGGER VERSION)
 // ============================================================
-private void printZoneAscii(String label, float t) {
+private void printZoneAscii_Logger(String label, float t, GELLabLogger L) {
 
     // Color icon
     String color;
@@ -1491,7 +1440,7 @@ private void printZoneAscii(String label, float t) {
     else if (t < 60)   color = "🟨";
     else               color = "🟥";
 
-    // Temperature scale → 0–100 chars
+    // Temperature scale → 0–100 bars
     float maxT = 80f;
     float pct = Math.min(1f, t / maxT);
     int bars = (int)(pct * 100);
@@ -1500,10 +1449,10 @@ private void printZoneAscii(String label, float t) {
     for (int i = 0; i < bars; i++) sb.append("█");
     while (sb.length() < 100) sb.append(" ");
 
-    // Header line
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    // Header (UI + Logger)
+    L.info(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
 
-    // BAR line (5sp monospace via <small><small><tt>>)
+    // BAR line printed as HTML (UI only)
     appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
 }
     

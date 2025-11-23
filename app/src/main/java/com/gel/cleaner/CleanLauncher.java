@@ -1,3 +1,7 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// CleanLauncher (GEL Edition)
+// Universal OEM Cleaner Launcher — Safe, Fast, Production Ready
+
 package com.gel.cleaner;
 
 import android.content.Context;
@@ -5,13 +9,10 @@ import android.content.Intent;
 import android.content.ComponentName;
 import android.os.Build;
 
-// ============================================================
-// CleanLauncher — Universal Smart Cleaner (GEL Edition)
-// ============================================================
 public class CleanLauncher {
 
     private static String low(String s) {
-        return (s == null) ? "" : s.toLowerCase().trim();
+        return (s == null ? "" : s.toLowerCase().trim());
     }
 
     private static boolean tryComponent(Context ctx, String pkg, String cls) {
@@ -27,50 +28,37 @@ public class CleanLauncher {
     }
 
     // ============================================================
-    // UNIVERSAL TEMP STORAGE CLEANER (Used by cleanTempFiles)
+    // TEMP STORAGE CLEANER (Used by cleanTempFiles)
     // ============================================================
     public static boolean openTempStorageCleaner(Context ctx) {
 
-        boolean launched = false;
-
-        // Xiaomi / MIUI / HyperOS
-        if (tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity"))
-            return true;
-
-        if (tryComponent(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity"))
-            return true;
+        // Xiaomi
+        if (tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity")) return true;
+        if (tryComponent(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity")) return true;
 
         // Samsung
-        if (tryComponent(ctx, "com.samsung.android.lool", "com.samsung.android.lool.MainActivity"))
-            return true;
-
+        if (tryComponent(ctx, "com.samsung.android.lool", "com.samsung.android.lool.MainActivity")) return true;
         if (tryComponent(ctx, "com.samsung.android.devicecare",
-                "com.samsung.android.devicecare.ui.DeviceCareActivity"))
-            return true;
+                "com.samsung.android.devicecare.ui.DeviceCareActivity")) return true;
 
         // Oppo / Realme
         if (tryComponent(ctx, "com.coloros.phonemanager",
-                "com.coloros.phonemanager.main.MainActivity"))
-            return true;
+                "com.coloros.phonemanager.main.MainActivity")) return true;
 
         if (tryComponent(ctx, "com.coloros.oppoguardelf",
-                "com.coloros.oppoguardelf.OppoGuardElfMainActivity"))
-            return true;
+                "com.coloros.oppoguardelf.OppoGuardElfMainActivity")) return true;
 
         // Huawei
         if (tryComponent(ctx, "com.huawei.systemmanager",
-                "com.huawei.systemmanager.spaceclean.SpaceCleanActivity"))
-            return true;
+                "com.huawei.systemmanager.spaceclean.SpaceCleanActivity")) return true;
 
         // Vivo
         if (tryComponent(ctx, "com.iqoo.secure",
-                "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity"))
-            return true;
+                "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity")) return true;
 
         // OnePlus
         if (tryComponent(ctx, "com.oneplus.security",
-                "com.oneplus.security.chaincleaner.ChainCleanerActivity"))
-            return true;
+                "com.oneplus.security.chaincleaner.ChainCleanerActivity")) return true;
 
         return false;
     }
@@ -96,64 +84,51 @@ public class CleanLauncher {
         boolean isSony     = brand.contains("sony")     || manu.contains("sony");
         boolean isPixel    = brand.contains("google")   || manu.contains("google");
 
-        boolean launched = false;
-
         // Xiaomi
-        if (isXiaomi && !launched) {
-            launched = tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity");
-            if (!launched) launched = tryComponent(ctx, "com.miui.securitycenter",
-                    "com.miui.securityscan.MainActivity");
-            if (!launched) launched = tryComponent(ctx, "com.miui.miservice",
-                    "com.miui.misservice.settings.ClearStorageActivity");
-            if (launched) return true;
+        if (isXiaomi) {
+            if (tryComponent(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity")) return true;
+            if (tryComponent(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity")) return true;
+            if (tryComponent(ctx, "com.miui.miservice", "com.miui.misservice.settings.ClearStorageActivity")) return true;
         }
 
         // Samsung
-        if (isSamsung && !launched) {
-            launched = tryComponent(ctx,
+        if (isSamsung) {
+            if (tryComponent(ctx,
                     "com.samsung.android.sm",
-                    "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity");
-            if (launched) return true;
+                    "com.samsung.android.sm.ui.dashboard.SmartManagerDashBoardActivity")) return true;
         }
 
         // Huawei
-        if (isHuawei && !launched) {
-            launched = tryComponent(ctx,
+        if (isHuawei) {
+            if (tryComponent(ctx,
                     "com.huawei.systemmanager",
-                    "com.huawei.systemmanager.mainscreen.MainScreenActivity");
-            if (launched) return true;
+                    "com.huawei.systemmanager.mainscreen.MainScreenActivity")) return true;
         }
 
         // Oppo / Realme / Vivo / OnePlus
-        if (!launched) {
-            launched = tryComponent(ctx,
-                    "com.coloros.phonemanager",
-                    "com.coloros.phonemanager.CleanupActivity");
-            if (launched) return true;
-        }
+        if (tryComponent(ctx,
+                "com.coloros.phonemanager",
+                "com.coloros.phonemanager.CleanupActivity")) return true;
 
         // Motorola
-        if (isMotorola && !launched) {
-            launched = tryComponent(ctx,
+        if (isMotorola) {
+            if (tryComponent(ctx,
                     "com.motorola.ccc",
-                    "com.motorola.ccc.settings.CleanerActivity");
-            if (launched) return true;
+                    "com.motorola.ccc.settings.CleanerActivity")) return true;
         }
 
         // Sony
-        if (isSony && !launched) {
-            launched = tryComponent(ctx,
+        if (isSony) {
+            if (tryComponent(ctx,
                     "com.sonymobile.settings",
-                    "com.sonymobile.settings.cleanup.CleanupActivity");
-            if (launched) return true;
+                    "com.sonymobile.settings.cleanup.CleanupActivity")) return true;
         }
 
         // Pixel
-        if (isPixel && !launched) {
-            launched = tryComponent(ctx,
+        if (isPixel) {
+            if (tryComponent(ctx,
                     "com.google.android.settings.intelligence",
-                    "com.google.android.settings.intelligence.modules.storage.StorageActivity");
-            if (launched) return true;
+                    "com.google.android.settings.intelligence.modules.storage.StorageActivity")) return true;
         }
 
         return false;
@@ -167,33 +142,28 @@ public class CleanLauncher {
         String brand = low(Build.BRAND);
         String manu  = low(Build.MANUFACTURER);
 
-        boolean isSamsung  = brand.contains("samsung") || manu.contains("samsung");
-        boolean isHuawei   = brand.contains("huawei")  || manu.contains("huawei");
+        boolean isSamsung = brand.contains("samsung") || manu.contains("samsung");
+        boolean isHuawei  = brand.contains("huawei")  || manu.contains("huawei");
 
-        boolean launched = false;
-
-        // Samsung
+        // Samsung RAM Cleaner
         if (isSamsung) {
-            launched = tryComponent(ctx,
+            if (tryComponent(ctx,
                     "com.samsung.android.sm",
-                    "com.samsung.android.sm.ui.ram.RamActivity");
+                    "com.samsung.android.sm.ui.ram.RamActivity")) return true;
 
-            if (!launched)
-                launched = tryComponent(ctx,
-                        "com.samsung.android.sm",
-                        "com.samsung.android.sm.ui.memory.MemoryActivity");
-
-            if (launched) return true;
+            if (tryComponent(ctx,
+                    "com.samsung.android.sm",
+                    "com.samsung.android.sm.ui.memory.MemoryActivity")) return true;
         }
 
-        // Huawei
-        if (isHuawei && !launched) {
-            launched = tryComponent(ctx,
+        // Huawei RAM Cleaner
+        if (isHuawei) {
+            if (tryComponent(ctx,
                     "com.huawei.systemmanager",
-                    "com.huawei.systemmanager.optimize.process.ProtectActivity");
-            if (launched) return true;
+                    "com.huawei.systemmanager.optimize.process.ProtectActivity")) return true;
         }
 
+        // Fallback → full OEM cleaner
         return openDeepCleaner(ctx);
     }
 }

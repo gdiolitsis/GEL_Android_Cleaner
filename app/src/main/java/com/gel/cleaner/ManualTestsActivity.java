@@ -1018,125 +1018,155 @@ private void runWifiDeepScan(WifiManager wm) {
     }).start();
 }
 
-    private void lab12MobileDataChecklist() {
-        logLine();
-        logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist + SIM detection.");
+    // ============================================================
+// LAB 12 — Mobile Data / SIM / Service Checklist
+// ============================================================
+private void lab12MobileDataChecklist() {
 
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 12 — Mobile Data / Airplane Mode Checklist + SIM detection");
+
+    try {
+        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if (tm == null) {
+            L.warn("TelephonyManager not available — cannot detect SIM.");
+            return;
+        }
+
+        // SIM STATE
+        int simState = tm.getSimState();
+        switch (simState) {
+            case TelephonyManager.SIM_STATE_READY:
+                L.ok("SIM detected and READY.");
+                break;
+            case TelephonyManager.SIM_STATE_ABSENT:
+                L.fail("NO SIM detected (ABSENT).");
+                break;
+            case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+                L.warn("SIM detected but locked (PIN required).");
+                break;
+            case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+                L.warn("SIM detected but locked (PUK required).");
+                break;
+            case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+                L.warn("SIM detected but network-locked.");
+                break;
+            case TelephonyManager.SIM_STATE_NOT_READY:
+                L.warn("SIM present but NOT READY.");
+                break;
+            default:
+                L.warn("SIM state unknown: " + simState);
+                break;
+        }
+
+        // SERVICE STATE
         try {
-            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-            if (tm == null) {
-                logWarn("TelephonyManager not available — cannot detect SIM.");
-            } else {
-                int simState = tm.getSimState();
-                switch (simState) {
-                    case TelephonyManager.SIM_STATE_READY:
-                        logOk("SIM detected and READY.");
+            ServiceState ss = tm.getServiceState();
+            if (ss != null) {
+                switch (ss.getState()) {
+                    case ServiceState.STATE_IN_SERVICE:
+                        L.ok("Mobile service: IN SERVICE.");
                         break;
-                    case TelephonyManager.SIM_STATE_ABSENT:
-                        logError("NO SIM detected (SIM_STATE_ABSENT).");
+                    case ServiceState.STATE_OUT_OF_SERVICE:
+                        L.warn("Mobile service: OUT OF SERVICE.");
                         break;
-                    case TelephonyManager.SIM_STATE_PIN_REQUIRED:
-                        logWarn("SIM detected but locked (PIN required).");
+                    case ServiceState.STATE_EMERGENCY_ONLY:
+                        L.warn("Mobile service: EMERGENCY ONLY.");
                         break;
-                    case TelephonyManager.SIM_STATE_PUK_REQUIRED:
-                        logWarn("SIM detected but locked (PUK required).");
-                        break;
-                    case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
-                        logWarn("SIM detected but network-locked.");
-                        break;
-                    case TelephonyManager.SIM_STATE_NOT_READY:
-                        logWarn("SIM present but not ready yet.");
+                    case ServiceState.STATE_POWER_OFF:
+                        L.warn("Mobile service: RADIO OFF (AIRPLANE MODE?).");
                         break;
                     default:
-                        logWarn("SIM state unknown: " + simState);
+                        L.warn("Mobile service state: " + ss.getState());
                         break;
                 }
-
-                // Service state (best-effort, may be blocked on some OEMs)
-                try {
-                    ServiceState ss = tm.getServiceState();
-                    if (ss != null) {
-                        int state = ss.getState();
-                        if (state == ServiceState.STATE_IN_SERVICE) {
-                            logOk("Mobile service: IN SERVICE.");
-                        } else if (state == ServiceState.STATE_OUT_OF_SERVICE) {
-                            logWarn("Mobile service: OUT OF SERVICE.");
-                        } else if (state == ServiceState.STATE_EMERGENCY_ONLY) {
-                            logWarn("Mobile service: EMERGENCY ONLY.");
-                        } else if (state == ServiceState.STATE_POWER_OFF) {
-                            logWarn("Mobile service: RADIO OFF / AIRPLANE?");
-                        } else {
-                            logWarn("Mobile service state: " + state);
-                        }
-                    } else {
-                        logWarn("ServiceState not available.");
-                    }
-                } catch (SecurityException se) {
-                    logWarn("ServiceState blocked by OS/OEM (no permission).");
-                } catch (Exception ignored) {}
-            }
-
-        } catch (Exception e) {
-            logWarn("SIM detection error: " + e.getMessage());
-        }
-
-        logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");
-        logInfo("2) Ensure a valid SIM with active data plan is inserted.");
-        logWarn("If the device shows signal bars but mobile data never works -> APN/carrier/modem issue.");
-        logError("If there is no mobile network at all in known-good coverage -> SIM, antenna or baseband problem.");
-    }
-
-    private void lab13CallGuidelines() {
-        logLine();
-        logInfo("LAB 13 — Basic Call Test Guidelines (manual).");
-        logInfo("1) Place a normal call to a known-good number.");
-        logInfo("2) Verify both directions: you hear them AND they hear you clearly.");
-        logWarn("If only one direction fails -> isolate earpiece vs microphone path.");
-        logError("If calls always drop or never connect while data works -> telephony/carrier registration issue.");
-    }
-
-    private void lab14InternetQuickCheck() {
-        logLine();
-        logInfo("LAB 14 — Internet Access Quick Check.");
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) {
-                logError("ConnectivityManager not available.");
-                return;
-            }
-
-            boolean hasInternet = false;
-            String transport = "UNKNOWN";
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                android.net.Network n = cm.getActiveNetwork();
-                NetworkCapabilities caps = cm.getNetworkCapabilities(n);
-                if (caps != null) {
-                    hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-                        transport = "Wi-Fi";
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-                        transport = "Cellular";
-                }
             } else {
-                @SuppressWarnings("deprecation")
-                NetworkInfo ni = cm.getActiveNetworkInfo();
-                if (ni != null && ni.isConnected()) {
-                    hasInternet = true;
-                    transport = ni.getTypeName();
-                }
+                L.warn("ServiceState not available.");
             }
-
-            if (!hasInternet)
-                logError("No active Internet connection detected at OS level.");
-            else
-                logOk("Internet connectivity is reported as active (" + transport + ").");
-
-        } catch (Exception e) {
-            logError("Internet quick check error: " + e.getMessage());
+        } catch (SecurityException se) {
+            L.warn("ServiceState blocked by OS/OEM (permission denied).");
         }
+
+    } catch (Exception e) {
+        L.fail("SIM detection error: " + e.getMessage());
     }
 
+    // GUIDELINES
+    L.info("1) Ensure Airplane mode is OFF and mobile data is enabled.");
+    L.info("2) Ensure SIM has an active data plan.");
+
+    // RESULTS
+    L.warn("If bars are visible but NO data works → APN/carrier/modem issue.");
+    L.fail("If NO network in known-good coverage → SIM, antenna or baseband problem.");
+}
+
+
+
+// ============================================================
+// LAB 13 — Basic Call Test Guidelines
+// ============================================================
+private void lab13CallGuidelines() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 13 — Basic Call Test Guidelines");
+
+    L.info("1) Place a normal call to a known-good number.");
+    L.info("2) Verify both directions: you hear them AND they hear you clearly.");
+
+    L.warn("If only one direction fails → isolate earpiece vs microphone path.");
+    L.fail("If calls always drop or never connect while data works → telephony/carrier registration issue.");
+}
+
+
+
+// ============================================================
+// LAB 14 — Internet Access Quick Check
+// ============================================================
+private void lab14InternetQuickCheck() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 14 — Internet Access Quick Check");
+
+    try {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            L.fail("ConnectivityManager not available.");
+            return;
+        }
+
+        boolean hasInternet = false;
+        String transport = "UNKNOWN";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network n = cm.getActiveNetwork();
+            NetworkCapabilities caps = cm.getNetworkCapabilities(n);
+
+            if (caps != null) {
+                hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                    transport = "Wi-Fi";
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                    transport = "Cellular";
+            }
+        } else {
+            @SuppressWarnings("deprecation")
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if (ni != null && ni.isConnected()) {
+                hasInternet = true;
+                transport = ni.getTypeName();
+            }
+        }
+
+        if (!hasInternet)
+            L.fail("No active Internet connection detected at OS level.");
+        else
+            L.ok("Internet connectivity is active (" + transport + ").");
+
+    } catch (Exception e) {
+        L.fail("Internet quick check error: " + e.getMessage());
+    }
+}
     // ============================================================
     // LAB 15 — Battery Health Stress Test (GEL C Mode)
     // ============================================================

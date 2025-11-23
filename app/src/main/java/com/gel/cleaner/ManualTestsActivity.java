@@ -3415,11 +3415,11 @@ private void lab30FinalSummary() {
 // ============================================================
 private void addLab30ExportButton() {
 
-    // Delay UI update so it's guaranteed to append after logs
     ui.post(() -> {
 
-        LinearLayout container = findViewById(R.id.manualTestsContainer);
-        if (container == null) return;
+        // Find the root LinearLayout inside the ScrollView
+        LinearLayout root = (LinearLayout) scroll.getChildAt(0);
+        if (root == null) return;
 
         Button btn = new Button(this);
         btn.setText("Export to Service Report");
@@ -3440,7 +3440,8 @@ private void addLab30ExportButton() {
             startActivity(i);
         });
 
-        container.addView(btn);
+        // Append button to bottom of UI
+        root.addView(btn);
     });
 }
 

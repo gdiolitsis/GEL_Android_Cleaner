@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:background="@color/gel_bg"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/gel_padding_m">
+
+    <!-- ========================================================= -->
+    <!--  LEFT SIDEBAR (Buttons)                                   -->
+    <!-- ========================================================= -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.32"
+        android:padding="@dimen/gel_padding_m"
+        android:background="@drawable/gel_card_bg"
+        android:gravity="top">
+
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🧹 GEL Cleaner"
+            android:textColor="@color/gel_gold"
+            android:textSize="@dimen/gel_text_title"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="@dimen/gel_padding_s" />
+
+        <Button
+            android:id="@+id/btnCleanRam"
+            style="@style/GEL.SideButton"
+            android:text="⚡ Clean RAM"/>
+
+        <Button
+            android:id="@+id/btnDeepClean"
+            style="@style/GEL.SideButton"
+            android:text="🛠 Deep Clean"/>
+
+        <Button
+            android:id="@+id/btnTempFiles"
+            style="@style/GEL.SideButton"
+            android:text="🔥 Temp / Junk Files"/>
+
+        <Button
+            android:id="@+id/btnBrowserClean"
+            style="@style/GEL.SideButton"
+            android:text="🌐 Browser Cache"/>
+
+        <Button
+            android:id="@+id/btnRunningApps"
+            style="@style/GEL.SideButton"
+            android:text="🚀 Running Apps"/>
+
+    </LinearLayout>
+
+    <!-- ========================================================= -->
+    <!--  RIGHT CONTENT AREA (Logs)                                -->
+    <!-- ========================================================= -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.68"
+        android:padding="@dimen/gel_padding_m">
+
+        <TextView
+            android:id="@+id/txtTitleRight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📝 Cleaner Log"
+            android:textColor="@color/gel_text_primary"
+            android:textSize="@dimen/gel_text_large"
+            android:textStyle="bold"
+            android:paddingBottom="@dimen/gel_padding_s" />
+
+        <ScrollView
+            android:id="@+id/scrollCleaner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#151515"
+            android:padding="@dimen/gel_padding_s">
+
+            <TextView
+                android:id="@+id/txtCleanerLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gel_text_secondary"
+                android:textSize="@dimen/gel_text_small"
+                android:lineSpacingExtra="2dp"
+                android:text="Log ready…\n" />
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</LinearLayout>

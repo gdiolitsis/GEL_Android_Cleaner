@@ -26,10 +26,10 @@
     <string name="clean_all">🧹 GEL General Cleaner</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 Browser Cache</string>
+    <string name="browser_cache">🌐 Browser Cache\n  Cleaner</string>
     <string name="app_cache">🧽 App Cache</string>
     <string name="app_cache_title">Select app to clear cache</string>
-    <string name="app_cache_btn">🧽 App Cache</string>
+    <string name="app_cache_btn">🧽 App Cache\n  Cleaner</string>
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->

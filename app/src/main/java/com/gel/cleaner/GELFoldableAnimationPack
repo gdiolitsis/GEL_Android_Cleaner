@@ -1,0 +1,129 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// STEP 6 — GELFoldableAnimationPack v1.0
+// Smooth hinge-driven UI transitions (outer ↔ inner, half-open ↔ flat)
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+
+package com.gel.cleaner;
+
+import android.app.Activity;
+import android.os.Build;
+import android.transition.AutoTransition;
+import android.transition.TransitionManager;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
+
+import androidx.annotation.NonNull;
+
+/**
+ * GELFoldableAnimationPack
+ *
+ * Call this BEFORE/AFTER UI reflow to avoid "jumping" on fold/unfold.
+ *
+ * Usage (inside your foldable callback):
+ *
+ *  GELFoldableAnimationPack A = new GELFoldableAnimationPack(this);
+ *  A.animateReflow(() -> uiManager.applyUI(isInnerScreen));
+ *
+ * Works on:
+ *  - Foldables (hinge posture changes)
+ *  - Tablets (rotation / size changes)
+ *  - Dex / freeform (window resize)
+ */
+public class GELFoldableAnimationPack {
+
+    private final Activity activity;
+    private final long durationMs;
+
+    public GELFoldableAnimationPack(@NonNull Activity act) {
+        this(act, 240); // default smooth duration
+    }
+
+    public GELFoldableAnimationPack(@NonNull Activity act, long durationMs) {
+        this.activity = act;
+        this.durationMs = Math.max(120, durationMs);
+    }
+
+    /**
+     * Animate any UI reflow action with smooth transition.
+     * The action should include applyUI(), layout changes, visibility toggles etc.
+     */
+    public void animateReflow(@NonNull Runnable reflowAction) {
+        View root = activity.findViewById(android.R.id.content);
+        if (!(root instanceof ViewGroup)) {
+            // fallback no-transition
+            reflowAction.run();
+            return;
+        }
+
+        ViewGroup vg = (ViewGroup) root;
+
+        // 1) TransitionManager for layout bounds + fades
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            AutoTransition t = new AutoTransition();
+            t.setDuration(durationMs);
+            t.setInterpolator(new DecelerateInterpolator());
+            TransitionManager.beginDelayedTransition(vg, t);
+        }
+
+        // 2) Soft pre-scale to reduce “snap”
+        preScale(vg, 0.985f);
+
+        // 3) Apply real UI changes
+        reflowAction.run();
+
+        // 4) Restore scale smoothly
+        postScale(vg, 1.0f);
+    }
+
+    // ------------------------------------------------------------
+    // Internal helpers
+    // ------------------------------------------------------------
+
+    private void preScale(ViewGroup root, float scale) {
+        try {
+            root.setPivotX(root.getWidth() / 2f);
+            root.setPivotY(root.getHeight() / 2f);
+            root.animate()
+                    .scaleX(scale)
+                    .scaleY(scale)
+                    .alpha(0.98f)
+                    .setDuration(durationMs / 3)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+        } catch (Throwable ignore) {}
+        // Recursively soften children a bit
+        softenChildren(root, 0.985f);
+    }
+
+    private void postScale(ViewGroup root, float scale) {
+        try {
+            root.animate()
+                    .scaleX(scale)
+                    .scaleY(scale)
+                    .alpha(1f)
+                    .setDuration(durationMs)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+        } catch (Throwable ignore) {}
+        softenChildren(root, 1.0f);
+    }
+
+    private void softenChildren(ViewGroup vg, float scale) {
+        if (vg == null) return;
+        int n = vg.getChildCount();
+        for (int i = 0; i < n; i++) {
+            View c = vg.getChildAt(i);
+            if (c == null) continue;
+
+            try {
+                c.setPivotX(c.getWidth() / 2f);
+                c.setPivotY(c.getHeight() / 2f);
+                c.setScaleX(scale);
+                c.setScaleY(scale);
+            } catch (Throwable ignore) {}
+
+            if (c instanceof ViewGroup) softenChildren((ViewGroup) c, scale);
+        }
+    }
+}

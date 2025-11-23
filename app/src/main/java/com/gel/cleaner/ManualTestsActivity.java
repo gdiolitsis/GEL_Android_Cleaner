@@ -3321,84 +3321,99 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 30 — FINAL DEVICE SUMMARY AGGREGATOR
-// Writes ONLY to GELServiceLog (ServiceReportActivity prints PDF)
-// Compatible with GELServiceLog.add(tag, msg)
+// LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// Does NOT modify GELServiceLog — only reads it.
+// Exports via ServiceReportActivity.
 // ============================================================
 private void lab30FinalSummary() {
 
-logLine();  
-logInfo("LAB 30 — Final Aggregated Summary (AUTO)");  
+    logLine();
+    logInfo("LAB 30 — Final Technician Summary (READ-ONLY)");
 
-// ------------------------------  
-// 1) Scores from Lab 29  
-// ------------------------------  
-String scoreHealth  = lastScoreHealth     != null ? lastScoreHealth     : "N/A";  
-String scorePerf    = lastScorePerformance!= null ? lastScorePerformance: "N/A";  
-String scoreSec     = lastScoreSecurity   != null ? lastScoreSecurity   : "N/A";  
-String scorePriv    = lastScorePrivacy    != null ? lastScorePrivacy    : "N/A";  
-String finalVerdict = lastFinalVerdict    != null ? lastFinalVerdict    : "N/A";  
+    // ------------------------------------------------------------
+    // 1) READ FULL LOG (from all labs)
+    // ------------------------------------------------------------
+    String fullLog = GELServiceLog.getAll();
 
-// ------------------------------  
-// 2) Collect WARNING lines only  
-// ------------------------------  
-String full = GELServiceLog.getAll();  
-String[] lines = full.split("\n");  
-StringBuilder warnings = new StringBuilder();  
+    if (fullLog.trim().isEmpty()) {
+        logWarn("No diagnostic data found. Please run Manual Tests first.");
+        return;
+    }
 
-for (String l : lines) {  
-    String low = l.toLowerCase(Locale.US);  
+    // ------------------------------------------------------------
+    // 2) FILTER WARNINGS & ERRORS ONLY
+    // ------------------------------------------------------------
+    String[] lines = fullLog.split("\n");
+    StringBuilder warnings = new StringBuilder();
 
-    if (low.contains("ok")) continue;  
-    if (low.contains("no issue")) continue;  
-    if (low.contains("all good")) continue;  
-    if (l.trim().isEmpty()) continue;  
+    for (String l : lines) {
+        String low = l.toLowerCase(Locale.US);
 
-    warnings.append(l).append("\n");  
-}  
+        if (low.contains("⚠") || low.contains("warning")) {
+            warnings.append(l).append("\n");
+        }
+        if (low.contains("❌") || low.contains("error")) {
+            warnings.append(l).append("\n");
+        }
+    }
 
-// ------------------------------  
-// 3) Clear log — write clean final  
-// ------------------------------  
-GELServiceLog.clear();  
+    // ------------------------------------------------------------
+    // 3) PRINT SUMMARY TO UI (ONLY)
+    // ------------------------------------------------------------
+    logInfo("===== FINAL TECHNICIAN SUMMARY =====");
 
-// ------------------------------  
-// 4) FINAL REPORT (tag,msg)  
-// ------------------------------  
-GELServiceLog.add("REPORT", "===== FINAL DEVICE DIAGNOSIS REPORT =====");  
-GELServiceLog.add("REPORT", "");  
+    if (warnings.length() == 0) {
+        logOk("No warnings or errors detected.");
+    } else {
+        logWarn("Warnings / Errors detected:");
+        for (String w : warnings.toString().split("\n")) {
+            if (!w.trim().isEmpty()) {
+                logWarn(w.trim());
+            }
+        }
+    }
 
-GELServiceLog.add("SCORES", "Device Health Score: "      + scoreHealth);  
-GELServiceLog.add("SCORES", "Performance Score: "        + scorePerf);  
-GELServiceLog.add("SCORES", "Security Score: "           + scoreSec);  
-GELServiceLog.add("SCORES", "Privacy Score: "            + scorePriv);  
+    logLine();
+    logInfo("To export the official PDF report, use the button below.");
 
-GELServiceLog.add("REPORT", "");  
-GELServiceLog.add("VERDICT", "Final Verdict:");  
-GELServiceLog.add("VERDICT", finalVerdict);  
-GELServiceLog.add("REPORT", "");  
+    // ------------------------------------------------------------
+    // 4) ADD EXPORT BUTTON
+    // ------------------------------------------------------------
+    addLab30ExportButton();
+}
 
-GELServiceLog.add("DETAILS", "Detailed Findings (Warnings Only):");  
+// ============================================================
+// ADD EXPORT BUTTON — Opens ServiceReportActivity
+// ============================================================
+private void addLab30ExportButton() {
 
-if (warnings.length() == 0) {  
-    GELServiceLog.add("DETAILS", "No technician warnings found.");  
-} else {  
-    for (String w : warnings.toString().split("\n")) {  
-        if (!w.trim().isEmpty()) {  
-            GELServiceLog.add("WARN", w.trim());  
-        }  
-    }  
-}  
+    // Delay UI update so it's guaranteed to append after logs
+    ui.post(() -> {
 
-GELServiceLog.add("REPORT", "");  
-GELServiceLog.add("NOTES", "Technician Notes:");  
-GELServiceLog.add("NOTES", "Review thermals, battery, logic board and system logs.");  
+        LinearLayout container = findViewById(R.id.manualTestsContainer);
+        if (container == null) return;
 
-GELServiceLog.add("REPORT", "");  
-GELServiceLog.add("REPORT", "===== END OF REPORT =====");  
+        Button btn = new Button(this);
+        btn.setText("Export to Service Report");
+        btn.setAllCaps(false);
+        btn.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        btn.setTextColor(0xFFFFFFFF);
 
-logOk("Lab 30 completed — Final summary prepared.");
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(48)
+                );
+        lp.setMargins(0, dp(16), 0, dp(16));
+        btn.setLayoutParams(lp);
 
+        btn.setOnClickListener(v -> {
+            Intent i = new Intent(ManualTestsActivity.this, ServiceReportActivity.class);
+            startActivity(i);
+        });
+
+        container.addView(btn);
+    });
 }
 
 // ============================================================

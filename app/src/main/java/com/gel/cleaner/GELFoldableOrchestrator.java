@@ -1,12 +1,13 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 7 — GELFoldableOrchestrator v1.0
-// Master controller that binds: Detector → Callback → UI Manager → Animations
-// NOTE: Ολόκληρο αρχείο, 100% έτοιμο για copy-paste.
+// STEP 7 — GELFoldableOrchestrator v1.0 (Final GEL-Ready Edition)
+// Master controller: Detector → Callback → AnimationPack → UI Manager
+// NOTE: Ολόκληρο αρχείο, 100% έτοιμο για copy-paste. (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
 import android.app.Activity;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 public class GELFoldableOrchestrator implements GELFoldableCallback {
@@ -14,6 +15,7 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
     private static final String TAG = "GELFoldOrchestrator";
 
     private final Activity activity;
+
     private GELFoldableDetector detector;
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animator;
@@ -45,46 +47,50 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
     // STOP (call from Activity.onDestroy)
     // ============================================================
     public void stop() {
-        if (detector != null) detector.stop();
+        try {
+            if (detector != null) detector.stop();
+        } catch (Exception e) {
+            Log.e(TAG, "Stop error", e);
+        }
     }
 
     // ============================================================
     // CALLBACK from GELFoldableDetector
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull GELFoldableCallback.Posture posture) {
-        Log.d(TAG, "Posture changed → " + posture.name());
+    public void onPostureChanged(@NonNull Posture posture) {
+
+        Log.d(TAG, "Posture changed → " + posture);
 
         boolean isInner = isBigScreen(posture);
 
         if (isInner == lastInnerState) {
-            Log.d(TAG, "Ignoring duplicate posture event.");
+            Log.d(TAG, "Duplicate posture event → ignored.");
             return;
         }
 
         lastInnerState = isInner;
 
-        // Smooth animation → change UI
+        // Smooth animation + apply UI transition
         animator.animateReflow(() -> uiManager.applyUI(isInner));
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
-        // Not needed here — orchestration happens via posture logic
+        // Orchestrator uses only posture → ignore direct screen callbacks
     }
 
     // ============================================================
-    // Logic: Decide if inner display UI should activate
+    // Decide inner/outer UI based on posture
     // ============================================================
-    private boolean isBigScreen(GELFoldableCallback.Posture p) {
-
+    private boolean isBigScreen(Posture p) {
         switch (p) {
-            case FLAT:       // fully open
-            case HALF_OPEN:  // laptop/book mode
-            case TABLETOP:   // table L-shaped mode
+            case FLAT:       // fully 180° open
+            case HALF_OPEN:  // book/laptop mode
+            case TABLETOP:   // L-shaped on desk
                 return true;
 
-            case CLOSED:     // folded - outer display
+            case CLOSED:     // folded shut — cover display
             case TENT:       // tent mode
             case UNKNOWN:
             default:
@@ -92,3 +98,5 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
         }
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

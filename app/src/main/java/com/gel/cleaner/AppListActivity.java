@@ -1,6 +1,5 @@
 package com.gel.cleaner;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -10,16 +9,19 @@ import android.widget.AdapterView;
 
 import java.util.List;
 
-public class AppListActivity extends Activity {
+// ============================================================
+// GEL AUTO SCALING ENABLED
+// ============================================================
+public class AppListActivity extends GELAutoActivityHook {
 
     private ListView list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_cache);   // ✅ σωστό layout
+        setContentView(R.layout.activity_app_cache);   // UI loads normally (auto-scaled)
 
-        list = findViewById(R.id.listApps);            // ✅ σωστό ID
+        list = findViewById(R.id.listApps);
 
         // Fetch launcher apps
         Intent i = new Intent(Intent.ACTION_MAIN, null);
@@ -28,11 +30,14 @@ public class AppListActivity extends Activity {
         PackageManager pm = getPackageManager();
         List<ResolveInfo> apps = pm.queryIntentActivities(i, 0);
 
+        // Adapter will also auto-scale because dp/sp are globally scaled
         AppListAdapter ad = new AppListAdapter(this, apps);
         list.setAdapter(ad);
 
-        // ✅ CLICK → Open App Details → (Permission/UI→Clear cache)
-        list.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
+        // CLICK → Open App Details
+        list.setOnItemClickListener((AdapterView<?> parent, android.view.View view,
+                                     int position, long id) -> {
+
             ResolveInfo info = apps.get(position);
             if (info != null && info.activityInfo != null) {
                 String pkg = info.activityInfo.packageName;

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Large-screen optimized UI -->
+
+    <!-- SPACING -->
+    <dimen name="gel_padding_xs">10dp</dimen>
+    <dimen name="gel_padding_s">14dp</dimen>
+    <dimen name="gel_padding_m">20dp</dimen>
+    <dimen name="gel_padding_l">26dp</dimen>
+    <dimen name="gel_padding_xl">34dp</dimen>
+
+    <!-- TEXT -->
+    <dimen name="gel_text_small">16sp</dimen>
+    <dimen name="gel_text_normal">18sp</dimen>
+    <dimen name="gel_text_medium">20sp</dimen>
+    <dimen name="gel_text_large">22sp</dimen>
+    <dimen name="gel_text_title">26sp</dimen>
+    <dimen name="gel_text_big_title">30sp</dimen>
+
+    <!-- HEADER -->
+    <dimen name="gel_header_height">64dp</dimen>
+
+    <!-- BUTTONS (large tablets) -->
+    <dimen name="gel_btn_height">56dp</dimen>
+    <dimen name="gel_btn_radius">16dp</dimen>
+    <dimen name="gel_btn_stroke">2dp</dimen>
+
+    <!-- BLOCKS -->
+    <dimen name="gel_block_radius">20dp</dimen>
+    <dimen name="gel_block_padding">24dp</dimen>
+
+    <!-- ICONS -->
+    <dimen name="gel_icon">36dp</dimen>
+    <dimen name="gel_icon_large">48dp</dimen>
+
+    <!-- Scaled DP -->
+    <dimen name="gel_dp_2">4dp</dimen>
+    <dimen name="gel_dp_6">10dp</dimen>
+    <dimen name="gel_dp_8">12dp</dimen>
+    <dimen name="gel_dp_10">16dp</dimen>
+    <dimen name="gel_dp_12">20dp</dimen>
+    <dimen name="gel_dp_14">22dp</dimen>
+    <dimen name="gel_dp_16">26dp</dimen>
+
+</resources>

@@ -1,3 +1,6 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// CleanerActivity (GEL Auto-Scaling + Locale + Universal UI)
+
 package com.gel.cleaner;
 
 import android.content.Context;
@@ -7,22 +10,18 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class CleanerActivity extends AppCompatActivity {
+public class CleanerActivity extends GELAutoActivityHook {
 
     private TextView txtLog;
 
     @Override
     protected void attachBaseContext(Context base) {
+        // Locale + AutoDP work together correctly
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // 🔥 AUTO SCALING (universal tablets / foldables / phones)
-        GELAutoActivityHook.apply(this);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
@@ -37,22 +36,30 @@ public class CleanerActivity extends AppCompatActivity {
 
         log("🧹 GEL Cleaner loaded.\n");
 
+        // Smart RAM Clean
         btnCleanRam.setOnClickListener(v ->
                 GELCleaner.cleanRAM(getBaseContext(), this::log));
 
+        // OEM Deep Clean
         btnDeepClean.setOnClickListener(v ->
                 GELCleaner.deepClean(getBaseContext(), this::log));
 
+        // Temp / Junk Files Cleaner
         btnTempClean.setOnClickListener(v ->
                 GELCleaner.cleanTempFiles(getBaseContext(), this::log));
 
+        // Browser Cache Cleaner
         btnBrowser.setOnClickListener(v ->
                 GELCleaner.browserCache(getBaseContext(), this::log));
 
+        // Running Apps Manager
         btnRunning.setOnClickListener(v ->
                 GELCleaner.openRunningApps(getBaseContext(), this::log));
     }
 
+    // ========================================================================
+    // LOG PRINTER
+    // ========================================================================
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             txtLog.append(msg + "\n");

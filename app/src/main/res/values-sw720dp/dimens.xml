@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- SPACING -->
     <dimen name="gel_padding_xs">10dp</dimen>
     <dimen name="gel_padding_s">14dp</dimen>
     <dimen name="gel_padding_m">20dp</dimen>
     <dimen name="gel_padding_l">28dp</dimen>
     <dimen name="gel_padding_xl">38dp</dimen>
 
-    <!-- TEXT -->
     <dimen name="gel_text_small">20sp</dimen>
     <dimen name="gel_text_normal">22sp</dimen>
     <dimen name="gel_text_medium">24sp</dimen>
@@ -16,23 +14,18 @@
     <dimen name="gel_text_title">32sp</dimen>
     <dimen name="gel_text_big_title">36sp</dimen>
 
-    <!-- HEADER -->
     <dimen name="gel_header_height">72dp</dimen>
 
-    <!-- BUTTONS -->
     <dimen name="gel_btn_height">64dp</dimen>
     <dimen name="gel_btn_radius">18dp</dimen>
     <dimen name="gel_btn_stroke">1dp</dimen>
 
-    <!-- BLOCKS -->
     <dimen name="gel_block_radius">22dp</dimen>
     <dimen name="gel_block_padding">28dp</dimen>
 
-    <!-- ICONS -->
     <dimen name="gel_icon">42dp</dimen>
     <dimen name="gel_icon_large">52dp</dimen>
 
-    <!-- PHONE ORIGINAL → UPGRADED -->
     <dimen name="gel_dp_2">4dp</dimen>
     <dimen name="gel_dp_6">10dp</dimen>
     <dimen name="gel_dp_8">12dp</dimen>

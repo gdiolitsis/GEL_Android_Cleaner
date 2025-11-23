@@ -1,29 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- ========================================================= -->
+    <!-- 📱📺 GEL UNIVERSAL LANDSCAPE DIMENS v4.0                 -->
+    <!-- ========================================================= -->
+
+    <!-- PADDING (λιγότερο vertical) -->
     <dimen name="gel_padding_xs">4dp</dimen>
-    <dimen name="gel_padding_s">8dp</dimen>
-    <dimen name="gel_padding_m">10dp</dimen>
-    <dimen name="gel_padding_l">14dp</dimen>
-    <dimen name="gel_padding_xl">18dp</dimen>
+    <dimen name="gel_padding_s">6dp</dimen>
+    <dimen name="gel_padding_m">8dp</dimen>
+    <dimen name="gel_padding_l">10dp</dimen>
+    <dimen name="gel_padding_xl">14dp</dimen>
 
-    <dimen name="gel_text_small">14sp</dimen>
-    <dimen name="gel_text_normal">15sp</dimen>
-    <dimen name="gel_text_medium">17sp</dimen>
-    <dimen name="gel_text_large">19sp</dimen>
-    <dimen name="gel_text_title">22sp</dimen>
-    <dimen name="gel_text_big_title">24sp</dimen>
+    <!-- TEXT (ίδια με phone, όχι tablet scale) -->
+    <dimen name="gel_text_small">13sp</dimen>
+    <dimen name="gel_text_normal">14sp</dimen>
+    <dimen name="gel_text_medium">16sp</dimen>
+    <dimen name="gel_text_large">18sp</dimen>
+    <dimen name="gel_text_title">20sp</dimen>
+    <dimen name="gel_text_big_title">22sp</dimen>
 
-    <dimen name="gel_header_height">46dp</dimen>
+    <!-- HEADER (χαμηλότερο για landscape) -->
+    <dimen name="gel_header_height">40dp</dimen>
 
-    <dimen name="gel_btn_height">42dp</dimen>
-    <dimen name="gel_btn_radius">12dp</dimen>
+    <!-- BUTTONS (πιο φαρδιά, πιο χαμηλά) -->
+    <dimen name="gel_btn_height">40dp</dimen>
+    <dimen name="gel_btn_radius">10dp</dimen>
     <dimen name="gel_btn_stroke">1dp</dimen>
 
+    <!-- BLOCKS / CARDS -->
     <dimen name="gel_block_radius">12dp</dimen>
-    <dimen name="gel_block_padding">12dp</dimen>
+    <dimen name="gel_block_padding">10dp</dimen>
 
-    <dimen name="gel_icon">24dp</dimen>
-    <dimen name="gel_icon_large">30dp</dimen>
+    <!-- ICONS (ελαφρώς μικρότερα) -->
+    <dimen name="gel_icon">20dp</dimen>
+    <dimen name="gel_icon_large">26dp</dimen>
+
+    <!-- ORIGINAL DP SET (scaled for landscape) -->
+    <dimen name="gel_dp_2">2dp</dimen>
+    <dimen name="gel_dp_6">6dp</dimen>
+    <dimen name="gel_dp_8">8dp</dimen>
+    <dimen name="gel_dp_10">10dp</dimen>
+    <dimen name="gel_dp_12">12dp</dimen>
+    <dimen name="gel_dp_14">14dp</dimen>
+    <dimen name="gel_dp_16">16dp</dimen>
 
 </resources>

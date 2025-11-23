@@ -634,383 +634,389 @@ private void lab5Vibration() {
     // ============================================================
     // LABS 6–10: DISPLAY & SENSORS
     // ============================================================
-    private void lab6DisplayTouch() {
-        logLine();
-        logInfo("LAB 6 — Display / Touch Basic Inspection (manual).");
-        logInfo("1) Open a plain white or grey image full-screen.");
-        logWarn("2) Look for yellow / purple tint, burn-in, strong shadows or vertical lines — possible panel damage.");
-        logWarn("3) Slowly drag a finger across the entire screen (top to bottom, left to right).");
-        logError("If there are dead touch zones or ghost touches -> digitizer / touch controller problem.");
-    }
-
-    private void lab7RotationManual() {
-        logLine();
-        logInfo("LAB 7 — Rotation / Auto-Rotate Check (manual).");
-        logInfo("1) Make sure Auto-Rotate is enabled in Quick Settings.");
-        logInfo("2) Open an app that supports rotation (gallery, browser, YouTube).");
-        logWarn("If the UI never rotates despite Auto-Rotate ON -> suspect accelerometer failure or sensor-service bug.");
-        logInfo("If rotation works only after reboot -> possible software/ROM issue, not pure hardware.");
-    }
-
-    private void lab8ProximityCall() {
-        logLine();
-        logInfo("LAB 8 — Proximity During Call (manual).");
-        logInfo("1) Start a normal call and bring the phone to the ear.");
-        logInfo("2) The display MUST turn off when the proximity area is covered.");
-        logError("If the screen stays ON near the ear -> proximity sensor or glass / protector alignment problem.");
-        logWarn("If the screen turns off but sometimes does not wake properly -> software/sensor edge cases.");
-    }
-
-    private void lab9SensorsQuick() {
-        logLine();
-        logInfo("LAB 9 — Sensors Quick Presence Check.");
-        try {
-            SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            if (sm == null) {
-                logError("SensorManager not available — framework issue.");
-                return;
-            }
-            List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-            logInfo("Total sensors reported: " + (all == null ? 0 : all.size()));
-
-            checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
-            checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
-            checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
-            checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
-            checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
-        } catch (Exception e) {
-            logError("Sensors Quick Check error: " + e.getMessage());
-        }
-    }
-
-    private void checkSensor(SensorManager sm, int type, String name) {
-        boolean ok = sm.getDefaultSensor(type) != null;
-        if (ok) logOk(name + " is reported as available.");
-        else logWarn(name + " is NOT reported — features depending on it will be limited or missing.");
-    }
-
-    private void lab10FullSensorList() {
-        logLine();
-        logInfo("LAB 10 — Full Sensor List for Report.");
-
-        try {
-            SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            if (sm == null) {
-                logError("SensorManager not available.");
-                return;
-            }
-
-            List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-            if (sensors == null || sensors.isEmpty()) {
-                logError("No sensors reported by the system.");
-                return;
-            }
-
-            // RAW LIST
-            for (Sensor s : sensors) {
-                String line = "• type=" + s.getType()
-                        + " | name=" + s.getName()
-                        + " | vendor=" + s.getVendor();
-                logInfo(line);
-            }
-
-            boolean hasVirtualGyro = false;
-            boolean hasDualALS = false;
-            int alsCount = 0;
-            boolean hasSAR = false;
-            boolean hasPickup = false;
-            boolean hasLargeTouch = false;
-            boolean hasGameRotation = false;
-
-            for (Sensor s : sensors) {
-                String name = s.getName() != null ? s.getName().toLowerCase(Locale.US) : "";
-                String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
-
-                if (name.contains("virtual_gyro") ||
-                        (name.contains("gyroscope") && vendor.contains("xiaomi")))
-                    hasVirtualGyro = true;
-
-                if (name.contains("ambient light"))
-                    alsCount++;
-
-                if (name.contains("sar") || name.contains("rf"))
-                    hasSAR = true;
-
-                if (name.contains("pickup"))
-                    hasPickup = true;
-
-                if (name.contains("touch") && name.contains("large"))
-                    hasLargeTouch = true;
-
-                if (name.contains("game rotation"))
-                    hasGameRotation = true;
-            }
-
-            if (alsCount >= 2) hasDualALS = true;
-
-            logLine();
-            logInfo("Sensor Interpretation Summary:");
-
-            if (hasVirtualGyro)
-                logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
-
-            if (hasDualALS)
-                logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
-            else
-                logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
-
-            if (hasSAR)
-                logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
-
-            if (hasPickup)
-                logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
-
-            if (hasLargeTouch)
-                logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
-
-            if (hasGameRotation)
-                logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
-
-            logOk("Sensor suite appears complete and healthy for this device.");
-
-        } catch (Exception e) {
-            logError("Full Sensor List error: " + e.getMessage());
-        }
-    }
 
     // ============================================================
-    // LAB 11: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR
-    // ============================================================
-    private void lab11WifiSnapshot() {
-        logLine();
-        logInfo("LAB 11 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");
+// LAB 6 — DISPLAY & TOUCH BASIC CHECK
+// ============================================================
+private void lab6DisplayTouch() {
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 6 — Display / Touch Basic Inspection");
 
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        if (wm == null) {
-            logError("WifiManager not available.");
+    L.info("1) Open a plain white or grey image in full screen.");
+    L.warn("2) Check for yellow/purple tint, burn-in, shadows or vertical lines → possible panel damage.");
+    L.warn("3) Slowly slide a finger across the entire screen (all directions).");
+    L.fail("Dead zones or ghost touches → digitizer / touch controller problem.");
+}
+
+
+// ============================================================
+// LAB 7 — ROTATION / AUTO-ROTATE CHECK
+// ============================================================
+private void lab7RotationManual() {
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 7 — Rotation / Auto-Rotate Check");
+
+    L.info("1) Ensure Auto-Rotate is enabled.");
+    L.info("2) Open an app supporting rotation (gallery, browser, YouTube).");
+
+    L.warn("UI never rotates → accelerometer failure or sensor-service bug.");
+    L.info("Rotation works only after reboot → likely software/ROM issue.");
+}
+
+
+// ============================================================
+// LAB 8 — PROXIMITY DURING CALL
+// ============================================================
+private void lab8ProximityCall() {
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 8 — Proximity Sensor (Call Behavior)");
+
+    L.info("1) Start a normal call and bring the phone to your ear.");
+    L.info("2) Screen MUST turn off when proximity area is covered.");
+
+    L.fail("Screen stays ON near the ear → proximity sensor or glass/protector alignment issue.");
+    L.warn("Screen turns off but sometimes fails to wake → borderline software/sensor case.");
+}
+
+
+// ============================================================
+// LAB 9 — SENSORS QUICK PRESENCE CHECK
+// ============================================================
+private void lab9SensorsQuick() {
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 9 — Sensors Quick Check");
+
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            L.fail("SensorManager not available — framework issue.");
             return;
         }
 
-        if (!wm.isWifiEnabled()) {
-            logWarn("Wi-Fi is OFF — please enable and retry.");
+        List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
+        L.info("Total sensors reported: " + (all == null ? 0 : all.size()));
+
+        checkSensor(L, sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+        checkSensor(L, sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+        checkSensor(L, sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
+        checkSensor(L, sm, Sensor.TYPE_LIGHT, "Ambient Light");
+        checkSensor(L, sm, Sensor.TYPE_PROXIMITY, "Proximity");
+
+    } catch (Exception e) {
+        L.fail("Sensors Quick Check error: " + e.getMessage());
+    }
+}
+
+private void checkSensor(GELLabLogger L, SensorManager sm, int type, String name) {
+    boolean ok = sm.getDefaultSensor(type) != null;
+
+    if (ok) L.ok(name + " is reported as available.");
+    else L.warn(name + " NOT reported — features depending on it may be limited.");
+}
+
+
+// ============================================================
+// LAB 10 — FULL SENSOR LIST + INTERPRETATION
+// ============================================================
+private void lab10FullSensorList() {
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 10 — Full Sensor List");
+
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            L.fail("SensorManager not available.");
             return;
         }
 
-        // 1) Runtime Location Permission (required for SSID/BSSID on Android 8.1+/10+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            boolean fineGranted =
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED;
-            boolean coarseGranted =
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED;
-
-            if (!fineGranted && !coarseGranted) {
-                logWarn("Location permission required to read SSID/BSSID (Android policy).");
-                pendingLab11AfterPermission = this::lab11WifiSnapshot;
-
-                ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                        },
-                        REQ_LOCATION_LAB11
-                );
-
-                logInfo("Grant permission, then Lab 11 will auto-retry.");
-                return;
-            }
-
-            // 2) Location services ON check
-            try {
-                LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
-                boolean gpsOn = lm != null && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                boolean netOn = lm != null && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-                if (!gpsOn && !netOn) {
-                    logWarn("Location services are OFF. SSID may show UNKNOWN.");
-                    logWarn("Opening Location Settings… enable Location and come back.");
-                    try {
-                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    } catch (Exception ignored) {}
-                    return;
-                }
-            } catch (Exception e) {
-                logWarn("Location services check failed: " + e.getMessage());
-            }
-        }
-
-        // 3) Read basic WifiInfo
-        WifiInfo info = wm.getConnectionInfo();
-        if (info == null) {
-            logError("Wi-Fi info not available.");
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        if (sensors == null || sensors.isEmpty()) {
+            L.fail("No sensors reported by the system.");
             return;
         }
 
-        String ssid = cleanSsid(info.getSSID());
-        String bssid = info.getBSSID();
-        int rssi  = info.getRssi();
-        int speed = info.getLinkSpeed();
-        int freqMhz = 0;
-        try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}
-        String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
-
-        logInfo("SSID: " + ssid);
-        if (bssid != null) logInfo("BSSID: " + bssid);
-        if (freqMhz > 0) logInfo("Band: " + band + " (" + freqMhz + " MHz)");
-        else logInfo("Band: " + band);
-
-        logInfo("Link speed: " + speed + " Mbps");
-        logInfo("RSSI: " + rssi + " dBm");
-
-        if ("Unknown".equalsIgnoreCase(ssid)) {
-            logWarn("SSID is UNKNOWN due to Android privacy policy.");
-            logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 11.");
-        } else {
-            logOk("SSID read OK.");
+        // RAW SENSOR LIST
+        for (Sensor s : sensors) {
+            String line = "• type=" + s.getType()
+                    + " | name=" + s.getName()
+                    + " | vendor=" + s.getVendor();
+            L.info(line);
         }
 
-        if (rssi > -65)
-            logOk("Wi-Fi signal is strong.");
-        else if (rssi > -80)
-            logWarn("Moderate Wi-Fi signal.");
+        // INTERPRETATION FLAGS
+        boolean hasVirtualGyro = false;
+        boolean hasDualALS = false;
+        int alsCount = 0;
+        boolean hasSAR = false;
+        boolean hasPickup = false;
+        boolean hasLargeTouch = false;
+        boolean hasGameRotation = false;
+
+        for (Sensor s : sensors) {
+            String name = (s.getName() == null ? "" : s.getName().toLowerCase(Locale.US));
+            String vendor = (s.getVendor() == null ? "" : s.getVendor().toLowerCase(Locale.US));
+
+            if (name.contains("virtual_gyro") ||
+                (name.contains("gyroscope") && vendor.contains("xiaomi")))
+                hasVirtualGyro = true;
+
+            if (name.contains("ambient light"))
+                alsCount++;
+
+            if (name.contains("sar") || name.contains("rf"))
+                hasSAR = true;
+
+            if (name.contains("pickup"))
+                hasPickup = true;
+
+            if (name.contains("touch") && name.contains("large"))
+                hasLargeTouch = true;
+
+            if (name.contains("game rotation"))
+                hasGameRotation = true;
+        }
+
+        if (alsCount >= 2) hasDualALS = true;
+
+        L.info("Sensor Interpretation:");
+
+        if (hasVirtualGyro)
+            L.ok("Xiaomi Virtual Gyroscope detected — expected behavior.");
+
+        if (hasDualALS)
+            L.ok("Dual Ambient Light Sensors detected — better auto-brightness.");
         else
-            logError("Very weak Wi-Fi signal — expect drops.");
+            L.warn("Only one Ambient Light Sensor — brightness accuracy may be reduced.");
 
-        // 4) DHCP / IP details
+        if (hasSAR)
+            L.ok("SAR detectors detected — normal for proximity + RF tuning.");
+
+        if (hasPickup)
+            L.ok("Pickup sensor present — supports lift-to-wake.");
+
+        if (hasLargeTouch)
+            L.ok("Large-Area Touch sensor present — better palm rejection.");
+
+        if (hasGameRotation)
+            L.ok("Game Rotation Vector sensor present — smoother gaming orientation.");
+
+        L.ok("Sensor suite appears complete and healthy.");
+
+    } catch (Exception e) {
+        L.fail("Full Sensor List error: " + e.getMessage());
+    }
+}
+
+    
+    // ============================================================
+    // LAB 11 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan
+    // ============================================================
+private void lab11WifiSnapshot() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.title("LAB 11 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan");
+
+    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+    if (wm == null) {
+        L.fail("WifiManager not available.");
+        return;
+    }
+
+    if (!wm.isWifiEnabled()) {
+        L.warn("Wi-Fi is OFF — enable Wi-Fi and retry.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 1) LOCATION PERMISSION CHECK (REQUIRED FOR SSID/BSSID)
+    // ------------------------------------------------------------
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+        boolean fineGranted =
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+
+        boolean coarseGranted =
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+
+        if (!fineGranted && !coarseGranted) {
+
+            L.warn("Location permission required to read SSID/BSSID (Android privacy policy).");
+            pendingLab11AfterPermission = this::lab11WifiSnapshot;
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    REQ_LOCATION_LAB11
+            );
+
+            L.info("Grant permission and Lab 11 will auto-retry.");
+            return;
+        }
+
+        // ------------------------------------------------------------
+        // 2) CHECK IF LOCATION SERVICES ARE ENABLED
+        // ------------------------------------------------------------
         try {
-            DhcpInfo dh = wm.getDhcpInfo();
-            if (dh != null) {
-                logInfo("IP: " + ipToStr(dh.ipAddress));
-                logInfo("Gateway: " + ipToStr(dh.gateway));
-                logInfo("DNS1: " + ipToStr(dh.dns1));
-                logInfo("DNS2: " + ipToStr(dh.dns2));
-            } else {
-                logWarn("DHCP info not available.");
+            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+            boolean gpsOn = lm != null && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            boolean netOn = lm != null && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (!gpsOn && !netOn) {
+                L.warn("Location services are OFF. SSID may show UNKNOWN.");
+                L.warn("Opening Location Settings… enable Location and return.");
+                try {
+                    startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                } catch (Exception ignored) {}
+                return;
             }
+
         } catch (Exception e) {
-            logWarn("DHCP read failed: " + e.getMessage());
-        }
-
-        // 5) DeepScan
-        runWifiDeepScan(wm);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, perms, grantResults);
-
-        if (requestCode == REQ_LOCATION_LAB11) {
-            boolean granted = false;
-            if (grantResults != null) {
-                for (int r : grantResults) {
-                    if (r == PackageManager.PERMISSION_GRANTED) {
-                        granted = true;
-                        break;
-                    }
-                }
-            }
-
-            if (granted) {
-                logOk("Location permission granted.");
-                if (pendingLab11AfterPermission != null) pendingLab11AfterPermission.run();
-            } else {
-                logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");
-            }
-            pendingLab11AfterPermission = null;
+            L.warn("Location services check failed: " + e.getMessage());
         }
     }
 
+    // ------------------------------------------------------------
+    // 3) BASIC WIFI INFO
+    // ------------------------------------------------------------
+    WifiInfo info = wm.getConnectionInfo();
+    if (info == null) {
+        L.fail("Wi-Fi info not available.");
+        return;
+    }
+
+    String ssid = cleanSsid(info.getSSID());
+    String bssid = info.getBSSID();
+    int rssi  = info.getRssi();
+    int speed = info.getLinkSpeed();
+    int freqMhz = 0;
+
+    try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}
+
+    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
+
+    L.info("SSID: " + ssid);
+    if (bssid != null) L.info("BSSID: " + bssid);
+
+    if (freqMhz > 0)
+        L.info("Band: " + band + " (" + freqMhz + " MHz)");
+    else
+        L.info("Band: " + band);
+
+    L.info("Link speed: " + speed + " Mbps");
+    L.info("RSSI: " + rssi + " dBm");
+
+    // ------------------------------------------------------------
+    // SSID PRIVACY BEHAVIOR
+    // ------------------------------------------------------------
+    if ("Unknown".equalsIgnoreCase(ssid)) {
+        L.warn("SSID is UNKNOWN due to Android privacy policy.");
+        L.warn("Fix: Grant Location permission AND turn Location ON, then re-run Lab 11.");
+    } else {
+        L.ok("SSID read OK.");
+    }
+
+    // ------------------------------------------------------------
+    // RSSI INTERPRETATION
+    // ------------------------------------------------------------
+    if (rssi > -65)
+        L.ok("Wi-Fi signal is strong.");
+    else if (rssi > -80)
+        L.warn("Moderate Wi-Fi signal.");
+    else
+        L.fail("Very weak Wi-Fi signal — expect dropouts.");
+
+    // ------------------------------------------------------------
+    // 4) DHCP / IP DETAILS
+    // ------------------------------------------------------------
+    try {
+        DhcpInfo dh = wm.getDhcpInfo();
+        if (dh != null) {
+            L.info("IP: " + ipToStr(dh.ipAddress));
+            L.info("Gateway: " + ipToStr(dh.gateway));
+            L.info("DNS1: " + ipToStr(dh.dns1));
+            L.info("DNS2: " + ipToStr(dh.dns2));
+        } else {
+            L.warn("DHCP info not available.");
+        }
+    } catch (Exception e) {
+        L.warn("DHCP read failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 5) DEEP SCAN
+    // ------------------------------------------------------------
+    runWifiDeepScan(wm);
+}
     // ============================================================
     // LAB 11 — DEEPSCAN v3.0
-    // ============================================================
-    private void runWifiDeepScan(WifiManager wm) {
-        new Thread(() -> {
+    // ===========================================================
+private void runWifiDeepScan(WifiManager wm) {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("GEL Network DeepScan v3.0 started...");
+
+    new Thread(() -> {
+        try {
+            String gatewayStr = null;
             try {
-                logLine();
-                logInfo("GEL Network DeepScan v3.0 started...");
+                DhcpInfo dh = wm.getDhcpInfo();
+                if (dh != null) gatewayStr = ipToStr(dh.gateway);
+            } catch (Exception ignored) {}
 
-                String gatewayStr = null;
-                try {
-                    DhcpInfo dh = wm.getDhcpInfo();
-                    if (dh != null) gatewayStr = ipToStr(dh.gateway);
-                } catch (Exception ignored) {}
+            // ------------------------------------------------------------
+            // 1) Ping latency to 8.8.8.8 (TCP connect, non-root)
+            // ------------------------------------------------------------
+            float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
+            if (pingMs > 0)
+                L.ok(String.format(Locale.US, "Ping latency to 8.8.8.8: %.1f ms", pingMs));
+            else
+                L.warn("Ping latency test failed (network block or deep firewalls).");
 
-                // 1) Ping latency to 8.8.8.8 using TCP connect (works non-root)
-                float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
-                if (pingMs > 0)
-                    logOk(String.format(Locale.US, "Ping latency to 8.8.8.8: %.1f ms", pingMs));
+            // ------------------------------------------------------------
+            // 2) DNS resolve time
+            // ------------------------------------------------------------
+            float dnsMs = dnsResolveMs("google.com");
+            if (dnsMs > 0)
+                L.ok(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));
+            else
+                L.warn("DNS resolve failed — DNS server slow or network restricted.");
+
+            // ------------------------------------------------------------
+            // 3) Gateway ping (TCP to port 80)
+            // ------------------------------------------------------------
+            if (gatewayStr != null) {
+                float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);
+                if (gwMs > 0)
+                    L.ok(String.format(Locale.US, "Gateway latency (%s): %.1f ms", gatewayStr, gwMs));
                 else
-                    logWarn("Ping latency test failed (network blocked).");
-
-                // 2) DNS resolve time
-                float dnsMs = dnsResolveMs("google.com");
-                if (dnsMs > 0)
-                    logOk(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));
-                else
-                    logWarn("DNS resolve failed.");
-
-                // 3) Gateway ping (TCP to 80)
-                if (gatewayStr != null) {
-                    float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);
-                    if (gwMs > 0)
-                        logOk(String.format(Locale.US, "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));
-                    else
-                        logWarn("Gateway ping failed.");
-                } else {
-                    logWarn("Gateway not detected.");
-                }
-
-                // 4) SpeedSim heuristic
-                WifiInfo info = wm.getConnectionInfo();
-                int link = info != null ? info.getLinkSpeed() : 0;
-                int rssi = info != null ? info.getRssi() : -80;
-                float speedSim = estimateSpeedSimMbps(link, rssi);
-                logOk(String.format(Locale.US, "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
-
-                logOk("DeepScan finished.");
-
-            } catch (Exception e) {
-                logError("DeepScan error: " + e.getMessage());
+                    L.warn("Gateway ping failed — router may block TCP probing.");
+            } else {
+                L.warn("Gateway not detected.");
             }
-        }).start();
-    }
 
-    private float tcpLatencyMs(String host, int port, int timeoutMs) {
-        long t0 = SystemClock.elapsedRealtime();
-        Socket s = new Socket();
-        try {
-            s.connect(new InetSocketAddress(host, port), timeoutMs);
-            long t1 = SystemClock.elapsedRealtime();
-            return (t1 - t0);
+            // ------------------------------------------------------------
+            // 4) SpeedSim Heuristic
+            // ------------------------------------------------------------
+            WifiInfo info = wm.getConnectionInfo();
+            int link = info != null ? info.getLinkSpeed() : 0;
+            int rssi = info != null ? info.getRssi() : -80;
+
+            float speedSim = estimateSpeedSimMbps(link, rssi);
+            L.ok(String.format(Locale.US, "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
+
+            // END
+            L.ok("DeepScan finished.");
+
         } catch (Exception e) {
-            return -1f;
-        } finally {
-            try { s.close(); } catch (Exception ignored) {}
+            L.fail("DeepScan error: " + e.getMessage());
         }
-    }
-
-    private float dnsResolveMs(String host) {
-        long t0 = SystemClock.elapsedRealtime();
-        try {
-            InetAddress.getByName(host);
-            long t1 = SystemClock.elapsedRealtime();
-            return (t1 - t0);
-        } catch (Exception e) {
-            return -1f;
-        }
-    }
-
-    private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
-        if (linkSpeedMbps <= 0) linkSpeedMbps = 72;
-        float rssiFactor;
-        if (rssiDbm > -55) rssiFactor = 1.2f;
-        else if (rssiDbm > -65) rssiFactor = 1.0f;
-        else if (rssiDbm > -75) rssiFactor = 0.7f;
-        else rssiFactor = 0.4f;
-        return Math.max(5f, linkSpeedMbps * rssiFactor);
-    }
+    }).start();
+}
 
     private void lab12MobileDataChecklist() {
         logLine();

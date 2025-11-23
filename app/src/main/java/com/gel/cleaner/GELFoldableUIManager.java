@@ -1,92 +1,172 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 3 — Dynamic UI Reflow Manager for Foldables
-// NOTE: Ολόκληρο αρχείο, κανόνας Γιώργου για copy-paste.
+// STEP 5 — Adaptive UI Reflow Manager for Foldables
 
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.Context;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
 
 public class GELFoldableUIManager {
 
-    private final Activity activity;
+    private final Activity act;
 
-    public GELFoldableUIManager(@NonNull Activity act) {
-        this.activity = act;
+    public GELFoldableUIManager(Activity activity) {
+        this.act = activity;
     }
 
-    /**
-     * Reflow UI depending on inner/outer display
-     * Called when hinge posture changes detection
-     */
+    // =====================================================
+    // PUBLIC MAIN ENTRY
+    // =====================================================
     public void applyUI(boolean isInnerScreen) {
-
         if (isInnerScreen) {
-            // 📱📖 Big screen mode — unfolded tablet-like view
-            applyFontScale(1.15f);
-            applyPaddingScale(1.20f);
+            applyTabletMode();
         } else {
-            // 📱 Outer screen / normal mode
-            applyFontScale(1.0f);
-            applyPaddingScale(1.0f);
+            applyPhoneMode();
         }
-
-        // Μπορείς να καλέσεις εδώ και custom reflows:
-        // expand to two columns, bigger cards, etc.
     }
 
-    /**
-     * Scale all TextViews in the activity
-     */
-    private void applyFontScale(float factor) {
-        scaleTextViews(activity.findViewById(android.R.id.content), factor);
+    // =====================================================
+    // MODE 1 — PHONE MODE (Compact)
+    // =====================================================
+    private void applyPhoneMode() {
+        applyGlobalPadding(dp(12));
+        applyGlobalTextSizeSp(14);
+
+        // Single column
+        applyColumnMode(false);
+
+        // Extra: shrink headers
+        scaleHeaders(16);
     }
 
-    private void scaleTextViews(View root, float factor) {
-        if (root == null) return;
+    // =====================================================
+    // MODE 2 — TABLET MODE (Unfolded)
+    // =====================================================
+    private void applyTabletMode() {
+        applyGlobalPadding(dp(18));
+        applyGlobalTextSizeSp(17);
 
-        if (root instanceof TextView) {
-            TextView t = (TextView) root;
-            float current = t.getTextSize();
-            float scaled = current * factor;
-            t.setTextSize(TypedValue.COMPLEX_UNIT_PX, scaled);
-        }
+        // Switch to 2-column wherever possible
+        applyColumnMode(true);
 
-        if (root instanceof android.view.ViewGroup) {
-            android.view.ViewGroup vg = (android.view.ViewGroup) root;
+        // Larger headers
+        scaleHeaders(19);
+    }
+
+    // =====================================================
+    // GLOBAL PADDING
+    // =====================================================
+    private void applyGlobalPadding(int px) {
+        View root = act.findViewById(android.R.id.content);
+        if (root != null) applyPaddingRecursive(root, px);
+    }
+
+    private void applyPaddingRecursive(View v, int px) {
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
+            vg.setPadding(px, px, px, px);
+
             for (int i = 0; i < vg.getChildCount(); i++) {
-                scaleTextViews(vg.getChildAt(i), factor);
+                applyPaddingRecursive(vg.getChildAt(i), px);
             }
         }
     }
 
-    /**
-     * Scale padding for all views
-     */
-    private void applyPaddingScale(float factor) {
-        scalePadding(activity.findViewById(android.R.id.content), factor);
+    // =====================================================
+    // GLOBAL TEXT SIZE
+    // =====================================================
+    private void applyGlobalTextSizeSp(int sp) {
+        View root = act.findViewById(android.R.id.content);
+        if (root != null) applyTextRecursive(root, sp);
     }
 
-    private void scalePadding(View root, float factor) {
-        if (root == null) return;
+    private void applyTextRecursive(View v, int sp) {
+        if (v instanceof TextView) {
+            ((TextView) v).setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+        }
 
-        int left   = (int) (root.getPaddingLeft() * factor);
-        int top    = (int) (root.getPaddingTop() * factor);
-        int right  = (int) (root.getPaddingRight() * factor);
-        int bottom = (int) (root.getPaddingBottom() * factor);
-
-        root.setPadding(left, top, right, bottom);
-
-        if (root instanceof android.view.ViewGroup) {
-            android.view.ViewGroup vg = (android.view.ViewGroup) root;
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
             for (int i = 0; i < vg.getChildCount(); i++) {
-                scalePadding(vg.getChildAt(i), factor);
+                applyTextRecursive(vg.getChildAt(i), sp);
             }
         }
     }
 
+    // =====================================================
+    // HEADERS SCALE (System / CPU / GPU / etc)
+    // =====================================================
+    private void scaleHeaders(int sp) {
+        int[] headerIds = new int[]{
+                R.id.headerSystem,
+                R.id.headerAndroid,
+                R.id.headerCpu,
+                R.id.headerGpu,
+                R.id.headerThermal,
+                R.id.headerThermalZones,
+                R.id.headerVulkan,
+                R.id.headerThermalProfiles,
+                R.id.headerFpsGovernor,
+                R.id.headerRam,
+                R.id.headerStorage,
+                R.id.headerScreen,
+                R.id.headerConnectivity,
+                R.id.headerRoot
+        };
+
+        for (int id : headerIds) {
+            View h = act.findViewById(id);
+            if (h != null && h instanceof ViewGroup) {
+                ViewGroup header = (ViewGroup) h;
+                for (int i = 0; i < header.getChildCount(); i++) {
+                    View c = header.getChildAt(i);
+                    if (c instanceof TextView) {
+                        ((TextView) c).setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+                    }
+                }
+            }
+        }
+    }
+
+    // =====================================================
+    // COLUMN MODE — SINGLE or DUAL LAYOUT
+    // =====================================================
+    private void applyColumnMode(boolean dual) {
+        // ANY LinearLayout vertical container becomes 2 columns
+        View root = act.findViewById(android.R.id.content);
+        if (root != null) convertColumnsRecursive(root, dual);
+    }
+
+    private void convertColumnsRecursive(View v, boolean dual) {
+        if (v instanceof LinearLayout) {
+            LinearLayout ll = (LinearLayout) v;
+
+            if (ll.getOrientation() == LinearLayout.VERTICAL && ll.getChildCount() > 2) {
+                if (dual) {
+                    ll.setOrientation(LinearLayout.HORIZONTAL);
+                } else {
+                    ll.setOrientation(LinearLayout.VERTICAL);
+                }
+            }
+        }
+
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                convertColumnsRecursive(vg.getChildAt(i), dual);
+            }
+        }
+    }
+
+    // =====================================================
+    // UTILS
+    // =====================================================
+    private int dp(int dp) {
+        float scale = act.getResources().getDisplayMetrics().density;
+        return (int) (dp * scale);
+    }
 }

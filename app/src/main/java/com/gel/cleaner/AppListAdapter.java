@@ -57,6 +57,28 @@ public class AppListAdapter extends BaseAdapter {
             h.icon = convertView.findViewById(R.id.appIcon);
 
             convertView.setTag(h);
+
+            // ============================================================
+            //  GEL UNIVERSAL SCALING — APPLY ONCE PER ROW
+            // ============================================================
+            if (ctx instanceof GELAutoActivityHook) {
+                GELAutoActivityHook a = (GELAutoActivityHook) ctx;
+
+                // Text scaling
+                h.name.setTextSize(a.sp(15f));
+                h.pkg.setTextSize(a.sp(12f));
+
+                // Icon scaling
+                ViewGroup.LayoutParams lp = h.icon.getLayoutParams();
+                lp.width  = a.dp(38);
+                lp.height = a.dp(38);
+                h.icon.setLayoutParams(lp);
+
+                // Row padding scaling
+                int pad = a.dp(12);
+                convertView.setPadding(pad, pad, pad, pad);
+            }
+
         } else {
             h = (Holder) convertView.getTag();
         }

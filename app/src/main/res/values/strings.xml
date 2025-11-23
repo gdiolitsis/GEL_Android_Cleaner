@@ -23,7 +23,7 @@
     <string name="phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
 
     <!-- CLEANER -->
-    <string name="clean_all">🧹 GEL Cleaner ALL</string>
+    <string name="clean_all">🧹 GEL General Cleaner</string>
 
     <!-- JUNK -->
     <string name="browser_cache">🌐 Browser Cache</string>

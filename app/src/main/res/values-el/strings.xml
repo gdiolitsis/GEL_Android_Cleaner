@@ -16,7 +16,7 @@
 
     <!-- SYSTEM -->
     <string name="cpu_ram_info">📱 Πληροφορίες Συσκευής</string>
-    <string name="cpu_ram_live">📈 CPU / RAM LIVE MONITOR</string>
+    <string name="cpu_ram_live">📈 CPU / RAM Ζωντανη Παρακολούθηση</string>
 
     <!-- PHONE INFO -->
     <string name="phone_info_internal">📱 Πληρ. Συσκευής\n (Εσωτερικά)</string>

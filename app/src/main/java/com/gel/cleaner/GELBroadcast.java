@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELBroadcast v2.0 — Boot + Package Events Handler
+// GELBroadcast v2.1 — Boot + Package Events + Foldable Awareness
+// 🔥 Fully Integrated with: GELFoldableOrchestrator + UIManager + Runtime Hooks
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
@@ -25,19 +26,30 @@ public class GELBroadcast extends BroadcastReceiver {
         Log.d(TAG, "📩 Received: " + action);
 
         // ============================================================
-        // BOOT COMPLETED
+        // 0) INITIALIZE GEL FOLDABLE RUNTIME (if app wakes from BOOT)
+        // ============================================================
+        try {
+            GELFoldableOrchestrator.initIfPossible(ctx);
+            Log.d(TAG, "🔧 Foldable Orchestrator initialized");
+        } catch (Throwable t) {
+            Log.w(TAG, "Foldable init skipped: " + t.getMessage());
+        }
+
+        // ============================================================
+        // 1) BOOT COMPLETED
         // ============================================================
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)
                 || Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action)) {
 
             Log.d(TAG, "✅ Boot completed");
 
-            // Placeholder for future auto-maintenance (only if user enables)
-            // GELCleaner.safeClean(ctx, null);
+            // Future: auto-scheduler, background cleanup, analytics sync
+            // Example placeholder:
+            // GELAutoMaintenance.scheduleDaily(ctx);
         }
 
         // ============================================================
-        // PACKAGE EVENTS (install / remove / update)
+        // 2) PACKAGE EVENTS (install / remove / update)
         // ============================================================
         if (Intent.ACTION_PACKAGE_ADDED.equals(action)
                 || Intent.ACTION_PACKAGE_REMOVED.equals(action)
@@ -49,9 +61,15 @@ public class GELBroadcast extends BroadcastReceiver {
 
             Log.d(TAG, "📦 Package event: " + action + " → " + pkg);
 
+            // Trigger optional refresh for foldable UI models
+            try {
+                GELFoldableOrchestrator.notifyPackageEvent(pkg);
+            } catch (Throwable ignore) {}
+
             // Future extensions:
-            // - auto-refresh list
-            // - recalc junk size
+            // - Clean cache when app removed
+            // - Recalculate app junk size
+            // - Notify GEL Dashboard
         }
     }
 }

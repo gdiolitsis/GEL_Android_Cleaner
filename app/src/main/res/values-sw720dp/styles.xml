@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ========================================================= -->
+    <!-- GEL DARK-GOLD — XL TABLET / DEX MODE EDITION v5.0        -->
+    <!-- ========================================================= -->
+
+    <style name="Theme.GEL.DarkGold" parent="Theme.AppCompat.Light.NoActionBar">
+
+        <!-- Global background -->
+        <item name="android:windowBackground">@color/gel_bg</item>
+
+        <!-- Text colors (same palette) -->
+        <item name="android:textColorPrimary">@color/gel_text_primary</item>
+        <item name="android:textColorSecondary">@color/gel_text_secondary</item>
+
+        <!-- Stronger scaling for XL screens -->
+        <item name="android:textAppearanceLarge">@style/GEL.XL.Title</item>
+
+        <!-- Bigger buttons (desktop feel) -->
+        <item name="android:buttonStyle">@style/GEL.XL.Button</item>
+
+        <!-- Bigger list row (app lists, browsers, etc.) -->
+        <item name="android:listPreferredItemHeight">72dp</item>
+    </style>
+
+    <!-- ========================================================= -->
+    <!-- XL TITLE STYLE                                             -->
+    <!-- ========================================================= -->
+    <style name="GEL.XL.Title" parent="@android:style/TextAppearance.Large">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <!-- ========================================================= -->
+    <!-- XL BUTTON STYLE                                            -->
+    <!-- ========================================================= -->
+    <style name="GEL.XL.Button" parent="@android:style/Widget.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingRight">20dp</item>
+    </style>
+
+</resources>

@@ -2215,232 +2215,229 @@ private boolean scanPairingPortRange() {
 }
 
     // ============================================================
-// LAB 26 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
-// GEL Universal Edition — NO external libs
+// LAB 26 — Root / Bootloader Integrity Scan (AUTO) — Logger Edition
+// Same structure as LAB 11
 // ============================================================
 private void lab26RootSuspicion() {
-    logLine();
-    logInfo("LAB 26 — Root / Bootloader Integrity Scan (AUTO).");
 
-    // ---------------------------
-    // (1) ROOT DETECTION
-    // ---------------------------
-    int rootScore = 0;
-    List<String> rootFindings = new ArrayList<>();
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 26 — Root / Bootloader Integrity Scan (AUTO) started...");
 
-    // su / busybox paths
-    String[] suPaths = {
-            "/system/bin/su",
-            "/system/xbin/su",
-            "/sbin/su",
-            "/su/bin/su",
-            "/system/app/Superuser.apk",
-            "/system/app/SuperSU.apk",
-            "/system/app/Magisk.apk",
-            "/system/bin/busybox",
-            "/system/xbin/busybox",
-            "/vendor/bin/su",
-            "/odm/bin/su"
-    };
+    new Thread(() -> {
+        try {
+            // ---------------------------
+            // (1) ROOT DETECTION
+            // ---------------------------
+            int rootScore = 0;
+            List<String> rootFindings = new ArrayList<>();
 
-    boolean suFound = false;
-    for (String p : suPaths) {
-        if (lab26_fileExists(p)) {
-            suFound = true;
-            rootScore += 18;
-            rootFindings.add("su/busybox path found: " + p);
+            String[] suPaths = {
+                    "/system/bin/su",
+                    "/system/xbin/su",
+                    "/sbin/su",
+                    "/su/bin/su",
+                    "/system/app/Superuser.apk",
+                    "/system/app/SuperSU.apk",
+                    "/system/app/Magisk.apk",
+                    "/system/bin/busybox",
+                    "/system/xbin/busybox",
+                    "/vendor/bin/su",
+                    "/odm/bin/su"
+            };
+
+            boolean suFound = false;
+            for (String p : suPaths) {
+                if (lab26_fileExists(p)) {
+                    suFound = true;
+                    rootScore += 18;
+                    rootFindings.add("su/busybox path found: " + p);
+                }
+            }
+
+            String whichSu = lab26_execFirstLine("which su");
+            if (whichSu != null && whichSu.contains("/")) {
+                rootScore += 12;
+                rootFindings.add("'which su' returned: " + whichSu);
+                suFound = true;
+            }
+
+            boolean suExec = lab26_canExecSu();
+            if (suExec) {
+                rootScore += 25;
+                rootFindings.add("su execution possible (shell granted).");
+                suFound = true;
+            }
+
+            String[] rootPkgs = {
+                    "com.topjohnwu.magisk",
+                    "eu.chainfire.supersu",
+                    "com.koushikdutta.superuser",
+                    "com.noshufou.android.su",
+                    "com.kingroot.kinguser",
+                    "com.kingo.root",
+                    "com.saurik.substrate",
+                    "de.robv.android.xposed.installer",
+                    "com.zachspong.temprootremovejb",
+                    "com.ramdroid.appquarantine"
+            };
+
+            List<String> installed = lab26_getInstalledPackagesLower();
+            boolean pkgHit = false;
+            for (String rp : rootPkgs) {
+                if (installed.contains(rp)) {
+                    pkgHit = true;
+                    rootScore += 20;
+                    rootFindings.add("root package installed: " + rp);
+                }
+            }
+
+            try {
+                String tags = Build.TAGS;
+                if (tags != null && tags.contains("test-keys")) {
+                    rootScore += 15;
+                    rootFindings.add("Build.TAGS contains test-keys.");
+                }
+            } catch (Throwable ignore) {}
+
+            String roSecure = lab26_getProp("ro.secure");
+            String roDebug  = lab26_getProp("ro.debuggable");
+            if ("0".equals(roSecure)) {
+                rootScore += 18;
+                rootFindings.add("ro.secure=0 (insecure build).");
+            }
+            if ("1".equals(roDebug)) {
+                rootScore += 12;
+                rootFindings.add("ro.debuggable=1 (debuggable build).");
+            }
+
+            // ---------------------------
+            // (2) BOOTLOADER / VERIFIED BOOT
+            // ---------------------------
+            int blScore = 0;
+            List<String> blFindings = new ArrayList<>();
+
+            String vbState = lab26_getProp("ro.boot.verifiedbootstate");
+            String vbmeta  = lab26_getProp("ro.boot.vbmeta.device_state");
+            String flashL  = lab26_getProp("ro.boot.flash.locked");
+            String wlBit   = lab26_getProp("ro.boot.warranty_bit");
+
+            if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {
+                blScore += 30;
+                blFindings.add("VerifiedBootState=" + vbState);
+            } else if (vbState != null) {
+                blFindings.add("VerifiedBootState=" + vbState);
+            }
+
+            if (vbmeta != null && vbmeta.contains("unlocked")) {
+                blScore += 35;
+                blFindings.add("vbmeta.device_state=unlocked");
+            } else if (vbmeta != null) {
+                blFindings.add("vbmeta.device_state=" + vbmeta);
+            }
+
+            if ("0".equals(flashL)) {
+                blScore += 25;
+                blFindings.add("flash.locked=0 (bootloader unlocked).");
+            } else if (flashL != null) {
+                blFindings.add("flash.locked=" + flashL);
+            }
+
+            if ("1".equals(wlBit)) {
+                blScore += 15;
+                blFindings.add("warranty_bit=1 (tamper flag).");
+            }
+
+            try {
+                int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);
+                if (oemAllowed == 1) {
+                    blScore += 10;
+                    blFindings.add("OEM unlock allowed=1 (developer enabled).");
+                }
+            } catch (Throwable ignore) {}
+
+            String cmdline = lab26_readOneLine("/proc/cmdline");
+            if (cmdline != null) {
+                String c = cmdline.toLowerCase(Locale.US);
+                if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||
+                        c.contains("vbmeta.device_state=unlocked") || c.contains("bootloader=unlocked")) {
+                    blScore += 20;
+                    blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");
+                }
+            }
+
+            // ---------------------------
+            // (3) BOOT ANIMATION / SPLASH MOD
+            // ---------------------------
+            int animScore = 0;
+            List<String> animFindings = new ArrayList<>();
+
+            if (lab26_fileExists("/data/local/bootanimation.zip")) {
+                animScore += 35;
+                animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");
+            }
+
+            boolean sysBoot =
+                    lab26_fileExists("/system/media/bootanimation.zip") ||
+                    lab26_fileExists("/product/media/bootanimation.zip") ||
+                    lab26_fileExists("/oem/media/bootanimation.zip") ||
+                    lab26_fileExists("/vendor/media/bootanimation.zip");
+
+            if (!sysBoot) {
+                animScore += 15;
+                animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");
+            } else {
+                animFindings.add("Stock bootanimation path exists.");
+            }
+
+            // ---------------------------
+            // FINAL RISK SCORE
+            // ---------------------------
+            int risk = Math.min(100, rootScore + blScore + animScore);
+
+            // ROOT section
+            L.info("Root Scan:");
+            if (rootFindings.isEmpty()) {
+                L.ok("No strong root traces detected.");
+            } else {
+                for (String s : rootFindings) L.warn("• " + s);
+            }
+
+            // BOOTLOADER section
+            L.info("Bootloader / Verified Boot:");
+            if (blFindings.isEmpty()) {
+                L.ok("No bootloader anomalies detected.");
+            } else {
+                for (String s : blFindings) L.warn("• " + s);
+            }
+
+            // ANIMATION section
+            L.info("Boot Animation / Splash:");
+            if (animFindings.isEmpty()) {
+                L.ok("No custom animation traces detected.");
+            } else {
+                for (String s : animFindings) L.warn("• " + s);
+            }
+
+            // Verdict
+            L.info("FINAL VERDICT:");
+            L.info("RISK SCORE: " + risk + " / 100");
+
+            if (risk >= 70 || suExec || pkgHit) {
+                L.error("STATUS: ROOTED / MODIFIED (high confidence).");
+            } else if (risk >= 35) {
+                L.warn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+            } else {
+                L.ok("STATUS: SAFE (no significant modification evidence).");
+            }
+
+            L.ok("Lab 26 finished.");
+
+        } catch (Exception e) {
+            new GELLabLogger(this).fail("LAB 26 crashed: " + e.getMessage());
         }
-    }
-
-    // which su
-    String whichSu = lab26_execFirstLine("which su");
-    if (whichSu != null && whichSu.contains("/")) {
-        rootScore += 12;
-        rootFindings.add("'which su' returned: " + whichSu);
-        suFound = true;
-    }
-
-    // try exec su (best effort)
-    boolean suExec = lab26_canExecSu();
-    if (suExec) {
-        rootScore += 25;
-        rootFindings.add("su execution possible (shell granted).");
-        suFound = true;
-    }
-
-    // known root packages
-    String[] rootPkgs = {
-            "com.topjohnwu.magisk",
-            "eu.chainfire.supersu",
-            "com.koushikdutta.superuser",
-            "com.noshufou.android.su",
-            "com.kingroot.kinguser",
-            "com.kingo.root",
-            "com.saurik.substrate",
-            "de.robv.android.xposed.installer",
-            "com.zachspong.temprootremovejb",
-            "com.ramdroid.appquarantine"
-    };
-
-    List<String> installed = lab26_getInstalledPackagesLower();
-    boolean pkgHit = false;
-    for (String rp : rootPkgs) {
-        if (installed.contains(rp)) {
-            pkgHit = true;
-            rootScore += 20;
-            rootFindings.add("root package installed: " + rp);
-        }
-    }
-
-    // build tags
-    try {
-        String tags = Build.TAGS;
-        if (tags != null && tags.contains("test-keys")) {
-            rootScore += 15;
-            rootFindings.add("Build.TAGS contains test-keys.");
-        }
-    } catch (Throwable ignore) {}
-
-    // suspicious props
-    String roSecure = lab26_getProp("ro.secure");
-    String roDebug  = lab26_getProp("ro.debuggable");
-    if ("0".equals(roSecure)) {
-        rootScore += 18;
-        rootFindings.add("ro.secure=0 (insecure build).");
-    }
-    if ("1".equals(roDebug)) {
-        rootScore += 12;
-        rootFindings.add("ro.debuggable=1 (debuggable build).");
-    }
-
-    // ---------------------------
-    // (2) BOOTLOADER / VERIFIED BOOT
-    // ---------------------------
-    int blScore = 0;
-    List<String> blFindings = new ArrayList<>();
-
-    String vbState = lab26_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
-    String vbmeta  = lab26_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
-    String flashL  = lab26_getProp("ro.boot.flash.locked"); // 1/0
-    String wlBit   = lab26_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs
-
-    if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {
-        blScore += 30;
-        blFindings.add("VerifiedBootState=" + vbState);
-    } else if (vbState != null) {
-        blFindings.add("VerifiedBootState=" + vbState);
-    }
-
-    if (vbmeta != null && vbmeta.contains("unlocked")) {
-        blScore += 35;
-        blFindings.add("vbmeta.device_state=unlocked");
-    } else if (vbmeta != null) {
-        blFindings.add("vbmeta.device_state=" + vbmeta);
-    }
-
-    if ("0".equals(flashL)) {
-        blScore += 25;
-        blFindings.add("flash.locked=0 (bootloader unlocked).");
-    } else if (flashL != null) {
-        blFindings.add("flash.locked=" + flashL);
-    }
-
-    if ("1".equals(wlBit)) {
-        blScore += 15;
-        blFindings.add("warranty_bit=1 (tamper flag).");
-    }
-
-    // OEM unlock allowed flag (Android settings)
-    try {
-        int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);
-        if (oemAllowed == 1) {
-            blScore += 10;
-            blFindings.add("OEM unlock allowed=1 (developer enabled).");
-        }
-    } catch (Throwable ignore) {}
-
-    // /proc/cmdline hints
-    String cmdline = lab26_readOneLine("/proc/cmdline");
-    if (cmdline != null) {
-        String c = cmdline.toLowerCase(Locale.US);
-        if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||
-            c.contains("vbmeta.device_state=unlocked") || c.contains("bootloader=unlocked")) {
-            blScore += 20;
-            blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");
-        }
-    }
-
-    // ---------------------------
-    // (3) BOOT ANIMATION / SPLASH MOD
-    // ---------------------------
-    int animScore = 0;
-    List<String> animFindings = new ArrayList<>();
-
-    // Strong indicator: custom bootanimation in /data/local
-    if (lab26_fileExists("/data/local/bootanimation.zip")) {
-        animScore += 35;
-        animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");
-    }
-
-    // If system bootanimation missing → suspicious ROM
-    boolean sysBoot = lab26_fileExists("/system/media/bootanimation.zip") ||
-                      lab26_fileExists("/product/media/bootanimation.zip") ||
-                      lab26_fileExists("/oem/media/bootanimation.zip") ||
-                      lab26_fileExists("/vendor/media/bootanimation.zip");
-    if (!sysBoot) {
-        animScore += 15;
-        animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");
-    } else {
-        animFindings.add("Stock bootanimation path exists.");
-    }
-
-    // ---------------------------
-    // FINAL RISK SCORE
-    // ---------------------------
-    int risk = Math.min(100, rootScore + blScore + animScore);
-
-    // Print ROOT section
-    logLine();
-    logInfo("Root Scan:");
-    if (rootFindings.isEmpty()) {
-        logOk("No strong root traces detected.");
-    } else {
-        for (String s : rootFindings) logWarn("• " + s);
-    }
-
-    // Print BOOTLOADER section
-    logLine();
-    logInfo("Bootloader / Verified Boot:");
-    if (blFindings.isEmpty()) {
-        logOk("No bootloader anomalies detected.");
-    } else {
-        for (String s : blFindings) logWarn("• " + s);
-    }
-
-    // Print ANIMATION section
-    logLine();
-    logInfo("Boot Animation / Splash:");
-    if (animFindings.isEmpty()) {
-        logOk("No custom animation traces detected.");
-    } else {
-        for (String s : animFindings) logWarn("• " + s);
-    }
-
-    // Verdict
-    logLine();
-    logInfo("FINAL VERDICT:");
-    logInfo("RISK SCORE: " + risk + " / 100");
-
-    if (risk >= 70 || suExec || pkgHit) {
-        logError("STATUS: ROOTED / MODIFIED (high confidence).");
-    } else if (risk >= 35) {
-        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
-    } else {
-        logOk("STATUS: SAFE (no significant modification evidence).");
-    }
-
-    logOk("Lab 26 finished.");
+    }).start();
 }
+
 
 // ============================================================
 // LAB 26 — INTERNAL HELPERS (unique names to avoid conflicts)
@@ -2517,145 +2514,157 @@ private String lab26_readOneLine(String path) {
 // ============================================================
 
 // ============================================================
-// LAB 27 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// LAB 27 — GEL Crash Intelligence (AUTO) — Logger Edition
 // ============================================================
 private void lab27CrashHistory() {
 
-    logLine();
-    logInfo("LAB 27 — GEL Crash Intelligence (AUTO)");
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 27 — GEL Crash Intelligence (AUTO)");
 
-    int crashCount = 0;
-    int anrCount = 0;
-    int systemCount = 0;
+    new Thread(() -> {
+        try {
 
-    Map<String, Integer> appEvents = new HashMap<>(); // Group per app
-    List<String> details = new ArrayList<>();
+            int crashCount = 0;
+            int anrCount = 0;
+            int systemCount = 0;
 
-    // ============================================================
-    // (A) Android 11+ — Process Exit Reasons
-    // ============================================================
-    try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            if (am != null) {
-                List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();
-                if (errs != null) {
-                    for (ActivityManager.ProcessErrorStateInfo e : errs) {
+            Map<String, Integer> appEvents = new HashMap<>();
+            List<String> details = new ArrayList<>();
 
-                        String app = e.processName;
-                        appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
 
-                        if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
-                            crashCount++;
-                            details.add("CRASH: " + app + " — " + e.shortMsg);
-                        } 
-                        else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
-                            anrCount++;
-                            details.add("ANR: " + app + " — " + e.shortMsg);
+            // ============================================================
+            // (A) Android 11+ — Process Exit Reasons
+            // ============================================================
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                    if (am != null) {
+                        List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();
+                        if (errs != null) {
+                            for (ActivityManager.ProcessErrorStateInfo e : errs) {
+
+                                String app = e.processName;
+                                appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
+
+                                if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
+                                    crashCount++;
+                                    details.add("CRASH: " + app + " — " + e.shortMsg);
+                                }
+                                else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                                    anrCount++;
+                                    details.add("ANR: " + app + " — " + e.shortMsg);
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    } catch (Exception ignored) {}
+            } catch (Exception ignore) {}
 
-    // ============================================================
-    // (B) DropBox crash logs — legacy Android sources
-    // ============================================================
-    try {
-        DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
 
-        if (db != null) {
-            String[] tags = {
-                    "system_app_crash", "data_app_crash",
-                    "system_app_anr", "data_app_anr",
-                    "system_server_crash", "system_server_wtf",
-                    "system_server_anr"
-            };
 
-            for (String tag : tags) {
-                DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
+            // ============================================================
+            // (B) DropBox crash logs — legacy Android sources
+            // ============================================================
+            try {
+                DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
 
-                while (ent != null) {
+                if (db != null) {
+                    String[] tags = {
+                            "system_app_crash", "data_app_crash",
+                            "system_app_anr", "data_app_anr",
+                            "system_server_crash", "system_server_wtf",
+                            "system_server_anr"
+                    };
 
-                    if (tag.contains("crash")) crashCount++;
-                    if (tag.contains("anr")) anrCount++;
-                    if (tag.contains("server")) systemCount++;
+                    for (String tag : tags) {
 
-                    String shortTxt = readDropBoxEntry(ent);
+                        DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
 
-                    String clean = tag.toUpperCase(Locale.US).replace("_", " ");
-                    details.add(clean + ": " + shortTxt);
+                        while (ent != null) {
 
-                    // grouping
-                    String key = clean;
-                    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
+                            if (tag.contains("crash")) crashCount++;
+                            if (tag.contains("anr")) anrCount++;
+                            if (tag.contains("server")) systemCount++;
 
-                    ent = db.getNextEntry(tag, ent.getTimeMillis());
+                            String shortTxt = readDropBoxEntry(ent);
+
+                            String clean = tag.toUpperCase(Locale.US).replace("_", " ");
+                            details.add(clean + ": " + shortTxt);
+
+                            appEvents.put(clean, appEvents.getOrDefault(clean, 0) + 1);
+
+                            ent = db.getNextEntry(tag, ent.getTimeMillis());
+                        }
+                    }
                 }
+
+            } catch (Exception ignore) {}
+
+
+
+            // ============================================================
+            // (C) SUMMARY + RISK SCORE
+            // ============================================================
+            int risk = crashCount * 5 + anrCount * 8 + systemCount * 15;
+            if (risk > 100) risk = 100;
+
+            String riskColor =
+                    (risk <= 20) ? "🟩" :
+                    (risk <= 50) ? "🟨" :
+                    (risk <= 80) ? "🟧" : "🟥";
+
+            L.info("Crash events: " + crashCount);
+            L.info("ANR events: " + anrCount);
+            L.info("System-level faults: " + systemCount);
+            L.info(riskColor + " Stability Risk Score: " + risk + "%");
+
+
+
+            // ============================================================
+            // (D) HEATMAP (Top Offenders)
+            // ============================================================
+            if (!appEvents.isEmpty()) {
+                L.info("Top Offenders (Heatmap):");
+
+                appEvents.entrySet()
+                        .stream()
+                        .sorted((a, b) -> b.getValue() - a.getValue())
+                        .limit(5)
+                        .forEach(e -> {
+                            String c =
+                                    (e.getValue() >= 10) ? "🟥" :
+                                    (e.getValue() >= 5)  ? "🟧" :
+                                    (e.getValue() >= 2)  ? "🟨" : "🟩";
+
+                            L.info(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");
+                        });
             }
+
+
+
+            // ============================================================
+            // (E) FULL DETAILS
+            // ============================================================
+            if (!details.isEmpty()) {
+                L.info("Detailed Crash Records:");
+                for (String d : details) L.info(d);
+            } else {
+                L.ok("No crash history found.");
+            }
+
+            L.ok("Lab 27 finished.");
+
+        } catch (Exception e) {
+            new GELLabLogger(this).fail("LAB 27 crashed: " + e.getMessage());
         }
 
-    } catch (Exception ignored) {}
-
-    // ============================================================
-    // (C) SUMMARY + RISK SCORE
-    // ============================================================
-    int risk = 0;
-    risk += crashCount * 5;
-    risk += anrCount * 8;
-    risk += systemCount * 15;
-    if (risk > 100) risk = 100;
-
-    // COLOR INDICATOR
-    String riskColor =
-            (risk <= 20) ? "🟩" :
-            (risk <= 50) ? "🟨" :
-            (risk <= 80) ? "🟧" : "🟥";
-
-    logInfo("Crash events: " + crashCount);
-    logInfo("ANR events: " + anrCount);
-    logInfo("System-level faults: " + systemCount);
-
-    logInfo(riskColor + " Stability Risk Score: " + risk + "%");
-
-    // ============================================================
-    // (D) HEATMAP (top offenders)
-    // ============================================================
-    if (!appEvents.isEmpty()) {
-        logLine();
-        logInfo("Top Offenders (Heatmap):");
-
-        appEvents.entrySet()
-                .stream()
-                .sorted((a, b) -> b.getValue() - a.getValue())
-                .limit(5)
-                .forEach(e -> {
-                    String c = (e.getValue() >= 10) ? "🟥" :
-                               (e.getValue() >= 5)  ? "🟧" :
-                               (e.getValue() >= 2)  ? "🟨" :
-                                                      "🟩";
-                    logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");
-                });
-    }
-
-    // ============================================================
-    // (E) FULL DETAILS
-    // ============================================================
-    if (!details.isEmpty()) {
-        logLine();
-        logInfo("Detailed Crash Records:");
-        for (String d : details) logInfo(d);
-    } else {
-        logOk("No crash history found.");
-    }
-
-    logOk("Lab 27 finished.");
+    }).start();
 }
 
+
+
 // ============================================================
-// SMALL helper inside same block (allowed)
-// Reads first 10 lines of DropBox entry
+// Helper — DropBox entry reader (unchanged)
 // ============================================================
 private String readDropBoxEntry(DropBoxManager.Entry ent) {
     try {
@@ -2667,16 +2676,20 @@ private String readDropBoxEntry(DropBoxManager.Entry ent) {
         StringBuilder sb = new StringBuilder();
         String line;
         int count = 0;
+
         while ((line = br.readLine()) != null && count < 10) {
             sb.append(line).append(" ");
             count++;
         }
+
         br.close();
         return sb.toString().trim();
+
     } catch (Exception e) {
         return "(read error)";
     }
 }
+
 
 // ============================================================
 // LAB 28 — App Permissions & Privacy (FULL AUTO + RISK SCORE)

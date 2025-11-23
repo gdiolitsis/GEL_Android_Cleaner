@@ -1,10 +1,11 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// UNIVERSAL MASTER HOOK
-// 🔥 Combines GELAutoDP + FoldableDetector + UIManager
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// UNIVERSAL MASTER HOOK (GEL v4.3)
+// 🔥 Combines: GELAutoDP + FoldableDetector + UIManager + Locale Hook
+// NOTE: Full-file patch — πάντα δούλευε πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 package com.gel.cleaner;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
@@ -19,16 +20,25 @@ public abstract class GELAutoActivityHook extends AppCompatActivity implements G
     private boolean lastInner = false;
 
     // ============================================================
+    // CONTEXT HOOK (Locale + Scaling-safe)
+    // ============================================================
+    @Override
+    protected void attachBaseContext(Context base) {
+        // LocaleHelper first (your standard rule)
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    // ============================================================
     // LIFECYCLE
     // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Universal DP scaling
+        // 1) Universal dp/sp scaling
         GELAutoDP.init(this);
 
-        // Foldable subsystem
+        // 2) Foldable systems
         uiManager = new GELFoldableUIManager(this);
         foldDetector = new GELFoldableDetector(this, this);
     }
@@ -46,23 +56,28 @@ public abstract class GELAutoActivityHook extends AppCompatActivity implements G
     }
 
     // ============================================================
-    // CONFIGURATION EVENTS: rotation / fold-unfold / locale / resize
+    // CONFIGURATION EVENTS: rotation / fold-unfold / locale change
     // ============================================================
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
+        // Always rescale DP/SP
         GELAutoDP.init(this);
 
-        // reapply foldable UI mode on orientation change
-        uiManager.applyUI(lastInner);
+        // Re-apply foldable UI
+        if (uiManager != null) uiManager.applyUI(lastInner);
     }
 
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
+
+        // Rescale again
         GELAutoDP.init(this);
 
-        uiManager.applyUI(lastInner);
+        // Re-apply foldable mode
+        if (uiManager != null) uiManager.applyUI(lastInner);
     }
 
     // ============================================================
@@ -71,21 +86,23 @@ public abstract class GELAutoActivityHook extends AppCompatActivity implements G
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
         // Optional debug
-        // Log.d("GEL-Fold", "Posture: " + posture);
+        // Log.d("GEL-Fold", "Posture = " + posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
         if (isInner == lastInner) return;
+
         lastInner = isInner;
 
-        if (uiManager != null) uiManager.applyUI(isInner);
+        if (uiManager != null)
+            uiManager.applyUI(isInner);
     }
 
     // ============================================================
-    // HELPERS (unchanged)
+    // HELPERS (GLOBAL DP/SP)
     // ============================================================
-    public int dp(int x) { return GELAutoDP.dp(x); }
+    public int dp(int x)  { return GELAutoDP.dp(x); }
     public float sp(float x) { return GELAutoDP.sp(x); }
-    public int px(int x) { return GELAutoDP.px(x); }
+    public int px(int x)  { return GELAutoDP.px(x); }
 }

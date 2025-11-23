@@ -205,6 +205,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
+            <!-- FIXED: MULTILINE BROWSER CACHE -->
             <Button
                 android:id="@+id/btnBrowserCache"
                 android:layout_width="0dp"
@@ -214,20 +215,27 @@
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:singleLine="true"
-                android:ellipsize="end"/>
+                android:gravity="center"
+                android:singleLine="false"
+                android:maxLines="2"
+                android:ellipsize="none"
+                android:padding="6dp"/>
 
+            <!-- FIXED: MULTILINE APP CACHE -->
             <Button
                 android:id="@+id/btnAppCache"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
-                android:text="@string/app_cache"
+                android:text="@string/app_cache_btn"
                 android:background="@drawable/gel_btn_outline_selector"
                 android:textColor="@color/gel_btn_text_white"
                 android:layout_margin="4dp"
-                android:singleLine="true"
-                android:ellipsize="end"/>
+                android:gravity="center"
+                android:singleLine="false"
+                android:maxLines="2"
+                android:ellipsize="none"
+                android:padding="6dp"/>
         </LinearLayout>
 
         <!-- PERFORMANCE -->

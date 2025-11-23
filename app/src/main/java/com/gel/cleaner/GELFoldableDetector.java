@@ -97,9 +97,9 @@ public class GELFoldableDetector implements SensorEventListener {
             return GELFoldableCallback.Posture.CLOSED;
         }
 
-        // 10°–45° → Tent (Samsung uses this range)
+        // 10°–45° → Tent mode
         if (angle > 10f && angle <= 45f) {
-            return GELFoldableCallback.Posture.TENT_MODE;
+            return GELFoldableCallback.Posture.TENT;
         }
 
         // 45°–110° → Half-open
@@ -107,9 +107,9 @@ public class GELFoldableDetector implements SensorEventListener {
             return GELFoldableCallback.Posture.HALF_OPEN;
         }
 
-        // 110°–150° → Table mode
+        // 110°–150° → Tabletop
         if (angle > 110f && angle <= 150f) {
-            return GELFoldableCallback.Posture.TABLE_MODE;
+            return GELFoldableCallback.Posture.TABLETOP;
         }
 
         // 150°–180° → Flat (unfolded)

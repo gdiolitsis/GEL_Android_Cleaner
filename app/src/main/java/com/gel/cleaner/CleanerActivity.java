@@ -20,6 +20,9 @@ public class CleanerActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 🔥 AUTO SCALING (universal tablets / foldables / phones)
+        GELAutoActivityHook.apply(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
@@ -32,43 +35,24 @@ public class CleanerActivity extends AppCompatActivity {
         Button btnBrowser    = findViewById(R.id.btnBrowserClean);
         Button btnRunning    = findViewById(R.id.btnRunningApps);
 
-        // FIXED: now valid
         log("🧹 GEL Cleaner loaded.\n");
 
-        // ====================================================================
-        // 1) CLEAN RAM (Smart Clean)
-        // ====================================================================
         btnCleanRam.setOnClickListener(v ->
                 GELCleaner.cleanRAM(getBaseContext(), this::log));
 
-        // ====================================================================
-        // 2) DEEP CLEAN (OEM Cleaner)
-        // ====================================================================
         btnDeepClean.setOnClickListener(v ->
                 GELCleaner.deepClean(getBaseContext(), this::log));
 
-        // ====================================================================
-        // 3) TEMP FILES
-        // ====================================================================
         btnTempClean.setOnClickListener(v ->
                 GELCleaner.cleanTempFiles(getBaseContext(), this::log));
 
-        // ====================================================================
-        // 4) BROWSER CACHE
-        // ====================================================================
         btnBrowser.setOnClickListener(v ->
                 GELCleaner.browserCache(getBaseContext(), this::log));
 
-        // ====================================================================
-        // 5) RUNNING APPS
-        // ====================================================================
         btnRunning.setOnClickListener(v ->
                 GELCleaner.openRunningApps(getBaseContext(), this::log));
     }
 
-    // ========================================================================
-    // LOG PRINTER (CORE)
-    // ========================================================================
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             txtLog.append(msg + "\n");
@@ -80,9 +64,6 @@ public class CleanerActivity extends AppCompatActivity {
         });
     }
 
-    // ========================================================================
-    // OVERLOAD FOR SIMPLE CALLS  (FIX)
-    // ========================================================================
     private void log(String msg) {
         log(msg, false);
     }

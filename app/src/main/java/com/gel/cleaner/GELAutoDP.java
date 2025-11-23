@@ -1,21 +1,25 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// GELAutoDP v4.3 — Universal DP/SP Auto-Scaling Core
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. (κανόνας παππού Γιώργου)
+
 package com.gel.cleaner;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.util.DisplayMetrics;
-import android.os.Build;
 import android.graphics.Rect;
+import android.os.Build;
+import android.util.DisplayMetrics;
 import android.view.WindowMetrics;
 
 public final class GELAutoDP {
 
     private GELAutoDP() {}
 
-    // Baseline design width in dp (Pixel-ish reference)
+    // Baseline design smallest-width in dp (Pixel-ish reference)
     private static final float BASE_SW_DP = 360f;
 
-    private static float factor = 1f;
-    private static float textFactor = 1f;
+    private static float factor = 1f;      // dp/px scale
+    private static float textFactor = 1f;  // sp scale (softer)
     private static boolean inited = false;
 
     // ------------------------------------------------------------
@@ -38,7 +42,7 @@ public final class GELAutoDP {
 
         factor = f;
 
-        // Text scaling: a bit softer so fonts don't explode on tablets
+        // Text scaling: softer so fonts don't explode on tablets
         textFactor = lerp(1f, factor, 0.75f);
         if (textFactor < 0.90f) textFactor = 0.90f;
         if (textFactor > 1.80f) textFactor = 1.80f;
@@ -79,15 +83,16 @@ public final class GELAutoDP {
     // ------------------------------------------------------------
     private static void ensure() {
         if (!inited) {
-            // Default safe factors if init not called yet
             factor = 1f;
             textFactor = 1f;
             inited = true;
         }
     }
 
-    // Reads smallest width dp from configuration.
-    // This is the GOLD standard for tablets/foldables.
+    /**
+     * Reads smallest width dp from configuration.
+     * GOLD standard for tablets/foldables.
+     */
     private static float readSmallestWidthDp(Activity a) {
         try {
             Configuration c = a.getResources().getConfiguration();
@@ -96,19 +101,27 @@ public final class GELAutoDP {
             }
 
             // Fallback if OEM returns 0: compute from real pixels
-            DisplayMetrics dm = new DisplayMetrics();
+            DisplayMetrics baseDm = a.getResources().getDisplayMetrics();
+            float density = (baseDm != null && baseDm.density > 0f) ? baseDm.density : 1f;
+
+            int wPx;
+            int hPx;
+
             if (Build.VERSION.SDK_INT >= 30) {
                 WindowMetrics wm = a.getWindowManager().getCurrentWindowMetrics();
                 Rect b = wm.getBounds();
-                dm.widthPixels = b.width();
-                dm.heightPixels = b.height();
-                dm.density = a.getResources().getDisplayMetrics().density;
+                wPx = b.width();
+                hPx = b.height();
             } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                //noinspection deprecation
                 a.getWindowManager().getDefaultDisplay().getMetrics(dm);
+                wPx = dm.widthPixels;
+                hPx = dm.heightPixels;
             }
 
-            float wDp = dm.widthPixels / dm.density;
-            float hDp = dm.heightPixels / dm.density;
+            float wDp = wPx / density;
+            float hDp = hPx / density;
             return Math.min(wDp, hDp);
 
         } catch (Throwable t) {

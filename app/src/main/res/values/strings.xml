@@ -27,6 +27,10 @@
 
     <!-- JUNK (FIXED MULTILINE) -->
     <string name="browser_cache">🌐 Browser Cache\nCleaner</string>
+
+    <!-- ✅ REQUIRED FIX (ADDED) -->
+    <string name="app_cache">🧽 App Cache Cleaner</string>
+
     <string name="app_cache_btn">🧽 App Cache\nCleaner</string>
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_icon_desc">App Icon</string>

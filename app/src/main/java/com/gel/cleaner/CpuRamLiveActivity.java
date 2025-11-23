@@ -5,18 +5,21 @@ import android.content.Context;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
-public class CpuRamLiveActivity extends AppCompatActivity {
+public class CpuRamLiveActivity extends GELAutoActivityHook {
 
     private TextView txtLive;
     private volatile boolean running = true;
     private boolean isRooted = false;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +28,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
         txtLive = findViewById(R.id.txtLiveInfo);
         txtLive.setText("CPU / RAM Live Monitor started…\n");
+        txtLive.setTextSize(sp(14f)); // GEL universal text scaling
 
         // ROOT AUTO-DETECTION
         isRooted = isDeviceRooted();
@@ -43,8 +47,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             while (running) {
 
                 double cpu;
-                if (isRooted) cpu = getCpuRootAccurate();    // ← FULL root CPU
-                else cpu = getCpuTotalAvgPercent();          // ← NORMAL mode
+                if (isRooted) cpu = getCpuRootAccurate();
+                else cpu = getCpuTotalAvgPercent();
 
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
 
@@ -66,7 +70,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                         .append(" | Temp: ").append(temp)
                         .append(" | RAM: ").append(usedMb).append(" MB / ").append(totalMb).append(" MB");
 
-                // EXTRA ROOT-ONLY INFO
                 if (isRooted) {
                     String gov = getCpuGovernor();
                     if (gov != null) line.append("\nGovernor: ").append(gov);
@@ -118,10 +121,10 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             String[] p = line.split("\\s+");
 
             return new long[]{
-                    Long.parseLong(p[1]), // user
-                    Long.parseLong(p[2]), // nice
-                    Long.parseLong(p[3]), // system
-                    Long.parseLong(p[4])  // idle
+                    Long.parseLong(p[1]),
+                    Long.parseLong(p[2]),
+                    Long.parseLong(p[3]),
+                    Long.parseLong(p[4])
             };
         } catch (Exception e) {
             return new long[]{0,0,0,0};
@@ -168,9 +171,10 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     // ======================================================================
     private double getCpuTotalAvgPercent() {
         try {
-            int cores = new File("/sys/devices/system/cpu/")
-                    .listFiles((f, n) -> n.matches("cpu[0-9]+")).length;
+            File[] coresFs = new File("/sys/devices/system/cpu/")
+                    .listFiles((f, n) -> n.matches("cpu[0-9]+"));
 
+            int cores = (coresFs == null) ? 0 : coresFs.length;
             if (cores <= 0) return -1;
 
             double sum = 0;
@@ -187,7 +191,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             }
 
             if (valid == 0) return -1;
-
             return sum / valid;
 
         } catch (Exception e) {
@@ -226,23 +229,19 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ======================================================================
-    // ROOT DETECTION (SAME AS OTHER ACTIVITIES)
+    // ROOT DETECTION
     // ======================================================================
     private boolean isDeviceRooted() {
 
         try {
-            // Test-keys build tag
             String tags = android.os.Build.TAGS;
             if (tags != null && tags.contains("test-keys")) return true;
 
-            // su existence
             String[] paths = { "/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su" };
             for (String p : paths) if (new File(p).exists()) return true;
 
-            // getprop
             String secure = getProp("ro.secure");
             String debug = getProp("ro.debuggable");
-
             if ("0".equals(secure) || "1".equals(debug)) return true;
 
         } catch (Exception ignored) {}

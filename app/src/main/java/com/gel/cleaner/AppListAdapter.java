@@ -21,26 +21,36 @@ public class AppListAdapter extends BaseAdapter {
     private final List<ResolveInfo> data;
     private final LayoutInflater inflater;
 
+    // Foldable managers (safe: optional if activity supports them)
+    private final boolean hasFoldable;
+    private GELFoldableUIManager uiManager;
+    private GELFoldableAnimationPack animPack;
+
     public AppListAdapter(Context ctx, List<ResolveInfo> data) {
         this.ctx = ctx;
         this.data = data;
         this.inflater = LayoutInflater.from(ctx);
+
+        // ============================================================
+        // AUTO DETECT IF ACTIVITY USES THE FOLDABLE ENGINE
+        // ============================================================
+        if (ctx instanceof GELAutoActivityHook) {
+            this.hasFoldable = true;
+            this.uiManager = new GELFoldableUIManager(ctx);
+            this.animPack = new GELFoldableAnimationPack(ctx);
+        } else {
+            this.hasFoldable = false;
+        }
     }
 
     @Override
-    public int getCount() {
-        return (data == null ? 0 : data.size());
-    }
+    public int getCount() { return (data == null ? 0 : data.size()); }
 
     @Override
-    public Object getItem(int position) {
-        return (data == null ? null : data.get(position));
-    }
+    public Object getItem(int position) { return (data == null ? null : data.get(position)); }
 
     @Override
-    public long getItemId(int position) {
-        return position;
-    }
+    public long getItemId(int position) { return position; }
 
     // ============================================================
     // HOLDER
@@ -70,7 +80,7 @@ public class AppListAdapter extends BaseAdapter {
             convertView.setTag(h);
 
             // ============================================================
-            // GEL UNIVERSAL AUTO-SCALING (runs once per inflated row)
+            // GEL UNIVERSAL AUTO-SCALING (once per new row)
             // ============================================================
             if (ctx instanceof GELAutoActivityHook) {
                 GELAutoActivityHook a = (GELAutoActivityHook) ctx;
@@ -90,6 +100,13 @@ public class AppListAdapter extends BaseAdapter {
                 convertView.setPadding(pad, pad, pad, pad);
             }
 
+            // ============================================================
+            // FOLDABLE ANIMATION BOOSTER (Fade-in per row)
+            // ============================================================
+            if (hasFoldable && animPack != null) {
+                animPack.applyListItemFade(convertView);
+            }
+
         } else {
             h = (Holder) convertView.getTag();
         }
@@ -104,7 +121,7 @@ public class AppListAdapter extends BaseAdapter {
             CharSequence label = null;
             try {
                 label = r.loadLabel(ctx.getPackageManager());
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {}
 
             h.name.setText(label != null ? label : "Unknown");
 

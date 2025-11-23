@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DiagnosisMenuActivity.java — Service Lab Menu v2 (GEL Universal Scaling)
-// NOTE: Full-file patch. Δούλευε μόνο πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// DiagnosisMenuActivity.java — Service Lab Menu v2 (GEL Universal Scaling + FOLDABLE READY)
+// NOTE: Full-file patch. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 package com.gel.cleaner;
 
@@ -16,8 +16,13 @@ import androidx.annotation.Nullable;
 
 // ============================================================
 // GEL Service Lab — Multi-Language Diagnosis Menu v2
+// Foldable Ready: GELFoldableUIManager + GELFoldableDetector
 // ============================================================
-public class DiagnosisMenuActivity extends GELAutoActivityHook {
+public class DiagnosisMenuActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
+
+    private GELFoldableUIManager uiManager;
+    private GELFoldableDetector foldDetector;
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -27,6 +32,12 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // =============================
+        // INIT FOLDABLE ENGINE
+        // =============================
+        uiManager = new GELFoldableUIManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -98,6 +109,35 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook {
         setContentView(scroll);
     }
 
+    // ============================================================
+    // FOLDABLE CALLBACKS
+    // ============================================================
+    @Override
+    protected void onResume() {
+        super.onResume();
+        foldDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        foldDetector.stop();
+        super.onPause();
+    }
+
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {
+        // optional — no need for UI changes here yet
+    }
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        // Tablet mode → auto reflow
+        uiManager.applyUI(isInner);
+    }
+
+    // ============================================================
+    // UI HELPERS
+    // ============================================================
     private TextView sectionLabel(String txt) {
         TextView tv = new TextView(this);
         tv.setText(txt);

@@ -3404,49 +3404,37 @@ private void lab30FinalSummary() {
     logLine();
     logInfo("To export the official PDF report, use the button below.");
 
-    // ------------------------------------------------------------
-    // 4) ADD EXPORT BUTTON
-    // ------------------------------------------------------------
-    addLab30ExportButton();
+    // Enable existing export button (do NOT create new)
+    enableSingleExportButton();
 }
 
 // ============================================================
-// ADD EXPORT BUTTON — Opens ServiceReportActivity
+// ENABLE EXISTING EXPORT BUTTON — No duplicates!
 // ============================================================
-private void addLab30ExportButton() {
+private void enableSingleExportButton() {
 
     ui.post(() -> {
+        View rootView = scroll.getChildAt(0);
+        if (!(rootView instanceof LinearLayout)) return;
 
-        // Find the root LinearLayout inside the ScrollView
-        LinearLayout root = (LinearLayout) scroll.getChildAt(0);
-        if (root == null) return;
+        LinearLayout root = (LinearLayout) rootView;
 
-        Button btn = new Button(this);
-        btn.setText("Export to Service Report");
-        btn.setAllCaps(false);
-        btn.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        btn.setTextColor(0xFFFFFFFF);
+        for (int i = 0; i < root.getChildCount(); i++) {
+            View v = root.getChildAt(i);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(48)
-                );
-        lp.setMargins(0, dp(16), 0, dp(16));
-        btn.setLayoutParams(lp);
+            if (v instanceof Button) {
+                Button b = (Button) v;
 
-        btn.setOnClickListener(v -> {
-            Intent i = new Intent(ManualTestsActivity.this, ServiceReportActivity.class);
-            startActivity(i);
-        });
-
-        // Append button to bottom of UI
-        root.addView(btn);
+                if ("Export Service Report".contentEquals(b.getText())) {
+                    b.setEnabled(true);
+                    b.setAlpha(1f);
+                }
+            }
+        }
     });
 }
 
 // ============================================================
 // END OF CLASS
 // ============================================================
-
 }

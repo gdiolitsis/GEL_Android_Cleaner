@@ -1,3 +1,6 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// CpuRamLiveActivity (GEL AutoScaling + Foldable Ready + Safe Thread Log)
+
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
@@ -27,15 +30,21 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
-        txtLive.setText("CPU / RAM Live Monitor started…\n");
-        txtLive.setTextSize(sp(14f)); // GEL universal text scaling
 
-        // ROOT AUTO-DETECTION
+        txtLive.setTextSize(sp(14f));
+        txtLive.setLineSpacing(dp(2), 1.0f);
+        txtLive.setPadding(dp(12), dp(12), dp(12), dp(12));
+
+        txtLive.setText("CPU / RAM Live Monitor started…\n");
+
         isRooted = isDeviceRooted();
 
         startLive();
     }
 
+    // ====================================================================================
+    // SAFE LIVE MONITOR LOOP
+    // ====================================================================================
     private void startLive() {
 
         Thread t = new Thread(() -> {
@@ -46,12 +55,11 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
             int i = 1;
             while (running) {
 
-                double cpu;
-                if (isRooted) cpu = getCpuRootAccurate();
-                else cpu = getCpuTotalAvgPercent();
-
+                // CPU
+                double cpu = isRooted ? getCpuRootAccurate() : getCpuTotalAvgPercent();
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
 
+                // RAM
                 long usedMb = 0, totalMb = 0;
                 if (am != null) {
                     ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -62,14 +70,16 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
                     usedMb = totalMb - availMb;
                 }
 
+                // Temperature
                 String temp = getCpuTemp();
 
                 StringBuilder line = new StringBuilder();
                 line.append("Live ").append(String.format("%02d", i))
                         .append(" | CPU: ").append(cpuTxt)
                         .append(" | Temp: ").append(temp)
-                        .append(" | RAM: ").append(usedMb).append(" MB / ").append(totalMb).append(" MB");
+                        .append(" | RAM: ").append(usedMb).append(" / ").append(totalMb).append(" MB");
 
+                // Root extras
                 if (isRooted) {
                     String gov = getCpuGovernor();
                     if (gov != null) line.append("\nGovernor: ").append(gov);
@@ -80,10 +90,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
 
                 String output = line.toString();
 
-                runOnUiThread(() -> txtLive.append("\n" + output));
+                runOnUiThread(() -> appendSafe(output));
 
                 i++;
-
                 try { Thread.sleep(1000); } catch (Exception ignored) {}
             }
         });
@@ -92,18 +101,38 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         t.start();
     }
 
-    // ======================================================================
-    // ROOT: TRUE CPU USAGE FROM /proc/stat
-    // ======================================================================
+    // ====================================================================================
+    // SAFE LOG APPEND (keeps only last 300 lines)
+    // ====================================================================================
+    private void appendSafe(String s) {
+        String current = txtLive.getText().toString();
+        String[] lines = current.split("\n");
+
+        if (lines.length > 300) {
+            // keep last 250 lines
+            StringBuilder trimmed = new StringBuilder();
+            for (int i = lines.length - 250; i < lines.length; i++) {
+                trimmed.append(lines[i]).append("\n");
+            }
+            txtLive.setText(trimmed.toString());
+        }
+
+        txtLive.append(s + "\n");
+    }
+
+    // ====================================================================================
+    // CPU ROOT (true readings)
+    // ====================================================================================
     private double getCpuRootAccurate() {
         try {
             long[] t1 = readCpuStat();
             Thread.sleep(200);
             long[] t2 = readCpuStat();
 
+            if (t1 == null || t2 == null) return -1;
+
             long idle = t2[3] - t1[3];
             long busy = (t2[0] - t1[0]) + (t2[1] - t1[1]) + (t2[2] - t1[2]);
-
             long total = idle + busy;
             if (total <= 0) return -1;
 
@@ -116,9 +145,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
 
     private long[] readCpuStat() {
         try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
-            String line = br.readLine();
-            if (line == null) return null;
-            String[] p = line.split("\\s+");
+            String l = br.readLine();
+            if (l == null) return null;
+            String[] p = l.split("\\s+");
 
             return new long[]{
                     Long.parseLong(p[1]),
@@ -127,13 +156,13 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
                     Long.parseLong(p[4])
             };
         } catch (Exception e) {
-            return new long[]{0,0,0,0};
+            return null;
         }
     }
 
-    // ======================================================================
-    // GOVERNOR (root only)
-    // ======================================================================
+    // ====================================================================================
+    // GOVERNOR (root)
+    // ====================================================================================
     private String getCpuGovernor() {
         try {
             File gov = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
@@ -148,9 +177,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ======================================================================
-    // CPU FREQ (root path)
-    // ======================================================================
+    // ====================================================================================
+    // CPU FREQ (root)
+    // ====================================================================================
     private String getCpuFreqRoot() {
         try {
             File cur = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
@@ -166,9 +195,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ======================================================================
+    // ====================================================================================
     // NON-ROOT CPU
-    // ======================================================================
+    // ====================================================================================
     private double getCpuTotalAvgPercent() {
         try {
             File[] coresFs = new File("/sys/devices/system/cpu/")
@@ -190,8 +219,7 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
                 }
             }
 
-            if (valid == 0) return -1;
-            return sum / valid;
+            return valid == 0 ? -1 : sum / valid;
 
         } catch (Exception e) {
             return -1;
@@ -206,11 +234,10 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
         }
     }
 
-    // ======================================================================
+    // ====================================================================================
     // CPU TEMPERATURE
-    // ======================================================================
+    // ====================================================================================
     private String getCpuTemp() {
-
         String[] paths = new String[]{
                 "/sys/class/thermal/thermal_zone0/temp",
                 "/sys/class/thermal/thermal_zone1/temp",
@@ -224,13 +251,12 @@ public class CpuRamLiveActivity extends GELAutoActivityHook {
                 return String.format("%.1f°C", (float) v);
             }
         }
-
         return "N/A";
     }
 
-    // ======================================================================
+    // ====================================================================================
     // ROOT DETECTION
-    // ======================================================================
+    // ====================================================================================
     private boolean isDeviceRooted() {
 
         try {

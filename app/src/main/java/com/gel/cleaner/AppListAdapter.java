@@ -1,3 +1,7 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// FINAL — AppListAdapter (GEL Auto-Scaling + Foldable Safe)
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+
 package com.gel.cleaner;
 
 import android.content.Context;
@@ -29,25 +33,32 @@ public class AppListAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int i) {
-        return (data == null ? null : data.get(i));
+    public Object getItem(int position) {
+        return (data == null ? null : data.get(position));
     }
 
     @Override
-    public long getItemId(int i) {
-        return i;
+    public long getItemId(int position) {
+        return position;
     }
 
+    // ============================================================
+    // HOLDER
+    // ============================================================
     static class Holder {
         TextView name;
         TextView pkg;
         ImageView icon;
     }
 
+    // ============================================================
+    // RENDER EACH ROW
+    // ============================================================
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
         Holder h;
+
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.list_item_app, parent, false);
             h = new Holder();
@@ -59,7 +70,7 @@ public class AppListAdapter extends BaseAdapter {
             convertView.setTag(h);
 
             // ============================================================
-            //  GEL UNIVERSAL SCALING — APPLY ONCE PER ROW
+            // GEL UNIVERSAL AUTO-SCALING (runs once per inflated row)
             // ============================================================
             if (ctx instanceof GELAutoActivityHook) {
                 GELAutoActivityHook a = (GELAutoActivityHook) ctx;
@@ -74,7 +85,7 @@ public class AppListAdapter extends BaseAdapter {
                 lp.height = a.dp(38);
                 h.icon.setLayoutParams(lp);
 
-                // Row padding scaling
+                // Row padding
                 int pad = a.dp(12);
                 convertView.setPadding(pad, pad, pad, pad);
             }
@@ -83,6 +94,9 @@ public class AppListAdapter extends BaseAdapter {
             h = (Holder) convertView.getTag();
         }
 
+        // ============================================================
+        // BIND DATA
+        // ============================================================
         ResolveInfo r = data.get(position);
         if (r != null) {
 
@@ -90,20 +104,18 @@ public class AppListAdapter extends BaseAdapter {
             CharSequence label = null;
             try {
                 label = r.loadLabel(ctx.getPackageManager());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) { }
 
             h.name.setText(label != null ? label : "Unknown");
 
             // Icon
             try {
-                h.icon.setImageDrawable(
-                        r.loadIcon(ctx.getPackageManager())
-                );
+                h.icon.setImageDrawable(r.loadIcon(ctx.getPackageManager()));
             } catch (Exception ignored) {
                 h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
             }
 
-            // Package
+            // Package name
             String pkg = "";
             if (r.activityInfo != null && r.activityInfo.packageName != null) {
                 pkg = r.activityInfo.packageName;

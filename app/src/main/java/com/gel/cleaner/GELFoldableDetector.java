@@ -9,6 +9,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
 import androidx.annotation.NonNull;
 
 public class GELFoldableDetector implements SensorEventListener {
@@ -19,82 +20,103 @@ public class GELFoldableDetector implements SensorEventListener {
     private final Sensor hingeSensor;
 
     private float lastAngle = -1f;
-    private boolean isInnerScreen = false;
+    private boolean lastInner = false;
+    private GELFoldableCallback.Posture lastPosture =
+            GELFoldableCallback.Posture.UNKNOWN;
 
     public GELFoldableDetector(@NonNull Context context,
                                @NonNull GELFoldableCallback cb) {
 
         this.ctx = context;
         this.callback = cb;
-
-        sm = (SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
+        this.sm = (SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
 
         // Android 12L hinge angle sensor
         hingeSensor = sm.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE);
     }
 
-    /**
-     * Call inside onResume()
-     */
+    // ============================================================
+    // START / STOP
+    // ============================================================
     public void start() {
         if (hingeSensor != null) {
             sm.registerListener(this, hingeSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
-    /**
-     * Call inside onPause()
-     */
     public void stop() {
         if (hingeSensor != null) {
             sm.unregisterListener(this);
         }
     }
 
+    // ============================================================
+    // SENSOR UPDATE
+    // ============================================================
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event == null || event.sensor == null) return;
         if (event.sensor.getType() != Sensor.TYPE_HINGE_ANGLE) return;
 
         float angle = event.values[0];
+
+        // Avoid noise
         if (angle == lastAngle) return;
         lastAngle = angle;
 
+        // Map angle → posture
         GELFoldableCallback.Posture posture = mapAngleToPosture(angle);
 
-        // Determine if inner (big) screen is active
-        boolean newIsInner = angle > 150;  // 150–180° → unfolded
+        // Detect screen mode
+        boolean isInner = angle > 150; // unfolded → inner screen active
 
-        if (newIsInner != isInnerScreen) {
-            isInnerScreen = newIsInner;
-            callback.onScreenChanged(isInnerScreen);
+        // FIRE CALLBACKS ONLY IF CHANGED
+        if (posture != lastPosture) {
+            lastPosture = posture;
+            callback.onPostureChanged(posture);
         }
 
-        callback.onPostureChanged(posture);
+        if (isInner != lastInner) {
+            lastInner = isInner;
+            callback.onScreenChanged(isInner);
+        }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // not required
+        // Not used
     }
 
-    /**
-     * Map hinge angle to foldable posture.
-     */
+    // ============================================================
+    // POSTURE LOGIC
+    // ============================================================
     private GELFoldableCallback.Posture mapAngleToPosture(float angle) {
-        if (angle < 10) {
-            return GELFoldableCallback.Posture.CLOSED;     // approx. 0–10°
-        }
-        if (angle < 45) {
-            return GELFoldableCallback.Posture.TENT_MODE;  // approx. 10–45°
-        }
-        if (angle < 110) {
-            return GELFoldableCallback.Posture.HALF_OPEN;  // approx. 45–110°
-        }
-        if (angle < 150) {
-            return GELFoldableCallback.Posture.TABLE_MODE; // approx. 110–150°
-        }
-        return GELFoldableCallback.Posture.FLAT;           // 150–180° fully open
-    }
 
+        // 0° → Closed
+        if (angle <= 10f) {
+            return GELFoldableCallback.Posture.CLOSED;
+        }
+
+        // 10°–45° → Tent (Samsung uses this range)
+        if (angle > 10f && angle <= 45f) {
+            return GELFoldableCallback.Posture.TENT_MODE;
+        }
+
+        // 45°–110° → Half-open
+        if (angle > 45f && angle <= 110f) {
+            return GELFoldableCallback.Posture.HALF_OPEN;
+        }
+
+        // 110°–150° → Table mode
+        if (angle > 110f && angle <= 150f) {
+            return GELFoldableCallback.Posture.TABLE_MODE;
+        }
+
+        // 150°–180° → Flat (unfolded)
+        if (angle > 150f) {
+            return GELFoldableCallback.Posture.FLAT;
+        }
+
+        return GELFoldableCallback.Posture.UNKNOWN;
+    }
 }

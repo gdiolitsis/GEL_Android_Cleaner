@@ -1,17 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// MainActivity — Unified, Clean, Locale-Safe Edition
-// -------------------------------------------------------
-// ✔ Συμβατό με LocaleHelper v3.0
-// ✔ Αφαιρεμένα τα διπλά prefs (χρησιμοποιεί μόνο gel_lang_pref)
-// ✔ 100% ασφαλές recreate()
-// ✔ ΟΛΟ το αρχείο έτοιμο για copy-paste (κανόνας Γιώργου)
-// -------------------------------------------------------
+// MainActivity — Foldable-Integrated, Locale-Safe Edition (v4.0)
 
 package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,23 +25,33 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private TextView txtLogs;
     private ScrollView scroll;
 
+    // 🔥 Foldable Orchestrator
+    private GELFoldableOrchestrator foldOrchestrator;
+
     // =========================================================
     // LOCALE (LocaleHelper v3.0)
     // =========================================================
     @Override
     protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base)); // 🔥 merged system
+        super.attachBaseContext(LocaleHelper.apply(base));
     }
 
+    // =========================================================
+    // ON CREATE
+    // =========================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Foldable system
+        foldOrchestrator = new GELFoldableOrchestrator(this);
+        foldOrchestrator.start();
+
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
-        applySavedLanguage();       // auto apply
+        applySavedLanguage();
         setupLangButtons();
 
         setupDonate();
@@ -58,22 +61,34 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     // =========================================================
-    // LANGUAGE SYSTEM (Clean + Unified)
+    // LIFECYCLE (Foldable-safe)
+    // =========================================================
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (foldOrchestrator != null) foldOrchestrator.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (foldOrchestrator != null) foldOrchestrator.stop();
+    }
+
+    // =========================================================
+    // LANGUAGE SYSTEM
     // =========================================================
     private void setupLangButtons() {
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
 
-        if (bGR != null)
-            bGR.setOnClickListener(v -> changeLang("el"));
-
-        if (bEN != null)
-            bEN.setOnClickListener(v -> changeLang("en"));
+        if (bGR != null) bGR.setOnClickListener(v -> changeLang("el"));
+        if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
     }
 
     private void changeLang(String code) {
-        LocaleHelper.set(this, code);   // save language properly
-        recreate();                     // reload UI safely
+        LocaleHelper.set(this, code);
+        recreate();
     }
 
     private void applySavedLanguage() {
@@ -99,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     // =========================================================
-    // BUTTON BINDINGS
+    // BUTTONS
     // =========================================================
     private void setupButtons() {
 
@@ -117,8 +132,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
                 () -> GELCleaner.deepClean(this, this));
 
         // BROWSER CACHE
-        bind(R.id.btnBrowserCache,
-                this::showBrowserPicker);
+        bind(R.id.btnBrowserCache, this::showBrowserPicker);
 
         // APP CACHE
         View appCache = findViewById(R.id.btnAppCache);
@@ -132,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // DIAGNOSIS MENU
+        // DIAGNOSTICS MENU
         bind(R.id.btnDiagnostics,
                 () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
     }
@@ -159,27 +173,19 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         PackageManager pm = getPackageManager();
 
         String[] candidates = {
-                "com.android.chrome",
-                "com.chrome.beta",
-                "org.mozilla.firefox",
-                "com.opera.browser",
-                "com.microsoft.emmx",
-                "com.brave.browser",
-                "com.vivaldi.browser",
-                "com.duckduckgo.mobile.android",
-                "com.sec.android.app.sbrowser",
-                "com.mi.globalbrowser",
-                "com.miui.hybrid",
-                "com.android.browser"
+            "com.android.chrome","com.chrome.beta",
+            "org.mozilla.firefox","com.opera.browser",
+            "com.microsoft.emmx","com.brave.browser",
+            "com.vivaldi.browser","com.duckduckgo.mobile.android",
+            "com.sec.android.app.sbrowser","com.mi.globalbrowser",
+            "com.miui.hybrid","com.android.browser"
         };
 
         List<String> installed = new ArrayList<>();
 
         for (String pkg : candidates) {
-            try {
-                pm.getPackageInfo(pkg, 0);
-                installed.add(pkg);
-            } catch (Exception ignored) {}
+            try { pm.getPackageInfo(pkg, 0); installed.add(pkg); }
+            catch (Exception ignored) {}
         }
 
         if (installed.isEmpty()) {

@@ -20,7 +20,6 @@ public class GELServiceLog {
     private static final SimpleDateFormat TS =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
-    // Μέγιστο μέγεθος για απόλυτη σταθερότητα σε OEM με aggressive memory-killers.
     private static final int MAX_CHARS = 50000;
 
     // ============================================================
@@ -36,7 +35,6 @@ public class GELServiceLog {
 
         LOG.append(line).append('\n');
 
-        // Auto-trim για σταθερότητα
         ensureLimit();
     }
 
@@ -46,14 +44,13 @@ public class GELServiceLog {
 
     private static void ensureLimit() {
         if (LOG.length() > MAX_CHARS) {
-            // Κόβουμε τα πρώτα 20% για να αδειάζει σταδιακά χωρίς spikes
-            int cut = (int) (MAX_CHARS * 0.20);
+            int cut = (int) (MAX_CHARS * 0.20); // trim 20%
             LOG.delete(0, cut);
         }
     }
 
     // ============================================================
-    // PUBLIC LOGGING API (SERVICE LAB)
+    // PUBLIC LOGGING API
     // ============================================================
     public static void info(String msg)  { add("ℹ️ INFO", msg); }
     public static void ok(String msg)    { add("✅ OK", msg); }
@@ -61,7 +58,7 @@ public class GELServiceLog {
     public static void error(String msg) { add("❌ ERROR", msg); }
 
     // ============================================================
-    // ADD LINE (Used by Manual Tests & Auto Diagnostics)
+    // ADD FREE LINE
     // ============================================================
     public static synchronized void addLine(String line) {
         if (line == null || line.trim().isEmpty())
@@ -77,16 +74,18 @@ public class GELServiceLog {
     }
 
     // ============================================================
-    // CLEAR FOR NEXT CUSTOMER
+    // CLEAR LOG
     // ============================================================
     public static synchronized void clear() {
         LOG.setLength(0);
     }
 
     // ============================================================
-    // CHECK IF ANYTHING EXISTS
+    // CHECK IF EMPTY
     // ============================================================
     public static synchronized boolean isEmpty() {
         return LOG.length() == 0;
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

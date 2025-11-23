@@ -11,9 +11,9 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ComponentName;
 import android.os.Build;
 import android.provider.Settings;
 import android.widget.Toast;
@@ -21,7 +21,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.text.DecimalFormat;
 
-public class GelActions {
+public final class GELActions {
+
+    private GELActions() {} // no instances
 
     private static final DecimalFormat DF = new DecimalFormat("#.##");
 
@@ -29,10 +31,12 @@ public class GelActions {
     // SMART CLEAN — Universal RAM Cleaner
     // ============================================================
     public static void doSmartClean(Activity activity) {
+        if (activity == null) return;
+
         try {
             CleanLauncher.smartClean(activity);
             Toast.makeText(activity, "✔ Smart Cleaner ενεργοποιήθηκε", Toast.LENGTH_SHORT).show();
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
             Toast.makeText(activity, "⚠ Smart Clean δεν υποστηρίζεται", Toast.LENGTH_SHORT).show();
         }
     }
@@ -41,6 +45,7 @@ public class GelActions {
     // BATTERY BOOSTER — Play-Safe Navigation (All OEMs)
     // ============================================================
     public static void openBatteryBooster(Activity activity) {
+        if (activity == null) return;
 
         // 1) Battery Saver (universal)
         if (tryIntent(activity, Settings.ACTION_BATTERY_SAVER_SETTINGS, "⚡ Battery Saver ανοίχτηκε"))
@@ -58,6 +63,8 @@ public class GelActions {
     // CLEAN OWN APP CACHE — internal/external + Toast report
     // ============================================================
     public static void cleanOwnCache(Context context) {
+        if (context == null) return;
+
         long before =
                 getFolderSize(context.getCacheDir()) +
                 getFolderSize(context.getExternalCacheDir());
@@ -66,7 +73,7 @@ public class GelActions {
         deleteDirSafe(context.getExternalCacheDir());
 
         Toast.makeText(
-                context,
+                context.getApplicationContext(),
                 "🧹 Cache καθαρίστηκε: " + formatSize(before),
                 Toast.LENGTH_LONG
         ).show();
@@ -76,6 +83,7 @@ public class GelActions {
     // UNIVERSAL TEMP FILES CLEANER — καλύπτει ΟΛΑ τα OEMs
     // ============================================================
     public static void cleanTempFiles(Context ctx) {
+        if (ctx == null) return;
 
         // ---------- XIAOMI / REDMI / POCO ----------
         if (isMiui()) {
@@ -142,6 +150,8 @@ public class GelActions {
     // STORAGE MANAGER — simple safe wrapper
     // ============================================================
     public static void openStorageManager(Activity act) {
+        if (act == null) return;
+
         if (!tryIntent(act, Settings.ACTION_INTERNAL_STORAGE_SETTINGS, "📦 Storage Manager")) {
             tryIntent(act, Settings.ACTION_SETTINGS, "📦 Storage Settings");
         }
@@ -151,62 +161,97 @@ public class GelActions {
     // INTERNAL HELPERS
     // ============================================================
     private static boolean tryIntent(Context ctx, String action, String toast) {
+        if (ctx == null) return false;
+
         try {
             Intent i = new Intent(action);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            if (toast != null) Toast.makeText(ctx, toast, Toast.LENGTH_SHORT).show();
+            if (toast != null) {
+                Toast.makeText(ctx.getApplicationContext(), toast, Toast.LENGTH_SHORT).show();
+            }
             return true;
-        } catch (Exception ignored) { return false; }
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private static boolean launch(Context ctx, String pkg, String cls) {
+        if (ctx == null) return false;
+
         try {
             Intent i = new Intent();
             i.setComponent(new ComponentName(pkg, cls));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
             return true;
-        } catch (Exception ignored) { return false; }
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private static void deleteDirSafe(File dir) {
-        if (dir == null || !dir.exists()) return;
-        if (dir.isFile()) { dir.delete(); return; }
-        File[] children = dir.listFiles();
-        if (children != null)
-            for (File f : children) deleteDirSafe(f);
-        dir.delete();
+        try {
+            if (dir == null || !dir.exists()) return;
+
+            if (dir.isFile()) {
+                //noinspection ResultOfMethodCallIgnored
+                dir.delete();
+                return;
+            }
+
+            File[] children = dir.listFiles();
+            if (children != null) {
+                for (File f : children) deleteDirSafe(f);
+            }
+
+            //noinspection ResultOfMethodCallIgnored
+            dir.delete();
+        } catch (Throwable ignored) {
+            // ultra-safe no crash
+        }
     }
 
     private static long getFolderSize(File dir) {
-        if (dir == null || !dir.exists()) return 0;
-        if (dir.isFile()) return dir.length();
-        long total = 0;
-        File[] list = dir.listFiles();
-        if (list != null)
-            for (File f : list) total += getFolderSize(f);
-        return total;
+        try {
+            if (dir == null || !dir.exists()) return 0;
+            if (dir.isFile()) return dir.length();
+
+            long total = 0;
+            File[] list = dir.listFiles();
+            if (list != null) {
+                for (File f : list) total += getFolderSize(f);
+            }
+            return total;
+        } catch (Throwable ignored) {
+            return 0;
+        }
     }
 
     private static String formatSize(long bytes) {
         if (bytes <= 0) return "0 KB";
+
         double kb = bytes / 1024.0;
         if (kb < 1024) return DF.format(kb) + " KB";
+
         double mb = kb / 1024.0;
         if (mb < 1024) return DF.format(mb) + " MB";
+
         double gb = mb / 1024.0;
         return DF.format(gb) + " GB";
     }
 
     private static boolean isMiui() {
-        String b = Build.BRAND.toLowerCase();
-        String m = Build.MANUFACTURER.toLowerCase();
+        String b = (Build.BRAND != null) ? Build.BRAND.toLowerCase() : "";
+        String m = (Build.MANUFACTURER != null) ? Build.MANUFACTURER.toLowerCase() : "";
         return (b.contains("xiaomi") || b.contains("redmi") || b.contains("poco")
                 || m.contains("xiaomi") || m.contains("redmi") || m.contains("poco"));
     }
 
     private static void toast(Context ctx, String m) {
-        Toast.makeText(ctx, m, Toast.LENGTH_LONG).show();
+        if (ctx == null) return;
+        try {
+            Toast.makeText(ctx.getApplicationContext(), m, Toast.LENGTH_LONG).show();
+        } catch (Throwable ignored) {}
     }
 }

@@ -26,10 +26,10 @@
     <string name="clean_all">🧹 GEL Γενικός Εκκαθαριστής</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 Cache Browser\n Εκκαθαριστής</string>
+    <string name="browser_cache">🌐 Cache Browser\n   Εκκαθαριστής</string>
     <string name="app_cache">🧽 Cache Εφαρμογών</string>
     <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_cache_btn">🧽 Cache Εφαρμογών\n Εκκαθαριστής</string>
+    <string name="app_cache_btn">🧽 Cache Εφαρμογών\n   Εκκαθαριστής</string>
     <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
     <!-- PERFORMANCE -->

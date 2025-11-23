@@ -259,21 +259,49 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body7.addView(makeTestButton("30. FINAL TECHNICIAN SUMMARY Notes (PDF Export)", this::lab30FinalSummary));  
 
     // LOG AREA  
-    txtLog = new TextView(this);  
-    txtLog.setTextSize(13f);  
-    txtLog.setTextColor(0xFFEEEEEE);  
-    txtLog.setPadding(0, dp(16), 0, dp(8));  
-    txtLog.setMovementMethod(new ScrollingMovementMethod());  
-    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));  
+txtLog = new TextView(this);  
+txtLog.setTextSize(13f);  
+txtLog.setTextColor(0xFFEEEEEE);  
+txtLog.setPadding(0, dp(16), 0, dp(8));  
+txtLog.setMovementMethod(new ScrollingMovementMethod());  
+txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));  
 
-    root.addView(txtLog);  
-    scroll.addView(root);  
-    setContentView(scroll);  
+root.addView(txtLog);
 
-    // First log entry  
-    GELServiceLog.clear();  
-    logInfo(getString(R.string.manual_log_desc));  
-}   // onCreate ends here  
+// ============================================================
+// EXPORT SERVICE REPORT BUTTON (AFTER LOG)
+// ============================================================
+
+Button btnExport = new Button(this);
+btnExport.setText(getString(R.string.export_report_title)); // "Export Service Report"
+btnExport.setAllCaps(false);
+btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+btnExport.setTextColor(0xFFFFFFFF);
+
+LinearLayout.LayoutParams lpExp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
+btnExport.setLayoutParams(lpExp);
+
+btnExport.setOnClickListener(v -> {
+    Intent i = new Intent(ManualTestsActivity.this, ServiceReportActivity.class);
+    startActivity(i);
+});
+
+root.addView(btnExport);
+
+// ============================================================
+
+scroll.addView(root);  
+setContentView(scroll);  
+
+// First log entry  
+GELServiceLog.clear();  
+logInfo(getString(R.string.manual_log_desc));  
+}   // onCreate ends here
 
 
 // ============================================================  

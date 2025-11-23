@@ -18,7 +18,6 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animator;
 
-    // last-known state to avoid duplicate UI refreshes
     private boolean lastInnerState = false;
     private boolean initialized = false;
 
@@ -26,9 +25,9 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
         this.activity = activity;
     }
 
-    /**
-     * Must be called from Activity.onCreate()
-     */
+    // ============================================================
+    // START (call from Activity.onCreate)
+    // ============================================================
     public void start() {
         if (initialized) return;
 
@@ -42,19 +41,18 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
         Log.d(TAG, "Foldable Orchestrator started.");
     }
 
-    /**
-     * Must be called from Activity.onDestroy()
-     */
+    // ============================================================
+    // STOP (call from Activity.onDestroy)
+    // ============================================================
     public void stop() {
         if (detector != null) detector.stop();
     }
 
-    // ----------------------------------------------------
+    // ============================================================
     // CALLBACK from GELFoldableDetector
-    // ----------------------------------------------------
+    // ============================================================
     @Override
-    public void onPostureChanged(GELFoldableCallback.Posture posture) {
-
+    public void onPostureChanged(@NonNull GELFoldableCallback.Posture posture) {
         Log.d(TAG, "Posture changed → " + posture.name());
 
         boolean isInner = isBigScreen(posture);
@@ -66,26 +64,31 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
 
         lastInnerState = isInner;
 
-        // Animate → apply UI scaling
+        // Smooth animation → change UI
         animator.animateReflow(() -> uiManager.applyUI(isInner));
     }
 
-    // ----------------------------------------------------
-    // Logic: When is the device considered “inner screen”?
-    // ----------------------------------------------------
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        // Not needed here — orchestration happens via posture logic
+    }
+
+    // ============================================================
+    // Logic: Decide if inner display UI should activate
+    // ============================================================
     private boolean isBigScreen(GELFoldableCallback.Posture p) {
 
         switch (p) {
-            case FLAT:
-            case HALF_OPEN:
-            case TABLETOP:
-                return true;    // unfolded / semi-open → inner screen UI
+            case FLAT:       // fully open
+            case HALF_OPEN:  // laptop/book mode
+            case TABLETOP:   // table L-shaped mode
+                return true;
 
-            case CLOSED:
-            case TENT:
+            case CLOSED:     // folded - outer display
+            case TENT:       // tent mode
+            case UNKNOWN:
             default:
-                return false;   // outer screen / folded
+                return false;
         }
     }
-
 }

@@ -1,3 +1,12 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// MainActivity — Unified, Clean, Locale-Safe Edition
+// -------------------------------------------------------
+// ✔ Συμβατό με LocaleHelper v3.0
+// ✔ Αφαιρεμένα τα διπλά prefs (χρησιμοποιεί μόνο gel_lang_pref)
+// ✔ 100% ασφαλές recreate()
+// ✔ ΟΛΟ το αρχείο έτοιμο για copy-paste (κανόνας Γιώργου)
+// -------------------------------------------------------
+
 package com.gel.cleaner;
 
 import android.content.Context;
@@ -23,9 +32,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     private TextView txtLogs;
     private ScrollView scroll;
 
+    // =========================================================
+    // LOCALE (LocaleHelper v3.0)
+    // =========================================================
     @Override
     protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
+        super.attachBaseContext(LocaleHelper.apply(base)); // 🔥 merged system
     }
 
     @Override
@@ -36,17 +48,18 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
-        applySavedLanguage();   // 🔥 auto-apply saved language
+        applySavedLanguage();       // auto apply
         setupLangButtons();
+
         setupDonate();
         setupButtons();
 
         log("📱 Device ready", false);
     }
 
-    /* =========================================================
-     * LANGUAGE
-     * ========================================================= */
+    // =========================================================
+    // LANGUAGE SYSTEM (Clean + Unified)
+    // =========================================================
     private void setupLangButtons() {
         View bGR = findViewById(R.id.btnLangGR);
         View bEN = findViewById(R.id.btnLangEN);
@@ -59,24 +72,18 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     private void changeLang(String code) {
-        // save language
-        SharedPreferences sp = getSharedPreferences("gel_lang", MODE_PRIVATE);
-        sp.edit().putString("lang", code).apply();
-
-        // apply & reload
-        LocaleHelper.set(this, code);
-        recreate();
+        LocaleHelper.set(this, code);   // save language properly
+        recreate();                     // reload UI safely
     }
 
     private void applySavedLanguage() {
-        SharedPreferences sp = getSharedPreferences("gel_lang", MODE_PRIVATE);
-        String code = sp.getString("lang", "en");
+        String code = LocaleHelper.getLang(this);
         LocaleHelper.set(this, code);
     }
 
-    /* =========================================================
-     * DONATE
-     * ========================================================= */
+    // =========================================================
+    // DONATE
+    // =========================================================
     private void setupDonate() {
         View b = findViewById(R.id.btnDonate);
         if (b != null) {
@@ -91,9 +98,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-    /* =========================================================
-     * BUTTON MAPPING
-     * ========================================================= */
+    // =========================================================
+    // BUTTON BINDINGS
+    // =========================================================
     private void setupButtons() {
 
         bind(R.id.btnPhoneInfoInternal,
@@ -105,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnCpuRamLive,
                 () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        // GEL CLEANER ALL → SAFE DEEP CLEAN
+        // SAFE DEEP CLEAN
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
@@ -113,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnBrowserCache,
                 this::showBrowserPicker);
 
-        // APP CACHE LIST
+        // APP CACHE
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -125,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // DIAGNOSIS MAIN MENU
+        // DIAGNOSIS MENU
         bind(R.id.btnDiagnostics,
                 () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
     }
@@ -136,15 +143,17 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             b.setOnClickListener(v -> {
                 try { fn.run(); }
                 catch (Throwable t) {
-                    Toast.makeText(this, "Action failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Action failed: " + t.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
-    /* =========================================================
-     * POPUP BROWSER LIST
-     * ========================================================= */
+    // =========================================================
+    // BROWSER PICKER
+    // =========================================================
     private void showBrowserPicker() {
 
         PackageManager pm = getPackageManager();
@@ -204,9 +213,9 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         }
     }
 
-    /* =========================================================
-     * LOGGING
-     * ========================================================= */
+    // =========================================================
+    // LOGGING
+    // =========================================================
     @Override
     public void log(String msg, boolean isError) {
         runOnUiThread(() -> {

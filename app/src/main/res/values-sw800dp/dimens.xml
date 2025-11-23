@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="gel_padding_xs">14dp</dimen>
+    <dimen name="gel_padding_s">20dp</dimen>
+    <dimen name="gel_padding_m">28dp</dimen>
+    <dimen name="gel_padding_l">38dp</dimen>
+    <dimen name="gel_padding_xl">50dp</dimen>
+
+    <dimen name="gel_text_small">24sp</dimen>
+    <dimen name="gel_text_normal">27sp</dimen>
+    <dimen name="gel_text_medium">30sp</dimen>
+    <dimen name="gel_text_large">34sp</dimen>
+    <dimen name="gel_text_title">40sp</dimen>
+    <dimen name="gel_text_big_title">46sp</dimen>
+
+    <dimen name="gel_header_height">90dp</dimen>
+
+    <dimen name="gel_btn_height">80dp</dimen>
+    <dimen name="gel_btn_radius">22dp</dimen>
+    <dimen name="gel_btn_stroke">2dp</dimen>
+
+    <dimen name="gel_block_radius">30dp</dimen>
+    <dimen name="gel_block_padding">40dp</dimen>
+
+    <dimen name="gel_icon">54dp</dimen>
+    <dimen name="gel_icon_large">70dp</dimen>
+
+    <dimen name="gel_dp_2">6dp</dimen>
+    <dimen name="gel_dp_6">14dp</dimen>
+    <dimen name="gel_dp_8">20dp</dimen>
+    <dimen name="gel_dp_10">24dp</dimen>
+    <dimen name="gel_dp_12">30dp</dimen>
+    <dimen name="gel_dp_14">34dp</dimen>
+    <dimen name="gel_dp_16">40dp</dimen>
+
+</resources>

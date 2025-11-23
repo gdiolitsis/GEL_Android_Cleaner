@@ -1457,7 +1457,8 @@ private void printZoneAscii_Logger(String label, float t, GELLabLogger L) {
 }
     
 // ============================================================
-// LAB 18 — Heat Under Load (EXACT TEXT + COLORS LIKE PHOTOS)
+// LAB 18 — Heat Under Load (LIVE + Manual) — Logger Edition
+// EXACT TEXT + COLORS LIKE PHOTOS
 // ============================================================
 private boolean lab18Running = false;
 private final Handler lab18Handler = new Handler(Looper.getMainLooper());
@@ -1465,150 +1466,197 @@ private final Handler lab18Handler = new Handler(Looper.getMainLooper());
 private void lab18ThermalQuestionnaire() { lab18(); }
 
 private void lab18() {
-    logLine();
-    logInfo("18. Thermal Stress (LIVE + Manual)");
 
-    Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-    int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-    boolean charging = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 18 — Thermal Stress (LIVE + Manual) started...");
 
-    if (!charging) {
-        logOk("Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
-    }
+    new Thread(() -> {
+        try {
+            Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+            boolean charging =
+                    (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                     status == BatteryManager.BATTERY_STATUS_FULL);
 
-    // EXACT SCRIPT FROM YOUR PHOTOS
-    logInfo("Manual Mode started.");
-    logInfo("1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
-    logInfo("2) While charging, watch if device becomes hot or throttles.");
-    logWarn("If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
-    logError("If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
-    logOk("Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
+            if (!charging) {
+                L.ok("Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");
+            }
 
-    if (charging) showLab18ChargingPopup();
-}
+            // ------------------------------------------------------------
+            // EXACT MANUAL SCRIPT (UI logs full, report only warn/error)
+            // ------------------------------------------------------------
+            L.info("Manual Mode started.");
+            L.info("1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");
+            L.info("2) While charging, watch if device becomes hot or throttles.");
+            L.warn("If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");
+            L.error("If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");
+            L.ok("Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");
 
-private void showLab18ChargingPopup() {
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
+            if (charging) {
+                ui.post(() -> showLab18ChargingPopup(L));
+            }
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(20), dp(20), dp(20), dp(20));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(Color.BLACK);
-    bg.setCornerRadius(dp(20));
-    bg.setStroke(dp(4), Color.parseColor("#FFD700"));
-    root.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("Press START for battery thermal test");
-    title.setTextColor(Color.parseColor("#FFD700"));
-    title.setGravity(Gravity.CENTER);
-    title.setTextSize(17f);
-    root.addView(title);
-
-    Button btnStart = new Button(this);
-    btnStart.setText("START");
-    btnStart.setAllCaps(false);
-    btnStart.setTextSize(16f);
-    btnStart.setBackgroundColor(Color.parseColor("#FFD700"));
-    btnStart.setTextColor(Color.BLACK);
-    root.addView(btnStart, new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, dp(45)));
-
-    TextView btnCancel = new TextView(this);
-    btnCancel.setText("CANCEL");
-    btnCancel.setTextColor(Color.parseColor("#00E5FF"));
-    btnCancel.setGravity(Gravity.END);
-    btnCancel.setPadding(0, dp(10), 0, 0);
-    root.addView(btnCancel);
-
-    b.setView(root);
-    AlertDialog dialog = b.create();
-
-    if (dialog.getWindow() != null)
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-    dialog.show();
-
-    btnStart.setOnClickListener(v -> {
-        dialog.dismiss();
-        showBatteryLiveMonitor();
-    });
-
-    btnCancel.setOnClickListener(v -> dialog.dismiss());
-}
-
-
-private void showBatteryLiveMonitor() {
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(20), dp(20), dp(20), dp(20));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(Color.BLACK);
-    bg.setCornerRadius(dp(20));
-    bg.setStroke(dp(4), Color.parseColor("#FFD700"));
-    root.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("Battery Temperature — LIVE");
-    title.setTextColor(Color.parseColor("#FFD700"));
-    title.setGravity(Gravity.CENTER);
-    title.setTextSize(17f);
-    root.addView(title);
-
-    ScrollView sc = new ScrollView(this);
-    TextView txt = new TextView(this);
-    txt.setTextColor(Color.WHITE);
-    txt.setTextSize(14f);
-    txt.setPadding(0, dp(15), 0, 0);
-    sc.addView(txt);
-    root.addView(sc, new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            dp(260)
-    ));
-
-    TextView btnStop = new TextView(this);
-    btnStop.setText("STOP");
-    btnStop.setTextColor(Color.parseColor("#00E5FF"));
-    btnStop.setGravity(Gravity.END);
-    btnStop.setPadding(0, dp(15), 0, 0);
-    root.addView(btnStop);
-
-    b.setView(root);
-    AlertDialog dlg = b.create();
-
-    if (dlg.getWindow() != null)
-        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-    lab18Running = true;
-    dlg.show();
-
-    btnStop.setOnClickListener(v -> {
-        lab18Running = false;
-        dlg.dismiss();
-    });
-
-    lab18Handler.post(new Runnable() {
-        @Override public void run() {
-            if (!lab18Running) return;
-
-            float t = getBatteryTemperature();
-            String line = String.format(Locale.US,
-                    "Battery: %.1f°C\n%s\n\n", t, asciiBar(t));
-
-            txt.append(line);
-            sc.post(() -> sc.fullScroll(View.FOCUS_DOWN));
-
-            lab18Handler.postDelayed(this, 1000);
+        } catch (Exception e) {
+            L.fail("LAB 18 crashed: " + e.getMessage());
         }
-    });
+    }).start();
 }
 
 
+// ============================================================
+// CHARGING POPUP (UI THREAD)
+// ============================================================
+private void showLab18ChargingPopup(GELLabLogger L) {
+    try {
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.BLACK);
+        bg.setCornerRadius(dp(20));
+        bg.setStroke(dp(4), Color.parseColor("#FFD700"));
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("Press START for battery thermal test");
+        title.setTextColor(Color.parseColor("#FFD700"));
+        title.setGravity(Gravity.CENTER);
+        title.setTextSize(17f);
+        root.addView(title);
+
+        Button btnStart = new Button(this);
+        btnStart.setText("START");
+        btnStart.setAllCaps(false);
+        btnStart.setTextSize(16f);
+        btnStart.setBackgroundColor(Color.parseColor("#FFD700"));
+        btnStart.setTextColor(Color.BLACK);
+        root.addView(btnStart, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(45)));
+
+        TextView btnCancel = new TextView(this);
+        btnCancel.setText("CANCEL");
+        btnCancel.setTextColor(Color.parseColor("#00E5FF"));
+        btnCancel.setGravity(Gravity.END);
+        btnCancel.setPadding(0, dp(10), 0, 0);
+        root.addView(btnCancel);
+
+        b.setView(root);
+        AlertDialog dialog = b.create();
+
+        if (dialog.getWindow() != null)
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        dialog.show();
+
+        btnStart.setOnClickListener(v -> {
+            dialog.dismiss();
+            L.ok("LIVE monitor started (charging mode).");
+            showBatteryLiveMonitor(L);
+        });
+
+        btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+            L.warn("LIVE monitor cancelled by user.");
+        });
+
+    } catch (Exception e) {
+        L.fail("Charging popup failed: " + e.getMessage());
+    }
+}
+
+
+// ============================================================
+// LIVE BATTERY TEMPERATURE MONITOR (UI THREAD)
+// ============================================================
+private void showBatteryLiveMonitor(GELLabLogger L) {
+    try {
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.BLACK);
+        bg.setCornerRadius(dp(20));
+        bg.setStroke(dp(4), Color.parseColor("#FFD700"));
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("Battery Temperature — LIVE");
+        title.setTextColor(Color.parseColor("#FFD700"));
+        title.setGravity(Gravity.CENTER);
+        title.setTextSize(17f);
+        root.addView(title);
+
+        ScrollView sc = new ScrollView(this);
+        TextView txt = new TextView(this);
+        txt.setTextColor(Color.WHITE);
+        txt.setTextSize(14f);
+        txt.setPadding(0, dp(15), 0, 0);
+        sc.addView(txt);
+        root.addView(sc, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(260)
+        ));
+
+        TextView btnStop = new TextView(this);
+        btnStop.setText("STOP");
+        btnStop.setTextColor(Color.parseColor("#00E5FF"));
+        btnStop.setGravity(Gravity.END);
+        btnStop.setPadding(0, dp(15), 0, 0);
+        root.addView(btnStop);
+
+        b.setView(root);
+        AlertDialog dlg = b.create();
+
+        if (dlg.getWindow() != null)
+            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        lab18Running = true;
+        dlg.show();
+
+        btnStop.setOnClickListener(v -> {
+            lab18Running = false;
+            dlg.dismiss();
+            L.ok("LIVE monitor stopped by user.");
+        });
+
+        lab18Handler.post(new Runnable() {
+            @Override public void run() {
+                if (!lab18Running) return;
+
+                float t = getBatteryTemperature();
+                String line = String.format(Locale.US,
+                        "Battery: %.1f°C\n%s\n\n", t, asciiBar(t));
+
+                txt.append(line);
+                sc.post(() -> sc.fullScroll(View.FOCUS_DOWN));
+
+                // Safety logging only on important conditions
+                if (t >= 60f) {
+                    L.error(String.format(Locale.US, "LIVE: Battery temperature critical: %.1f°C", t));
+                } else if (t >= 50f) {
+                    L.warn(String.format(Locale.US, "LIVE: Battery temperature high: %.1f°C", t));
+                }
+
+                lab18Handler.postDelayed(this, 1000);
+            }
+        });
+
+    } catch (Exception e) {
+        lab18Running = false;
+        L.fail("LIVE monitor failed: " + e.getMessage());
+    }
+}
+
+
+// ============================================================
+// ASCII BAR (LIVE UI)
+// ============================================================
 private String asciiBar(float t) {
     int bars = Math.max(1, Math.min(50, (int)t));
     StringBuilder sb = new StringBuilder();
@@ -1619,6 +1667,7 @@ private String asciiBar(float t) {
 
 // ============================================================
 // THERMAL HELPERS (GEL UNIVERSAL AUTO-SCALE — FINAL EDITION)
+// (No logger needed here; pure utilities)
 // ============================================================
 private Map<String, Float> readThermalZones() {
     Map<String, Float> out = new HashMap<>();
@@ -1637,36 +1686,25 @@ private Map<String, Float> readThermalZones() {
 
         String type = name;
         try {
-            // Read zone type if available
             if (typeFile.exists()) {
                 type = readFirstLine(typeFile);
                 if (type == null || type.trim().isEmpty())
                     type = name;
             }
 
-            // Read raw temperature
             String tRaw = readFirstLine(tempFile);
             if (tRaw == null) continue;
 
             float v = Float.parseFloat(tRaw.trim());
 
-            // ============================================================
-            // GEL UNIVERSAL AUTO-SCALE (fix for ALL Android devices)
-            // ============================================================
+            // GEL UNIVERSAL AUTO-SCALE
             if (v > 1000f) {
-                // millidegree → Pixel / Samsung / Huawei
-                v = v / 1000f;
-            } 
-            else if (v > 200f) {
-                // centidegree → Xiaomi / Redmi / POCO
-                v = v / 100f;
-            } 
-            else if (v > 20f) {
-                // deci-degree → some MediaTek devices
-                v = v / 10f;
+                v = v / 1000f;  // millidegree
+            } else if (v > 200f) {
+                v = v / 100f;   // centidegree
+            } else if (v > 20f) {
+                v = v / 10f;    // deci-degree
             }
-            // else → already °C
-
             out.put(type.toLowerCase(Locale.US), v);
 
         } catch (Throwable ignore) {}
@@ -1675,9 +1713,6 @@ private Map<String, Float> readThermalZones() {
     return out;
 }
 
-// ============================================================
-// PICK ZONE
-// ============================================================
 private Float pickZone(Map<String, Float> zones, String... keys) {
     if (zones == null || zones.isEmpty()) return null;
 
@@ -1694,9 +1729,6 @@ private Float pickZone(Map<String, Float> zones, String... keys) {
     return null;
 }
 
-// ============================================================
-// READ FIRST LINE
-// ============================================================
 private String readFirstLine(File file) throws IOException {
     BufferedReader br = null;
     try {
@@ -1706,215 +1738,288 @@ private String readFirstLine(File file) throws IOException {
         if (br != null) try { br.close(); } catch (Throwable ignore) {}
     }
 }
+
+
     // ============================================================
     // LABS 19–22: STORAGE & PERFORMANCE
     // ============================================================
-    private void lab19StorageSnapshot() {
-        logLine();
-        logInfo("LAB 19 — Internal Storage Snapshot.");
+    // ============================================================
+// LAB 19 — Internal Storage Snapshot — Logger Edition
+// ============================================================
+private void lab19StorageSnapshot() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 19 — Internal Storage Snapshot");
+
+    new Thread(() -> {
         try {
             StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
             long total = s.getBlockCountLong() * s.getBlockSizeLong();
-            long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
-            long used = total - free;
+            long free  = s.getAvailableBlocksLong() * s.getBlockSizeLong();
+            long used  = total - free;
             int pctFree = (int) ((free * 100L) / total);
 
-            logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
-                    + " (free " + humanBytes(free) + ", " + pctFree + "%).");
+            L.info("Internal storage used: " +
+                    humanBytes(used) + " / " + humanBytes(total) +
+                    " (free " + humanBytes(free) + ", " + pctFree + "%)");
 
-            if (pctFree < 5)
-                logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");
-            else if (pctFree < 10)
-                logWarn("Free space below 10% — performance and update issues likely.");
-            else
-                logOk("Internal storage level is acceptable for daily usage.");
+            if (pctFree < 5) {
+                L.error("Free space below 5% — high risk of crashes, failed updates and slow UI.");
+            } else if (pctFree < 10) {
+                L.warn("Free space below 10% — performance and update issues likely.");
+            } else {
+                L.ok("Internal storage level is acceptable for daily usage.");
+            }
+
         } catch (Exception e) {
-            logError("Storage snapshot error: " + e.getMessage());
+            L.error("Storage snapshot error: " + e.getMessage());
         }
-    }
+    }).start();
+}
 
-    private void lab20AppsFootprint() {
-        logLine();
-        logInfo("LAB 20 — Installed Apps Footprint.");
+
+// ============================================================
+// LAB 20 — Installed Apps Footprint — Logger Edition
+// ============================================================
+private void lab20AppsFootprint() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 20 — Installed Apps Footprint");
+
+    new Thread(() -> {
         try {
             PackageManager pm = getPackageManager();
             List<ApplicationInfo> apps = pm.getInstalledApplications(0);
             if (apps == null) {
-                logWarn("Cannot read installed applications list.");
+                L.warn("Cannot read installed applications list.");
                 return;
             }
+
             int userApps = 0;
             int systemApps = 0;
+
             for (ApplicationInfo ai : apps) {
-                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) systemApps++;
-                else userApps++;
+                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                    systemApps++;
+                else
+                    userApps++;
             }
-            logInfo("User-installed apps: " + userApps);
-            logInfo("System apps: " + systemApps);
-            logInfo("Total packages: " + apps.size());
 
-            if (userApps > 120)
-                logError("Very high number of user apps — strong risk of background drain and lag.");
-            else if (userApps > 80)
-                logWarn("High number of user apps — possible performance impact.");
-            else
-                logOk("App footprint is within a normal range.");
+            L.info("User-installed apps: " + userApps);
+            L.info("System apps: " + systemApps);
+            L.info("Total packages: " + apps.size());
+
+            if (userApps > 120) {
+                L.error("Very high number of user apps — strong risk of background drain and lag.");
+            } else if (userApps > 80) {
+                L.warn("High number of user apps — possible performance impact.");
+            } else {
+                L.ok("App footprint is within a normal range.");
+            }
+
         } catch (Exception e) {
-            logError("Apps footprint error: " + e.getMessage());
+            L.error("Apps footprint error: " + e.getMessage());
         }
-    }
+    }).start();
+}
 
-    private void lab21RamSnapshot() {
-        logLine();
-        logInfo("LAB 21 — Live RAM Snapshot.");
+
+// ============================================================
+// LAB 21 — Live RAM Snapshot — Logger Edition
+// ============================================================
+private void lab21RamSnapshot() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 21 — Live RAM Snapshot");
+
+    new Thread(() -> {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
             if (am == null) {
-                logError("ActivityManager not available.");
+                L.error("ActivityManager not available.");
                 return;
             }
+
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
-            long free = mi.availMem;
+
+            long free  = mi.availMem;
             long total = mi.totalMem;
             int pct = (int) ((free * 100L) / total);
-            logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");
-            if (pct < 10)
-                logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");
-            else if (pct < 20)
-                logWarn("Low free RAM (10–20%) — borderline under load.");
-            else
-                logOk("RAM level is acceptable for normal usage at this moment.");
-        } catch (Exception e) {
-            logError("RAM snapshot error: " + e.getMessage());
-        }
-    }
 
-    private void lab22UptimeHints() {
-        logLine();
-        logInfo("LAB 22 — Uptime / Reboot History Hints.");
-        long upMs = SystemClock.elapsedRealtime();
-        String upStr = formatUptime(upMs);
-        logInfo("System uptime: " + upStr);
-        if (upMs < 2 * 60 * 60 * 1000L) {
-            logWarn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");
-        } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
-            logWarn("Uptime above 7 days — recommend a reboot before deep diagnostics.");
-        } else {
-            logOk("Uptime is within a reasonable range for diagnostics.");
+            L.info("RAM now: " + humanBytes(free) + " free (" + pct + "%)");
+
+            if (pct < 10) {
+                L.error("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");
+            } else if (pct < 20) {
+                L.warn("Low free RAM (10–20%) — borderline under load.");
+            } else {
+                L.ok("RAM level is acceptable for normal usage at this moment.");
+            }
+
+        } catch (Exception e) {
+            L.error("RAM snapshot error: " + e.getMessage());
         }
-    }
+    }).start();
+}
+
+
+// ============================================================
+// LAB 22 — Uptime / Reboot History Hints — Logger Edition
+// ============================================================
+private void lab22UptimeHints() {
+
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 22 — Uptime / Reboot History Hints");
+
+    new Thread(() -> {
+        try {
+            long upMs = SystemClock.elapsedRealtime();
+            String upStr = formatUptime(upMs);
+
+            L.info("System uptime: " + upStr);
+
+            if (upMs < 2L * 60L * 60L * 1000L) {
+                L.warn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");
+            } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
+                L.warn("Uptime above 7 days — recommend a reboot before deep diagnostics.");
+            } else {
+                L.ok("Uptime is within a reasonable range for diagnostics.");
+            }
+
+        } catch (Exception e) {
+            L.error("Uptime hints error: " + e.getMessage());
+        }
+    }).start();
+}
+
 
     // ============================================================
     // LABS 23–26: SECURITY & SYSTEM HEALTH
     // ============================================================
     // ============================================================
-// LAB 23 — Screen Lock / Biometrics Checklist (auto-detect + manual)
+// LAB 23 — Screen Lock / Biometrics Checklist — Logger Edition
 // ============================================================
 private void lab23ScreenLock() {
-    logLine();
-    logInfo("LAB 23 — Screen Lock / Biometrics Checklist");
 
-    try {
-        android.app.KeyguardManager km =
-                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 23 — Screen Lock / Biometrics Checklist");
 
-        if (km != null) {
-            boolean secure = km.isDeviceSecure();
+    new Thread(() -> {
+        try {
+            android.app.KeyguardManager km =
+                    (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-            if (secure) {
-                logOk("Device reports SECURE lock method (PIN / Pattern / Password).");
+            if (km != null) {
+                boolean secure = km.isDeviceSecure();
+
+                if (secure) {
+                    L.ok("Device reports SECURE lock method (PIN / Pattern / Password).");
+                } else {
+                    L.error("Device has NO secure lock method — phone is UNPROTECTED!");
+                    L.warn("Anyone can access data without authentication.");
+                }
             } else {
-                logError("Device has NO secure lock method — phone is UNPROTECTED!");
-                logWarn("Anyone can access data without authentication.");
+                L.warn("KeyguardManager not available — cannot read lock status.");
             }
-        } else {
-            logWarn("KeyguardManager not available — cannot read lock status.");
-        }
-    } catch (Exception e) {
-        logWarn("Screen lock detection failed: " + e.getMessage());
-    }
 
-    // Manual guidance (kept for technician)
-    logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");
-    logWarn("If the device is left with no lock at all — higher risk for data and account theft.");
-    logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
+        } catch (Exception e) {
+            L.warn("Screen lock detection failed: " + e.getMessage());
+        }
+
+        // Manual guidance
+        L.info("1) Verify that the device has a secure lock method (PIN / pattern / password).");
+        L.warn("If the device is left with no lock at all — higher risk for data and account theft.");
+        L.info("2) Test fingerprint / face unlock if configured to confirm sensor response.");
+
+    }).start();
 }
 
-    // ============================================================
-// LAB 24 — Security Patch & Play Protect (auto + manual)
+
+
+// ============================================================
+// LAB 24 — Security Patch & Play Protect — Logger Edition
 // ============================================================
 private void lab24SecurityPatchManual() {
-    logLine();
-    logInfo("LAB 24 — Security Patch & Play Protect Check");
 
-    // ----------------------------
-    // 1) Security Patch Level
-    // ----------------------------
-    try {
-        String patch = android.os.Build.VERSION.SECURITY_PATCH;
-        if (patch != null && !patch.isEmpty()) {
-            logInfo("Security Patch Level: " + patch);
-        } else {
-            logWarn("Security Patch Level not reported by system.");
-        }
-    } catch (Exception e) {
-        logWarn("Security patch read failed: " + e.getMessage());
-    }
+    GELLabLogger L = new GELLabLogger(this);
+    L.section("LAB 24 — Security Patch & Play Protect Check");
 
-    // ----------------------------
-    // 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT
-    // ----------------------------
-    try {
-        PackageManager pm = getPackageManager();
+    new Thread(() -> {
 
-        // Check Google Play Services exists
-        boolean gmsPresent = false;
+        // ----------------------------
+        // 1) Security Patch Level
+        // ----------------------------
         try {
-            pm.getPackageInfo("com.google.android.gms", 0);
-            gmsPresent = true;
-        } catch (Exception ignored) {}
+            String patch = android.os.Build.VERSION.SECURITY_PATCH;
 
-        if (!gmsPresent) {
-            logError("Google Play Services missing — Play Protect NOT available.");
-        } else {
-            // Check Verify Apps setting (Google verifier)
-            int verify = -1;
+            if (patch != null && !patch.isEmpty()) {
+                L.info("Security Patch Level: " + patch);
+            } else {
+                L.warn("Security Patch Level not reported by system.");
+            }
+
+        } catch (Exception e) {
+            L.warn("Security patch read failed: " + e.getMessage());
+        }
+
+
+        // ----------------------------
+        // 2) Play Protect Detection
+        // ----------------------------
+        try {
+            PackageManager pm = getPackageManager();
+
+            // Check GMS presence
+            boolean gmsPresent = false;
             try {
-                verify = Settings.Global.getInt(
-                        getContentResolver(),
-                        "package_verifier_enable",
-                        -1
-                );
+                pm.getPackageInfo("com.google.android.gms", 0);
+                gmsPresent = true;
             } catch (Exception ignored) {}
 
-            if (verify == 1) {
-                logOk("Play Protect: ON (Google Verify Apps ENABLED).");
-            } else if (verify == 0) {
-                logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");
+            if (!gmsPresent) {
+                L.error("Google Play Services missing — Play Protect NOT available.");
             } else {
-                // Fallback — detect if the activity exists
-                Intent protectIntent = new Intent();
-                protectIntent.setClassName(
-                        "com.google.android.gms",
-                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
-                );
 
-                if (protectIntent.resolveActivity(pm) != null) {
-                    logOk("Play Protect module detected (activity present).");
+                int verify = -1;
+                try {
+                    verify = Settings.Global.getInt(
+                            getContentResolver(),
+                            "package_verifier_enable",
+                            -1
+                    );
+                } catch (Exception ignored) {}
+
+                if (verify == 1) {
+                    L.ok("Play Protect: ON (Google Verify Apps ENABLED).");
+                } else if (verify == 0) {
+                    L.warn("Play Protect: OFF (Google Verify Apps DISABLED).");
                 } else {
-                    logWarn("Play Protect module not fully detected — OEM variant or restricted build.");
+                    // Activity fallback
+                    Intent protectIntent = new Intent();
+                    protectIntent.setClassName(
+                            "com.google.android.gms",
+                            "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+                    );
+
+                    if (protectIntent.resolveActivity(pm) != null) {
+                        L.ok("Play Protect module detected (activity present).");
+                    } else {
+                        L.warn("Play Protect module not fully detected — OEM variant or restricted build.");
+                    }
                 }
             }
-        }
-    } catch (Exception e) {
-        logWarn("Play Protect detection error: " + e.getMessage());
-    }
 
-    // MANUAL GUIDANCE (kept for technicians)
-    logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");
-    logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");
-    logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
+        } catch (Exception e) {
+            L.warn("Play Protect detection error: " + e.getMessage());
+        }
+
+        // Manual guidance
+        L.info("1) Open Android Settings → About phone → Security patch level.");
+        L.warn("If the patch level is very old — increased vulnerability risk.");
+        L.info("2) In Google Play Store → Play Protect → ensure scanning is enabled.");
+
+    }).start();
 }
 
     // ============================================================

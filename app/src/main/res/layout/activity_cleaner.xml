@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#101010"
-    android:padding="16dp">
+    android:padding="@dimen/gel_dp_16">
 
     <!-- TITLE -->
     <TextView
@@ -13,8 +13,8 @@
         android:layout_height="wrap_content"
         android:text="🧹 GEL Cleaner"
         android:textColor="#FFD700"
-        android:textSize="22sp"
-        android:paddingBottom="12dp"
+        android:textSize="@dimen/gel_sp_22"
+        android:paddingBottom="@dimen/gel_dp_12"
         android:textStyle="bold" />
 
     <!-- BUTTONS -->
@@ -30,7 +30,7 @@
             android:text="⚡ Clean RAM"
             android:background="@drawable/gel_btn_outline"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/gel_dp_8" />
 
         <Button
             android:id="@+id/btnDeepClean"
@@ -39,7 +39,7 @@
             android:text="🛠 Deep Clean"
             android:background="@drawable/gel_btn_outline"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/gel_dp_8" />
 
         <Button
             android:id="@+id/btnTempFiles"
@@ -48,7 +48,7 @@
             android:text="🔥 Temp / Junk Files"
             android:background="@drawable/gel_btn_outline"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/gel_dp_8" />
 
         <Button
             android:id="@+id/btnBrowserClean"
@@ -57,7 +57,7 @@
             android:text="🌐 Browser Cache"
             android:background="@drawable/gel_btn_outline"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/gel_dp_8" />
 
         <Button
             android:id="@+id/btnRunningApps"
@@ -66,7 +66,7 @@
             android:text="🚀 Running Apps"
             android:background="@drawable/gel_btn_outline"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="14dp" />
+            android:layout_marginBottom="@dimen/gel_dp_14" />
 
     </LinearLayout>
 
@@ -77,14 +77,14 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#151515"
-        android:padding="12dp">
+        android:padding="@dimen/gel_dp_12">
 
         <TextView
             android:id="@+id/txtCleanerLog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#CCCCCC"
-            android:textSize="14sp"
+            android:textSize="@dimen/gel_sp_14"
             android:text="Log ready…\n" />
 
     </ScrollView>

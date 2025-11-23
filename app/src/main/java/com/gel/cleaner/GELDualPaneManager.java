@@ -1,12 +1,17 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 8 — Dual-Pane Auto Layout Manager (v1.0)
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste.
+// STEP 8 — Dual-Pane Auto Layout Manager (v2.0 — Foldable Ready + Orchestrator Sync)
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου).
+// NOTE2: Fully Integrated with:
+//        ➤ GELFoldableOrchestrator
+//        ➤ GELFoldableUIManager
+//        ➤ GELFoldableAnimationPack
+//        ➤ GELAutoActivityHook
+//        ➤ Global DP/SP Scaling (GELAutoDP)
 
 package com.gel.cleaner;
 
 import android.app.Activity;
 import android.util.Log;
-import android.view.View;
 
 import androidx.annotation.LayoutRes;
 
@@ -16,13 +21,13 @@ public class GELDualPaneManager {
 
     private final Activity activity;
 
-    // Layouts που θα αλλάζουν ανάλογα με το fold state
+    // Phone / Tablet layouts (auto-swapped)
     @LayoutRes
     private final int phoneLayout;
     @LayoutRes
     private final int tabletLayout;
 
-    private boolean lastModeTablet = false;
+    private boolean lastTablet = false;
 
     public GELDualPaneManager(Activity act,
                               @LayoutRes int phoneLayout,
@@ -31,31 +36,69 @@ public class GELDualPaneManager {
         this.activity = act;
         this.phoneLayout = phoneLayout;
         this.tabletLayout = tabletLayout;
+
+        // Register to orchestrator if available
+        try {
+            GELFoldableOrchestrator.registerDualPaneManager(act, this);
+        } catch (Throwable ignore) {}
     }
 
-    /**
-     * Καλείται από τον Orchestrator όταν αλλάζει posture
-     */
-    public void applyDualPane(boolean isTabletMode) {
+    // =====================================================================
+    // PUBLIC — CALLED BY ORCHESTRATOR WHEN POSTURE / SCREEN CHANGES
+    // =====================================================================
+    public void applyDualPane(boolean tabletMode) {
 
-        if (isTabletMode == lastModeTablet) {
-            Log.d(TAG, "Dual-pane unchanged → skip.");
+        if (tabletMode == lastTablet) {
+            Log.d(TAG, "DualPane: no change → skip.");
             return;
         }
 
-        lastModeTablet = isTabletMode;
+        lastTablet = tabletMode;
 
         activity.runOnUiThread(() -> {
             try {
+                // =============================
+                // Swap Phone ↔ Tablet layout
+                // =============================
                 activity.setContentView(
-                        isTabletMode ? tabletLayout : phoneLayout
+                        tabletMode ? tabletLayout : phoneLayout
                 );
-                Log.d(TAG, "Dual-pane applied → " +
-                        (isTabletMode ? "TABLET MODE" : "PHONE MODE"));
+
+                // =============================
+                // Reapply GEL DP/SP scaling
+                // =============================
+                try { GELAutoDP.init(activity); } catch (Throwable ignore) {}
+
+                // =============================
+                // Notify UI Manager
+                // =============================
+                try {
+                    GELFoldableUIManager mgr =
+                            GELFoldableOrchestrator.getUiManager(activity);
+                    if (mgr != null) mgr.applyUI(tabletMode);
+                } catch (Throwable ignore) {}
+
+                // =============================
+                // Optional animations
+                // =============================
+                try {
+                    if (tabletMode)
+                        GELFoldableAnimationPack.animateExpand(activity);
+                    else
+                        GELFoldableAnimationPack.animateCollapse(activity);
+                } catch (Throwable ignore) {}
+
+                Log.d(TAG, "DualPane: applied → " +
+                        (tabletMode ? "TABLET MODE" : "PHONE MODE"));
 
             } catch (Exception e) {
-                Log.e(TAG, "Dual-pane swap error", e);
+                Log.e(TAG, "DualPane: swap error", e);
             }
         });
     }
+
+    // =====================================================================
+    // INTERNAL (optional)
+    // =====================================================================
+    public boolean isTabletMode() { return lastTablet; }
 }

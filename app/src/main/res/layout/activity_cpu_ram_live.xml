@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/gel_bg"
-    android:padding="12dp"
+    android:padding="@dimen/gel_dp_12"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,21 +17,20 @@
             android:layout_height="wrap_content"
             android:text="📈 CPU / RAM LIVE"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="@dimen/gel_sp_20"
             android:textColor="@color/gel_text_primary"
             android:gravity="center"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="@dimen/gel_dp_10" />
 
-        <!-- 🔥 ΑΥΤΟ ΕΛΕΙΠΕ! (Fix) -->
         <TextView
             android:id="@+id/txtLiveInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/gel_text_secondary"
-            android:textSize="14sp"
+            android:textSize="@dimen/gel_sp_14"
             android:typeface="monospace"
-            android:padding="6dp"
-            android:lineSpacingExtra="2dp" />
+            android:padding="@dimen/gel_dp_6"
+            android:lineSpacingExtra="@dimen/gel_dp_2" />
 
     </LinearLayout>
 

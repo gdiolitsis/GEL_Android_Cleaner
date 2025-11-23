@@ -1,3 +1,7 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// DiagnosisMenuActivity.java — Service Lab Menu v2 (GEL Universal Scaling)
+// NOTE: Full-file patch. Δούλευε μόνο πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+
 package com.gel.cleaner;
 
 import android.content.Intent;
@@ -9,12 +13,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 // ============================================================
 // GEL Service Lab — Multi-Language Diagnosis Menu v2
 // ============================================================
-public class DiagnosisMenuActivity extends AppCompatActivity {
+public class DiagnosisMenuActivity extends GELAutoActivityHook {
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -37,7 +40,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         // TITLE
         TextView title = new TextView(this);
         title.setText(getString(R.string.gel_service_lab));
-        title.setTextSize(22f);
+        title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFFFFF);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0, 0, 0, dp(8));
@@ -46,7 +49,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         // SUBTITLE
         TextView sub = new TextView(this);
         sub.setText(getString(R.string.gel_service_lab_sub));
-        sub.setTextSize(14f);
+        sub.setTextSize(sp(14f));
         sub.setTextColor(0xFFCCCCCC);
         sub.setGravity(Gravity.CENTER_HORIZONTAL);
         sub.setPadding(0, 0, 0, dp(16));
@@ -98,7 +101,7 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
     private TextView sectionLabel(String txt) {
         TextView tv = new TextView(this);
         tv.setText(txt);
-        tv.setTextSize(16f);
+        tv.setTextSize(sp(16f));
         tv.setTextColor(0xFFEEEEEE);
         tv.setGravity(Gravity.CENTER_HORIZONTAL);
         tv.setPadding(0, dp(12), 0, dp(6));
@@ -119,29 +122,26 @@ public class DiagnosisMenuActivity extends AppCompatActivity {
         card.setLayoutParams(lp);
 
         card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        card.setClickable(true);
+        card.setFocusable(true);
 
+        // TITLE
         TextView t = new TextView(this);
         t.setText(title);
-        t.setTextSize(16f);
+        t.setTextSize(sp(16f));
         t.setTextColor(0xFFFFFFFF);
         t.setGravity(Gravity.CENTER_HORIZONTAL);
         t.setPadding(0, 0, 0, dp(4));
         card.addView(t);
 
+        // SUBTITLE
         TextView s = new TextView(this);
         s.setText(subtitle);
-        s.setTextSize(13f);
+        s.setTextSize(sp(13f));
         s.setTextColor(0xFFAAAAAA);
         s.setGravity(Gravity.CENTER_HORIZONTAL);
         card.addView(s);
 
-        card.setClickable(true);
-        card.setFocusable(true);
         return card;
-    }
-
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
     }
 }

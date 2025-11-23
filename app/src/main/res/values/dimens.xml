@@ -1,7 +1,14 @@
+<dimen name="gel_dp_2">2dp</dimen>
+<dimen name="gel_dp_6">6dp</dimen>
 <dimen name="gel_dp_8">8dp</dimen>
+<dimen name="gel_dp_10">10dp</dimen>
 <dimen name="gel_dp_12">12dp</dimen>
 <dimen name="gel_dp_14">14dp</dimen>
 <dimen name="gel_dp_16">16dp</dimen>
 
 <dimen name="gel_sp_14">14sp</dimen>
+<dimen name="gel_sp_20">20sp</dimen>
 <dimen name="gel_sp_22">22sp</dimen>
+
+
+

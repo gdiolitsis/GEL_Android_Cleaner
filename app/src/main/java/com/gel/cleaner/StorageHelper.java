@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Foldable Ready Edition (v1.1)
+// ServiceReportActivity — Foldable Ready Edition (v1.2)
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
@@ -38,11 +38,44 @@ public class ServiceReportActivity extends GELAutoActivityHook {
     private static final int REQ_WRITE = 9911;
     private TextView txtPreview;
 
+    // --------------------------------------------------------------
+    // FOLDABLE STABILITY HOOKS
+    // --------------------------------------------------------------
+    private final GELFoldableCallback foldableCallback = new GELFoldableCallback() {
+        @Override
+        public void onPostureChanged(@NonNull Posture posture) {
+            if (txtPreview != null) txtPreview.postInvalidate();
+        }
+
+        @Override
+        public void onScreenChanged(boolean isInner) {
+            if (txtPreview != null) txtPreview.setTextSize(isInner ? sp(14f) : sp(13f));
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        GELFoldableOrchestrator.register(this, foldableCallback);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        GELFoldableOrchestrator.unregister(this, foldableCallback);
+    }
+
+    // --------------------------------------------------------------
+    // LOCALE
+    // --------------------------------------------------------------
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
+    // --------------------------------------------------------------
+    // UI BUILD
+    // --------------------------------------------------------------
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,12 +161,16 @@ public class ServiceReportActivity extends GELAutoActivityHook {
             }
         }
 
+        GELFoldableUIManager.freezeTransitions(this);
+
         exportPdf();
+
+        GELFoldableUIManager.unfreezeTransitions(this);
     }
 
-    // ------------------------------------------------------------
-    // PDF EXPORT — MULTI PAGE + LOGO
-    // ------------------------------------------------------------
+    // --------------------------------------------------------------
+    // PDF EXPORT
+    // --------------------------------------------------------------
     private void exportPdf() {
         try {
             File outDir = Environment.getExternalStoragePublicDirectory(

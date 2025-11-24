@@ -255,7 +255,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));  
     body7.addView(makeTestButton("28. App Permissions & Privacy (FULL AUTO + RISK SCORE)", this::lab28PermissionsPrivacy));  
-    body7.addView(makeTestButton("29. DEVICE SCORES Summary", this::lab29CombineFindings));  
+    body7.addView(makeTestButton("29. DEVICE SCORES Summary", v -> runLab29()));  
     body7.addView(makeTestButton("30. FINAL TECHNICIAN SUMMARY Notes (PDF Export)", this::lab30FinalSummary));  
 
     // LOG AREA  
@@ -2777,41 +2777,15 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// ================== LAB 29 — FINAL GEL HOOK ==================
+// LAB 29 — DEVICE SCORES SUMMARY (via Lab29Engine)
 // ============================================================
-//
-//  Αυτό αντικαθιστά ΟΛΟ το παλιό Lab 29 code.
-//
-//  Τώρα το ManualTestsActivity δεν έχει καθόλου εσωτερική λογική
-//  snapshot/storage/security/privacy/scoring.
-//
-//  Όλα αυτά τα κάνει το:
-//       → Lab29Engine.buildLab29Summary()
-//
-//  ✔ Zero imports
-//  ✔ Zero custom classes εδώ μέσα
-//  ✔ Zero κίνδυνος για το pipeline
-//  ✔ Δεν επηρεάζει κανένα άλλο LAB
-// ============================================================
-
 private void runLab29() {
 
-    appendResult("\nRunning LAB 29…\n");
-
     try {
+        append("\nRunning LAB 29…\n");
 
-        // Thermal values (υπάρχουν ήδη στο Activity – αν δεν υπάρχουν, βάζει null)
-        Float maxT = null;
-        Float avgT = null;
-
-        try {
-            maxT = (lastThermalMax != null) ? lastThermalMax : null;
-            avgT = (lastThermalAvg != null) ? lastThermalAvg : null;
-        } catch (Exception ignored) {}
-
-        // ============================================================
-        // ============   CALL LAB 29 ENGINE (MAIN LOGIC)   ============
-        // ============================================================
+        Float maxT = (lastThermalMax != null) ? lastThermalMax : null;
+        Float avgT = (lastThermalAvg != null) ? lastThermalAvg : null;
 
         String summary = Lab29Engine.buildLab29Summary(
                 this,
@@ -2819,12 +2793,11 @@ private void runLab29() {
                 avgT
         );
 
-        appendResult(summary);
-
-        appendResult("\nLAB 29 complete.\n");
+        append(summary);
+        append("\nLAB 29 complete.\n");
 
     } catch (Exception e) {
-        appendResult("LAB 29 ERROR: " + e.getMessage() + "\n");
+        append("LAB 29 ERROR: " + e.getMessage() + "\n");
     }
 }
 
@@ -2919,3 +2892,4 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+

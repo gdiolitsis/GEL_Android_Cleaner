@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CleanLauncher — Foldable Ready (GEL Edition v2.0)
+// CleanLauncher — Foldable Ready (GEL Edition v2.1 FINAL)
 // Universal OEM Cleaner Launcher — Safe, Fast, Production Ready
 // NOTE: Full file ready for copy-paste (κανόνας παππού Γιώργου)
 
@@ -22,6 +22,24 @@ import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public class CleanLauncher implements GELFoldableCallback {
 
+    // ============================================================
+    // STATIC PROXY API (because your Activities call: CleanLauncher.xxxx(ctx))
+    // ============================================================
+    public static boolean smartClean(Context ctx) {
+        return new CleanLauncher(ctx).smartClean();
+    }
+
+    public static boolean openDeepCleaner(Context ctx) {
+        return new CleanLauncher(ctx).openDeepCleaner();
+    }
+
+    public static boolean openTempStorageCleaner(Context ctx) {
+        return new CleanLauncher(ctx).openTempStorageCleaner();
+    }
+
+    // ============================================================
+    // INSTANCE FIELDS
+    // ============================================================
     private final Context ctx;
     private final GELFoldableDetector foldDetector;
     private final GELFoldableUIManager uiManager;
@@ -31,36 +49,27 @@ public class CleanLauncher implements GELFoldableCallback {
     public CleanLauncher(Context ctx) {
         this.ctx = ctx;
 
-        // Foldable engine init
         uiManager    = new GELFoldableUIManager(ctx);
-        animPack     = new GELFoldableAnimationPack(null);   // animation bound later (auto-root resolve)
+        animPack     = new GELFoldableAnimationPack(null);
         dualPane     = new DualPaneManager(ctx);
         foldDetector = new GELFoldableDetector(ctx, this);
     }
 
     // ============================================================
-    // START / STOP FOLDABLE LISTENER (call from Activity)
+    // FOLDABLE LISTENER
     // ============================================================
-    public void start() {
-        foldDetector.start();
-    }
+    public void start() { foldDetector.start(); }
+    public void stop()  { foldDetector.stop();  }
 
-    public void stop() {
-        foldDetector.stop();
-    }
-
-    // ============================================================
-    // FOLDABLE CALLBACKS
-    // ============================================================
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
 
-        // animation on hinge change
-        animPack.animateReflow(() -> {
-            boolean isInner = (posture == Posture.FLAT ||
-                               posture == Posture.FULLY_OPEN ||
-                               posture == Posture.TABLE_MODE);
+        boolean isInner =
+                (posture == Posture.FLAT ||
+                 posture == Posture.TABLETOP ||
+                 posture == Posture.HALF_OPEN);
 
+        animPack.animateReflow(() -> {
             uiManager.applyUI(isInner);
             dualPane.dispatchMode(isInner);
         });
@@ -152,9 +161,9 @@ public class CleanLauncher implements GELFoldableCallback {
         boolean isVivo     = brand.contains("vivo")    || manu.contains("vivo");
         boolean isOnePlus  = brand.contains("oneplus") || manu.contains("oneplus");
         boolean isRealme   = brand.contains("realme")  || manu.contains("realme");
-        boolean isMotorola = brand.contains("motorola") || manu.contains("motorola");
-        boolean isSony     = brand.contains("sony")     || manu.contains("sony");
-        boolean isPixel    = brand.contains("google")   || manu.contains("google");
+        boolean isMotorola = brand.contains("motorola")|| manu.contains("motorola");
+        boolean isSony     = brand.contains("sony")    || manu.contains("sony");
+        boolean isPixel    = brand.contains("google")  || manu.contains("google");
 
         // Xiaomi
         if (isXiaomi) {
@@ -177,7 +186,7 @@ public class CleanLauncher implements GELFoldableCallback {
                     "com.huawei.systemmanager.mainscreen.MainScreenActivity")) return true;
         }
 
-        // Oppo / Realme / Vivo / OnePlus
+        // Oppo/Realme/Vivo/OnePlus
         if (tryComponent(ctx,
                 "com.coloros.phonemanager",
                 "com.coloros.phonemanager.CleanupActivity")) return true;
@@ -207,7 +216,7 @@ public class CleanLauncher implements GELFoldableCallback {
     }
 
     // ============================================================
-    // SMART CLEAN (RAM Cleaner)
+    // SMART CLEAN
     // ============================================================
     public boolean smartClean() {
 
@@ -238,5 +247,3 @@ public class CleanLauncher implements GELFoldableCallback {
         return openDeepCleaner();
     }
 }
-
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

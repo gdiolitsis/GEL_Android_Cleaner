@@ -1,19 +1,17 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 8 — Dual-Pane Auto Layout Manager (v4.0 FULL — Foldable Ready + Orchestrator Sync)
-// ✔ Fixed packages/imports to match FULL Foldable System
-// ✔ Removed dead GELAutoDP references (class doesn't exist)
-// ✔ Added safe Orchestrator callback stubs
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου).
+// GELDualPaneManager.java — GEL PATCH v4.1 (Legacy static stubs)
+// NOTE: Full-file patch — πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
 
 package com.gel.cleaner.base;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.LayoutRes;
 
 import com.gel.cleaner.GELFoldableOrchestrator;
-import com.gel.cleaner.GELFoldableUIManager;
 import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public class GELDualPaneManager {
@@ -42,9 +40,24 @@ public class GELDualPaneManager {
         } catch (Throwable ignore) {}
     }
 
-    // =====================================================================
-    // PUBLIC — CALLED BY ORCHESTRATOR WHEN POSTURE / SCREEN CHANGES
-    // =====================================================================
+    // ============================================================
+    // LEGACY STATIC STUBS (fixes old callers)
+    // ============================================================
+    public static void openSide(Context ctx, Intent i) {
+        try {
+            if (ctx != null && i != null) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(i);
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    public static void dispatchMode(Context ctx, boolean isInner) {
+        // legacy no-op — new flow uses instance applyDualPane()
+        Log.d(TAG, "dispatchMode(legacy) inner=" + isInner);
+    }
+
+    // ============================================================
     public void applyDualPane(boolean tabletMode) {
 
         if (tabletMode == lastTablet) {
@@ -60,14 +73,12 @@ public class GELDualPaneManager {
                         tabletMode ? tabletLayout : phoneLayout
                 );
 
-                // Notify UI Manager (re-apply rules on swapped layout)
                 try {
                     GELFoldableUIManager mgr =
                             GELFoldableOrchestrator.getUiManager(activity);
                     if (mgr != null) mgr.applyUI(tabletMode);
                 } catch (Throwable ignore) {}
 
-                // Optional animations
                 try {
                     if (tabletMode)
                         GELFoldableAnimationPack.animateExpand(activity);
@@ -84,17 +95,12 @@ public class GELDualPaneManager {
         });
     }
 
-    // =====================================================================
     // SAFE STUBS — Orchestrator compatibility
-    // =====================================================================
-    public void onPostureChanged(Posture posture) {
-        // No-op. Orchestrator decides tabletMode and calls applyDualPane().
-    }
+    public void onPostureChanged(Posture posture) { }
 
     public void onScreenChanged(boolean isInner) {
         applyDualPane(isInner);
     }
 
-    // =====================================================================
     public boolean isTabletMode() { return lastTablet; }
 }

@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Foldable Ready v4.1
+// ServiceReportActivity — Foldable Ready v4.1 (GEL Patched)
 // --------------------------------------------------------------
 // ✔ Based 100% on your latest file (no logic changes)
 // ✔ Added Foldable-Safe Export Pipeline:
@@ -9,6 +9,7 @@
 // ✔ Fully compatible with:
 //      GELFoldableOrchestrator / GELFoldableUIManager / DualPaneManager
 // --------------------------------------------------------------
+// NOTE: Full-file patch — έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 package com.gel.cleaner;
 
@@ -33,6 +34,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -76,8 +78,8 @@ public class ServiceReportActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        super.onStop();
         GELFoldableOrchestrator.unregister(this, foldableCallback);
+        super.onStop();
     }
 
     // ----------------------------------------------------------
@@ -95,6 +97,9 @@ public class ServiceReportActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Universal scaling init (Foldable/Tablet aware)
+        GELAutoDP.init(this);
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
@@ -107,7 +112,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         // TITLE
         TextView title = new TextView(this);
         title.setText("📄 " + getString(R.string.export_report_title));
-        title.setTextSize(22f);
+        title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
         root.addView(title);
@@ -118,14 +123,14 @@ public class ServiceReportActivity extends AppCompatActivity {
                 getString(R.string.report_dev_line) + "\n" +
                 getString(R.string.export_report_desc).trim()
         );
-        sub.setTextSize(13f);
+        sub.setTextSize(sp(13f));
         sub.setTextColor(0xFFCCCCCC);
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 
         // PREVIEW
         txtPreview = new TextView(this);
-        txtPreview.setTextSize(13f);
+        txtPreview.setTextSize(sp(13f));
         txtPreview.setTextColor(0xFFEEEEEE);
         txtPreview.setMovementMethod(new ScrollingMovementMethod());
         txtPreview.setPadding(0, 0, 0, dp(12));
@@ -277,6 +282,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     private String unicodeWrap(String text, int width) {
+        if (text == null) return "";
         if (text.length() <= width) return text;
 
         StringBuilder sb = new StringBuilder();
@@ -354,8 +360,9 @@ public class ServiceReportActivity extends AppCompatActivity {
         return GELServiceLog.getAll();
     }
 
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
-    }
+    // ----------------------------------------------------------
+    // GEL AUTO DP/SP HELPERS (Universal Scaling)
+    // ----------------------------------------------------------
+    private int dp(int v) { return GELAutoDP.dp(v); }
+    private float sp(float v) { return GELAutoDP.sp(v); }
 }

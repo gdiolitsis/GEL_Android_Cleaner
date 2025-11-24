@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — Foldable-ready + GELAutoScaling + DarkGold UI (FIXED v2.1)
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// AppListActivity — Foldable-ready + GELAutoScaling + DarkGold UI (FIXED v3.0)
+// NOTE: Full compile-safe patch — no dispatchMode() usage.
 
 package com.gel.cleaner;
 
@@ -23,18 +23,18 @@ public class AppListActivity extends GELAutoActivityHook
 
     private ListView list;
 
-    // FOLDABLE ENGINE
+    // Foldable system
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
-    private DualPaneManager dualPane;
     private GELFoldableAnimationPack animPack;
+    private DualPaneManager dualPane;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
-        // NORMAL UI SETUP
+        // NORMAL UI
         list = findViewById(R.id.listApps);
 
         Intent i = new Intent(Intent.ACTION_MAIN, null);
@@ -48,7 +48,6 @@ public class AppListActivity extends GELAutoActivityHook
 
         list.setOnItemClickListener((AdapterView<?> parent, android.view.View view,
                                      int position, long id) -> {
-
             ResolveInfo info = apps.get(position);
             if (info != null && info.activityInfo != null) {
                 openAppDetails(info.activityInfo.packageName);
@@ -56,7 +55,7 @@ public class AppListActivity extends GELAutoActivityHook
         });
 
         // ============================================================
-        // INIT FOLDABLE ENGINE (100% compatible with GEL base)
+        // INIT FOLDABLE ENGINE (SAFE)
         // ============================================================
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
@@ -77,7 +76,7 @@ public class AppListActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS (BASE API)
+    // FOLDABLE CALLBACKS
     // ============================================================
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
@@ -90,11 +89,11 @@ public class AppListActivity extends GELAutoActivityHook
         if (animPack != null) {
             animPack.animateReflow(() -> {
                 if (uiManager != null) uiManager.applyUI(isInner);
-                if (dualPane  != null) dualPane.dispatchMode(isInner);
+                try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
             });
         } else {
             if (uiManager != null) uiManager.applyUI(isInner);
-            if (dualPane  != null) dualPane.dispatchMode(isInner);
+            try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
         }
     }
 
@@ -104,16 +103,16 @@ public class AppListActivity extends GELAutoActivityHook
         if (animPack != null) {
             animPack.animateReflow(() -> {
                 if (uiManager != null) uiManager.applyUI(isInner);
-                if (dualPane  != null) dualPane.dispatchMode(isInner);
+                try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
             });
         } else {
             if (uiManager != null) uiManager.applyUI(isInner);
-            if (dualPane  != null) dualPane.dispatchMode(isInner);
+            try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
         }
     }
 
     // ============================================================
-    // OPEN PER-APP SETTINGS
+    // OPEN APP SETTINGS
     // ============================================================
     private void openAppDetails(String pkg) {
         try {
@@ -121,8 +120,6 @@ public class AppListActivity extends GELAutoActivityHook
                     new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             intent.setData(android.net.Uri.parse("package:" + pkg));
             startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
     }
 }

@@ -7,6 +7,7 @@
 //    • GELFoldableAnimationPack
 //    • DualPaneManager
 //    • GELAutoActivityHook
+// NOTE3: Compile-Safe sync με τα πραγματικά APIs του base package (no phantom methods).
 
 package com.gel.cleaner;
 
@@ -14,7 +15,10 @@ import com.gel.cleaner.base.*;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.BatteryManager;
 import android.os.Build;
 
@@ -57,14 +61,15 @@ public class GELDiagnostics {
         info(cb, "\n📁 FOLDABLE LAB");
 
         try {
-            boolean supported = GELFoldableOrchestrator.isFoldableSupported(ctx);
+            boolean supported = isFoldableSupportedLocal(ctx);
             boolean dual = DualPaneManager.isDualPaneActive(ctx);
 
             info(cb, "   Foldable API supported: " + supported);
             info(cb, "   Dual-Pane Mode Active: " + dual);
 
+            // No direct posture API exposed by orchestrator in current base.
             if (supported) {
-                info(cb, "   ➤ Posture: " + GELFoldableOrchestrator.getCurrentPostureName());
+                info(cb, "   ➤ Posture: (runtime-driven, no static read)");
             }
 
             if (dual) ok(cb, "✔ Dual-pane active.");
@@ -72,6 +77,17 @@ public class GELDiagnostics {
 
         } catch (Exception e) {
             err(cb, "Foldable Lab error: " + e.getMessage());
+        }
+    }
+
+    private static boolean isFoldableSupportedLocal(Context ctx) {
+        try {
+            SensorManager sm = (SensorManager) ctx.getSystemService(Context.SENSOR_SERVICE);
+            if (sm == null) return false;
+            Sensor hinge = sm.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE);
+            return hinge != null;
+        } catch (Throwable ignore) {
+            return false;
         }
     }
 
@@ -91,13 +107,13 @@ public class GELDiagnostics {
     }
 
     // ============================================================
-    // INIT FOLDABLE RUNTIME
+    // INIT FOLDABLE RUNTIME (compile-safe)
     // ============================================================
     private static void initFoldableRuntime(Context ctx) {
         try {
-            GELFoldableOrchestrator.initIfPossible(ctx);
-            GELFoldableAnimationPack.prepare(ctx);
-            DualPaneManager.prepareIfSupported(ctx);
+            // Current base exposes only these static hooks:
+            try { GELFoldableAnimationPack.prepare(ctx); } catch (Throwable ignore) {}
+            try { DualPaneManager.prepareIfSupported(ctx); } catch (Throwable ignore) {}
         } catch (Throwable ignore) {}
     }
 
@@ -154,7 +170,7 @@ public class GELDiagnostics {
                 "   Internal: used %s / %s (free %s)",
                 human(used), human(total), human(free)));
 
-        double pct = (free * 100.0 / total);
+        double pct = (total > 0) ? (free * 100.0 / total) : 0.0;
 
         if (pct < 5)
             err(cb, String.format(Locale.US, "❌ Free space %.1f%% — Κρίσιμα.", pct));
@@ -183,7 +199,7 @@ public class GELDiagnostics {
         long avail = mi.availMem;
         long used  = total - avail;
 
-        double freePct = avail * 100.0 / total;
+        double freePct = (total > 0) ? (avail * 100.0 / total) : 0.0;
 
         info(cb, String.format(Locale.US,
                 "   RAM used: %s / %s (free %s)",
@@ -233,7 +249,7 @@ public class GELDiagnostics {
         info(cb, "\n🔋 BATTERY LAB");
 
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        android.content.Intent i = ctx.registerReceiver(null, f);
+        Intent i = ctx.registerReceiver(null, f);
 
         if (i == null) {
             err(cb, "❌ Cannot read battery intent.");
@@ -382,3 +398,5 @@ public class GELDiagnostics {
         if (cb != null) cb.log(m, true);
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

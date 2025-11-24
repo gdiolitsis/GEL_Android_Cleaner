@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // STEP 4 — Foldable Activity Bridge (v2.0 PRO)
 // Fully Integrated: Orchestrator + DualPane + UIManager + AutoDP
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// NOTE: Ολόκληρο  αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 

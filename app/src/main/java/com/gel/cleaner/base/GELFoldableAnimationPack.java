@@ -1,9 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELFoldableAnimationPack — Final v2.2 (Context-Safe + List Fade Stub)
+// GELFoldableAnimationPack — Final v2.3 (Context-Safe + Posture Import FIX)
 // ------------------------------------------------------------
-// ✔ Added Context constructor (used by adapters)
-// ✔ Added applyListItemFade(View) stub
-// ✔ animateReflow(...) kept
+// ✔ FIX: Added missing Posture import (build blocker)
+// ✔ Context constructor (adapters)
+// ✔ applyListItemFade stub
+// ✔ animateReflow stable
 // ------------------------------------------------------------
 
 package com.gel.cleaner.base;
@@ -12,6 +13,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.view.View;
+
+// REQUIRED — FIX for build:
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public class GELFoldableAnimationPack {
 
@@ -70,7 +74,6 @@ public class GELFoldableAnimationPack {
 
     // REQUIRED by AppListAdapter
     public void applyListItemFade(View v) {
-        // safe no-op (keeps behavior stable)
         if (v != null) Log.d(TAG, "applyListItemFade()");
     }
 }

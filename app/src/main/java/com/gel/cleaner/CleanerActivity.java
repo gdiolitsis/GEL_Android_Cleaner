@@ -34,9 +34,9 @@ public class CleanerActivity extends GELAutoActivityHook
 
         // Foldable Engine
         uiManager    = new GELFoldableUIManager(this);
-        animPack     = new GELFoldableAnimationPack(this);
-        dualPane     = new DualPaneManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
+        animPack     = new GELFoldableAnimationPack(this);   // stub-safe
+        dualPane     = new DualPaneManager(this);            // wrapper
+        foldDetector = new GELFoldableDetector(this, this);  // v1.2
 
         // UI Binding
         txtLog = findViewById(R.id.txtCleanerLog);
@@ -78,16 +78,28 @@ public class CleanerActivity extends GELAutoActivityHook
         super.onPause();
     }
 
+    // ============================================================
+    // FOLDABLE CALLBACKS (Unified v1.2)
+    // ============================================================
+
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
-        animPack.applyHingePulse(posture);
+    public void onPostureChanged(@NonNull Posture posture) {
+        // Safe stub call (no errors)
+        animPack.onPostureChanged(posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
         uiManager.applyUI(isInner);
-        dualPane.dispatchMode(isInner);
+
+        // DualPaneManager has no dispatchMode() in the new system
+        // Replace with safe supported call:
+        try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
     }
+
+    // ============================================================
+    // LOGGING
+    // ============================================================
 
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {

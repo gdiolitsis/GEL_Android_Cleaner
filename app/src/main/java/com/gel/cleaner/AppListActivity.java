@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — Foldable-ready + GELAutoScaling + DarkGold UI
+// AppListActivity — Foldable-ready + GELAutoScaling + DarkGold UI (FIXED v2.1)
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
@@ -10,8 +10,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.widget.ListView;
 import android.widget.AdapterView;
+import android.widget.ListView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,31 +26,15 @@ public class AppListActivity extends GELAutoActivityHook
     // FOLDABLE ENGINE
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
-    private GELFoldableOrchestrator orchestrator;      // NEW
-    private DualPaneManager dualPaneManager;           // NEW
-    private GELFoldableAnimationPack animPack;         // NEW
+    private DualPaneManager dualPane;
+    private GELFoldableAnimationPack animPack;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
-        // ============================================================
-        // 1) INIT FOLDABLE ENGINE (Full Integration)
-        // ============================================================
-        uiManager = new GELFoldableUIManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
-        orchestrator = new GELFoldableOrchestrator(this, uiManager);
-        dualPaneManager = new DualPaneManager(this);
-        animPack = new GELFoldableAnimationPack(this);
-
-        orchestrator.attach(list);       // future-proof auto-width handling
-        dualPaneManager.attach(this);    // split mode for tablets / inner screen
-        animPack.applyFadeIn(findViewById(android.R.id.content)); // soft animation
-
-        // ============================================================
-        // 2) NORMAL UI SETUP
-        // ============================================================
+        // NORMAL UI SETUP
         list = findViewById(R.id.listApps);
 
         Intent i = new Intent(Intent.ACTION_MAIN, null);
@@ -70,33 +54,62 @@ public class AppListActivity extends GELAutoActivityHook
                 openAppDetails(info.activityInfo.packageName);
             }
         });
+
+        // ============================================================
+        // INIT FOLDABLE ENGINE (100% compatible with GEL base)
+        // ============================================================
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        foldDetector.start();
+        if (foldDetector != null) foldDetector.start();
     }
 
     @Override
     protected void onPause() {
-        foldDetector.stop();
+        if (foldDetector != null) foldDetector.stop();
         super.onPause();
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS — FIXED + UPDATED
+    // FOLDABLE CALLBACKS (BASE API)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
-        orchestrator.onPosture(posture);     // main hinge logic
-        animPack.onPosture(posture);         // animations adapt
+    public void onPostureChanged(@NonNull Posture posture) {
+
+        final boolean isInner =
+                (posture == Posture.FLAT ||
+                 posture == Posture.TABLE_MODE ||
+                 posture == Posture.FULLY_OPEN);
+
+        if (animPack != null) {
+            animPack.animateReflow(() -> {
+                if (uiManager != null) uiManager.applyUI(isInner);
+                if (dualPane  != null) dualPane.dispatchMode(isInner);
+            });
+        } else {
+            if (uiManager != null) uiManager.applyUI(isInner);
+            if (dualPane  != null) dualPane.dispatchMode(isInner);
+        }
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
-        uiManager.applyUI(isInner);          // inner = big tablet-like screen
-        dualPaneManager.onScreenMode(isInner);
+
+        if (animPack != null) {
+            animPack.animateReflow(() -> {
+                if (uiManager != null) uiManager.applyUI(isInner);
+                if (dualPane  != null) dualPane.dispatchMode(isInner);
+            });
+        } else {
+            if (uiManager != null) uiManager.applyUI(isInner);
+            if (dualPane  != null) dualPane.dispatchMode(isInner);
+        }
     }
 
     // ============================================================
@@ -104,7 +117,8 @@ public class AppListActivity extends GELAutoActivityHook
     // ============================================================
     private void openAppDetails(String pkg) {
         try {
-            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Intent intent =
+                    new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             intent.setData(android.net.Uri.parse("package:" + pkg));
             startActivity(intent);
         } catch (Exception e) {
@@ -112,3 +126,5 @@ public class AppListActivity extends GELAutoActivityHook
         }
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

@@ -5,6 +5,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.graphics.Rect;

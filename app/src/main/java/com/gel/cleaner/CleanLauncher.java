@@ -5,15 +5,20 @@
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.base.*;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.ComponentName;
 import android.os.Build;
 
-// Foldable dependencies
 import androidx.annotation.NonNull;
+
+// === Foldable engine imports ===
+import com.gel.cleaner.base.GELFoldableAnimationPack;
+import com.gel.cleaner.base.GELFoldableUIManager;
+import com.gel.cleaner.base.DualPaneManager;
+import com.gel.cleaner.base.GELFoldableDetector;
+import com.gel.cleaner.base.GELFoldableCallback;
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public class CleanLauncher implements GELFoldableCallback {
 
@@ -28,7 +33,7 @@ public class CleanLauncher implements GELFoldableCallback {
 
         // Foldable engine init
         uiManager    = new GELFoldableUIManager(ctx);
-        animPack     = new GELFoldableAnimationPack(ctx);
+        animPack     = new GELFoldableAnimationPack(null);   // animation bound later (auto-root resolve)
         dualPane     = new DualPaneManager(ctx);
         foldDetector = new GELFoldableDetector(ctx, this);
     }
@@ -49,14 +54,24 @@ public class CleanLauncher implements GELFoldableCallback {
     // ============================================================
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
-        // Light hinge animation only
-        animPack.applyHingePulse(posture);
+
+        // animation on hinge change
+        animPack.animateReflow(() -> {
+            boolean isInner = (posture == Posture.FLAT ||
+                               posture == Posture.FULLY_OPEN ||
+                               posture == Posture.TABLE_MODE);
+
+            uiManager.applyUI(isInner);
+            dualPane.dispatchMode(isInner);
+        });
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
-        uiManager.applyUI(isInner);
-        dualPane.dispatchMode(isInner);
+        animPack.animateReflow(() -> {
+            uiManager.applyUI(isInner);
+            dualPane.dispatchMode(isInner);
+        });
     }
 
     // ============================================================
@@ -89,26 +104,32 @@ public class CleanLauncher implements GELFoldableCallback {
 
         // Samsung
         if (tryComponent(ctx, "com.samsung.android.lool", "com.samsung.android.lool.MainActivity")) return true;
-        if (tryComponent(ctx, "com.samsung.android.devicecare",
+        if (tryComponent(ctx,
+                "com.samsung.android.devicecare",
                 "com.samsung.android.devicecare.ui.DeviceCareActivity")) return true;
 
         // Oppo / Realme
-        if (tryComponent(ctx, "com.coloros.phonemanager",
+        if (tryComponent(ctx,
+                "com.coloros.phonemanager",
                 "com.coloros.phonemanager.main.MainActivity")) return true;
 
-        if (tryComponent(ctx, "com.coloros.oppoguardelf",
+        if (tryComponent(ctx,
+                "com.coloros.oppoguardelf",
                 "com.coloros.oppoguardelf.OppoGuardElfMainActivity")) return true;
 
         // Huawei
-        if (tryComponent(ctx, "com.huawei.systemmanager",
+        if (tryComponent(ctx,
+                "com.huawei.systemmanager",
                 "com.huawei.systemmanager.spaceclean.SpaceCleanActivity")) return true;
 
         // Vivo
-        if (tryComponent(ctx, "com.iqoo.secure",
+        if (tryComponent(ctx,
+                "com.iqoo.secure",
                 "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity")) return true;
 
         // OnePlus
-        if (tryComponent(ctx, "com.oneplus.security",
+        if (tryComponent(ctx,
+                "com.oneplus.security",
                 "com.oneplus.security.chaincleaner.ChainCleanerActivity")) return true;
 
         return false;
@@ -217,3 +238,5 @@ public class CleanLauncher implements GELFoldableCallback {
         return openDeepCleaner();
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

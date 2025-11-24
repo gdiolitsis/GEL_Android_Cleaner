@@ -1,11 +1,9 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// app/src/main/java/com/gel/cleaner/base/DualPaneManager.java
-// DualPaneManager — Bridge Wrapper v1.1 (FINAL)
+// DualPaneManager — GEL Dummy Safe v2.0
 // ------------------------------------------------------------
-// ✔ Fixes ALL "cannot find symbol DualPaneManager"
-// ✔ Adds missing dispatchMode(boolean)
-// ✔ Delegates to GELDualPaneManager (if exists)
-// ✔ Zero-crash fallbacks
+// ✔ Removes ALL references to non-existent GELDualPaneManager
+// ✔ Keeps API compatible with the rest of the project
+// ✔ Zero-crash, zero-dependency, works everywhere
 // ------------------------------------------------------------
 
 package com.gel.cleaner.base;
@@ -24,52 +22,39 @@ public class DualPaneManager {
         this.ctx = c;
     }
 
-    // ---------- Static API used by app ----------
+    // ---------------------------------------------------------
+    // STATIC API (kept for compatibility)
+    // ---------------------------------------------------------
     public static void prepareIfSupported(Context ctx) {
-        try {
-            GELDualPaneManager.prepareIfSupported(ctx);
-        } catch (Throwable t) {
-            Log.w(TAG, "prepareIfSupported skipped: " + t.getMessage());
-        }
+        Log.d(TAG, "prepareIfSupported(): no-op (DualPane not supported)");
     }
 
     public static boolean isDualPaneActive(Context ctx) {
-        try {
-            return GELDualPaneManager.isDualPaneActive(ctx);
-        } catch (Throwable t) {
-            return false;
-        }
+        return false; // safe fallback
     }
 
     public static void openSide(Context ctx, Intent i) {
         try {
-            GELDualPaneManager.openSide(ctx, i);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
         } catch (Throwable t) {
-            try {
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(i);
-            } catch (Throwable ignored) {}
+            Log.w(TAG, "openSide fallback failed: " + t.getMessage());
         }
     }
 
-    // ==========================================================
-    // NEW → REQUIRED BY CLEANER / BROWSER / DIAGNOSTICS
-    // ==========================================================
+    // ---------------------------------------------------------
+    // INSTANCE API
+    // ---------------------------------------------------------
     public void dispatchMode(boolean isInner) {
-        try {
-            GELDualPaneManager.dispatchMode(ctx, isInner);
-        } catch (Throwable t) {
-            Log.w(TAG, "dispatchMode fallback: " + t.getMessage());
-        }
+        Log.d(TAG, "dispatchMode(" + isInner + "): no-op");
     }
 
-    // ---------- Optional lifecycle hooks ----------
+    // Optional hooks (kept for orchestrator compatibility)
     public void onCreate() {}
     public void onResume() {}
     public void onPause() {}
     public void onConfigurationChanged(android.content.res.Configuration c) {}
     public void onMultiWindowModeChanged(boolean inMultiWindow) {}
-
     public void onScreenChanged(boolean isInner) {}
-    public void onPostureChanged(Posture posture) {}
+    public void onPostureChanged(Object posture) {}
 }

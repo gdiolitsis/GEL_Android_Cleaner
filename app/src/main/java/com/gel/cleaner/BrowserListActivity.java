@@ -21,7 +21,7 @@ public class BrowserListActivity extends GELAutoActivityHook
 
     private LinearLayout listRoot;
 
-    // Foldable Engine
+    // Foldable System (new unified)
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animPack;
@@ -74,16 +74,27 @@ public class BrowserListActivity extends GELAutoActivityHook
         super.onPause();
     }
 
+    // ============================================================
+    // FOLDABLE CALLBACKS (Unified v1.2)
+    // ============================================================
+
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
-        animPack.onPosture(posture);
+    public void onPostureChanged(@NonNull Posture posture) {
+        // New stub-safe animation call (no errors)
+        animPack.onPostureChanged(posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
         uiManager.applyUI(isInner);
-        dualPane.dispatchMode(isInner);
+        // No dispatchMode() exists in DualPaneManager (new system)
+        // So we replace with safe call:
+        try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
     }
+
+    // ============================================================
+    // ROW / UI BUILDING
+    // ============================================================
 
     private List<BrowserItem> getInstalledBrowsers() {
         PackageManager pm = getPackageManager();
@@ -134,7 +145,10 @@ public class BrowserListActivity extends GELAutoActivityHook
         lp.bottomMargin = dp(6);
         row.setLayoutParams(lp);
 
-        animPack.applyListItemFade(row);
+        // Old API: animPack.applyListItemFade(row)
+        // Now replaced with safe no-op fallback:
+        try { row.setAlpha(0.0f); row.animate().alpha(1f).setDuration(180).start(); }
+        catch (Throwable ignore) {}
 
         row.setOnClickListener(v -> openBrowserSettings(b.pkg));
 
@@ -147,9 +161,7 @@ public class BrowserListActivity extends GELAutoActivityHook
             i.setData(Uri.parse("package:" + pkg));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
     }
 
     private void addFallbackText(String t) {

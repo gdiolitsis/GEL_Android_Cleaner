@@ -1,14 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELFoldableUIManager — Official Foldable Reflow Engine v1.3 (Context-Safe + Static Compat)
-// *********************************************************************************
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// GELFoldableUIManager.java — GEL PATCH v1.2.1 (Context Overload + Safe No-Activity)
+// NOTE: Full-file patch — πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,9 +18,8 @@ import androidx.gridlayout.widget.GridLayout;
 
 public class GELFoldableUIManager {
 
-    private static final String TAG = "GEL.FoldableUI";
+    private final Activity act;
 
-    private final Activity act; // may be null if constructed from non-activity context
     private boolean lastInner = false;
 
     private static final int TAG_ORIG_TEXT_PX     = 0x7F0A0F01;
@@ -31,25 +28,20 @@ public class GELFoldableUIManager {
     private static final int TAG_ORIG_PAD_RIGHT   = 0x7F0A0F04;
     private static final int TAG_ORIG_PAD_BOTTOM  = 0x7F0A0F05;
 
-    // Activity ctor (preferred)
     public GELFoldableUIManager(Activity activity) {
         this.act = activity;
     }
 
-    // Context ctor (for adapters etc.) — safe no-op if not Activity
+    // NEW overload to accept Context safely (fixes adapters/launchers)
     public GELFoldableUIManager(Context ctx) {
         this.act = (ctx instanceof Activity) ? (Activity) ctx : null;
     }
-
-    // Static compatibility
-    public static void freezeTransitions(Activity a) { Log.d(TAG, "freezeTransitions()"); }
-    public static void unfreezeTransitions(Activity a) { Log.d(TAG, "unfreezeTransitions()"); }
 
     // ============================================================
     // PUBLIC ENTRY POINT
     // ============================================================
     public void applyUI(boolean isInnerScreen) {
-        if (act == null) return; // constructed from non-activity context -> no-op
+        if (act == null) return;
 
         int sw = readSmallestWidthDp();
         int cols = 1;
@@ -66,10 +58,16 @@ public class GELFoldableUIManager {
             applyColumnReflow(1);
         }
 
-        if (isInnerScreen && !lastInner) playOvershoot();
+        if (isInnerScreen && !lastInner) {
+            playOvershoot();
+        }
+
         lastInner = isInnerScreen;
     }
 
+    // ============================================================
+    // FONT SCALE
+    // ============================================================
     private void applyFontScale(float factor) {
         View root = act.findViewById(android.R.id.content);
         scaleTextRecursive(root, factor);
@@ -83,8 +81,9 @@ public class GELFoldableUIManager {
 
             Object tag = t.getTag(TAG_ORIG_TEXT_PX);
             float origPx;
-            if (tag instanceof Float) origPx = (Float) tag;
-            else {
+            if (tag instanceof Float) {
+                origPx = (Float) tag;
+            } else {
                 origPx = t.getTextSize();
                 t.setTag(TAG_ORIG_TEXT_PX, origPx);
             }
@@ -94,11 +93,15 @@ public class GELFoldableUIManager {
 
         if (v instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) v;
-            for (int i = 0; i < vg.getChildCount(); i++)
+            for (int i = 0; i < vg.getChildCount(); i++) {
                 scaleTextRecursive(vg.getChildAt(i), f);
+            }
         }
     }
 
+    // ============================================================
+    // PADDING SCALE
+    // ============================================================
     private void applyPaddingScale(float factor) {
         View root = act.findViewById(android.R.id.content);
         scalePaddingRecursive(root, factor);
@@ -112,12 +115,18 @@ public class GELFoldableUIManager {
         int origR = cachePad(v, TAG_ORIG_PAD_RIGHT,  v.getPaddingRight());
         int origB = cachePad(v, TAG_ORIG_PAD_BOTTOM, v.getPaddingBottom());
 
-        v.setPadding((int)(origL*f), (int)(origT*f), (int)(origR*f), (int)(origB*f));
+        int l = (int) (origL * f);
+        int t = (int) (origT * f);
+        int r = (int) (origR * f);
+        int b = (int) (origB * f);
+
+        v.setPadding(l, t, r, b);
 
         if (v instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) v;
-            for (int i = 0; i < vg.getChildCount(); i++)
+            for (int i = 0; i < vg.getChildCount(); i++) {
                 scalePaddingRecursive(vg.getChildAt(i), f);
+            }
         }
     }
 
@@ -128,26 +137,36 @@ public class GELFoldableUIManager {
         return current;
     }
 
+    // ============================================================
+    // COLUMN REFLOW ENGINE
+    // ============================================================
     private void applyColumnReflow(int columns) {
         View root = act.findViewById(android.R.id.content);
         if (!(root instanceof ViewGroup)) return;
 
         ViewGroup parent = (ViewGroup) root;
-        if (parent.getChildCount() == 1 && parent.getChildAt(0) instanceof ViewGroup)
-            parent = (ViewGroup) parent.getChildAt(0);
 
-        if (columns <= 1) restoreLinear(parent);
-        else convertToGrid(parent, columns);
+        if (parent.getChildCount() == 1 && parent.getChildAt(0) instanceof ViewGroup) {
+            parent = (ViewGroup) parent.getChildAt(0);
+        }
+
+        if (columns <= 1) {
+            restoreLinear(parent);
+        } else {
+            convertToGrid(parent, columns);
+        }
     }
 
     private void convertToGrid(ViewGroup parent, int cols) {
+
         if (parent instanceof GridLayout) {
             ((GridLayout) parent).setColumnCount(cols);
             return;
         }
-        if (!(parent instanceof LinearLayout)) return;
 
+        if (!(parent instanceof LinearLayout)) return;
         LinearLayout ll = (LinearLayout) parent;
+
         GridLayout grid = new GridLayout(act);
         grid.setColumnCount(cols);
         grid.setUseDefaultMargins(true);
@@ -168,13 +187,16 @@ public class GELFoldableUIManager {
     }
 
     private void restoreLinear(ViewGroup parent) {
+
         if (parent instanceof LinearLayout) {
-            ((LinearLayout) parent).setOrientation(LinearLayout.VERTICAL);
+            LinearLayout ll = (LinearLayout) parent;
+            ll.setOrientation(LinearLayout.VERTICAL);
             return;
         }
-        if (!(parent instanceof GridLayout)) return;
 
+        if (!(parent instanceof GridLayout)) return;
         GridLayout grid = (GridLayout) parent;
+
         LinearLayout ll = new LinearLayout(act);
         ll.setOrientation(LinearLayout.VERTICAL);
 
@@ -192,6 +214,9 @@ public class GELFoldableUIManager {
         superP.addView(ll, idx);
     }
 
+    // ============================================================
+    // OVERSHOOT
+    // ============================================================
     private void playOvershoot() {
         try {
             View root = act.findViewById(android.R.id.content);
@@ -200,17 +225,23 @@ public class GELFoldableUIManager {
             root.setScaleX(0.98f);
             root.setScaleY(0.98f);
             root.animate()
-                    .scaleX(1.0f).scaleY(1.0f)
-                    .setDuration(260)
-                    .setInterpolator(new OvershootInterpolator(0.9f))
-                    .start();
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setDuration(260)
+                .setInterpolator(new OvershootInterpolator(0.9f))
+                .start();
         } catch (Throwable ignored) {}
     }
 
+    // ============================================================
+    // READ SMALLEST WIDTH DP
+    // ============================================================
     private int readSmallestWidthDp() {
         try {
             Configuration c = act.getResources().getConfiguration();
-            if (c != null && c.smallestScreenWidthDp > 0) return c.smallestScreenWidthDp;
+            if (c != null && c.smallestScreenWidthDp > 0) {
+                return c.smallestScreenWidthDp;
+            }
         } catch (Throwable ignored) {}
         return 360;
     }

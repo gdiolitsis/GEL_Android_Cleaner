@@ -1,5 +1,5 @@
 // ============================================================
-// PerformanceDiagnosticsActivity — Foldable Ready (v4.0)
+// PerformanceDiagnosticsActivity — Foldable Ready (v4.1)
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // Hospital Edition (30 LABS)
 // ============================================================
@@ -47,6 +47,7 @@ import android.util.DisplayMetrics;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.BufferedReader;
@@ -60,7 +61,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class PerformanceDiagnosticsActivity extends GELAutoActivityHook {
+public class PerformanceDiagnosticsActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
 
     private TextView txtDiag;
     private ScrollView scroll;
@@ -69,6 +71,14 @@ public class PerformanceDiagnosticsActivity extends GELAutoActivityHook {
     private int warnCount = 0;
     private int errorCount = 0;
     private boolean rooted = false;
+
+    // ------------------------------
+    // FOLDABLE ENGINE (FULL STACK)
+    // ------------------------------
+    private GELFoldableDetector foldDetector;
+    private GELFoldableUIManager uiManager;
+    private GELFoldableAnimationPack animPack;
+    private DualPaneManager dualPane;
 
     // ============================================================
     // LOCALE SUPPORT
@@ -85,6 +95,13 @@ public class PerformanceDiagnosticsActivity extends GELAutoActivityHook {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Foldable Init
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
+
+        // UI
         scroll = new ScrollView(this);
         txtDiag = new TextView(this);
 
@@ -106,6 +123,35 @@ public class PerformanceDiagnosticsActivity extends GELAutoActivityHook {
         logLine();
 
         runFullDiagnosis();
+    }
+
+    // ============================================================
+    // FOLDABLE LIFECYCLE
+    // ============================================================
+    @Override
+    protected void onResume() {
+        super.onResume();
+        foldDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        foldDetector.stop();
+        super.onPause();
+    }
+
+    // ============================================================
+    // FOLDABLE CALLBACKS
+    // ============================================================
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {
+        animPack.onPostureChanged(posture);   // stub-safe
+    }
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        uiManager.applyUI(isInner);
+        try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
     }
 
     // ============================================================

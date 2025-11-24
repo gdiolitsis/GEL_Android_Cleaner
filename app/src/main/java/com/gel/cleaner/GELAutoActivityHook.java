@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// UNIVERSAL MASTER HOOK (GEL v4.6)
-// Full fix: removed invalid @Override methods outside class.
+// GELAutoActivityHook.java — GEL FIXED v4.7 (Posture Unified)
+// NOTE: Full-file patch — πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
 
 package com.gel.cleaner;
 
@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public abstract class GELAutoActivityHook extends AppCompatActivity
         implements GELFoldableCallback {
@@ -110,16 +109,16 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
+    // FOLDABLE CALLBACKS (Unified Posture)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
+    public void onPostureChanged(@NonNull Posture posture) {
         safeCall(foldOrchestrator, "onPostureChanged",
-                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
+                new Class[]{Posture.class}, new Object[]{posture});
         safeCall(foldAnimPack, "onPostureChanged",
-                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
+                new Class[]{Posture.class}, new Object[]{posture});
         safeCall(dualPaneManager, "onPostureChanged",
-                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
+                new Class[]{Posture.class}, new Object[]{posture});
     }
 
     @Override
@@ -139,7 +138,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // EXTRA ENGINES
+    // EXTRA ENGINES (Reflection Safe)
     // ============================================================
     private void initExtraFoldableEngines() {
 
@@ -150,13 +149,13 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
         );
 
         foldAnimPack = tryNew(
-                "com.gel.cleaner.GELFoldableAnimationPack",
+                "com.gel.cleaner.base.GELFoldableAnimationPack",
                 new Class[]{Context.class},
                 new Object[]{this}
         );
 
         dualPaneManager = tryNew(
-                "com.gel.cleaner.DualPaneManager",
+                "com.gel.cleaner.base.GELDualPaneManager",
                 new Class[]{Context.class},
                 new Object[]{this}
         );

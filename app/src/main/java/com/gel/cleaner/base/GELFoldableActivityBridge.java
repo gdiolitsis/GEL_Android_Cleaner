@@ -3,7 +3,7 @@
 // Fully Integrated: Orchestrator + DualPane + UIManager + AutoDP
 // NOTE: Ολόκληρο  αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.util.Log;

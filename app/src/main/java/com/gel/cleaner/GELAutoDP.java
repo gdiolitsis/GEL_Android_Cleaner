@@ -5,6 +5,7 @@
 
 package com.gel.cleaner;
 
+import java.lang.reflect.Method;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;

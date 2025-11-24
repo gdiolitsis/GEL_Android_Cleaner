@@ -1,10 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELAutoActivityHook.java — GEL FIXED v4.7 (Posture Unified)
-// NOTE: Full-file patch — πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
+// GELAutoActivityHook.java — GEL FIXED v4.8 (Stable Unified Foldable Engine)
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -12,6 +9,13 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.gel.cleaner.base.GELFoldableCallback;
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
+import com.gel.cleaner.base.GELFoldableDetector;
+import com.gel.cleaner.base.GELFoldableUIManager;
+import com.gel.cleaner.base.GELFoldableAnimationPack;
+import com.gel.cleaner.base.GELDualPaneManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -109,7 +113,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS (Unified Posture)
+    // UNIFIED FOLDABLE CALLBACKS
     // ============================================================
     @Override
     public void onPostureChanged(@NonNull Posture posture) {

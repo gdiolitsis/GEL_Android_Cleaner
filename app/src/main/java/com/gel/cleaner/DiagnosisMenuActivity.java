@@ -38,9 +38,9 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         // INIT FOLDABLE ENGINE (FULL STACK)
         // ============================================================
         uiManager    = new GELFoldableUIManager(this);
-        animPack     = new GELFoldableAnimationPack(this);
-        dualPane     = new DualPaneManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
+        animPack     = new GELFoldableAnimationPack(this);   // stub-safe
+        dualPane     = new DualPaneManager(this);            // wrapper
+        foldDetector = new GELFoldableDetector(this, this);  // v1.2
 
         // ============================================================
         // ROOT SCROLL VIEW
@@ -134,17 +134,20 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS (Unified GELFoldablePosture)
+    // FOLDABLE CALLBACKS — Unified Posture API (v1.2)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
-        animPack.applyHingePulse(posture);
+    public void onPostureChanged(@NonNull Posture posture) {
+        // stub-safe
+        animPack.onPostureChanged(posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
         uiManager.applyUI(isInner);
-        dualPane.dispatchMode(isInner);
+
+        // DualPaneManager has NO dispatchMode() in new API
+        try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
     }
 
     // ============================================================

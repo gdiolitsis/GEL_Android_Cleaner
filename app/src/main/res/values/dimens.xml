@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- REQUIRED BY LINT (base declaration) -->
+    <dimen name="gel_btn_stroke">1dp</dimen>
+
     <!-- YOUR ORIGINAL VALUES -->
     <dimen name="gel_dp_2">2dp</dimen>
     <dimen name="gel_dp_6">6dp</dimen>

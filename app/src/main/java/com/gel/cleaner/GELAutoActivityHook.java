@@ -1,8 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELAutoActivityHook.java — GEL FIXED v4.8 (Stable Unified Foldable Engine)
+// GELAutoActivityHook.java — GEL FIXED v4.8.1 (Stable Unified Foldable Engine)
+// NOTE: Full file ready for copy-paste. (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -15,7 +17,6 @@ import com.gel.cleaner.base.GELFoldableCallback.Posture;
 import com.gel.cleaner.base.GELFoldableDetector;
 import com.gel.cleaner.base.GELFoldableUIManager;
 import com.gel.cleaner.base.GELFoldableAnimationPack;
-import com.gel.cleaner.base.GELDualPaneManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -26,7 +27,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
 
-    // Optional engines
+    // Optional engines (reflection only)
     private Object foldOrchestrator;
     private Object foldAnimPack;
     private Object dualPaneManager;
@@ -146,24 +147,28 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     // ============================================================
     private void initExtraFoldableEngines() {
 
+        // Current orchestrator ctor is (Activity)
         foldOrchestrator = tryNew(
                 "com.gel.cleaner.GELFoldableOrchestrator",
-                new Class[]{Context.class, GELFoldableCallback.class},
-                new Object[]{this, this}
+                new Class[]{Activity.class},
+                new Object[]{this}
         );
 
+        // Animation pack (has Context ctor)
         foldAnimPack = tryNew(
                 "com.gel.cleaner.base.GELFoldableAnimationPack",
                 new Class[]{Context.class},
                 new Object[]{this}
         );
 
+        // Dual pane optional engine (if exists in base)
         dualPaneManager = tryNew(
                 "com.gel.cleaner.base.GELDualPaneManager",
                 new Class[]{Context.class},
                 new Object[]{this}
         );
 
+        // bind() is optional — safe no-op if not present
         safeCall(foldOrchestrator, "bind",
                 new Class[]{
                         GELFoldableDetector.class,

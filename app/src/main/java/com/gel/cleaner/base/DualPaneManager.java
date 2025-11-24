@@ -1,9 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // app/src/main/java/com/gel/cleaner/base/DualPaneManager.java
-// DualPaneManager — Bridge Wrapper v1.0
+// DualPaneManager — Bridge Wrapper v1.1 (FINAL)
 // ------------------------------------------------------------
-// ✔ Fixes "cannot find symbol DualPaneManager"
-// ✔ Delegates to existing GELDualPaneManager if present
+// ✔ Fixes ALL "cannot find symbol DualPaneManager"
+// ✔ Adds missing dispatchMode(boolean)
+// ✔ Delegates to GELDualPaneManager (if exists)
 // ✔ Zero-crash fallbacks
 // ------------------------------------------------------------
 
@@ -44,11 +45,21 @@ public class DualPaneManager {
         try {
             GELDualPaneManager.openSide(ctx, i);
         } catch (Throwable t) {
-            // fallback normal start
             try {
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(i);
             } catch (Throwable ignored) {}
+        }
+    }
+
+    // ==========================================================
+    // NEW → REQUIRED BY CLEANER / BROWSER / DIAGNOSTICS
+    // ==========================================================
+    public void dispatchMode(boolean isInner) {
+        try {
+            GELDualPaneManager.dispatchMode(ctx, isInner);
+        } catch (Throwable t) {
+            Log.w(TAG, "dispatchMode fallback: " + t.getMessage());
         }
     }
 

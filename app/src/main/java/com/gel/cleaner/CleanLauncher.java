@@ -5,6 +5,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.ComponentName;

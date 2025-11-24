@@ -148,5 +148,3 @@ public class PermissionHelper {
         }
     }
 }
-
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

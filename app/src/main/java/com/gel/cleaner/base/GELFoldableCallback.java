@@ -3,7 +3,7 @@
 // Foldable Ready • Orchestrator Safe • Legacy Bridge Supported
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. (κανόνας παππού Γιώργου)
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import androidx.annotation.NonNull;
 
@@ -93,4 +93,3 @@ public interface GELFoldableCallback {
     }
 }
 
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

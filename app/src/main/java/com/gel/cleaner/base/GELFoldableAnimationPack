@@ -3,7 +3,7 @@
 // Foldable Ready • Orchestrator Compatible • Dual-Pane Safe
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.os.Build;

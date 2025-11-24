@@ -1,9 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELCleaner.java — v2.6 Service-Pro Foldable Edition
-// 🔥 Fully Integrated with: GELFoldableOrchestrator + GELFoldableUIManager
-//     + GELFoldableAnimationPack + DualPaneManager
+// GELCleaner.java — v2.7 Service-Pro Foldable Edition (FINAL)
+// 🔥 Fully Integrated with:
+//    • GELFoldableOrchestrator
+//    • GELFoldableUIManager
+//    • GELFoldableAnimationPack
+//    • DualPaneManager
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
-// NOTE2: Full Foldable-Ready integration → No partial patches.
+// NOTE2: Πλήρης Foldable-Ready αρχιτεκτονική — χωρίς ημιτελή patches.
 
 package com.gel.cleaner;
 
@@ -25,7 +28,7 @@ import java.util.Locale;
 public class GELCleaner {
 
     // ============================================================
-    // LOGGING CALLBACK
+    // LOGGING
     // ============================================================
     public interface LogCallback {
         void log(String msg, boolean isError);
@@ -37,7 +40,7 @@ public class GELCleaner {
     private static void err (LogCallback cb, String m) { if (cb != null) cb.log("❌ " + m, true ); }
 
     // ============================================================
-    // FOLDABLE INITIALIZATION (global cleaner awareness)
+    // GLOBAL FOLDABLE RUNTIME INIT
     // ============================================================
     private static void initFoldableRuntime(Context ctx) {
         try {
@@ -48,51 +51,38 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // CLEAN RAM (Smart Clean)
+    // CLEAN RAM (Smart/OEM)
     // ============================================================
     public static void cleanRAM(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
-
         try {
             boolean launched = CleanLauncher.smartClean(ctx);
-
-            if (launched) {
-                ok(cb, "Smart RAM Cleaner ενεργοποιήθηκε.");
-            } else {
-                err(cb, "Δεν βρέθηκε RAM cleaner στη συσκευή.");
-            }
-
+            if (launched) ok(cb, "Smart RAM Cleaner ενεργοποιήθηκε.");
+            else err(cb, "Δεν βρέθηκε RAM Cleaner.");
         } catch (Exception e) {
             err(cb, "cleanRAM failed: " + e.getMessage());
         }
     }
 
     // ============================================================
-    // DEEP CLEAN (OEM Cleaner)
+    // DEEP CLEAN (OEM)
     // ============================================================
     public static void deepClean(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
-
         try {
             boolean launched = CleanLauncher.openDeepCleaner(ctx);
-
-            if (launched) {
-                ok(cb, "Device Deep Cleaner ενεργοποιήθηκε.");
-            } else {
-                err(cb, "Δεν βρέθηκε deep cleaner στη συσκευή.");
-            }
-
+            if (launched) ok(cb, "Device Deep Cleaner ενεργοποιήθηκε.");
+            else err(cb, "Δεν βρέθηκε deep cleaner στη συσκευή.");
         } catch (Exception e) {
             err(cb, "deepClean failed: " + e.getMessage());
         }
     }
 
     // ============================================================
-    // CLEAN APP CACHE (internal cache only)
+    // APP CACHE
     // ============================================================
     public static void cleanAppCache(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
-
         try {
             long before = folderSize(ctx.getCacheDir());
             deleteFolder(ctx.getCacheDir());
@@ -103,7 +93,7 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // TEMP FILES — UNIVERSAL CLEANER (Root or Not)
+    // TEMP FILES CLEANER (Root + Non-Root)
     // ============================================================
     public static void cleanTempFiles(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
@@ -112,16 +102,16 @@ public class GELCleaner {
             ensureAllFilesAccessIfNeeded(ctx, cb);
 
             if (isDeviceRooted()) {
-                info(cb, "Root detected — ενεργοποιώ GEL Root Temp Cleaner.");
+                info(cb, "Root detected — ενεργοποίηση GEL Root Temp Cleaner.");
                 rootExtraTempCleanup(cb);
                 rootExtendedCleanup(cb);
             } else {
-                info(cb, "Device not rooted — τρέχει ασφαλής temp cleaner.");
+                info(cb, "Non-root device — ασφαλής καθαρισμός.");
             }
 
             boolean launched = CleanLauncher.openTempStorageCleaner(ctx);
             if (launched) {
-                ok(cb, "Άνοιξα Storage/Junk Cleaner της συσκευής.");
+                ok(cb, "OEM Storage/Junk Cleaner άνοιξε.");
                 return;
             }
 
@@ -133,13 +123,12 @@ public class GELCleaner {
                 return;
             } catch (Exception ignored) {}
 
-            boolean deep = CleanLauncher.openDeepCleaner(ctx);
-            if (deep) {
-                ok(cb, "Fallback: Άνοιξα OEM Cleaner.");
+            if (CleanLauncher.openDeepCleaner(ctx)) {
+                ok(cb, "Fallback Deep Cleaner άνοιξε.");
                 return;
             }
 
-            err(cb, "Δεν βρέθηκε cleaner για temp files.");
+            err(cb, "No compatible Temp Cleaner found.");
 
         } catch (Exception e) {
             err(cb, "cleanTempFiles failed: " + e.getMessage());
@@ -147,7 +136,7 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // BROWSER CACHE — Auto Smart Selector (foldable-aware)
+    // BROWSER CACHE
     // ============================================================
     public static void browserCache(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
@@ -156,13 +145,13 @@ public class GELCleaner {
             PackageManager pm = ctx.getPackageManager();
 
             String[] browsers = {
-                    "com.android.chrome", "com.chrome.beta",
-                    "org.mozilla.firefox", "org.mozilla.fenix",
-                    "com.opera.browser", "com.opera.mini.native",
-                    "com.microsoft.emmx", "com.brave.browser",
-                    "com.vivaldi.browser", "com.duckduckgo.mobile.android",
+                    "com.android.chrome","com.chrome.beta",
+                    "org.mozilla.firefox","org.mozilla.fenix",
+                    "com.opera.browser","com.opera.mini.native",
+                    "com.microsoft.emmx","com.brave.browser",
+                    "com.vivaldi.browser","com.duckduckgo.mobile.android",
                     "com.sec.android.app.sbrowser",
-                    "com.mi.globalbrowser", "com.android.browser",
+                    "com.mi.globalbrowser","com.android.browser",
                     "com.miui.hybrid"
             };
 
@@ -173,13 +162,13 @@ public class GELCleaner {
             }
 
             if (installed.isEmpty()) {
-                err(cb, "No browser found.");
+                err(cb, "No installed browsers.");
                 return;
             }
 
             if (installed.size() == 1) {
                 openAppDetails(ctx, installed.get(0));
-                ok(cb, "Άνοιξα browser → Storage → Clear Cache.");
+                ok(cb, "Άνοιξα browser → Cache settings.");
                 return;
             }
 
@@ -187,21 +176,20 @@ public class GELCleaner {
                 Intent chooser = new Intent(ctx, BrowserListActivity.class);
                 chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                // Foldable dual-pane: open chooser in side-pane if possible
                 if (DualPaneManager.isDualPaneActive(ctx)) {
                     DualPaneManager.openSide(ctx, chooser);
-                    ok(cb, "Άνοιξα Browser Chooser σε dual-pane mode.");
+                    ok(cb, "Browser chooser σε dual-pane mode.");
                 } else {
                     ctx.startActivity(chooser);
                     ok(cb, "Άνοιξα Browser Chooser list.");
                 }
 
-                info(cb, "Διάλεξε browser → Storage → Clear Cache.");
+                info(cb, "Επίλεξε browser → Storage → Clear Cache.");
                 return;
 
             } catch (Exception e) {
                 openAppDetails(ctx, installed.get(0));
-                warn(cb, "Chooser failed — άνοιξα πρώτο browser.");
+                warn(cb, "Chooser failed — άνοιξα τον 1ο browser.");
             }
 
         } catch (Exception e) {
@@ -210,7 +198,7 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // RUNNING APPS (developer settings)
+    // RUNNING APPS (Developer Menu)
     // ============================================================
     public static void openRunningApps(Context ctx, LogCallback cb) {
         initFoldableRuntime(ctx);
@@ -221,8 +209,7 @@ public class GELCleaner {
             ctx.startActivity(dev);
 
             ok(cb, "Developer menu opened.");
-            info(cb, "➡ 'Running Services' για ενεργές εφαρμογές.");
-
+            info(cb, "➡ Άνοιξε 'Running Services'.");
         } catch (Exception e) {
             err(cb, "openRunningApps failed: " + e.getMessage());
         }
@@ -273,7 +260,7 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // PERMISSION SELF-REPAIR
+    // PERMISSION SELF-REPAIR (Android 11+)
     // ============================================================
     private static void ensureAllFilesAccessIfNeeded(Context ctx, LogCallback cb) {
         if (ctx == null) return;
@@ -281,8 +268,8 @@ public class GELCleaner {
 
         try {
             if (!Environment.isExternalStorageManager()) {
-                warn(cb, "Android 11+ περιορίζει πρόσβαση σε αρχεία.");
-                info(cb, "Αν θέλεις full cleaning, δώσε 'All Files Access'.");
+                warn(cb, "Android 11+ περιορισμός. Χρειάζεται All-Files Access.");
+                info(cb, "➡ Άνοιγμα Settings για δικαίωμα αρχείων.");
 
                 Intent i = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 i.setData(Uri.parse("package:" + ctx.getPackageName()));
@@ -298,17 +285,16 @@ public class GELCleaner {
     }
 
     // ============================================================
-    // ROOT DETECTION
+    // ROOT CHECK
     // ============================================================
     private static boolean isDeviceRooted() {
         String tags = Build.TAGS;
         if (tags != null && tags.contains("test-keys")) return true;
 
         String[] paths = {
-                "/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su",
-                "/system/bin/.ext/su", "/system/usr/we-need-root/su"
+                "/system/bin/su","/system/xbin/su","/sbin/su","/system/su",
+                "/system/bin/.ext/su","/system/usr/we-need-root/su"
         };
-
         for (String p : paths)
             try { if (new File(p).exists()) return true; }
             catch (Throwable ignored) {}
@@ -318,9 +304,8 @@ public class GELCleaner {
 
     private static boolean runSu(String cmd) {
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
-            int code = p.waitFor();
-            return code == 0;
+            Process p = Runtime.getRuntime().exec(new String[]{"su","-c",cmd});
+            return p.waitFor() == 0;
         } catch (Exception e) {
             return false;
         }
@@ -337,20 +322,17 @@ public class GELCleaner {
                 "/data/system/dropbox",
                 "/cache"
         };
-
         for (String p : paths) {
             if (runSu("rm -rf " + p + "/*"))
                 ok(cb, "Root cleaned: " + p);
             else
-                info(cb, "Root skip: " + p);
+                info(cb, "Skip: " + p);
         }
-
         ok(cb, "GEL Root Temp Cleaner ολοκληρώθηκε.");
     }
 
     private static void rootExtendedCleanup(LogCallback cb) {
-        info(cb, "Root Extended Cleaner ενεργό…");
-
+        info(cb, "Root Extended Cleaner...");
         String[] extra = {
                 "/data/system/usagestats/*",
                 "/data/system/package_cache/*",
@@ -359,14 +341,12 @@ public class GELCleaner {
                 "/data/log/*",
                 "/data/vendor/log/*"
         };
-
         for (String p : extra) {
             if (runSu("rm -rf " + p))
-                ok(cb, "Root extended cleaned: " + p);
+                ok(cb, "Root cleaned: " + p);
             else
                 info(cb, "Skip: " + p);
         }
-
-        ok(cb, "Root Extended Cleaner — COMPLETE.");
+        ok(cb, "Root Extended Cleaner COMPLETE.");
     }
 }

@@ -3,7 +3,7 @@
 // Master controller: Detector → Callback → AnimationPack → UI Manager
 // NOTE: Ολόκληρο αρχείο, 100% έτοιμο για copy-paste. (κανόνας παππού Γιώργου)
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.util.Log;
@@ -99,4 +99,3 @@ public class GELFoldableOrchestrator implements GELFoldableCallback {
     }
 }
 
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

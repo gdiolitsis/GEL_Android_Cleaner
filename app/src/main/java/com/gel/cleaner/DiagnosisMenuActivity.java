@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DiagnosisMenuActivity.java — Service Lab Menu v2 (GEL Universal Scaling + FOLDABLE READY)
+// DiagnosisMenuActivity.java — Service Lab Menu v3.0 (GEL Universal Scaling + FOLDABLE READY)
 // NOTE: Full-file patch. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 package com.gel.cleaner;
@@ -14,17 +14,16 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-// ============================================================
-// GEL Service Lab — Multi-Language Diagnosis Menu v2
-// Foldable Ready: GELFoldableUIManager + GELFoldableDetector
-// ============================================================
 public class DiagnosisMenuActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
 
     private GELFoldableUIManager uiManager;
     private GELFoldableDetector foldDetector;
+    private GELFoldableAnimationPack animPack;
+    private DualPaneManager dualPane;
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -35,12 +34,17 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // =============================
-        // INIT FOLDABLE ENGINE
-        // =============================
-        uiManager = new GELFoldableUIManager(this);
+        // ============================================================
+        // INIT FOLDABLE ENGINE (FULL STACK)
+        // ============================================================
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
+        // ============================================================
+        // ROOT SCROLL VIEW
+        // ============================================================
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
 
@@ -50,7 +54,9 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         root.setPadding(pad, pad, pad, pad);
         root.setBackgroundColor(0xFF101010);
 
+        // ============================================================
         // TITLE
+        // ============================================================
         TextView title = new TextView(this);
         title.setText(getString(R.string.gel_service_lab));
         title.setTextSize(sp(22f));
@@ -68,9 +74,9 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         sub.setPadding(0, 0, 0, dp(16));
         root.addView(sub);
 
-        // =========================
+        // ============================================================
         // AUTO DIAGNOSIS
-        // =========================
+        // ============================================================
         root.addView(sectionLabel(getString(R.string.auto_diagnosis)));
 
         View autoBtn = makeBlockButton(
@@ -81,9 +87,9 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
                 startActivity(new Intent(this, PerformanceDiagnosticsActivity.class)));
         root.addView(autoBtn);
 
-        // =========================
+        // ============================================================
         // MANUAL TESTS
-        // =========================
+        // ============================================================
         root.addView(sectionLabel(getString(R.string.manual_tests)));
 
         View manualBtn = makeBlockButton(
@@ -94,9 +100,9 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
                 startActivity(new Intent(this, ManualTestsActivity.class)));
         root.addView(manualBtn);
 
-        // =========================
+        // ============================================================
         // SERVICE REPORT
-        // =========================
+        // ============================================================
         root.addView(sectionLabel(getString(R.string.service_report)));
 
         View exportBtn = makeBlockButton(
@@ -107,12 +113,13 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
                 startActivity(new Intent(this, ServiceReportActivity.class)));
         root.addView(exportBtn);
 
+        // FINALIZE ROOT
         scroll.addView(root);
         setContentView(scroll);
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
+    // FOLDABLE LIFE CYCLE
     // ============================================================
     @Override
     protected void onResume() {
@@ -126,15 +133,18 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         super.onPause();
     }
 
+    // ============================================================
+    // FOLDABLE CALLBACKS (Unified GELFoldablePosture)
+    // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
-        // optional — no need for UI changes here yet
+    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
+        animPack.applyHingePulse(posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
-        // Tablet mode → auto reflow
         uiManager.applyUI(isInner);
+        dualPane.dispatchMode(isInner);
     }
 
     // ============================================================

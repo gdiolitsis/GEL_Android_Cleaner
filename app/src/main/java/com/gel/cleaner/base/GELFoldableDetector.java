@@ -61,18 +61,19 @@ public class GELFoldableDetector implements SensorEventListener {
 
         float angle = event.values[0];
 
-        // avoid unnecessary noise
+        // Avoid noise / redundant events
         if (angle == lastAngle) return;
         lastAngle = angle;
 
-        // ------ Unified posture via GEL v1.2 mapper ------
+        // ------ Unified posture via GELFoldableCallback mapper ------
+        boolean isUnfolded = angle >= 155f; // inner display
         GELFoldableCallback.Posture posture =
-                GELFoldableCallback.postureFrom(angle >= 150f, angle);
+                GELFoldableCallback.postureFrom(isUnfolded, angle);
 
         // ------ Screen mode logic ------
         boolean isInner = (posture == GELFoldableCallback.Posture.FLAT);
 
-        // ------ FIRE CALLBACKS ONLY IF CHANGED ------
+        // ------ CALLBACKS ONLY WHEN CHANGED ------
         if (posture != lastPosture) {
             lastPosture = posture;
             callback.onPostureChanged(posture);
@@ -89,4 +90,3 @@ public class GELFoldableDetector implements SensorEventListener {
         // not used
     }
 }
-

@@ -1,8 +1,8 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// UNIVERSAL MASTER HOOK (GEL v4.4)
-// 🔥 Combines: GELAutoDP + FoldableDetector + UIManager + Locale Hook
-// + GELFoldableOrchestrator + GELFoldableAnimationPack + DualPaneManager (safe reflective bind)
-// NOTE: Full-file patch — πάντα δούλευε πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// UNIVERSAL MASTER HOOK (GEL v4.5)
+// Combines: GELAutoDP + GELFoldableDetector + UIManager + Locale Hook
+// + GELFoldableOrchestrator + GELFoldableAnimationPack + DualPaneManager
+// NOTE: Full-file patch — Πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
 package com.gel.cleaner;
 
@@ -24,7 +24,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
 
-    // Optional foldable modules (reflection-safe)
+    // Optional engines
     private Object foldOrchestrator;
     private Object foldAnimPack;
     private Object dualPaneManager;
@@ -32,11 +32,10 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     private boolean lastInner = false;
 
     // ============================================================
-    // CONTEXT HOOK (Locale + Scaling-safe)
+    // CONTEXT HOOK (Locale + scaling)
     // ============================================================
     @Override
     protected void attachBaseContext(Context base) {
-        // LocaleHelper first (your standard rule)
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
@@ -47,14 +46,11 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 1) Universal dp/sp scaling
         GELAutoDP.init(this);
 
-        // 2) Core foldable systems
-        uiManager = new GELFoldableUIManager(this);
+        uiManager    = new GELFoldableUIManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
-        // 3) EXTRA foldable engines (safe bind)
         initExtraFoldableEngines();
     }
 
@@ -80,16 +76,14 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // CONFIGURATION EVENTS: rotation / fold-unfold / locale change
+    // CONFIG CHANGES (locale / rotation / fold)
     // ============================================================
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        // Always rescale DP/SP
         GELAutoDP.init(this);
 
-        // Re-apply foldable UI
         if (uiManager != null) uiManager.applyUI(lastInner);
 
         safeCall(foldOrchestrator, "onConfigurationChanged",
@@ -104,10 +98,8 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
 
-        // Rescale again
         GELAutoDP.init(this);
 
-        // Re-apply foldable mode
         if (uiManager != null) uiManager.applyUI(lastInner);
 
         safeCall(foldOrchestrator, "onMultiWindowModeChanged",
@@ -119,17 +111,16 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
+    // FOLDABLE CALLBACKS (Unified GELFoldablePosture)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
-        // Optional debug
+    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
         safeCall(foldOrchestrator, "onPostureChanged",
-                new Class[]{Posture.class}, new Object[]{posture});
+                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
         safeCall(foldAnimPack, "onPostureChanged",
-                new Class[]{Posture.class}, new Object[]{posture});
+                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
         safeCall(dualPaneManager, "onPostureChanged",
-                new Class[]{Posture.class}, new Object[]{posture});
+                new Class[]{GELFoldablePosture.class}, new Object[]{posture});
     }
 
     @Override
@@ -149,10 +140,10 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // EXTRA FOLDABLE ENGINES (Orchestrator / Anim Pack / Dual Pane)
+    // EXTRA FOLDABLE ENGINES (Reflection Safe)
     // ============================================================
     private void initExtraFoldableEngines() {
-        // Try create instances safely (no hard dependency)
+
         foldOrchestrator = tryNew(
                 "com.gel.cleaner.GELFoldableOrchestrator",
                 new Class[]{Context.class, GELFoldableCallback.class},
@@ -171,7 +162,6 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
                 new Object[]{this}
         );
 
-        // If orchestrator supports binding, wire the core modules in
         safeCall(foldOrchestrator, "bind",
                 new Class[]{
                         GELFoldableDetector.class,
@@ -188,18 +178,17 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // REFLECTION HELPERS (SAFE)
+    // REFLECTION UTILITIES
     // ============================================================
-    private Object tryNew(String className, Class<?>[] sig, Object[] args) {
+    private Object tryNew(String name, Class<?>[] sig, Object[] args) {
         try {
-            Class<?> c = Class.forName(className);
+            Class<?> c = Class.forName(name);
             Constructor<?> ctor = c.getConstructor(sig);
             ctor.setAccessible(true);
             return ctor.newInstance(args);
         } catch (Throwable ignore) {
-            // fallback: try no-arg constructor
             try {
-                Class<?> c = Class.forName(className);
+                Class<?> c = Class.forName(name);
                 Constructor<?> ctor = c.getDeclaredConstructor();
                 ctor.setAccessible(true);
                 return ctor.newInstance();
@@ -213,7 +202,8 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
         safeCall(target, method, null, null);
     }
 
-    private void safeCall(Object target, String method, Class<?>[] sig, Object[] args) {
+    private void safeCall(Object target, String method,
+                          Class<?>[] sig, Object[] args) {
         if (target == null || method == null) return;
         try {
             Method m;
@@ -230,9 +220,9 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // HELPERS (GLOBAL DP/SP)
+    // GLOBAL DP/SP HELPERS
     // ============================================================
-    public int dp(int x)       { return GELAutoDP.dp(x); }
-    public float sp(float x)   { return GELAutoDP.sp(x); }
-    public int px(int x)       { return GELAutoDP.px(x); }
+    public int dp(int x)     { return GELAutoDP.dp(x); }
+    public float sp(float x) { return GELAutoDP.sp(x); }
+    public int px(int x)     { return GELAutoDP.px(x); }
 }

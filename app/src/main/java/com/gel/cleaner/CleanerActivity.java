@@ -16,7 +16,7 @@ public class CleanerActivity extends GELAutoActivityHook
 
     private TextView txtLog;
 
-    // Foldable core
+    // Foldable Engine
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animPack;
@@ -32,11 +32,11 @@ public class CleanerActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
-        // Foldable Engine
+        // Foldable Core
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);   // stub-safe
         dualPane     = new DualPaneManager(this);            // wrapper
-        foldDetector = new GELFoldableDetector(this, this);  // v1.2
+        foldDetector = new GELFoldableDetector(this, this);  // v1.2 unified
 
         // UI Binding
         txtLog = findViewById(R.id.txtCleanerLog);
@@ -79,21 +79,19 @@ public class CleanerActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS (Unified v1.2)
+    // FOLDABLE CALLBACKS (Unified Posture v1.2)
     // ============================================================
 
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
-        // Safe stub call (no errors)
-        animPack.onPostureChanged(posture);
+        animPack.onPostureChanged(posture);   // stub-safe
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
         uiManager.applyUI(isInner);
 
-        // DualPaneManager has no dispatchMode() in the new system
-        // Replace with safe supported call:
+        // No dispatchMode() in new DualPaneManager
         try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
     }
 

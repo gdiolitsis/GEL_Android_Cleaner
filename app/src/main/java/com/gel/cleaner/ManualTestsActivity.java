@@ -2825,28 +2825,45 @@ private void runLab29() {
 }
 
 // ============================================================
-// LAB 29 — DEVICE SCORES SUMMARY (via Lab29Engine)
+// LAB 29 — DEVICE SCORES SUMMARY (POPUP WINDOW via Lab29Engine)
 // ============================================================
 private void runLab29() {
 
     try {
-        append("\nRunning LAB 29…\n");
 
-        // Gather available thermal readings (nullable)
+        // Open clean popup like the original LAB 29 window
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("LAB 29 — DEVICE SCORES SUMMARY");
+        b.setCancelable(true);
+
+        // Collect nullable thermal readings (no maxOf/avgOf needed)
         Float cpu  = lastThermalCPU;
         Float gpu  = lastThermalGPU;
         Float skin = lastThermalSKIN;
         Float pmic = lastThermalPMIC;
-        Float batt = lastBatteryTemp;   // Battery temperature from your existing sensors
+        Float batt = lastBatteryTemp;
 
-        // Build final summary using the dedicated engine
+        // Build summary using Lab29Engine (new independent engine)
         String summary = Lab29Engine.buildLab29Summary(
                 this,
                 cpu, gpu, skin, pmic, batt
         );
 
-        append(summary);
-        append("\nLAB 29 complete.\n");
+        // Multi-line scrollable view (like old LAB 29)
+        TextView tv = new TextView(this);
+        tv.setText(summary);
+        tv.setTextSize(14f);
+        tv.setPadding(32, 32, 32, 32);
+        tv.setTextIsSelectable(true);
+
+        ScrollView sv = new ScrollView(this);
+        sv.addView(tv);
+
+        b.setView(sv);
+        b.setPositiveButton("OK", null);
+
+        AlertDialog dlg = b.create();
+        dlg.show();
 
     } catch (Exception e) {
         append("LAB 29 ERROR: " + e.getMessage() + "\n");
@@ -2944,6 +2961,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

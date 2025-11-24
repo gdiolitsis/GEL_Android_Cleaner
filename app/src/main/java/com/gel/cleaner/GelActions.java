@@ -1,10 +1,11 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELActions — System Actions Manager v3.0 (Ultra-Safe Edition)
+// GELActions — System Actions Manager v3.1 (Foldable-Aware Ultra-Safe Edition)
 // ============================================================
 // • Συμβατό με ΟΛΕΣ τις συσκευές (Samsung / Xiaomi / Oppo / Pixel / Huawei)
+// • Foldable/DualPane route όταν υποστηρίζεται
 // • Zero-Crash guarantees (all intents wrapped, fallbacks included)
 // • Safe Cleaners (RAM / Temp / Storage / Battery)
-// • 100% έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// • 100% έτοιμο για copy-paste
 // • Βασισμένο στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
 // ============================================================
 
@@ -18,9 +19,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.provider.Settings;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 
 public final class GELActions {
@@ -30,35 +33,57 @@ public final class GELActions {
     private static final DecimalFormat DF = new DecimalFormat("#.##");
 
     // ============================================================
-    // SMART CLEAN — Universal RAM Cleaner
+    // FOLDABLE RUNTIME INIT (ULTRA-SAFE)
+    // ============================================================
+    private static void initFoldableRuntime(Context ctx) {
+        if (ctx == null) return;
+        try {
+            GELFoldableOrchestrator.initIfPossible(ctx);
+        } catch (Throwable ignored) {}
+        try {
+            GELFoldableAnimationPack.prepare(ctx);
+        } catch (Throwable ignored) {}
+        try {
+            DualPaneManager.prepareIfSupported(ctx);
+        } catch (Throwable ignored) {}
+    }
+
+    // ============================================================
+    // SMART CLEAN — Universal RAM Cleaner (Foldable-Aware)
     // ============================================================
     public static void doSmartClean(Activity activity) {
         if (activity == null) return;
+        initFoldableRuntime(activity);
 
         try {
             CleanLauncher.smartClean(activity);
-            Toast.makeText(activity, "✔ Smart Cleaner ενεργοποιήθηκε", Toast.LENGTH_SHORT).show();
+            safeToast(activity, "✔ Smart Cleaner ενεργοποιήθηκε");
         } catch (Throwable ignored) {
-            Toast.makeText(activity, "⚠ Smart Clean δεν υποστηρίζεται", Toast.LENGTH_SHORT).show();
+            safeToast(activity, "⚠ Smart Clean δεν υποστηρίζεται");
         }
     }
 
     // ============================================================
     // BATTERY BOOSTER — Play-Safe Navigation (All OEMs)
+    // Foldable/DualPane aware routing
     // ============================================================
     public static void openBatteryBooster(Activity activity) {
         if (activity == null) return;
+        initFoldableRuntime(activity);
 
         // 1) Battery Saver (universal)
-        if (tryIntent(activity, Settings.ACTION_BATTERY_SAVER_SETTINGS, "⚡ Battery Saver ανοίχτηκε"))
+        if (tryIntentFoldable(activity, Settings.ACTION_BATTERY_SAVER_SETTINGS,
+                "⚡ Battery Saver ανοίχτηκε"))
             return;
 
         // 2) Usage Access (fallback)
-        if (tryIntent(activity, Settings.ACTION_USAGE_ACCESS_SETTINGS, "⚡ Άνοιγμα Battery Usage"))
+        if (tryIntentFoldable(activity, Settings.ACTION_USAGE_ACCESS_SETTINGS,
+                "⚡ Άνοιγμα Battery Usage"))
             return;
 
         // 3) Last fallback → Settings
-        tryIntent(activity, Settings.ACTION_SETTINGS, "⚡ Ρυθμίσεις Μπαταρίας");
+        tryIntentFoldable(activity, Settings.ACTION_SETTINGS,
+                "⚡ Ρυθμίσεις Μπαταρίας");
     }
 
     // ============================================================
@@ -66,6 +91,7 @@ public final class GELActions {
     // ============================================================
     public static void cleanOwnCache(Context context) {
         if (context == null) return;
+        initFoldableRuntime(context);
 
         long before =
                 getFolderSize(context.getCacheDir()) +
@@ -74,124 +100,199 @@ public final class GELActions {
         deleteDirSafe(context.getCacheDir());
         deleteDirSafe(context.getExternalCacheDir());
 
-        Toast.makeText(
+        safeToast(
                 context.getApplicationContext(),
-                "🧹 Cache καθαρίστηκε: " + formatSize(before),
-                Toast.LENGTH_LONG
-        ).show();
+                "🧹 Cache καθαρίστηκε: " + formatSize(before)
+        );
     }
 
     // ============================================================
     // UNIVERSAL TEMP FILES CLEANER — καλύπτει ΟΛΑ τα OEMs
+    // Foldable-aware routing for Settings screens
     // ============================================================
     public static void cleanTempFiles(Context ctx) {
         if (ctx == null) return;
+        initFoldableRuntime(ctx);
 
         // ---------- XIAOMI / REDMI / POCO ----------
         if (isMiui()) {
-            if (launch(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity")) {
-                toast(ctx, "🗑 MIUI Cleaner → Temp Files");
-                return;
-            }
-            if (launch(ctx, "com.miui.securitycenter", "com.miui.securityscan.MainActivity")) {
-                toast(ctx, "🗑 MIUI Security Cleaner");
-                return;
-            }
+            if (launchFoldable(ctx, "com.miui.cleaner", "com.miui.cleaner.MainActivity",
+                    "🗑 MIUI Cleaner → Temp Files")) return;
+
+            if (launchFoldable(ctx, "com.miui.securitycenter",
+                    "com.miui.securityscan.MainActivity",
+                    "🗑 MIUI Security Cleaner")) return;
         }
 
         // ---------- SAMSUNG ----------
-        if (launch(ctx, "com.samsung.android.lool", "com.samsung.android.lool.MainActivity")) {
-            toast(ctx, "🗑 Samsung Device Care");
-            return;
-        }
-        if (launch(ctx, "com.samsung.android.devicecare",
-                "com.samsung.android.devicecare.ui.DeviceCareActivity")) {
-            toast(ctx, "🗑 Samsung Storage Cleaner");
-            return;
-        }
+        if (launchFoldable(ctx, "com.samsung.android.lool",
+                "com.samsung.android.lool.MainActivity",
+                "🗑 Samsung Device Care")) return;
+
+        if (launchFoldable(ctx, "com.samsung.android.devicecare",
+                "com.samsung.android.devicecare.ui.DeviceCareActivity",
+                "🗑 Samsung Storage Cleaner")) return;
 
         // ---------- OPPO / REALME ----------
-        if (launch(ctx, "com.coloros.phonemanager",
-                "com.coloros.phonemanager.main.MainActivity")) {
-            toast(ctx, "🗑 ColorOS Cleaner");
-            return;
-        }
+        if (launchFoldable(ctx, "com.coloros.phonemanager",
+                "com.coloros.phonemanager.main.MainActivity",
+                "🗑 ColorOS Cleaner")) return;
 
         // ---------- ONEPLUS ----------
-        if (launch(ctx, "com.oneplus.security",
-                "com.oneplus.security.cleaner.CleanerActivity")) {
-            toast(ctx, "🗑 OnePlus Cleaner");
-            return;
-        }
+        if (launchFoldable(ctx, "com.oneplus.security",
+                "com.oneplus.security.cleaner.CleanerActivity",
+                "🗑 OnePlus Cleaner")) return;
 
         // ---------- VIVO / IQOO ----------
-        if (launch(ctx, "com.iqoo.secure",
-                "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity")) {
-            toast(ctx, "🗑 Vivo Phone Optimizer");
-            return;
-        }
+        if (launchFoldable(ctx, "com.iqoo.secure",
+                "com.iqoo.secure.ui.phoneoptimize.PhoneOptimizeActivity",
+                "🗑 Vivo Phone Optimizer")) return;
 
         // ---------- HUAWEI / HONOR ----------
-        if (launch(ctx, "com.huawei.systemmanager",
-                "com.huawei.systemmanager.spaceclean.SpaceCleanActivity")) {
-            toast(ctx, "🗑 Huawei Space Cleaner");
-            return;
-        }
+        if (launchFoldable(ctx, "com.huawei.systemmanager",
+                "com.huawei.systemmanager.spaceclean.SpaceCleanActivity",
+                "🗑 Huawei Space Cleaner")) return;
 
         // ---------- GENERIC ANDROID (Pixel / Sony / Motorola) ----------
-        if (tryIntent(ctx, Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+        if (tryIntentFoldable(ctx, Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
                 "📦 Storage → Temporary / Junk Files"))
             return;
 
         // ---------- LAST FALLBACK ----------
-        toast(ctx, "⚠ Δεν βρέθηκε temp cleaner.");
-        tryIntent(ctx, Settings.ACTION_SETTINGS, null);
+        safeToast(ctx, "⚠ Δεν βρέθηκε temp cleaner.");
+        tryIntentFoldable(ctx, Settings.ACTION_SETTINGS, null);
     }
 
     // ============================================================
-    // STORAGE MANAGER — simple safe wrapper
+    // STORAGE MANAGER — simple safe wrapper (Foldable-aware)
     // ============================================================
     public static void openStorageManager(Activity act) {
         if (act == null) return;
+        initFoldableRuntime(act);
 
-        if (!tryIntent(act, Settings.ACTION_INTERNAL_STORAGE_SETTINGS, "📦 Storage Manager")) {
-            tryIntent(act, Settings.ACTION_SETTINGS, "📦 Storage Settings");
+        if (!tryIntentFoldable(act, Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+                "📦 Storage Manager")) {
+            tryIntentFoldable(act, Settings.ACTION_SETTINGS,
+                    "📦 Storage Settings");
         }
     }
 
     // ============================================================
-    // INTERNAL HELPERS
+    // INTERNAL HELPERS — Foldable/DualPane routing
     // ============================================================
-    private static boolean tryIntent(Context ctx, String action, String toast) {
+    private static boolean tryIntentFoldable(Context ctx, String action, String toast) {
         if (ctx == null) return false;
 
         try {
             Intent i = new Intent(action);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(i);
-            if (toast != null) {
-                Toast.makeText(ctx.getApplicationContext(), toast, Toast.LENGTH_SHORT).show();
-            }
-            return true;
+            return startIntentFoldable(ctx, i, toast);
         } catch (Throwable ignored) {
             return false;
         }
     }
 
-    private static boolean launch(Context ctx, String pkg, String cls) {
+    private static boolean launchFoldable(Context ctx, String pkg, String cls, String toast) {
         if (ctx == null) return false;
 
         try {
             Intent i = new Intent();
             i.setComponent(new ComponentName(pkg, cls));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            ctx.startActivity(i);
-            return true;
+
+            boolean ok = startIntentFoldable(ctx, i, toast);
+            return ok;
         } catch (Throwable ignored) {
             return false;
         }
     }
 
+    /**
+     * Starts intent in DualPane side if active, else normal startActivity.
+     * Ultra-safe and reflection-guarded.
+     */
+    private static boolean startIntentFoldable(Context ctx, Intent i, String toast) {
+        if (ctx == null || i == null) return false;
+
+        try {
+            // Prefer DualPane if active
+            if (isDualPaneActiveSafe(ctx)) {
+                if (openSideSafe(ctx, i)) {
+                    if (toast != null) safeToast(ctx, toast);
+                    return true;
+                }
+            }
+
+            ctx.startActivity(i);
+            if (toast != null) safeToast(ctx, toast);
+            return true;
+
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static boolean isDualPaneActiveSafe(Context ctx) {
+        try {
+            return DualPaneManager.isDualPaneActive(ctx);
+        } catch (Throwable t) {
+            // reflection fallback if class missing
+            try {
+                Class<?> c = Class.forName("com.gel.cleaner.DualPaneManager");
+                Method m = c.getMethod("isDualPaneActive", Context.class);
+                Object r = m.invoke(null, ctx);
+                return (r instanceof Boolean) && (Boolean) r;
+            } catch (Throwable ignored) {
+                return false;
+            }
+        }
+    }
+
+    private static boolean openSideSafe(Context ctx, Intent i) {
+        try {
+            DualPaneManager.openSide(ctx, i);
+            return true;
+        } catch (Throwable t) {
+            try {
+                Class<?> c = Class.forName("com.gel.cleaner.DualPaneManager");
+                Method m = c.getMethod("openSide", Context.class, Intent.class);
+                m.invoke(null, ctx, i);
+                return true;
+            } catch (Throwable ignored) {
+                return false;
+            }
+        }
+    }
+
+    // ============================================================
+    // SAFE TOAST — Foldable-scaled if host is GELAutoActivityHook
+    // ============================================================
+    private static void safeToast(Context ctx, String m) {
+        if (ctx == null || m == null) return;
+        try {
+            Toast t = Toast.makeText(ctx.getApplicationContext(), m, Toast.LENGTH_LONG);
+
+            // If we are inside a GELAutoActivityHook, scale text
+            if (ctx instanceof GELAutoActivityHook) {
+                try {
+                    TextView tv = new TextView(ctx);
+                    GELAutoActivityHook a = (GELAutoActivityHook) ctx;
+                    tv.setText(m);
+                    tv.setTextSize(a.sp(14f));
+                    tv.setPadding(a.dp(12), a.dp(8), a.dp(12), a.dp(8));
+                    tv.setTextColor(0xFFFFFFFF);
+                    tv.setBackgroundColor(0xCC000000);
+                    t.setView(tv);
+                } catch (Throwable ignored) {}
+            }
+
+            t.show();
+        } catch (Throwable ignored) {}
+    }
+
+    // ============================================================
+    // FILE HELPERS
+    // ============================================================
     private static void deleteDirSafe(File dir) {
         try {
             if (dir == null || !dir.exists()) return;
@@ -248,12 +349,5 @@ public final class GELActions {
         String m = (Build.MANUFACTURER != null) ? Build.MANUFACTURER.toLowerCase() : "";
         return (b.contains("xiaomi") || b.contains("redmi") || b.contains("poco")
                 || m.contains("xiaomi") || m.contains("redmi") || m.contains("poco"));
-    }
-
-    private static void toast(Context ctx, String m) {
-        if (ctx == null) return;
-        try {
-            Toast.makeText(ctx.getApplicationContext(), m, Toast.LENGTH_LONG).show();
-        } catch (Throwable ignored) {}
     }
 }

@@ -12,7 +12,7 @@
 // • Compatible with ScrollView / NestedScrollView / FrameLayout wrappers
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.content.res.Configuration;
@@ -256,4 +256,3 @@ public class GELFoldableUIManager {
     }
 }
 
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

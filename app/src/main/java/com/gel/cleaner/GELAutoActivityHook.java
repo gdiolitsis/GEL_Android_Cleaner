@@ -1,8 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// UNIVERSAL MASTER HOOK (GEL v4.5)
-// Combines: GELAutoDP + GELFoldableDetector + UIManager + Locale Hook
-// + GELFoldableOrchestrator + GELFoldableAnimationPack + DualPaneManager
-// NOTE: Full-file patch — Πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// UNIVERSAL MASTER HOOK (GEL v4.6)
+// Full fix: removed invalid @Override methods outside class.
 
 package com.gel.cleaner;
 
@@ -19,9 +17,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
-@Override public void onPostureChanged(Posture posture) { }
-@Override public void onScreenChanged(boolean isInner) { }
-
 public abstract class GELAutoActivityHook extends AppCompatActivity
         implements GELFoldableCallback {
 
@@ -36,7 +31,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     private boolean lastInner = false;
 
     // ============================================================
-    // CONTEXT HOOK (Locale + scaling)
+    // CONTEXT HOOK
     // ============================================================
     @Override
     protected void attachBaseContext(Context base) {
@@ -80,7 +75,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // CONFIG CHANGES (locale / rotation / fold)
+    // CONFIG CHANGES
     // ============================================================
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -115,7 +110,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS (Unified GELFoldablePosture)
+    // FOLDABLE CALLBACKS
     // ============================================================
     @Override
     public void onPostureChanged(@NonNull GELFoldablePosture posture) {
@@ -144,7 +139,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // EXTRA FOLDABLE ENGINES (Reflection Safe)
+    // EXTRA ENGINES
     // ============================================================
     private void initExtraFoldableEngines() {
 
@@ -182,7 +177,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // REFLECTION UTILITIES
+    // REFLECTION HELPERS
     // ============================================================
     private Object tryNew(String name, Class<?>[] sig, Object[] args) {
         try {
@@ -224,7 +219,7 @@ public abstract class GELAutoActivityHook extends AppCompatActivity
     }
 
     // ============================================================
-    // GLOBAL DP/SP HELPERS
+    // GLOBAL HELPERS
     // ============================================================
     public int dp(int x)     { return GELAutoDP.dp(x); }
     public float sp(float x) { return GELAutoDP.sp(x); }

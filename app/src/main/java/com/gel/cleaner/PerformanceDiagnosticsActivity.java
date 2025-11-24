@@ -7,6 +7,8 @@
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
+
+import com.gel.cleaner.base.*;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;

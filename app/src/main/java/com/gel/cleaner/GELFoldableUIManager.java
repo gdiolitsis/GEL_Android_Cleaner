@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELFoldableUIManager.java — GEL PATCH v1.2.1 (Context Overload + Safe No-Activity)
-// NOTE: Full-file patch — πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο σου.
+// GELFoldableUIManager.java — GEL PATCH v1.2.2 (Safe Hooks Added)
+// NOTE: Full-file patch — ready for copy-paste.
 
 package com.gel.cleaner.base;
 
@@ -244,5 +244,16 @@ public class GELFoldableUIManager {
             }
         } catch (Throwable ignored) {}
         return 360;
+    }
+
+    // ============================================================
+    // NEW — SAFE NO-OP HOOKS FOR ACTIVITIES
+    // ============================================================
+    public static void freezeTransitions(Activity a) {
+        // intentionally empty — prevents crashes, preserves compatibility
+    }
+
+    public static void unfreezeTransitions(Activity a) {
+        // intentionally empty — prevents crashes, preserves compatibility
     }
 }

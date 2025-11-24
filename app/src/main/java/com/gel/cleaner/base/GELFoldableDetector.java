@@ -3,7 +3,7 @@
 // v2.1 — Fully Compatible with GELFoldableCallback v1.2
 // NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας Γιώργου).
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -90,4 +90,3 @@ public class GELFoldableDetector implements SensorEventListener {
     }
 }
 
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

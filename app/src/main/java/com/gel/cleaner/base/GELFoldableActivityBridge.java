@@ -1,7 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 4 — Foldable Activity Bridge (v2.0 PRO)
-// Fully Integrated: Orchestrator + DualPane + UIManager + AutoDP
-// NOTE: Ολόκληρο  αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// STEP 4 — Foldable Activity Bridge (v4.0 FULL)
+// Fully Integrated: Orchestrator + DualPane + UIManager
+// ✔ Fixed packages/imports to match FULL Foldable System
+// ✔ Removed dead GELAutoDP references (class doesn't exist)
+// ✔ Safe callbacks + zero-crash
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner.base;
 
@@ -10,6 +13,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.gel.cleaner.GELFoldableOrchestrator;
+import com.gel.cleaner.GELFoldableUIManager;
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
+
 public class GELFoldableActivityBridge implements GELFoldableCallback {
 
     private static final String TAG = "GELFoldBridge";
@@ -17,8 +24,8 @@ public class GELFoldableActivityBridge implements GELFoldableCallback {
     private final Activity activity;
     private final GELFoldableDetector detector;
     private final GELFoldableUIManager uiManager;
-    private GELDualPaneManager dualPane;   // optional, auto-linked
 
+    private GELDualPaneManager dualPane;   // optional, auto-linked
     private boolean lastInner = false;
 
     // =====================================================================
@@ -59,8 +66,8 @@ public class GELFoldableActivityBridge implements GELFoldableCallback {
 
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
-        // Debug info
-        Log.d(TAG, "Posture: " + posture.toString());
+        Log.d(TAG, "Posture: " + posture);
+        // Bridge doesn't decide UI by posture; Orchestrator does.
     }
 
     @Override
@@ -79,8 +86,7 @@ public class GELFoldableActivityBridge implements GELFoldableCallback {
                 try { dualPane.applyDualPane(isInnerScreen); } catch (Throwable ignore) {}
             }
 
-            // 3) Re-init scaling (safe)
-            try { GELAutoDP.init(activity); } catch (Throwable ignore) {}
+            // 3) (Scaling hook removed — GELAutoDP no longer exists)
         });
     }
 

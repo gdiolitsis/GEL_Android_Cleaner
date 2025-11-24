@@ -5,6 +5,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 // PERIPHERALS REPORT v6.3 — SERVICE-PRO EDITION (GEL)
 // Camera / Biometrics / Sensors / Connectivity / Location / Other / BT / NFC / Root
 // + Battery Health / Temperature / Charging Type / UWB / Vibrator Amplitude / Haptics Class

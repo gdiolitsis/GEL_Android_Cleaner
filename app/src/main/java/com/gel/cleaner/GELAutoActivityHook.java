@@ -17,6 +17,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
+
+@Override public void onPostureChanged(Posture posture) { }
+@Override public void onScreenChanged(boolean isInner) { }
 
 public abstract class GELAutoActivityHook extends AppCompatActivity
         implements GELFoldableCallback {

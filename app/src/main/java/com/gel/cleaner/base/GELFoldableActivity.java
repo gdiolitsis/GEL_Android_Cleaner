@@ -1,6 +1,11 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// STEP 9 — Foldable Posture Handler (Auto UI Refresh)
-// COMPLETE FILE (Base Activity) — Ready for copy/paste
+// GELFoldableActivity — Final Foldable Base v3.0 (Compile-Safe)
+// ------------------------------------------------------------
+// ✔ Fix: implements BOTH callback methods
+// ✔ Fix: posture mapping uses the REAL enum of the project
+// ✔ Zero-crash on posture / multi-window
+// ✔ Fully compatible with GELFoldableDetector + UIManager
+// ------------------------------------------------------------
 
 package com.gel.cleaner.base;
 
@@ -12,12 +17,12 @@ import com.gel.cleaner.GELFoldableDetector;
 import com.gel.cleaner.GELFoldableUIManager;
 import com.gel.cleaner.GELFoldableCallback;
 
-public abstract class GELFoldableActivity extends AppCompatActivity {
+public abstract class GELFoldableActivity extends AppCompatActivity
+        implements GELFoldableCallback {
 
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
 
-    // Current state (prevent useless refresh)
     private boolean lastInnerState = false;
 
     @Override
@@ -26,11 +31,15 @@ public abstract class GELFoldableActivity extends AppCompatActivity {
 
         uiManager = new GELFoldableUIManager(this);
 
-        // Detector with callback
         foldDetector = new GELFoldableDetector(this, new GELFoldableCallback() {
             @Override
             public void onPostureChanged(Posture posture) {
-                handlePosture(posture);
+                GELFoldableActivity.this.onPostureChanged(posture);
+            }
+
+            @Override
+            public void onScreenChanged(boolean isInner) {
+                GELFoldableActivity.this.onScreenChanged(isInner);
             }
         });
     }
@@ -38,51 +47,64 @@ public abstract class GELFoldableActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        foldDetector.start();
+        if (foldDetector != null) foldDetector.start();
     }
 
     @Override
     protected void onPause() {
-        foldDetector.stop();
+        if (foldDetector != null) foldDetector.stop();
         super.onPause();
     }
 
-    /**
-     * Convert hinge posture → UI state
-     */
-    private void handlePosture(GELFoldableCallback.Posture posture) {
+    // ------------------------------------------------------------
+    // REQUIRED CALLBACK 1 — Posture changed
+    // ------------------------------------------------------------
+    @Override
+    public void onPostureChanged(Posture posture) {
 
         boolean isInner;
 
         switch (posture) {
 
-            case CLOSED:
-            case HALF_OPEN:
             case OUTER_SCREEN:
                 isInner = false;
                 break;
 
-            case FLAT:
+            case INNER_SCREEN:
             case TABLE_MODE:
             case FULLY_OPEN:
                 isInner = true;
                 break;
 
+            case HALF_OPENED:
             default:
-                isInner = false;
+                // keep previous state to avoid flicker
+                isInner = lastInnerState;
         }
 
         if (isInner != lastInnerState) {
             lastInnerState = isInner;
             uiManager.applyUI(isInner);
-            onFoldableUIChanged(isInner);   // optional override
+            onFoldableUIChanged(isInner);
         }
     }
 
-    /**
-     * Optional — subclasses can override
-     */
+    // ------------------------------------------------------------
+    // REQUIRED CALLBACK 2 — OEM screen switching
+    // ------------------------------------------------------------
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        if (isInner != lastInnerState) {
+            lastInnerState = isInner;
+            uiManager.applyUI(isInner);
+            onFoldableUIChanged(isInner);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // OPTIONAL — Activity override hook
+    // ------------------------------------------------------------
     protected void onFoldableUIChanged(boolean isInnerScreen) {
-        // Example: refresh recycler adapters, change layout thresholds, etc.
+        // override if needed (e.g. refresh lists, adjust layout)
     }
 }

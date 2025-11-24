@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELFoldableUIManager — Official Foldable Reflow Engine v1.2 (ULTRA SAFE EDITION)
+// app/src/main/java/com/gel/cleaner/GELFoldableUIManager.java
+// GELFoldableUIManager — Official Foldable Reflow Engine v1.2 (ULTRA SAFE EDITION + Static Compat)
 // *********************************************************************************
 // • SAFE column reflow with breakpoints:
 //      sw < 600dp  → 1 column
@@ -10,12 +11,16 @@
 // • Idempotent layout swaps (won’t re-convert already swapped containers)
 // • Soft overshoot animation when entering inner/large mode
 // • Compatible with ScrollView / NestedScrollView / FrameLayout wrappers
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// • Added static stubs for compatibility:
+//      • freezeTransitions(Activity)
+//      • unfreezeTransitions(Activity)
+// NOTE TO GIORGOS: πάντα δουλεύουμε πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο που έχει σταλεί.
 
-package com.gel.cleaner.base;
+package com.gel.cleaner;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +31,8 @@ import android.widget.TextView;
 import androidx.gridlayout.widget.GridLayout;
 
 public class GELFoldableUIManager {
+
+    private static final String TAG = "GEL.FoldableUI";
 
     private final Activity act;
 
@@ -39,6 +46,17 @@ public class GELFoldableUIManager {
 
     public GELFoldableUIManager(Activity activity) {
         this.act = activity;
+    }
+
+    // ============================================================
+    // STATIC COMPATIBILITY (some Activities call these)
+    // ============================================================
+    public static void freezeTransitions(Activity a) {
+        Log.d(TAG, "freezeTransitions()");
+    }
+
+    public static void unfreezeTransitions(Activity a) {
+        Log.d(TAG, "unfreezeTransitions()");
     }
 
     // ============================================================
@@ -234,11 +252,11 @@ public class GELFoldableUIManager {
             root.setScaleX(0.98f);
             root.setScaleY(0.98f);
             root.animate()
-                .scaleX(1.0f)
-                .scaleY(1.0f)
-                .setDuration(260)
-                .setInterpolator(new OvershootInterpolator(0.9f))
-                .start();
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(260)
+                    .setInterpolator(new OvershootInterpolator(0.9f))
+                    .start();
         } catch (Throwable ignored) {}
     }
 

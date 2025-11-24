@@ -1,10 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// Lab29Engine — Independent Final Summary Module v1.0
+// Lab29Engine — Independent Final Summary Module v2.0 (OLD LOGIC MATCH)
 // ------------------------------------------------------------
 // ✔ ΜΟΝΟ για LAB 29
 // ✔ Δεν αγγίζει κανένα άλλο LAB / Activity
 // ✔ Compile-safe, pipeline-safe
-// ✔ Μπορεί να κληθεί από ManualTestsActivity με 1 γραμμή
+// ✔ Outputs SAME weights + breakdown as old lab29CombineFindings
 // ------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -21,6 +21,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
+import android.os.SystemClock;
 import android.provider.Settings;
 
 import androidx.annotation.NonNull;
@@ -166,7 +167,6 @@ public final class Lab29Engine {
 
     private static boolean detectRootFast(Context ctx) {
         try {
-            // SU paths
             String[] paths = {
                     "/system/bin/su", "/system/xbin/su", "/sbin/su",
                     "/system/app/Superuser.apk", "/system/app/Magisk.apk",
@@ -175,7 +175,6 @@ public final class Lab29Engine {
             for (String p : paths)
                 if (new File(p).exists()) return true;
 
-            // Magisk / SuperSU packages
             PackageManager pm = ctx.getPackageManager();
             String[] pkgs = {
                     "com.topjohnwu.magisk",
@@ -214,7 +213,6 @@ public final class Lab29Engine {
                 if (pi == null || pi.applicationInfo == null) continue;
                 ApplicationInfo ai = pi.applicationInfo;
 
-                // skip system apps
                 if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
 
                 p.totalUserAppsChecked++;
@@ -257,7 +255,7 @@ public final class Lab29Engine {
     }
 
     // ============================================================
-    // SCORING (UNCHANGED LOGIC)
+    // SCORING (OLD LOGIC)
     // ============================================================
 
     private static int scoreThermals(float maxT, float avgT) {
@@ -405,47 +403,107 @@ public final class Lab29Engine {
             }
         } catch (Throwable ignored) {}
 
-        float maxT = (maxThermalC != null) ? maxThermalC : 0f;
-        float avgT = (avgThermalC != null) ? avgThermalC : 0f;
+        float maxT = (maxThermalC != null) ? maxThermalC : battTemp;
+        float avgT = (avgThermalC != null) ? avgThermalC : battTemp;
 
-        int sTherm = scoreThermals(maxT, avgT);
-        int sBatt  = scoreBattery(battTemp, battPct, charging);
-        int sStor  = scoreStorage(st.pctFree, st.totalBytes);
-        int sApps  = scoreApps(ap.userApps, ap.totalApps);
-        int sRam   = scoreRam(rm.pctFree);
-        int sStab  = scoreStability(android.os.SystemClock.elapsedRealtime());
-        int sSec   = scoreSecurity(sc);
-        int sPriv  = scorePrivacy(pr);
+        int thermalScore  = scoreThermals(maxT, avgT);
+        int batteryScore  = scoreBattery(battTemp, battPct, charging);
+        int storageScore  = scoreStorage(st.pctFree, st.totalBytes);
+        int appsScore     = scoreApps(ap.userApps, ap.totalApps);
+        int ramScore      = scoreRam(rm.pctFree);
+        int stabilityScore= scoreStability(SystemClock.elapsedRealtime());
+        int securityScore = scoreSecurity(sc);
+        int privacyScore  = scorePrivacy(pr);
 
-        // Health & performance composites (same spirit as your LAB29)
-        int health = (sBatt + sTherm + sStor + sRam) / 4;
-        int perf   = (sApps + sRam + sStab) / 3;
+        // OLD weighted composites (match old Lab29)
+        int performanceScore = Math.round(
+                (storageScore * 0.35f) +
+                (ramScore     * 0.35f) +
+                (appsScore    * 0.15f) +
+                (thermalScore * 0.15f)
+        );
+
+        int deviceHealthScore = Math.round(
+                (thermalScore     * 0.25f) +
+                (batteryScore     * 0.25f) +
+                (performanceScore * 0.30f) +
+                (stabilityScore   * 0.20f)
+        );
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("🧾 LAB 29 — FINAL SUMMARY\n");
-        sb.append("--------------------------------\n");
-        sb.append("Thermals: ").append(colorFlagFromScore(sTherm)).append(" ").append(sTherm).append("/100\n");
-        sb.append("Battery : ").append(colorFlagFromScore(sBatt)).append(" ").append(sBatt).append("/100\n");
-        sb.append("Storage : ").append(colorFlagFromScore(sStor)).append(" ").append(sStor).append("/100\n");
-        sb.append("RAM     : ").append(colorFlagFromScore(sRam)).append(" ").append(sRam).append("/100\n");
-        sb.append("Apps    : ").append(colorFlagFromScore(sApps)).append(" ").append(sApps).append("/100\n");
-        sb.append("Stability: ").append(colorFlagFromScore(sStab)).append(" ").append(sStab).append("/100\n");
-        sb.append("Security: ").append(colorFlagFromScore(sSec)).append(" ").append(sSec).append("/100\n");
-        sb.append("Privacy : ").append(colorFlagFromScore(sPriv)).append(" ").append(sPriv).append("/100\n\n");
+        sb.append("LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)\n");
+        sb.append("----------------------------------------------\n\n");
 
-        sb.append("HEALTH  : ").append(colorFlagFromScore(health)).append(" ").append(health).append("/100\n");
-        sb.append("SECURITY: ").append(colorFlagFromScore(sSec)).append(" ").append(sSec).append("/100\n");
-        sb.append("PRIVACY : ").append(colorFlagFromScore(sPriv)).append(" ").append(sPriv).append("/100\n");
-        sb.append("PERF    : ").append(colorFlagFromScore(perf)).append(" ").append(perf).append("/100\n\n");
+        sb.append("AUTO Breakdown:\n");
 
-        sb.append(finalVerdict(health, sSec, sPriv, perf)).append("\n");
+        sb.append("Thermals: ").append(colorFlagFromScore(thermalScore))
+                .append(" ").append(thermalScore).append("%\n");
+        sb.append("• max=").append(fmt1(maxT)).append("°C | avg=")
+                .append(fmt1(avgT)).append("°C\n");
+
+        sb.append("Battery: ").append(colorFlagFromScore(batteryScore))
+                .append(" ").append(batteryScore).append("%\n");
+        sb.append("• Level=").append(battPct >= 0 ? fmt1(battPct) + "%" : "Unknown")
+                .append(" | Temp=").append(fmt1(battTemp))
+                .append("°C | Charging=").append(charging).append("\n");
+
+        sb.append("Storage: ").append(colorFlagFromScore(storageScore))
+                .append(" ").append(storageScore).append("%\n");
+        sb.append("• Free=").append(st.pctFree).append("% | Used=")
+                .append(humanBytes(st.usedBytes)).append(" / ")
+                .append(humanBytes(st.totalBytes)).append("\n");
+
+        sb.append("Apps Footprint: ").append(colorFlagFromScore(appsScore))
+                .append(" ").append(appsScore).append("%\n");
+        sb.append("• User apps=").append(ap.userApps)
+                .append(" | System apps=").append(ap.systemApps)
+                .append(" | Total=").append(ap.totalApps).append("\n");
+
+        sb.append("RAM: ").append(colorFlagFromScore(ramScore))
+                .append(" ").append(ramScore).append("%\n");
+        sb.append("• Free=").append(rm.pctFree).append("% (")
+                .append(humanBytes(rm.freeBytes)).append(" / ")
+                .append(humanBytes(rm.totalBytes)).append(")\n");
+
+        sb.append("Stability/Uptime: ").append(colorFlagFromScore(stabilityScore))
+                .append(" ").append(stabilityScore).append("%\n");
+        sb.append("• Uptime=").append(formatUptime(SystemClock.elapsedRealtime())).append("\n");
+
+        sb.append("Security: ").append(colorFlagFromScore(securityScore))
+                .append(" ").append(securityScore).append("%\n");
+        sb.append("• Lock secure=").append(sc.lockSecure).append("\n");
+        sb.append("• Patch level=").append(sc.securityPatch != null ? sc.securityPatch : "Unknown").append("\n");
+        sb.append("• ADB USB=").append(sc.adbUsbOn)
+                .append(" | ADB Wi-Fi=").append(sc.adbWifiOn)
+                .append(" | DevOptions=").append(sc.devOptionsOn).append("\n");
+
+        sb.append("Privacy: ").append(colorFlagFromScore(privacyScore))
+                .append(" ").append(privacyScore).append("%\n");
+        sb.append("• Dangerous perms on user apps: ")
+                .append("Location=").append(pr.userAppsWithLocation).append(", ")
+                .append("Mic=").append(pr.userAppsWithMic).append(", ")
+                .append("Camera=").append(pr.userAppsWithCamera).append(", ")
+                .append("SMS=").append(pr.userAppsWithSms).append("\n\n");
+
+        sb.append("FINAL Scores:\n");
+        sb.append("Device Health Score: ").append(deviceHealthScore).append("% ")
+                .append(colorFlagFromScore(deviceHealthScore)).append("\n");
+        sb.append("Performance Score: ").append(performanceScore).append("% ")
+                .append(colorFlagFromScore(performanceScore)).append("\n");
+        sb.append("Security Score: ").append(securityScore).append("% ")
+                .append(colorFlagFromScore(securityScore)).append("\n");
+        sb.append("Privacy Score: ").append(privacyScore).append("% ")
+                .append(colorFlagFromScore(privacyScore)).append("\n\n");
+
+        sb.append(finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore))
+                .append("\n");
 
         return sb.toString();
     }
 
     // ============================================================
-    // UTIL (UNCHANGED)
+    // UTIL
     // ============================================================
 
     private static int clampScore(int s) {
@@ -469,7 +527,34 @@ public final class Lab29Engine {
         return "🟥 Device is NOT healthy — immediate servicing recommended.";
     }
 
-    // Safe read helper (kept for parity)
+    private static String fmt1(float v) {
+        return String.format(Locale.US, "%.1f", v);
+    }
+
+    private static String humanBytes(long b) {
+        try {
+            float kb = b / 1024f;
+            float mb = kb / 1024f;
+            float gb = mb / 1024f;
+            if (gb >= 1f) return String.format(Locale.US, "%.2f GB", gb);
+            if (mb >= 1f) return String.format(Locale.US, "%.1f MB", mb);
+            if (kb >= 1f) return String.format(Locale.US, "%.0f KB", kb);
+            return b + " B";
+        } catch (Throwable t) {
+            return b + " B";
+        }
+    }
+
+    private static String formatUptime(long upMs) {
+        long s = upMs / 1000L;
+        long m = s / 60L; s %= 60L;
+        long h = m / 60L; m %= 60L;
+        long d = h / 24L; h %= 24L;
+        if (d > 0) return d + "d " + h + "h " + m + "m";
+        if (h > 0) return h + "h " + m + "m";
+        return m + "m " + s + "s";
+    }
+
     @SuppressWarnings("unused")
     private static String safeReadFirstLine(String p) {
         try (BufferedReader br = new BufferedReader(new FileReader(p))) {

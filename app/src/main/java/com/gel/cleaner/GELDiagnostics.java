@@ -398,5 +398,3 @@ public class GELDiagnostics {
         if (cb != null) cb.log(m, true);
     }
 }
-
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

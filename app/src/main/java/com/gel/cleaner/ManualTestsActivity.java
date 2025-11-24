@@ -2777,31 +2777,79 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 29 — DEVICE SCORES SUMMARY (via Lab29Engine)
+// LAB 29 — DEVICE SCORES Summary (Dialog + Lab29Engine)
+// Opens its own window, does NOT spam main log.
 // ============================================================
 private void runLab29() {
 
-    logLine();
-    logInfo("Running LAB 29…");
-
     try {
-        // Thermal values not available globally → send nulls
-        Float maxT = null;
-        Float avgT = null;
+        // ------------------------------------------------------------
+        // 1) THERMALS (same as old lab29CombineFindings)
+        // ------------------------------------------------------------
+        java.util.Map<String, Float> zones = null;
+        try { zones = readThermalZones(); } catch (Throwable ignored) {}
 
+        float battTemp = getBatteryTemperature();
+
+        Float cpu  = null, gpu = null, skin = null, pmic = null;
+        if (zones != null && !zones.isEmpty()) {
+            cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
+            gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
+            skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
+            pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
+        }
+
+        float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);
+        float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);
+
+        // ------------------------------------------------------------
+        // 2) BUILD SUMMARY FROM ENGINE (old weights + full breakdown)
+        // ------------------------------------------------------------
         String summary = Lab29Engine.buildLab29Summary(
                 this,
-                maxT,
-                avgT
+                maxThermal,
+                avgThermal
         );
 
-        logInfo(summary);
-        logOk("LAB 29 complete.");
+        // ------------------------------------------------------------
+        // 3) OPEN OWN WINDOW (dialog) — not main log
+        // ------------------------------------------------------------
+        showLab29Dialog(summary);
+
+        // Keep only 1 small log line (optional)
+        logOk("LAB 29 complete (opened in separate window).");
 
     } catch (Exception e) {
         logError("LAB 29 ERROR: " + e.getMessage());
     }
 }
+
+// ============================================================
+// LAB 29 — Dialog Window Helper
+// ============================================================
+private void showLab29Dialog(String text) {
+    try {
+        androidx.appcompat.app.AlertDialog.Builder b =
+                new androidx.appcompat.app.AlertDialog.Builder(this);
+
+        b.setTitle("LAB 29 — DEVICE SCORES Summary");
+
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(13f);
+        tv.setTextColor(0xFFEEEEEE);
+        tv.setPadding(dp(12), dp(12), dp(12), dp(12));
+
+        ScrollView sv = new ScrollView(this);
+        sv.addView(tv);
+
+        b.setView(sv);
+        b.setPositiveButton("OK", null);
+        b.show();
+
+    } catch (Throwable ignored) {}
+}
+    
 // ============================================================
 // LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
 // Does NOT modify GELServiceLog — only reads it.
@@ -2893,5 +2941,6 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 

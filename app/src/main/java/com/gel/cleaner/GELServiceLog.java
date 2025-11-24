@@ -89,5 +89,3 @@ public class GELServiceLog {
         return LOG.length() == 0;
     }
 }
-
-// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

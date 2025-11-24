@@ -2825,29 +2825,32 @@ private void runLab29() {
 }
 
 // ============================================================
-// LAB 29 — Dialog Window Helper
+// LAB 29 — DEVICE SCORES SUMMARY (via Lab29Engine)
 // ============================================================
-private void showLab29Dialog(String text) {
+private void runLab29() {
+
     try {
-        androidx.appcompat.app.AlertDialog.Builder b =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
+        append("\nRunning LAB 29…\n");
 
-        b.setTitle("LAB 29 — DEVICE SCORES Summary");
+        // Gather available thermal readings (nullable)
+        Float cpu  = lastThermalCPU;
+        Float gpu  = lastThermalGPU;
+        Float skin = lastThermalSKIN;
+        Float pmic = lastThermalPMIC;
+        Float batt = lastBatteryTemp;   // Battery temperature from your existing sensors
 
-        TextView tv = new TextView(this);
-        tv.setText(text);
-        tv.setTextSize(13f);
-        tv.setTextColor(0xFFEEEEEE);
-        tv.setPadding(dp(12), dp(12), dp(12), dp(12));
+        // Build final summary using the dedicated engine
+        String summary = Lab29Engine.buildLab29Summary(
+                this,
+                cpu, gpu, skin, pmic, batt
+        );
 
-        ScrollView sv = new ScrollView(this);
-        sv.addView(tv);
+        append(summary);
+        append("\nLAB 29 complete.\n");
 
-        b.setView(sv);
-        b.setPositiveButton("OK", null);
-        b.show();
-
-    } catch (Throwable ignored) {}
+    } catch (Exception e) {
+        append("LAB 29 ERROR: " + e.getMessage() + "\n");
+    }
 }
     
 // ============================================================
@@ -2941,6 +2944,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

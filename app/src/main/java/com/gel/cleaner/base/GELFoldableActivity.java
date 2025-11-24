@@ -1,21 +1,21 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELFoldableActivity — Final Foldable Base v3.0 (Compile-Safe)
+// GELFoldableActivity — Final Foldable Base v4.0 (FULL / Compile-Safe)
 // ------------------------------------------------------------
-// ✔ Fix: implements BOTH callback methods
-// ✔ Fix: posture mapping uses the REAL enum of the project
+// ✔ Correct imports/packages
+// ✔ No enum-switch compile traps (uses name() mapping)
 // ✔ Zero-crash on posture / multi-window
-// ✔ Fully compatible with GELFoldableDetector + UIManager
+// ✔ Fully compatible with GELFoldableDetector + UIManager + Orchestrator
 // ------------------------------------------------------------
 
 package com.gel.cleaner.base;
 
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.gel.cleaner.GELFoldableDetector;
 import com.gel.cleaner.GELFoldableUIManager;
-import com.gel.cleaner.GELFoldableCallback;
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 public abstract class GELFoldableActivity extends AppCompatActivity
         implements GELFoldableCallback {
@@ -62,25 +62,7 @@ public abstract class GELFoldableActivity extends AppCompatActivity
     @Override
     public void onPostureChanged(Posture posture) {
 
-        boolean isInner;
-
-        switch (posture) {
-
-            case OUTER_SCREEN:
-                isInner = false;
-                break;
-
-            case INNER_SCREEN:
-            case TABLE_MODE:
-            case FULLY_OPEN:
-                isInner = true;
-                break;
-
-            case HALF_OPENED:
-            default:
-                // keep previous state to avoid flicker
-                isInner = lastInnerState;
-        }
+        boolean isInner = isInnerFromPosture(posture);
 
         if (isInner != lastInnerState) {
             lastInnerState = isInner;
@@ -99,6 +81,27 @@ public abstract class GELFoldableActivity extends AppCompatActivity
             uiManager.applyUI(isInner);
             onFoldableUIChanged(isInner);
         }
+    }
+
+    // ------------------------------------------------------------
+    // Robust posture mapping (supports old + new vocab)
+    // ------------------------------------------------------------
+    private boolean isInnerFromPosture(Posture p) {
+        if (p == null) return false;
+        String n = p.name();
+
+        // New vocab
+        if ("INNER_SCREEN".equals(n) ||
+            "TABLE_MODE".equals(n) ||
+            "FULLY_OPEN".equals(n)) return true;
+
+        // Old vocab
+        if ("FLAT".equals(n) ||
+            "HALF_OPEN".equals(n) ||
+            "HALF_OPENED".equals(n) ||
+            "TABLETOP".equals(n)) return true;
+
+        return false;
     }
 
     // ------------------------------------------------------------

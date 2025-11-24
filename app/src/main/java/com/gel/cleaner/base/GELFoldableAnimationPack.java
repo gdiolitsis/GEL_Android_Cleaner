@@ -1,11 +1,9 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// app/src/main/java/com/gel/cleaner/base/GELFoldableAnimationPack.java
-// Foldable Animation Pack — Final v2.0 (Compile-Safe + Reflow Support)
+// GELFoldableAnimationPack — Final v2.2 (Context-Safe + List Fade Stub)
 // ------------------------------------------------------------
-// ✔ Fix: Added animateReflow(Runnable) — missing method causing build failures
-// ✔ No-op but fully safe (zero crash, zero impact)
-// ✔ Accepts lambda from Activities (AppListActivity, CpuRamLiveActivity etc.)
-// ✔ Perfect compatibility with GELFoldableActivity + Callback
+// ✔ Added Context constructor (used by adapters)
+// ✔ Added applyListItemFade(View) stub
+// ✔ animateReflow(...) kept
 // ------------------------------------------------------------
 
 package com.gel.cleaner.base;
@@ -13,27 +11,25 @@ package com.gel.cleaner.base;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
+import android.view.View;
 
 public class GELFoldableAnimationPack {
 
     private static final String TAG = "GEL.AnimPack";
 
-    private final Activity activity;
+    private final Activity activity; // may be null
 
     public GELFoldableAnimationPack(Activity a) {
         this.activity = a;
     }
 
-    // ------------------------------------------------------------
-    // Static prepare hook (some callers use static)
-    // ------------------------------------------------------------
-    public static void prepare(Context ctx) {
-        Log.d(TAG, "prepare()");
+    // Context ctor (for adapters) — safe
+    public GELFoldableAnimationPack(Context ctx) {
+        this.activity = (ctx instanceof Activity) ? (Activity) ctx : null;
     }
 
-    // ------------------------------------------------------------
-    // Static animations — used by GELDualPaneManager (safe no-op)
-    // ------------------------------------------------------------
+    public static void prepare(Context ctx) { Log.d(TAG, "prepare()"); }
+
     public static void animateCollapse(Activity a) {
         if (a != null) Log.d(TAG, "animateCollapse()");
     }
@@ -42,9 +38,6 @@ public class GELFoldableAnimationPack {
         if (a != null) Log.d(TAG, "animateExpand()");
     }
 
-    // ------------------------------------------------------------
-    // Lifecycle hooks — no-op but logging for debug safety
-    // ------------------------------------------------------------
     public void onCreate() { Log.d(TAG, "onCreate()"); }
     public void onResume() { Log.d(TAG, "onResume()"); }
     public void onPause()  { Log.d(TAG, "onPause()"); }
@@ -65,17 +58,19 @@ public class GELFoldableAnimationPack {
         Log.d(TAG, "onPostureChanged(" + posture + ")");
     }
 
-    // ------------------------------------------------------------
-    // ✔ NEW: Reflow Animation Hook — REQUIRED BY MANY ACTIVITIES
-    // ------------------------------------------------------------
+    // REQUIRED by Activities
     public void animateReflow(Runnable action) {
         Log.d(TAG, "animateReflow()");
         if (action != null) {
-            try {
-                action.run();   // safe execution (UI refresh / layout reflow)
-            } catch (Exception e) {
-                Log.e(TAG, "animateReflow() error: ", e);
+            try { action.run(); } catch (Throwable e) {
+                Log.e(TAG, "animateReflow error", e);
             }
         }
+    }
+
+    // REQUIRED by AppListAdapter
+    public void applyListItemFade(View v) {
+        // safe no-op (keeps behavior stable)
+        if (v != null) Log.d(TAG, "applyListItemFade()");
     }
 }

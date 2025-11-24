@@ -4,6 +4,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Bundle;

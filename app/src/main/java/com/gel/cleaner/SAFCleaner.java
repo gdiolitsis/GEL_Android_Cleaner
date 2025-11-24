@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// SAFCleaner — Foldable Ready FINAL v3.4
+// SAFCleaner — Foldable Ready FINAL v3.4 (GEL Ultra-Safe Patch)
 // --------------------------------------------------------------
 // ✔ Βασισμένο 100% στο ΤΕΛΕΥΤΑΙΟ αρχείο σου (v3.3)
 // ✔ Καμία αλλαγή στη λογική cleaning (safe / silent / no folder creation)
@@ -7,6 +7,7 @@
 //      - GELFoldableOrchestrator compatible
 //      - Foldable-Safe Launch wrapper for SAF permission intents
 // ✔ Zero-crash σε multi-window / split mode / dual pane
+// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -25,16 +26,25 @@ import androidx.documentfile.provider.DocumentFile;
 public class SAFCleaner {
 
     /* ===========================================================
+     * MAIN THREAD HANDLER (ultra-safe)
+     * =========================================================== */
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
+
+    /* ===========================================================
      * LOG HELPERS
      * =========================================================== */
     private static void log(GELCleaner.LogCallback cb, String msg) {
         if (cb == null) return;
-        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, false));
+        if (msg == null) msg = "";
+        final String m = msg;
+        MAIN.post(() -> cb.log(m, false));
     }
 
     private static void err(GELCleaner.LogCallback cb, String msg) {
         if (cb == null) return;
-        new Handler(Looper.getMainLooper()).post(() -> cb.log(msg, true));
+        if (msg == null) msg = "";
+        final String m = msg;
+        MAIN.post(() -> cb.log(m, true));
     }
 
     /* ===========================================================
@@ -45,29 +55,37 @@ public class SAFCleaner {
 
     /** Αποθήκευση SAF root ΜΟΝΟ την πρώτη φορά — Foldable Safe */
     public static void saveTreeUri(Context ctx, Uri treeUri) {
-        if (treeUri == null) return;
+        if (ctx == null || treeUri == null) return;
 
-        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        SharedPreferences sp =
+                ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
         if (sp.getString(KEY_TREE, null) != null) return; // ήδη υπάρχει
 
         try {
-            // 🔥 Foldable-Safe: we never call directly, always via safe wrapper
+            // 🔥 Persist SAF permissions safely (no crash)
             FoldableSafe.launchSAFGrant(ctx, treeUri);
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
 
-        sp.edit().putString(KEY_TREE, treeUri.toString()).apply();
+        try {
+            sp.edit().putString(KEY_TREE, treeUri.toString()).apply();
+        } catch (Throwable ignored) {}
     }
 
     public static Uri getTreeUri(Context ctx) {
-        String s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .getString(KEY_TREE, null);
-        return (s == null) ? null : Uri.parse(s);
+        if (ctx == null) return null;
+        try {
+            String s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .getString(KEY_TREE, null);
+            return (s == null) ? null : Uri.parse(s);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     public static boolean hasTree(Context ctx) {
         return getTreeUri(ctx) != null;
     }
-
 
     /* ===========================================================
      * PUBLIC CLEAN FUNCTIONS (UNCHANGED)
@@ -109,11 +127,14 @@ public class SAFCleaner {
         log(cb, "🔥🔥 ALL CLEAN DONE 🔥🔥");
     }
 
-
     /* ===========================================================
-     * MAIN KNOWN PATH CLEANER (UNCHANGED)
+     * MAIN KNOWN PATH CLEANER (UNCHANGED LOGIC)
      * =========================================================== */
     public static void cleanKnownJunk(Context ctx, GELCleaner.LogCallback cb) {
+        if (ctx == null) {
+            err(cb, "❌ Context null");
+            return;
+        }
 
         Uri root = getTreeUri(ctx);
         if (root == null) {
@@ -121,7 +142,12 @@ public class SAFCleaner {
             return;
         }
 
-        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        DocumentFile rootDoc;
+        try {
+            rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        } catch (Throwable t) {
+            rootDoc = null;
+        }
         if (rootDoc == null) {
             err(cb, "❌ SAF root invalid");
             return;
@@ -208,14 +234,20 @@ public class SAFCleaner {
     }
 
     /* ===========================================================
-     * THUMBNAILS SCAN (UNCHANGED)
+     * THUMBNAILS SCAN (UNCHANGED LOGIC)
      * =========================================================== */
     private static void thumbnailScanAndDelete(Context ctx, GELCleaner.LogCallback cb) {
+        if (ctx == null) return;
 
         Uri root = getTreeUri(ctx);
         if (root == null) return;
 
-        DocumentFile rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        DocumentFile rootDoc;
+        try {
+            rootDoc = DocumentFile.fromTreeUri(ctx, root);
+        } catch (Throwable t) {
+            rootDoc = null;
+        }
         if (rootDoc == null) return;
 
         String[] rels = {
@@ -254,21 +286,32 @@ public class SAFCleaner {
         DocumentFile folder = traverse(root, rel);
         if (folder == null) return rep;
 
-        for (DocumentFile f : folder.listFiles()) {
-            if (f.isFile()) {
-                long size = f.length();
-                if (f.delete()) {
-                    rep.count++;
-                    rep.bytes += size;
-                }
+        DocumentFile[] files;
+        try {
+            files = folder.listFiles();
+        } catch (Throwable t) {
+            files = null;
+        }
+
+        if (files == null) return rep;
+
+        for (DocumentFile f : files) {
+            if (f != null && f.isFile()) {
+                long size = 0;
+                try { size = f.length(); } catch (Throwable ignored) {}
+                try {
+                    if (f.delete()) {
+                        rep.count++;
+                        rep.bytes += size;
+                    }
+                } catch (Throwable ignored) {}
             }
         }
         return rep;
     }
 
-
     /* ===========================================================
-     * FS HELPERS (UNCHANGED)
+     * FS HELPERS (UNCHANGED LOGIC)
      * =========================================================== */
     private static DocumentFile traverse(DocumentFile root, String rel) {
         if (root == null || rel == null) return null;
@@ -290,17 +333,27 @@ public class SAFCleaner {
 
         long freed = 0L;
 
-        for (DocumentFile f : folder.listFiles()) {
-            try {
-                long sz = f.length();
-                if (f.delete()) freed += sz;
-            } catch (Exception ignored) {}
+        DocumentFile[] kids;
+        try {
+            kids = folder.listFiles();
+        } catch (Throwable t) {
+            kids = null;
+        }
+
+        if (kids != null) {
+            for (DocumentFile f : kids) {
+                try {
+                    if (f == null) continue;
+                    long sz = f.length();
+                    if (f.delete()) freed += sz;
+                } catch (Throwable ignored) {}
+            }
         }
 
         try {
             long sz = folder.length();
             if (folder.delete()) freed += sz;
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
 
         return freed;
     }
@@ -308,8 +361,19 @@ public class SAFCleaner {
     private static DocumentFile findChild(DocumentFile parent, String name) {
         if (parent == null || name == null) return null;
 
-        for (DocumentFile f : parent.listFiles()) {
-            if (name.equalsIgnoreCase(f.getName())) return f;
+        DocumentFile[] kids;
+        try {
+            kids = parent.listFiles();
+        } catch (Throwable t) {
+            kids = null;
+        }
+
+        if (kids == null) return null;
+
+        for (DocumentFile f : kids) {
+            try {
+                if (f != null && name.equalsIgnoreCase(f.getName())) return f;
+            } catch (Throwable ignored) {}
         }
         return null;
     }
@@ -318,7 +382,6 @@ public class SAFCleaner {
         return String.format("%.2f", (b / 1024f / 1024f));
     }
 
-
     /* ===========================================================
      * FOLDABLE-SAFE FLAGS / WRAPPERS
      * =========================================================== */
@@ -326,14 +389,17 @@ public class SAFCleaner {
 
         /** SAF grant → always safe in foldable split-modes */
         static void launchSAFGrant(Context ctx, Uri tree) {
+            if (ctx == null || tree == null) return;
+
             try {
                 ctx.getContentResolver().takePersistableUriPermission(
                         tree,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
-                                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 );
             } catch (Throwable ignored) {}
         }
     }
 }
+
+// Παππού Γιώργο δώσε μου το επόμενο αρχείο να το κάνω Foldable Ready (Fully Integrated).

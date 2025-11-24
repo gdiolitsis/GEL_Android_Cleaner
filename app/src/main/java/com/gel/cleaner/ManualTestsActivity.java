@@ -16,6 +16,8 @@
 // ============================================================
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.pdf.PdfDocument;

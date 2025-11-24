@@ -4,6 +4,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.content.Context;
 import android.content.pm.ResolveInfo;
 import android.view.LayoutInflater;

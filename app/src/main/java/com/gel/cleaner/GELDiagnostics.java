@@ -1,8 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELDiagnostics v3.0 — Foldable Ready + DualPane + UI Sync + GELOrchestrator
-// NOTE: Full-file rewrite — πάντα δουλεύω πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
-// NOTE2: Απόλυτα συμβατό με: GELFoldableOrchestrator, GELFoldableUIManager,
-//        GELFoldableAnimationPack, DualPaneManager, GELAutoActivityHook.
+// GELDiagnostics v3.1 — Foldable Ready + DualPane + UI Sync + Orchestrator Sync
+// NOTE: Τελική PRO έκδοση — full rewrite πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// NOTE2: Συμβατό με:
+//    • GELFoldableOrchestrator
+//    • GELFoldableUIManager
+//    • GELFoldableAnimationPack
+//    • DualPaneManager
+//    • GELAutoActivityHook
 
 package com.gel.cleaner;
 
@@ -10,7 +14,6 @@ import com.gel.cleaner.base.*;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -19,12 +22,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.util.Locale;
 
 public class GELDiagnostics {
 
     // ============================================================
-    // PUBLIC ENTRY (FULL DIAGNOSTICS)
+    // PUBLIC ENTRY
     // ============================================================
     public static void runFullDiagnostics(Context ctx, GELCleaner.LogCallback cb) {
 
@@ -34,19 +38,20 @@ public class GELDiagnostics {
         info(cb, "--------------------------------------");
 
         foldableLab(ctx, cb);
+        deviceLab(ctx, cb);
         rootLab(ctx, cb);
         storageLab(ctx, cb);
         memoryLab(ctx, cb);
         cpuLab(cb);
         batteryLab(ctx, cb);
-        networkLab(ctx, cb);
+        networkLab(cb);
 
         info(cb, "--------------------------------------");
         ok(cb, "✅ Diagnostics finished.");
     }
 
     // ============================================================
-    // FOLDABLE LAB — New for v3.0
+    // FOLDABLE LAB
     // ============================================================
     private static void foldableLab(Context ctx, GELCleaner.LogCallback cb) {
         info(cb, "\n📁 FOLDABLE LAB");
@@ -59,19 +64,30 @@ public class GELDiagnostics {
             info(cb, "   Dual-Pane Mode Active: " + dual);
 
             if (supported) {
-                info(cb, "   ➤ Foldable posture: " +
-                        GELFoldableOrchestrator.getCurrentPostureName());
+                info(cb, "   ➤ Posture: " + GELFoldableOrchestrator.getCurrentPostureName());
             }
 
-            if (dual) {
-                ok(cb, "✔ Device is in dual-pane mode — optimized layout active.");
-            } else {
-                info(cb, "ℹ Single-screen mode.");
-            }
+            if (dual) ok(cb, "✔ Dual-pane active.");
+            else info(cb, "ℹ Single screen mode");
 
         } catch (Exception e) {
             err(cb, "Foldable Lab error: " + e.getMessage());
         }
+    }
+
+    // ============================================================
+    // DEVICE LAB (NEW)
+    // ============================================================
+    private static void deviceLab(Context ctx, GELCleaner.LogCallback cb) {
+        info(cb, "\n📱 DEVICE LAB");
+
+        info(cb, "   Model: " + Build.MANUFACTURER + " " + Build.MODEL);
+        info(cb, "   Android: " + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + ")");
+
+        if (Build.VERSION.SDK_INT < 28)
+            warn(cb, "⚠ Το Android είναι παλιό. Service impact πιθανό.");
+        else
+            ok(cb, "✔ Android version OK.");
     }
 
     // ============================================================
@@ -94,8 +110,8 @@ public class GELDiagnostics {
         boolean rooted = isRooted();
 
         if (rooted) {
-            err(cb, "⚠ Η συσκευή φαίνεται ROOTED (test-keys / su binary).");
-            info(cb, "   ➤ Από πλευρά service είναι ΟΚ — ενημέρωσε τον πελάτη.");
+            err(cb, "⚠ Η συσκευή φαίνεται ROOTED.");
+            info(cb, "   ➤ Ενημέρωσε πελάτη, πιθανή αλλοίωση στοιχείων.");
         } else {
             ok(cb, "✔ Η συσκευή φαίνεται UNROOTED.");
         }
@@ -105,18 +121,16 @@ public class GELDiagnostics {
                     "/sys/class/power_supply/battery/cycle_count",
                     "/sys/class/power_supply/bms/cycle_count"
             };
-            boolean cycleFound = false;
+            boolean found = false;
             for (String p : cycleCandidates) {
                 String line = safeReadFirstLine(p);
-                if (line != null && !line.isEmpty()) {
-                    info(cb, "   🔍 Battery cycle_count: " + line.trim());
-                    cycleFound = true;
+                if (line != null) {
+                    info(cb, "   🔍 Battery cycles: " + line.trim());
+                    found = true;
                     break;
                 }
             }
-            if (!cycleFound) {
-                info(cb, "   ℹ Δεν βρέθηκε cycle_count (εξαρτάται από OEM).");
-            }
+            if (!found) info(cb, "   ℹ Δεν υπάρχει cycle_count για αυτή τη συσκευή.");
         }
     }
 
@@ -126,32 +140,28 @@ public class GELDiagnostics {
     private static void storageLab(Context ctx, GELCleaner.LogCallback cb) {
         info(cb, "\n💾 STORAGE LAB");
 
-        File dataDir = ctx.getFilesDir();
-        if (dataDir == null) {
-            err(cb, "❌ Δεν μπορώ να διαβάσω internal storage dir.");
+        File data = ctx.getFilesDir();
+        if (data == null) {
+            err(cb, "❌ Internal storage not readable.");
             return;
         }
 
-        long total = dataDir.getTotalSpace();
-        long free  = dataDir.getFreeSpace();
+        long total = data.getTotalSpace();
+        long free  = data.getFreeSpace();
         long used  = total - free;
 
         info(cb, String.format(Locale.US,
                 "   Internal: used %s / %s (free %s)",
                 human(used), human(total), human(free)));
 
-        double pct = (total > 0) ? (free * 100.0 / total) : 0;
+        double pct = (free * 100.0 / total);
 
-        if (pct < 5) {
-            err(cb, String.format(Locale.US,
-                    "❌ Free space %.1f%% — Κρίσιμα χαμηλό.", pct));
-        } else if (pct < 10) {
-            err(cb, String.format(Locale.US,
-                    "⚠ Free space %.1f%% — Χαμηλό.", pct));
-        } else {
-            ok(cb, String.format(Locale.US,
-                    "✔ Free space %.1f%% — OK.", pct));
-        }
+        if (pct < 5)
+            err(cb, String.format(Locale.US, "❌ Free space %.1f%% — Κρίσιμα.", pct));
+        else if (pct < 10)
+            warn(cb, String.format(Locale.US, "⚠ Free space %.1f%% — Χαμηλό.", pct));
+        else
+            ok(cb, String.format(Locale.US, "✔ Free space %.1f%% — OK.", pct));
     }
 
     // ============================================================
@@ -162,7 +172,7 @@ public class GELDiagnostics {
 
         ActivityManager am = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         if (am == null) {
-            err(cb, "❌ ActivityManager = null");
+            err(cb, "❌ ActivityManager null");
             return;
         }
 
@@ -173,26 +183,21 @@ public class GELDiagnostics {
         long avail = mi.availMem;
         long used  = total - avail;
 
-        double pct = avail * 100.0 / total;
+        double freePct = avail * 100.0 / total;
 
         info(cb, String.format(Locale.US,
                 "   RAM used: %s / %s (free %s)",
                 human(used), human(total), human(avail)));
 
-        if (pct < 5) {
-            err(cb, String.format(Locale.US,
-                    "❌ Free RAM %.1f%% — πολύ χαμηλή.", pct));
-        } else if (pct < 15) {
-            err(cb, String.format(Locale.US,
-                    "⚠ Free RAM %.1f%% — πιθανές καθυστερήσεις.", pct));
-        } else {
-            ok(cb, String.format(Locale.US,
-                    "✔ Free RAM %.1f%% — OK.", pct));
-        }
+        if (freePct < 5)
+            err(cb, "❌ RAM critically low.");
+        else if (freePct < 15)
+            warn(cb, "⚠ Low RAM.");
+        else
+            ok(cb, "✔ RAM OK.");
 
-        if (mi.lowMemory) {
-            err(cb, "❌ LOW MEMORY mode ενεργό.");
-        }
+        if (mi.lowMemory)
+            err(cb, "❌ LOW MEMORY mode active.");
     }
 
     // ============================================================
@@ -202,27 +207,23 @@ public class GELDiagnostics {
         info(cb, "\n🧮 CPU LAB");
 
         int cores = Runtime.getRuntime().availableProcessors();
-        info(cb, "   CPU cores detected: " + cores);
+        info(cb, "   CPU cores: " + cores);
 
-        if (cores <= 4) {
-            err(cb, "⚠ Λίγοι πυρήνες για σύγχρονα workloads.");
-        } else {
-            ok(cb, "✔ Αρκετοί πυρήνες.");
-        }
+        if (cores <= 4)
+            warn(cb, "⚠ Low core count for modern workloads.");
+        else
+            ok(cb, "✔ Enough CPU cores.");
 
-        String maxFreq = safeReadFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-        if (maxFreq != null) {
+        String max = safeReadFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        if (max != null) {
             try {
-                long khz = Long.parseLong(maxFreq.trim());
+                long khz = Long.parseLong(max.trim());
                 double ghz = khz / 1_000_000.0;
-                info(cb, String.format(Locale.US,
-                        "   CPU0 max freq: %.2f GHz", ghz));
+                info(cb, String.format(Locale.US, "   CPU0 max freq: %.2f GHz", ghz));
             } catch (Exception e) {
-                info(cb, "   CPU0 max freq raw: " + maxFreq);
+                info(cb, "   Raw freq: " + max);
             }
-        } else {
-            info(cb, "   CPU freq info unavailable.");
-        }
+        } else info(cb, "   CPU freq unavailable.");
     }
 
     // ============================================================
@@ -231,17 +232,19 @@ public class GELDiagnostics {
     private static void batteryLab(Context ctx, GELCleaner.LogCallback cb) {
         info(cb, "\n🔋 BATTERY LAB");
 
-        Intent batt = ctx.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (batt == null) {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        android.content.Intent i = ctx.registerReceiver(null, f);
+
+        if (i == null) {
             err(cb, "❌ Cannot read battery intent.");
             return;
         }
 
-        int level  = batt.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale  = batt.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        int temp   = batt.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1); // 1/10°C
-        int health = batt.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
-        int status = batt.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int level  = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale  = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int temp   = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        int health = i.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+        int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
 
         float pct = (scale > 0) ? (level * 100f / scale) : -1;
         float celsius = (temp > 0) ? (temp / 10f) : -1;
@@ -252,63 +255,54 @@ public class GELDiagnostics {
         // HEALTH
         switch (health) {
             case BatteryManager.BATTERY_HEALTH_DEAD:
-                err(cb, "❌ Battery health: DEAD.");
-                break;
             case BatteryManager.BATTERY_HEALTH_OVERHEAT:
             case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
-                err(cb, "❌ Battery danger: OVERHEAT / OVERVOLTAGE.");
+                err(cb, "❌ Battery health critical.");
                 break;
             case BatteryManager.BATTERY_HEALTH_GOOD:
-                ok(cb, "✔ Battery health: GOOD.");
+                ok(cb, "✔ Battery health GOOD.");
                 break;
             default:
-                info(cb, "   Battery health: Unknown.");
+                info(cb, "   Health unknown.");
         }
 
         // TEMP
         if (celsius > 45)
-            err(cb, "❌ Πολύ υψηλή θερμοκρασία μπαταρίας!");
+            err(cb, "❌ Battery overheating!");
         else if (celsius > 40)
-            err(cb, "⚠ Υψηλή θερμοκρασία μπαταρίας.");
+            warn(cb, "⚠ Battery hot.");
         else
-            ok(cb, "✔ Θερμοκρασία φυσιολογική.");
+            ok(cb, "✔ Temperature normal.");
 
         // STATUS
         switch (status) {
             case BatteryManager.BATTERY_STATUS_CHARGING:
-                info(cb, "   Status: Charging.");
+                info(cb, "   Status: Charging");
                 break;
             case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                info(cb, "   Status: Discharging.");
+                info(cb, "   Status: Discharging");
                 break;
             case BatteryManager.BATTERY_STATUS_FULL:
-                info(cb, "   Status: Full.");
+                info(cb, "   Status: Full");
                 break;
             default:
-                info(cb, "   Status: Unknown.");
+                info(cb, "   Status: Unknown");
         }
     }
 
     // ============================================================
     // NETWORK LAB
     // ============================================================
-    private static void networkLab(Context ctx, GELCleaner.LogCallback cb) {
+    private static void networkLab(GELCleaner.LogCallback cb) {
         info(cb, "\n📡 NETWORK LAB");
 
         try {
-            Process p = Runtime.getRuntime().exec("ping -c 1 8.8.8.8");
-            int rc = p.waitFor();
-            if (rc == 0)
-                ok(cb, "✔ Ping 8.8.8.8 OK.");
-            else
-                err(cb, "⚠ Ping failed.");
+            boolean reachable = InetAddress.getByName("8.8.8.8").isReachable(1500);
+            if (reachable) ok(cb, "✔ Ping 8.8.8.8 OK.");
+            else warn(cb, "⚠ Ping failed.");
         } catch (Exception e) {
-            info(cb, "ℹ Ping not allowed on this device.");
+            info(cb, "ℹ Ping blocked by OEM.");
         }
-
-        info(cb, "   Android " + Build.VERSION.RELEASE +
-                " (SDK " + Build.VERSION.SDK_INT + ")");
-        info(cb, "   Device: " + Build.MANUFACTURER + " " + Build.MODEL);
     }
 
     // ============================================================
@@ -324,12 +318,13 @@ public class GELDiagnostics {
     }
 
     private static boolean checkSuBinary() {
-        String[] paths = {
-                "/system/bin/", "/system/xbin/", "/sbin/",
-                "/system/sd/xbin/", "/system/bin/failsafe/",
-                "/data/local/", "/data/local/bin/", "/data/local/xbin/"
+        String[] dirs = {
+                "/system/bin/","/system/xbin/","/sbin/",
+                "/system/sd/xbin/","/system/bin/failsafe/",
+                "/data/local/","/data/local/bin/","/data/local/xbin/"
         };
-        for (String p : paths) if (new File(p + "su").exists()) return true;
+        for (String d : dirs)
+            if (new File(d + "su").exists()) return true;
         return false;
     }
 
@@ -339,7 +334,7 @@ public class GELDiagnostics {
 
     private static boolean checkWhichSu() {
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"which", "su"});
+            Process p = Runtime.getRuntime().exec(new String[]{"which","su"});
             BufferedReader br = new BufferedReader(
                     new InputStreamReader(p.getInputStream()));
             String line = br.readLine();
@@ -376,6 +371,10 @@ public class GELDiagnostics {
     }
 
     private static void ok(GELCleaner.LogCallback cb, String m) {
+        if (cb != null) cb.log(m, false);
+    }
+
+    private static void warn(GELCleaner.LogCallback cb, String m) {
         if (cb != null) cb.log(m, false);
     }
 

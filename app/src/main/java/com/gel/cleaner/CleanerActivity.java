@@ -1,8 +1,3 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// CleanerActivity — Foldable Ready (GEL Edition v3.0)
-// GEL Auto-Scaling + Locale + Foldable Engine + Dual Pane UI
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
-
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
@@ -37,17 +32,13 @@ public class CleanerActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
-        // ============================================================
-        // FOLDABLE ENGINE INIT
-        // ============================================================
+        // Foldable Engine
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
         dualPane     = new DualPaneManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
-        // ============================================================
-        // UI BINDING
-        // ============================================================
+        // UI Binding
         txtLog = findViewById(R.id.txtCleanerLog);
         txtLog.setMovementMethod(new ScrollingMovementMethod());
 
@@ -59,7 +50,6 @@ public class CleanerActivity extends GELAutoActivityHook
 
         log("🧹 GEL Cleaner loaded.\n");
 
-        // GEL CLEAN ACTIONS
         btnCleanRam.setOnClickListener(v ->
                 GELCleaner.cleanRAM(getBaseContext(), this::log));
 
@@ -76,9 +66,6 @@ public class CleanerActivity extends GELAutoActivityHook
                 GELCleaner.openRunningApps(getBaseContext(), this::log));
     }
 
-    // ============================================================
-    // FOLDABLE LIFE CYCLE
-    // ============================================================
     @Override
     protected void onResume() {
         super.onResume();
@@ -91,11 +78,8 @@ public class CleanerActivity extends GELAutoActivityHook
         super.onPause();
     }
 
-    // ============================================================
-    // FOLDABLE CALLBACKS
-    // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
+    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
         animPack.applyHingePulse(posture);
     }
 
@@ -105,9 +89,6 @@ public class CleanerActivity extends GELAutoActivityHook
         dualPane.dispatchMode(isInner);
     }
 
-    // ============================================================
-    // LOG PRINTER
-    // ============================================================
     private void log(String msg, boolean isError) {
         runOnUiThread(() -> {
             txtLog.append(msg + "\n");

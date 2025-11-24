@@ -10,6 +10,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.base.*;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;

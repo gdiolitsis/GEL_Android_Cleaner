@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// MainActivity — Foldable-Integrated, Locale-Safe Edition (v4.0)
+// MainActivity v4.2 — Foldable-Integrated + Locale-Safe + AutoDP Scaling
+// 100% έτοιμο για copy-paste (κανόνας παππού Γιώργου)
 
 package com.gel.cleaner;
 
@@ -17,21 +18,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements GELCleaner.LogCallback {
+public class MainActivity extends GELAutoActivityHook
+        implements GELCleaner.LogCallback {
 
     private TextView txtLogs;
     private ScrollView scroll;
 
-    // 🔥 Foldable Orchestrator
-    private GELFoldableOrchestrator foldOrchestrator;
-
     // =========================================================
-    // LOCALE (LocaleHelper v3.0)
+    // LOCALE HOOK
     // =========================================================
     @Override
     protected void attachBaseContext(Context base) {
@@ -46,35 +44,15 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Foldable system
-        foldOrchestrator = new GELFoldableOrchestrator(this);
-        foldOrchestrator.start();
-
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
         applySavedLanguage();
         setupLangButtons();
-
         setupDonate();
         setupButtons();
 
         log("📱 Device ready", false);
-    }
-
-    // =========================================================
-    // LIFECYCLE (Foldable-safe)
-    // =========================================================
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (foldOrchestrator != null) foldOrchestrator.start();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (foldOrchestrator != null) foldOrchestrator.stop();
     }
 
     // =========================================================
@@ -116,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     // =========================================================
-    // BUTTONS
+    // BUTTON BINDINGS
     // =========================================================
     private void setupButtons() {
 
@@ -129,14 +107,12 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
         bind(R.id.btnCpuRamLive,
                 () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        // SAFE DEEP CLEAN
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this, this));
 
-        // BROWSER CACHE
-        bind(R.id.btnBrowserCache, this::showBrowserPicker);
+        bind(R.id.btnBrowserCache,
+                this::showBrowserPicker);
 
-        // APP CACHE
         View appCache = findViewById(R.id.btnAppCache);
         if (appCache != null) {
             appCache.setOnClickListener(v -> {
@@ -148,7 +124,6 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
             });
         }
 
-        // DIAGNOSTICS MENU
         bind(R.id.btnDiagnostics,
                 () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
     }
@@ -222,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements GELCleaner.LogCal
     }
 
     // =========================================================
-    // LOGGING
+    // LOGGING SYSTEM
     // =========================================================
     @Override
     public void log(String msg, boolean isError) {

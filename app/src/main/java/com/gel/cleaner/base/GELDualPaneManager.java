@@ -8,7 +8,7 @@
 //        ➤ GELAutoActivityHook
 //        ➤ Global DP/SP Scaling (GELAutoDP)
 
-package com.gel.cleaner;
+package com.gel.cleaner.base;
 
 import android.app.Activity;
 import android.util.Log;

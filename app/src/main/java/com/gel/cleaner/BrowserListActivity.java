@@ -1,12 +1,7 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// FINAL — BrowserListActivity (GEL Auto-Scaling + Foldable Orchestrator)
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
-
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
@@ -15,6 +10,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +27,6 @@ public class BrowserListActivity extends GELAutoActivityHook
     private GELFoldableAnimationPack animPack;
     private DualPaneManager dualPane;
 
-    // ============================================================
-    // INTERNAL MODEL
-    // ============================================================
     private static class BrowserItem {
         final String pkg;
         final String label;
@@ -43,25 +37,19 @@ public class BrowserListActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // ON CREATE
-    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browser_list);
 
-        // 1) FOLDABLE ENGINE INIT
-        uiManager = new GELFoldableUIManager(this);
-        animPack = new GELFoldableAnimationPack(this);
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
         foldDetector = new GELFoldableDetector(this, this);
-        dualPane = new DualPaneManager(this);
+        dualPane     = new DualPaneManager(this);
 
-        // 2) NORMAL UI
         listRoot = findViewById(R.id.browserListRoot);
 
         List<BrowserItem> installed = getInstalledBrowsers();
-
         if (installed.isEmpty()) {
             addFallbackText("❌ No browsers found on this device.");
             return;
@@ -71,8 +59,7 @@ public class BrowserListActivity extends GELAutoActivityHook
             addBrowserRow(b);
         }
 
-        // Apply dual-pane layout if device is unfolded
-        uiManager.applyUI(isLarge());
+        uiManager.applyUI(false);
     }
 
     @Override
@@ -87,25 +74,17 @@ public class BrowserListActivity extends GELAutoActivityHook
         super.onPause();
     }
 
-    // ============================================================
-    // FOLDABLE CALLBACKS
-    // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
-        // Reserved hook for future animations
-        animPack.applyHingeMotion(listRoot, posture);
+    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
+        animPack.onPosture(posture);
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
-        // inner = unfolded tablet mode
         uiManager.applyUI(isInner);
-        dualPane.reflow(listRoot, isInner);
+        dualPane.dispatchMode(isInner);
     }
 
-    // ============================================================
-    // DETECT INSTALLED BROWSERS
-    // ============================================================
     private List<BrowserItem> getInstalledBrowsers() {
         PackageManager pm = getPackageManager();
         List<BrowserItem> out = new ArrayList<>();
@@ -132,9 +111,6 @@ public class BrowserListActivity extends GELAutoActivityHook
         return out;
     }
 
-    // ============================================================
-    // ADD A BROWSER ROW (GEL AUTO-SCALED + FOLDABLE SAFE)
-    // ============================================================
     private void addBrowserRow(BrowserItem b) {
 
         View row = getLayoutInflater().inflate(
@@ -147,7 +123,6 @@ public class BrowserListActivity extends GELAutoActivityHook
         name.setText(b.label);
         name.setTextSize(sp(15f));
 
-        // GEL padding
         int padV = dp(10);
         int padH = dp(16);
         row.setPadding(padH, padV, padH, padV);
@@ -159,19 +134,13 @@ public class BrowserListActivity extends GELAutoActivityHook
         lp.bottomMargin = dp(6);
         row.setLayoutParams(lp);
 
-        // Foldable list animation
         animPack.applyListItemFade(row);
 
-        // CLICK → OPEN STORAGE SETTINGS
         row.setOnClickListener(v -> openBrowserSettings(b.pkg));
 
-        // Add to container
         listRoot.addView(row);
     }
 
-    // ============================================================
-    // OPEN PACKAGE → DETAILS
-    // ============================================================
     private void openBrowserSettings(String pkg) {
         try {
             Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -183,9 +152,6 @@ public class BrowserListActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // FALLBACK TEXT ROW
-    // ============================================================
     private void addFallbackText(String t) {
         TextView tv = new TextView(this);
         tv.setText(t);

@@ -29,6 +29,9 @@
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
 
+    <!-- 🚨 MISSING COLOR (FIX FOR GITHUB ACTIONS) -->
+    <color name="gel_gold_faint">#66FFD700</color>
+
     <!-- ===== RED (DANGER) ===== -->
     <color name="gel_red_danger">#FF3333</color>
     <color name="gel_red_danger_dark">#CC0000</color>

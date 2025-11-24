@@ -1,7 +1,3 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity (Foldable Ready + GEL AutoScaling + Safe Live Monitor)
-// NOTE: Ολόκληρο αρχείο έτοιμο για copy-paste (κανόνας παππού Γιώργου)
-
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
@@ -41,17 +37,11 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
-        // ============================================================
-        // FOLDABLE ENGINE INIT
-        // ============================================================
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
         dualPane     = new DualPaneManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
-        // ============================================================
-        // UI INIT
-        // ============================================================
         txtLive = findViewById(R.id.txtLiveInfo);
 
         txtLive.setTextSize(sp(14f));
@@ -61,13 +51,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         txtLive.setText("CPU / RAM Live Monitor started…\n");
 
         isRooted = isDeviceRooted();
-
         startLive();
     }
 
-    // ============================================================
-    // FOLDABLE LIFE CYCLE
-    // ============================================================
     @Override
     protected void onResume() {
         super.onResume();
@@ -81,10 +67,10 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
+    // FOLDABLE CALLBACKS (UPDATED → GELFoldablePosture)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
+    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
         animPack.applyHingePulse(posture);
     }
 
@@ -93,7 +79,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         uiManager.applyUI(isInner);
         dualPane.dispatchMode(isInner);
 
-        // Tablet mode = larger log panel
         if (isInner) {
             txtLive.setTextSize(sp(17f));
             txtLive.setPadding(dp(18), dp(18), dp(18), dp(18));
@@ -116,11 +101,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
             int i = 1;
             while (running) {
 
-                // CPU
                 double cpu = isRooted ? getCpuRootAccurate() : getCpuTotalAvgPercent();
                 String cpuTxt = cpu < 0 ? "N/A" : String.format("%.1f%%", cpu);
 
-                // RAM
                 long usedMb = 0, totalMb = 0;
                 if (am != null) {
                     ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -131,7 +114,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
                     usedMb = totalMb - availMb;
                 }
 
-                // Temperature
                 String temp = getCpuTemp();
 
                 StringBuilder line = new StringBuilder();
@@ -140,7 +122,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
                         .append(" | Temp: ").append(temp)
                         .append(" | RAM: ").append(usedMb).append(" / ").append(totalMb).append(" MB");
 
-                // Root extras
                 if (isRooted) {
                     String gov = getCpuGovernor();
                     if (gov != null) line.append("\nGovernor: ").append(gov);
@@ -160,9 +141,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         t.start();
     }
 
-    // ============================================================
-    // SAFE LOG APPEND — Keeps last 300 lines
-    // ============================================================
     private void appendSafe(String s) {
         String current = txtLive.getText().toString();
         String[] lines = current.split("\n");
@@ -178,9 +156,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         txtLive.append(s + "\n");
     }
 
-    // ============================================================
-    // CPU ROOT READINGS
-    // ============================================================
     private double getCpuRootAccurate() {
         try {
             long[] t1 = readCpuStat();
@@ -218,9 +193,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // GOVERNOR + FREQ (ROOT)
-    // ============================================================
     private String getCpuGovernor() {
         try {
             File gov = new File("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
@@ -250,9 +222,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // NON-ROOT CPU
-    // ============================================================
     private double getCpuTotalAvgPercent() {
         try {
             File[] coresFs = new File("/sys/devices/system/cpu/")
@@ -289,9 +258,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // CPU TEMPERATURE
-    // ============================================================
     private String getCpuTemp() {
         String[] paths = new String[]{
                 "/sys/class/thermal/thermal_zone0/temp",
@@ -309,9 +275,6 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         return "N/A";
     }
 
-    // ============================================================
-    // ROOT DETECTION
-    // ============================================================
     private boolean isDeviceRooted() {
 
         try {

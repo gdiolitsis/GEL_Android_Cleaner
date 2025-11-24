@@ -255,7 +255,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     body7.addView(makeTestButton("27. Crash / Freeze History (interview)", this::lab27CrashHistory));  
     body7.addView(makeTestButton("28. App Permissions & Privacy (FULL AUTO + RISK SCORE)", this::lab28PermissionsPrivacy));  
-    body7.addView(makeTestButton("29. DEVICE SCORES Summary", v -> runLab29()));  
+    body7.addView(makeTestButton("29. DEVICE SCORES Summary", () -> runLab29()));  
     body7.addView(makeTestButton("30. FINAL TECHNICIAN SUMMARY Notes (PDF Export)", this::lab30FinalSummary));  
 
     // LOG AREA  
@@ -2781,11 +2781,13 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // ============================================================
 private void runLab29() {
 
-    try {
-        append("\nRunning LAB 29…\n");
+    logLine();
+    logInfo("Running LAB 29…");
 
-        Float maxT = (lastThermalMax != null) ? lastThermalMax : null;
-        Float avgT = (lastThermalAvg != null) ? lastThermalAvg : null;
+    try {
+        // Thermal values not available globally → send nulls
+        Float maxT = null;
+        Float avgT = null;
 
         String summary = Lab29Engine.buildLab29Summary(
                 this,
@@ -2793,14 +2795,13 @@ private void runLab29() {
                 avgT
         );
 
-        append(summary);
-        append("\nLAB 29 complete.\n");
+        logInfo(summary);
+        logOk("LAB 29 complete.");
 
     } catch (Exception e) {
-        append("LAB 29 ERROR: " + e.getMessage() + "\n");
+        logError("LAB 29 ERROR: " + e.getMessage());
     }
 }
-
 // ============================================================
 // LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
 // Does NOT modify GELServiceLog — only reads it.
@@ -2892,4 +2893,5 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 

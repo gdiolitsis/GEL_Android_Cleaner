@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL FINAL v5.1 (Foldable Unified Edition)
+// DeviceInfoInternalActivity.java — GEL FINAL v5.2 (Foldable Unified Edition)
 // NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — ποτέ πίσω.
 
 package com.gel.cleaner;
@@ -27,6 +27,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+
+import com.gel.cleaner.base.GELFoldableCallback.Posture;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -137,11 +139,12 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
+    // FOLDABLE CALLBACKS — FIXED (Unified Posture API)
     // ============================================================
     @Override
-    public void onPostureChanged(@NonNull GELFoldablePosture posture) {
+    public void onPostureChanged(@NonNull Posture posture) {
         // no-op (future hinge logic)
+        // keep signature unified with GELAutoActivityHook
     }
 
     @Override

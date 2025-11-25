@@ -1098,7 +1098,7 @@ private void lab14InternetQuickCheck() {
 
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL C Mode)
-// (Original UI + Thermal Change + Health Category)
+// (Original UI + Thermal Change + Health Category Checkboxes)
 // ============================================================
 private void lab15BatteryHealthStressTest() {
     showBatteryHealthTestDialog();
@@ -1225,6 +1225,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
         float delta = startPct - endPct;
         float perHour = (delta * 3600000f) / dtMs;
+        float perHourAbs = Math.max(0f, perHour);
 
         logInfo(String.format(Locale.US,
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
@@ -1249,7 +1250,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
                 dCPU, dGPU, dSKIN, dPMIC, dBATT));
 
-        // ---- FINAL BATTERY BEHAVIOR (drain line stays as is) ----
+        // ---- FINAL BATTERY BEHAVIOR (drain text stays as before) ----
         if (delta <= 0.1f) {
             logOk("Almost zero drain in stress window — battery behavior looks strong.");
         } else if (perHour <= 12f) {
@@ -1263,27 +1264,57 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ---- EXTRA HEALTH CATEGORY LINE (Excellent / Very good / Normal / Weak) ----
-        String health;
-        if (perHour <= 8f) {
-            health = "Excellent";
-        } else if (perHour <= 12f) {
-            health = "Very good";
-        } else if (perHour <= 20f) {
-            health = "Normal";
+        // ============================================================
+        // HEALTH CATEGORY CHECKBOXES (Strong / Excellent / Very good / Normal / Weak)
+        // ============================================================
+        String category;
+        if (perHourAbs <= 6f) {
+            category = "Strong";
+        } else if (perHourAbs <= 9f) {
+            category = "Excellent";
+        } else if (perHourAbs <= 12f) {
+            category = "Very good";
+        } else if (perHourAbs <= 20f) {
+            category = "Normal";
         } else {
-            health = "Weak";
+            category = "Weak";
         }
 
-        if (perHour <= 12f) {
-            // ✔ Green
-            logOk("Battery health from stress window: " + health + ".");
-        } else if (perHour <= 20f) {
-            // ⚠ Yellow
-            logWarn("Battery health from stress window: " + health + ".");
+        logInfo("Battery health map from stress window:");
+
+        // Strong
+        if ("Strong".equals(category)) {
+            logOk("✔ Strong");
         } else {
-            // ❌ Red
-            logError("Battery health from stress window: " + health + ".");
+            logInfo("☐ Strong");
+        }
+
+        // Excellent
+        if ("Excellent".equals(category)) {
+            logOk("✔ Excellent");
+        } else {
+            logInfo("☐ Excellent");
+        }
+
+        // Very good
+        if ("Very good".equals(category)) {
+            logOk("✔ Very good");
+        } else {
+            logInfo("☐ Very good");
+        }
+
+        // Normal
+        if ("Normal".equals(category)) {
+            logWarn("✔ Normal");
+        } else {
+            logInfo("☐ Normal");
+        }
+
+        // Weak
+        if ("Weak".equals(category)) {
+            logError("✔ Weak");
+        } else {
+            logInfo("☐ Weak");
         }
 
     }, durationSec * 1000L);
@@ -1370,7 +1401,7 @@ private float getCurrentBatteryPercent() {
         return -1f;
     }
 }
-
+        
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3470,4 +3501,5 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 

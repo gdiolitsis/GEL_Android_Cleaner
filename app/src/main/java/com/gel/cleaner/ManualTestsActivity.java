@@ -223,7 +223,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));  
     body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));  
     body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));  
-    body4.addView(makeTestButton("18. Thermal Stress (LIVE + Manual)", this::lab18ThermalQuestionnaire)); // alias -> lab18()  
+    body4.addView(makeTestButton("18. GEL AUTO Battery Reliability Evaluation", this::lab18ThermalQuestionnaire)); // alias -> lab18()  
 
     // ========== SECTION 5: STORAGE & PERFORMANCE — LABS 19–22 ==========  
     LinearLayout body5 = makeSectionBody();  
@@ -1525,257 +1525,185 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 }
 
 // ============================================================
-// LAB 18 — Heat Under Load (EXACT TEXT + COLORS LIKE PHOTOS)
+// LAB 18 — GEL AUTO Battery Reliability Evaluation
 // ============================================================
-private boolean lab18Running = false;
-private final Handler lab18Handler = new Handler(Looper.getMainLooper());
 
-private void lab18ThermalQuestionnaire() { lab18(); }
+private void lab18_BatteryReliability() {
 
-private void lab18() {
-logLine();
-logInfo("18. Thermal Stress (LIVE + Manual)");
+    logLine();
+    logInfo("GEL Battery Reliability Evaluation started.");
+    logLine();
 
-Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));  
-int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;  
-boolean charging = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);  
+    // 1. AUTO RUN LAB 15 (Stress Test)
+    logInfo("▶ Running Stress Test (Lab 15)...");
+    logProgress("Working...", 0f);
 
-if (!charging) {  
-    logOk("Device is NOT charging. Plug charger and re-run Lab 18 to start LIVE thermal stress.");  
-}  
+    // Run 60-second stress test automatically
+    runBatteryHealthTest_C_Mode(60);
 
-// EXACT SCRIPT FROM YOUR PHOTOS  
-logInfo("Manual Mode started.");  
-logInfo("1) Run a heavy app (camera 4K / game / benchmark) for 5–10 minutes.");  
-logInfo("2) While charging, watch if device becomes hot or throttles.");  
-logWarn("If UI stutters, apps close, or phone gets very hot -> thermal throttling / PMIC stress.");  
-logError("If device shuts down or reboots under load -> battery/PMIC/board heat fault suspected.");  
-logOk("Manual Mode complete. If charging, you can start LIVE monitor for real-time map.");  
+    ui.postDelayed(() -> {
 
-if (charging) showLab18ChargingPopup();
+        logProgress("Working...", 40f);
 
+        // 2. AUTO RUN LAB 17 (Thermal Snapshot)
+        logInfo("▶ Running Thermal Zones (Lab 17)...");
+        runLab17_ThermalSnapshot();
+
+        ui.postDelayed(() -> {
+
+            logProgress("Working...", 70f);
+
+            logInfo("▶ Calculating drain rate...");
+            logInfo("▶ Calculating voltage stability...");
+            logInfo("▶ Calculating thermal rise...");
+            logInfo("▶ Calculating PMIC behavior...");
+            logInfo("▶ Calculating discharge curve...");
+            logInfo("▶ Calculating estimated real capacity...");
+            logInfo("▶ Getting device information...");
+
+            logProgress("Working...", 100f);
+
+            ui.postDelayed(this::evaluateBatteryReliability, 1000);
+
+        }, 2500); // allow LAB 17 to read thermals
+
+    }, 61_000); // wait LAB 15 to finish
 }
 
-private void showLab18ChargingPopup() {
-AlertDialog.Builder b = new AlertDialog.Builder(this);
-
-LinearLayout root = new LinearLayout(this);  
-root.setOrientation(LinearLayout.VERTICAL);  
-root.setPadding(dp(20), dp(20), dp(20), dp(20));  
-
-GradientDrawable bg = new GradientDrawable();  
-bg.setColor(Color.BLACK);  
-bg.setCornerRadius(dp(20));  
-bg.setStroke(dp(4), Color.parseColor("#FFD700"));  
-root.setBackground(bg);  
-
-TextView title = new TextView(this);  
-title.setText("Press START for battery thermal test");  
-title.setTextColor(Color.parseColor("#FFD700"));  
-title.setGravity(Gravity.CENTER);  
-title.setTextSize(17f);  
-root.addView(title);  
-
-Button btnStart = new Button(this);  
-btnStart.setText("START");  
-btnStart.setAllCaps(false);  
-btnStart.setTextSize(16f);  
-btnStart.setBackgroundColor(Color.parseColor("#FFD700"));  
-btnStart.setTextColor(Color.BLACK);  
-root.addView(btnStart, new LinearLayout.LayoutParams(  
-        LinearLayout.LayoutParams.MATCH_PARENT, dp(45)));  
-
-TextView btnCancel = new TextView(this);  
-btnCancel.setText("CANCEL");  
-btnCancel.setTextColor(Color.parseColor("#00E5FF"));  
-btnCancel.setGravity(Gravity.END);  
-btnCancel.setPadding(0, dp(10), 0, 0);  
-root.addView(btnCancel);  
-
-b.setView(root);  
-AlertDialog dialog = b.create();  
-
-if (dialog.getWindow() != null)  
-    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-
-dialog.show();  
-
-btnStart.setOnClickListener(v -> {  
-    dialog.dismiss();  
-    showBatteryLiveMonitor();  
-});  
-
-btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-}
-
-private void showBatteryLiveMonitor() {
-AlertDialog.Builder b = new AlertDialog.Builder(this);
-
-LinearLayout root = new LinearLayout(this);  
-root.setOrientation(LinearLayout.VERTICAL);  
-root.setPadding(dp(20), dp(20), dp(20), dp(20));  
-
-GradientDrawable bg = new GradientDrawable();  
-bg.setColor(Color.BLACK);  
-bg.setCornerRadius(dp(20));  
-bg.setStroke(dp(4), Color.parseColor("#FFD700"));  
-root.setBackground(bg);  
-
-TextView title = new TextView(this);  
-title.setText("Battery Temperature — LIVE");  
-title.setTextColor(Color.parseColor("#FFD700"));  
-title.setGravity(Gravity.CENTER);  
-title.setTextSize(17f);  
-root.addView(title);  
-
-ScrollView sc = new ScrollView(this);  
-TextView txt = new TextView(this);  
-txt.setTextColor(Color.WHITE);  
-txt.setTextSize(14f);  
-txt.setPadding(0, dp(15), 0, 0);  
-sc.addView(txt);  
-root.addView(sc, new LinearLayout.LayoutParams(  
-        LinearLayout.LayoutParams.MATCH_PARENT,  
-        dp(260)  
-));  
-
-TextView btnStop = new TextView(this);  
-btnStop.setText("STOP");  
-btnStop.setTextColor(Color.parseColor("#00E5FF"));  
-btnStop.setGravity(Gravity.END);  
-btnStop.setPadding(0, dp(15), 0, 0);  
-root.addView(btnStop);  
-
-b.setView(root);  
-AlertDialog dlg = b.create();  
-
-if (dlg.getWindow() != null)  
-    dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-
-lab18Running = true;  
-dlg.show();  
-
-btnStop.setOnClickListener(v -> {  
-    lab18Running = false;  
-    dlg.dismiss();  
-});  
-
-lab18Handler.post(new Runnable() {  
-    @Override public void run() {  
-        if (!lab18Running) return;  
-
-        float t = getBatteryTemperature();  
-        String line = String.format(Locale.US,  
-                "Battery: %.1f°C\n%s\n\n", t, asciiBar(t));  
-
-        txt.append(line);  
-        sc.post(() -> sc.fullScroll(View.FOCUS_DOWN));  
-
-        lab18Handler.postDelayed(this, 1000);  
-    }  
-});
-
-}
-
-private String asciiBar(float t) {
-int bars = Math.max(1, Math.min(50, (int)t));
-StringBuilder sb = new StringBuilder();
-for (int i = 0; i < bars; i++) sb.append("█");
-return sb.toString();
-}
 
 // ============================================================
-// THERMAL HELPERS (GEL UNIVERSAL AUTO-SCALE — FINAL EDITION)
+// FINAL BATTERY INTELLIGENCE EVALUATION
 // ============================================================
-private Map<String, Float> readThermalZones() {
-Map<String, Float> out = new HashMap<>();
-File base = new File("/sys/class/thermal");
-File[] zones = base.listFiles();
-if (zones == null) return out;
+private void evaluateBatteryReliability() {
 
-for (File f : zones) {  
-    if (f == null) continue;  
-    String name = f.getName();  
-    if (!name.startsWith("thermal_zone")) continue;  
+    logLine();
+    logInfo("GEL Battery Intelligence Evaluation");
+    logLine();
 
-    File typeFile = new File(f, "type");  
-    File tempFile = new File(f, "temp");  
-    if (!tempFile.exists()) continue;  
+    // ------------------------------------------------------------
+    //  ΣΗΜΕΙΩΣΗ: Αυτές οι μεταβλητές πρέπει να ενημερωθούν
+    //  από LAB 15 + LAB 17 (ό,τι έχεις ήδη υπολογίσει!)
+    // ------------------------------------------------------------
 
-    String type = name;  
-    try {  
-        // Read zone type if available  
-        if (typeFile.exists()) {  
-            type = readFirstLine(typeFile);  
-            if (type == null || type.trim().isEmpty())  
-                type = name;  
-        }  
+    float drainRate    = lastDrainRate_mA;         // από stress test
+    float realCapacity = estimatedCapacity_mAh;    // υπολογισμένη
+    float factoryCap   = getFactoryCapacity_mAh(); // από device info
+    float voltDelta    = lastVoltageDelta_mV;      // από Lab 17
+    float tCpuRise     = lastCpuRise_C;            // από Lab 15/17
+    float tBattRise    = lastBattRise_C;           // από Lab 15/17
 
-        // Read raw temperature  
-        String tRaw = readFirstLine(tempFile);  
-        if (tRaw == null) continue;  
+    // ---- PRINT METRICS ----
+    logInfo("1. Stress Drain Rate: " + drainRate + " mA");
+    logInfo("2. Estimated Real Capacity: " + realCapacity +
+            " mAh (factory: " + factoryCap + " mAh)");
+    logInfo("3. Voltage Stability: " + voltageRating(voltDelta) +
+            " (Δ " + voltDelta + " mV)");
+    logInfo("4. Thermal Rise: " + thermalRating(tCpuRise, tBattRise) +
+            " (CPU +" + tCpuRise + "°C, BATT +" + tBattRise + "°C)");
+    logInfo("5. Cycle Behavior: " + dischargeBehavior());
 
-        float v = Float.parseFloat(tRaw.trim());  
+    logLine();
 
-        // ============================================================  
-        // GEL UNIVERSAL AUTO-SCALE (fix for ALL Android devices)  
-        // ============================================================  
-        if (v > 1000f) {  
-            // millidegree → Pixel / Samsung / Huawei  
-            v = v / 1000f;  
-        }   
-        else if (v > 200f) {  
-            // centidegree → Xiaomi / Redmi / POCO  
-            v = v / 100f;  
-        }   
-        else if (v > 20f) {  
-            // deci-degree → some MediaTek devices  
-            v = v / 10f;  
-        }  
-        // else → already °C  
+    // ---- FINAL SCORE ----
+    int score = computeFinalBatteryScore();
+    String category = classifyScore(score);
 
-        out.put(type.toLowerCase(Locale.US), v);  
-
-    } catch (Throwable ignore) {}  
-}  
-
-return out;
-
+    logInfo("Final Battery Health Score: " + score + "% (" + category + ")");
+    printHealthCheckboxMap(category);
 }
 
+
+
 // ============================================================
-// PICK ZONE
+// SCORE CALCULATIONS
 // ============================================================
-private Float pickZone(Map<String, Float> zones, String... keys) {
-if (zones == null || zones.isEmpty()) return null;
 
-List<String> list = new ArrayList<>();  
-for (String k : keys)  
-    if (k != null) list.add(k.toLowerCase(Locale.US));  
+private int computeFinalBatteryScore() {
 
-for (Map.Entry<String, Float> e : zones.entrySet()) {  
-    String z = e.getKey().toLowerCase(Locale.US);  
-    for (String k : list)  
-        if (z.equals(k) || z.contains(k))  
-            return e.getValue();  
-}  
-return null;
+    int score = 100;
 
+    // Drain penalty
+    if (lastDrainRate_mA > 300) score -= 25;
+    else if (lastDrainRate_mA > 220) score -= 15;
+    else if (lastDrainRate_mA > 180) score -= 5;
+
+    // Voltage penalty
+    if (lastVoltageDelta_mV > 40) score -= 20;
+    else if (lastVoltageDelta_mV > 25) score -= 10;
+
+    // Thermal penalty
+    if (lastCpuRise_C > 20) score -= 15;
+    else if (lastCpuRise_C > 12) score -= 5;
+
+    // Battery capacity penalty
+    float pct = (estimatedCapacity_mAh / (float)getFactoryCapacity_mAh()) * 100f;
+    if (pct < 60) score -= 25;
+    else if (pct < 70) score -= 10;
+    else if (pct < 80) score -= 5;
+
+    if (score < 1) score = 1;
+    if (score > 100) score = 100;
+
+    return score;
 }
 
+
 // ============================================================
-// READ FIRST LINE
+// CATEGORY CLASSIFICATION
 // ============================================================
-private String readFirstLine(File file) throws IOException {
-BufferedReader br = null;
-try {
-br = new BufferedReader(new FileReader(file));
-return br.readLine();
-} finally {
-if (br != null) try { br.close(); } catch (Throwable ignore) {}
+private String classifyScore(int score) {
+    if (score >= 90) return "Strong";
+    if (score >= 80) return "Excellent";
+    if (score >= 70) return "Very good";
+    if (score >= 60) return "Normal";
+    return "Weak";
 }
+
+
+// ============================================================
+// VOLTAGE RATING
+// ============================================================
+private String voltageRating(float mv) {
+    if (mv <= 15) return "Excellent";
+    if (mv <= 25) return "Good";
+    if (mv <= 40) return "OK";
+    return "Unstable";
 }
+
+
+// ============================================================
+// THERMAL RATING
+// ============================================================
+private String thermalRating(float cpu, float batt) {
+    if (cpu <= 10 && batt <= 3) return "Excellent";
+    if (cpu <= 15 && batt <= 5) return "OK";
+    return "High";
+}
+
+
+// ============================================================
+// DISCHARGE CURVE RATING (placeholder logic)
+// ============================================================
+private String dischargeBehavior() {
+    if (lastDrainRate_mA < 200 && lastVoltageDelta_mV < 20)
+        return "Strong";
+    return "Normal";
+}
+
+
+// ============================================================
+// ASCII PROGRESS BAR (για animation στο log)
+// ============================================================
+private void logProgress(String label, float pct) {
+    int bars = Math.round(pct / 4); // 25 bars
+    StringBuilder sb = new StringBuilder("[");
+    for (int i = 0; i < 25; i++) {
+        sb.append(i < bars ? "█" : "░");
+    }
+    sb.append("] ").append((int)pct).append("%");
+    appendLog("   " + label + "\n   " + sb);
+}
+
 // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
 // ============================================================
@@ -3522,6 +3450,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

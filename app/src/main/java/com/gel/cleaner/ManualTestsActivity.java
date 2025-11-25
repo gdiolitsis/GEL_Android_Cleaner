@@ -1096,9 +1096,6 @@ private void lab14InternetQuickCheck() {
     }  
 }  
 
-Αν battery < 50% →
-logError("Battery level too low. Under 50%. Please charge the battery and try again for stress test.
-
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
@@ -3508,6 +3505,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

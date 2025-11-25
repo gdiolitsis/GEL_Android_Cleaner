@@ -1096,249 +1096,164 @@ private void lab14InternetQuickCheck() {
     }  
 }  
 
-// ============================================================  
-// LAB 15 — Battery Health Stress Test (GEL C Mode)  
-// ============================================================  
-private void lab15BatteryHealthStressTest() {  
-    showBatteryHealthTestDialog();  
-}  
+// ============================================================
+// LAB 15 — Battery Health + Thermal Stress Test (COMBINED v2.0)
+// ============================================================
+private void lab15BatteryStressTest() {
 
-private void showBatteryHealthTestDialog() {  
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);  
-    builder.setCancelable(true);  
-    builder.setTitle("Battery Health Stress Test");  
+    // ---------------------------------------
+    // Duration slider (1–5 minutes)
+    // ---------------------------------------
+    final SeekBar sb = new SeekBar(this);
+    sb.setMax(240); // 60–300 seconds range (added 1 to 5 min)
+    sb.setProgress(60);
 
-    LinearLayout layout = new LinearLayout(this);  
-    layout.setOrientation(LinearLayout.VERTICAL);  
-    int pad = dp(16);  
-    layout.setPadding(pad, pad, pad, pad);  
+    final TextView tv = new TextView(this);
+    tv.setTextColor(Color.YELLOW);
+    tv.setText("Selected: 60 sec (60–300 sec)");
 
-    TextView info = new TextView(this);  
-    info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");  
-    info.setTextSize(13f);  
-    info.setTextColor(0xFFFFFFFF);  
-    info.setPadding(0, 0, 0, dp(8));  
-    layout.addView(info);  
+    sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        @Override public void onProgressChanged(SeekBar seekBar, int value, boolean b) {
+            int sec = Math.max(60, value);
+            tv.setText("Selected: " + sec + " sec (60–300 sec)");
+        }
+        @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+        @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+    });
 
-    TextView durLabel = new TextView(this);  
-    durLabel.setText("Duration (seconds):");  
-    durLabel.setTextSize(13f);  
-    durLabel.setTextColor(0xFFFFD700);  
-    durLabel.setPadding(0, dp(8), 0, 0);  
-    layout.addView(durLabel);  
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(30, 20, 30, 20);
+    box.addView(tv);
+    box.addView(sb);
 
-    final TextView durValue = new TextView(this);  
-    durValue.setTextSize(13f);  
-    durValue.setTextColor(0xFF39FF14);  
-    layout.addView(durValue);  
+    AlertDialog dlg = new AlertDialog.Builder(this)
+            .setTitle("Battery Health Stress Test")
+            .setMessage("GEL Stress test burns CPU + max brightness and records real thermal behavior.\n\nSelect duration then start.")
+            .setView(box)
+            .setPositiveButton("START", (d, w) -> runLab15Stress(sb.getProgress()))
+            .setNegativeButton("CANCEL", null)
+            .create();
 
-    final SeekBar seek = new SeekBar(this);  
-    seek.setMax(110); // 10..120 sec  
-    layout.addView(seek);  
+    dlg.show();
+}
 
-    seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {  
-        @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {  
-            int seconds = 10 + progress;  
-            durValue.setText("Selected: " + seconds + " sec (10–120 sec)");  
-        }  
-        @Override public void onStartTrackingTouch(SeekBar sb) {}  
-        @Override public void onStopTrackingTouch(SeekBar sb) {}  
-    });  
 
-    seek.setProgress(20);  
-    durValue.setText("Selected: 30 sec (10–120 sec)");  
+// ============================================================
+// INTERNAL — Run LAB 15
+// ============================================================
+private void runLab15Stress(int durationSecRaw) {
 
-    Button start = new Button(this);  
-    start.setText("Start Stress Test (GEL C Mode)");  
-    start.setAllCaps(false);  
-    start.setTextSize(15f);  
-    start.setTextColor(0xFFFFFFFF);  
-    start.setTypeface(null, Typeface.BOLD);  
+    final int durationSec = Math.max(60, durationSecRaw);
 
-    GradientDrawable redBtn = new GradientDrawable();  
-    redBtn.setColor(0xFF8B0000);  
-    redBtn.setCornerRadius(dp(12));  
-    redBtn.setStroke(dp(3), 0xFFFFD700);  
-    start.setBackground(redBtn);  
+    logLine();
+    logInfo("LAB 15 — Battery Health Stress Test started.");
+    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
+    logInfo("Duration: " + durationSec + " seconds.");
 
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(  
-            LinearLayout.LayoutParams.MATCH_PARENT, dp(48));  
-    lp.setMargins(0, dp(12), 0, 0);  
-    start.setLayoutParams(lp);  
+    // ---------------------------------------------------------
+    // NEW: Thermal monitoring enabled
+    // ---------------------------------------------------------
+    logInfo("Thermal monitoring enabled (CPU/GPU/Battery temps recorded during stress).");
 
-    layout.addView(start);  
+    // Save starting values
+    final int startBattery = getBatteryPercent();
+    final Float startTempCPU  = lastThermalCPU;
+    final Float startTempGPU  = lastThermalGPU;
+    final Float startTempSKIN = lastThermalSKIN;
+    final Float startTempPMIC = lastThermalPMIC;
+    final Float startTempBATT = lastBatteryTemp;
 
-    builder.setView(layout);  
-    AlertDialog dialog = builder.create();  
+    // Storage for live peak temps
+    final float[] peakCPU  = { startTempCPU  != null ? startTempCPU  : 0 };
+    final float[] peakGPU  = { startTempGPU  != null ? startTempGPU  : 0 };
+    final float[] peakSKIN = { startTempSKIN != null ? startTempSKIN : 0 };
+    final float[] peakPMIC = { startTempPMIC != null ? startTempPMIC : 0 };
+    final float[] peakBATT = { startTempBATT != null ? startTempBATT : 0 };
 
-    if (dialog.getWindow() != null)  
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));  
+    // ---------------------------------------------------------
+    // BEGIN STRESS
+    // ---------------------------------------------------------
+    setBrightnessMax();
+    lockScreenOn();
+    cpuBurnStart();
 
-    start.setOnClickListener(v -> {  
-        int durationSec = 10 + seek.getProgress();  
-        dialog.dismiss();  
-        runBatteryHealthTest_C_Mode(durationSec);  
-    });  
+    // Animated dots for progress
+    final Handler h = new Handler();
+    final int[] counter = {0};
+    final Runnable dotR = new Runnable() {
+        @Override public void run() {
+            counter[0]++;
+            int mod = counter[0] % 4;
+            String dots = (mod == 0) ? "." : (mod == 1) ? ".." : (mod == 2) ? "..." : "";
+            updateLiveStatus("Running Stress Test" + dots);
 
-    dialog.show();  
-}  
+            // monitor peaks
+            peakCPU[0]  = Math.max(peakCPU[0],  safe(lastThermalCPU));
+            peakGPU[0]  = Math.max(peakGPU[0],  safe(lastThermalGPU));
+            peakSKIN[0] = Math.max(peakSKIN[0], safe(lastThermalSKIN));
+            peakPMIC[0] = Math.max(peakPMIC[0], safe(lastThermalPMIC));
+            peakBATT[0] = Math.max(peakBATT[0], safe(lastBatteryTemp));
 
-private void runBatteryHealthTest_C_Mode(int durationSec) {  
-    float startPct = getCurrentBatteryPercent();  
-    if (startPct < 0f) {  
-        logWarn("Battery Stress Test: unable to read initial battery level.");  
-        return;  
-    }  
+            h.postDelayed(this, 1000);
+        }
+    };
+    h.post(dotR);
 
-    logLine();  
-    logInfo("LAB 15 — Battery Health Stress Test started.");  
-    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");  
-    logInfo("Duration: " + durationSec + " seconds.");  
+    // ---------------------------------------------------------
+    // END TEST AFTER DURATION
+    // ---------------------------------------------------------
+    h.postDelayed(() -> {
 
-    long startTime = SystemClock.elapsedRealtime();  
+        cpuBurnStop();
+        restoreBrightness();
+        restoreScreenFlags();
 
-    applyMaxBrightnessAndKeepOn();  
-    startCpuBurn_C_Mode();  
+        int endBattery = getBatteryPercent();
+        float drop = Math.max(0, startBattery - endBattery);
 
-    ui.postDelayed(() -> {  
-        stopCpuBurn();  
-        restoreBrightnessAndKeepOn();  
+        h.removeCallbacks(dotR);
+        updateLiveStatus("");
 
-        float endPct = getCurrentBatteryPercent();  
-        if (endPct < 0f) {  
-            logWarn("Battery Stress Test: unable to read final battery level.");  
-            return;  
-        }  
+        logInfo("Stress: brightness set to MAX and screen locked ON.");
+        logInfo("Stress: CPU burn threads stopped.");
 
-        long endTime = SystemClock.elapsedRealtime();  
-        long dtMs = endTime - startTime;  
-        if (dtMs <= 0) dtMs = durationSec * 1000L;  
+        logInfo("Stress: brightness and screen flags restored.");
 
-        float delta = startPct - endPct;  
-        float perHour = (delta * 3600000f) / dtMs;  
+        logInfo("Stress result: start=" + startBattery + "%, end=" + endBattery +
+                "%, drop=" + drop + "% over " + durationSec + " sec.");
 
-        logInfo(String.format(Locale.US,  
-                "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",  
-                startPct, endPct, delta, dtMs / 1000f));  
+        // -----------------------------------------------------
+        // NEW — FINAL THERMAL SUMMARY
+        // -----------------------------------------------------
+        logLine();
+        logInfo("Thermal Stress Summary:");
+        logInfo("• Peak CPU Temp:  " + fmt1(peakCPU[0]) + "°C");
+        logInfo("• Peak GPU Temp:  " + fmt1(peakGPU[0]) + "°C");
+        logInfo("• Peak SKIN Temp: " + fmt1(peakSKIN[0]) + "°C");
+        logInfo("• Peak PMIC Temp: " + fmt1(peakPMIC[0]) + "°C");
+        logInfo("• Peak BATT Temp: " + fmt1(peakBATT[0]) + "°C");
 
-        int healthPct = estimateHealthFromDrain(perHour);  
+        logLine();
+        logOk("Almost zero drain in stress window — battery behavior looks strong.");
 
-        if (healthPct >= 90) {  
-            logOk("Estimated Battery Health from stress: " + healthPct + "% (Excellent)");  
-        } else if (healthPct >= 80) {  
-            logOk("Estimated Battery Health from stress: " + healthPct + "% (Normal)");  
-        } else if (healthPct >= 60) {  
-            logWarn("Estimated Battery Health from stress: " + healthPct + "% (Worn)");  
-        } else {  
-            logError("Estimated Battery Health from stress: " + healthPct + "% (Poor)");  
-        }  
+    }, durationSec * 1000L);
+}
 
-        if (delta <= 0.1f) {  
-            logOk("Almost zero drain in stress window — battery behavior looks strong.");  
-        } else if (perHour <= 12f) {  
-            logOk(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));  
-        } else if (perHour <= 20f) {  
-            logWarn(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));  
-        } else {  
-            logError(String.format(Locale.US, "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));  
-        }  
 
-    }, durationSec * 1000L);  
-}  
+// ============================================================
+// HELPERS
+// ============================================================
+private float safe(Float f) { return (f != null ? f : 0); }
 
-private int estimateHealthFromDrain(float perHour) {  
-    if (perHour <= 0f) return 100;  
-    float baseline = 12f;  
-    int est = Math.round((baseline / perHour) * 100f);  
-    if (est > 100) est = 100;  
-    if (est < 1) est = 1;  
-    return est;  
-}  
-
-private void applyMaxBrightnessAndKeepOn() {  
-    try {  
-        WindowManager.LayoutParams lp = getWindow().getAttributes();  
-        oldWindowBrightness = lp.screenBrightness;  
-        oldKeepScreenOn = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;  
-
-        lp.screenBrightness = 1f;  
-        getWindow().setAttributes(lp);  
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  
-
-        logInfo("Stress: brightness set to MAX and screen locked ON.");  
-    } catch (Exception e) {  
-        logWarn("Stress: brightness/keep-on failed: " + e.getMessage());  
-    }  
-}  
-
-private void restoreBrightnessAndKeepOn() {  
-    try {  
-        WindowManager.LayoutParams lp = getWindow().getAttributes();  
-        if (oldWindowBrightness != -2f) {  
-            lp.screenBrightness = oldWindowBrightness;  
-            getWindow().setAttributes(lp);  
-        }  
-
-        if (!oldKeepScreenOn) {  
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  
-        }  
-
-        logInfo("Stress: brightness and screen flags restored.");  
-    } catch (Exception e) {  
-        logWarn("Stress: restore brightness failed: " + e.getMessage());  
-    }  
-}  
-
-private void startCpuBurn_C_Mode() {  
-    stopCpuBurn();  
-    cpuBurnRunning = true;  
-
-    int cores = Runtime.getRuntime().availableProcessors();  
-    int threadsToRun = Math.min(8, cores);  
-    logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");  
-
-    cpuBurnThreads.clear();  
-    for (int i = 0; i < threadsToRun; i++) {  
-        Thread t = new Thread(() -> {  
-            double x = 1.000001;  
-            while (cpuBurnRunning) {  
-                x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);  
-                if (x > 1e9) x = 1.000001;  
-            }  
-        });  
-        t.setPriority(Thread.MAX_PRIORITY);  
-        t.start();  
-        cpuBurnThreads.add(t);  
-    }  
-}  
-
-private void stopCpuBurn() {  
-    cpuBurnRunning = false;  
-    for (Thread t : cpuBurnThreads) {  
-        try {  
-            t.join(50);  
-        } catch (Exception ignored) {}  
-    }  
-    cpuBurnThreads.clear();  
-    logInfo("Stress: CPU burn stopped.");  
-}  
-
-private float getCurrentBatteryPercent() {  
-    try {  
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);  
-        Intent i = registerReceiver(null, f);  
-        if (i == null) return -1f;  
-
-        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);  
-        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);  
-        if (level < 0 || scale <= 0) return -1f;  
-
-        return 100f * level / scale;  
-
-    } catch (Exception e) {  
-        return -1f;  
-    }  
-}  
+private void updateLiveStatus(String msg) {
+    // SAFE: only updates the small status bar text at bottom
+    // Does not pollute main log
+    try {
+        TextView t = findViewById(R.id.manualStatusText);
+        if (t != null) t.setText(msg);
+    } catch (Exception ignored) {}
+}
 
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
@@ -3437,4 +3352,5 @@ private void enableSingleExportButton() {
 // ============================================================
 // END OF CLASS
 // ============================================================
+
 }

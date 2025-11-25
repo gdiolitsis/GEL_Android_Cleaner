@@ -1114,7 +1114,7 @@ private void lab15BatteryHealthStressTest() {
     // BLOCK TEST IF BATTERY < 50%
     if (pct < 50f) {
         logLine();
-        logError("Battery level too low (<50%). Please charge the battery and try again for stress test.");
+        logError("Battery level too low. Under <50%. Please charge the battery to run a reliable stress test");
         return;
     }
 
@@ -1164,10 +1164,10 @@ private void showBatteryHealthTestDialog() {
     });
 
     seek.setProgress(20);
-    durValue.setText("Selected: 30 sec (10–120 sec)");
+    durValue.setText("Selected: 1 min (1–5 min)");
 
     Button start = new Button(this);
-    start.setText("Start Stress Test (GEL C Mode)");
+    start.setText("Start Stress Test (GEL Full Mode)");
     start.setAllCaps(false);
     start.setTextSize(15f);
     start.setTextColor(0xFFFFFFFF);
@@ -3518,6 +3518,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

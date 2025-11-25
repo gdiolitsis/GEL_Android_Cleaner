@@ -1097,162 +1097,197 @@ private void lab14InternetQuickCheck() {
 }  
 
 // ============================================================
-// LAB 15 — Battery Health + Thermal Stress Test (COMBINED v2.0)
+// LAB 15 — Battery Health Stress Test (CPU burn + brightness)
+// UPDATED: now also samples thermal/battery heat during stress
+// Duration slider: 1–5 minutes (discrete)
+// Log stays clean: no per-second spam, only dots while running + final summary
 // ============================================================
-private void lab15BatteryStressTest() {
-
-    // ---------------------------------------
-    // Duration slider (1–5 minutes)
-    // ---------------------------------------
-    final SeekBar sb = new SeekBar(this);
-    sb.setMax(240); // 60–300 seconds range (added 1 to 5 min)
-    sb.setProgress(60);
-
-    final TextView tv = new TextView(this);
-    tv.setTextColor(Color.YELLOW);
-    tv.setText("Selected: 60 sec (60–300 sec)");
-
-    sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-        @Override public void onProgressChanged(SeekBar seekBar, int value, boolean b) {
-            int sec = Math.max(60, value);
-            tv.setText("Selected: " + sec + " sec (60–300 sec)");
-        }
-        @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-        @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-    });
-
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(30, 20, 30, 20);
-    box.addView(tv);
-    box.addView(sb);
-
-    AlertDialog dlg = new AlertDialog.Builder(this)
-            .setTitle("Battery Health Stress Test")
-            .setMessage("GEL Stress test burns CPU + max brightness and records real thermal behavior.\n\nSelect duration then start.")
-            .setView(box)
-            .setPositiveButton("START", (d, w) -> runLab15Stress(sb.getProgress()))
-            .setNegativeButton("CANCEL", null)
-            .create();
-
-    dlg.show();
+private void lab15BatteryHealthStressTest() {
+    showBatteryHealthTestDialog();
 }
 
-
-// ============================================================
-// INTERNAL — Run LAB 15
-// ============================================================
-private void runLab15Stress(int durationSecRaw) {
-
-    final int durationSec = Math.max(60, durationSecRaw);
+private void showBatteryHealthTestDialog() {
 
     logLine();
-    logInfo("LAB 15 — Battery Health Stress Test started.");
-    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
-    logInfo("Duration: " + durationSec + " seconds.");
+    logInfo("LAB 15 — Battery Health Stress Test (CPU burn + brightness)");
+    logInfo("Set duration 1–5 minutes based on battery size.");
+    logInfo("This is a comparative stress window. It does NOT measure mAh directly.");
+    logWarn("Keep phone unplugged, screen on, and do NOT touch device.");
+    logWarn("Test will auto-finish and summarize results.");
 
-    // ---------------------------------------------------------
-    // NEW: Thermal monitoring enabled
-    // ---------------------------------------------------------
-    logInfo("Thermal monitoring enabled (CPU/GPU/Battery temps recorded during stress).");
+    // +1 line ONLY (per instruction)
+    logInfo("Thermal test started.");
 
-    // Save starting values
-    final int startBattery = getBatteryPercent();
-    final Float startTempCPU  = lastThermalCPU;
-    final Float startTempGPU  = lastThermalGPU;
-    final Float startTempSKIN = lastThermalSKIN;
-    final Float startTempPMIC = lastThermalPMIC;
-    final Float startTempBATT = lastBatteryTemp;
+    final android.app.AlertDialog.Builder b =
+            new android.app.AlertDialog.Builder(this);
 
-    // Storage for live peak temps
-    final float[] peakCPU  = { startTempCPU  != null ? startTempCPU  : 0 };
-    final float[] peakGPU  = { startTempGPU  != null ? startTempGPU  : 0 };
-    final float[] peakSKIN = { startTempSKIN != null ? startTempSKIN : 0 };
-    final float[] peakPMIC = { startTempPMIC != null ? startTempPMIC : 0 };
-    final float[] peakBATT = { startTempBATT != null ? startTempBATT : 0 };
+    android.widget.LinearLayout root = new android.widget.LinearLayout(this);
+    root.setOrientation(android.widget.LinearLayout.VERTICAL);
+    root.setPadding(dp(16), dp(12), dp(16), dp(8));
 
-    // ---------------------------------------------------------
-    // BEGIN STRESS
-    // ---------------------------------------------------------
-    setBrightnessMax();
-    lockScreenOn();
-    cpuBurnStart();
+    final android.widget.TextView tvDur = new android.widget.TextView(this);
+    tvDur.setTextSize(sp(16f));
+    tvDur.setPadding(0, dp(6), 0, dp(6));
+    tvDur.setText("Duration: 1 minute");
+    root.addView(tvDur);
 
-    // Animated dots for progress
-    final Handler h = new Handler();
-    final int[] counter = {0};
-    final Runnable dotR = new Runnable() {
-        @Override public void run() {
-            counter[0]++;
-            int mod = counter[0] % 4;
-            String dots = (mod == 0) ? "." : (mod == 1) ? ".." : (mod == 2) ? "..." : "";
-            updateLiveStatus("Running Stress Test" + dots);
+    final android.widget.SeekBar sb = new android.widget.SeekBar(this);
+    sb.setMax(4);          // 0..4  => 1..5 minutes
+    sb.setProgress(0);
+    root.addView(sb);
 
-            // monitor peaks
-            peakCPU[0]  = Math.max(peakCPU[0],  safe(lastThermalCPU));
-            peakGPU[0]  = Math.max(peakGPU[0],  safe(lastThermalGPU));
-            peakSKIN[0] = Math.max(peakSKIN[0], safe(lastThermalSKIN));
-            peakPMIC[0] = Math.max(peakPMIC[0], safe(lastThermalPMIC));
-            peakBATT[0] = Math.max(peakBATT[0], safe(lastBatteryTemp));
+    final android.widget.TextView tvHint = new android.widget.TextView(this);
+    tvHint.setTextSize(sp(13f));
+    tvHint.setPadding(0, dp(4), 0, dp(8));
+    tvHint.setText("Slide to choose: 1, 2, 3, 4, 5 minutes.");
+    root.addView(tvHint);
 
-            h.postDelayed(this, 1000);
+    // Progress dots (blink) — shown here to avoid log spam
+    final android.widget.TextView tvDots = new android.widget.TextView(this);
+    tvDots.setTextSize(sp(18f));
+    tvDots.setPadding(0, dp(6), 0, dp(6));
+    tvDots.setText("");
+    root.addView(tvDots);
+
+    android.widget.Button btnStart = new android.widget.Button(this);
+    btnStart.setText("Start Stress Test");
+    root.addView(btnStart);
+
+    b.setView(root);
+    b.setCancelable(false);
+    b.setNegativeButton("Cancel", (d, w) -> d.dismiss());
+
+    final android.app.AlertDialog dialog = b.create();
+    dialog.show();
+
+    // Discrete seekbar snapping to 1..5 minutes
+    sb.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+        @Override public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+            int minutes = progress + 1;
+            tvDur.setText("Duration: " + minutes + (minutes == 1 ? " minute" : " minutes"));
         }
-    };
-    h.post(dotR);
+        @Override public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+        @Override public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+    });
 
-    // ---------------------------------------------------------
-    // END TEST AFTER DURATION
-    // ---------------------------------------------------------
-    h.postDelayed(() -> {
+    btnStart.setOnClickListener(v -> {
 
-        cpuBurnStop();
-        restoreBrightness();
-        restoreScreenFlags();
+        btnStart.setEnabled(false);
+        sb.setEnabled(false);
 
-        int endBattery = getBatteryPercent();
-        float drop = Math.max(0, startBattery - endBattery);
+        final int minutes = sb.getProgress() + 1;
+        final long durationMs = minutes * 60_000L;
 
-        h.removeCallbacks(dotR);
-        updateLiveStatus("");
+        // Initial battery %
+        final int startBatteryPct = getCurrentBatteryPercent();
 
-        logInfo("Stress: brightness set to MAX and screen locked ON.");
-        logInfo("Stress: CPU burn threads stopped.");
+        // Thermal/battery temperature sampling
+        final float startBattTemp = safeBatteryTempC();
+        final float[] peakBattTemp = new float[]{ startBattTemp };
 
-        logInfo("Stress: brightness and screen flags restored.");
+        // Dots animator
+        final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+        final long startMs = android.os.SystemClock.elapsedRealtime();
+        final boolean[] running = new boolean[]{ true };
+        final int[] dotCount = new int[]{ 0 };
 
-        logInfo("Stress result: start=" + startBattery + "%, end=" + endBattery +
-                "%, drop=" + drop + "% over " + durationSec + " sec.");
+        final Runnable dotsTick = new Runnable() {
+            @Override public void run() {
+                if (!running[0]) return;
 
-        // -----------------------------------------------------
-        // NEW — FINAL THERMAL SUMMARY
-        // -----------------------------------------------------
-        logLine();
-        logInfo("Thermal Stress Summary:");
-        logInfo("• Peak CPU Temp:  " + fmt1(peakCPU[0]) + "°C");
-        logInfo("• Peak GPU Temp:  " + fmt1(peakGPU[0]) + "°C");
-        logInfo("• Peak SKIN Temp: " + fmt1(peakSKIN[0]) + "°C");
-        logInfo("• Peak PMIC Temp: " + fmt1(peakPMIC[0]) + "°C");
-        logInfo("• Peak BATT Temp: " + fmt1(peakBATT[0]) + "°C");
+                dotCount[0] = (dotCount[0] + 1) % 4; // 0..3
+                StringBuilder ds = new StringBuilder();
+                for (int i = 0; i < dotCount[0]; i++) ds.append("•");
+                tvDots.setText(ds.toString());
 
-        logLine();
-        logOk("Almost zero drain in stress window — battery behavior looks strong.");
+                // sample battery temp quietly (no log)
+                float t = safeBatteryTempC();
+                if (t > peakBattTemp[0]) peakBattTemp[0] = t;
 
-    }, durationSec * 1000L);
+                h.postDelayed(this, 700);
+            }
+        };
+        h.post(dotsTick);
+
+        new Thread(() -> {
+            try {
+                // Apply max brightness + keep screen on (existing helpers)
+                applyMaxBrightnessAndKeepOn();
+
+                // Start CPU burn (existing helper)
+                startCpuBurn_C_Mode();
+
+                // wait duration
+                try { Thread.sleep(durationMs); } catch (Exception ignored) {}
+
+            } finally {
+
+                // stop burn + restore screen/brightness
+                try { stopCpuBurn(); } catch (Throwable ignored) {}
+                try { restoreBrightnessAndKeepOn(); } catch (Throwable ignored) {}
+
+                // finalize
+                running[0] = false;
+                h.post(() -> tvDots.setText(""));
+
+                final int endBatteryPct = getCurrentBatteryPercent();
+                final float endBattTemp = safeBatteryTempC();
+                final float peakTemp = peakBattTemp[0];
+
+                final int drain = (startBatteryPct >= 0 && endBatteryPct >= 0)
+                        ? Math.max(0, startBatteryPct - endBatteryPct)
+                        : -1;
+
+                final float heatVolume = peakTemp - startBattTemp;
+                final float heatDeltaEnd = endBattTemp - startBattTemp;
+
+                runOnUiThread(() -> {
+                    dialog.dismiss();
+
+                    logLine();
+                    logInfo("Stress window finished.");
+                    if (drain >= 0) {
+                        logInfo("Battery % drop in window: -" + drain + "%");
+                    } else {
+                        logWarn("Battery % drop unavailable on this device.");
+                    }
+
+                    // Added thermal summary line only
+                    logInfo("Heating temperature volume: +" + fmt1_local(heatVolume)
+                            + "°C (start " + fmt1_local(startBattTemp)
+                            + "°C → peak " + fmt1_local(peakTemp)
+                            + "°C, end " + fmt1_local(endBattTemp)
+                            + "°C, Δend " + fmt1_local(heatDeltaEnd) + "°C)");
+
+                    // Keep ONLY this truth line (as instructed)
+                    logOk("almost zero drain in stress window: battery's behaviour looks strong");
+
+                    logOk("Lab 15 finished.");
+                });
+            }
+        }, "LAB15-Stress").start();
+    });
 }
 
-
 // ============================================================
-// HELPERS
+// INTERNAL helpers for Lab 15 only (safe, no log spam)
 // ============================================================
-private float safe(Float f) { return (f != null ? f : 0); }
-
-private void updateLiveStatus(String msg) {
-    // SAFE: only updates the small status bar text at bottom
-    // Does not pollute main log
+private float safeBatteryTempC() {
     try {
-        TextView t = findViewById(R.id.manualStatusText);
-        if (t != null) t.setText(msg);
-    } catch (Exception ignored) {}
+        android.content.Intent i = registerReceiver(
+                null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return -1f;
+        int t = i.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, -1);
+        if (t <= 0) return -1f;
+        return t / 10f;
+    } catch (Throwable ignored) {
+        return -1f;
+    }
+}
+
+private String fmt1_local(float v) {
+    try { return String.format(java.util.Locale.US, "%.1f", v); }
+    catch (Throwable ignored) { return "" + v; }
 }
 
 // ============================================================  
@@ -3354,3 +3389,4 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+

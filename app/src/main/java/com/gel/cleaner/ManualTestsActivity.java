@@ -1100,21 +1100,20 @@ private void lab14InternetQuickCheck() {
 logError("Battery level too low. Under 50%. Please charge the battery and try again for stress test.
 
 // ============================================================
-// LAB 15 — Battery Health Stress Test (GEL C Mode)
-// (Original UI + Thermal Change + Health Category Checkboxes)
+// LAB 15 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
 private void lab15BatteryHealthStressTest() {
 
     float pct = getCurrentBatteryPercent();
     if (pct < 0f) {
-        logError("Battery Stress Test: unable to read battery level.");
+        logError("Unable to read battery level.");
         return;
     }
 
     // BLOCK TEST IF BATTERY < 50%
     if (pct < 50f) {
         logLine();
-        logError("Battery level too low. Under <50%. Please charge the battery to run a reliable stress test");
+        logError("Battery level too low (<50%). Please charge the battery to run a reliable stress test.");
         return;
     }
 
@@ -1132,14 +1131,14 @@ private void showBatteryHealthTestDialog() {
     layout.setPadding(pad, pad, pad, pad);
 
     TextView info = new TextView(this);
-    info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");
+    info.setText("GEL Stress Test burns CPU + max brightness and checks real battery % drop.\nSelect duration then start.");
     info.setTextSize(13f);
     info.setTextColor(0xFFFFFFFF);
     info.setPadding(0, 0, 0, dp(8));
     layout.addView(info);
 
     TextView durLabel = new TextView(this);
-    durLabel.setText("Duration (seconds):");
+    durLabel.setText("Duration (minutes):");
     durLabel.setTextSize(13f);
     durLabel.setTextColor(0xFFFFD700);
     durLabel.setPadding(0, dp(8), 0, 0);
@@ -1151,19 +1150,19 @@ private void showBatteryHealthTestDialog() {
     layout.addView(durValue);
 
     final SeekBar seek = new SeekBar(this);
-    seek.setMax(110); // 10..120 sec
+    seek.setMax(4); // 1–5 minutes
     layout.addView(seek);
 
     seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-            int seconds = 10 + progress;
-            durValue.setText("Selected: " + seconds + " sec (10–120 sec)");
+            int minutes = 1 + progress;
+            durValue.setText("Selected: " + minutes + " min (1–5 min)");
         }
         @Override public void onStartTrackingTouch(SeekBar sb) {}
         @Override public void onStopTrackingTouch(SeekBar sb) {}
     });
 
-    seek.setProgress(20);
+    seek.setProgress(0);
     durValue.setText("Selected: 1 min (1–5 min)");
 
     Button start = new Button(this);
@@ -1193,7 +1192,8 @@ private void showBatteryHealthTestDialog() {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
 
     start.setOnClickListener(v -> {
-        int durationSec = 10 + seek.getProgress();
+        int durationMin = 1 + seek.getProgress();
+        int durationSec = durationMin * 60;
         dialog.dismiss();
         runBatteryHealthTest_C_Mode(durationSec);
     });
@@ -1209,7 +1209,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         return;
     }
 
-    // ---- READ THERMALS BEFORE START ----
+    // ---- READ THERMALS BEFORE ----
     Map<String,Float> z0 = readThermalZones();
     Float cpu0  = pickZone(z0,"cpu","soc","big","little");
     Float gpu0  = pickZone(z0,"gpu");
@@ -1219,7 +1219,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
     logLine();
     logInfo("LAB 15 — Battery Health Stress Test started.");
-    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
+    logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
     logInfo("Duration: " + durationSec + " seconds.");
 
     long startTime = SystemClock.elapsedRealtime();
@@ -1257,7 +1257,6 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         Float pmic1 = pickZone(z1,"pmic","pmic_therm");
         Float batt1 = pickZone(z1,"battery","batt","bat");
 
-        // ---- THERMAL CHANGE DURING STRESS ----
         float dCPU  = (cpu1  != null && cpu0  != null) ? cpu1  - cpu0  : 0f;
         float dGPU  = (gpu1  != null && gpu0  != null) ? gpu1  - gpu0  : 0f;
         float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;
@@ -1268,7 +1267,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
                 dCPU, dGPU, dSKIN, dPMIC, dBATT));
 
-        // ---- BATTERY DRAIN BEHAVIOR ----
+        // ---- DRAIN BEHAVIOR ----
         if (delta <= 0.1f) {
             logOk("Almost zero drain in stress window — battery behavior looks strong.");
         } else if (perHour <= 12f) {
@@ -1282,19 +1281,14 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ---- HEALTH CATEGORY (Strong / Excellent / Very good / Normal / Weak) ----
+        // ---- HEALTH CATEGORY (CHECKBOX MAP) ----
         String health;
-        if (perHour <= 6f) {
-            health = "Strong";
-        } else if (perHour <= 9f) {
-            health = "Excellent";
-        } else if (perHour <= 12f) {
-            health = "Very good";
-        } else if (perHour <= 20f) {
-            health = "Normal";
-        } else {
-            health = "Weak";
-        }
+
+        if (perHour <= 6f)      health = "Strong";       // NEW highest level  
+        else if (perHour <= 8f) health = "Excellent";
+        else if (perHour <=12f) health = "Very good";
+        else if (perHour <=20f) health = "Normal";
+        else                    health = "Weak";
 
         printHealthCheckboxMap(health);
 
@@ -1302,35 +1296,31 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 }
 
 // ============================================================
-// HEALTH CHECKBOX MAP (5 σειρές με ✔ / ☐)
+// CHECKBOX MAP
 // ============================================================
 private void printHealthCheckboxMap(String health) {
-    // Όλα λευκά, μόνο η επιλεγμένη κατηγορία με πράσινο (logOk)
-    String strongLine   = "☐ Strong";
-    String excellentLine= "☐ Excellent";
-    String veryGoodLine = "☐ Very good";
-    String normalLine   = "☐ Normal";
-    String weakLine     = "☐ Weak";
 
-    if ("Strong".equalsIgnoreCase(health)) {
-        strongLine = "✔ Strong";
-    } else if ("Excellent".equalsIgnoreCase(health)) {
-        excellentLine = "✔ Excellent";
-    } else if ("Very good".equalsIgnoreCase(health)) {
-        veryGoodLine = "✔ Very good";
-    } else if ("Normal".equalsIgnoreCase(health)) {
-        normalLine = "✔ Normal";
-    } else if ("Weak".equalsIgnoreCase(health)) {
-        weakLine = "✔ Weak";
-    }
+    String neon = "#39FF14";
+    String white = "#FFFFFF";
 
-    logLine();
-    // επιλεγμένη κατηγορία με logOk (neon green), οι άλλες με logInfo (λευκό)
-    if (strongLine.startsWith("✔"))  logOk(strongLine);  else logInfo(strongLine);
-    if (excellentLine.startsWith("✔")) logOk(excellentLine); else logInfo(excellentLine);
-    if (veryGoodLine.startsWith("✔")) logOk(veryGoodLine); else logInfo(veryGoodLine);
-    if (normalLine.startsWith("✔")) logOk(normalLine);  else logInfo(normalLine);
-    if (weakLine.startsWith("✔"))   logOk(weakLine);   else logInfo(weakLine);
+    boolean strong   = health.equals("Strong");
+    boolean excel    = health.equals("Excellent");
+    boolean verygood = health.equals("Very good");
+    boolean normal   = health.equals("Normal");
+    boolean weak     = health.equals("Weak");
+
+    logRaw( cb("Strong",    strong,   neon, white) );
+    logRaw( cb("Excellent", excel,    neon, white) );
+    logRaw( cb("Very good", verygood, neon, white) );
+    logRaw( cb("Normal",    normal,   neon, white) );
+    logRaw( cb("Weak",      weak,     neon, white) );
+}
+
+private String cb(String label, boolean active, String neon, String white) {
+    if (active)
+        return "✔ " + color(label, neon);
+    else
+        return "☐ " + color(label, white);
 }
 
 // ============================================================
@@ -3518,6 +3508,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

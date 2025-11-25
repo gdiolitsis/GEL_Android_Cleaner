@@ -1384,7 +1384,9 @@ private void startCpuBurn_C_Mode() {
 private void stopCpuBurn() {
     cpuBurnRunning = false;
     for (Thread t : cpuBurnThreads) {
-        try { t.join(50); } catch (Exception ignored) {}
+        try { 
+            t.join(50); 
+        } catch (Exception ignored) {}
     }
     cpuBurnThreads.clear();
     logInfo("Stress: CPU burn stopped.");
@@ -1401,9 +1403,24 @@ private float getCurrentBatteryPercent() {
         if (level < 0 || scale <= 0) return -1f;
 
         return 100f * level / scale;
+
     } catch (Exception e) {
         return -1f;
     }
+}
+
+// ============================================================
+// LOG RAW + COLOR HELPERS (ΑΠΑΡΑΙΤΗΤΟΙ ΓΙΑ CHECKBOXES)
+// ============================================================
+
+private void logRaw(String s) {
+    // γράφει 100% όπως το δίνουμε, χωρίς prefix, χωρίς timestamps
+    appendLog(s);
+}
+
+private String color(String text, String hex) {
+    // επιτρέπει neon/white χρώματα στα labels των checkboxes
+    return "<font color='" + hex + "'>" + text + "</font>";
 }
         
 //=============================================================
@@ -3505,6 +3522,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

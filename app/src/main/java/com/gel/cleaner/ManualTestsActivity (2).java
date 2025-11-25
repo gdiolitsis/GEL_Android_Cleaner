@@ -1098,7 +1098,7 @@ private void lab14InternetQuickCheck() {
 
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL C Mode)
-// (Original UI + Thermal Change + Health Category)
+// (Original UI + Thermal Change + Health Category + LowBatterySafety)
 // ============================================================
 private void lab15BatteryHealthStressTest() {
     showBatteryHealthTestDialog();
@@ -1191,6 +1191,16 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         return;
     }
 
+    // ============================================================
+    // LOW BATTERY SAFETY (NEW)
+    // ============================================================
+    if (startPct < 30f) {
+        logWarn("Battery level too low (" + startPct + "%).");
+        logWarn("Technician note: Run this test ONLY when battery is ≥ 50% for accurate results.");
+        logError("Stress test aborted due to low battery.");
+        return;
+    }
+
     // ---- READ THERMALS BEFORE START ----
     Map<String,Float> z0 = readThermalZones();
     Float cpu0  = pickZone(z0,"cpu","soc","big","little");
@@ -1249,7 +1259,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
                 dCPU, dGPU, dSKIN, dPMIC, dBATT));
 
-        // ---- FINAL BATTERY BEHAVIOR (drain line stays as is) ----
+        // ---- FINAL BATTERY BEHAVIOR (existing logic unchanged) ----
         if (delta <= 0.1f) {
             logOk("Almost zero drain in stress window — battery behavior looks strong.");
         } else if (perHour <= 12f) {
@@ -1263,26 +1273,18 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ---- EXTRA HEALTH CATEGORY LINE (Excellent / Very good / Normal / Weak) ----
+        // ---- HEALTH CATEGORY ----
         String health;
-        if (perHour <= 8f) {
-            health = "Excellent";
-        } else if (perHour <= 12f) {
-            health = "Very good";
-        } else if (perHour <= 20f) {
-            health = "Normal";
-        } else {
-            health = "Weak";
-        }
+        if (perHour <= 8f)       health = "Excellent";
+        else if (perHour <= 12f) health = "Very good";
+        else if (perHour <= 20f) health = "Normal";
+        else                     health = "Weak";
 
         if (perHour <= 12f) {
-            // ✔ Green
             logOk("Battery health from stress window: " + health + ".");
         } else if (perHour <= 20f) {
-            // ⚠ Yellow
             logWarn("Battery health from stress window: " + health + ".");
         } else {
-            // ❌ Red
             logError("Battery health from stress window: " + health + ".");
         }
 
@@ -1370,7 +1372,7 @@ private float getCurrentBatteryPercent() {
         return -1f;
     }
 }
-
+        
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3470,4 +3472,5 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 

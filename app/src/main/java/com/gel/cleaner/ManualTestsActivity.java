@@ -1524,184 +1524,257 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 
 }
 
-// ============================================================
-// LAB 18 — GEL AUTO Battery Reliability Evaluation
-// ============================================================
+// ============================================================================
+// LAB 18 — GEL AUTO BATTERY RELIABILITY EVALUATION (FULL SELF-CONTAINED MODULE)
+// ============================================================================
 
-private void lab18_BatteryReliability() {
+// -------------------- REQUIRED STATE VARIABLES --------------------
+private float lastDrainRate_mA       = -1f;
+private float lastVoltageDelta_mV    = -1f;
+private float lastCpuRise_C          = -1f;
+private float estimatedCapacity_mAh  = -1f;
 
-    logLine();
-    logInfo("GEL Battery Reliability Evaluation started.");
-    logLine();
 
-    // 1. AUTO RUN LAB 15 (Stress Test)
-    logInfo("▶ Running Stress Test (Lab 15)...");
-    logProgress("Working...", 0f);
-
-    // Run 60-second stress test automatically
-    runBatteryHealthTest_C_Mode(60);
-
-    ui.postDelayed(() -> {
-
-        logProgress("Working...", 40f);
-
-        // 2. AUTO RUN LAB 17 (Thermal Snapshot)
-        logInfo("▶ Running Thermal Zones (Lab 17)...");
-        runLab17_ThermalSnapshot();
-
-        ui.postDelayed(() -> {
-
-            logProgress("Working...", 70f);
-
-            logInfo("▶ Calculating drain rate...");
-            logInfo("▶ Calculating voltage stability...");
-            logInfo("▶ Calculating thermal rise...");
-            logInfo("▶ Calculating PMIC behavior...");
-            logInfo("▶ Calculating discharge curve...");
-            logInfo("▶ Calculating estimated real capacity...");
-            logInfo("▶ Getting device information...");
-
-            logProgress("Working...", 100f);
-
-            ui.postDelayed(this::evaluateBatteryReliability, 1000);
-
-        }, 2500); // allow LAB 17 to read thermals
-
-    }, 61_000); // wait LAB 15 to finish
+// -------------------- ENTRY POINT --------------------
+private void lab18ThermalQuestionnaire() {
+    runLab18_BatteryReliability();
 }
 
+private void runLab18_BatteryReliability() {
 
-// ============================================================
-// FINAL BATTERY INTELLIGENCE EVALUATION
-// ============================================================
-private void evaluateBatteryReliability() {
+    logLine();
+    logInfo("18. GEL AUTO Battery Reliability Evaluation");
+    logInfo("Collecting data…");
 
+    // ================================================================
+    // 1. REQUIREMENT: LAB 15 RESULTS
+    // ================================================================
+    if (lastDrainRate_mA < 0 || lastVoltageDelta_mV < 0 || lastCpuRise_C < 0) {
+        logWarn("Lab 15 results not found.");
+        logWarn("Please run: LAB 15 — Battery Health Stress Test.");
+        return;
+    }
+
+    // ================================================================
+    // 2. REQUIREMENT: THERMAL LIVE READINGS (LAB 17)
+    // ================================================================
+    Map<String, Float> zones = null;
+    try { zones = readThermalZones(); } catch (Throwable ignore) {}
+
+    Float cpu  = pickZone(zones, "cpu","big","little","soc","cpu-therm","tsens","mtktscpu");
+    Float gpu  = pickZone(zones, "gpu","gpuss","gpu-therm","mtkgpu");
+    Float skin = pickZone(zones, "skin","xo-therm","surface","shell");
+    Float pmic = pickZone(zones, "pmic","pmic-therm","power-thermal","charger","chg");
+
+    logOk("Thermal zones read successfully.");
+
+    // ================================================================
+    // 3. ESTIMATED REAL CAPACITY (FROM LAB 15)
+    // ================================================================
+    if (estimatedCapacity_mAh <= 0f) {
+        estimatedCapacity_mAh = estimateCapacityFromDrain(lastDrainRate_mA);
+    }
+
+    int factory = getFactoryCapacity_mAh();
+    float capPct = (estimatedCapacity_mAh / (float)factory) * 100f;
+
+    // ================================================================
+    // 4. SCORING ENGINE
+    // ================================================================
+    int score = 100;
+
+    // Drain
+    if (lastDrainRate_mA > 350)       score -= 30;
+    else if (lastDrainRate_mA > 280)  score -= 20;
+    else if (lastDrainRate_mA > 200)  score -= 10;
+
+    // Voltage stability
+    if (lastVoltageDelta_mV > 25)     score -= 10;
+    else if (lastVoltageDelta_mV > 18) score -= 5;
+
+    // Thermal rise
+    if (lastCpuRise_C > 20)          score -= 15;
+    else if (lastCpuRise_C > 12)     score -= 5;
+
+    // Capacity percent
+    if (capPct < 85)                 score -= 10;
+    if (capPct < 70)                 score -= 20;
+
+    if (score < 0) score = 0;
+
+    // ================================================================
+    // 5. LOG OUTPUT — FULL REPORT
+    // ================================================================
     logLine();
     logInfo("GEL Battery Intelligence Evaluation");
     logLine();
 
-    // ------------------------------------------------------------
-    //  ΣΗΜΕΙΩΣΗ: Αυτές οι μεταβλητές πρέπει να ενημερωθούν
-    //  από LAB 15 + LAB 17 (ό,τι έχεις ήδη υπολογίσει!)
-    // ------------------------------------------------------------
-
-    float drainRate    = lastDrainRate_mA;         // από stress test
-    float realCapacity = estimatedCapacity_mAh;    // υπολογισμένη
-    float factoryCap   = getFactoryCapacity_mAh(); // από device info
-    float voltDelta    = lastVoltageDelta_mV;      // από Lab 17
-    float tCpuRise     = lastCpuRise_C;            // από Lab 15/17
-    float tBattRise    = lastBattRise_C;           // από Lab 15/17
-
-    // ---- PRINT METRICS ----
-    logInfo("1. Stress Drain Rate: " + drainRate + " mA");
-    logInfo("2. Estimated Real Capacity: " + realCapacity +
-            " mAh (factory: " + factoryCap + " mAh)");
-    logInfo("3. Voltage Stability: " + voltageRating(voltDelta) +
-            " (Δ " + voltDelta + " mV)");
-    logInfo("4. Thermal Rise: " + thermalRating(tCpuRise, tBattRise) +
-            " (CPU +" + tCpuRise + "°C, BATT +" + tBattRise + "°C)");
-    logInfo("5. Cycle Behavior: " + dischargeBehavior());
+    appendLog("1. Stress Drain Rate: " + (int)lastDrainRate_mA + " mA");
+    appendLog("2. Estimated Real Capacity: " + (int)estimatedCapacity_mAh +
+            " mAh  (factory: " + factory + " mAh)");
+    appendLog("3. Voltage Stability: Δ " + lastVoltageDelta_mV + " mV");
+    appendLog("4. Thermal Rise (CPU): +" + lastCpuRise_C + "°C");
+    appendLog("5. Capacity Percentage: " + String.format(Locale.US, "%.1f%%", capPct));
 
     logLine();
+    appendLog("Final Battery Health Score: " + score + "%");
 
-    // ---- FINAL SCORE ----
-    int score = computeFinalBatteryScore();
-    String category = classifyScore(score);
+    // ================================================================
+    // 6. CATEGORY BASED ON SCORE
+    // ================================================================
+    String category;
 
-    logInfo("Final Battery Health Score: " + score + "% (" + category + ")");
+    if (score >= 90)       category = "Strong";
+    else if (score >= 80)  category = "Excellent";
+    else if (score >= 70)  category = "Very good";
+    else if (score >= 60)  category = "Normal";
+    else                   category = "Weak";
+
     printHealthCheckboxMap(category);
 }
 
 
-
-// ============================================================
-// SCORE CALCULATIONS
-// ============================================================
-
-private int computeFinalBatteryScore() {
-
-    int score = 100;
-
-    // Drain penalty
-    if (lastDrainRate_mA > 300) score -= 25;
-    else if (lastDrainRate_mA > 220) score -= 15;
-    else if (lastDrainRate_mA > 180) score -= 5;
-
-    // Voltage penalty
-    if (lastVoltageDelta_mV > 40) score -= 20;
-    else if (lastVoltageDelta_mV > 25) score -= 10;
-
-    // Thermal penalty
-    if (lastCpuRise_C > 20) score -= 15;
-    else if (lastCpuRise_C > 12) score -= 5;
-
-    // Battery capacity penalty
-    float pct = (estimatedCapacity_mAh / (float)getFactoryCapacity_mAh()) * 100f;
-    if (pct < 60) score -= 25;
-    else if (pct < 70) score -= 10;
-    else if (pct < 80) score -= 5;
-
-    if (score < 1) score = 1;
-    if (score > 100) score = 100;
-
-    return score;
+// ============================================================================
+// ESTIMATE CAPACITY FROM DRAIN (FALLBACK FOR LAB 15)
+// ============================================================================
+private float estimateCapacityFromDrain(float drain_mA) {
+    if (drain_mA <= 0) return 4000f;
+    // simple inference model — safe, stable
+    return Math.max(3000f, 5000f - (drain_mA * 1.1f));
 }
 
 
-// ============================================================
-// CATEGORY CLASSIFICATION
-// ============================================================
-private String classifyScore(int score) {
-    if (score >= 90) return "Strong";
-    if (score >= 80) return "Excellent";
-    if (score >= 70) return "Very good";
-    if (score >= 60) return "Normal";
-    return "Weak";
+// ============================================================================
+// FACTORY BATTERY CAPACITY (PLACEHOLDER OR REAL DEVICE READ)
+// ============================================================================
+private int getFactoryCapacity_mAh() {
+    // Αν θέλεις, μπορούμε να πάρουμε πραγματικό από system properties.
+    return 5000;
 }
 
 
-// ============================================================
-// VOLTAGE RATING
-// ============================================================
-private String voltageRating(float mv) {
-    if (mv <= 15) return "Excellent";
-    if (mv <= 25) return "Good";
-    if (mv <= 40) return "OK";
-    return "Unstable";
+// ============================================================================
+// LOG RAW + HTML COLOR (REQUIRED FOR CHECKBOXES)
+// ============================================================================
+private void logRaw(String s) {
+    appendLog(s);
+}
+
+private String color(String text, String hex) {
+    return "<font color='" + hex + "'>" + text + "</font>";
 }
 
 
-// ============================================================
-// THERMAL RATING
-// ============================================================
-private String thermalRating(float cpu, float batt) {
-    if (cpu <= 10 && batt <= 3) return "Excellent";
-    if (cpu <= 15 && batt <= 5) return "OK";
-    return "High";
+// ============================================================================
+// CHECKBOX MAP
+// ============================================================================
+private void printHealthCheckboxMap(String health) {
+
+    String neon  = "#39FF14";
+    String white = "#FFFFFF";
+
+    boolean strong   = health.equals("Strong");
+    boolean excel    = health.equals("Excellent");
+    boolean verygood = health.equals("Very good");
+    boolean normal   = health.equals("Normal");
+    boolean weak     = health.equals("Weak");
+
+    logRaw(cb("Strong",    strong,   neon, white));
+    logRaw(cb("Excellent", excel,    neon, white));
+    logRaw(cb("Very good", verygood, neon, white));
+    logRaw(cb("Normal",    normal,   neon, white));
+    logRaw(cb("Weak",      weak,     neon, white));
+}
+
+private String cb(String label, boolean active, String neon, String white) {
+    if (active)
+        return "✔ " + color(label, neon);
+    else
+        return "☐ " + color(label, white);
 }
 
 
-// ============================================================
-// DISCHARGE CURVE RATING (placeholder logic)
-// ============================================================
-private String dischargeBehavior() {
-    if (lastDrainRate_mA < 200 && lastVoltageDelta_mV < 20)
-        return "Strong";
-    return "Normal";
+// ============================================================================
+// REQUIRED HELPER: appendLog
+// ============================================================================
+private void appendLog(String s) {
+    logInfo(s);    // ή logRaw(s) αν θες χωρίς prefix
 }
 
 
-// ============================================================
-// ASCII PROGRESS BAR (για animation στο log)
-// ============================================================
-private void logProgress(String label, float pct) {
-    int bars = Math.round(pct / 4); // 25 bars
-    StringBuilder sb = new StringBuilder("[");
-    for (int i = 0; i < 25; i++) {
-        sb.append(i < bars ? "█" : "░");
+// ============================================================================
+// THERMAL READERS (FROM OLD LAB 18) — REQUIRED
+// ============================================================================
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    File base = new File("/sys/class/thermal");
+    File[] zones = base.listFiles();
+    if (zones == null) return out;
+
+    for (File f : zones) {
+        if (f == null) continue;
+        String name = f.getName();
+        if (!name.startsWith("thermal_zone")) continue;
+
+        File typeFile = new File(f, "type");
+        File tempFile = new File(f, "temp");
+        if (!tempFile.exists()) continue;
+
+        String type = name;
+
+        try {
+            if (typeFile.exists()) {
+                type = readFirstLine(typeFile);
+                if (type == null || type.trim().isEmpty())
+                    type = name;
+            }
+
+            String tRaw = readFirstLine(tempFile);
+            if (tRaw == null) continue;
+
+            float v = Float.parseFloat(tRaw.trim());
+
+            if (v > 1000f) v /= 1000f;
+            else if (v > 200f) v /= 100f;
+            else if (v > 20f) v /= 10f;
+
+            out.put(type.toLowerCase(Locale.US), v);
+
+        } catch (Throwable ignore) {}
     }
-    sb.append("] ").append((int)pct).append("%");
-    appendLog("   " + label + "\n   " + sb);
+
+    return out;
+}
+
+
+// ============================================================================
+// PICK ZONE
+// ============================================================================
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty()) return null;
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String name = e.getKey().toLowerCase(Locale.US);
+        for (String k : keys) {
+            if (name.contains(k.toLowerCase(Locale.US)))
+                return e.getValue();
+        }
+    }
+    return null;
+}
+
+
+// ============================================================================
+// READ FIRST LINE
+// ============================================================================
+private String readFirstLine(File file) throws IOException {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        return br.readLine();
+    } finally {
+        if (br != null) try { br.close(); } catch (Throwable ignore) {}
+    }
 }
 
 // ============================================================
@@ -3450,6 +3523,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

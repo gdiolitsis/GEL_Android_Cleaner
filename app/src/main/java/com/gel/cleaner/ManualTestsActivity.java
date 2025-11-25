@@ -1302,11 +1302,6 @@ private float sp(float v) {
     );
 }
 
-private int dp(int v) {
-    float d = getResources().getDisplayMetrics().density;
-    return (int) (v * d);
-}
-
 private int getCurrentBatteryPercent() {
     try {
         Intent i = registerReceiver(null,
@@ -3468,5 +3463,6 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 

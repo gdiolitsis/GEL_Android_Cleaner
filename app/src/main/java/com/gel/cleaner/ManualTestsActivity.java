@@ -1097,6 +1097,96 @@ private void lab14InternetQuickCheck() {
 }  
 
 // ============================================================
+// GEL THERMAL ENGINE — UNIVERSAL AUTO-SCALE (FINAL)
+// Compatible with all Android devices (Pixel, Samsung, Xiaomi, POCO, Huawei,
+// OnePlus, Oppo, Vivo, Realme, Motorola, Infinix, Tecno, MTK, Snapdragon).
+// ============================================================
+
+// ------------------------------
+// READ ALL THERMAL ZONES
+// ------------------------------
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    File base = new File("/sys/class/thermal");
+    File[] zones = base.listFiles();
+    if (zones == null) return out;
+
+    for (File f : zones) {
+        if (f == null) continue;
+        String name = f.getName();
+        if (!name.startsWith("thermal_zone")) continue;
+
+        File typeFile = new File(f, "type");
+        File tempFile = new File(f, "temp");
+        if (!tempFile.exists()) continue;
+
+        try {
+            // Read type
+            String type = name;
+            if (typeFile.exists()) {
+                String t = readFirstLine(typeFile);
+                if (t != null && !t.trim().isEmpty())
+                    type = t.trim();
+            }
+
+            // Read raw temperature
+            String tRaw = readFirstLine(tempFile);
+            if (tRaw == null) continue;
+            float v = Float.parseFloat(tRaw.trim());
+
+            // -------------------------------------------
+            // AUTO-SCALE (handles every Android variant)
+            // -------------------------------------------
+            if (v > 1000f)       v = v / 1000f;  // millidegree
+            else if (v > 200f)  v = v / 100f;   // centidegree
+            else if (v > 20f)   v = v / 10f;    // deci-degree
+            // else already °C
+
+            out.put(type.toLowerCase(Locale.US), v);
+
+        } catch (Throwable ignore) {}
+    }
+
+    return out;
+}
+
+
+// ------------------------------
+// PICK the correct zone by keywords
+// ------------------------------
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty()) return null;
+    if (keys == null || keys.length == 0) return null;
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String z = e.getKey().toLowerCase(Locale.US);
+        for (String k : keys) {
+            if (k == null) continue;
+            String kk = k.toLowerCase(Locale.US);
+            if (z.equals(kk) || z.contains(kk))
+                return e.getValue();
+        }
+    }
+    return null;
+}
+
+
+// ------------------------------
+// READ FIRST LINE
+// ------------------------------
+private String readFirstLine(File file) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        return br.readLine();
+    } catch (Exception e) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Exception ignore) {}
+    }
+}
+    
+// ============================================================
 // LAB 15 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
 private void lab15BatteryHealthStressTest() {
@@ -3432,6 +3522,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

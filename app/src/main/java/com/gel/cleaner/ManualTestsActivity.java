@@ -1414,8 +1414,8 @@ private float getCurrentBatteryPercent() {
 // ============================================================
 
 private void logRaw(String s) {
-    // γράφει 100% όπως το δίνουμε, χωρίς prefix, χωρίς timestamps
-    appendLog(s);
+    // raw HTML output inside log (χωρίς prefix)
+    logInfo(s);
 }
 
 private String color(String text, String hex) {
@@ -3522,6 +3522,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

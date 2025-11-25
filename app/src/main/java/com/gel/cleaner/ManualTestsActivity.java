@@ -1293,8 +1293,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
     }, durationSec * 1000L);
 }
-
-// ============================================================  
+====================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
 private void lab16ChargingPortManual() {  
@@ -3393,6 +3392,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

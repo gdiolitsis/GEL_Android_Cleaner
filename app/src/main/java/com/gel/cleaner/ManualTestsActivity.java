@@ -1101,22 +1101,20 @@ logError("Battery level too low. Under 50%. Please charge the battery and try ag
 
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL C Mode)
-// Strong/Excellent/Very good/Normal/Weak (Checkbox Map)
-// Battery ≥ 50% + Thermal Change
+// (Original UI + Thermal Change + Health Category Checkboxes)
 // ============================================================
-
 private void lab15BatteryHealthStressTest() {
 
     float pct = getCurrentBatteryPercent();
     if (pct < 0f) {
-        logError("Unable to read battery level.");
+        logError("Battery Stress Test: unable to read battery level.");
         return;
     }
 
     // BLOCK TEST IF BATTERY < 50%
     if (pct < 50f) {
         logLine();
-        logError("Battery level too low (<50%). Please charge the device above 50% to run a reliable stress test.");
+        logError("Battery level too low (<50%). Please charge the battery and try again for stress test.");
         return;
     }
 
@@ -1153,7 +1151,7 @@ private void showBatteryHealthTestDialog() {
     layout.addView(durValue);
 
     final SeekBar seek = new SeekBar(this);
-    seek.setMax(110); // 10…120 sec
+    seek.setMax(110); // 10..120 sec
     layout.addView(seek);
 
     seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -1259,9 +1257,9 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         Float pmic1 = pickZone(z1,"pmic","pmic_therm");
         Float batt1 = pickZone(z1,"battery","batt","bat");
 
-        // ---- THERMAL CHANGE ----
-        float dCPU  = (cpu1 != null && cpu0 != null) ? cpu1 - cpu0 : 0f;
-        float dGPU  = (gpu1 != null && gpu0 != null) ? gpu1 - gpu0 : 0f;
+        // ---- THERMAL CHANGE DURING STRESS ----
+        float dCPU  = (cpu1  != null && cpu0  != null) ? cpu1  - cpu0  : 0f;
+        float dGPU  = (gpu1  != null && gpu0  != null) ? gpu1  - gpu0  : 0f;
         float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;
         float dPMIC = (pmic1 != null && pmic0 != null) ? pmic1 - pmic0 : 0f;
         float dBATT = (batt1 != null && batt0 != null) ? batt1 - batt0 : 0f;
@@ -1284,17 +1282,141 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ---- HEALTH CATEGORY ----
+        // ---- HEALTH CATEGORY (Strong / Excellent / Very good / Normal / Weak) ----
         String health;
-        if (perHour <= 4f)       health = "Strong";
-        else if (perHour <= 8f)  health = "Excellent";
-        else if (perHour <= 12f) health = "Very good";
-        else if (perHour <= 20f) health = "Normal";
-        else                     health = "Weak";
+        if (perHour <= 6f) {
+            health = "Strong";
+        } else if (perHour <= 9f) {
+            health = "Excellent";
+        } else if (perHour <= 12f) {
+            health = "Very good";
+        } else if (perHour <= 20f) {
+            health = "Normal";
+        } else {
+            health = "Weak";
+        }
 
         printHealthCheckboxMap(health);
 
     }, durationSec * 1000L);
+}
+
+// ============================================================
+// HEALTH CHECKBOX MAP (5 σειρές με ✔ / ☐)
+// ============================================================
+private void printHealthCheckboxMap(String health) {
+    // Όλα λευκά, μόνο η επιλεγμένη κατηγορία με πράσινο (logOk)
+    String strongLine   = "☐ Strong";
+    String excellentLine= "☐ Excellent";
+    String veryGoodLine = "☐ Very good";
+    String normalLine   = "☐ Normal";
+    String weakLine     = "☐ Weak";
+
+    if ("Strong".equalsIgnoreCase(health)) {
+        strongLine = "✔ Strong";
+    } else if ("Excellent".equalsIgnoreCase(health)) {
+        excellentLine = "✔ Excellent";
+    } else if ("Very good".equalsIgnoreCase(health)) {
+        veryGoodLine = "✔ Very good";
+    } else if ("Normal".equalsIgnoreCase(health)) {
+        normalLine = "✔ Normal";
+    } else if ("Weak".equalsIgnoreCase(health)) {
+        weakLine = "✔ Weak";
+    }
+
+    logLine();
+    // επιλεγμένη κατηγορία με logOk (neon green), οι άλλες με logInfo (λευκό)
+    if (strongLine.startsWith("✔"))  logOk(strongLine);  else logInfo(strongLine);
+    if (excellentLine.startsWith("✔")) logOk(excellentLine); else logInfo(excellentLine);
+    if (veryGoodLine.startsWith("✔")) logOk(veryGoodLine); else logInfo(veryGoodLine);
+    if (normalLine.startsWith("✔")) logOk(normalLine);  else logInfo(normalLine);
+    if (weakLine.startsWith("✔"))   logOk(weakLine);   else logInfo(weakLine);
+}
+
+// ============================================================
+// HELPERS (ίδιοι όπως πριν, για να μη λείπει τίποτα)
+// ============================================================
+private void applyMaxBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        oldWindowBrightness = lp.screenBrightness;
+        oldKeepScreenOn = (getWindow().getAttributes().flags &
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
+
+        lp.screenBrightness = 1f;
+        getWindow().setAttributes(lp);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        logInfo("Stress: brightness set to MAX and screen locked ON.");
+    } catch (Exception e) {
+        logWarn("Stress: brightness/keep-on failed: " + e.getMessage());
+    }
+}
+
+private void restoreBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        if (oldWindowBrightness != -2f) {
+            lp.screenBrightness = oldWindowBrightness;
+            getWindow().setAttributes(lp);
+        }
+
+        if (!oldKeepScreenOn) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+
+        logInfo("Stress: brightness and screen flags restored.");
+    } catch (Exception e) {
+        logWarn("Stress: restore brightness failed: " + e.getMessage());
+    }
+}
+
+private void startCpuBurn_C_Mode() {
+    stopCpuBurn();
+    cpuBurnRunning = true;
+
+    int cores = Runtime.getRuntime().availableProcessors();
+    int threadsToRun = Math.min(8, cores);
+    logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
+
+    cpuBurnThreads.clear();
+    for (int i = 0; i < threadsToRun; i++) {
+        Thread t = new Thread(() -> {
+            double x = 1.000001;
+            while (cpuBurnRunning) {
+                x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
+                if (x > 1e9) x = 1.000001;
+            }
+        });
+        t.setPriority(Thread.MAX_PRIORITY);
+        t.start();
+        cpuBurnThreads.add(t);
+    }
+}
+
+private void stopCpuBurn() {
+    cpuBurnRunning = false;
+    for (Thread t : cpuBurnThreads) {
+        try { t.join(50); } catch (Exception ignored) {}
+    }
+    cpuBurnThreads.clear();
+    logInfo("Stress: CPU burn stopped.");
+}
+
+private float getCurrentBatteryPercent() {
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return -1f;
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level < 0 || scale <= 0) return -1f;
+
+        return 100f * level / scale;
+    } catch (Exception e) {
+        return -1f;
+    }
 }
         
 ====================================  
@@ -3396,6 +3518,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

@@ -223,7 +223,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));  
     body4.addView(makeTestButton("16. Charging Port & Charger Inspection (manual)", this::lab16ChargingPortManual));  
     body4.addView(makeTestButton("17. Thermal Snapshot (CPU where available)", this::lab17ThermalSnapshot));  
-    body4.addView(makeTestButton("18. GEL AUTO Battery Reliability Evaluation", this::lab18ThermalQuestionnaire)); // alias -> lab18()  
+    body4.addView(makeTestButton("18. GEL AUTO Battery Reliability Evaluation", this::lab18RunAuto));  
 
     // ========== SECTION 5: STORAGE & PERFORMANCE — LABS 19–22 ==========  
     LinearLayout body5 = makeSectionBody();  
@@ -3522,6 +3522,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

@@ -1615,7 +1615,7 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 }
 
 // ============================================================
-// LAB 18 — GEL AUTO Battery Reliability Evaluation (FINAL)
+// LAB 18 — GEL AUTO Battery Reliability Evaluation (FINAL — SAFE NO-ANR VERSION)
 // ============================================================
 
 private void lab18RunAuto() {
@@ -1623,159 +1623,148 @@ private void lab18RunAuto() {
     logInfo("18. GEL Auto Battery Reliability Evaluation");
     logInfo("Preparing…");
 
-    // ============================================================
-    // 1. RUN LAB 15 (STRESS TEST)
-    // ============================================================
-    logInfo("Running stress test (Lab 15)...");
-    float startPct = getCurrentBatteryPercent();
-    if (startPct < 50f) {
-        logError("Battery <50%. Please charge to run automatic evaluation.");
-        return;
-    }
+    // Run everything in background thread
+    new Thread(() -> {
 
-    // Run Lab 15 in AUTO short mode (60 seconds)
-    float before = getCurrentBatteryPercent();
-    long t0 = SystemClock.elapsedRealtime();
+        try {
 
-    applyMaxBrightnessAndKeepOn();
-    startCpuBurn_C_Mode();
+            // ============================================================
+            // 1. RUN LAB 15 (STRESS TEST)
+            // ============================================================
+            ui.post(() -> logInfo("Running stress test (Lab 15)..."));
+            float startPct = getCurrentBatteryPercent();
+            if (startPct < 50f) {
+                ui.post(() -> logError("Battery <50%. Please charge to run automatic evaluation."));
+                return;
+            }
 
-    try { Thread.sleep(60_000); } catch (Exception ignore) {}
+            float before = getCurrentBatteryPercent();
+            long t0 = SystemClock.elapsedRealtime();
 
-    stopCpuBurn();
-    restoreBrightnessAndKeepOn();
+            ui.post(this::applyMaxBrightnessAndKeepOn);
+            startCpuBurn_C_Mode();
 
-    float after = getCurrentBatteryPercent();
-    long t1 = SystemClock.elapsedRealtime();
+            Thread.sleep(60_000);  // stays in background, no ANR
 
-    float drop = before - after;
-    float perHour = (drop * 3600000f) / (t1 - t0);
+            stopCpuBurn();
+            ui.post(this::restoreBrightnessAndKeepOn);
 
-    logInfo(String.format(Locale.US,
-            "Stress window: %.1f%% → %.1f%% (drop %.2f%%)", before, after, drop));
-    logInfo(String.format(Locale.US,
-            "Drain rate under load: %.1f %%/hour", perHour));
+            float after = getCurrentBatteryPercent();
+            long t1 = SystemClock.elapsedRealtime();
 
-    int drain_mA = (int)(perHour * 50);   // Generic mapping to mA  
-    if (drain_mA < 0) drain_mA = 0;
+            float drop = before - after;
+            float perHour = (drop * 3600000f) / (t1 - t0);
+            int drain_mA = (int)(perHour * 50);
+            if (drain_mA < 0) drain_mA = 0;
 
-    // ============================================================
-    // 2. READ THERMAL ZONES (equivalent to old Lab 17)
-    // ============================================================
-    logInfo("Reading thermal zones (Lab 17)...");
-    Map<String,Float> z0 = readThermalZones();
-    try { Thread.sleep(1500); } catch (Exception ignore) {}
-    Map<String,Float> z1 = readThermalZones();
+            ui.post(() -> {
+                logInfo(String.format(Locale.US,
+                        "Stress window: %.1f%% → %.1f%% (drop %.2f%%)", before, after, drop));
+                logInfo(String.format(Locale.US,
+                        "Drain rate under load: %.1f %%/hour", perHour));
+            });
 
-    Float cpu0 = pickZone(z0,"cpu","soc","big","little");
-    Float cpu1 = pickZone(z1,"cpu","soc","big","little");
+            // ============================================================
+            // 2. THERMALS
+            // ============================================================
+            ui.post(() -> logInfo("Reading thermal zones (Lab 17)..."));
+            Map<String,Float> z0 = readThermalZones();
+            Thread.sleep(1500);
+            Map<String,Float> z1 = readThermalZones();
 
-    Float batt0 = pickZone(z0,"battery","batt","bat");
-    Float batt1 = pickZone(z1,"battery","batt","bat");
+            Float cpu0 = pickZone(z0,"cpu","soc","big","little");
+            Float cpu1 = pickZone(z1,"cpu","soc","big","little");
 
-    float dCPU = (cpu0 != null && cpu1 != null) ? cpu1 - cpu0 : 0f;
-    float dBATT = (batt0 != null && batt1 != null) ? batt1 - batt0 : 0f;
+            Float batt0 = pickZone(z0,"battery","batt","bat");
+            Float batt1 = pickZone(z1,"battery","batt","bat");
 
-    logInfo(String.format(Locale.US,
-            "Thermal rise: CPU +%.1f°C, BATT +%.1f°C", dCPU, dBATT));
+            float dCPU = (cpu0 != null && cpu1 != null) ? cpu1 - cpu0 : 0f;
+            float dBATT = (batt0 != null && batt1 != null) ? batt1 - batt0 : 0f;
 
-    // ============================================================
-    // 3. VOLTAGE STABILITY CHECK
-    // ============================================================
-    float v0 = getBatteryVoltage_mV();
-    try { Thread.sleep(1500); } catch (Exception ignore) {}
-    float v1 = getBatteryVoltage_mV();
+            ui.post(() -> logInfo(String.format(Locale.US,
+                    "Thermal rise: CPU +%.1f°C, BATT +%.1f°C", dCPU, dBATT)));
 
-    float dv = Math.abs(v1 - v0);
-    logInfo(String.format(Locale.US,
-            "Voltage stability Δ = %.1f mV", dv));
+            // ============================================================
+            // 3. VOLTAGE
+            // ============================================================
+            float v0 = getBatteryVoltage_mV();
+            Thread.sleep(1500);
+            float v1 = getBatteryVoltage_mV();
+            float dv = Math.abs(v1 - v0);
 
-    // ============================================================
-    // 4. ESTIMATED REAL CAPACITY (GENERIC MODEL)
-    // ============================================================
-    int factory = getFactoryCapacity_mAh();
-    if (factory <= 0) factory = 5000;
+            ui.post(() -> logInfo(String.format(Locale.US,
+                    "Voltage stability Δ = %.1f mV", dv)));
 
-    float estimatedCapacity_mAh = factory * (100f / (100f + perHour));
-    if (estimatedCapacity_mAh > factory) estimatedCapacity_mAh = factory;
+            // ============================================================
+            // 4. CAPACITY ESTIMATION
+            // ============================================================
+            int factory = getFactoryCapacity_mAh();
+            if (factory <= 0) factory = 5000;
 
-    logInfo(String.format(Locale.US,
-            "Estimated real capacity: %.0f mAh (factory: %d mAh)",
-            estimatedCapacity_mAh, factory));
+            float estimatedCapacity_mAh = factory * (100f / (100f + perHour));
+            if (estimatedCapacity_mAh > factory) estimatedCapacity_mAh = factory;
 
-    // ============================================================
-    // 5. SCORING SYSTEM
-    // ============================================================
-    int score = 100;
+            ui.post(() -> logInfo(String.format(Locale.US,
+                    "Estimated real capacity: %.0f mAh (factory: %d mAh)",
+                    estimatedCapacity_mAh, factory)));
 
-    // drain penalty
-    if (perHour > 15) score -= 25;
-    else if (perHour > 10) score -= 10;
+            // ============================================================
+            // 5. SCORE
+            // ============================================================
+            int score = 100;
 
-    // thermal penalty
-    if (dCPU > 20) score -= 20;
-    else if (dCPU > 12) score -= 10;
+            if (perHour > 15) score -= 25;
+            else if (perHour > 10) score -= 10;
 
-    // voltage penalty
-    if (dv > 30) score -= 15;
-    else if (dv > 20) score -= 5;
+            if (dCPU > 20) score -= 20;
+            else if (dCPU > 12) score -= 10;
 
-    // capacity
-    float pctHealth = (estimatedCapacity_mAh / factory) * 100f;
-    if (pctHealth < 70) score -= 20;
-    else if (pctHealth < 80) score -= 10;
+            if (dv > 30) score -= 15;
+            else if (dv > 20) score -= 5;
 
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
+            float pctHealth = (estimatedCapacity_mAh / factory) * 100f;
+            if (pctHealth < 70) score -= 20;
+            else if (pctHealth < 80) score -= 10;
 
-    logLine();
-    logInfo("GEL Battery Intelligence Evaluation");
-    logInfo("----------------------------------------------");
-    logInfo(String.format(Locale.US, "1. Stress Drain Rate: %d mA", drain_mA));
-    logInfo(String.format(Locale.US, "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",
-            estimatedCapacity_mAh, factory));
-    logInfo(String.format(Locale.US, "3. Voltage Stability: Δ %.1f mV", dv));
-    logInfo(String.format(Locale.US, "4. Thermal Rise: CPU +%.1f°C, BATT +%.1f°C", dCPU, dBATT));
+            if (score < 0) score = 0;
+            if (score > 100) score = 100;
 
-    // cycle curve estimation (generic)
-    String cycle = (perHour < 10 && dv < 20) ? "Strong" : "Normal";
-    logInfo("5. Cycle Behavior: " + cycle);
+            String cycle = (perHour < 10 && dv < 20) ? "Strong" : "Normal";
 
-    logLine();
-    logOk(String.format(Locale.US, "Final Battery Health Score: %d%%", score));
+            // ============================================================
+            // FINAL UI PRINT
+            // ============================================================
+            ui.post(() -> {
+                logLine();
+                logInfo("GEL Battery Intelligence Evaluation");
+                logInfo("----------------------------------------------");
+                logInfo(String.format(Locale.US, "1. Stress Drain Rate: %d mA", drain_mA));
+                logInfo(String.format(Locale.US, "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",
+                        estimatedCapacity_mAh, factory));
+                logInfo(String.format(Locale.US, "3. Voltage Stability: Δ %.1f mV", dv));
+                logInfo(String.format(Locale.US, "4. Thermal Rise: CPU +%.1f°C, BATT +%.1f°C", dCPU, dBATT));
+                logInfo("5. Cycle Behavior: " + cycle);
 
-    // ============================================================
-    // CHECKBOX MAP (uses existing functions from Lab 15)
-    // ============================================================
-    String category;
-    if (score >= 90) category = "Strong";
-    else if (score >= 80) category = "Excellent";
-    else if (score >= 70) category = "Very good";
-    else if (score >= 60) category = "Normal";
-    else category = "Weak";
+                logLine();
+                logOk(String.format(Locale.US, "Final Battery Health Score: %d%%", score));
 
-    printHealthCheckboxMap(category);
+                String category;
+                if (score >= 90) category = "Strong";
+                else if (score >= 80) category = "Excellent";
+                else if (score >= 70) category = "Very good";
+                else if (score >= 60) category = "Normal";
+                else category = "Weak";
+
+                printHealthCheckboxMap(category);
+            });
+
+        } catch (Exception e) {
+            ui.post(() -> logError("Lab 18 error: " + e.getMessage()));
+        }
+
+    }).start();
 }
-
-// ============================================================
-// SUPPORT FUNCTIONS NEEDED BY LAB 18
-// ============================================================
-
-private float getBatteryVoltage_mV() {
-    try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent i = registerReceiver(null, f);
-        if (i == null) return 0f;
-        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-    } catch (Exception e) {
-        return 0f;
-    }
-}
-
-private int getFactoryCapacity_mAh() {
-    // Replace with actual model-detected capacity if you have DB
-    return 5000;
-}
+    
 // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
 // ============================================================
@@ -3522,6 +3511,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

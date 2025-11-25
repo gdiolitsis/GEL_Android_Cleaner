@@ -1097,200 +1097,203 @@ private void lab14InternetQuickCheck() {
 }  
 
 // ============================================================
-    // LAB 15 — Battery Health Stress Test (GEL C Mode)
-    // (Block <50% battery, Thermal Change Restore, Checkboxes)
-    // ============================================================
-    private void lab15BatteryHealthStressTest() {
+// LAB 15 — Battery Health Stress Test (GEL C Mode)
+// Strong/Excellent/Very good/Normal/Weak (Checkbox Map)
+// Battery ≥ 50% + Thermal Change
+// ============================================================
 
-        float pct = getCurrentBatteryPercent();
-        if (pct < 0f) {
-            logError("Unable to read battery level.");
-            return;
-        }
+private void lab15BatteryHealthStressTest() {
 
-        // BLOCK TEST IF BATTERY < 50%
-        if (pct < 50f) {
-            logLine();
-            logError("Battery level too low (<50%). Please charge the device above 50% to run a reliable stress test.");
-            return;
-        }
-
-        showBatteryHealthTestDialog();
+    float pct = getCurrentBatteryPercent();
+    if (pct < 0f) {
+        logError("Unable to read battery level.");
+        return;
     }
 
-    private void showBatteryHealthTestDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(true);
-        builder.setTitle("Battery Health Stress Test");
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(16);
-        layout.setPadding(pad, pad, pad, pad);
-
-        TextView info = new TextView(this);
-        info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");
-        info.setTextSize(13f);
-        info.setTextColor(0xFFFFFFFF);
-        info.setPadding(0, 0, 0, dp(8));
-        layout.addView(info);
-
-        TextView durLabel = new TextView(this);
-        durLabel.setText("Duration (seconds):");
-        durLabel.setTextSize(13f);
-        durLabel.setTextColor(0xFFFFD700);
-        durLabel.setPadding(0, dp(8), 0, 0);
-        layout.addView(durLabel);
-
-        final TextView durValue = new TextView(this);
-        durValue.setTextSize(13f);
-        durValue.setTextColor(0xFF39FF14);
-        layout.addView(durValue);
-
-        final SeekBar seek = new SeekBar(this);
-        seek.setMax(110);
-        layout.addView(seek);
-
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                int seconds = 10 + progress;
-                durValue.setText("Selected: " + seconds + " sec (10–120 sec)");
-            }
-            @Override public void onStartTrackingTouch(SeekBar sb) {}
-            @Override public void onStopTrackingTouch(SeekBar sb) {}
-        });
-
-        seek.setProgress(20);
-        durValue.setText("Selected: 30 sec (10–120 sec)");
-
-        Button start = new Button(this);
-        start.setText("Start Stress Test (GEL C Mode)");
-        start.setAllCaps(false);
-        start.setTextSize(15f);
-        start.setTextColor(0xFFFFFFFF);
-        start.setTypeface(null, Typeface.BOLD);
-
-        GradientDrawable redBtn = new GradientDrawable();
-        redBtn.setColor(0xFF8B0000);
-        redBtn.setCornerRadius(dp(12));
-        redBtn.setStroke(dp(3), 0xFFFFD700);
-        start.setBackground(redBtn);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
-        lp.setMargins(0, dp(12), 0, 0);
-        start.setLayoutParams(lp);
-
-        layout.addView(start);
-
-        builder.setView(layout);
-        AlertDialog dialog = builder.create();
-
-        if (dialog.getWindow() != null)
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
-
-        start.setOnClickListener(v -> {
-            int durationSec = 10 + seek.getProgress();
-            dialog.dismiss();
-            runBatteryHealthTest_C_Mode(durationSec);
-        });
-
-        dialog.show();
-    }
-
-    private void runBatteryHealthTest_C_Mode(int durationSec) {
-
-        float startPct = getCurrentBatteryPercent();
-        if (startPct < 0f) {
-            logWarn("Battery Stress Test: unable to read initial battery level.");
-            return;
-        }
-
-        // ---- READ THERMALS BEFORE START ----
-        Map<String,Float> z0 = readThermalZones();
-        Float cpu0  = pickZone(z0,"cpu","soc","big","little");
-        Float gpu0  = pickZone(z0,"gpu");
-        Float skin0 = pickZone(z0,"skin","pa_therm");
-        Float pmic0 = pickZone(z0,"pmic","pmic_therm");
-        Float batt0 = pickZone(z0,"battery","batt","bat");
-
+    // BLOCK TEST IF BATTERY < 50%
+    if (pct < 50f) {
         logLine();
-        logInfo("LAB 15 — Battery Health Stress Test started.");
-        logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
-        logInfo("Duration: " + durationSec + " seconds.");
-
-        long startTime = SystemClock.elapsedRealtime();
-
-        applyMaxBrightnessAndKeepOn();
-        startCpuBurn_C_Mode();
-
-        ui.postDelayed(() -> {
-
-            stopCpuBurn();
-            restoreBrightnessAndKeepOn();
-
-            float endPct = getCurrentBatteryPercent();
-            if (endPct < 0f) {
-                logWarn("Battery Stress Test: unable to read final battery level.");
-                return;
-            }
-
-            long endTime = SystemClock.elapsedRealtime();
-            long dtMs = endTime - startTime;
-            if (dtMs <= 0) dtMs = durationSec * 1000L;
-
-            float delta = startPct - endPct;
-            float perHour = (delta * 3600000f) / dtMs;
-
-            logInfo(String.format(Locale.US,
-                    "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
-                    startPct, endPct, delta, dtMs / 1000f));
-
-            // ---- READ THERMALS AFTER ----
-            Map<String,Float> z1 = readThermalZones();
-            Float cpu1  = pickZone(z1,"cpu","soc","big","little");
-            Float gpu1  = pickZone(z1,"gpu");
-            Float skin1 = pickZone(z1,"skin","pa_therm");
-            Float pmic1 = pickZone(z1,"pmic","pmic_therm");
-            Float batt1 = pickZone(z1,"battery","batt","bat");
-
-            // ---- THERMAL CHANGE RESTORED ----
-            float dCPU  = (cpu1  != null && cpu0  != null) ? cpu1  - cpu0  : 0f;
-            float dGPU  = (gpu1  != null && gpu0  != null) ? gpu1  - gpu0  : 0f;
-            float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;
-            float dPMIC = (pmic1 != null && pmic0 != null) ? pmic1 - pmic0 : 0f;
-            float dBATT = (batt1 != null && batt0 != null) ? batt1 - batt0 : 0f;
-
-            logInfo(String.format(Locale.US,
-                    "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
-                    dCPU, dGPU, dSKIN, dPMIC, dBATT));
-
-            // ---- BATTERY DRAIN BEHAVIOR ----
-            if (delta <= 0.1f) {
-                logOk("Almost zero drain in stress window — battery behavior looks strong.");
-            } else if (perHour <= 12f) {
-                logOk(String.format(Locale.US,
-                        "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));
-            } else if (perHour <= 20f) {
-                logWarn(String.format(Locale.US,
-                        "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));
-            } else {
-                logError(String.format(Locale.US,
-                        "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
-            }
-
-            // ---- HEALTH CATEGORY CHECKBOX MAP ----
-            String health;
-            if (perHour <= 8f)      health = "Excellent";
-            else if (perHour <=12f) health = "Very good";
-            else if (perHour <=20f) health = "Normal";
-            else                    health = "Weak";
-
-            printHealthCheckboxMap(health);
-
-        }, durationSec * 1000L);
+        logError("Battery level too low (<50%). Please charge the device above 50% to run a reliable stress test.");
+        return;
     }
-        
+
+    showBatteryHealthTestDialog();
+}
+
+private void showBatteryHealthTestDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setCancelable(true);
+    builder.setTitle("Battery Health Stress Test");
+
+    LinearLayout layout = new LinearLayout(this);
+    layout.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    layout.setPadding(pad, pad, pad, pad);
+
+    TextView info = new TextView(this);
+    info.setText("GEL Stress test burns CPU + max brightness and watches real battery % drop.\nSelect duration then start.");
+    info.setTextSize(13f);
+    info.setTextColor(0xFFFFFFFF);
+    info.setPadding(0, 0, 0, dp(8));
+    layout.addView(info);
+
+    TextView durLabel = new TextView(this);
+    durLabel.setText("Duration (seconds):");
+    durLabel.setTextSize(13f);
+    durLabel.setTextColor(0xFFFFD700);
+    durLabel.setPadding(0, dp(8), 0, 0);
+    layout.addView(durLabel);
+
+    final TextView durValue = new TextView(this);
+    durValue.setTextSize(13f);
+    durValue.setTextColor(0xFF39FF14);
+    layout.addView(durValue);
+
+    final SeekBar seek = new SeekBar(this);
+    seek.setMax(110); // 10…120 sec
+    layout.addView(seek);
+
+    seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+            int seconds = 10 + progress;
+            durValue.setText("Selected: " + seconds + " sec (10–120 sec)");
+        }
+        @Override public void onStartTrackingTouch(SeekBar sb) {}
+        @Override public void onStopTrackingTouch(SeekBar sb) {}
+    });
+
+    seek.setProgress(20);
+    durValue.setText("Selected: 30 sec (10–120 sec)");
+
+    Button start = new Button(this);
+    start.setText("Start Stress Test (GEL C Mode)");
+    start.setAllCaps(false);
+    start.setTextSize(15f);
+    start.setTextColor(0xFFFFFFFF);
+    start.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable redBtn = new GradientDrawable();
+    redBtn.setColor(0xFF8B0000);
+    redBtn.setCornerRadius(dp(12));
+    redBtn.setStroke(dp(3), 0xFFFFD700);
+    start.setBackground(redBtn);
+
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+    lp.setMargins(0, dp(12), 0, 0);
+    start.setLayoutParams(lp);
+
+    layout.addView(start);
+
+    builder.setView(layout);
+    AlertDialog dialog = builder.create();
+
+    if (dialog.getWindow() != null)
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
+
+    start.setOnClickListener(v -> {
+        int durationSec = 10 + seek.getProgress();
+        dialog.dismiss();
+        runBatteryHealthTest_C_Mode(durationSec);
+    });
+
+    dialog.show();
+}
+
+private void runBatteryHealthTest_C_Mode(int durationSec) {
+
+    float startPct = getCurrentBatteryPercent();
+    if (startPct < 0f) {
+        logWarn("Battery Stress Test: unable to read initial battery level.");
+        return;
+    }
+
+    // ---- READ THERMALS BEFORE START ----
+    Map<String,Float> z0 = readThermalZones();
+    Float cpu0  = pickZone(z0,"cpu","soc","big","little");
+    Float gpu0  = pickZone(z0,"gpu");
+    Float skin0 = pickZone(z0,"skin","pa_therm");
+    Float pmic0 = pickZone(z0,"pmic","pmic_therm");
+    Float batt0 = pickZone(z0,"battery","batt","bat");
+
+    logLine();
+    logInfo("LAB 15 — Battery Health Stress Test started.");
+    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
+    logInfo("Duration: " + durationSec + " seconds.");
+
+    long startTime = SystemClock.elapsedRealtime();
+
+    applyMaxBrightnessAndKeepOn();
+    startCpuBurn_C_Mode();
+
+    ui.postDelayed(() -> {
+
+        stopCpuBurn();
+        restoreBrightnessAndKeepOn();
+
+        float endPct = getCurrentBatteryPercent();
+        if (endPct < 0f) {
+            logWarn("Battery Stress Test: unable to read final battery level.");
+            return;
+        }
+
+        long endTime = SystemClock.elapsedRealtime();
+        long dtMs = endTime - startTime;
+        if (dtMs <= 0) dtMs = durationSec * 1000L;
+
+        float delta = startPct - endPct;
+        float perHour = (delta * 3600000f) / dtMs;
+
+        logInfo(String.format(Locale.US,
+                "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
+                startPct, endPct, delta, dtMs / 1000f));
+
+        // ---- READ THERMALS AFTER ----
+        Map<String,Float> z1 = readThermalZones();
+        Float cpu1  = pickZone(z1,"cpu","soc","big","little");
+        Float gpu1  = pickZone(z1,"gpu");
+        Float skin1 = pickZone(z1,"skin","pa_therm");
+        Float pmic1 = pickZone(z1,"pmic","pmic_therm");
+        Float batt1 = pickZone(z1,"battery","batt","bat");
+
+        // ---- THERMAL CHANGE ----
+        float dCPU  = (cpu1 != null && cpu0 != null) ? cpu1 - cpu0 : 0f;
+        float dGPU  = (gpu1 != null && gpu0 != null) ? gpu1 - gpu0 : 0f;
+        float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;
+        float dPMIC = (pmic1 != null && pmic0 != null) ? pmic1 - pmic0 : 0f;
+        float dBATT = (batt1 != null && batt0 != null) ? batt1 - batt0 : 0f;
+
+        logInfo(String.format(Locale.US,
+                "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
+                dCPU, dGPU, dSKIN, dPMIC, dBATT));
+
+        // ---- BATTERY DRAIN BEHAVIOR ----
+        if (delta <= 0.1f) {
+            logOk("Almost zero drain in stress window — battery behavior looks strong.");
+        } else if (perHour <= 12f) {
+            logOk(String.format(Locale.US,
+                    "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));
+        } else if (perHour <= 20f) {
+            logWarn(String.format(Locale.US,
+                    "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));
+        } else {
+            logError(String.format(Locale.US,
+                    "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
+        }
+
+        // ---- HEALTH CATEGORY ----
+        String health;
+        if (perHour <= 4f)       health = "Strong";
+        else if (perHour <= 8f)  health = "Excellent";
+        else if (perHour <= 12f) health = "Very good";
+        else if (perHour <= 20f) health = "Normal";
+        else                     health = "Weak";
+
+        printHealthCheckboxMap(health);
+
+    }, durationSec * 1000L);
+}
+
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3390,6 +3393,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

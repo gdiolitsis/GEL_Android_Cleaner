@@ -1764,6 +1764,27 @@ private void lab18RunAuto() {
 
     }).start();
 }
+
+
+// ============================================================
+// SUPPORT FUNCTIONS FOR LAB 18
+// ============================================================
+
+private float getBatteryVoltage_mV() {
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return 0f;
+        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+    } catch (Exception e) {
+        return 0f;
+    }
+}
+
+private int getFactoryCapacity_mAh() {
+    // Generic fallback for unknown devices
+    return 5000;
+}
     
 // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3511,6 +3532,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

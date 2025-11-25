@@ -1096,6 +1096,9 @@ private void lab14InternetQuickCheck() {
     }  
 }  
 
+Αν battery < 50% →
+logError("Battery level too low. Under 50%. Please charge the battery and try again for stress test.
+
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL C Mode)
 // Strong/Excellent/Very good/Normal/Weak (Checkbox Map)
@@ -1293,6 +1296,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
     }, durationSec * 1000L);
 }
+        
 ====================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3392,6 +3396,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

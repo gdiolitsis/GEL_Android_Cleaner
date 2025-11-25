@@ -1098,6 +1098,7 @@ private void lab14InternetQuickCheck() {
 
 // ============================================================  
 // LAB 15 — Battery Health Stress Test (GEL C Mode)  
+// (Original code + Thermal Change Injection ONLY)  
 // ============================================================  
 private void lab15BatteryHealthStressTest() {  
     showBatteryHealthTestDialog();  
@@ -1190,6 +1191,14 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         return;  
     }  
 
+    // ---- READ THERMALS BEFORE START ----  
+    Map<String,Float> z0 = readThermalZones();  
+    Float cpu0  = pickZone(z0,"cpu","soc","big","little");  
+    Float gpu0  = pickZone(z0,"gpu");  
+    Float skin0 = pickZone(z0,"skin","pa_therm");  
+    Float pmic0 = pickZone(z0,"pmic","pmic_therm");  
+    Float batt0 = pickZone(z0,"battery","batt","bat");  
+
     logLine();  
     logInfo("LAB 15 — Battery Health Stress Test started.");  
     logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");  
@@ -1221,18 +1230,26 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",  
                 startPct, endPct, delta, dtMs / 1000f));  
 
-        int healthPct = estimateHealthFromDrain(perHour);  
+        // ---- READ THERMALS AFTER ----  
+        Map<String,Float> z1 = readThermalZones();  
+        Float cpu1  = pickZone(z1,"cpu","soc","big","little");  
+        Float gpu1  = pickZone(z1,"gpu");  
+        Float skin1 = pickZone(z1,"skin","pa_therm");  
+        Float pmic1 = pickZone(z1,"pmic","pmic_therm");  
+        Float batt1 = pickZone(z1,"battery","batt","bat");  
 
-        if (healthPct >= 90) {  
-            logOk("Estimated Battery Health from stress: " + healthPct + "% (Excellent)");  
-        } else if (healthPct >= 80) {  
-            logOk("Estimated Battery Health from stress: " + healthPct + "% (Normal)");  
-        } else if (healthPct >= 60) {  
-            logWarn("Estimated Battery Health from stress: " + healthPct + "% (Worn)");  
-        } else {  
-            logError("Estimated Battery Health from stress: " + healthPct + "% (Poor)");  
-        }  
+        // ---- THERMAL CHANGE ----  
+        float dCPU  = (cpu1  != null && cpu0  != null) ? cpu1  - cpu0  : 0f;  
+        float dGPU  = (gpu1  != null && gpu0  != null) ? gpu1  - gpu0  : 0f;  
+        float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;  
+        float dPMIC = (pmic1 != null && pmic0 != null) ? pmic1 - pmic0 : 0f;  
+        float dBATT = (batt1 != null && batt0 != null) ? batt1 - batt0 : 0f;  
 
+        logInfo(String.format(Locale.US,  
+                "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",  
+                dCPU, dGPU, dSKIN, dPMIC, dBATT));  
+
+        // ---- FINAL BATTERY BEHAVIOR ----  
         if (delta <= 0.1f) {  
             logOk("Almost zero drain in stress window — battery behavior looks strong.");  
         } else if (perHour <= 12f) {  
@@ -1244,15 +1261,6 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         }  
 
     }, durationSec * 1000L);  
-}  
-
-private int estimateHealthFromDrain(float perHour) {  
-    if (perHour <= 0f) return 100;  
-    float baseline = 12f;  
-    int est = Math.round((baseline / perHour) * 100f);  
-    if (est > 100) est = 100;  
-    if (est < 1) est = 1;  
-    return est;  
 }  
 
 private void applyMaxBrightnessAndKeepOn() {  
@@ -1315,9 +1323,7 @@ private void startCpuBurn_C_Mode() {
 private void stopCpuBurn() {  
     cpuBurnRunning = false;  
     for (Thread t : cpuBurnThreads) {  
-        try {  
-            t.join(50);  
-        } catch (Exception ignored) {}  
+        try { t.join(50); } catch (Exception ignored) {}  
     }  
     cpuBurnThreads.clear();  
     logInfo("Stress: CPU burn stopped.");  
@@ -1334,11 +1340,10 @@ private float getCurrentBatteryPercent() {
         if (level < 0 || scale <= 0) return -1f;  
 
         return 100f * level / scale;  
-
     } catch (Exception e) {  
         return -1f;  
     }  
-}  
+}
 
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
@@ -3437,4 +3442,5 @@ private void enableSingleExportButton() {
 // ============================================================
 // END OF CLASS
 // ============================================================
+
 }

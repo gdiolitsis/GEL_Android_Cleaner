@@ -1096,164 +1096,131 @@ private void lab14InternetQuickCheck() {
     }  
 }  
 
-/* ============================================================
-   LAB 15 — Battery Health Stress Test (CPU burn + brightness)
-   FULL RESTORE UI + LOG + added thermal scan (silent)
-   ============================================================ */
+    // ============================================================
+    // LAB 15 — Battery Health Stress Test (ORIGINAL RESTORE)
+    // ============================================================
+    private void lab15BatteryHealthStressTest() {
 
-private void lab15BatteryStressTest() {
-
-    // -------- UI Dialog --------
-    AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.GELDialog);
-    b.setCancelable(true);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(24), dp(24), dp(24));
-    root.setBackgroundColor(Color.BLACK);
-
-    TextView title = new TextView(this);
-    title.setText("Battery Health Stress Test");
-    title.setTextColor(Color.WHITE);
-    title.setTextSize(22f);
-    title.setPadding(0, 0, 0, dp(16));
-    root.addView(title);
-
-    TextView info = new TextView(this);
-    info.setText("GEL Stress test burns CPU + max brightness and watches\nreal battery % drop.\nSelect duration then start.");
-    info.setTextColor(Color.LTGRAY);
-    info.setTextSize(15f);
-    info.setPadding(0, 0, 0, dp(20));
-    root.addView(info);
-
-    TextView tvDur = new TextView(this);
-    tvDur.setTextColor(Color.YELLOW);
-    tvDur.setTextSize(16f);
-    tvDur.setText("Selected: 30 sec (10–120 sec)");
-    root.addView(tvDur);
-
-    SeekBar sb = new SeekBar(this);
-    sb.setMax(110);        // 10..120 sec window
-    sb.setProgress(20);
-    sb.setPadding(0, dp(12), 0, dp(20));
-    root.addView(sb);
-
-    sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-        @Override public void onProgressChanged(SeekBar seekBar, int v, boolean b) {
-            int s = v + 10;
-            tvDur.setText("Selected: " + s + " sec (10–120 sec)");
-        }
-        @Override public void onStartTrackingTouch(SeekBar s) {}
-        @Override public void onStopTrackingTouch(SeekBar s) {}
-    });
-
-    Button startBtn = new Button(this);
-    startBtn.setText("Start Stress Test (GEL C Mode)");
-    startBtn.setTextColor(Color.WHITE);
-    startBtn.setBackgroundColor(Color.RED);
-    startBtn.setAllCaps(false);
-    startBtn.setPadding(dp(16), dp(12), dp(16), dp(12));
-    root.addView(startBtn);
-
-    b.setView(root);
-    AlertDialog dialog = b.create();
-    dialog.show();
-
-    // -------- Start Action --------
-    startBtn.setOnClickListener(v -> {
-        dialog.dismiss();
-
-        int duration = sb.getProgress() + 10;   // seconds
-        runLab15Stress(duration);
-    });
-}
-
-/* ============================================================
-   EXECUTION of LAB 15
-   ============================================================ */
-
-private void runLab15Stress(int seconds) {
-
-    logLine();
-    logInfo("LAB 15 — Battery Health Stress Test started.");
-    logInfo("Mode: GEL C Mode (aggressive CPU burn + brightness MAX).");
-    logInfo("Duration: " + seconds + " seconds.");
-
-    // OLD TEXT — DO NOT TOUCH
-    logInfo("Stress: brightness set to MAX and screen locked ON.");
-    logInfo("Stress: CPU burn stopped.");
-    logInfo("Stress: starting CPU burn threads: 8 (cores=8).");
-
-    // Start test
-    applyMaxBrightnessAndKeepOn();
-    startCpuBurn_C_Mode();
-
-    // --- Silent thermal tracking (peak values only) ---
-    Float[] peakCPU  = {0f};
-    Float[] peakGPU  = {0f};
-    Float[] peakSKIN = {0f};
-    Float[] peakPMIC = {0f};
-    Float[] peakBATT = {0f};
-
-    // NEW LINE ONLY (as you asked)
-    logInfo("Thermal test started.");
-
-    Handler h = new Handler();
-    long endAt = System.currentTimeMillis() + (seconds * 1000L);
-
-    Runnable poll = new Runnable() {
-        @Override public void run() {
-
-            // accumulate peaks (NO log spam)
-            peakCPU[0]  = Math.max(peakCPU[0],  safe(lastThermalCPU));
-            peakGPU[0]  = Math.max(peakGPU[0],  safe(lastThermalGPU));
-            peakSKIN[0] = Math.max(peakSKIN[0], safe(lastThermalSKIN));
-            peakPMIC[0] = Math.max(peakPMIC[0], safe(lastThermalPMIC));
-            peakBATT[0] = Math.max(peakBATT[0], safe(lastBatteryTemp));
-
-            if (System.currentTimeMillis() < endAt) {
-                h.postDelayed(this, 1000);
-            }
-        }
-    };
-    h.postDelayed(poll, 1000);
-
-    // --- Finish test timer ---
-    new Handler().postDelayed(() -> {
-
-        try { stopCpuBurn(); } catch (Throwable ignore) {}
-        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-        logInfo("Stress: CPU burn stopped.");
-        logInfo("Stress: brightness and screen flags restored.");
-
-        int startPct = startBatteryPct;
-        int endPct   = getCurrentBatteryPercent();
-        float drop   = startPct - endPct;
-
-        logInfo("Stress result: start=" + startPct + "%, end=" + endPct +
-                "%, drop=" + drop + "% over " + seconds + " sec.");
-
-        // REMOVE this line completely
-        // logOk("Estimated Battery Health from stress: 100% (Excellent)");
-
-        // KEEP THIS LINE
-        logOk("Almost zero drain in stress window — battery behavior looks strong.");
-
-        // NEW summary for thermal results (only at end)
         logLine();
-        logInfo("Thermal Peaks:");
-        logInfo("• CPU:  " + peakCPU[0]  + "°C");
-        logInfo("• GPU:  " + peakGPU[0]  + "°C");
-        logInfo("• SKIN: " + peakSKIN[0] + "°C");
-        logInfo("• PMIC: " + peakPMIC[0] + "°C");
-        logInfo("• BATT: " + peakBATT[0] + "°C");
+        logInfo("LAB 15 — Battery Health Stress Test");
+        logInfo("Thermal stress test started…");   // <-- ΜΟΝΑΔΙΚΗ ΠΡΟΣΘΗΚΗ
 
-        logOk("LAB 15 finished.");
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Battery Health Stress Test");
 
-    }, seconds * 1000L);
-}
+        LinearLayout ll = new LinearLayout(this);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        ll.setPadding(dp(16), dp(16), dp(16), dp(16));
 
+        TextView tvDur = new TextView(this);
+        tvDur.setText("Select test duration (minutes):");
+        tvDur.setTextColor(Color.WHITE);
+        tvDur.setTextSize(16f);
+
+        SeekBar sb = new SeekBar(this);
+        sb.setMax(4); // minutes: 1–5
+        sb.setProgress(0);
+
+        TextView tvHint = new TextView(this);
+        tvHint.setTextColor(Color.YELLOW);
+        tvHint.setTextSize(14f);
+        tvHint.setText("1 minute selected");
+
+        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int value, boolean b1) {
+                int mins = value + 1;
+                tvHint.setText(mins + " minute" + (mins > 1 ? "s" : "") + " selected");
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        ll.addView(tvDur);
+        ll.addView(sb);
+        ll.addView(tvHint);
+
+        b.setView(ll);
+
+        b.setPositiveButton("START", (d, w) -> {
+
+            int mins = sb.getProgress() + 1;
+            long durationMs = mins * 60_000L;
+
+            logInfo("Selected duration: " + mins + " minute(s).");
+            logInfo("Applying maximum brightness, preventing screen-off…");
+            logInfo("Locking screen ON… Starting CPU burn…");
+
+            try {
+                lockScreenOn();
+            } catch (Throwable ignored) {}
+
+            try {
+                applyMaxBrightness();
+            } catch (Throwable ignored) {}
+
+            int startBatteryPct = getBatteryPercent();
+            logInfo("Initial battery level: " + startBatteryPct + "%");
+
+            final float[] peakCPU  = {0f};
+            final float[] peakGPU  = {0f};
+            final float[] peakSKIN = {0f};
+            final float[] peakPMIC = {0f};
+            final float[] peakBATT = {0f};
+
+            cpuBurnStart();
+
+            final Handler h = new Handler();
+            final long[] tStart = { SystemClock.elapsedRealtime() };
+
+            Runnable r = new Runnable() {
+                @Override public void run() {
+
+                    long elapsed = SystemClock.elapsedRealtime() - tStart[0];
+                    if (elapsed >= durationMs) {
+
+                        cpuBurnStop();
+                        restoreBrightness();
+                        restoreScreenFlags();
+
+                        int endBattery = getBatteryPercent();
+                        int diff = startBatteryPct - endBattery;
+
+                        logInfo("Ending battery level: " + endBattery + "%");
+                        logInfo("Total battery drain: " + diff + "%");
+
+                        logInfo("Peak CPU Temp:  "  + fmt1(peakCPU[0])  + "°C");
+                        logInfo("Peak GPU Temp:  "  + fmt1(peakGPU[0])  + "°C");
+                        logInfo("Peak Skin Temp: "  + fmt1(peakSKIN[0]) + "°C");
+                        logInfo("Peak PMIC Temp: "  + fmt1(peakPMIC[0]) + "°C");
+                        logInfo("Peak Batt Temp: "  + fmt1(peakBATT[0]) + "°C");
+
+                        if (diff <= 1) {
+                            logOk("Almost zero drain in stress window: battery's behaviour looks strong.");
+                        } else if (diff <= 3) {
+                            logWarn("Moderate drain detected: battery is aging normally.");
+                        } else {
+                            logError("High drain: battery might be degraded.");
+                        }
+
+                        return;
+                    }
+
+                    peakCPU[0]  = Math.max(peakCPU[0],  safe(lastThermalCPU));
+                    peakGPU[0]  = Math.max(peakGPU[0],  safe(lastThermalGPU));
+                    peakSKIN[0] = Math.max(peakSKIN[0], safe(lastThermalSKIN));
+                    peakPMIC[0] = Math.max(peakPMIC[0], safe(lastThermalPMIC));
+                    peakBATT[0] = Math.max(peakBATT[0], safe(lastBatteryTemp));
+
+                    h.postDelayed(this, 500);
+                }
+            };
+
+            h.post(r);
+        });
+
+        b.setNegativeButton("CANCEL", null);
+        b.show();
+    }
 /* ============================================================
    Small helper
    ============================================================ */
@@ -3453,6 +3420,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

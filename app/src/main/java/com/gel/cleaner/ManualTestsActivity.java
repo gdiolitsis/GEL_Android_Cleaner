@@ -1290,6 +1290,85 @@ private String fmt1_local(float v) {
     catch (Throwable ignored) { return "" + v; }
 }
 
+// ============================================================
+// LAB 15 HELPERS (required by stress test)
+// ============================================================
+
+private float sp(float v) {
+    return android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP,
+            v,
+            getResources().getDisplayMetrics()
+    );
+}
+
+private int dp(int v) {
+    float d = getResources().getDisplayMetrics().density;
+    return (int) (v * d);
+}
+
+private int getCurrentBatteryPercent() {
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return -1;
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level < 0 || scale <= 0) return -1;
+        return Math.round((level * 100f) / scale);
+    } catch (Throwable ignored) {
+        return -1;
+    }
+}
+
+// --------------------------------------------
+// SCREEN + BRIGHTNESS CONTROL
+// --------------------------------------------
+private void applyMaxBrightnessAndKeepOn() {
+    try {
+        android.view.Window w = getWindow();
+        android.view.WindowManager.LayoutParams lp = w.getAttributes();
+        lp.screenBrightness = 1.0f;
+        w.setAttributes(lp);
+        w.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    } catch (Throwable ignored) {}
+}
+
+private void restoreBrightnessAndKeepOn() {
+    try {
+        android.view.Window w = getWindow();
+        android.view.WindowManager.LayoutParams lp = w.getAttributes();
+        lp.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+        w.setAttributes(lp);
+        w.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    } catch (Throwable ignored) {}
+}
+
+// --------------------------------------------
+// CPU BURNER (original from Lab 15)
+// --------------------------------------------
+private Thread cpuThread = null;
+
+private void startCpuBurn_C_Mode() {
+    try {
+        cpuThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                double x = Math.random();
+                double y = Math.sin(x);
+            }
+        }, "CPU-BURN");
+        cpuThread.setPriority(Thread.MAX_PRIORITY);
+        cpuThread.start();
+    } catch (Throwable ignored) {}
+}
+
+private void stopCpuBurn() {
+    try {
+        if (cpuThread != null) cpuThread.interrupt();
+        cpuThread = null;
+    } catch (Throwable ignored) {}
+}
+    
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3389,4 +3468,5 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 

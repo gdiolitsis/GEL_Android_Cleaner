@@ -1096,10 +1096,6 @@ private void lab14InternetQuickCheck() {
     }  
 }  
 
-// ============================================================
-// LAB 15 — Battery Health Stress Test (GEL C Mode)
-// (Original UI + Thermal Change + Health Category Checkboxes)
-// ============================================================
 private void lab15BatteryHealthStressTest() {
     showBatteryHealthTestDialog();
 }
@@ -1170,8 +1166,8 @@ private void showBatteryHealthTestDialog() {
     layout.addView(start);
 
     builder.setView(layout);
+    
     AlertDialog dialog = builder.create();
-
     if (dialog.getWindow() != null)
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(0xFF000000));
 
@@ -1185,13 +1181,21 @@ private void showBatteryHealthTestDialog() {
 }
 
 private void runBatteryHealthTest_C_Mode(int durationSec) {
+
     float startPct = getCurrentBatteryPercent();
     if (startPct < 0f) {
         logWarn("Battery Stress Test: unable to read initial battery level.");
         return;
     }
 
-    // ---- READ THERMALS BEFORE START ----
+    // ----------- SAFETY: BLOCK TEST ON LOW BATTERY ----------------
+    if (startPct < 40f) {
+        logError("Battery too low for accurate health measurement (needs ≥40%). Charge device and retry.");
+        return;
+    }
+    // --------------------------------------------------------------
+
+    // READ THERMALS BEFORE
     Map<String,Float> z0 = readThermalZones();
     Float cpu0  = pickZone(z0,"cpu","soc","big","little");
     Float gpu0  = pickZone(z0,"gpu");
@@ -1210,6 +1214,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
     startCpuBurn_C_Mode();
 
     ui.postDelayed(() -> {
+
         stopCpuBurn();
         restoreBrightnessAndKeepOn();
 
@@ -1225,13 +1230,12 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
         float delta = startPct - endPct;
         float perHour = (delta * 3600000f) / dtMs;
-        float perHourAbs = Math.max(0f, perHour);
 
         logInfo(String.format(Locale.US,
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                 startPct, endPct, delta, dtMs / 1000f));
 
-        // ---- READ THERMALS AFTER ----
+        // READ THERMALS AFTER
         Map<String,Float> z1 = readThermalZones();
         Float cpu1  = pickZone(z1,"cpu","soc","big","little");
         Float gpu1  = pickZone(z1,"gpu");
@@ -1239,9 +1243,8 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         Float pmic1 = pickZone(z1,"pmic","pmic_therm");
         Float batt1 = pickZone(z1,"battery","batt","bat");
 
-        // ---- THERMAL CHANGE ----
-        float dCPU  = (cpu1  != null && cpu0  != null) ? cpu1  - cpu0  : 0f;
-        float dGPU  = (gpu1  != null && gpu0  != null) ? gpu1  - gpu0  : 0f;
+        float dCPU  = (cpu1 != null && cpu0 != null) ? cpu1 - cpu0 : 0f;
+        float dGPU  = (gpu1 != null && gpu0 != null) ? gpu1 - gpu0 : 0f;
         float dSKIN = (skin1 != null && skin0 != null) ? skin1 - skin0 : 0f;
         float dPMIC = (pmic1 != null && pmic0 != null) ? pmic1 - pmic0 : 0f;
         float dBATT = (batt1 != null && batt0 != null) ? batt1 - batt0 : 0f;
@@ -1250,7 +1253,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
                 dCPU, dGPU, dSKIN, dPMIC, dBATT));
 
-        // ---- FINAL BATTERY BEHAVIOR (drain text stays as before) ----
+        // DRAIN LINE
         if (delta <= 0.1f) {
             logOk("Almost zero drain in stress window — battery behavior looks strong.");
         } else if (perHour <= 12f) {
@@ -1264,144 +1267,34 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ============================================================
-        // HEALTH CATEGORY CHECKBOXES (Strong / Excellent / Very good / Normal / Weak)
-        // ============================================================
-        String category;
-        if (perHourAbs <= 6f) {
-            category = "Strong";
-        } else if (perHourAbs <= 9f) {
-            category = "Excellent";
-        } else if (perHourAbs <= 12f) {
-            category = "Very good";
-        } else if (perHourAbs <= 20f) {
-            category = "Normal";
-        } else {
-            category = "Weak";
-        }
+        // HEALTH CATEGORY MAP
+        String health;
+        if (perHour <= 8f) health = "Excellent";
+        else if (perHour <= 12f) health = "Very good";
+        else if (perHour <= 20f) health = "Normal";
+        else health = "Weak";
 
+        logLine();
         logInfo("Battery health map from stress window:");
 
-        // Strong
-        if ("Strong".equals(category)) {
-            logOk("✔ Strong");
-        } else {
-            logInfo("☐ Strong");
-        }
+        if (health.equals("Strong")) logOk("✔ Strong");
+        else logInfo("☐ Strong");
 
-        // Excellent
-        if ("Excellent".equals(category)) {
-            logOk("✔ Excellent");
-        } else {
-            logInfo("☐ Excellent");
-        }
+        if (health.equals("Excellent")) logOk("✔ Excellent");
+        else logInfo("☐ Excellent");
 
-        // Very good
-        if ("Very good".equals(category)) {
-            logOk("✔ Very good");
-        } else {
-            logInfo("☐ Very good");
-        }
+        if (health.equals("Very good")) logOk("✔ Very good");
+        else logInfo("☐ Very good");
 
-        // Normal
-        if ("Normal".equals(category)) {
-            logWarn("✔ Normal");
-        } else {
-            logInfo("☐ Normal");
-        }
+        if (health.equals("Normal")) logWarn("✔ Normal");
+        else logInfo("☐ Normal");
 
-        // Weak
-        if ("Weak".equals(category)) {
-            logError("✔ Weak");
-        } else {
-            logInfo("☐ Weak");
-        }
+        if (health.equals("Weak")) logError("✔ Weak");
+        else logInfo("☐ Weak");
 
     }, durationSec * 1000L);
 }
-
-private void applyMaxBrightnessAndKeepOn() {
-    try {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        oldWindowBrightness = lp.screenBrightness;
-        oldKeepScreenOn = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
-
-        lp.screenBrightness = 1f;
-        getWindow().setAttributes(lp);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        logInfo("Stress: brightness set to MAX and screen locked ON.");
-    } catch (Exception e) {
-        logWarn("Stress: brightness/keep-on failed: " + e.getMessage());
-    }
-}
-
-private void restoreBrightnessAndKeepOn() {
-    try {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        if (oldWindowBrightness != -2f) {
-            lp.screenBrightness = oldWindowBrightness;
-            getWindow().setAttributes(lp);
-        }
-
-        if (!oldKeepScreenOn) {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
-
-        logInfo("Stress: brightness and screen flags restored.");
-    } catch (Exception e) {
-        logWarn("Stress: restore brightness failed: " + e.getMessage());
-    }
-}
-
-private void startCpuBurn_C_Mode() {
-    stopCpuBurn();
-    cpuBurnRunning = true;
-
-    int cores = Runtime.getRuntime().availableProcessors();
-    int threadsToRun = Math.min(8, cores);
-    logInfo("Stress: starting CPU burn threads: " + threadsToRun + " (cores=" + cores + ").");
-
-    cpuBurnThreads.clear();
-    for (int i = 0; i < threadsToRun; i++) {
-        Thread t = new Thread(() -> {
-            double x = 1.000001;
-            while (cpuBurnRunning) {
-                x = x * 1.0000001 + Math.sqrt(x) + Math.sin(x) + Math.cos(x);
-                if (x > 1e9) x = 1.000001;
-            }
-        });
-        t.setPriority(Thread.MAX_PRIORITY);
-        t.start();
-        cpuBurnThreads.add(t);
-    }
-}
-
-private void stopCpuBurn() {
-    cpuBurnRunning = false;
-    for (Thread t : cpuBurnThreads) {
-        try { t.join(50); } catch (Exception ignored) {}
-    }
-    cpuBurnThreads.clear();
-    logInfo("Stress: CPU burn stopped.");
-}
-
-private float getCurrentBatteryPercent() {
-    try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent i = registerReceiver(null, f);
-        if (i == null) return -1f;
-
-        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        if (level < 0 || scale <= 0) return -1f;
-
-        return 100f * level / scale;
-    } catch (Exception e) {
-        return -1f;
-    }
-}
-        
+    
 // ============================================================  
 // LAB 16 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -3501,5 +3394,6 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 

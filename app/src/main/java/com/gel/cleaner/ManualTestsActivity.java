@@ -1189,9 +1189,6 @@ private String readFirstLine(File file) {
 // ============================================================
 // LAB 15 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
-                // ============================================================
-// LAB 15 — Battery Health Stress Test (GEL Full Mode)
-// ============================================================
 private void lab15BatteryHealthStressTest() {
 
     float pct = getCurrentBatteryPercent();
@@ -1285,13 +1282,13 @@ private void showBatteryHealthTestDialog() {
         int durationMin = 1 + seek.getProgress();
         int durationSec = durationMin * 60;
         dialog.dismiss();
-        runBatteryHealthTest_C_Mode(durationSec);
+        runBatteryHealthTest_C_Mode(durationSec, durationMin);
     });
 
     dialog.show();
 }
 
-private void runBatteryHealthTest_C_Mode(int durationSec) {
+private void runBatteryHealthTest_C_Mode(int durationSec, int durationMin) {
 
     float startPct = getCurrentBatteryPercent();
     if (startPct < 0f) {
@@ -1312,13 +1309,16 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
     logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
     logInfo("Duration: " + durationSec + " seconds.");
 
-    // 🔵 Ζωντανές τελίτσες — όπως ζήτησες
-    animateDots("   Stressing CPU ", 350, 8);
-
     long startTime = SystemClock.elapsedRealtime();
 
     applyMaxBrightnessAndKeepOn();
     startCpuBurn_C_Mode();
+
+    // ============================================================
+    // RED DOT ANIMATION for full duration
+    // ============================================================
+    animateDotsReplace("Stressing CPU", 500, durationMin * 120); 
+    // (2 updates per second → 120 per minute)
 
     ui.postDelayed(() -> {
 
@@ -1337,9 +1337,6 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
         float delta = startPct - endPct;
         float perHour = (delta * 3600000f) / dtMs;
-
-        // 🔵 Ζωντανές τελίτσες στον υπολογισμό drain
-        animateDots("   Calculating drain ", 350, 6);
 
         logInfo(String.format(Locale.US,
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
@@ -1392,7 +1389,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 }
 
 // ============================================================
-// CHECKBOX MAP (όπως στο δικό σου – δεν άγγιξα τίποτα)
+// CHECKBOX MAP
 // ============================================================
 private void printHealthCheckboxMap(String health) {
 
@@ -1418,6 +1415,7 @@ private String cb(String label, boolean active, String neon, String white) {
     else
         return "☐ " + color(label, white);
 }
+    
 // ============================================================
 // HELPERS (ίδιοι όπως πριν, για να μη λείπει τίποτα)
 // ============================================================
@@ -3632,6 +3630,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

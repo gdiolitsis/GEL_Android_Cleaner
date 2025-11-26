@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL FINAL v5.2 (Foldable Unified Edition)
-// NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — ποτέ πίσω.
+// DeviceInfoInternalActivity.java — GEL FINAL v5.3 (Fixed Expanders)
+// NOTE: Το αρχείο είναι 100% έτοιμο για copy-paste.
 
 package com.gel.cleaner;
 
@@ -28,14 +28,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.gel.cleaner.base.GELFoldableCallback.Posture;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DeviceInfoInternalActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
@@ -60,7 +56,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);
 
-        // FOLDABLE INIT
+        // FOLD INIT
         foldUI = new GELFoldableUIManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
@@ -120,10 +116,23 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         // ROOT CHECK
         isRooted = isDeviceRooted();
 
-        // -------------- ORIGINAL CONTENT BLOCKS (UNCHANGED) --------------
-        // (Όλο το περιεχόμενο CPU/GPU/Thermals/Vulkan/Connectivity/Root
-        //  έμεινε 100% όπως το είχες – δεν πειράχτηκε τίποτα)
-        // -----------------------------------------------------------------
+        // ============================================================
+        // EXPANDERS (THE FIX YOU NEEDED)
+        // ============================================================
+        setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
+        setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
+        setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
+        setupSection(findViewById(R.id.headerGpu), txtGpuContent, iconGpu);
+        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+        setupSection(findViewById(R.id.headerThermalZones), txtThermalZonesContent, iconThermalZones);
+        setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
+        setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
+        setupSection(findViewById(R.id.headerFpsGovernor), txtFpsGovernorContent, iconFpsGovernor);
+        setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
+        setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
+        setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
+        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+        setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
     }
 
     @Override
@@ -138,23 +147,14 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         super.onPause();
     }
 
-    // ============================================================
-    // FOLDABLE CALLBACKS — FIXED (Unified Posture API)
-    // ============================================================
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {
-        // no-op (future hinge logic)
-        // keep signature unified with GELAutoActivityHook
-    }
+    public void onPostureChanged(@NonNull Posture posture) {}
 
     @Override
     public void onScreenChanged(boolean isInner) {
         if (foldUI != null) foldUI.applyUI(isInner);
     }
 
-    // ============================================================
-    // ONE-OPEN-ONLY LOGIC
-    // ============================================================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
         header.setOnClickListener(v -> toggleSection(content, icon));
@@ -177,10 +177,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
         iconToUpdate.setText(visible ? "＋" : "−");
     }
-
-    // ============================================================
-    // HELPERS (UNCHANGED)
-    // ============================================================
 
     private boolean isDeviceRooted() {
         String tags = Build.TAGS;
@@ -205,9 +201,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
     }
 
-    // ============================================================
-    // WIFI BAND FIX — YOUR REQUEST
-    // ============================================================
     private String describeWifiBand(int freq) {
         if (freq >= 2400 && freq < 2500) return "2.4 GHz";
         if (freq >= 4900 && freq < 5900) return "5 GHz";

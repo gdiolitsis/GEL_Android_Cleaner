@@ -1615,8 +1615,8 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 }
 
 // ============================================================
-// LAB 18 — GEL AUTO Battery Reliability Evaluation (FINAL)
-// 3 ΞΕΧΩΡΙΣΤΕΣ LIVE NEON-GREEN ΜΠΑΡΕΣ
+// LAB 18 — GEL AUTO Battery Reliability Evaluation (FINAL v8)
+// 3 ΠΡΑΣΙΝΕΣ LIVE ΜΠΑΡΕΣ — ΑΚΡΙΒΩΣ ΟΠΩΣ ΤΟ ΠΑΡΑΔΕΙΓΜΑ
 // ============================================================
 
 private void lab18RunAuto() {
@@ -1624,23 +1624,15 @@ private void lab18RunAuto() {
     new Thread(() -> {
 
         logLine();
-        logInfo("18. GEL Auto Battery Reliability Evaluation");
         logInfo("ℹ️ GEL Battery Reliability Evaluation started.");
         logLine();
 
-        // ============================================================
-        // 1) STRESS TEST — BAR #1 (0–32%)
-        // ============================================================
+        // =================================================================
+        // BAR #1 — STRESS TEST  (0 → 32%)
+        // =================================================================
+
         logInfo("▶ Running Stress Test (Lab 15)...");
-        appendHtml(buildGreenProgressBar(0));   // BAR 1
-
-        stopCpuBurn();
-
-        float startPct = getCurrentBatteryPercent();
-        if (startPct < 50f) {
-            logError("Battery <50%. Please charge before running lab.");
-            return;
-        }
+        appendHtml(buildBar(0));   // 1st bar appears
 
         float before = getCurrentBatteryPercent();
         long t0 = SystemClock.elapsedRealtime();
@@ -1648,14 +1640,9 @@ private void lab18RunAuto() {
         applyMaxBrightnessAndKeepOn();
         startCpuBurn_C_Mode();
 
-        int target1 = 32;     // τελική μπάρα #1
-        int steps1 = 60;      // 60 updates
-        int delay1 = 1000;    // 1s per step → 60s total
-
-        for (int i = 1; i <= steps1; i++) {
-            int percent = (target1 * i) / steps1;
-            replaceLastBar(percent);
-            try { Thread.sleep(delay1); } catch (Exception ignore) {}
+        for (int p = 0; p <= 32; p++) {
+            replaceLastBar(p);
+            try { Thread.sleep(1000); } catch (Exception ignore) {}
         }
 
         stopCpuBurn();
@@ -1667,34 +1654,29 @@ private void lab18RunAuto() {
         float drop = before - after;
         if (drop < 0) drop = 0;
 
-        float perHour = (drop * 3600000f) / Math.max(1, (t1 - t0));
+        float perHour = (drop * 3600000f) / Math.max(1, t1 - t0);
         if (perHour < 0) perHour = 0;
 
         int drain_mA = (int)(perHour * 50f);
-        if (drain_mA < 0) drain_mA = 0;
 
-        logInfo("Stress Test complete.");
         logLine();
 
-        // ============================================================
-        // 2) THERMAL ZONES — BAR #2 (0–36% mapped 32–68)
-        // ============================================================
+        // =================================================================
+        // BAR #2 — THERMAL ZONES (0 → 68%)
+        // EACH BAR STARTS FROM ZERO
+        // =================================================================
+
         logInfo("▶ Running Thermal Zones (Lab 17)...");
-        appendHtml(buildGreenProgressBar(0));   // BAR 2
+        appendHtml(buildBar(0));   // new bar #2 (stays separate)
 
         Map<String,Float> z0 = readThermalZones();
-
-        int target2 = 36;
-        int steps2 = 30;
-        int delay2 = 100;
-
-        for (int i = 1; i <= steps2; i++) {
-            int percent = (target2 * i) / steps2;
-            replaceLastBar(percent);
-            try { Thread.sleep(delay2); } catch (Exception ignore) {}
-        }
-
+        try { Thread.sleep(1500); } catch (Exception ignore) {}
         Map<String,Float> z1 = readThermalZones();
+
+        for (int p = 0; p <= 68; p++) {
+            replaceLastBar(p);
+            try { Thread.sleep(40); } catch (Exception ignore) {}
+        }
 
         Float cpu0  = pickZone(z0,"cpu","soc","big","little");
         Float cpu1  = pickZone(z1,"cpu","soc","big","little");
@@ -1704,23 +1686,18 @@ private void lab18RunAuto() {
         float dCPU  = (cpu0 != null && cpu1 != null) ? cpu1 - cpu0 : 0f;
         float dBATT = (batt0 != null && batt1 != null) ? batt1 - batt0 : 0f;
 
-        logInfo("Thermal Zones complete.");
         logLine();
 
-        // ============================================================
-        // 3) DRAIN MODEL — BAR #3 (0–17% mapped 68–85)
-        // ============================================================
+        // =================================================================
+        // BAR #3 — DRAIN MODEL (0 → 85%)
+        // =================================================================
+
         logInfo("▶ Calculating drain rate...");
-        appendHtml(buildGreenProgressBar(0));   // BAR 3
+        appendHtml(buildBar(0));   // new bar #3
 
-        int target3 = 17;
-        int steps3 = 20;
-        int delay3 = 80;
-
-        for (int i = 1; i <= steps3; i++) {
-            int percent = (target3 * i) / steps3;
-            replaceLastBar(percent);
-            try { Thread.sleep(delay3); } catch (Exception ignore) {}
+        for (int p = 0; p <= 85; p++) {
+            replaceLastBar(p);
+            try { Thread.sleep(30); } catch (Exception ignore) {}
         }
 
         logInfo("▶ Calculating voltage stability...");
@@ -1741,9 +1718,10 @@ private void lab18RunAuto() {
         float estimatedCapacity_mAh = factory * (100f / (100f + perHour));
         if (estimatedCapacity_mAh > factory) estimatedCapacity_mAh = factory;
 
-        // ============================================================
-        // 4) SCORING SYSTEM
-        // ============================================================
+        // =================================================================
+        // SCORING
+        // =================================================================
+
         int score = 100;
 
         if (perHour > 15)      score -= 25;
@@ -1773,12 +1751,14 @@ private void lab18RunAuto() {
         else if (score >= 60) category = "Normal";
         else                  category = "Weak";
 
-        // ============================================================
-        // 5) FINAL REPORT
-        // ============================================================
+        // =================================================================
+        // REPORT
+        // =================================================================
+
         logLine();
+        logInfo("--------------------------------------------------");
         logInfo("GEL Battery Intelligence Evaluation");
-        logLine();
+        logInfo("--------------------------------------------------");
 
         logInfo("1. Stress Drain Rate: " + drain_mA + " mA");
         logInfo(String.format(Locale.US,
@@ -1798,54 +1778,44 @@ private void lab18RunAuto() {
 
     }).start();
 }
-
-
+        
 //=====================    
 //HELPERS
 //=====================
-private String buildGreenProgressBar(int percent) {
-    if (percent < 0) percent = 0;
-    if (percent > 100) percent = 100;
-
-    int total = 20;
+private String buildBar(int percent) {
+    percent = Math.max(0, Math.min(100, percent));
+    int total = 30;
     int filled = (percent * total) / 100;
     int empty = total - filled;
 
-    StringBuilder bar = new StringBuilder();
-
-    bar.append("<font color='#39FF14'>");
-    for (int i = 0; i < filled; i++) bar.append("█");
-    bar.append("</font>");
-
-    bar.append("<font color='#333333'>");
-    for (int i = 0; i < empty; i++) bar.append("█");
-    bar.append("</font>");
-
-    bar.append(" ").append(percent).append("%");
-    return bar.toString();
+    StringBuilder sb = new StringBuilder("[");
+    sb.append("<font color='#39FF14'>");
+    for (int i = 0; i < filled; i++) sb.append("█");
+    sb.append("</font>");
+    for (int i = 0; i < empty; i++) sb.append("░");
+    sb.append("] ").append(percent).append("%");
+    return sb.toString();
 }
 
 private void replaceLastBar(int percent) {
-    String html = buildGreenProgressBar(percent);
+    String bar = buildBar(percent);
 
     ui.post(() -> {
-        try {
-            CharSequence cur = txtLog.getText();
-            if (cur == null) cur = "";
-            String s = cur.toString();
-
-            int idx = s.lastIndexOf("<br>");
-            if (idx <= 0) {
-                txtLog.setText(Html.fromHtml(html + "<br>"));
-            } else {
-                String head = s.substring(0, idx);
-                txtLog.setText(Html.fromHtml(head + "<br>" + html + "<br>"));
-            }
-
-            scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-        } catch (Exception e) {
-            appendHtml(html + "<br>");
+        CharSequence cur = txtLog.getText();
+        String s = (cur == null) ? "" : cur.toString();
+        int idx = s.lastIndexOf("[");
+        if (idx < 0) {
+            appendHtml(bar + "<br>");
+            return;
         }
+        int br = s.indexOf("]", idx);
+        if (br < 0) { appendHtml(bar + "<br>"); return; }
+
+        String head = s.substring(0, idx);
+        String tail = s.substring(br + 1);
+
+        txtLog.setText(Html.fromHtml(head + bar + "<br>" + tail));
+        scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
     });
 }
 
@@ -1863,7 +1833,6 @@ private float getBatteryVoltage_mV() {
 private int getFactoryCapacity_mAh() {
     return 5000;
 }
-
     
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3611,6 +3580,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

@@ -1,11 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v7.0
+// CpuRamLiveActivity.java — FIXED v7.1
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -50,9 +51,9 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
                 final String line =
                         "Live " + String.format("%02d", counter) +
-                        " | CPU: " + cpu +
-                        " | Temp: " + temp +
-                        " | RAM: " + ram;
+                                " | CPU: " + cpu +
+                                " | Temp: " + temp +
+                                " | RAM: " + ram;
 
                 runOnUiThread(() -> txtLive.append(line + "\n"));
 
@@ -101,12 +102,20 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 
+    // UNIVERSAL SAFE TEMP FOR ALL APIS
     private String readCpuTemp() {
         try {
             BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-            if (t > 0) return (t / 10f) + "°C";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                try {
+                    int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
+                    if (t > 0) return (t / 10f) + "°C";
+                } catch (Exception ignored) {}
+            }
+
             return "N/A";
+
         } catch (Exception e) {
             return "N/A";
         }

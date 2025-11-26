@@ -1,10 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v7.4 PRO (Soft Expand v2.0)
+// DeviceInfoPeripheralsActivity.java — FINAL FIXED v7.4.1
 
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
-import android.Manifest;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -25,6 +25,7 @@ import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -35,6 +36,7 @@ import androidx.annotation.NonNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.FileReader;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
@@ -54,8 +56,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle saved) {
+        super.onCreate(saved);
         setContentView(R.layout.activity_device_info_peripherals);
 
         GELAutoDP.init(this);
@@ -71,6 +73,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             title.setTextSize(sp(20f));
         }
 
+        // ================================
+        // FIND CONTENT AREAS
+        // ================================
         TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
         TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
         TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
@@ -88,6 +93,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
         TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
 
+        // ICONS
         TextView iconCamera        = findViewById(R.id.iconCameraToggle);
         TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
         TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
@@ -120,6 +126,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         isRooted = isDeviceRooted();
 
+        // EXPANDERS
         setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
         setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
         setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
@@ -142,110 +149,40 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     protected void onStart() {
         super.onStart();
 
-        setTxt(R.id.txtCameraContent,        buildCameraInfo());
-        setTxt(R.id.txtBiometricsContent,    buildBiometricsInfo());
-        setTxt(R.id.txtSensorsContent,       buildSensorsInfo());
-        setTxt(R.id.txtConnectivityContent,  buildConnectivityInfo());
-        setTxt(R.id.txtLocationContent,      buildLocationInfo());
-        setTxt(R.id.txtBluetoothContent,     buildBluetoothInfo());
-        setTxt(R.id.txtNfcContent,           buildNfcInfo());
-        setTxt(R.id.txtBatteryContent,       buildBatteryInfo());
-        setTxt(R.id.txtUwbContent,           buildUwbInfo());
-        setTxt(R.id.txtHapticsContent,       buildHapticsInfo());
-        setTxt(R.id.txtGnssContent,          buildGnssInfo());
-        setTxt(R.id.txtUsbContent,           buildUsbInfo());
-        setTxt(R.id.txtMicsContent,          buildMicsInfo());
-        setTxt(R.id.txtAudioHalContent,      buildAudioHalInfo());
+        setText(R.id.txtCameraContent, buildCameraInfo());
+        setText(R.id.txtBiometricsContent, buildBiometricsInfo());
+        setText(R.id.txtSensorsContent, buildSensorsInfo());
+        setText(R.id.txtConnectivityContent, buildConnectivityInfo());
+        setText(R.id.txtLocationContent, buildLocationInfo());
+        setText(R.id.txtBluetoothContent, buildBluetoothInfo());
+        setText(R.id.txtNfcContent, buildNfcInfo());
+        setText(R.id.txtBatteryContent, buildBatteryInfo());
+        setText(R.id.txtUwbContent, buildUwbInfo());
+        setText(R.id.txtHapticsContent, buildHapticsInfo());
+        setText(R.id.txtGnssContent, buildGnssInfo());
+        setText(R.id.txtUsbContent, buildUsbInfo());
+        setText(R.id.txtMicsContent, buildMicsInfo());
+        setText(R.id.txtAudioHalContent, buildAudioHalInfo());
 
-        TextView txtRoot = findViewById(R.id.txtRootContent);
-        if (txtRoot != null) {
-            txtRoot.setText(isRooted ?
-                    "ROOT: YES (su detected)" :
-                    "DEVICE IS NOT ROOTED");
-        }
+        setText(R.id.txtRootContent,
+                isRooted ? "Root Detected: YES" : "Device is NOT rooted");
 
-        TextView txtOther = findViewById(R.id.txtOtherPeripheralsContent);
-        if (txtOther != null) {
-            boolean vib = getPackageManager().hasSystemFeature(PackageManager.FEATURE_VIBRATOR);
-            txtOther.setText("Vibration Motor : " + (vib ? "Yes" : "No"));
-        }
+        setText(R.id.txtOtherPeripheralsContent,
+                "Vibration Motor : " +
+                        yes("android.hardware.vibrator"));
     }
 
-    private void setTxt(int id, String txt) {
+    // SMALL helper
+    private void setText(int id, String txt) {
         TextView t = findViewById(id);
         if (t != null) t.setText(txt);
     }
 
-    private void setupSection(View header, final TextView content, final TextView icon) {
-        if (header == null) return;
-        header.setOnClickListener(v -> toggleSection(content, icon));
+    // BUILDERS ============================
+
+    private String yes(String feature) {
+        return getPackageManager().hasSystemFeature(feature) ? "Yes" : "No";
     }
-
-    private void toggleSection(TextView open, TextView icon) {
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-            if (c == open) continue;
-            animateCollapse(c);
-            ic.setText("＋");
-        }
-
-        if (open.getVisibility() == View.VISIBLE) {
-            animateCollapse(open);
-            icon.setText("＋");
-        } else {
-            animateExpand(open);
-            icon.setText("−");
-        }
-    }
-
-    private void animateExpand(final View v) {
-        v.measure(View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        int h = v.getMeasuredHeight();
-        v.getLayoutParams().height = 0;
-        v.setVisibility(View.VISIBLE);
-        v.setAlpha(0f);
-
-        v.animate().alpha(1f).setDuration(160)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> v.getLayoutParams().height = h)
-                .start();
-    }
-
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
-
-        int h = v.getMeasuredHeight();
-        v.animate().alpha(0f).setDuration(120)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = h;
-                    v.setAlpha(1f);
-                })
-                .start();
-    }
-
-    private boolean isDeviceRooted() {
-        try {
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su"
-            };
-            for (String p : paths) if (new File(p).exists()) return true;
-
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            return line != null && !line.isEmpty();
-        } catch (Throwable ignore) {
-            return false;
-        }
-    }
-
-    @Override public int dp(int v) { return GELAutoDP.dp(v); }
-    @Override public float sp(float v) { return GELAutoDP.sp(v); }
 
     private String buildCameraInfo() {
         StringBuilder sb = new StringBuilder();
@@ -254,98 +191,129 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             if (cm != null) {
                 for (String id : cm.getCameraIdList()) {
                     CameraCharacteristics cc = cm.getCameraCharacteristics(id);
-                    sb.append("Camera ID ").append(id).append("\n");
+
+                    sb.append("Camera ").append(id).append(":\n");
+
+                    Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
+                    if (facing != null) {
+                        sb.append("  Facing: ")
+                                .append(facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" :
+                                        facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :
+                                                "External")
+                                .append("\n");
+                    }
+
+                    float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+                    if (apertures != null && apertures.length > 0)
+                        sb.append("  Aperture: f/").append(apertures[0]).append("\n");
+
+                    sb.append("\n");
                 }
             }
         } catch (Throwable ignore) {}
-        return sb.length() == 0 ? "No camera data" : sb.toString();
+
+        if (sb.length() == 0) return "No camera data.\n";
+        return sb.toString();
     }
 
     private String buildBiometricsInfo() {
-        return "Fingerprint : " + yes(PackageManager.FEATURE_FINGERPRINT) + "\n" +
-               "Face Unlock : " + yes("android.hardware.biometrics.face") + "\n" +
-               "Iris Scan   : " + yes("android.hardware.biometrics.iris") + "\n";
-    }
-
-    private String yes(String feat) {
-        return getPackageManager().hasSystemFeature(feat) ? "Yes" : "No";
+        return  "Fingerprint: " + yes(PackageManager.FEATURE_FINGERPRINT) + "\n" +
+                "Face: "        + yes("android.hardware.biometrics.face") + "\n";
     }
 
     private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
-            SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-            for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL))
-                sb.append(s.getName()).append("\n");
+            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm != null) {
+                for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL))
+                    sb.append(s.getName()).append("\n");
+            }
         } catch (Throwable ignore) {}
-        return sb.length() == 0 ? "No sensors detected" : sb.toString();
+
+        if (sb.length() == 0) return "No sensors detected.\n";
+        return sb.toString();
     }
 
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
         try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
             if (cm != null) {
                 NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
                 if (caps != null) {
+                    sb.append("Active: ");
                     if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) sb.append("Wi-Fi\n");
                     else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) sb.append("Cellular\n");
+                    else sb.append("Other\n");
                 }
             }
 
             if (wm != null) {
                 WifiInfo wi = wm.getConnectionInfo();
-                if (wi.getNetworkId() != -1) {
+                if (wi != null && wi.getNetworkId() != -1) {
                     sb.append("SSID: ").append(wi.getSSID()).append("\n");
                     sb.append("Speed: ").append(wi.getLinkSpeed()).append(" Mbps\n");
                 }
             }
 
         } catch (Throwable ignore) {}
-        return sb.length() == 0 ? "No connectivity" : sb.toString();
+
+        if (sb.length() == 0) return "No connectivity info.\n";
+        return sb.toString();
     }
 
     private String buildLocationInfo() {
+        StringBuilder sb = new StringBuilder();
         try {
-            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
-            return "GPS: " + (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? "On" : "Off") + "\n" +
-                   "Network: " + (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ? "On" : "Off") + "\n";
-        } catch (Throwable e) {
-            return "No location info";
-        }
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            sb.append("GPS: ").append(lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? "Enabled" : "Disabled");
+        } catch (Throwable ignore) {}
+
+        if (sb.length() == 0) return "No location data.\n";
+        return sb.toString();
     }
 
     private String buildBluetoothInfo() {
+        StringBuilder sb = new StringBuilder();
         try {
-            BluetoothManager bm = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-            BluetoothAdapter ba = bm.getAdapter();
-            if (ba == null) return "Supported: No";
-            return "Supported: Yes\nEnabled: " + (ba.isEnabled() ? "Yes" : "No") + "\nName: " + ba.getName();
+            BluetoothAdapter ba = ((BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
+            if (ba != null) {
+                sb.append("Supported: Yes\n");
+                sb.append("Enabled: ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+                sb.append("Name: ").append(ba.getName()).append("\n");
+            }
         } catch (Throwable ignore) {}
-        return "No BT info";
+
+        if (sb.length() == 0) return "No Bluetooth data.\n";
+        return sb.toString();
     }
 
     private String buildNfcInfo() {
         try {
-            NfcManager nfc = (NfcManager) getSystemService(NFC_SERVICE);
-            NfcAdapter a = nfc.getDefaultAdapter();
-            if (a == null) return "NFC: Not supported";
-            return "NFC: Supported\nEnabled: " + (a.isEnabled() ? "Yes" : "No");
+            NfcAdapter a = ((NfcManager)getSystemService(Context.NFC_SERVICE)).getDefaultAdapter();
+            return "NFC: " + (a != null ? "Supported" : "Not supported") + "\n";
         } catch (Throwable ignore) {}
-        return "NFC error";
+        return "NFC: Not supported\n";
     }
 
     private String buildBatteryInfo() {
+        StringBuilder sb = new StringBuilder();
         try {
             Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-            int lvl = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            return "Level: " + lvl + "%\nTemp: " + (temp / 10f) + "°C\n";
-        } catch (Throwable e) {
-            return "Battery info error";
-        }
+            if (i != null) {
+                int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int temp  = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+
+                sb.append("Level: ").append(level).append("%\n");
+                if (temp > 0) sb.append("Temp: ").append(temp / 10f).append("°C\n");
+            }
+        } catch (Throwable ignore) {}
+
+        if (sb.length() == 0) return "No battery info.\n";
+        return sb.toString();
     }
 
     private String buildUwbInfo() {
@@ -353,11 +321,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     private String buildHapticsInfo() {
-        return "Vibration: " + yes(PackageManager.FEATURE_VIBRATOR) + "\n";
+        return "Vibration: " + yes("android.hardware.vibrator") + "\n";
     }
 
     private String buildGnssInfo() {
-        return "GNSS: " + yes(PackageManager.FEATURE_LOCATION_GNSS) + "\n";
+        return "GNSS: " + yes("android.hardware.location.gnss") + "\n";
     }
 
     private String buildUsbInfo() {
@@ -367,11 +335,14 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private String buildMicsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            for (AudioDeviceInfo d : am.getDevices(AudioManager.GET_DEVICES_INPUTS))
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
+            for (AudioDeviceInfo d : devs)
                 sb.append("Mic: ").append(d.getProductName()).append("\n");
         } catch (Throwable ignore) {}
-        return sb.length() == 0 ? "No microphones" : sb.toString();
+
+        if (sb.length() == 0) return "No microphones detected.\n";
+        return sb.toString();
     }
 
     private String buildAudioHalInfo() {
@@ -383,7 +354,28 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line = br.readLine();
-            return line == null ? "" : line.trim();
-        } catch (Throwable e) { return ""; }
+            br.close();
+            return line != null ? line.trim() : "";
+        } catch (Exception e) { return ""; }
     }
+
+    // ROOT
+    private boolean isDeviceRooted() {
+        try {
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su"
+            };
+            for (String p : paths) if (new File(p).exists()) return true;
+
+            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            return in.readLine() != null;
+
+        } catch (Throwable ignore) { return false; }
+    }
+
+    // UI DP/SP
+    @Override public int dp(int v) { return GELAutoDP.dp(v); }
+    @Override public float sp(float v) { return GELAutoDP.sp(v); }
 }

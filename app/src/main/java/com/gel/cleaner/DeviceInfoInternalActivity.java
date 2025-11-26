@@ -1,10 +1,14 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v6.0 (Full Report + Soft Expand v2.0)
-// NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — χωρίς αλλαγές σε UI / XML.
+// ==========================================================
+// GDiolitsis Engine Lab (GEL) — Author & Developer  
+// DeviceInfoInternalActivity.java — FULL PRO v7.0 (PART 1/2)  
+// ==========================================================
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.base.*;
+import com.gel.cleaner.base.GELAutoActivityHook;
+import com.gel.cleaner.base.GELFoldableCallback;
+import com.gel.cleaner.base.GELFoldableDetector;
+import com.gel.cleaner.base.GELFoldableUIManager;
 
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
@@ -16,14 +20,12 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
-import android.nfc.NfcManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.Settings;
-import android.telephony.*;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -63,7 +65,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         TextView title = findViewById(R.id.txtTitleDevice);
         if (title != null) title.setText(getString(R.string.phone_info_internal));
 
-        // CONTENT
         TextView txtSystemContent           = findViewById(R.id.txtSystemContent);
         TextView txtAndroidContent          = findViewById(R.id.txtAndroidContent);
         TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
@@ -79,7 +80,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
         TextView txtRootContent             = findViewById(R.id.txtRootContent);
 
-        // ICONS
         TextView iconSystem           = findViewById(R.id.iconSystemToggle);
         TextView iconAndroid          = findViewById(R.id.iconAndroidToggle);
         TextView iconCpu              = findViewById(R.id.iconCpuToggle);
@@ -111,9 +111,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         isRooted = isDeviceRooted();
 
-        // ============================================================
-        // FULL PRO CONTENT BUILD
-        // ============================================================
         if (txtSystemContent != null)          txtSystemContent.setText(buildSystemInfo());
         if (txtAndroidContent != null)         txtAndroidContent.setText(buildAndroidInfo());
         if (txtCpuContent != null)             txtCpuContent.setText(buildCpuInfo());
@@ -129,7 +126,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         if (txtConnectivityContent != null)    txtConnectivityContent.setText(buildConnectivityInfo());
         if (txtRootContent != null)            txtRootContent.setText(buildRootInfo());
 
-        // EXPANDERS
         setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
         setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
         setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
@@ -145,6 +141,10 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
         setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
     }
+
+// ==========================================================
+// DeviceInfoInternalActivity.java — FULL PRO v7.0 (PART 2/2)
+// ==========================================================
 
     @Override
     protected void onResume() {
@@ -167,7 +167,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // EXPANDER LOGIC WITH ANIMATION (Soft Expand v2.0)
+    // EXPANDERS — Soft Expand v2.0
     // ============================================================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
@@ -177,7 +177,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
 
         for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
+            TextView c  = allContents[i];
             TextView ic = allIcons[i];
             if (c == null || ic == null) continue;
             if (c == toOpen) continue;
@@ -213,9 +213,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 .alpha(1f)
                 .setDuration(160)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.getLayoutParams().height = target;
-                })
+                .withEndAction(() -> v.getLayoutParams().height = target)
                 .start();
     }
 
@@ -238,7 +236,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // SECTION BUILDERS — FULL PRO
+    // BUILDERS — FULL PRO
     // ============================================================
 
     private String buildSystemInfo() {
@@ -260,26 +258,17 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             androidId = Settings.Secure.getString(
                     getContentResolver(), Settings.Secure.ANDROID_ID);
         } catch (Throwable ignore) {}
-        if (androidId != null) {
-            sb.append("Android ID   : ").append(androidId).append("\n");
-        }
+        if (androidId != null) sb.append("Android ID   : ").append(androidId).append("\n");
 
-        sb.append("Device Type  : ");
-        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) {
-            sb.append("Tablet\n");
-        } else {
-            sb.append("Phone\n");
-        }
+        sb.append("Device Type  : ")
+                .append(getResources().getConfiguration().smallestScreenWidthDp >= 600
+                        ? "Tablet\n" : "Phone\n");
 
         String region = getProp("ro.product.locale.region");
-        if (region != null && !region.isEmpty()) {
-            sb.append("Region       : ").append(region).append("\n");
-        }
+        if (!region.isEmpty()) sb.append("Region       : ").append(region).append("\n");
 
         String vendor = getProp("ro.product.vendor.name");
-        if (vendor != null && !vendor.isEmpty()) {
-            sb.append("Vendor Name  : ").append(vendor).append("\n");
-        }
+        if (!vendor.isEmpty()) sb.append("Vendor Name  : ").append(vendor).append("\n");
 
         return sb.toString();
     }
@@ -290,38 +279,27 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         sb.append("Android      : ").append(Build.VERSION.RELEASE)
                 .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             sb.append("Security Pch : ").append(Build.VERSION.SECURITY_PATCH).append("\n");
-        }
 
         sb.append("Build ID     : ").append(Build.ID).append("\n");
         sb.append("Build Type   : ").append(Build.TYPE).append("\n");
         sb.append("Build Tags   : ").append(Build.TAGS).append("\n\n");
 
-        String incr = Build.VERSION.INCREMENTAL;
-        if (incr != null) {
-            sb.append("Incremental  : ").append(incr).append("\n");
-        }
+        if (Build.VERSION.INCREMENTAL != null)
+            sb.append("Incremental  : ").append(Build.VERSION.INCREMENTAL).append("\n");
 
         String baseband = getProp("gsm.version.baseband");
-        if (baseband != null && !baseband.isEmpty()) {
-            sb.append("Baseband     : ").append(baseband).append("\n");
-        }
+        if (!baseband.isEmpty()) sb.append("Baseband     : ").append(baseband).append("\n");
 
         String vendorRel = getProp("ro.vendor.build.version.release");
-        if (vendorRel != null && !vendorRel.isEmpty()) {
-            sb.append("Vendor Rel   : ").append(vendorRel).append("\n");
-        }
+        if (!vendorRel.isEmpty()) sb.append("Vendor Rel   : ").append(vendorRel).append("\n");
 
         String miui = getProp("ro.miui.ui.version.name");
-        if (miui != null && !miui.isEmpty()) {
-            sb.append("MIUI         : ").append(miui).append("\n");
-        }
+        if (!miui.isEmpty()) sb.append("MIUI         : ").append(miui).append("\n");
 
         String hyper = getProp("ro.mi.os.version.name");
-        if (hyper != null && !hyper.isEmpty()) {
-            sb.append("HyperOS      : ").append(hyper).append("\n");
-        }
+        if (!hyper.isEmpty()) sb.append("HyperOS      : ").append(hyper).append("\n");
 
         return sb.toString();
     }
@@ -329,60 +307,49 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     private String buildCpuInfo() {
         StringBuilder sb = new StringBuilder();
 
-        // ABI
         sb.append("ABI          : ");
         if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
             for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
                 if (i > 0) sb.append(", ");
                 sb.append(Build.SUPPORTED_ABIS[i]);
             }
-        } else {
-            sb.append(Build.CPU_ABI);
-        }
+        } else sb.append(Build.CPU_ABI);
         sb.append("\n");
 
         int cores = Runtime.getRuntime().availableProcessors();
         sb.append("CPU Cores    : ").append(cores).append("\n");
 
-        // /proc/cpuinfo key lines
-        String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
-        if (cpuinfo != null && !cpuinfo.isEmpty()) {
-            String[] lines = cpuinfo.split("\n");
-            for (String line : lines) {
+        String cpuinfo = readTextFile("/proc/cpuinfo", 32768);
+        if (cpuinfo != null) {
+            for (String line : cpuinfo.split("\n")) {
                 String low = line.toLowerCase();
-                if (low.startsWith("hardware")) {
-                    sb.append(line.trim()).append("\n");
-                } else if (low.startsWith("model name")) {
-                    sb.append(line.trim()).append("\n");
-                } else if (low.startsWith("processor")) {
+                if (low.startsWith("hardware") ||
+                    low.startsWith("model name") ||
+                    low.startsWith("processor")) {
                     sb.append(line.trim()).append("\n");
                 }
             }
         }
 
-        // Governor & frequency (if exposed)
         String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        if (gov != null && !gov.isEmpty()) {
-            sb.append("Governor     : ").append(gov.trim()).append("\n");
-        }
+        if (gov != null) sb.append("Governor     : ").append(gov).append("\n");
 
-        long curFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-        long minFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-        long maxFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        long cur = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
+        long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
+        long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
 
-        if (curFreq > 0 || minFreq > 0 || maxFreq > 0) {
+        if (cur > 0 || min > 0 || max > 0) {
             sb.append("Freq (MHz)   : ");
-            if (curFreq > 0) sb.append("cur=").append(curFreq / 1000).append(" ");
-            if (minFreq > 0) sb.append("min=").append(minFreq / 1000).append(" ");
-            if (maxFreq > 0) sb.append("max=").append(maxFreq / 1000);
+            if (cur > 0) sb.append("cur=").append(cur / 1000).append(" ");
+            if (min > 0) sb.append("min=").append(min / 1000).append(" ");
+            if (max > 0) sb.append("max=").append(max / 1000);
             sb.append("\n");
         }
 
-        // big.LITTLE hint from clusters (if exist)
         String policy0 = readSysString("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq");
         String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
         if ((policy0 != null && !policy0.isEmpty()) ||
-                (policy7 != null && !policy7.isEmpty())) {
+            (policy7 != null && !policy7.isEmpty())) {
             sb.append("Cluster Hint : big.LITTLE detected\n");
         }
 
@@ -393,34 +360,23 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         StringBuilder sb = new StringBuilder();
 
         try {
-            ActivityManager am =
-                    (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
                 ConfigurationInfo ci = am.getDeviceConfigurationInfo();
-                if (ci != null) {
-                    sb.append("OpenGL ES    : ").append(ci.getGlEsVersion()).append("\n");
-                }
+                if (ci != null) sb.append("OpenGL ES    : ").append(ci.getGlEsVersion()).append("\n");
             }
         } catch (Throwable ignore) {}
 
         String egl = getProp("ro.hardware.egl");
-        if (egl != null && !egl.isEmpty()) {
-            sb.append("EGL HW       : ").append(egl).append("\n");
-        }
+        if (!egl.isEmpty()) sb.append("EGL HW       : ").append(egl).append("\n");
 
-        String driver0 = getProp("ro.gfx.driver.0");
-        if (driver0 != null && !driver0.isEmpty()) {
-            sb.append("GPU Driver   : ").append(driver0).append("\n");
-        }
+        String driver = getProp("ro.gfx.driver.0");
+        if (!driver.isEmpty()) sb.append("GPU Driver   : ").append(driver).append("\n");
 
         String perf = getProp("ro.gpu.uv");
-        if (perf != null && !perf.isEmpty()) {
-            sb.append("GPU Mode     : ").append(perf).append("\n");
-        }
+        if (!perf.isEmpty()) sb.append("GPU Mode     : ").append(perf).append("\n");
 
-        if (sb.length() == 0) {
-            sb.append("No GPU information available via system properties.\n");
-        }
+        if (sb.length() == 0) sb.append("No GPU information available.\n");
 
         return sb.toString();
     }
@@ -428,33 +384,32 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     private String buildThermalSensorsInfo() {
         StringBuilder sb = new StringBuilder();
 
-        // Battery temp
         long batt = readSysLong("/sys/class/power_supply/battery/temp");
         if (batt > 0) {
             double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
             sb.append("Battery      : ").append(String.format("%.1f°C", c)).append("\n");
         }
 
-        // A few key thermal zones by type
         File dir = new File("/sys/class/thermal");
-        if (dir.exists() && dir.isDirectory()) {
+        if (dir.exists()) {
             File[] zones = dir.listFiles();
             if (zones != null) {
                 for (File z : zones) {
                     if (!z.getName().startsWith("thermal_zone")) continue;
+
                     String type = readSysString(z.getAbsolutePath() + "/type");
                     if (type == null) continue;
                     String low = type.toLowerCase();
 
-                    if (low.contains("cpu") || low.contains("gpu")
-                            || low.contains("soc") || low.contains("skin")) {
+                    if (low.contains("cpu") || low.contains("gpu") ||
+                        low.contains("soc") || low.contains("skin")) {
 
                         long t = readSysLong(z.getAbsolutePath() + "/temp");
                         if (t <= 0) continue;
 
                         double c = (t > 1000) ? t / 1000.0 : t / 10.0;
-                        sb.append(padRight(type, 12))
-                                .append(": ")
+
+                        sb.append(padRight(type, 12)).append(": ")
                                 .append(String.format("%.1f°C", c))
                                 .append("  (").append(z.getName()).append(")\n");
                     }
@@ -462,48 +417,42 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             }
         }
 
-        if (sb.length() == 0) {
-            sb.append("No readable thermal sensors via sysfs.\n");
-        }
+        if (sb.length() == 0) sb.append("No readable thermal sensors.\n");
 
         return sb.toString();
     }
 
     private String buildThermalZonesInfo() {
         StringBuilder sb = new StringBuilder();
+
         File dir = new File("/sys/class/thermal");
-        if (!dir.exists() || !dir.isDirectory()) {
+        if (!dir.exists()) {
             sb.append("Thermal directory not accessible.\n");
             return sb.toString();
         }
 
         File[] zones = dir.listFiles();
-        if (zones == null || zones.length == 0) {
+        if (zones == null) {
             sb.append("No thermal zones found.\n");
             return sb.toString();
         }
 
         for (File z : zones) {
             if (!z.getName().startsWith("thermal_zone")) continue;
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            long temp = readSysLong(z.getAbsolutePath() + "/temp");
 
-            if ((type == null || type.isEmpty()) && temp <= 0) continue;
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            long temp   = readSysLong(z.getAbsolutePath() + "/temp");
 
             sb.append(z.getName()).append(" | ");
+
             if (type != null) sb.append(type.trim()).append(" | ");
 
             if (temp > 0) {
                 double c = (temp > 1000) ? temp / 1000.0 : temp / 10.0;
                 sb.append(String.format("%.1f°C", c));
-            } else {
-                sb.append("N/A");
-            }
-            sb.append("\n");
-        }
+            } else sb.append("N/A");
 
-        if (sb.length() == 0) {
-            sb.append("No readable thermal zones.\n");
+            sb.append("\n");
         }
 
         return sb.toString();
@@ -512,35 +461,22 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     private String buildVulkanInfo() {
         StringBuilder sb = new StringBuilder();
 
-        try {
-            boolean hasLevel = getPackageManager().hasSystemFeature(
-                    "android.hardware.vulkan.level");
-            boolean hasVersion = getPackageManager().hasSystemFeature(
-                    "android.hardware.vulkan.version");
-            sb.append("Feature Level : ").append(hasLevel ? "Yes" : "No").append("\n");
-            sb.append("Feature Vers  : ").append(hasVersion ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {}
+        boolean lvl = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
+        boolean ver = getPackageManager().hasSystemFeature("android.hardware.vulkan.version");
+
+        sb.append("Feature Level : ").append(lvl ? "Yes" : "No").append("\n");
+        sb.append("Feature Vers  : ").append(ver ? "Yes" : "No").append("\n");
 
         String hw = getProp("ro.hardware.vulkan");
-        if (hw != null && !hw.isEmpty()) {
-            sb.append("Vulkan HW     : ").append(hw).append("\n");
-        }
+        if (!hw.isEmpty()) sb.append("Vulkan HW     : ").append(hw).append("\n");
 
         String enable = getProp("ro.vulkan.enable");
-        if (enable != null && !enable.isEmpty()) {
-            sb.append("Vulkan Enable : ").append(enable).append("\n");
-        }
+        if (!enable.isEmpty()) sb.append("Vulkan Enable : ").append(enable).append("\n");
 
         String layers = getProp("debug.vulkan.layers");
-        if (layers != null && !layers.isEmpty()) {
-            sb.append("Debug Layers  : ").append(layers).append("\n");
-        }
+        if (!layers.isEmpty()) sb.append("Debug Layers  : ").append(layers).append("\n");
 
-        if (sb.length() == 0) {
-            sb.append("No Vulkan information available.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "No Vulkan info.\n" : sb.toString();
     }
 
     private String buildThermalProfilesInfo() {
@@ -556,16 +492,10 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         for (String k : keys) {
             String v = getProp(k);
-            if (v != null && !v.isEmpty()) {
-                sb.append(k).append(" = ").append(v).append("\n");
-            }
+            if (!v.isEmpty()) sb.append(k).append(" = ").append(v).append("\n");
         }
 
-        if (sb.length() == 0) {
-            sb.append("No explicit thermal profile properties found.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "No thermal profile properties.\n" : sb.toString();
     }
 
     private String buildFpsGovernorInfo() {
@@ -573,38 +503,24 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         try {
             DisplayMetrics dm = getResources().getDisplayMetrics();
-            int w = dm.widthPixels;
-            int h = dm.heightPixels;
-            int dpi = dm.densityDpi;
-            sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
-            sb.append("Density       : ").append(dpi).append(" dpi\n");
+            sb.append("Resolution    : ").append(dm.widthPixels)
+                    .append(" x ").append(dm.heightPixels).append("\n");
+            sb.append("Density       : ").append(dm.densityDpi).append(" dpi\n");
         } catch (Throwable ignore) {}
 
         String refresh = getProp("ro.surface_flinger.refresh_rate");
-        if (refresh != null && !refresh.isEmpty()) {
-            sb.append("Default Ref   : ").append(refresh).append(" Hz\n");
-        }
+        if (!refresh.isEmpty()) sb.append("Default Ref   : ").append(refresh).append(" Hz\n");
 
         String peak = getProp("ro.surface_flinger.max_refresh_rate");
-        if (peak != null && !peak.isEmpty()) {
-            sb.append("Max Refresh   : ").append(peak).append(" Hz\n");
-        }
+        if (!peak.isEmpty()) sb.append("Max Refresh   : ").append(peak).append(" Hz\n");
 
         String mode = getProp("ro.display.mode");
-        if (mode != null && !mode.isEmpty()) {
-            sb.append("Display Mode  : ").append(mode).append("\n");
-        }
+        if (!mode.isEmpty()) sb.append("Display Mode  : ").append(mode).append("\n");
 
         String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        if (gov != null && !gov.isEmpty()) {
-            sb.append("CPU Governor  : ").append(gov.trim()).append("\n");
-        }
+        if (gov != null) sb.append("CPU Governor  : ").append(gov).append("\n");
 
-        if (sb.length() == 0) {
-            sb.append("No FPS / governor hints available.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "No FPS / governor info.\n" : sb.toString();
     }
 
     private String buildRamInfo() {
@@ -616,72 +532,52 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
                 am.getMemoryInfo(mi);
 
-                long totalMb = mi.totalMem / (1024 * 1024);
-                long availMb = mi.availMem / (1024 * 1024);
-                long usedMb  = totalMb - availMb;
+                long total = mi.totalMem / (1024 * 1024);
+                long avail = mi.availMem / (1024 * 1024);
+                long used  = total - avail;
 
-                sb.append("Total RAM     : ").append(totalMb).append(" MB\n");
-                sb.append("Used RAM      : ").append(usedMb).append(" MB\n");
-                sb.append("Free RAM      : ").append(availMb).append(" MB\n");
+                sb.append("Total RAM     : ").append(total).append(" MB\n");
+                sb.append("Used RAM      : ").append(used).append(" MB\n");
+                sb.append("Free RAM      : ").append(avail).append(" MB\n");
                 sb.append("Low Memory    : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
                 sb.append("Threshold     : ").append(mi.threshold / (1024 * 1024)).append(" MB\n");
             }
         } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) {
-            sb.append("Unable to read RAM information.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "Unable to read RAM.\n" : sb.toString();
     }
 
     private String buildStorageInfo() {
         StringBuilder sb = new StringBuilder();
 
         try {
-            File internal = Environment.getDataDirectory();
-            appendStorageBlock(sb, "Internal", internal);
+            appendStorageBlock(sb, "Internal", Environment.getDataDirectory());
 
             File ext = Environment.getExternalStorageDirectory();
-            if (ext != null && ext.exists()) {
-                appendStorageBlock(sb, "External (primary)", ext);
-            }
+            if (ext != null && ext.exists()) appendStorageBlock(sb, "External", ext);
+
         } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) {
-            sb.append("Unable to read storage partitions.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "Unable to read storage.\n" : sb.toString();
     }
 
     private void appendStorageBlock(StringBuilder sb, String label, File path) {
         try {
             StatFs stat = new StatFs(path.getAbsolutePath());
-            long blockSize, totalBlocks, availBlocks;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize   = stat.getBlockSizeLong();
-                totalBlocks = stat.getBlockCountLong();
-                availBlocks = stat.getAvailableBlocksLong();
-            } else {
-                blockSize   = stat.getBlockSize();
-                totalBlocks = stat.getBlockCount();
-                availBlocks = stat.getAvailableBlocks();
-            }
 
-            long totalBytes = blockSize * totalBlocks;
-            long availBytes = blockSize * availBlocks;
-            long usedBytes  = totalBytes - availBytes;
+            long bs  = stat.getBlockSizeLong();
+            long tot = stat.getBlockCountLong();
+            long avi = stat.getAvailableBlocksLong();
 
-            long totalGb = totalBytes / (1024 * 1024 * 1024);
-            long usedGb  = usedBytes  / (1024 * 1024 * 1024);
-            long freeGb  = availBytes / (1024 * 1024 * 1024);
+            long total = (bs * tot) / (1024L * 1024L * 1024L);
+            long free  = (bs * avi) / (1024L * 1024L * 1024L);
+            long used  = total - free;
 
             sb.append(label).append(":\n");
             sb.append("  Path   : ").append(path.getAbsolutePath()).append("\n");
-            sb.append("  Total  : ").append(totalGb).append(" GB\n");
-            sb.append("  Used   : ").append(usedGb).append(" GB\n");
-            sb.append("  Free   : ").append(freeGb).append(" GB\n\n");
+            sb.append("  Total  : ").append(total).append(" GB\n");
+            sb.append("  Used   : ").append(used).append(" GB\n");
+            sb.append("  Free   : ").append(free).append(" GB\n\n");
 
         } catch (Throwable ignore) {}
     }
@@ -694,23 +590,20 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             int w = dm.widthPixels;
             int h = dm.heightPixels;
             int dpi = dm.densityDpi;
-            float density = dm.density;
 
             sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
-            sb.append("Density       : ").append(density).append(" (").append(dpi).append(" dpi)\n");
+            sb.append("Density       : ").append(dm.density)
+                    .append(" (").append(dpi).append(" dpi)\n");
 
-            double widthInch  = w / (double) dpi;
-            double heightInch = h / (double) dpi;
-            double diag = Math.sqrt(widthInch * widthInch + heightInch * heightInch);
+            double wi = w / (double) dpi;
+            double hi = h / (double) dpi;
+            double diag = Math.sqrt(wi * wi + hi * hi);
+
             sb.append("Approx. Size  : ").append(String.format("%.1f\"", diag)).append("\n");
 
         } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) {
-            sb.append("Unable to read screen metrics.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "Unable to read screen.\n" : sb.toString();
     }
 
     private String buildConnectivityInfo() {
@@ -719,30 +612,22 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         try {
             ConnectivityManager cm =
                     (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            TelephonyManager tm =
-                    (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
             if (cm != null) {
                 Network active = cm.getActiveNetwork();
                 NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+
                 if (caps != null) {
                     sb.append("Active        : ");
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        sb.append("Wi-Fi\n");
-                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        sb.append("Cellular\n");
-                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                        sb.append("Ethernet\n");
-                    } else {
-                        sb.append("Other\n");
-                    }
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) sb.append("Wi-Fi\n");
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) sb.append("Cellular\n");
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) sb.append("Ethernet\n");
+                    else sb.append("Other\n");
 
                     sb.append("Downlink      : ")
-                            .append(caps.getLinkDownstreamBandwidthKbps())
-                            .append(" kbps\n");
+                            .append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");
                     sb.append("Uplink        : ")
-                            .append(caps.getLinkUpstreamBandwidthKbps())
-                            .append(" kbps\n");
+                            .append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");
                 }
             }
 
@@ -759,12 +644,15 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 }
             }
 
+            TelephonyManager tm =
+                    (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
             if (tm != null) {
                 sb.append("\nCellular:\n");
+
                 String op = tm.getNetworkOperatorName();
-                if (op != null && !op.isEmpty()) {
+                if (op != null && !op.isEmpty())
                     sb.append("  Operator    : ").append(op).append("\n");
-                }
 
                 int netType = tm.getDataNetworkType();
                 sb.append("  Network     : ").append(describeNetworkType(netType)).append("\n");
@@ -772,11 +660,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) {
-            sb.append("No connectivity details available.\n");
-        }
-
-        return sb.toString();
+        return sb.length()==0 ? "No connectivity info.\n" : sb.toString();
     }
 
     private String buildRootInfo() {
@@ -784,28 +668,19 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         sb.append("Root Detected : ").append(isRooted ? "YES" : "NO").append("\n");
 
-        String tags = Build.TAGS;
-        sb.append("Build Tags    : ").append(tags).append("\n");
+        sb.append("Build Tags    : ").append(Build.TAGS).append("\n");
 
         String secure = getProp("ro.secure");
-        if (secure != null && !secure.isEmpty()) {
-            sb.append("ro.secure     : ").append(secure).append("\n");
-        }
+        if (!secure.isEmpty()) sb.append("ro.secure     : ").append(secure).append("\n");
 
         String dbg = getProp("ro.debuggable");
-        if (dbg != null && !dbg.isEmpty()) {
-            sb.append("ro.debuggable : ").append(dbg).append("\n");
-        }
+        if (!dbg.isEmpty()) sb.append("ro.debuggable : ").append(dbg).append("\n");
 
         String verity = getProp("ro.boot.veritymode");
-        if (verity != null && !verity.isEmpty()) {
-            sb.append("Verity Mode   : ").append(verity).append("\n");
-        }
+        if (!verity.isEmpty()) sb.append("Verity Mode   : ").append(verity).append("\n");
 
         String selinux = getProp("ro.build.selinux");
-        if (selinux != null && !selinux.isEmpty()) {
-            sb.append("SELinux       : ").append(selinux).append("\n");
-        }
+        if (!selinux.isEmpty()) sb.append("SELinux       : ").append(selinux).append("\n");
 
         if (isRooted) {
             sb.append("\nRoot paths found:\n");
@@ -816,9 +691,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
             for (String p : paths) {
-                if (new File(p).exists()) {
-                    sb.append("  ").append(p).append("\n");
-                }
+                if (new File(p).exists()) sb.append("  ").append(p).append("\n");
             }
         }
 
@@ -830,11 +703,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     // ============================================================
 
     private String readTextFile(String path, int maxLen) {
-        BufferedReader br = null;
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-            br = new BufferedReader(new FileReader(f));
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             StringBuilder sb = new StringBuilder();
             char[] buf = new char[1024];
             int read;
@@ -844,41 +713,28 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             return sb.toString();
         } catch (Throwable ignore) {
             return null;
-        } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
         }
     }
 
     private String readSysString(String path) {
-        BufferedReader br = null;
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-            br = new BufferedReader(new FileReader(f));
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             String line = br.readLine();
-            if (line != null) return line.trim();
-            return null;
+            return line != null ? line.trim() : null;
         } catch (Throwable ignore) {
             return null;
-        } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
         }
     }
 
     private long readSysLong(String path) {
         String s = readSysString(path);
-        if (s == null || s.isEmpty()) return -1;
-        try {
-            return Long.parseLong(s);
-        } catch (Throwable ignore) {
-            return -1;
-        }
+        if (s == null) return -1;
+        try { return Long.parseLong(s); }
+        catch (Throwable ignore) { return -1; }
     }
 
     private boolean isDeviceRooted() {
         try {
-            String tags = Build.TAGS;
-            if (tags != null && tags.contains("test-keys")) return true;
+            if (Build.TAGS != null && Build.TAGS.contains("test-keys")) return true;
 
             String[] paths = {
                     "/system/bin/su", "/system/xbin/su", "/sbin/su",
@@ -886,6 +742,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                     "/system/usr/we-need-root/su-backup",
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
+
             for (String p : paths) {
                 if (new File(p).exists()) return true;
             }
@@ -894,7 +751,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String line = in.readLine();
             in.close();
-            return line != null && line.trim().length() > 0;
+
+            return line != null && !line.trim().isEmpty();
 
         } catch (Throwable ignore) {
             return false;
@@ -908,7 +766,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             String line = br.readLine();
             br.close();
             return line != null ? line.trim() : "";
-        } catch (Exception e) {
+        } catch (Throwable ignore) {
             return "";
         }
     }
@@ -920,8 +778,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         return "Unknown";
     }
 
-    private String describeNetworkType(int type) {
-        switch (type) {
+    private String describeNetworkType(int t) {
+        switch (t) {
             case TelephonyManager.NETWORK_TYPE_GPRS: return "2G (GPRS)";
             case TelephonyManager.NETWORK_TYPE_EDGE: return "2G (EDGE)";
             case TelephonyManager.NETWORK_TYPE_UMTS: return "3G (UMTS)";
@@ -936,9 +794,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
     private String padRight(String s, int n) {
         if (s == null) s = "";
-        if (s.length() >= n) return s;
-        StringBuilder sb = new StringBuilder(s);
-        while (sb.length() < n) sb.append(' ');
-        return sb.toString();
+        while (s.length() < n) s += " ";
+        return s;
     }
 }
+

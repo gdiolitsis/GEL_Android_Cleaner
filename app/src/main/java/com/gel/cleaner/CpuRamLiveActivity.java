@@ -1,142 +1,129 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v9.0 (Universal CPU/RAM Monitor)
+// CPU_RAM_LiveActivity.java — FINAL v5.0 (Universal CPU Load Engine)
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 
-public class CpuRamLiveActivity extends GELAutoActivityHook {
+public class CPU_RAM_LiveActivity extends AppCompatActivity {
 
-    private TextView txtOutput;
-    private Handler handler = new Handler();
-    private int index = 1;
-
-    private long lastIdle = 0;
-    private long lastTotal = 0;
+    private TextView txtLive;
+    private boolean running = true;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
-        txtOutput = findViewById(R.id.txtOutput);
-
-        txtOutput.setText("CPU / RAM Live Monitor started...\n");
+        txtLive = findViewById(R.id.txtLiveData);
 
         startLiveLoop();
     }
 
-    private void startLiveLoop() {
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                int cpu = getCpuUsage();
-                float temp = getBatteryTemp();
-                String ram = getRamInfo();
-
-                txtOutput.append(
-                        "Live " + (index < 10 ? "0" + index : index)
-                                + "  |  CPU: " + (cpu < 0 ? "N/A" : cpu + "%")
-                                + "  |  Temp: " + (temp < 0 ? "N/A" : temp + "°C")
-                                + "  |  RAM: " + ram + "\n"
-                );
-
-                index++;
-                handler.postDelayed(this, 1000);
-            }
-        }, 1000);
+    @Override
+    protected void onDestroy() {
+        running = false;
+        super.onDestroy();
     }
 
-    // ============================================================
-    // UNIVERSAL CPU USAGE (WORKS ON ALL DEVICES)
-    // ============================================================
-    private int getCpuUsage() {
+    // ======================================================
+    // LIVE LOOP
+    // ======================================================
+    private void startLiveLoop() {
+        new Thread(() -> {
+            int counter = 1;
+
+            while (running) {
+
+                String cpu = readCpuLoad();
+                String temp = readCpuTemp();
+                String ram = readRamUsage();
+
+                final String line =
+                        "Live " + String.format("%02d", counter) +
+                        " | CPU: " + cpu +
+                        " | Temp: " + temp +
+                        " | RAM: " + ram;
+
+                runOnUiThread(() -> txtLive.append(line + "\n"));
+
+                counter++;
+                if (counter > 999) counter = 1;
+
+                try { Thread.sleep(1000); } catch (Exception ignored) {}
+            }
+        }).start();
+    }
+
+    // ======================================================
+    // CPU LOAD — works on ALL phones (Android 7–14)
+    // ======================================================
+    private String readCpuLoad() {
         try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
+            BufferedReader br = new BufferedReader(new FileReader("/proc/loadavg"));
             String line = br.readLine();
             br.close();
+            if (line == null) return "N/A";
 
-            if (line == null || !line.startsWith("cpu")) return -1;
+            String[] parts = line.split(" ");
+            float load = Float.parseFloat(parts[0]);
 
-            String[] toks = line.trim().split("\\s+");
-            long user = Long.parseLong(toks[1]);
-            long nice = Long.parseLong(toks[2]);
-            long system = Long.parseLong(toks[3]);
-            long idle = Long.parseLong(toks[4]);
+            // 0.00 – 1.00 ~= 0–100%
+            int percent = (int) (load * 100f);
 
-            long total = user + nice + system + idle;
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
 
-            long diffIdle = idle - lastIdle;
-            long diffTotal = total - lastTotal;
+            return percent + "%";
 
-            lastIdle = idle;
-            lastTotal = total;
-
-            if (diffTotal == 0) return 0;
-
-            return (int) (100 * (diffTotal - diffIdle) / diffTotal);
-
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    // ============================================================
-    // RAM INFO — UNIVERSAL
-    // ============================================================
-    private String getRamInfo() {
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-
-            long total = mi.totalMem / 1048576;
-            long avail = mi.availMem / 1048576;
-
-            return avail + " / " + total + " MB";
         } catch (Exception e) {
             return "N/A";
         }
     }
 
-    // ============================================================
-    // TEMPERATURE — UNIVERSAL
-    // ============================================================
-    private float getBatteryTemp() {
+    // ======================================================
+    // CPU TEMP — many devices return battery temp only
+    // ======================================================
+    private String readCpuTemp() {
         try {
-            long t = readTemp("/sys/class/power_supply/battery/temp");
-            if (t < 0) return -1;
+            // Most devices expose thermal zones locked — fallback to battery sensor
+            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
+            if (t > 0) return (t / 10f) + "°C";
 
-            if (t > 1000) return t / 1000f; // m°C
-            else return t / 10f;           // 1/10°C
-
+            return "N/A";
         } catch (Exception e) {
-            return -1;
+            return "N/A";
         }
     }
 
-    private long readTemp(String path) {
+    // ======================================================
+    // RAM INFO
+    // ======================================================
+    private String readRamUsage() {
         try {
-            BufferedReader br = new BufferedReader(new FileReader(path));
-            String s = br.readLine();
-            br.close();
-            return Long.parseLong(s.trim());
-        } catch (Exception e) {
-            return -1;
-        }
-    }
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
 
-    @Override
-    protected void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
-        super.onDestroy();
+            long total = mi.totalMem / (1024 * 1024);
+            long free  = mi.availMem / (1024 * 1024);
+            long used  = total - free;
+
+            return used + " / " + total + " MB";
+        } catch (Exception e) {
+            return "N/A";
+        }
     }
 }

@@ -1,108 +1,39 @@
-package com.gel.cleaner;
+private long lastIdle = 0;
+private long lastTotal = 0;
 
-import android.app.ActivityManager;
-import android.content.Context;
-import android.os.BatteryManager;
-import android.os.Bundle;
-import android.widget.TextView;
+private String readCpuLoad() {
+    try {
+        BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
+        String line = br.readLine();   // cpu  3357 0 4313 136239 0 0 0 0 0 0
+        br.close();
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+        if (line == null || !line.startsWith("cpu")) return "N/A";
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+        String[] parts = line.trim().split("\\s+");
 
-public class CpuRamLiveActivity extends AppCompatActivity {
+        long user = Long.parseLong(parts[1]);
+        long nice = Long.parseLong(parts[2]);
+        long system = Long.parseLong(parts[3]);
+        long idle = Long.parseLong(parts[4]);
 
-    private TextView txtLive;
-    private boolean running = true;
+        long total = user + nice + system + idle;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_cpu_ram_live);
+        long diffIdle = idle - lastIdle;
+        long diffTotal = total - lastTotal;
 
-        txtLive = findViewById(R.id.txtLiveData);   // FIXED
+        lastIdle = idle;
+        lastTotal = total;
 
-        startLiveLoop();
-    }
+        if (diffTotal == 0) return "0%";
 
-    @Override
-    protected void onDestroy() {
-        running = false;
-        super.onDestroy();
-    }
+        int usage = (int) ((diffTotal - diffIdle) * 100L / diffTotal);
 
-    private void startLiveLoop() {
-        new Thread(() -> {
-            int counter = 1;
+        if (usage < 0) usage = 0;
+        if (usage > 100) usage = 100;
 
-            while (running) {
-                String cpu = readCpuLoad();
-                String temp = readCpuTemp();
-                String ram = readRamUsage();
+        return usage + "%";
 
-                final String line =
-                        "Live " + String.format("%02d", counter) +
-                        " | CPU: " + cpu +
-                        " | Temp: " + temp +
-                        " | RAM: " + ram;
-
-                runOnUiThread(() -> txtLive.append(line + "\n"));
-
-                counter++;
-                if (counter > 999) counter = 1;
-
-                try { Thread.sleep(1000); } catch (Exception ignored) {}
-            }
-        }).start();
-    }
-
-    private String readCpuLoad() {
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/loadavg"));
-            String line = br.readLine();
-            br.close();
-
-            if (line == null) return "N/A";
-
-            float load = Float.parseFloat(line.split(" ")[0]);
-            int percent = (int) (load * 100f);
-
-            return percent + "%";
-        } catch (Exception e) {
-            return "N/A";
-        }
-    }
-
-    private String readCpuTemp() {
-        try {
-            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-
-            // FIXED — universal, works on all devices, all SDKs
-            int t = bm.getIntProperty(4);   // 4 = BATTERY_PROPERTY_TEMPERATURE
-
-            if (t > 0) return (t / 10f) + "°C";
-            return "N/A";
-
-        } catch (Exception e) {
-            return "N/A";
-        }
-    }
-
-    private String readRamUsage() {
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-
-            long total = mi.totalMem / (1024 * 1024);
-            long free  = mi.availMem / (1024 * 1024);
-            long used  = total - free;
-
-            return used + " / " + total + " MB";
-        } catch (Exception e) {
-            return "N/A";
-        }
+    } catch (Exception e) {
+        return "N/A";
     }
 }

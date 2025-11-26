@@ -5,7 +5,7 @@
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.base.GELAutoActivityHook;
+import com.gel.cleaner.GELAutoActivityHook;
 import com.gel.cleaner.base.GELFoldableCallback;
 import com.gel.cleaner.base.GELFoldableDetector;
 import com.gel.cleaner.base.GELFoldableUIManager;

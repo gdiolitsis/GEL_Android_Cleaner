@@ -1,13 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — PERIPHERALS REPORT v7.2 (Build-Safe)
-// ------------------------------------------------------------
-// ✔ FULL Foldable Integration (final)
-// ✔ Unified Posture (GELFoldableCallback.Posture)
-// ✔ DualPane dispatch + UI reflow
-// ✔ Uses GELFoldableAnimationPack v2.2 API
-// ✔ Public dp/sp override (FIXED compiler error)
-// ✔ No missing callbacks, no wrong types
-// NOTE: Full-file patch — έτοιμο για copy-paste.
+// DeviceInfoPeripheralsActivity.java — FINAL v7.3 (Soft Expand v2.0)
 
 package com.gel.cleaner;
 
@@ -37,8 +29,8 @@ import android.nfc.NfcManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -47,8 +39,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
@@ -56,9 +46,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private boolean isRooted = false;
 
-    // ============================================================
-    // FOLDABLE ENGINE
-    // ============================================================
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager foldUI;
     private GELFoldableAnimationPack animPack;
@@ -79,24 +66,17 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         GELAutoDP.init(this);
 
-        // ============================================================
-        // FOLDABLE INIT
-        // ============================================================
         foldUI       = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
         dualPane     = new DualPaneManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
-        // TITLE
         TextView title = findViewById(R.id.txtTitleDevice);
         if (title != null) {
             title.setText(getString(R.string.phone_info_peripherals));
             title.setTextSize(sp(20f));
         }
 
-        // ============================================================
-        // CONTENT SECTIONS
-        // ============================================================
         TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
         TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
         TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
@@ -106,7 +86,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
         TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
         TextView txtRootContent          = findViewById(R.id.txtRootContent);
-
         TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
         TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
         TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
@@ -115,7 +94,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
         TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
 
-        // ICONS
         TextView iconCamera        = findViewById(R.id.iconCameraToggle);
         TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
         TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
@@ -125,7 +103,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);
         TextView iconNfc           = findViewById(R.id.iconNfcToggle);
         TextView iconRoot          = findViewById(R.id.iconRootToggle);
-
         TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
         TextView iconUwb           = findViewById(R.id.iconUwbToggle);
         TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);
@@ -147,13 +124,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 iconUsb, iconMics, iconAudioHal
         };
 
-        // ROOT CHECK
         isRooted = isDeviceRooted();
-        PackageManager pm = getPackageManager();
 
-        // ============================================================
-        // EXPANDERS
-        // ============================================================
         setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
         setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
         setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
@@ -172,9 +144,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
 
-    // ============================================================
-    // FOLDABLE LIFE CYCLE
-    // ============================================================
     @Override
     protected void onResume() {
         super.onResume();
@@ -187,9 +156,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onPause();
     }
 
-    // ============================================================
-    // FOLDABLE CALLBACKS
-    // ============================================================
     @Override
     public void onPostureChanged(@NonNull GELFoldableCallback.Posture posture) {
         if (animPack != null) animPack.onPostureChanged(posture);
@@ -202,7 +168,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // EXPANDER LOGIC
+    // EXPANDER LOGIC — Soft Expand v2.0
     // ============================================================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
@@ -210,24 +176,66 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
+
         for (int i = 0; i < allContents.length; i++) {
             TextView c = allContents[i];
             TextView ic = allIcons[i];
             if (c == null || ic == null) continue;
             if (c == toOpen) continue;
 
-            c.setVisibility(View.GONE);
+            animateCollapse(c);
             ic.setText("＋");
         }
 
         boolean visible = (toOpen.getVisibility() == View.VISIBLE);
-        toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
-        iconToUpdate.setText(visible ? "＋" : "−");
+
+        if (visible) {
+            animateCollapse(toOpen);
+            iconToUpdate.setText("＋");
+        } else {
+            animateExpand(toOpen);
+            iconToUpdate.setText("−");
+        }
     }
 
-    // ============================================================
-    // ROOT DETECTION
-    // ============================================================
+    private void animateExpand(final View v) {
+        v.measure(View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),
+                  View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        final int target = v.getMeasuredHeight();
+
+        v.getLayoutParams().height = 0;
+        v.setVisibility(View.VISIBLE);
+        v.setAlpha(0f);
+
+        v.animate()
+                .alpha(1f)
+                .setDuration(160)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.getLayoutParams().height = target;
+                })
+                .start();
+    }
+
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
+
+        final int initial = v.getMeasuredHeight();
+        v.setAlpha(1f);
+
+        v.animate()
+                .alpha(0f)
+                .setDuration(120)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.setVisibility(View.GONE);
+                    v.getLayoutParams().height = initial;
+                    v.setAlpha(1f);
+                })
+                .start();
+    }
+
+    // ROOT
     private boolean isDeviceRooted() {
         try {
             String[] paths = {
@@ -236,9 +244,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     "/system/usr/we-need-root/su-backup",
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
-            }
+            for (String p : paths) if (new File(p).exists()) return true;
 
             Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
             BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -251,9 +257,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
     }
 
-    // ============================================================
-    // PUBLIC DP/SP — FINAL FIX (NO MORE ERRORS)
-    // ============================================================
     @Override
     public int dp(int v) {
         return GELAutoDP.dp(v);

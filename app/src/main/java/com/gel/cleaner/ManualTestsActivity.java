@@ -1616,7 +1616,7 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 
 // ============================================================
 // LAB 18 — GEL AUTO Battery Reliability Evaluation
-// Premium Diagnostic Edition (FINAL FULL BLOCK)
+// Premium Diagnostic Edition — Real-Time Progress
 // ============================================================
 
 private void lab18RunAuto() {
@@ -1631,7 +1631,7 @@ private void lab18RunAuto() {
         try {
 
             // ============================================================
-            // 1. STRESS TEST (LAB 15 CORE)
+            // 1. STRESS TEST (LAB 15 CORE) — 60s REAL TIME
             // ============================================================
             float startPct = getCurrentBatteryPercent();
             if (startPct < 50f) {
@@ -1641,7 +1641,6 @@ private void lab18RunAuto() {
 
             ui.post(() -> {
                 logInfo("▶ Running Stress Test (Lab 15)...");
-                logInfo("[██████████░░░░░░░░░░░░░░░░░░] 32%");
             });
 
             float before = getCurrentBatteryPercent();
@@ -1650,7 +1649,8 @@ private void lab18RunAuto() {
             ui.post(this::applyMaxBrightnessAndKeepOn);
             startCpuBurn_C_Mode();
 
-            Thread.sleep(60_000);   // Stress load on background thread
+            // progress 0 → 32 over 60s
+            animateProgressSegment(0, 32, 60_000L);
 
             stopCpuBurn();
             ui.post(this::restoreBrightnessAndKeepOn);
@@ -1658,7 +1658,7 @@ private void lab18RunAuto() {
             float after = getCurrentBatteryPercent();
             long t1 = SystemClock.elapsedRealtime();
 
-            float drop   = before - after;
+            float drop    = before - after;
             float perHour = (drop * 3600000f) / (t1 - t0);
             if (perHour < 0f) perHour = 0f;
             int drain_mA = (int)(perHour * 50);
@@ -1666,8 +1666,10 @@ private void lab18RunAuto() {
 
             ui.post(() -> {
                 logInfo("▶ Calculating drain rate...");
-                logInfo("[███████████████████████░░░░] 85%");
             });
+
+            // μικρό animation για drain calc: 32 → 45 σε 2s
+            animateProgressSegment(32, 45, 2_000L);
 
             // ============================================================
             // 2. THERMAL ZONES (LAB 17 STYLE)
@@ -1675,11 +1677,11 @@ private void lab18RunAuto() {
             ui.post(() -> {
                 logInfo("");
                 logInfo("▶ Running Thermal Zones (Lab 17)...");
-                logInfo("[██████████████████░░░░░░░░░░] 68%");
             });
 
             Map<String,Float> z0 = readThermalZones();
-            Thread.sleep(1500);
+            // 45 → 68 σε 3s (thermal sampling window)
+            animateProgressSegment(45, 68, 3_000L);
             Map<String,Float> z1 = readThermalZones();
 
             Float cpu0  = pickZone(z0,"cpu","soc","big","little");
@@ -1691,17 +1693,14 @@ private void lab18RunAuto() {
             float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;
 
             // ============================================================
-            // 3. VOLTAGE STABILITY
+            // 3. VOLTAGE + CAPACITY
             // ============================================================
             ui.post(() -> logInfo("▶ Calculating voltage stability..."));
             float v0 = getBatteryVoltage_mV();
-            Thread.sleep(1500);
+            Thread.sleep(1000);
             float v1 = getBatteryVoltage_mV();
             float dv = Math.abs(v1 - v0);
 
-            // ============================================================
-            // 4. CAPACITY ESTIMATION + PMIC
-            // ============================================================
             ui.post(() -> {
                 logInfo("▶ Calculating thermal rise...");
                 logInfo("▶ Calculating PMIC behavior...");
@@ -1718,8 +1717,11 @@ private void lab18RunAuto() {
             if (estimatedCapacity_mAh > factory)
                 estimatedCapacity_mAh = factory;
 
+            // τελευταίο segment 68 → 100 σε 3s (diagnostic crunch)
+            animateProgressSegment(68, 100, 3_000L);
+
             // ============================================================
-            // 5. SCORING ENGINE
+            // 4. SCORING ENGINE
             // ============================================================
             int score = 100;
 
@@ -1784,7 +1786,7 @@ private void lab18RunAuto() {
             else                  category = "Weak";
 
             // ============================================================
-            // 6. FINAL UI OUTPUT
+            // 5. FINAL UI OUTPUT
             // ============================================================
             final float f_before   = before;
             final float f_after    = after;
@@ -1873,7 +1875,55 @@ private int getFactoryCapacity_mAh() {
     return 5000;
 }
 
-// ============================================================
+/**
+ * Animated progress segment for Lab 18.
+ * fromPercent → toPercent over durationMs milliseconds.
+ * Draws a green bar like: [████████░░░░░░░░░░░░] 45%
+ */
+private void animateProgressSegment(int fromPercent, int toPercent, long durationMs) {
+    int steps = 30;
+    if (steps < 1) steps = 1;
+    if (durationMs < steps) {
+        steps = (int) durationMs;
+        if (steps < 1) steps = 1;
+    }
+    long stepDelay = durationMs / steps;
+    float delta = toPercent - fromPercent;
+
+    for (int i = 0; i <= steps; i++) {
+        final int p = fromPercent + Math.round(delta * (i / (float) steps));
+        ui.post(() -> appendHtml(buildGreenProgressBar(p)));
+        try {
+            Thread.sleep(stepDelay);
+        } catch (InterruptedException ignored) {
+            break;
+        }
+    }
+}
+
+/**
+ * Builds a green ASCII progress bar with percentage.
+ * Example: [████████░░░░░░░░░░░░] 45%
+ */
+private String buildGreenProgressBar(int percent) {
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+
+    int width = 24;
+    int filled = Math.round(width * (percent / 100f));
+    if (filled > width) filled = width;
+
+    StringBuilder fill = new StringBuilder();
+    StringBuilder empty = new StringBuilder();
+    for (int i = 0; i < filled; i++) fill.append("█");
+    for (int i = filled; i < width; i++) empty.append("░");
+
+    return String.format(Locale.US,
+            "<font color='#39FF14'>[%s</font><font color='#555555'>%s]</font> %d%%",
+            fill.toString(), empty.toString(), percent);
+}
+    
+// ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
 // ============================================================
 private void lab19StorageSnapshot() {
@@ -3619,6 +3669,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

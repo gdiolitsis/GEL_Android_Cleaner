@@ -23,7 +23,7 @@
             android:layout_marginBottom="@dimen/gel_dp_10" />
 
         <TextView
-            android:id="@+id/txtLiveInfo"
+            android:id="@+id/txtLiveData"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/gel_text_secondary"

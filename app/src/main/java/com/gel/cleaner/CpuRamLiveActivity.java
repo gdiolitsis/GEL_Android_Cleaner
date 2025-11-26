@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CPU_RAM_LiveActivity.java — FINAL v5.0 (Universal CPU Load Engine)
+// CpuRamLiveActivity.java — FINAL v5.1
 
 package com.gel.cleaner;
 
@@ -13,10 +13,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 
-public class CPU_RAM_LiveActivity extends AppCompatActivity {
+public class CpuRamLiveActivity extends AppCompatActivity {
 
     private TextView txtLive;
     private boolean running = true;
@@ -37,15 +36,11 @@ public class CPU_RAM_LiveActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    // ======================================================
-    // LIVE LOOP
-    // ======================================================
     private void startLiveLoop() {
         new Thread(() -> {
             int counter = 1;
 
             while (running) {
-
                 String cpu = readCpuLoad();
                 String temp = readCpuTemp();
                 String ram = readRamUsage();
@@ -66,38 +61,25 @@ public class CPU_RAM_LiveActivity extends AppCompatActivity {
         }).start();
     }
 
-    // ======================================================
-    // CPU LOAD — works on ALL phones (Android 7–14)
-    // ======================================================
     private String readCpuLoad() {
         try {
             BufferedReader br = new BufferedReader(new FileReader("/proc/loadavg"));
             String line = br.readLine();
             br.close();
+
             if (line == null) return "N/A";
 
-            String[] parts = line.split(" ");
-            float load = Float.parseFloat(parts[0]);
-
-            // 0.00 – 1.00 ~= 0–100%
+            float load = Float.parseFloat(line.split(" ")[0]);
             int percent = (int) (load * 100f);
 
-            if (percent < 0) percent = 0;
-            if (percent > 100) percent = 100;
-
             return percent + "%";
-
         } catch (Exception e) {
             return "N/A";
         }
     }
 
-    // ======================================================
-    // CPU TEMP — many devices return battery temp only
-    // ======================================================
     private String readCpuTemp() {
         try {
-            // Most devices expose thermal zones locked — fallback to battery sensor
             BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
             int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
             if (t > 0) return (t / 10f) + "°C";
@@ -108,9 +90,6 @@ public class CPU_RAM_LiveActivity extends AppCompatActivity {
         }
     }
 
-    // ======================================================
-    // RAM INFO
-    // ======================================================
     private String readRamUsage() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

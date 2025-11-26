@@ -1,9 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v7.5 (Soft Expand v2.0 + FIXED)
+// DeviceInfoPeripheralsActivity.java — FINAL v8.0 (API-SAFE)
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.base.*;
+import com.gel.cleaner.GELAutoActivityHook;
+
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -43,11 +44,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private boolean isRooted = false;
 
-    private GELFoldableDetector foldDetector;
-    private GELFoldableUIManager foldUI;
-    private GELFoldableAnimationPack animPack;
-    private DualPaneManager dualPane;
-
     private TextView[] allContents;
     private TextView[] allIcons;
 
@@ -61,20 +57,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
 
-        GELAutoDP.init(this);
-
-        foldUI       = new GELFoldableUIManager(this);
-        animPack     = new GELFoldableAnimationPack(this);
-        dualPane     = new DualPaneManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
-
         TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) {
-            title.setText(getString(R.string.phone_info_peripherals));
-            title.setTextSize(sp(20f));
-        }
+        if (title != null) title.setText(getString(R.string.phone_info_peripherals));
 
-        // CONTENT
         TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
         TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
         TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
@@ -92,7 +77,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
         TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
 
-        // ICONS
         TextView iconCamera        = findViewById(R.id.iconCameraToggle);
         TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
         TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
@@ -143,32 +127,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (foldDetector != null) foldDetector.start();
-    }
-
-    @Override
-    protected void onPause() {
-        if (foldDetector != null) foldDetector.stop();
-        super.onPause();
-    }
-
-    @Override
-    public void onPostureChanged(@NonNull GELFoldableCallback.Posture posture) {
-        if (animPack != null) animPack.onPostureChanged(posture);
-    }
-
-    @Override
-    public void onScreenChanged(boolean isInner) {
-        if (foldUI != null) foldUI.applyUI(isInner);
-        if (dualPane != null) dualPane.dispatchMode(isInner);
-    }
-
-    // ============================================================
-    // EXPANDERS — Soft Expand v2.0
-    // ============================================================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
         header.setOnClickListener(v -> toggleSection(content, icon));
@@ -198,12 +156,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     private void animateExpand(final View v) {
-        v.measure(
-                View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        );
-
+        v.measure(View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
         final int target = v.getMeasuredHeight();
+
         v.getLayoutParams().height = 0;
         v.setVisibility(View.VISIBLE);
         v.setAlpha(0f);
@@ -234,8 +190,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 .start();
     }
 
-    // ============================================================
-    // ROOT
+// ============================================================
+    // ROOT CHECK
     // ============================================================
     private boolean isDeviceRooted() {
         try {
@@ -245,7 +201,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     "/system/usr/we-need-root/su-backup",
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
-            for (String p : paths) if (new File(p).exists()) return true;
+            for (String p : paths)
+                if (new File(p).exists()) return true;
 
             Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
             BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -258,59 +215,33 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
     }
 
-    @Override
-    public int dp(int v) {
-        return GELAutoDP.dp(v);
-    }
-
-    @Override
-    public float sp(float v) {
-        return GELAutoDP.sp(v);
-    }
-
     // ============================================================
-    // BUILDERS — FULL PRO REPORT
+    // BUILDERS — CAMERA
     // ============================================================
-
     private String buildCameraInfo() {
         StringBuilder sb = new StringBuilder();
         try {
             CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
             if (cm != null) {
+
                 for (String id : cm.getCameraIdList()) {
                     CameraCharacteristics cc = cm.getCameraCharacteristics(id);
+
                     Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
-                    Float focal = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS) != null ?
-                            cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)[0] : null;
+                    float[] focals = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                    float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
 
                     sb.append("Camera ID ").append(id).append(":\n");
-                    sb.append("  Facing        : ").append(
-                            facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :
-                            facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" :
-                            "External").append("\n");
+                    sb.append("• Facing: ")
+                            .append(facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :
+                                    facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" :
+                                            "External").append("\n");
 
-                    if (focal != null)
-                        sb.append("  Focal length  : ").append(focal).append("mm\n");
+                    if (focals != null && focals.length > 0)
+                        sb.append("• Focal: ").append(focals[0]).append(" mm\n");
 
-                    Integer hwLevel = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-                    if (hwLevel != null) {
-                        String level;
-                        switch (hwLevel) {
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL"; break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3"; break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED"; break;
-                            default:
-                                level = "LEGACY"; break;
-                        }
-                        sb.append("  HW Level      : ").append(level).append("\n");
-                    }
-
-                    float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
                     if (apertures != null && apertures.length > 0)
-                        sb.append("  Aperture      : f/").append(apertures[0]).append("\n");
+                        sb.append("• Aperture: f/").append(apertures[0]).append("\n");
 
                     sb.append("\n");
                 }
@@ -321,27 +252,35 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
+    // ============================================================
+    // BIOMETRICS
+    // ============================================================
     private String buildBiometricsInfo() {
         StringBuilder sb = new StringBuilder();
 
-        boolean hasFP = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-        boolean hasFace = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");
-        boolean hasIris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");
+        boolean fp   = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+        boolean face = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");
+        boolean iris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");
 
-        sb.append("Fingerprint : ").append(hasFP ? "Yes" : "No").append("\n");
-        sb.append("Face Unlock : ").append(hasFace ? "Yes" : "No").append("\n");
-        sb.append("Iris Scan   : ").append(hasIris ? "Yes" : "No").append("\n");
+        sb.append("Fingerprint : ").append(fp ? "Yes" : "No").append("\n");
+        sb.append("Face Unlock : ").append(face ? "Yes" : "No").append("\n");
+        sb.append("Iris Scan   : ").append(iris ? "Yes" : "No").append("\n");
 
         return sb.toString();
     }
 
+    // ============================================================
+    // SENSORS
+    // ============================================================
     private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
             SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sm != null) {
                 for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append(s.getName()).append(" (").append(s.getVendor()).append(")\n");
+                    sb.append("• ")
+                            .append(s.getName())
+                            .append(" (").append(s.getVendor()).append(")\n");
                 }
             }
         } catch (Throwable ignore) {}
@@ -350,8 +289,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
+    // ============================================================
+    // CONNECTIVITY
+    // ============================================================
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -360,28 +303,32 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
                 if (caps != null) {
                     sb.append("Active: ");
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) sb.append("Wi-Fi\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) sb.append("Cellular\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) sb.append("Ethernet\n");
-                    else sb.append("Other\n");
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                        sb.append("Wi-Fi\n");
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                        sb.append("Cellular\n");
+                    else
+                        sb.append("Other\n");
                 }
             }
 
             if (wm != null) {
                 WifiInfo wi = wm.getConnectionInfo();
                 if (wi != null && wi.getNetworkId() != -1) {
-                    sb.append("SSID       : ").append(wi.getSSID()).append("\n");
-                    sb.append("Link Speed : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    sb.append("RSSI       : ").append(wi.getRssi()).append(" dBm\n");
+                    sb.append("SSID      : ").append(wi.getSSID()).append("\n");
+                    sb.append("LinkSpeed : ").append(wi.getLinkSpeed()).append(" Mbps\n");
+                    sb.append("RSSI      : ").append(wi.getRssi()).append(" dBm\n");
                 }
             }
-
         } catch (Throwable ignore) {}
 
         if (sb.length() == 0) sb.append("No connectivity info.\n");
         return sb.toString();
     }
 
+    // ============================================================
+    // LOCATION
+    // ============================================================
     private String buildLocationInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -390,8 +337,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
             boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-            sb.append("GPS       : ").append(gps ? "Enabled" : "Disabled").append("\n");
-            sb.append("Network   : ").append(net ? "Enabled" : "Disabled").append("\n");
+            sb.append("GPS     : ").append(gps ? "Enabled" : "Disabled").append("\n");
+            sb.append("Network : ").append(net ? "Enabled" : "Disabled").append("\n");
 
         } catch (Throwable ignore) {}
 
@@ -399,6 +346,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
+    // ============================================================
+    // BLUETOOTH
+    // ============================================================
     private String buildBluetoothInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -413,25 +363,33 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             } else {
                 sb.append("Supported : No\n");
             }
+
         } catch (Throwable ignore) {}
 
         return sb.toString();
     }
 
+    // ============================================================
+    // NFC
+    // ============================================================
     private String buildNfcInfo() {
         StringBuilder sb = new StringBuilder();
         try {
             NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);
             NfcAdapter a = nfc != null ? nfc.getDefaultAdapter() : null;
 
-            sb.append("NFC      : ").append(a != null ? "Supported" : "Not supported").append("\n");
-            if (a != null) sb.append("Enabled  : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
+            sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");
+            if (a != null)
+                sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
 
         } catch (Throwable ignore) {}
 
         return sb.toString();
     }
 
+// ============================================================
+    // BATTERY
+    // ============================================================
     private String buildBatteryInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -442,48 +400,56 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
                 int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-
-                sb.append("Level  : ").append(level).append("%\n");
-                sb.append("Scale  : ").append(scale).append("\n");
-                sb.append("Status : ").append(status).append("\n");
-
                 int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-                if (temp > 0) sb.append("Temp   : ").append(temp / 10f).append("°C\n");
-            }
 
+                sb.append("Level   : ").append(level).append("%\n");
+                sb.append("Scale   : ").append(scale).append("\n");
+                sb.append("Status  : ").append(status).append("\n");
+
+                if (temp > 0)
+                    sb.append("Temp    : ").append((temp / 10f)).append("°C\n");
+            }
         } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) sb.append("No battery info.\n");
+        if (sb.length() == 0) sb.append("No battery data.\n");
         return sb.toString();
     }
 
+    // ============================================================
+    // UWB
+    // ============================================================
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
-        return "UWB Supported : " + (supported ? "Yes" : "No") + "\n";
+        return "Supported : " + (supported ? "Yes" : "No") + "\n";
     }
 
+    // ============================================================
+    // HAPTICS
+    // ============================================================
     private String buildHapticsInfo() {
-        boolean vib = getPackageManager().hasSystemFeature(PackageManager.FEATURE_VIBRATOR);
-        return "Vibration Motor : " + (vib ? "Yes" : "No") + "\n";
+        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+        return "Supported : " + (vib ? "Yes" : "No") + "\n";
     }
 
+    // ============================================================
+    // GNSS
+    // ============================================================
     private String buildGnssInfo() {
-        boolean gnss = getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GNSS);
-        return "GNSS : " + (gnss ? "Yes" : "No") + "\n";
+        boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
+        return "GNSS     : " + (gnss ? "Yes" : "No") + "\n";
     }
 
+    // ============================================================
+    // USB / OTG
+    // ============================================================
     private String buildUsbInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            sb.append("OTG Support : ")
-                    .append(getPackageManager().hasSystemFeature("android.hardware.usb.host") ? "Yes" : "No")
-                    .append("\n");
-
-        } catch (Throwable ignore) {}
-
-        return sb.toString();
+        boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
+        return "OTG Support : " + (otg ? "Yes" : "No") + "\n";
     }
 
+    // ============================================================
+    // MICROPHONES
+    // ============================================================
     private String buildMicsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -500,6 +466,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
+    // ============================================================
+    // AUDIO HAL
+    // ============================================================
     private String buildAudioHalInfo() {
         return "Audio HAL : " + getProp("ro.audio.hal.version") + "\n";
     }
@@ -511,58 +480,47 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             String line = br.readLine();
             br.close();
             return line != null ? line.trim() : "";
-        } catch (Exception e) {
+        } catch (Throwable ignore) {
             return "";
         }
     }
 
     // ============================================================
-    // SET TEXT
+    // SET TEXT FOR ALL SECTIONS
     // ============================================================
     @Override
     protected void onStart() {
         super.onStart();
 
-        TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
-        TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
-        TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
-        TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);
-        TextView txtLocationContent      = findViewById(R.id.txtLocationContent);
-        TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
-        TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
-        TextView txtRootContent          = findViewById(R.id.txtRootContent);
-        TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-        TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
-        TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
-        TextView txtGnssContent          = findViewById(R.id.txtGnssContent);
-        TextView txtUsbContent           = findViewById(R.id.txtUsbContent);
-        TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
-        TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
-        TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);
+        set(R.id.txtCameraContent,       buildCameraInfo());
+        set(R.id.txtBiometricsContent,   buildBiometricsInfo());
+        set(R.id.txtSensorsContent,      buildSensorsInfo());
+        set(R.id.txtConnectivityContent, buildConnectivityInfo());
+        set(R.id.txtLocationContent,     buildLocationInfo());
+        set(R.id.txtBluetoothContent,    buildBluetoothInfo());
+        set(R.id.txtNfcContent,          buildNfcInfo());
+        set(R.id.txtBatteryContent,      buildBatteryInfo());
+        set(R.id.txtUwbContent,          buildUwbInfo());
+        set(R.id.txtHapticsContent,      buildHapticsInfo());
+        set(R.id.txtGnssContent,         buildGnssInfo());
+        set(R.id.txtUsbContent,          buildUsbInfo());
+        set(R.id.txtMicsContent,         buildMicsInfo());
+        set(R.id.txtAudioHalContent,     buildAudioHalInfo());
 
-        if (txtCameraContent       != null) txtCameraContent.setText(buildCameraInfo());
-        if (txtBiometricsContent   != null) txtBiometricsContent.setText(buildBiometricsInfo());
-        if (txtSensorsContent      != null) txtSensorsContent.setText(buildSensorsInfo());
-        if (txtConnectivityContent != null) txtConnectivityContent.setText(buildConnectivityInfo());
-        if (txtLocationContent     != null) txtLocationContent.setText(buildLocationInfo());
-        if (txtBluetoothContent    != null) txtBluetoothContent.setText(buildBluetoothInfo());
-        if (txtNfcContent          != null) txtNfcContent.setText(buildNfcInfo());
-        if (txtBatteryContent      != null) txtBatteryContent.setText(buildBatteryInfo());
-        if (txtUwbContent          != null) txtUwbContent.setText(buildUwbInfo());
-        if (txtHapticsContent      != null) txtHapticsContent.setText(buildHapticsInfo());
-        if (txtGnssContent         != null) txtGnssContent.setText(buildGnssInfo());
-        if (txtUsbContent          != null) txtUsbContent.setText(buildUsbInfo());
-        if (txtMicsContent         != null) txtMicsContent.setText(buildMicsInfo());
-        if (txtAudioHalContent     != null) txtAudioHalContent.setText(buildAudioHalInfo());
-
-        if (txtRootContent != null) {
-            txtRootContent.setText(isRooted ? "Root Detected: YES" : "Device is NOT rooted");
+        TextView root = findViewById(R.id.txtRootContent);
+        if (root != null) {
+            root.setText(isRooted ? "ROOT STATUS : YES" : "DEVICE IS NOT ROOTED");
         }
 
-        if (txtOtherPeripherals != null) {
-            txtOtherPeripherals.setText(
-                    "Vibration Motor : " + (getPackageManager().hasSystemFeature(PackageManager.FEATURE_VIBRATOR) ? "Yes" : "No")
-            );
+        TextView other = findViewById(R.id.txtOtherPeripheralsContent);
+        if (other != null) {
+            boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+            other.setText("Vibration Motor : " + (vib ? "Yes" : "No"));
         }
+    }
+
+    private void set(int id, String txt) {
+        TextView t = findViewById(id);
+        if (t != null) t.setText(txt);
     }
 }

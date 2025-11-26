@@ -176,26 +176,28 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-            if (c == null || ic == null) continue;
-            if (c == toOpen) continue;
+    // Collapse all other sections
+    for (int i = 0; i < allContents.length; i++) {
+        TextView c = allContents[i];
+        TextView ic = allIcons[i];
 
+        if (c == null || ic == null) continue;
+
+        if (c != toOpen) {
             animateCollapse(c);
             ic.setText("＋");
         }
-
-        boolean visible = (toOpen.getVisibility() == View.VISIBLE);
-
-        if (visible) {
-            animateCollapse(toOpen);
-            iconToUpdate.setText("＋");
-        } else {
-            animateExpand(toOpen);
-            iconToUpdate.setText("−");
-        }
     }
+
+    // Toggle the selected section ONLY
+    if (toOpen.getVisibility() == View.VISIBLE) {
+        animateCollapse(toOpen);
+        iconToUpdate.setText("＋");
+    } else {
+        animateExpand(toOpen);
+        iconToUpdate.setText("−");
+    }
+}
 
     private void animateExpand(final View v) {
         v.measure(

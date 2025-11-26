@@ -1309,6 +1309,9 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
     logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
     logInfo("Duration: " + durationSec + " seconds.");
 
+    // 🔵 ΖΩΝΤΑΝΕΣ ΤΕΛΙΤΣΕΣ (ΜΕΤΑ ΤΗΝ ΕΝΑΡΞΗ)
+    animateDots("   Stressing CPU ", 350, 8);
+
     long startTime = SystemClock.elapsedRealtime();
 
     applyMaxBrightnessAndKeepOn();
@@ -1331,6 +1334,9 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
 
         float delta = startPct - endPct;
         float perHour = (delta * 3600000f) / dtMs;
+
+        // 🔵 ΖΩΝΤΑΝΕΣ ΤΕΛΙΤΣΕΣ (ΥΠΟΛΟΓΙΣΜΟΣ DRAIN)
+        animateDots("   Calculating drain ", 350, 6);
 
         logInfo(String.format(Locale.US,
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
@@ -1368,10 +1374,10 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                     "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
         }
 
-        // ---- HEALTH CATEGORY (CHECKBOX MAP) ----
+        // ---- HEALTH CATEGORY ----
         String health;
 
-        if (perHour <= 6f)      health = "Strong";       // NEW highest level  
+        if (perHour <= 6f)      health = "Strong";
         else if (perHour <= 8f) health = "Excellent";
         else if (perHour <=12f) health = "Very good";
         else if (perHour <=20f) health = "Normal";
@@ -1380,34 +1386,6 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         printHealthCheckboxMap(health);
 
     }, durationSec * 1000L);
-}
-
-// ============================================================
-// CHECKBOX MAP
-// ============================================================
-private void printHealthCheckboxMap(String health) {
-
-    String neon = "#39FF14";
-    String white = "#FFFFFF";
-
-    boolean strong   = health.equals("Strong");
-    boolean excel    = health.equals("Excellent");
-    boolean verygood = health.equals("Very good");
-    boolean normal   = health.equals("Normal");
-    boolean weak     = health.equals("Weak");
-
-    logRaw( cb("Strong",    strong,   neon, white) );
-    logRaw( cb("Excellent", excel,    neon, white) );
-    logRaw( cb("Very good", verygood, neon, white) );
-    logRaw( cb("Normal",    normal,   neon, white) );
-    logRaw( cb("Weak",      weak,     neon, white) );
-}
-
-private String cb(String label, boolean active, String neon, String white) {
-    if (active)
-        return "✔ " + color(label, neon);
-    else
-        return "☐ " + color(label, white);
 }
 
 // ============================================================
@@ -3624,6 +3602,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

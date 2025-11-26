@@ -1317,7 +1317,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec, int durationMin) {
     // ============================================================
     // RED DOT ANIMATION for full duration
     // ============================================================
-    animateDotsReplace("Stressing CPU", 500, durationMin * 120); 
+    animateDotsSafe("Stressing CPU", 500, durationMin * 120); 
     // (2 updates per second → 120 per minute)
 
     ui.postDelayed(() -> {
@@ -3633,6 +3633,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

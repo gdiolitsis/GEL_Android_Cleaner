@@ -134,26 +134,30 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-            if (c == null || ic == null) continue;
-            if (c == toOpen) continue;
+    // Collapse everything except the one we clicked
+    for (int i = 0; i < allContents.length; i++) {
+        TextView c = allContents[i];
+        TextView ic = allIcons[i];
 
+        if (c == null || ic == null) continue;
+
+        if (c != toOpen) {
             animateCollapse(c);
             ic.setText("＋");
         }
-
-        boolean visible = (toOpen.getVisibility() == View.VISIBLE);
-
-        if (visible) {
-            animateCollapse(toOpen);
-            iconToUpdate.setText("＋");
-        } else {
-            animateExpand(toOpen);
-            iconToUpdate.setText("−");
-        }
     }
+
+    // Toggle correct item
+    if (toOpen.getVisibility() == View.VISIBLE) {
+        // Already open -> close it
+        animateCollapse(toOpen);
+        iconToUpdate.setText("＋");
+    } else {
+        // Closed -> open it
+        animateExpand(toOpen);
+        iconToUpdate.setText("−");
+    }
+}
 
     private void animateExpand(final View v) {
         v.measure(View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),

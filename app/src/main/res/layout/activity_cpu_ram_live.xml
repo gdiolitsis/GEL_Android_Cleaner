@@ -2,8 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="12dp"
     android:background="@color/gel_bg"
-    android:padding="@dimen/gel_dp_12"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,20 +17,20 @@
             android:layout_height="wrap_content"
             android:text="📈 CPU / RAM LIVE"
             android:textStyle="bold"
-            android:textSize="@dimen/gel_sp_20"
-            android:textColor="@color/gel_text_primary"
+            android:textSize="22sp"
             android:gravity="center"
-            android:layout_marginBottom="@dimen/gel_dp_10" />
+            android:layout_marginBottom="12dp"
+            android:textColor="@color/gel_text_primary" />
 
         <TextView
-            android:id="@+id/txtLiveData"
+            android:id="@+id/txtLiveInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/gel_text_secondary"
-            android:textSize="@dimen/gel_sp_14"
+            android:textSize="14sp"
             android:typeface="monospace"
-            android:padding="@dimen/gel_dp_6"
-            android:lineSpacingExtra="@dimen/gel_dp_2" />
+            android:padding="6dp"
+            android:lineSpacingExtra="2dp" />
 
     </LinearLayout>
 

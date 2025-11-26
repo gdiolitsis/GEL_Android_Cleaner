@@ -1,6 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL FINAL v5.3 (Fixed Expanders)
-// NOTE: Το αρχείο είναι 100% έτοιμο για copy-paste.
+// DeviceInfoInternalActivity.java — GEL FINAL v5.4 (Soft Expand v2.0)
 
 package com.gel.cleaner;
 
@@ -24,6 +23,7 @@ import android.provider.Settings;
 import android.telephony.*;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,11 +38,9 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
     private boolean isRooted = false;
 
-    // Foldable
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager foldUI;
 
-    // One-open-only logic arrays
     private TextView[] allContents;
     private TextView[] allIcons;
 
@@ -56,17 +54,13 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);
 
-        // FOLD INIT
         foldUI = new GELFoldableUIManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
-        // TITLE
         TextView title = findViewById(R.id.txtTitleDevice);
         if (title != null) title.setText(getString(R.string.phone_info_internal));
 
-        // ---------------------------------------------
-        // CONTENT REFERENCES
-        // ---------------------------------------------
+        // CONTENT
         TextView txtSystemContent           = findViewById(R.id.txtSystemContent);
         TextView txtAndroidContent          = findViewById(R.id.txtAndroidContent);
         TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
@@ -82,7 +76,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
         TextView txtRootContent             = findViewById(R.id.txtRootContent);
 
-        // ICON REFERENCES
+        // ICONS
         TextView iconSystem           = findViewById(R.id.iconSystemToggle);
         TextView iconAndroid          = findViewById(R.id.iconAndroidToggle);
         TextView iconCpu              = findViewById(R.id.iconCpuToggle);
@@ -98,7 +92,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
         TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
-        // ONE-OPEN-ONLY ARRAYS
         allContents = new TextView[]{
                 txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
                 txtThermalContent, txtThermalZonesContent, txtVulkanContent,
@@ -113,12 +106,9 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 iconStorage, iconScreen, iconConnectivity, iconRoot
         };
 
-        // ROOT CHECK
         isRooted = isDeviceRooted();
 
-        // ============================================================
-        // EXPANDERS (THE FIX YOU NEEDED)
-        // ============================================================
+        // EXPANDERS
         setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
         setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
         setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
@@ -155,13 +145,15 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         if (foldUI != null) foldUI.applyUI(isInner);
     }
 
+    // ============================================================
+    // EXPANDER LOGIC WITH ANIMATION (Soft Expand v2.0)
+    // ============================================================
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
         header.setOnClickListener(v -> toggleSection(content, icon));
     }
 
     private void toggleSection(TextView toOpen, TextView iconToUpdate) {
-        if (allContents == null || allIcons == null) return;
 
         for (int i = 0; i < allContents.length; i++) {
             TextView c = allContents[i];
@@ -169,15 +161,59 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             if (c == null || ic == null) continue;
             if (c == toOpen) continue;
 
-            c.setVisibility(View.GONE);
+            animateCollapse(c);
             ic.setText("＋");
         }
 
         boolean visible = (toOpen.getVisibility() == View.VISIBLE);
-        toOpen.setVisibility(visible ? View.GONE : View.VISIBLE);
-        iconToUpdate.setText(visible ? "＋" : "−");
+
+        if (visible) {
+            animateCollapse(toOpen);
+            iconToUpdate.setText("＋");
+        } else {
+            animateExpand(toOpen);
+            iconToUpdate.setText("−");
+        }
     }
 
+    private void animateExpand(final View v) {
+        v.measure(View.MeasureSpec.makeMeasureSpec(v.getWidth(), View.MeasureSpec.EXACTLY),
+                  View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        final int target = v.getMeasuredHeight();
+
+        v.getLayoutParams().height = 0;
+        v.setVisibility(View.VISIBLE);
+        v.setAlpha(0f);
+
+        v.animate()
+                .alpha(1f)
+                .setDuration(160)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.getLayoutParams().height = target;
+                })
+                .start();
+    }
+
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
+
+        final int initial = v.getMeasuredHeight();
+        v.setAlpha(1f);
+
+        v.animate()
+                .alpha(0f)
+                .setDuration(120)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.setVisibility(View.GONE);
+                    v.getLayoutParams().height = initial;
+                    v.setAlpha(1f);
+                })
+                .start();
+    }
+
+    // ROOT & HELPERS
     private boolean isDeviceRooted() {
         String tags = Build.TAGS;
         if (tags != null && tags.contains("test-keys")) return true;

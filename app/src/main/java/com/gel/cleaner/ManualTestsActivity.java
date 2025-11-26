@@ -1647,8 +1647,10 @@ private void lab18RunAuto() {
 
             ui.post(() -> {
                 logInfo("▶ Running Stress Test (Lab 15)...");
-                animateDots("   Working ", 350, 8);
             });
+
+            // ⛔ REMOVE ASCII BAR – replace with real-time dots
+            animateDotsReplace("Working", 500, 240);  // 2 minutes (240 half-seconds)
 
             float before = getCurrentBatteryPercent();
             long t0 = SystemClock.elapsedRealtime();
@@ -1656,7 +1658,7 @@ private void lab18RunAuto() {
             ui.post(this::applyMaxBrightnessAndKeepOn);
             startCpuBurn_C_Mode();
 
-            Thread.sleep(60_000);
+            Thread.sleep(120_000);   // **2-minute stress fixed**
 
             stopCpuBurn();
             ui.post(this::restoreBrightnessAndKeepOn);
@@ -1670,10 +1672,10 @@ private void lab18RunAuto() {
             int drain_mA = (int)(perHour * 50);
             if (drain_mA < 0) drain_mA = 0;
 
-            ui.post(() -> {
-                logInfo("▶ Calculating drain rate...");
-                animateDots("   Processing ", 350, 6);
-            });
+            ui.post(() -> logInfo("▶ Calculating drain rate..."));
+
+            // small pause animation
+            animateDotsReplace("Calculating drain", 400, 15);
 
             // ============================================================
             // 2. THERMAL ZONES (LAB 17 STYLE)
@@ -1681,8 +1683,9 @@ private void lab18RunAuto() {
             ui.post(() -> {
                 logInfo("");
                 logInfo("▶ Running Thermal Zones (Lab 17)...");
-                animateDots("   Reading thermal data ", 350, 8);
             });
+
+            animateDotsReplace("Processing thermal data", 400, 25);
 
             Map<String,Float> z0 = readThermalZones();
             Thread.sleep(1500);
@@ -1699,10 +1702,9 @@ private void lab18RunAuto() {
             // ============================================================
             // 3. VOLTAGE STABILITY
             // ============================================================
-            ui.post(() -> {
-                logInfo("▶ Calculating voltage stability...");
-                animateDots("   Measuring ", 350, 5);
-            });
+            ui.post(() -> logInfo("▶ Calculating voltage stability..."));
+
+            animateDotsReplace("Measuring voltage", 400, 25);
 
             float v0 = getBatteryVoltage_mV();
             Thread.sleep(1500);
@@ -1729,9 +1731,10 @@ private void lab18RunAuto() {
                 estimatedCapacity_mAh = factory;
 
             // ============================================================
-            // 5. SCORING ENGINE
+            // 5. SCORING ENGINE (UNCHANGED)
             // ============================================================
             int score = 100;
+
             if (perHour > 20f)       score -= 30;
             else if (perHour > 15f)  score -= 20;
             else if (perHour > 10f)  score -= 10;
@@ -1784,7 +1787,7 @@ private void lab18RunAuto() {
             else                  category = "Weak";
 
             // ============================================================
-            // 6. FINAL UI OUTPUT
+            // 6. FINAL UI OUTPUT (UNCHANGED)
             // ============================================================
             final float f_before   = before;
             final float f_after    = after;
@@ -1850,39 +1853,65 @@ private void lab18RunAuto() {
 
     }).start();
 }
-    
+
+
 // ============================================================
 // SUPPORT FUNCTIONS FOR LAB 18 (HELPERS)
 // ============================================================
 
-private void animateDots(String baseText, int ms, int repeat) {
+// ============================================================
+// DOT ANIMATION — replaces same line (NO SPAM), red dots
+// ============================================================
+private int logIndex18 = -1;
+
+private void animateDotsReplace(String base, int ms, int repeat) {
     new Thread(() -> {
         try {
-            String[] dots = {".", "..", "...", "....", "....."};
+            String[] dots = {
+                "<font color='#FF3333'>.</font>",
+                "<font color='#FF3333'>..</font>",
+                "<font color='#FF3333'>...</font>",
+                "<font color='#FF3333'>....</font>",
+                "<font color='#FF3333'>.....</font>"
+            };
+
+            ui.post(() -> {
+                logInfo(base + " .");
+                logIndex18 = logMessages.size() - 1;
+            });
+
+            Thread.sleep(60);
+            int idx = logIndex18;
+
             for (int i = 0; i < repeat; i++) {
                 String d = dots[i % dots.length];
-                ui.post(() -> logInfo(baseText + d));
+                int fi = idx;
+                ui.post(() -> logReplace(fi, base + " " + d));
                 Thread.sleep(ms);
             }
+
+            ui.post(() -> logReplace(idx,
+                    base + " <font color='#39FF14'>done</font>"
+            ));
+
         } catch (Exception ignored) {}
     }).start();
 }
-    
+
 private float getBatteryVoltage_mV() {
-try {
-IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-Intent i = registerReceiver(null, f);
-if (i == null) return 0f;
-return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-} catch (Exception e) {
-return 0f;
-}
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return 0f;
+        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+    } catch (Exception e) {
+        return 0f;
+    }
 }
 
 private int getFactoryCapacity_mAh() {
-// Generic fallback. You can later replace with per-model DB.
-return 5000;
-}                       
+    return 5000;
+}                                   
     
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3630,6 +3659,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

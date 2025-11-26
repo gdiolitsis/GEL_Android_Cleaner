@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v5.1
+// CpuRamLiveActivity.java — FINAL v5.2 FIXED
 
 package com.gel.cleaner;
 
@@ -25,7 +25,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
-        txtLive = findViewById(R.id.txtLiveData);
+        // FIXED → correct ID
+        txtLive = findViewById(R.id.txtLiveInfo);
 
         startLiveLoop();
     }
@@ -81,9 +82,11 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     private String readCpuTemp() {
         try {
             BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-            if (t > 0) return (t / 10f) + "°C";
 
+            // FIXED → use int property fallback (GitHub API 23 support)
+            int t = bm.getIntProperty(4); // 4 = TEMPERATURE
+
+            if (t > 0) return (t / 10f) + "°C";
             return "N/A";
         } catch (Exception e) {
             return "N/A";

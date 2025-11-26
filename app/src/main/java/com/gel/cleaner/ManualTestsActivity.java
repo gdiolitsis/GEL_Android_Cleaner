@@ -1859,40 +1859,6 @@ private void lab18RunAuto() {
 // SUPPORT FUNCTIONS FOR LAB 18 (HELPERS)
 // ============================================================
 
-// ============================================================
-// DOT ANIMATION (ManualTestsActivity SAFE VERSION)
-// No logReplace, no logMessages – works with appendHtml()
-// ============================================================
-private void animateDotsSafe(String base, int ms, int repeat) {
-
-    new Thread(() -> {
-        try {
-            String[] dots = {
-                    "<font color='#FF3333'>.</font>",
-                    "<font color='#FF3333'>..</font>",
-                    "<font color='#FF3333'>...</font>",
-                    "<font color='#FF3333'>....</font>",
-                    "<font color='#FF3333'>.....</font>"
-            };
-
-            // start block
-            ui.post(() -> appendHtml("<br>" + base + " ."));
-
-            for (int i = 0; i < repeat; i++) {
-                String d = dots[i % dots.length];
-                ui.post(() -> appendHtml("<br>" + base + " " + d));
-                Thread.sleep(ms);
-            }
-
-            ui.post(() ->
-                    appendHtml("<br>" + base +
-                            " <font color='#39FF14'>done</font>")
-            );
-
-        } catch (Exception ignored) {}
-    }).start();
-}
-
 private float getBatteryVoltage_mV() {
     try {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -1906,7 +1872,37 @@ private float getBatteryVoltage_mV() {
 
 private int getFactoryCapacity_mAh() {
     return 5000;
-}                                   
+}     
+
+// ============================================================
+// DOT ANIMATION (SAFE HTML VERSION FOR MANUALTESTSACTIVITY)
+// ============================================================
+private void animateDotsSafe(String base, int ms, int repeat) {
+
+    new Thread(() -> {
+        try {
+            String[] dots = {
+                    "<font color='#FF3333'>.</font>",
+                    "<font color='#FF3333'>..</font>",
+                    "<font color='#FF3333'>...</font>",
+                    "<font color='#FF3333'>....</font>",
+                    "<font color='#FF3333'>.....</font>"
+            };
+
+            ui.post(() -> appendHtml("<br>" + base + " ."));
+
+            for (int i = 0; i < repeat; i++) {
+                final String d = dots[i % dots.length];
+                ui.post(() -> appendHtml("<br>" + base + " " + d));
+                Thread.sleep(ms);
+            }
+
+            ui.post(() -> appendHtml("<br>" + base +
+                    " <font color='#39FF14'>done</font>"));
+
+        } catch (Exception ignored) {}
+    }).start();
+}
     
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3654,6 +3650,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

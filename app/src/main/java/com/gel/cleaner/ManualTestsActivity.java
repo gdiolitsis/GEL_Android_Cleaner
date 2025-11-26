@@ -1899,6 +1899,21 @@ private String buildGreenBar(int percent) {
     sb.append("] ").append(percent).append("%</font>");
     return sb.toString();
 }
+    private float getBatteryVoltage_mV() {
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return 0f;
+        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+    } catch (Exception e) {
+        return 0f;
+    }
+}
+
+private int getFactoryCapacity_mAh() {
+    // Προσωρινή default τιμή — αργότερα βάλε per-model DB.
+    return 5000;
+}
     
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3646,6 +3661,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

@@ -1860,39 +1860,34 @@ private void lab18RunAuto() {
 // ============================================================
 
 // ============================================================
-// DOT ANIMATION — replaces same line (NO SPAM), red dots
+// DOT ANIMATION (ManualTestsActivity SAFE VERSION)
+// No logReplace, no logMessages – works with appendHtml()
 // ============================================================
-private int logIndex18 = -1;
+private void animateDotsSafe(String base, int ms, int repeat) {
 
-private void animateDotsReplace(String base, int ms, int repeat) {
     new Thread(() -> {
         try {
             String[] dots = {
-                "<font color='#FF3333'>.</font>",
-                "<font color='#FF3333'>..</font>",
-                "<font color='#FF3333'>...</font>",
-                "<font color='#FF3333'>....</font>",
-                "<font color='#FF3333'>.....</font>"
+                    "<font color='#FF3333'>.</font>",
+                    "<font color='#FF3333'>..</font>",
+                    "<font color='#FF3333'>...</font>",
+                    "<font color='#FF3333'>....</font>",
+                    "<font color='#FF3333'>.....</font>"
             };
 
-            ui.post(() -> {
-                logInfo(base + " .");
-                logIndex18 = logMessages.size() - 1;
-            });
-
-            Thread.sleep(60);
-            int idx = logIndex18;
+            // start block
+            ui.post(() -> appendHtml("<br>" + base + " ."));
 
             for (int i = 0; i < repeat; i++) {
                 String d = dots[i % dots.length];
-                int fi = idx;
-                ui.post(() -> logReplace(fi, base + " " + d));
+                ui.post(() -> appendHtml("<br>" + base + " " + d));
                 Thread.sleep(ms);
             }
 
-            ui.post(() -> logReplace(idx,
-                    base + " <font color='#39FF14'>done</font>"
-            ));
+            ui.post(() ->
+                    appendHtml("<br>" + base +
+                            " <font color='#39FF14'>done</font>")
+            );
 
         } catch (Exception ignored) {}
     }).start();
@@ -3659,6 +3654,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

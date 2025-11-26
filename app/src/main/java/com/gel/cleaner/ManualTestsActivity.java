@@ -1871,10 +1871,7 @@ return 0f;
 private int getFactoryCapacity_mAh() {
 // Generic fallback. You can later replace with per-model DB.
 return 5000;
-}
-
-Πάρε αυτό το αρχείο και απλώς κάνε τις μπάρες πράσινες και ζωντανές real progress.
-Δεν θα πειράξεις ούτε τρίχα από το υπόλοιπο αρχείο                            
+}                       
     
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
@@ -3622,6 +3619,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

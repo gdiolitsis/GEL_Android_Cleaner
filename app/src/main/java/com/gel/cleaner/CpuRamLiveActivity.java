@@ -1,3 +1,7 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// CpuRamLiveActivity.java — GEL CPU/RAM Live v3.2 (Safe Mode + Battery Temp)
+// NOTE: Πάντα δίνουμε ολόκληρο το αρχείο έτοιμο για copy-paste.
+
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
@@ -13,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 
 public class CpuRamLiveActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
@@ -26,6 +31,9 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animPack;
     private DualPaneManager dualPane;
+
+    // CPU state
+    private long[] lastCpuStat = null;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -56,12 +64,12 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
     @Override
     protected void onResume() {
         super.onResume();
-        foldDetector.start();
+        if (foldDetector != null) foldDetector.start();
     }
 
     @Override
     protected void onPause() {
-        foldDetector.stop();
+        if (foldDetector != null) foldDetector.stop();
         super.onPause();
     }
 
@@ -76,18 +84,20 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
                  posture == Posture.TABLE_MODE ||
                  posture == Posture.FULLY_OPEN);
 
-        animPack.animateReflow(() -> uiManager.applyUI(isInner));
+        if (animPack != null && uiManager != null) {
+            animPack.animateReflow(() -> uiManager.applyUI(isInner));
+        }
     }
 
     @Override
     public void onScreenChanged(boolean isInner) {
 
-        animPack.animateReflow(() -> uiManager.applyUI(isInner));
+        if (animPack != null && uiManager != null) {
+            animPack.animateReflow(() -> uiManager.applyUI(isInner));
+        }
 
-        // DualPane safe new API
         try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
 
-        // Adjust text scaling
         if (isInner) {
             txtLive.setTextSize(sp(17f));
             txtLive.setPadding(dp(18), dp(18), dp(18), dp(18));
@@ -133,10 +143,14 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
 
                 if (isRooted) {
                     String gov = getCpuGovernor();
-                    if (gov != null) line.append("\nGovernor: ").append(gov);
+                    if (gov != null && !gov.isEmpty()) {
+                        line.append("\nGovernor: ").append(gov);
+                    }
 
                     String freq = getCpuFreqRoot();
-                    if (freq != null) line.append("\nFreq: ").append(freq);
+                    if (freq != null && !freq.isEmpty()) {
+                        line.append("\nFreq: ").append(freq);
+                    }
                 }
 
                 runOnUiThread(() -> appendSafe(line.toString()));
@@ -151,6 +165,8 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
     }
 
     private void appendSafe(String s) {
+        if (txtLive == null) return;
+
         String current = txtLive.getText().toString();
         String[] lines = current.split("\n");
 
@@ -165,26 +181,191 @@ public class CpuRamLiveActivity extends GELAutoActivityHook
         txtLive.append(s + "\n");
     }
 
-    // ============================
-    // CPU HELPERS
-    // ============================
-    private double getCpuRootAccurate() { /* unchanged */ return -1; }
+    // ============================================================
+    // CPU HELPERS — SAFE MODE
+    // ============================================================
 
-    private long[] readCpuStat() { /* unchanged */ return null; }
+    // Για root συσκευές μπορούμε να το κάνουμε πιο “βαθύ”,
+    // αλλά για τώρα επιστρέφουμε την ίδια ασφαλή μέτρηση.
+    private double getCpuRootAccurate() {
+        return getCpuTotalAvgPercent();
+    }
 
-    private String getCpuGovernor() { /* unchanged */ return null; }
+    private long[] readCpuStat() {
+        RandomAccessFile reader = null;
+        try {
+            reader = new RandomAccessFile("/proc/stat", "r");
+            String load = reader.readLine();
+            if (load == null || !load.startsWith("cpu")) return null;
 
-    private String getCpuFreqRoot() { /* unchanged */ return null; }
+            String[] toks = load.trim().split("\\s+");
+            if (toks.length < 5) return null;
 
-    private double getCpuTotalAvgPercent() { /* unchanged */ return -1; }
+            long user = Long.parseLong(toks[1]);
+            long nice = Long.parseLong(toks[2]);
+            long system = Long.parseLong(toks[3]);
+            long idle = Long.parseLong(toks[4]);
 
-    private long readLong(String path) { /* unchanged */ return -1; }
+            return new long[]{user, nice, system, idle};
 
-    private String getCpuTemp() { /* unchanged */ return "N/A"; }
+        } catch (Throwable ignore) {
+            return null;
+        } finally {
+            try { if (reader != null) reader.close(); } catch (Exception ignored) {}
+        }
+    }
 
-    private boolean isDeviceRooted() { /* unchanged */ return false; }
+    private double getCpuTotalAvgPercent() {
+        try {
+            long[] cur = readCpuStat();
+            if (cur == null) return -1;
 
-    private String getProp(String key) { /* unchanged */ return ""; }
+            if (lastCpuStat == null) {
+                lastCpuStat = cur;
+                return -1; // πρώτο δείγμα -> δεν έχουμε diff ακόμη
+            }
+
+            long userDiff   = cur[0] - lastCpuStat[0];
+            long niceDiff   = cur[1] - lastCpuStat[1];
+            long sysDiff    = cur[2] - lastCpuStat[2];
+            long idleDiff   = cur[3] - lastCpuStat[3];
+
+            long total = userDiff + niceDiff + sysDiff + idleDiff;
+            if (total <= 0) {
+                lastCpuStat = cur;
+                return -1;
+            }
+
+            long busy = total - idleDiff;
+            lastCpuStat = cur;
+
+            return (busy * 100.0d) / total;
+
+        } catch (Throwable ignore) {
+            return -1;
+        }
+    }
+
+    private String getCpuGovernor() {
+        String path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor";
+        String gov = readString(path);
+        if (gov == null) return null;
+        return gov.trim();
+    }
+
+    private String getCpuFreqRoot() {
+        String path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq";
+        String val = readString(path);
+        if (val == null) return null;
+
+        try {
+            long hz = Long.parseLong(val.trim());
+            // Συνήθως είναι σε KHz
+            long mhz = hz / 1000;
+            return mhz + " MHz";
+        } catch (Throwable ignore) {
+            return val.trim();
+        }
+    }
+
+    private long readLong(String path) {
+        String s = readString(path);
+        if (s == null) return -1;
+        try {
+            return Long.parseLong(s.trim());
+        } catch (Throwable ignore) {
+            return -1;
+        }
+    }
+
+    private String readString(String path) {
+        BufferedReader br = null;
+        try {
+            File f = new File(path);
+            if (!f.exists()) return null;
+
+            br = new BufferedReader(new FileReader(f));
+            String line = br.readLine();
+            return line;
+        } catch (Throwable ignore) {
+            return null;
+        } finally {
+            try { if (br != null) br.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    // ============================================================
+    // TEMP (BATTERY FALLBACK)
+    // ============================================================
+    private String getCpuTemp() {
+        // Προσπαθούμε πρώτα battery temp (ασφαλές σε όλες τις συσκευές)
+        long milli = readLong("/sys/class/power_supply/battery/temp");
+        if (milli > 0) {
+            // Μπορεί να είναι σε δεκάτα ή χιλιοστά
+            double c;
+            if (milli > 1000) {
+                c = milli / 1000.0;
+            } else {
+                c = milli / 10.0;
+            }
+            return String.format("%.1f°C (battery)", c);
+        }
+
+        // Fallback σε thermal_zone0 αν επιτρέπεται
+        long t = readLong("/sys/class/thermal/thermal_zone0/temp");
+        if (t > 0) {
+            double c;
+            if (t > 1000) {
+                c = t / 1000.0;
+            } else {
+                c = t / 10.0;
+            }
+            return String.format("%.1f°C", c);
+        }
+
+        return "N/A";
+    }
+
+    // ============================================================
+    // ROOT DETECTION (ίδιο στυλ με τα άλλα activities)
+    // ============================================================
+    private boolean isDeviceRooted() {
+        try {
+            String tags = android.os.Build.TAGS;
+            if (tags != null && tags.contains("test-keys")) return true;
+
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su", "/system/bin/.ext/.su",
+                    "/system/usr/we-need-root/su-backup",
+                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
+            };
+            for (String p : paths) {
+                if (new File(p).exists()) return true;
+            }
+
+            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String line = in.readLine();
+            in.close();
+            return line != null && line.trim().length() > 0;
+
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
+
+    private String getProp(String key) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = br.readLine();
+            br.close();
+            return line != null ? line.trim() : "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
 
     @Override
     protected void onDestroy() {

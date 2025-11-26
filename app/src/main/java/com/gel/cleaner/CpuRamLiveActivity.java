@@ -1,12 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FIXED v7.1
+// CpuRamLiveActivity.java — UNIVERSAL FIX v7.2
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.BatteryManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -14,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
@@ -46,7 +45,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
             while (running) {
                 String cpu = readCpuLoad();
-                String temp = readCpuTemp();
+                String temp = readCpuTempUniversal();
                 String ram = readRamUsage();
 
                 final String line =
@@ -74,12 +73,12 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
             if (line == null || !line.startsWith("cpu")) return "N/A";
 
-            String[] parts = line.trim().split("\\s+");
+            String[] p = line.trim().split("\\s+");
 
-            long user = Long.parseLong(parts[1]);
-            long nice = Long.parseLong(parts[2]);
-            long system = Long.parseLong(parts[3]);
-            long idle = Long.parseLong(parts[4]);
+            long user = Long.parseLong(p[1]);
+            long nice = Long.parseLong(p[2]);
+            long system = Long.parseLong(p[3]);
+            long idle = Long.parseLong(p[4]);
 
             long total = user + nice + system + idle;
 
@@ -102,23 +101,31 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 
-    // UNIVERSAL SAFE TEMP FOR ALL APIS
-    private String readCpuTemp() {
+    // UNIVERSAL TEMPERATURE (NO BatteryManager)
+    private String readCpuTempUniversal() {
         try {
-            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+            String[] paths = {
+                    "/sys/class/thermal/thermal_zone0/temp",
+                    "/sys/class/hwmon/hwmon0/temp1_input"
+            };
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                try {
-                    int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-                    if (t > 0) return (t / 10f) + "°C";
-                } catch (Exception ignored) {}
+            for (String p : paths) {
+                File f = new File(p);
+                if (f.exists()) {
+                    BufferedReader br = new BufferedReader(new FileReader(f));
+                    String line = br.readLine();
+                    br.close();
+
+                    if (line != null) {
+                        float v = Float.parseFloat(line) / 1000f;
+                        return v + "°C";
+                    }
+                }
             }
 
-            return "N/A";
+        } catch (Exception ignored) {}
 
-        } catch (Exception e) {
-            return "N/A";
-        }
+        return "N/A";
     }
 
     private String readRamUsage() {

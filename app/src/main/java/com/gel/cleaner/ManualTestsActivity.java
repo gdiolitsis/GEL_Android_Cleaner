@@ -1645,12 +1645,10 @@ private void lab18RunAuto() {
                 return;
             }
 
-            ui.post(() -> {
-                logInfo("▶ Running Stress Test (Lab 15)...");
-            });
+            ui.post(() -> logInfo("▶ Running Stress Test (Lab 15)..."));
 
-            // ⛔ REMOVE ASCII BAR – replace with real-time dots
-            animateDotsReplace("Working", 500, 240);  // 2 minutes (240 half-seconds)
+            // 🔴 RED DOTS — 2 MINUTES (500 ms x 240 ticks)
+            animateDotsSafe("Working", 500, 240);
 
             float before = getCurrentBatteryPercent();
             long t0 = SystemClock.elapsedRealtime();
@@ -1658,7 +1656,7 @@ private void lab18RunAuto() {
             ui.post(this::applyMaxBrightnessAndKeepOn);
             startCpuBurn_C_Mode();
 
-            Thread.sleep(120_000);   // **2-minute stress fixed**
+            Thread.sleep(120_000);   // 2 minutes
 
             stopCpuBurn();
             ui.post(this::restoreBrightnessAndKeepOn);
@@ -1674,8 +1672,8 @@ private void lab18RunAuto() {
 
             ui.post(() -> logInfo("▶ Calculating drain rate..."));
 
-            // small pause animation
-            animateDotsReplace("Calculating drain", 400, 15);
+            // 🔴 Short animation
+            animateDotsSafe("Calculating drain", 400, 15);
 
             // ============================================================
             // 2. THERMAL ZONES (LAB 17 STYLE)
@@ -1685,7 +1683,7 @@ private void lab18RunAuto() {
                 logInfo("▶ Running Thermal Zones (Lab 17)...");
             });
 
-            animateDotsReplace("Processing thermal data", 400, 25);
+            animateDotsSafe("Processing thermal data", 400, 25);
 
             Map<String,Float> z0 = readThermalZones();
             Thread.sleep(1500);
@@ -1704,7 +1702,7 @@ private void lab18RunAuto() {
             // ============================================================
             ui.post(() -> logInfo("▶ Calculating voltage stability..."));
 
-            animateDotsReplace("Measuring voltage", 400, 25);
+            animateDotsSafe("Measuring voltage", 400, 25);
 
             float v0 = getBatteryVoltage_mV();
             Thread.sleep(1500);
@@ -1854,7 +1852,22 @@ private void lab18RunAuto() {
     }).start();
 }
 
+// ============================================================
+// DOT ANIMATION — SAFE VERSION (NO REPLACE, NO logMessages)
+// ============================================================
 
+private void animateDotsSafe(String base, int ms, int repeat) {
+    new Thread(() -> {
+        try {
+            String[] d = {".", "..", "...", "....", "....."};
+            for (int i = 0; i < repeat; i++) {
+                String dots = "<font color='#FF0000'>" + d[i % d.length] + "</font>";
+                ui.post(() -> logInfo(base + " " + dots));
+                Thread.sleep(ms);
+            }
+        } catch (Exception ignored) {}
+    }).start();
+}
 // ============================================================
 // SUPPORT FUNCTIONS FOR LAB 18 (HELPERS)
 // ============================================================
@@ -1873,37 +1886,7 @@ private float getBatteryVoltage_mV() {
 private int getFactoryCapacity_mAh() {
     return 5000;
 }     
-
-// ============================================================
-// DOT ANIMATION (SAFE HTML VERSION FOR MANUALTESTSACTIVITY)
-// ============================================================
-private void animateDotsSafe(String base, int ms, int repeat) {
-
-    new Thread(() -> {
-        try {
-            String[] dots = {
-                    "<font color='#FF3333'>.</font>",
-                    "<font color='#FF3333'>..</font>",
-                    "<font color='#FF3333'>...</font>",
-                    "<font color='#FF3333'>....</font>",
-                    "<font color='#FF3333'>.....</font>"
-            };
-
-            ui.post(() -> appendHtml("<br>" + base + " ."));
-
-            for (int i = 0; i < repeat; i++) {
-                final String d = dots[i % dots.length];
-                ui.post(() -> appendHtml("<br>" + base + " " + d));
-                Thread.sleep(ms);
-            }
-
-            ui.post(() -> appendHtml("<br>" + base +
-                    " <font color='#39FF14'>done</font>"));
-
-        } catch (Exception ignored) {}
-    }).start();
-}
-    
+ 
 // ============================================================ // ============================================================
 // LABS 19–22: STORAGE & PERFORMANCE
 // ============================================================
@@ -3650,6 +3633,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

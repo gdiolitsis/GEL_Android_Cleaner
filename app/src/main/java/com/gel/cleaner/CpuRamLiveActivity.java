@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — v16.0 (Triple Engine + Engine Indicator)
+// CpuRamLiveActivity.java — FINAL v16.0 (Triple Engine + Engine Indicator + Core Monitor button)
 
 package com.gel.cleaner;
 
@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -23,7 +24,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     private TextView txtLive;
     private boolean running = true;
 
-    // Native function
     public native int getCpuUsageNative();
 
     @Override
@@ -32,6 +32,14 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
+
+        // ============================================================
+        // BUTTON: CORE MONITOR
+        // ============================================================
+        Button btnCore = findViewById(R.id.btnCoreMonitor);
+        btnCore.setOnClickListener(v ->
+                startActivity(new Intent(CpuRamLiveActivity.this, CoreMonitorActivity.class))
+        );
 
         startLiveLoop();
     }
@@ -53,8 +61,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
                 int cpuVal = getCpuUsageNative();
                 EngineInfo info = EngineInfo.decode(cpuVal);
-                String cpu = info.percent + "% [" + info.name + "]";
 
+                String cpu = info.percent + "% [" + info.name + "]";
                 String temp = readCpuTemp();
                 String ram  = readRamUsage();
 
@@ -76,7 +84,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // ENGINE FORMATTER
+    // ENGINE INFO DECODER
     // ============================================================
     private static class EngineInfo {
         public final int percent;
@@ -106,7 +114,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // CPU TEMP (Battery sensor fallback)
+    // TEMP
     // ============================================================
     private String readCpuTemp() {
         try {
@@ -127,7 +135,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // RAM USAGE (used / total)
+    // RAM
     // ============================================================
     private String readRamUsage() {
         try {

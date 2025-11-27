@@ -35,10 +35,33 @@
     <color name="gel_red_danger_dark">#CC0000</color>
 
     <!-- ========================================= -->
+    <!-- 🔥 CPU/RAM LIVE EXTRA COLORS -->
+    <!-- ========================================= -->
+
+    <!-- Gold title for CPU/RAM LIVE -->
+    <color name="gel_live_title_gold">#FFD700</color>
+
+    <!-- Neon temp text -->
+    <color name="gel_temp_neon">#00FF66</color>
+
+    <!-- Neon RAM USED -->
+    <color name="gel_ram_used_neon">#00FF66</color>
+
+    <!-- ========================================= -->
     <!-- 🔥 CORE MONITOR EXTRAS -->
     <!-- ========================================= -->
+
+    <!-- Gold title for Core Monitor -->
     <color name="gel_core_title_gold">#FFD700</color>
+
+    <!-- Deep red border for the gold button -->
     <color name="gel_button_border_red">#990000</color>
+
+    <!-- Gold button BG (hover/pressed) -->
+    <color name="gel_btn_gold_pressed">#E6C200</color>
+
+    <!-- Border highlight when pressed -->
+    <color name="gel_btn_border_pressed">#660000</color>
 
     <!-- ========================================= -->
     <!-- 🔥 CPU/RAM LIVE BUTTON (GEL STYLE) -->
@@ -47,7 +70,7 @@
     <color name="gel_text_button">#FF000000</color>
 
     <!-- ========================================= -->
-    <!-- 🔥 REQUIRED FIX (activity_main.xml) -->
+    <!-- 🔥 FIX FOR ACTIVITY_MAIN.XML -->
     <!-- ========================================= -->
     <color name="gel_btn_text_white">#FFFFFFFF</color>
 

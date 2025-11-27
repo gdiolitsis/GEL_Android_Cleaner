@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — FINAL v20.0
-// CpuRamLiveActivity.java — CPU Neon + TEMP Neon + RAM USED Only Neon
+// GDiolitsis Engine Lab (GEL) — FINAL v21.0
+// CpuRamLiveActivity.java — Gold Title + CPU Neon + TEMP Neon + RAM USED Neon + Core Button Gold/Bordo
 
 package com.gel.cleaner;
 
@@ -22,7 +22,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         System.loadLibrary("cpustat");
     }
 
-    private TextView txtLive;
+    private TextView txtLive, txtTitle;
     private boolean running = true;
 
     public native int getCpuUsageNative();
@@ -32,11 +32,19 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
-        txtLive = findViewById(R.id.txtLiveInfo);
+        txtLive  = findViewById(R.id.txtLiveInfo);
+        txtTitle = findViewById(R.id.txtTitleLive);
 
+        // 🔥 GOLD TITLE
+        txtTitle.setTextColor(getColor(R.color.gel_gold));
+
+        // 🔥 GOLD BUTTON WITH BORDEAU BORDER
         Button btnCore = findViewById(R.id.btnCoreMonitor);
+        btnCore.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
+        btnCore.setTextColor(getColor(R.color.black));
+
         btnCore.setOnClickListener(v ->
-                startActivity(new Intent(CpuRamLiveActivity.this, CoreMonitorActivity.class))
+                startActivity(new Intent(this, CoreMonitorActivity.class))
         );
 
         startLiveLoop();
@@ -57,41 +65,29 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                 int cpuVal = getCpuUsageNative();
                 EngineInfo info = EngineInfo.decode(cpuVal);
 
-                // CPU % NEON
                 String cpuColored =
-                        "<font color='#00FF66'>" + info.percent + "%</font>" +
-                                " [" + info.name + "]";
+                        "<font color='#00FF66'>" + info.percent + "%</font> [" + info.name + "]";
 
-                // TEMP NEON
                 String tempColored =
                         "<font color='#00FF66'>" + readCpuTemp() + "</font>";
 
-                // ================================
-                // RAM USED ONLY → NEON GREEN
-                // ================================
-                String ramRaw = readRamUsage();         // e.g. "2234 / 3479 MB"
-                String[] parts = ramRaw.split(" ");
-
-                String used = parts[0];                 // 2234
-                String slash = parts[1];                // /
-                String total = parts[2];                // 3479
+                String ram = readRamUsage();
+                String used = ram.split("/")[0].trim();
 
                 String ramColored =
-                        "<font color='#00FF66'>" + used + "</font> " +
-                                slash + " " + total;
+                        "<font color='#00FF66'>" + used + "</font> / " + ram.split("/")[1].trim();
 
-                String htmlLine =
+                String html =
                         "Live " + String.format("%02d", counter) +
-                                " | CPU: " + cpuColored +
-                                " | Temp: " + tempColored +
-                                " | RAM: " + ramColored;
+                        " | CPU: " + cpuColored +
+                        " | Temp: " + tempColored +
+                        " | RAM: " + ramColored;
 
                 runOnUiThread(() ->
-                        txtLive.setText(Html.fromHtml(htmlLine, Html.FROM_HTML_MODE_LEGACY))
+                        txtLive.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY))
                 );
 
-                counter++;
-                if (counter > 999) counter = 1;
+                counter = (counter + 1 > 999) ? 1 : counter + 1;
 
                 try { Thread.sleep(1000); } catch (Exception ignored) {}
             }
@@ -104,41 +100,26 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         public final String name;
 
         private EngineInfo(int p, String n) {
-            this.percent = p;
-            this.name = n;
+            percent = p;
+            name = n;
         }
 
-        public static EngineInfo decode(int cpuVal) {
-
-            if (cpuVal >= 0 && cpuVal <= 100) {
-                return new EngineInfo(cpuVal, "RAW");
-            }
-
-            if (cpuVal >= 1000 && cpuVal <= 1100) {
-                return new EngineInfo(cpuVal - 1000, "FREQ");
-            }
-
-            if (cpuVal >= 2000 && cpuVal <= 2100) {
-                return new EngineInfo(cpuVal - 2000, "THERMAL");
-            }
-
+        public static EngineInfo decode(int v) {
+            if (v >= 0 && v <= 100) return new EngineInfo(v, "RAW");
+            if (v >= 1000 && v <= 1100) return new EngineInfo(v - 1000, "FREQ");
+            if (v >= 2000 && v <= 2100) return new EngineInfo(v - 2000, "THERMAL");
             return new EngineInfo(0, "N/A");
         }
     }
 
     private String readCpuTemp() {
         try {
-            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent intent = registerReceiver(null, filter);
+            Intent intent = registerReceiver(null,
+                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (intent == null) return "N/A";
 
-            int temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            if (temp > 0) {
-                float c = temp / 10f;
-                return c + "°C";
-            } else {
-                return "N/A";
-            }
+            int t = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            return (t > 0) ? (t / 10f) + "°C" : "N/A";
         } catch (Exception e) {
             return "N/A";
         }
@@ -147,8 +128,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     private String readRamUsage() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            if (am == null) return "N/A";
-
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
 
@@ -156,8 +135,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             long free  = mi.availMem / (1024 * 1024);
             long used  = total - free;
 
-            return used + " / " + total + " MB";
-
+            return used + " MB / " + total + " MB";
         } catch (Exception e) {
             return "N/A";
         }

@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// corefreq.c — v1.0 Per-Core Hz + Status Engine
+// corefreq.c — v1.1 HTML <br> Version (Correct Line Breaks for Android)
 
 #include <jni.h>
 #include <stdio.h>
@@ -23,10 +23,11 @@ static long read_long(const char *path) {
 JNIEXPORT jstring JNICALL
 Java_com_gel_cleaner_CoreMonitorActivity_getCoreInfoNative(JNIEnv *env, jobject thiz) {
 
-    char out[2048];
+    char out[4096];
     out[0] = 0;
 
-    strcat(out, "GEL Core Monitor\n\n");
+    // Title + blank line
+    strcat(out, "GEL Core Monitor<br><br>");
 
     for (int i = 0; i < 16; i++) {
 
@@ -40,7 +41,7 @@ Java_com_gel_cleaner_CoreMonitorActivity_getCoreInfoNative(JNIEnv *env, jobject 
         long max = read_long(pMax);
 
         if (max <= 0) {
-            // CPU δεν υπάρχει, σταματάμε εδώ
+            // No more CPUs — exit cleanly
             break;
         }
 
@@ -48,7 +49,7 @@ Java_com_gel_cleaner_CoreMonitorActivity_getCoreInfoNative(JNIEnv *env, jobject 
 
         if (cur <= 0) {
             snprintf(line, sizeof(line),
-                     "C%d: 0 MHz   [OFFLINE]\n", i);
+                     "C%d: 0 MHz   [OFFLINE]<br>", i);
         } else {
             int mhz = (int)(cur / 1000);
             int pct = (int)((cur * 100) / max);
@@ -65,7 +66,7 @@ Java_com_gel_cleaner_CoreMonitorActivity_getCoreInfoNative(JNIEnv *env, jobject 
                 state = "OFFLINE";
 
             snprintf(line, sizeof(line),
-                     "C%d: %d MHz   [%s]\n", i, mhz, state);
+                     "C%d: %d MHz   [%s]<br>", i, mhz, state);
         }
 
         strcat(out, line);

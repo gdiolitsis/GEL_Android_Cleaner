@@ -117,6 +117,14 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- ============================================================
+             🔥 Core Monitor (FIX — crash λύθηκε)
+             ============================================================ -->
+        <activity
+            android:name=".CoreMonitorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- SERVICE MENU -->
         <activity android:name=".DiagnosisMenuActivity"
             android:exported="false"

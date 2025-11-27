@@ -1,9 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CoreMonitorActivity.java — v1.0 (Per-Core Hz + Status)
+// CoreMonitorActivity.java — FINAL v7 (Gold Title + Neon States)
 
 package com.gel.cleaner;
 
 import android.os.Bundle;
+import android.text.Html;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -15,38 +16,54 @@ public class CoreMonitorActivity extends AppCompatActivity {
         System.loadLibrary("corefreq");
     }
 
-    private TextView txtCores;
-    private boolean running = true;
-
-    public native String getCoreInfoNative();  // returns full per-core text
+    private native String getCoreInfoNative();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_core_monitor);
 
-        txtCores = findViewById(R.id.txtCoreInfo);
+        TextView txt = findViewById(R.id.txtCoreData);
 
-        startLoop();
-    }
+        // ============================================================
+        // RAW TEXT from native
+        // ============================================================
+        String data = getCoreInfoNative();
+        if (data == null) data = "N/A";
 
-    @Override
-    protected void onDestroy() {
-        running = false;
-        super.onDestroy();
-    }
+        // ============================================================
+        // GOLD TITLE
+        // ============================================================
+        String html =
+                "<font color='#FFD700'><b>GEL Core Monitor</b></font><br><br>";
 
-    private void startLoop() {
-        new Thread(() -> {
+        // ============================================================
+        // COLOR THE STATES
+        // ============================================================
+        String[] lines = data.split("\n");
 
-            while (running) {
-                String info = getCoreInfoNative();
+        for (String line : lines) {
 
-                runOnUiThread(() -> txtCores.setText(info));
+            String styled = line;
 
-                try { Thread.sleep(800); } catch (Exception ignored) {}
+            // Neon green for OK
+            if (line.contains("[OK]")) {
+                styled = line.replace("[OK]",
+                        "<font color='#00FF66'><b>[OK]</b></font>");
             }
 
-        }).start();
+            // Neon green for BOOST
+            if (line.contains("[BOOST]")) {
+                styled = line.replace("[BOOST]",
+                        "<font color='#00FF66'><b>[BOOST]</b></font>");
+            }
+
+            html += styled + "<br>";
+        }
+
+        // ============================================================
+        // APPLY HTML
+        // ============================================================
+        txt.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY));
     }
 }

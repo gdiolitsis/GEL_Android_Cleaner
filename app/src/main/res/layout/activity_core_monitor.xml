@@ -2,16 +2,33 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    android:background="#000000">
+    android:background="@color/gel_bg"
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/txtCoreInfo"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Loading..."
-        android:textSize="16sp"
-        android:textColor="#FFFFFF"
-        android:typeface="monospace" />
+        android:orientation="vertical">
+
+        <!-- 🔥 GOLD TITLE -->
+        <TextView
+            android:id="@+id/txtCoreTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GEL Core Monitor"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/gel_gold"
+            android:paddingBottom="16dp" />
+
+        <TextView
+            android:id="@+id/txtCoreInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gel_text_primary"
+            android:textSize="16sp"
+            android:typeface="monospace" />
+
+    </LinearLayout>
 
 </ScrollView>

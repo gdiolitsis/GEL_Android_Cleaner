@@ -1,7 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
+
+    <!-- GOLD FILL -->
     <solid android:color="#FFD700"/>
-    <stroke android:width="3dp" android:color="#990000"/>
+
+    <!-- BORDEAUX DEEP RED BORDER -->
+    <stroke
+        android:width="3dp"
+        android:color="#990000"/>
+
+    <!-- ROUNDED CORNERS -->
     <corners android:radius="12dp"/>
-    <padding android:left="8dp" android:right="8dp" android:top="8dp" android:bottom="8dp"/>
+
+    <!-- INNER PADDING -->
+    <padding
+        android:left="8dp"
+        android:right="8dp"
+        android:top="8dp"
+        android:bottom="8dp"/>
+
 </shape>

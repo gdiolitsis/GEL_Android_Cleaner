@@ -1,43 +1,39 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// cpustat.c — v15.0 Triple Engine CPU%
-// Priority:
-//   1) /proc/stat   RAW kernel CPU%
-//   2) /sys/cpu/... FREQ-based universal fallback
-//   3) /sys/thermal hybrid fallback
+// cpustat.c — v16.0 Triple Engine CPU%
+// Priority chain:
+//   1) /proc/stat   RAW (only if REAL, not fake)
+//   2) /sys/cpu/... FREQ (universal, true hardware Hz)
+//   3) /sys/thermal hybrid
 //
-// Return:
-//   0–100 : valid CPU%
-//   -1    : total failure (no source available)
+// Return format:
+//   RAW:     0–100
+//   FREQ:    1000–1100  (encoded percent = raw+1000)
+//   THERMAL: 2000–2100  (encoded percent = raw+2000)
+//   FAIL:    -1
 
 #include <jni.h>
 #include <stdio.h>
 #include <string.h>
 
 // ------------------------------------------------------
-// Shared state for /proc/stat RAW mode
+// Helpers
 // ------------------------------------------------------
-static long lastIdle = -1;
-static long lastTotal = -1;
-
-// ------------------------------------------------------
-// Small helpers
-// ------------------------------------------------------
-static long clamp_long(long v, long lo, long hi) {
-    if (v < lo) return lo;
-    if (v > hi) return hi;
-    return v;
-}
-
 static int clamp_int(int v, int lo, int hi) {
     if (v < lo) return lo;
     if (v > hi) return hi;
     return v;
 }
 
-static int read_line(const char *path, char *buf, size_t bufSize) {
+static long clamp_long(long v, long lo, long hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+static int read_line(const char *path, char *buf, size_t len) {
     FILE *fp = fopen(path, "r");
-    if (fp == NULL) return -1;
-    if (fgets(buf, (int)bufSize, fp) == NULL) {
+    if (!fp) return -1;
+    if (!fgets(buf, (int)len, fp)) {
         fclose(fp);
         return -1;
     }
@@ -45,45 +41,50 @@ static int read_line(const char *path, char *buf, size_t bufSize) {
     return 0;
 }
 
-// ======================================================
-// 1) RAW /proc/stat engine
-// ======================================================
-static int read_cpu_procstat_raw(int *outPercent) {
-    FILE *fp = fopen("/proc/stat", "r");
-    if (fp == NULL) {
-        return -1;
-    }
+static long read_long(const char *path) {
+    char buf[64];
+    if (read_line(path, buf, sizeof(buf)) != 0) return -1;
 
+    size_t L = strlen(buf);
+    if (L > 0 && (buf[L-1] == '\n' || buf[L-1] == '\r')) buf[L-1] = 0;
+
+    long v = -1;
+    if (sscanf(buf, "%ld", &v) != 1) return -1;
+    return v;
+}
+
+// ======================================================
+// 1) RAW /proc/stat ENGINE (with anti-fake logic)
+// ======================================================
+static long lastIdle = -1;
+static long lastTotal = -1;
+
+static int read_cpu_raw(int *outPercent) {
     char line[256];
-    if (fgets(line, sizeof(line), fp) == NULL) {
-        fclose(fp);
-        return -1;
-    }
-    fclose(fp);
 
-    if (strncmp(line, "cpu", 3) != 0) {
+    if (read_line("/proc/stat", line, sizeof(line)) != 0)
         return -1;
-    }
 
-    // cpu  user nice system idle iowait irq softirq [steal guest guest_nice]
+    if (strncmp(line, "cpu", 3) != 0)
+        return -1;
+
     char cpuLabel[5];
     long user, nice, system, idle, iowait, irq, softirq;
-    int scanned = sscanf(
-            line,
-            "%4s %ld %ld %ld %ld %ld %ld %ld",
-            cpuLabel,
-            &user, &nice, &system, &idle, &iowait, &irq, &softirq
+
+    int s = sscanf(
+        line,
+        "%4s %ld %ld %ld %ld %ld %ld %ld",
+        cpuLabel,
+        &user, &nice, &system, &idle, &iowait, &irq, &softirq
     );
 
-    if (scanned < 5) {
-        // δεν έχουμε τουλάχιστον user, nice, system, idle
+    if (s < 5)
         return -1;
-    }
 
     long idleAll = idle + iowait;
     long total   = user + nice + system + idle + iowait + irq + softirq;
 
-    // Πρώτη φορά: απλά αποθήκευσε και γύρνα 0% (νόμιμο, όχι N/A)
+    // First call
     if (lastIdle < 0 || lastTotal < 0) {
         lastIdle  = idleAll;
         lastTotal = total;
@@ -97,213 +98,162 @@ static int read_cpu_procstat_raw(int *outPercent) {
     lastIdle  = idleAll;
     lastTotal = total;
 
-    if (diffTotal <= 0) {
-        *outPercent = 0;
-        return 0;
+    // --------------------------------------------------
+    // Anti-fake #1:
+    // RAW must have significant diffTotal. If tiny → fake.
+    // --------------------------------------------------
+    if (diffTotal < 50) {  // threshold tuned for fake MIUI/HyperOS
+        return -1;
     }
 
-    long used  = diffTotal - diffIdle;
-    long usage = used * 100 / diffTotal;
+    // --------------------------------------------------
+    // Anti-fake #2:
+    // All diffs zero → fake / static ticks.
+    // --------------------------------------------------
+    if (diffIdle == 0 && diffTotal == 0) {
+        return -1;
+    }
 
-    usage = clamp_long(usage, 0, 100);
-    *outPercent = (int)usage;
+    long used = diffTotal - diffIdle;
+    if (used < 0) used = 0;
+
+    long pct = (used * 100) / diffTotal;
+    pct = clamp_long(pct, 0, 100);
+
+    *outPercent = (int)pct;
     return 0;
 }
 
 // ======================================================
-// 2) /sys/devices/system/cpu/... freq engine
+// 2) UNIVERSAL FREQ ENGINE
 // ======================================================
-static long read_long_file(const char *path) {
-    char buf[64];
-    if (read_line(path, buf, sizeof(buf)) != 0) {
-        return -1;
-    }
-    // strip newline
-    size_t len = strlen(buf);
-    if (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-        buf[len - 1] = '\0';
-    }
-    long val = -1;
-    if (sscanf(buf, "%ld", &val) != 1) {
-        return -1;
-    }
-    return val;
-}
-
 static int detect_cores() {
-    // απλό brute force: cpu0..cpu31
-    int cores = 0;
-    for (int i = 0; i < 32; ++i) {
+    int c = 0;
+    for (int i = 0; i < 32; i++) {
         char path[128];
-        snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/online", i);
+        snprintf(path, sizeof(path),
+                 "/sys/devices/system/cpu/cpu%d/cpufreq", i);
         FILE *fp = fopen(path, "r");
         if (fp) {
-            // if "online" file υπάρχει, είναι valid core
             fclose(fp);
-            cores++;
-            continue;
-        }
-        // αν δεν υπάρχει online, δοκίμασε αν υπάρχει ο φάκελος cpufreq
-        snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq", i);
-        fp = fopen(path, "r");
-        if (fp) {
-            fclose(fp);
-            cores++;
-            continue;
-        }
-
-        // αν δεν βρίσκουμε τίποτα, σταμάτα στο πρώτο συνεχόμενο κενό
-        if (cores == i) {
-            break;
+            c++;
+        } else {
+            if (c == i) break;
         }
     }
-    if (cores <= 0) cores = 1;
-    return cores;
+    if (c <= 0) c = 1;
+    return c;
 }
 
-static int read_cpu_freq_engine(int *outPercent) {
+static int read_cpu_freq(int *outPercent) {
     int cores = detect_cores();
     if (cores <= 0) return -1;
 
-    long totalPercent = 0;
-    int validCores = 0;
+    long acc = 0;
+    int valid = 0;
 
-    for (int i = 0; i < cores; ++i) {
-        char pathCur[160];
-        char pathMax[160];
+    for (int i = 0; i < cores; i++) {
+        char pCur[160], pMax[160];
+        snprintf(pCur, sizeof(pCur),
+                "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", i);
+        snprintf(pMax, sizeof(pMax),
+                "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
 
-        snprintf(pathCur, sizeof(pathCur),
-                 "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", i);
-        snprintf(pathMax, sizeof(pathMax),
-                 "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
+        long cur = read_long(pCur);
+        long max = read_long(pMax);
 
-        long cur = read_long_file(pathCur);
-        long max = read_long_file(pathMax);
+        if (cur <= 0 || max <= 0) continue;
 
-        if (cur <= 0 || max <= 0) {
-            continue;
-        }
+        long pct = (cur * 100) / max;
+        pct = clamp_long(pct, 0, 100);
 
-        long p = (cur * 100) / max;
-        p = clamp_long(p, 0, 100);
-
-        totalPercent += p;
-        validCores++;
+        acc += pct;
+        valid++;
     }
 
-    if (validCores <= 0) {
-        return -1;
-    }
+    if (valid <= 0) return -1;
 
-    long avg = totalPercent / validCores;
+    long avg = acc / valid;
     avg = clamp_long(avg, 0, 100);
     *outPercent = (int)avg;
     return 0;
 }
 
 // ======================================================
-// 3) /sys/class/thermal hybrid engine
+// 3) THERMAL ENGINE
 // ======================================================
-//
-// Προσέγγιση: βρίσκουμε thermal_zoneX με type που περιέχει
-// "cpu" ή "soc" ή "ap". Αν βρούμε, παίρνουμε temp (milli-°C)
-// και το χαρτογραφούμε σε 0–100% περίπου:
-//   30°C -> 0%
-//   90°C -> 100%  (clamped)
-//
-static int read_cpu_thermal_engine(int *outPercent) {
-    char typePath[128];
-    char tempPath[128];
-    char buf[128];
-    int found = 0;
+static int read_cpu_thermal(int *outPercent) {
+    char type[128];
+    char tpath[128];
+
     long tempMilli = -1;
 
-    for (int i = 0; i < 32; ++i) {
+    for (int i = 0; i < 32; i++) {
+        char typePath[160];
         snprintf(typePath, sizeof(typePath),
                  "/sys/class/thermal/thermal_zone%d/type", i);
-        if (read_line(typePath, buf, sizeof(buf)) != 0) {
-            continue;
-        }
-        // strip newline
-        size_t len = strlen(buf);
-        if (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-            buf[len - 1] = '\0';
-        }
 
-        // ψάχνουμε cpu / soc / ap (case-insensitive-ish)
-        if (strstr(buf, "cpu") == NULL &&
-            strstr(buf, "CPU") == NULL &&
-            strstr(buf, "soc") == NULL &&
-            strstr(buf, "SOC") == NULL &&
-            strstr(buf, "ap")  == NULL &&
-            strstr(buf, "AP")  == NULL) {
+        if (read_line(typePath, type, sizeof(type)) != 0)
             continue;
-        }
 
-        snprintf(tempPath, sizeof(tempPath),
+        size_t L = strlen(type);
+        if (L > 0 && (type[L-1] == '\n' || type[L-1] == '\r'))
+            type[L-1] = 0;
+
+        if (!(strstr(type, "cpu") || strstr(type, "CPU") ||
+              strstr(type, "soc") || strstr(type, "SOC") ||
+              strstr(type, "ap")  || strstr(type, "AP")))
+            continue;
+
+        snprintf(tpath, sizeof(tpath),
                  "/sys/class/thermal/thermal_zone%d/temp", i);
-        tempMilli = read_long_file(tempPath);
-        if (tempMilli <= 0) {
-            continue;
-        }
 
-        found = 1;
-        break;
+        tempMilli = read_long(tpath);
+        if (tempMilli > 0) break;
     }
 
-    if (!found || tempMilli <= 0) {
+    if (tempMilli <= 0)
         return -1;
-    }
 
-    // πολλές συσκευές δίνουν milli°C. Αν είναι πολύ μικρό, θεωρούμε ότι είναι ήδη °C
-    double tempC;
-    if (tempMilli > 1000) {
-        tempC = tempMilli / 1000.0;
-    } else {
-        tempC = (double)tempMilli;
-    }
+    double C = (tempMilli > 1000 ? tempMilli / 1000.0 : tempMilli);
 
-    // απλό linear mapping: 30°C -> 0%, 90°C -> 100%
     double minC = 30.0;
     double maxC = 90.0;
     double pct;
 
-    if (tempC <= minC) {
-        pct = 0.0;
-    } else if (tempC >= maxC) {
-        pct = 100.0;
-    } else {
-        pct = (tempC - minC) * 100.0 / (maxC - minC);
-    }
+    if (C <= minC) pct = 0;
+    else if (C >= maxC) pct = 100;
+    else pct = (C - minC) * 100.0 / (maxC - minC);
 
     int result = (int)(pct + 0.5);
     result = clamp_int(result, 0, 100);
+
     *outPercent = result;
     return 0;
 }
 
 // ======================================================
-// JNI entry point — Triple Engine with fallback chain
+// JNI Entry — Engine Chain & Encoding
 // ======================================================
 JNIEXPORT jint JNICALL
-Java_com_gel_cleaner_CpuRamLiveActivity_getCpuUsageNative(JNIEnv *env, jobject thiz) {
-    int percent = -1;
+Java_com_gel_cleaner_CpuRamLiveActivity_getCpuUsageNative(JNIEnv *env, jobject obj) {
 
-    // 1) RAW /proc/stat
-    if (read_cpu_procstat_raw(&percent) == 0) {
-        return clamp_int(percent, 0, 100);
+    int p = -1;
+
+    // RAW attempt (with anti-fake)
+    if (read_cpu_raw(&p) == 0) {
+        return clamp_int(p, 0, 100);  // RAW: 0–100
     }
 
-    // 2) FREQ engine
-    if (read_cpu_freq_engine(&percent) == 0) {
-        return clamp_int(percent, 0, 100);
+    // FREQ fallback
+    if (read_cpu_freq(&p) == 0) {
+        return 1000 + clamp_int(p, 0, 100);  // encoded freq
     }
 
-    // 3) THERMAL hybrid (last resort)
-    if (read_cpu_thermal_engine(&percent) == 0) {
-        return clamp_int(percent, 0, 100);
+    // THERMAL fallback
+    if (read_cpu_thermal(&p) == 0) {
+        return 2000 + clamp_int(p, 0, 100);  // encoded thermal
     }
 
-    // όλα απέτυχαν
-    return -1;
+    return -1; // total fail
 }

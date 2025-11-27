@@ -3,33 +3,37 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/gel_bg"
-    android:padding="16dp">
+    android:padding="18dp"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- GOLD TITLE -->
+        <!-- 🔥 GOLD TITLE (FINAL) -->
         <TextView
             android:id="@+id/txtCoreTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="GEL Core Monitor"
+            android:text="GEL Cores Monitor"
             android:textColor="@color/gel_gold"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:paddingBottom="16dp" />
+            android:gravity="center"
+            android:paddingBottom="20dp"
+            android:letterSpacing="0.04" />
 
-        <!-- CORE READOUT -->
+        <!-- CORE INFO READOUT -->
         <TextView
             android:id="@+id/txtCoreInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/gel_text_primary"
             android:textSize="17sp"
-            android:lineSpacingExtra="3dp"
-            android:typeface="monospace" />
+            android:typeface="monospace"
+            android:lineSpacingExtra="4dp"
+            android:padding="4dp" />
 
     </LinearLayout>
 

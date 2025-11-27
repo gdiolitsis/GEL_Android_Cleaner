@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v8.0
-// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback + Root-Extended Internals
+// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v9.0
+// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback + Root-Extended Internals + Stealth Masking
 // NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — χωρίς αλλαγές σε UI / XML.
 
 package com.gel.cleaner;
@@ -335,7 +335,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // SECTION BUILDERS — FULL PRO + ROOT EXTENDED
+    // SECTION BUILDERS — FULL PRO + ROOT EXTENDED + STEALTH
     // ============================================================
 
     private String buildSystemInfo() {
@@ -534,8 +534,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             if (!addedRootCpu) {
                 sb.append("Root CPU details not exposed by current kernel.\n");
             }
-        } else {
-            sb.append("\nAdvanced CPU tables : N/A (Device is NOT rooted or CPU sysfs restricted)\n");
         }
 
         return sb.toString();
@@ -609,8 +607,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             if (!addedRootGpu) {
                 sb.append("Root GPU metrics not exposed by current driver.\n");
             }
-        } else {
-            sb.append("\nAdvanced GPU metrics : N/A (Device is NOT rooted or KGSL locked)\n");
         }
 
         return sb.toString();
@@ -654,10 +650,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
 
         if (sb.length() == 0) {
-            sb.append("No readable thermal sensors via sysfs.\n");
-            if (!isRooted) {
-                sb.append("Status       : N/A (Device is NOT rooted or sensors restricted)\n");
-            }
+            sb.append("Thermal sensors are not exposed by this device/firmware.\n");
         }
 
         return sb.toString();
@@ -667,19 +660,13 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         StringBuilder sb = new StringBuilder();
         File dir = new File("/sys/class/thermal");
         if (!dir.exists() || !dir.isDirectory()) {
-            sb.append("Thermal directory not accessible.\n");
-            if (!isRooted) {
-                sb.append("Status       : N/A (Device is NOT rooted or thermal interface restricted)\n");
-            }
+            sb.append("Thermal directory not accessible (not exposed by this device).\n");
             return sb.toString();
         }
 
         File[] zones = dir.listFiles();
         if (zones == null || zones.length == 0) {
-            sb.append("No thermal zones found.\n");
-            if (!isRooted) {
-                sb.append("Status       : N/A (Device is NOT rooted or thermal zones hidden)\n");
-            }
+            sb.append("No thermal zones exposed by this device.\n");
             return sb.toString();
         }
 
@@ -703,10 +690,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
 
         if (sb.length() == 0) {
-            sb.append("No readable thermal zones.\n");
-            if (!isRooted) {
-                sb.append("Status       : N/A (Device is NOT rooted or thermal zones restricted)\n");
-            }
+            sb.append("No readable thermal zones (not exposed by current firmware).\n");
         }
 
         return sb.toString();
@@ -780,8 +764,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             }
         }
 
-        if (!anyCfg && !isRooted) {
-            sb.append("Config Files  : N/A (Device is NOT rooted or vendor thermal configs hidden)\n");
+        if (!anyCfg) {
+            sb.append("Config Files  : Not exposed by this device.\n");
         }
 
         if (sb.length() == 0) {
@@ -887,8 +871,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             }
         } catch (Throwable ignore) {
         }
-        if (!anyZram && !isRooted) {
-            sb.append("ZRAM Details  : N/A (Device is NOT rooted or zram not present)\n");
+        if (!anyZram) {
+            sb.append("ZRAM Details  : Not exposed by this device.\n");
         }
 
         if (sb.length() == 0) {
@@ -935,8 +919,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                             .append(" (").append(parts[0]).append(")\n");
                 }
             }
-        } else if (!isRooted) {
-            sb.append("Mount table   : N/A (Device is NOT rooted or /proc/mounts hidden)\n");
+        } else {
+            sb.append("Mount table   : Not exposed by this device.\n");
         }
 
         // /proc/partitions snapshot
@@ -944,8 +928,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         if (parts != null && !parts.isEmpty()) {
             sb.append("\n/proc/partitions (snapshot):\n");
             sb.append(parts.trim()).append("\n");
-        } else if (!isRooted) {
-            sb.append("Partitions    : N/A (Device is NOT rooted or /proc/partitions restricted)\n");
+        } else {
+            sb.append("Partitions    : Not exposed by this device.\n");
         }
 
         if (sb.length() == 0) {
@@ -1085,8 +1069,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                     sb.append(line.trim()).append("\n");
                 }
             }
-        } else if (!isRooted) {
-            sb.append("Net device stats : N/A (Device is NOT rooted or /proc/net restricted)\n");
+        } else {
+            sb.append("Net device stats : Not exposed by this device.\n");
         }
 
         if (sb.length() == 0) {
@@ -1138,7 +1122,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 }
             }
         } else {
-            sb.append("\nAdvanced root-only diagnostics : N/A (Device is NOT rooted)\n");
+            sb.append("\nAdvanced diagnostics : Not exposed by this device.\n");
         }
 
         return sb.toString();

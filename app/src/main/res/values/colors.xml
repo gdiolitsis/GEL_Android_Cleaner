@@ -13,8 +13,8 @@
     <color name="colorAccent">#FFD700</color>
 
     <!-- ===== GEL BACKGROUNDS ===== -->
-    <color name="gel_bg">#121212</color>        
-    <color name="gel_bg_dark">#0A0A0A</color>   
+    <color name="gel_bg">#121212</color>
+    <color name="gel_bg_dark">#0A0A0A</color>
     <color name="gel_bg_pressed">#1A1A1A</color>
 
     <!-- ===== TEXT ===== -->
@@ -37,17 +37,18 @@
     <!-- ========================================= -->
     <!-- 🔥 CORE MONITOR EXTRAS (NEW) -->
     <!-- ========================================= -->
-
-    <!-- Gold title for Core Monitor -->
     <color name="gel_core_title_gold">#FFD700</color>
-
-    <!-- Deep red border for gold button -->
     <color name="gel_button_border_red">#990000</color>
 
     <!-- ========================================= -->
     <!-- 🔥 FIX FOR CPU/RAM LIVE BUTTON (GEL STYLE) -->
     <!-- ========================================= -->
-    <color name="gel_btn">#FFD700</color>        
+    <color name="gel_btn">#FFD700</color>
     <color name="gel_text_button">#FF000000</color>
+
+    <!-- ========================================= -->
+    <!-- 🔥 REQUIRED FIX FOR ACTIVITY_MAIN.XML -->
+    <!-- ========================================= -->
+    <color name="gel_btn_text_white">#FFFFFFFF</color>
 
 </resources>

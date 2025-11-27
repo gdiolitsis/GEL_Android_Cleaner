@@ -1,27 +1,27 @@
 # GDiolitsis Engine Lab (GEL) — Author & Developer
-# CMakeLists for cpustat native lib (v13.1 – fixed flags)
+# CMakeLists.txt — FINAL v16.0
+# Includes:
+#   - cpustat.c   (CPU Triple Engine)
+#   - corefreq.c  (Per-core monitor)
 
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.10.2)
 
-project(cpustat C)
+project("gel_native")
 
-# ------------------------------------------
-# Correct flag for C code (NOT CXX!)
-# ------------------------------------------
-set(CMAKE_C_FLAGS "-std=c11")
+# =======================================================
+# cpustat (RAW + FREQ + THERMAL engine)
+# =======================================================
+add_library(cpustat SHARED cpustat.c)
 
-add_library(
-    cpustat
-    SHARED
-    cpustat.c
-)
+target_link_libraries(cpustat
+        android
+        log)
 
-find_library(
-    log-lib
-    log
-)
+# =======================================================
+# corefreq (Per-Core Hz + Status)
+# =======================================================
+add_library(corefreq SHARED corefreq.c)
 
-target_link_libraries(
-    cpustat
-    ${log-lib}
-)
+target_link_libraries(corefreq
+        android
+        log)

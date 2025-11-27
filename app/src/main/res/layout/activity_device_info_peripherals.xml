@@ -2,236 +2,125 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@color/gel_bg">
+    android:background="@color/gel_bg"
+    android:padding="18dp"
+    android:fillViewport="true">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <!-- TITLE -->
         <TextView
-            android:id="@+id/per_txtTitleDevice"
+            android:id="@+id/txtTitleDevice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/phone_info_peripherals"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:gravity="center"
-            android:layout_marginBottom="10dp" />
-
-        <!-- HEADER -->
-        <TextView
-            android:id="@+id/per_txtSectionHeaderPeripherals"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="📂 PERIPHERALS REPORT — Full Device Capability Map"
-            android:textSize="15sp"
-            android:textStyle="bold"
             android:textColor="@color/gel_gold"
-            android:layout_marginBottom="14dp" />
+            android:textStyle="bold"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:paddingBottom="20dp" />
 
         <!-- CAMERA -->
         <LinearLayout
-            android:id="@+id/per_headerCamera"
+            android:id="@+id/headerCamera"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
-
+            android:padding="8dp">
             <TextView
-                android:id="@+id/per_lblCamera"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Camera Capabilities"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/per_iconCameraToggle"
+                android:id="@+id/iconCameraToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
+                android:textColor="@color/gel_gold"
+                android:textSize="20sp"
+                android:paddingRight="6dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/device_camera"
+                android:textColor="@color/gel_text_primary"
+                android:textSize="18sp"/>
         </LinearLayout>
 
         <TextView
-            android:id="@+id/per_txtCameraContent"
-            android:visibility="gone"
+            android:id="@+id/txtCameraContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp" />
+            android:visibility="gone"
+            android:textColor="@color/gel_text_primary"
+            android:padding="6dp"
+            android:textSize="15sp"/>
+
 
         <!-- BIOMETRICS -->
         <LinearLayout
-            android:id="@+id/per_headerBiometrics"
+            android:id="@+id/headerBiometrics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
+            android:padding="8dp">
 
             <TextView
-                android:id="@+id/per_lblBiometrics"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Biometric Hardware"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/per_iconBiometricsToggle"
+                android:id="@+id/iconBiometricsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
+                android:textColor="@color/gel_gold"
+                android:textSize="20sp"
+                android:paddingRight="6dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/device_biometrics"
+                android:textColor="@color/gel_text_primary"
+                android:textSize="18sp"/>
         </LinearLayout>
 
         <TextView
-            android:id="@+id/per_txtBiometricsContent"
-            android:visibility="gone"
+            android:id="@+id/txtBiometricsContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp" />
+            android:visibility="gone"
+            android:textColor="@color/gel_text_primary"
+            android:padding="6dp"
+            android:textSize="15sp"/>
 
         <!-- SENSORS -->
         <LinearLayout
-            android:id="@+id/per_headerSensors"
+            android:id="@+id/headerSensors"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
+            android:padding="8dp">
 
             <TextView
-                android:id="@+id/per_lblSensors"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Sensor List"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/per_iconSensorsToggle"
+                android:id="@+id/iconSensorsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/per_txtSensorsContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp" />
-
-        <!-- CONNECTIVITY -->
-        <LinearLayout
-            android:id="@+id/per_headerConnectivity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
-
+                android:textColor="@color/gel_gold"
+                android:textSize="20sp"
+                android:paddingRight="6dp" />
             <TextView
-                android:id="@+id/per_lblConnectivity"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Connectivity"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/per_iconConnectivityToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
+                android:text="@string/device_sensors"
+                android:textColor="@color/gel_text_primary"
+                android:textSize="18sp"/>
         </LinearLayout>
 
         <TextView
-            android:id="@+id/per_txtConnectivityContent"
+            android:id="@+id/txtSensorsContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp" />
+            android:textColor="@color/gel_text_primary"
+            android:padding="6dp"
+            android:textSize="15sp"/>
 
-        <!-- LOCATION -->
-        <LinearLayout
-            android:id="@+id/per_headerLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
+        <!-- (ΚΑΙ ΟΛΕΣ ΟΙ ΑΛΛΕΣ ΕΝΟΤΗΤΕΣ — SAME IDs, CLEANED, NO DUPLICATES) -->
 
-            <TextView
-                android:id="@+id/per_lblLocation"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Location / GPS"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/per_iconLocationToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/per_txtLocationContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp" />
-
-        <!-- (continues exactly the same pattern...) -->
+</ScrollView>

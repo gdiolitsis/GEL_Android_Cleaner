@@ -1,54 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ===== BASE COLORS ===== -->
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
-    <color name="gray">#FF808080</color>
-    <color name="dark_gray">#FF444444</color>
 
-    <!-- ===== PRIMARY THEME ===== -->
-    <color name="colorPrimary">#FFD700</color>
-    <color name="colorPrimaryDark">#B8860B</color>
-    <color name="colorAccent">#FFD700</color>
-
-    <!-- ===== GEL BACKGROUNDS ===== -->
     <color name="gel_bg">#121212</color>
-    <color name="gel_bg_dark">#0A0A0A</color>
-    <color name="gel_bg_pressed">#1A1A1A</color>
-
-    <!-- ===== TEXT ===== -->
     <color name="gel_text_primary">#FFFFFFFF</color>
     <color name="gel_text_secondary">#B0B0B0</color>
 
-    <!-- ===== NEON GREEN ===== -->
     <color name="gel_neon_green">#00FF66</color>
 
-    <!-- ===== GOLD ===== -->
-    <color name="gold">#FFD700</color>
+    <!-- GOLD -->
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
     <color name="gel_gold_faint">#66FFD700</color>
 
-    <!-- ===== RED (DANGER) ===== -->
-    <color name="gel_red_danger">#FF3333</color>
-    <color name="gel_red_danger_dark">#CC0000</color>
-
-    <!-- ========================================= -->
-    <!-- 🔥 CORE MONITOR EXTRAS (NEW) -->
-    <!-- ========================================= -->
-    <color name="gel_core_title_gold">#FFD700</color>
+    <!-- CORE BUTTON BORDER -->
     <color name="gel_button_border_red">#990000</color>
 
-    <!-- ========================================= -->
-    <!-- 🔥 FIX FOR CPU/RAM LIVE BUTTON (GEL STYLE) -->
-    <!-- ========================================= -->
-    <color name="gel_btn">#FFD700</color>
-    <color name="gel_text_button">#FF000000</color>
-
-    <!-- ========================================= -->
-    <!-- 🔥 REQUIRED FIX FOR ACTIVITY_MAIN.XML -->
-    <!-- ========================================= -->
+    <!-- WHITE FIX -->
     <color name="gel_btn_text_white">#FFFFFFFF</color>
 
 </resources>

@@ -23,7 +23,7 @@
             android:layout_marginBottom="12dp"
             android:textColor="@color/gel_gold"/>
 
-        <!-- CONTENT -->
+        <!-- LIVE TEXT -->
         <TextView
             android:id="@+id/txtLiveInfo"
             android:layout_width="match_parent"
@@ -34,7 +34,7 @@
             android:typeface="monospace"
             android:padding="6dp"/>
 
-        <!-- CORE BUTTON -->
+        <!-- GOLD BUTTON + BORDO BORDER -->
         <Button
             android:id="@+id/btnCoreMonitor"
             android:layout_width="match_parent"

@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 🔥 GOLD TITLE (FINAL) -->
+        <!-- GOLD TITLE -->
         <TextView
             android:id="@+id/txtCoreTitle"
             android:layout_width="match_parent"
@@ -24,7 +24,7 @@
             android:paddingBottom="20dp"
             android:letterSpacing="0.04" />
 
-        <!-- CORE INFO READOUT -->
+        <!-- CORE INFO -->
         <TextView
             android:id="@+id/txtCoreInfo"
             android:layout_width="match_parent"

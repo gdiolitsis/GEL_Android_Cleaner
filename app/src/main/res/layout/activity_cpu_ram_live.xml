@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- TITLE -->
         <TextView
             android:id="@+id/txtTitleLive"
             android:layout_width="match_parent"
@@ -22,6 +23,7 @@
             android:layout_marginBottom="12dp"
             android:textColor="@color/gel_text_primary" />
 
+        <!-- LIVE TEXT -->
         <TextView
             android:id="@+id/txtLiveInfo"
             android:layout_width="match_parent"
@@ -31,6 +33,21 @@
             android:typeface="monospace"
             android:padding="6dp"
             android:lineSpacingExtra="2dp" />
+
+        <!-- =========================================== -->
+        <!-- 🔥 CORE MONITOR BUTTON (GEL STYLE)          -->
+        <!-- =========================================== -->
+        <Button
+            android:id="@+id/btnCoreMonitor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Core Monitor"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:padding="12dp"
+            android:background="@color/gel_btn"
+            android:textColor="@color/gel_text_button" />
 
     </LinearLayout>
 

@@ -28,9 +28,7 @@
     <color name="gold">#FFD700</color>
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
-
-    <!-- 🚨 MISSING COLOR (FIX FOR GITHUB ACTIONS) -->
-    <color name="gel_gold_faint">#66FFD700</color>
+    <color name="gel_gold_faint">#66FFD700</color> <!-- REQUIRED FIX -->
 
     <!-- ===== RED (DANGER) ===== -->
     <color name="gel_red_danger">#FF3333</color>
@@ -38,5 +36,11 @@
 
     <!-- ===== BUTTON TEXT ===== -->
     <color name="gel_btn_text_white">#FFFFFFFF</color>
+
+    <!-- ========================================= -->
+    <!-- 🔥 FIX FOR CPU/RAM LIVE BUTTON (GEL STYLE) -->
+    <!-- ========================================= -->
+    <color name="gel_btn">#FFD700</color>               <!-- gold button -->
+    <color name="gel_text_button">#FF000000</color>     <!-- black text -->
 
 </resources>

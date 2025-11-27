@@ -1,11 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v9.0 (TOP Method CPU Reader)
+// CpuRamLiveActivity.java — FINAL v10.0 (Build-Safe Edition)
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -13,7 +12,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
@@ -27,7 +25,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
-
         startLiveLoop();
     }
 
@@ -42,14 +39,13 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             int counter = 1;
 
             while (running) {
+
                 String cpu = readCpuLoad();
-                String temp = readCpuTemp();
                 String ram = readRamUsage();
 
                 final String line =
                         "Live " + String.format("%02d", counter) +
                         " | CPU: " + cpu +
-                        " | Temp: " + temp +
                         " | RAM: " + ram;
 
                 runOnUiThread(() -> txtLive.append(line + "\n"));
@@ -62,10 +58,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }).start();
     }
 
-    // -------------------------------------------
-    // REAL CPU % via "top -n 1"
-    // Works on ALL Android versions (even 13–15)
-    // -------------------------------------------
+    // CPU usage via TOP (universal)
     private String readCpuLoad() {
         try {
             Process proc = Runtime.getRuntime().exec("top -n 1 -b");
@@ -76,7 +69,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                 line = line.toLowerCase();
 
                 if (line.contains("cpu") && line.contains("id")) {
-
                     String[] parts = line.split(",");
                     for (String p : parts) {
                         p = p.trim();
@@ -93,17 +85,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             br.close();
             return "N/A";
 
-        } catch (Exception e) {
-            return "N/A";
-        }
-    }
-
-    private String readCpuTemp() {
-        try {
-            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-            if (t > 0) return (t / 10f) + "°C";
-            return "N/A";
         } catch (Exception e) {
             return "N/A";
         }

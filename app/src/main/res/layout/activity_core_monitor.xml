@@ -10,23 +10,25 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 🔥 GOLD TITLE -->
+        <!-- GOLD TITLE -->
         <TextView
             android:id="@+id/txtCoreTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="GEL Core Monitor"
-            android:textSize="22sp"
-            android:textStyle="bold"
             android:textColor="@color/gel_gold"
+            android:textSize="24sp"
+            android:textStyle="bold"
             android:paddingBottom="16dp" />
 
+        <!-- CORE READOUT -->
         <TextView
             android:id="@+id/txtCoreInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/gel_text_primary"
-            android:textSize="16sp"
+            android:textSize="17sp"
+            android:lineSpacingExtra="3dp"
             android:typeface="monospace" />
 
     </LinearLayout>

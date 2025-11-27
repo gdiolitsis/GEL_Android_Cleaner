@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v16.0 (Triple Engine + Engine Indicator + Core Monitor button)
+// CpuRamLiveActivity.java — FINAL v17.0 (Single-line + Core Monitor button)
 
 package com.gel.cleaner;
 
@@ -51,7 +51,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // LIVE LOOP
+    // LIVE LOOP — single-line output (no log flooding)
     // ============================================================
     private void startLiveLoop() {
         new Thread(() -> {
@@ -72,7 +72,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                         " | Temp: " + temp +
                         " | RAM: " + ram;
 
-                runOnUiThread(() -> txtLive.append(line + "\n"));
+                // 🔥 1 γραμμή μόνο — πάντα η πιο πρόσφατη
+                runOnUiThread(() -> txtLive.setText(line));
 
                 counter++;
                 if (counter > 999) counter = 1;

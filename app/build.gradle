@@ -20,7 +20,8 @@ android {
         // -----------------------------------------------
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c11"
+                // FIXED: Correct flag for C (NOT C++)
+                cFlags "-std=c11"
             }
         }
 
@@ -30,7 +31,7 @@ android {
     }
 
     // -----------------------------------------------
-    // 🔥 Enable CMake build (This triggers libcpustat.so)
+    // 🔥 Enable CMake build (Triggers libcpustat.so)
     // -----------------------------------------------
     externalNativeBuild {
         cmake {

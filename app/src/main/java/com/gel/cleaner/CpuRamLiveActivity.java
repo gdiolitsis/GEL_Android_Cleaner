@@ -1,6 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v8.0 (Core CPU% + Temp + RAM)
-// NOTE: Full ready-to-paste file per GEL rule — no manual edits needed.
+// CpuRamLiveActivity.java — FINAL v9.1 (Stable CPU% Snapshot + Temp + RAM)
 
 package com.gel.cleaner;
 
@@ -23,9 +22,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     private TextView txtLive;
     private boolean running = true;
 
-    private long lastIdle = 0L;
-    private long lastTotal = 0L;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +43,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             int counter = 1;
 
             while (running) {
-                String cpu  = readCpuLoad();
+                String cpu  = readCpuUsage();
                 String temp = readCpuTemp();
                 String ram  = readRamUsage();
 
@@ -55,64 +51,35 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                         "Live " + String.format("%02d", counter) +
                         " | CPU: " + cpu +
                         " | Temp: " + temp +
-                        " | RAM: " + ram;
+                        " | RAM: "  + ram;
 
                 runOnUiThread(() -> txtLive.append(line + "\n"));
 
                 counter++;
                 if (counter > 999) counter = 1;
 
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception ignored) {
-                }
+                try { Thread.sleep(1000); } catch (Exception ignored) {}
             }
         }).start();
     }
 
     // ============================================================
-    // CPU LOAD (from /proc/stat, percentage 0–100)
+    // CPU USAGE — Snapshot Method (Works Android 9–14)
     // ============================================================
-    private String readCpuLoad() {
-        BufferedReader br = null;
+    private String readCpuUsage() {
         try {
-            br = new BufferedReader(new FileReader("/proc/stat"));
-            String line = br.readLine();
-            if (line == null || !line.startsWith("cpu")) {
-                return "N/A";
-            }
+            long[] sample1 = readCpuSnapshot();
+            Thread.sleep(200); // short delay gives accurate diff
+            long[] sample2 = readCpuSnapshot();
 
-            String[] parts = line.trim().split("\\s+");
-            if (parts.length < 5) {
-                return "N/A";
-            }
+            if (sample1 == null || sample2 == null) return "N/A";
 
-            long user   = Long.parseLong(parts[1]);
-            long nice   = Long.parseLong(parts[2]);
-            long system = Long.parseLong(parts[3]);
-            long idle   = Long.parseLong(parts[4]);
+            long idle  = sample2[0] - sample1[0];
+            long total = sample2[1] - sample1[1];
 
-            long total = user + nice + system + idle;
+            if (total <= 0) return "0%";
 
-            if (lastTotal == 0L && lastIdle == 0L) {
-                // first sample, just store and return 0% to avoid spike
-                lastTotal = total;
-                lastIdle = idle;
-                return "0%";
-            }
-
-            long diffTotal = total - lastTotal;
-            long diffIdle  = idle - lastIdle;
-
-            lastTotal = total;
-            lastIdle  = idle;
-
-            if (diffTotal <= 0L) {
-                return "0%";
-            }
-
-            long active = diffTotal - diffIdle;
-            int usage = (int) (active * 100L / diffTotal);
+            int usage = (int) ((total - idle) * 100L / total);
 
             if (usage < 0) usage = 0;
             if (usage > 100) usage = 100;
@@ -121,18 +88,37 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             return "N/A";
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Exception ignored) {
-                }
-            }
+        }
+    }
+
+    private long[] readCpuSnapshot() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu")) return null;
+
+            String[] p = line.trim().split("\\s+");
+            if (p.length < 8) return null;
+
+            long user = Long.parseLong(p[1]);
+            long nice = Long.parseLong(p[2]);
+            long sys  = Long.parseLong(p[3]);
+            long idle = Long.parseLong(p[4]);
+            long iow  = Long.parseLong(p[5]);
+            long irq  = Long.parseLong(p[6]);
+            long sirq = Long.parseLong(p[7]);
+
+            long idleAll = idle + iow;
+            long total   = user + nice + sys + idle + iow + irq + sirq;
+
+            return new long[]{ idleAll, total };
+
+        } catch (Exception e) {
+            return null;
         }
     }
 
     // ============================================================
-    // CPU TEMP (Battery temperature via ACTION_BATTERY_CHANGED)
+    // TEMP
     // ============================================================
     private String readCpuTemp() {
         try {
@@ -141,19 +127,16 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             if (intent == null) return "N/A";
 
             int temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            if (temp > 0) {
-                float c = temp / 10f;
-                return c + "°C";
-            } else {
-                return "N/A";
-            }
+            if (temp > 0) return (temp / 10f) + "°C";
+
+            return "N/A";
         } catch (Exception e) {
             return "N/A";
         }
     }
 
     // ============================================================
-    // RAM USAGE (used / total MB)
+    // RAM
     // ============================================================
     private String readRamUsage() {
         try {
@@ -168,6 +151,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             long used  = total - free;
 
             return used + " / " + total + " MB";
+
         } catch (Exception e) {
             return "N/A";
         }

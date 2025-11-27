@@ -173,4 +173,3 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 }
-```0

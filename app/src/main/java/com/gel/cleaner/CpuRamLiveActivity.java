@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v17.0 (Single-line + Core Monitor button)
+// CpuRamLiveActivity.java — FINAL v18.0 (Gold Title + Neon CPU%)
 
 package com.gel.cleaner;
 
@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.text.Html;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -62,18 +63,23 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                 int cpuVal = getCpuUsageNative();
                 EngineInfo info = EngineInfo.decode(cpuVal);
 
-                String cpu = info.percent + "% [" + info.name + "]";
+                // Neon CPU%
+                String cpuColored = "<font color='#00FF66'>" + info.percent + "%</font>"
+                        + " [" + info.name + "]";
+
                 String temp = readCpuTemp();
                 String ram  = readRamUsage();
 
-                final String line =
-                        "Live " + String.format("%02d", counter) +
-                        " | CPU: " + cpu +
+                String line = "Live " + String.format("%02d", counter) +
+                        " | CPU: " + cpuColored +
                         " | Temp: " + temp +
                         " | RAM: " + ram;
 
-                // 🔥 1 γραμμή μόνο — πάντα η πιο πρόσφατη
-                runOnUiThread(() -> txtLive.setText(line));
+                final String htmlLine = line;
+
+                runOnUiThread(() ->
+                        txtLive.setText(Html.fromHtml(htmlLine, Html.FROM_HTML_MODE_LEGACY))
+                );
 
                 counter++;
                 if (counter > 999) counter = 1;

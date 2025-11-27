@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — FINAL v3.1
-// CoreMonitorActivity.java — Gold Title + Neon States + Proper Newlines
+// GDiolitsis Engine Lab (GEL) — FINAL v4.0
+// CoreMonitorActivity.java — GOLD TITLE + Neon States + <br> Correct Layout
 
 package com.gel.cleaner;
 
@@ -36,16 +36,13 @@ public class CoreMonitorActivity extends AppCompatActivity {
 
                 String raw = getCoreInfoNative();
 
-                // FIX: Ensure all cores appear on separate lines
-                raw = raw.replace("C0:", "\nC0:")
-                         .replace("GEL Core Monitor", "GEL Core Monitor\n");
-
-                // Neon color states
+                // Neon highlight
                 String html = raw
                         .replace("[OK]", "<font color='#00FF66'>[OK]</font>")
                         .replace("[BOOST]", "<font color='#00FF66'>[BOOST]</font>")
                         .replace("[MAX]", "<font color='#00FF66'>[MAX]</font>")
-                        .replace("[SUSPECT]", "<font color='#FF3333'>[SUSPECT]</font>");
+                        .replace("[SUSPECT]", "<font color='#FF3333'>[SUSPECT]</font>")
+                        .replace("[OFFLINE]", "<font color='#888888'>[OFFLINE]</font>");
 
                 runOnUiThread(() ->
                         txtInfo.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY))

@@ -1,10 +1,11 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — UNIVERSAL FIX v7.2
+// CpuRamLiveActivity.java — FINAL v9.0 (TOP Method CPU Reader)
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -12,16 +13,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
 
     private TextView txtLive;
     private boolean running = true;
-
-    private long lastIdle = 0;
-    private long lastTotal = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,14 +43,14 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
             while (running) {
                 String cpu = readCpuLoad();
-                String temp = readCpuTempUniversal();
+                String temp = readCpuTemp();
                 String ram = readRamUsage();
 
                 final String line =
                         "Live " + String.format("%02d", counter) +
-                                " | CPU: " + cpu +
-                                " | Temp: " + temp +
-                                " | RAM: " + ram;
+                        " | CPU: " + cpu +
+                        " | Temp: " + temp +
+                        " | RAM: " + ram;
 
                 runOnUiThread(() -> txtLive.append(line + "\n"));
 
@@ -64,68 +62,51 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }).start();
     }
 
-    // REAL CPU %
+    // -------------------------------------------
+    // REAL CPU % via "top -n 1"
+    // Works on ALL Android versions (even 13–15)
+    // -------------------------------------------
     private String readCpuLoad() {
         try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
-            String line = br.readLine();
+            Process proc = Runtime.getRuntime().exec("top -n 1 -b");
+            BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.toLowerCase();
+
+                if (line.contains("cpu") && line.contains("id")) {
+
+                    String[] parts = line.split(",");
+                    for (String p : parts) {
+                        p = p.trim();
+                        if (p.contains("id")) {
+                            String num = p.replaceAll("[^0-9.]", "");
+                            float idle = Float.parseFloat(num);
+                            float usage = 100f - idle;
+                            return ((int) usage) + "%";
+                        }
+                    }
+                }
+            }
+
             br.close();
-
-            if (line == null || !line.startsWith("cpu")) return "N/A";
-
-            String[] p = line.trim().split("\\s+");
-
-            long user = Long.parseLong(p[1]);
-            long nice = Long.parseLong(p[2]);
-            long system = Long.parseLong(p[3]);
-            long idle = Long.parseLong(p[4]);
-
-            long total = user + nice + system + idle;
-
-            long diffIdle = idle - lastIdle;
-            long diffTotal = total - lastTotal;
-
-            lastIdle = idle;
-            lastTotal = total;
-
-            if (diffTotal == 0) return "0%";
-
-            int usage = (int) ((diffTotal - diffIdle) * 100L / diffTotal);
-            if (usage < 0) usage = 0;
-            if (usage > 100) usage = 100;
-
-            return usage + "%";
+            return "N/A";
 
         } catch (Exception e) {
             return "N/A";
         }
     }
 
-    // UNIVERSAL TEMPERATURE (NO BatteryManager)
-    private String readCpuTempUniversal() {
+    private String readCpuTemp() {
         try {
-            String[] paths = {
-                    "/sys/class/thermal/thermal_zone0/temp",
-                    "/sys/class/hwmon/hwmon0/temp1_input"
-            };
-
-            for (String p : paths) {
-                File f = new File(p);
-                if (f.exists()) {
-                    BufferedReader br = new BufferedReader(new FileReader(f));
-                    String line = br.readLine();
-                    br.close();
-
-                    if (line != null) {
-                        float v = Float.parseFloat(line) / 1000f;
-                        return v + "°C";
-                    }
-                }
-            }
-
-        } catch (Exception ignored) {}
-
-        return "N/A";
+            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
+            if (t > 0) return (t / 10f) + "°C";
+            return "N/A";
+        } catch (Exception e) {
+            return "N/A";
+        }
     }
 
     private String readRamUsage() {

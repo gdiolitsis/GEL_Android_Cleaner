@@ -13,7 +13,7 @@
 
         <!-- TITLE -->
         <TextView
-            android:id="@+id/txtTitleDevice"
+            android:id="@+id/int_txtTitleDevice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/phone_info_internal"
@@ -25,7 +25,7 @@
 
         <!-- SECTION HEADER -->
         <TextView
-            android:id="@+id/txtSectionHeaderInternal"
+            android:id="@+id/int_txtSectionHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="📂 INTERNAL REPORT — System / OS / Hardware"
@@ -34,11 +34,9 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="14dp" />
 
-        <!-- ========================================================= -->
         <!-- SYSTEM -->
-        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerSystem"
+            android:id="@+id/int_headerSystem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -49,6 +47,7 @@
             android:focusable="true">
 
             <TextView
+                android:id="@+id/int_txtSystemLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -58,7 +57,7 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/iconSystemToggle"
+                android:id="@+id/int_iconSystemToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
@@ -67,7 +66,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtSystemContent"
+            android:id="@+id/int_txtSystemContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
@@ -76,11 +75,9 @@
             android:typeface="monospace"
             android:padding="12dp" />
 
-        <!-- ========================================================= -->
         <!-- ANDROID -->
-        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerAndroid"
+            android:id="@+id/int_headerAndroid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -91,6 +88,7 @@
             android:focusable="true">
 
             <TextView
+                android:id="@+id/int_txtAndroidLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -100,7 +98,7 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/iconAndroidToggle"
+                android:id="@+id/int_iconAndroidToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
@@ -109,7 +107,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtAndroidContent"
+            android:id="@+id/int_txtAndroidContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
@@ -118,11 +116,9 @@
             android:typeface="monospace"
             android:padding="12dp" />
 
-        <!-- ========================================================= -->
         <!-- CPU -->
-        <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerCpu"
+            android:id="@+id/int_headerCpu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -131,496 +127,3 @@
             android:layout_marginTop="6dp"
             android:clickable="true"
             android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="CPU / ABI Info"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconCpuToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtCpuContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- GPU -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerGpu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="GPU Info"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconGpuToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtGpuContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- THERMAL -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerThermal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thermal Sensors"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconThermalToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtThermalContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- THERMAL ZONES -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerThermalZones"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thermal Zones (CPU / GPU / Battery)"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconThermalZonesToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtThermalZonesContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- VULKAN -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerVulkan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Vulkan / GPU Driver Info"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconVulkanToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtVulkanContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- THERMAL PROFILES -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerThermalProfiles"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thermal Engine Profiles (vendor configs)"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconThermalProfilesToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtThermalProfilesContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- FPS GOVERNOR -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerFpsGovernor"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="FPS / GPU Governor &amp; Clocks"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconFpsGovernorToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtFpsGovernorContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- RAM -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerRam"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="RAM &amp; Memory"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconRamToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtRamContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- STORAGE -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerStorage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Internal Storage"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconStorageToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtStorageContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- SCREEN -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerScreen"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Screen &amp; Display"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconScreenToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtScreenContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- CONNECTIVITY -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerConnectivity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Connectivity"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconConnectivityToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtConnectivityContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-        <!-- ========================================================= -->
-        <!-- ROOT -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerRoot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Root Extras"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/iconRootToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtRootContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:typeface="monospace"
-            android:padding="12dp" />
-
-    </LinearLayout>
-</ScrollView>

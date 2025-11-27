@@ -1,6 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v13.0 (JNI RAW /proc/stat CPU% + Temp + RAM)
-// NOTE: Full ready-to-paste file per GEL rule — no manual edits needed in this file.
+// CpuRamLiveActivity.java — v16.0 (Triple Engine + Engine Indicator)
 
 package com.gel.cleaner;
 
@@ -18,15 +17,14 @@ import androidx.appcompat.app.AppCompatActivity;
 public class CpuRamLiveActivity extends AppCompatActivity {
 
     static {
-        // φορτώνει τη native βιβλιοθήκη libcpustat.so
         System.loadLibrary("cpustat");
     }
 
-    // Native method: επιστρέφει 0–100 ή -1 σε σφάλμα
-    private native int getCpuUsageNative();
-
     private TextView txtLive;
     private boolean running = true;
+
+    // Native function
+    public native int getCpuUsageNative();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,6 +42,9 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    // ============================================================
+    // LIVE LOOP
+    // ============================================================
     private void startLiveLoop() {
         new Thread(() -> {
             int counter = 1;
@@ -51,7 +52,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             while (running) {
 
                 int cpuVal = getCpuUsageNative();
-                String cpu = (cpuVal >= 0 && cpuVal <= 100) ? (cpuVal + "%") : "N/A";
+                EngineInfo info = EngineInfo.decode(cpuVal);
+                String cpu = info.percent + "% [" + info.name + "]";
 
                 String temp = readCpuTemp();
                 String ram  = readRamUsage();
@@ -67,16 +69,44 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                 counter++;
                 if (counter > 999) counter = 1;
 
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception ignored) {
-                }
+                try { Thread.sleep(1000); } catch (Exception ignored) {}
             }
+
         }).start();
     }
 
     // ============================================================
-    // CPU TEMP (Battery temperature)
+    // ENGINE FORMATTER
+    // ============================================================
+    private static class EngineInfo {
+        public final int percent;
+        public final String name;
+
+        private EngineInfo(int p, String n) {
+            this.percent = p;
+            this.name = n;
+        }
+
+        public static EngineInfo decode(int cpuVal) {
+
+            if (cpuVal >= 0 && cpuVal <= 100) {
+                return new EngineInfo(cpuVal, "RAW");
+            }
+
+            if (cpuVal >= 1000 && cpuVal <= 1100) {
+                return new EngineInfo(cpuVal - 1000, "FREQ");
+            }
+
+            if (cpuVal >= 2000 && cpuVal <= 2100) {
+                return new EngineInfo(cpuVal - 2000, "THERMAL");
+            }
+
+            return new EngineInfo(0, "N/A");
+        }
+    }
+
+    // ============================================================
+    // CPU TEMP (Battery sensor fallback)
     // ============================================================
     private String readCpuTemp() {
         try {
@@ -97,7 +127,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
     }
 
     // ============================================================
-    // RAM USAGE (used / total MB)
+    // RAM USAGE (used / total)
     // ============================================================
     private String readRamUsage() {
         try {
@@ -112,6 +142,7 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             long used  = total - free;
 
             return used + " / " + total + " MB";
+
         } catch (Exception e) {
             return "N/A";
         }

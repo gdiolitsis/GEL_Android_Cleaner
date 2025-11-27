@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL RAW v12.0
-// True RAW CPU% from /proc/stat — No smoothing, no filters.
+// CpuRamLiveActivity.java — FINAL v13.0 (JNI RAW /proc/stat CPU% + Temp + RAM)
+// NOTE: Full ready-to-paste file per GEL rule — no manual edits needed in this file.
 
 package com.gel.cleaner;
 
@@ -12,27 +12,30 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-
 public class CpuRamLiveActivity extends AppCompatActivity {
+
+    static {
+        // φορτώνει τη native βιβλιοθήκη libcpustat.so
+        System.loadLibrary("cpustat");
+    }
+
+    // Native method: επιστρέφει 0–100 ή -1 σε σφάλμα
+    private native int getCpuUsageNative();
 
     private TextView txtLive;
     private boolean running = true;
 
-    private long lastIdle = -1;
-    private long lastTotal = -1;
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
         txtLive = findViewById(R.id.txtLiveInfo);
 
-        startLoop();
+        startLiveLoop();
     }
 
     @Override
@@ -41,99 +44,73 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void startLoop() {
+    private void startLiveLoop() {
         new Thread(() -> {
             int counter = 1;
 
             while (running) {
-                String cpu  = readCpuRaw();
+
+                int cpuVal = getCpuUsageNative();
+                String cpu = (cpuVal >= 0 && cpuVal <= 100) ? (cpuVal + "%") : "N/A";
+
                 String temp = readCpuTemp();
                 String ram  = readRamUsage();
 
-                String line =
+                final String line =
                         "Live " + String.format("%02d", counter) +
                         " | CPU: " + cpu +
                         " | Temp: " + temp +
                         " | RAM: " + ram;
 
-                int finalCounter = counter;
                 runOnUiThread(() -> txtLive.append(line + "\n"));
 
-                if (++counter > 999) counter = 1;
+                counter++;
+                if (counter > 999) counter = 1;
 
-                try { Thread.sleep(1000); } catch (Exception ignored) {}
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ignored) {
+                }
             }
         }).start();
     }
 
     // ============================================================
-    // RAW TRUE CPU% FROM /proc/stat
-    // ============================================================
-    private String readCpuRaw() {
-        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
-            String line = br.readLine();
-            if (line == null || !line.startsWith("cpu")) return "N/A";
-
-            String[] t = line.trim().split("\\s+");
-            if (t.length < 8) return "N/A";
-
-            long user = Long.parseLong(t[1]);
-            long nice = Long.parseLong(t[2]);
-            long system = Long.parseLong(t[3]);
-            long idle = Long.parseLong(t[4]);
-            long iow = Long.parseLong(t[5]);
-            long irq = Long.parseLong(t[6]);
-            long sirq = Long.parseLong(t[7]);
-
-            long idleAll = idle + iow;
-            long total = user + nice + system + idle + iow + irq + sirq;
-
-            if (lastIdle < 0 || lastTotal < 0) {
-                lastIdle = idleAll;
-                lastTotal = total;
-                return "0%";
-            }
-
-            long diffIdle = idleAll - lastIdle;
-            long diffTotal = total - lastTotal;
-
-            lastIdle = idleAll;
-            lastTotal = total;
-
-            if (diffTotal == 0) return "0%";
-
-            long diffUsed = diffTotal - diffIdle;
-            int usage = (int) ((diffUsed * 100L) / diffTotal);
-
-            if (usage < 0) usage = 0;
-            if (usage > 100) usage = 100;
-
-            return usage + "%";
-
-        } catch (Exception e) {
-            return "N/A";
-        }
-    }
-
+    // CPU TEMP (Battery temperature)
     // ============================================================
     private String readCpuTemp() {
         try {
-            Intent intent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent intent = registerReceiver(null, filter);
             if (intent == null) return "N/A";
+
             int temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            return temp > 0 ? (temp / 10f) + "°C" : "N/A";
+            if (temp > 0) {
+                float c = temp / 10f;
+                return c + "°C";
+            } else {
+                return "N/A";
+            }
         } catch (Exception e) {
             return "N/A";
         }
     }
 
+    // ============================================================
+    // RAM USAGE (used / total MB)
+    // ============================================================
     private String readRamUsage() {
         try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null) return "N/A";
+
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(mi);
+            am.getMemoryInfo(mi);
+
             long total = mi.totalMem / (1024 * 1024);
             long free  = mi.availMem / (1024 * 1024);
             long used  = total - free;
+
             return used + " / " + total + " MB";
         } catch (Exception e) {
             return "N/A";

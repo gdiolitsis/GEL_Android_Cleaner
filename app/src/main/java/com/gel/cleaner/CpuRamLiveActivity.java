@@ -1,10 +1,14 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v13 (ThermalZone Edition)
+// CpuRamLiveActivity.java — FINAL v8.0 (Core CPU% + Temp + RAM)
+// NOTE: Full ready-to-paste file per GEL rule — no manual edits needed.
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -12,13 +16,15 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
 
     private TextView txtLive;
     private boolean running = true;
+
+    private long lastIdle = 0L;
+    private long lastTotal = 0L;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,46 +47,73 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             int counter = 1;
 
             while (running) {
-
-                String cpu = readCpuLoad();
-                String temp = readCpuTemp(); // thermal zone
-                String ram = readRamUsage();
+                String cpu  = readCpuLoad();
+                String temp = readCpuTemp();
+                String ram  = readRamUsage();
 
                 final String line =
                         "Live " + String.format("%02d", counter) +
-                                " | CPU: " + cpu +
-                                " | Temp: " + temp +
-                                " | RAM: " + ram;
+                        " | CPU: " + cpu +
+                        " | Temp: " + temp +
+                        " | RAM: " + ram;
 
                 runOnUiThread(() -> txtLive.append(line + "\n"));
 
                 counter++;
                 if (counter > 999) counter = 1;
 
-                try { Thread.sleep(1000); } catch (Exception ignored) {}
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ignored) {
+                }
             }
         }).start();
     }
 
-
-    // ---------------------------
-    // REAL CPU LOAD
-    // ---------------------------
+    // ============================================================
+    // CPU LOAD (from /proc/stat, percentage 0–100)
+    // ============================================================
     private String readCpuLoad() {
+        BufferedReader br = null;
         try {
-            long[] s1 = readCpuStat();
-            Thread.sleep(200);
-            long[] s2 = readCpuStat();
+            br = new BufferedReader(new FileReader("/proc/stat"));
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu")) {
+                return "N/A";
+            }
 
-            long idle = s2[3] - s1[3];
-            long total = (s2[0] - s1[0]) +
-                    (s2[1] - s1[1]) +
-                    (s2[2] - s1[2]) +
-                    (s2[3] - s1[3]);
+            String[] parts = line.trim().split("\\s+");
+            if (parts.length < 5) {
+                return "N/A";
+            }
 
-            if (total <= 0) return "0%";
+            long user   = Long.parseLong(parts[1]);
+            long nice   = Long.parseLong(parts[2]);
+            long system = Long.parseLong(parts[3]);
+            long idle   = Long.parseLong(parts[4]);
 
-            int usage = (int) ((total - idle) * 100L / total);
+            long total = user + nice + system + idle;
+
+            if (lastTotal == 0L && lastIdle == 0L) {
+                // first sample, just store and return 0% to avoid spike
+                lastTotal = total;
+                lastIdle = idle;
+                return "0%";
+            }
+
+            long diffTotal = total - lastTotal;
+            long diffIdle  = idle - lastIdle;
+
+            lastTotal = total;
+            lastIdle  = idle;
+
+            if (diffTotal <= 0L) {
+                return "0%";
+            }
+
+            long active = diffTotal - diffIdle;
+            int usage = (int) (active * 100L / diffTotal);
+
             if (usage < 0) usage = 0;
             if (usage > 100) usage = 100;
 
@@ -88,80 +121,45 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             return "N/A";
-        }
-    }
-
-    private long[] readCpuStat() {
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
-            String line = br.readLine();
-            br.close();
-
-            if (line == null || !line.startsWith("cpu"))
-                return new long[]{0, 0, 0, 0};
-
-            String[] p = line.trim().split("\\s+");
-
-            long user = Long.parseLong(p[1]);
-            long nice = Long.parseLong(p[2]);
-            long system = Long.parseLong(p[3]);
-            long idle = Long.parseLong(p[4]);
-
-            return new long[]{user, nice, system, idle};
-
-        } catch (Exception e) {
-            return new long[]{0, 0, 0, 0};
-        }
-    }
-
-
-    // ---------------------------
-    // UNIVERSAL THERMAL ZONE TEMP
-    // ---------------------------
-    private String readCpuTemp() {
-        try {
-            File dir = new File("/sys/class/thermal/");
-            File[] list = dir.listFiles();
-            if (list == null) return "N/A";
-
-            for (File f : list) {
-                if (f.getName().contains("thermal_zone")) {
-                    File t = new File(f, "temp");
-                    if (t.exists()) {
-                        BufferedReader br = new BufferedReader(new FileReader(t));
-                        String s = br.readLine();
-                        br.close();
-
-                        if (s == null) continue;
-
-                        long v = Long.parseLong(s);
-
-                        if (v > 1000)          // e.g. 45000 → 45.0°C
-                            return (v / 1000f) + "°C";
-
-                        if (v > 100)            // e.g. 450 → 45°C
-                            return (v / 10f) + "°C";
-
-                        if (v > 0)              // fallback
-                            return v + "°C";
-                    }
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception ignored) {
                 }
             }
+        }
+    }
 
-            return "N/A";
+    // ============================================================
+    // CPU TEMP (Battery temperature via ACTION_BATTERY_CHANGED)
+    // ============================================================
+    private String readCpuTemp() {
+        try {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent intent = registerReceiver(null, filter);
+            if (intent == null) return "N/A";
 
+            int temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            if (temp > 0) {
+                float c = temp / 10f;
+                return c + "°C";
+            } else {
+                return "N/A";
+            }
         } catch (Exception e) {
             return "N/A";
         }
     }
 
-
-    // ---------------------------
-    // RAM USAGE
-    // ---------------------------
+    // ============================================================
+    // RAM USAGE (used / total MB)
+    // ============================================================
     private String readRamUsage() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null) return "N/A";
+
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
 
@@ -170,9 +168,9 @@ public class CpuRamLiveActivity extends AppCompatActivity {
             long used  = total - free;
 
             return used + " / " + total + " MB";
-
         } catch (Exception e) {
             return "N/A";
         }
     }
 }
+```0

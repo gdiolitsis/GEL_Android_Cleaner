@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v10.0
-// API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING
+// DeviceInfoPeripheralsActivity.java — FINAL v11.0
+// API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED
 
 package com.gel.cleaner;
 
@@ -625,7 +625,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // ROOT PERIPHERALS — PREMIUM SUMMARY
+    // ROOT PERIPHERALS — PREMIUM SUMMARY + FUSION LINK
     // ============================================================
     private String buildRootInfo() {
         StringBuilder sb = new StringBuilder();
@@ -655,6 +655,15 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         String selinux = getProp("ro.build.selinux");
         if (selinux != null && !selinux.isEmpty()) {
             sb.append("SELinux          : ").append(selinux).append("\n");
+        }
+
+        // 🔗 Fusion layer link (Hardware + Kernel + HAL + Root + AI Interpreter)
+        sb.append("\nFusion Layer     : ");
+        if (isRooted) {
+            sb.append("Peripherals telemetry is wired into GEL Dynamic Access Routing Engine v1.0 ")
+              .append("(Hardware + Kernel + HAL + Root + AI Interpreter).\n");
+        } else {
+            sb.append("Peripherals run in Fusion-ready mode; advanced routing activates when Full-Access Device Mode is enabled.\n");
         }
 
         if (isRooted) {

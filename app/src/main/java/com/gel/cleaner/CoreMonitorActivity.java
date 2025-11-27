@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — FINAL v4.0
-// CoreMonitorActivity.java — Gold Title + Neon States + <br> HTML Support
+// GDiolitsis Engine Lab (GEL) — v3.2 FINAL
+// CoreMonitorActivity — Clean Title + Neon
 
 package com.gel.cleaner;
 
@@ -32,18 +32,23 @@ public class CoreMonitorActivity extends AppCompatActivity {
 
     private void startLoop() {
         new Thread(() -> {
+
             while (true) {
 
-                // HTML-ready output (<br> for new lines)
                 String raw = getCoreInfoNative();
 
-                // Neon formatting
+                // REMOVE INTERNAL WHITE TITLE
+                raw = raw.replace("GEL Core Monitor", "");
+
+                // FIX SPACING
+                raw = raw.replace("C0:", "\nC0:");
+
+                // NEON STATES
                 String html = raw
                         .replace("[OK]", "<font color='#00FF66'>[OK]</font>")
                         .replace("[BOOST]", "<font color='#00FF66'>[BOOST]</font>")
                         .replace("[MAX]", "<font color='#00FF66'>[MAX]</font>")
-                        .replace("[SUSPECT]", "<font color='#FF3333'>[SUSPECT]</font>")
-                        .replace("[OFFLINE]", "<font color='#FF3333'>[OFFLINE]</font>");
+                        .replace("[SUSPECT]", "<font color='#FF3333'>[SUSPECT]</font>");
 
                 runOnUiThread(() ->
                         txtInfo.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY))
@@ -51,6 +56,7 @@ public class CoreMonitorActivity extends AppCompatActivity {
 
                 try { Thread.sleep(1000); } catch (Exception ignored) {}
             }
+
         }).start();
     }
 }

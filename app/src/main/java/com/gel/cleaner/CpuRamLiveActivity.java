@@ -1,11 +1,10 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v12.0 (MIUI SAFE)
+// CpuRamLiveActivity.java — FINAL v13 (ThermalZone Edition)
 
 package com.gel.cleaner;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -13,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 
 public class CpuRamLiveActivity extends AppCompatActivity {
@@ -42,9 +42,9 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
             while (running) {
 
-                String cpu = readCpuLoad();     // REAL CPU %
-                String temp = readCpuTemp();    // Battery temp
-                String ram = readRamUsage();    // RAM usage
+                String cpu = readCpuLoad();
+                String temp = readCpuTemp(); // thermal zone
+                String ram = readRamUsage();
 
                 final String line =
                         "Live " + String.format("%02d", counter) +
@@ -64,19 +64,19 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
 
     // ---------------------------
-    // REAL CPU LOAD (MIUI SAFE)
+    // REAL CPU LOAD
     // ---------------------------
     private String readCpuLoad() {
         try {
             long[] s1 = readCpuStat();
-            Thread.sleep(300);
+            Thread.sleep(200);
             long[] s2 = readCpuStat();
 
             long idle = s2[3] - s1[3];
             long total = (s2[0] - s1[0]) +
-                         (s2[1] - s1[1]) +
-                         (s2[2] - s1[2]) +
-                         (s2[3] - s1[3]);
+                    (s2[1] - s1[1]) +
+                    (s2[2] - s1[2]) +
+                    (s2[3] - s1[3]);
 
             if (total <= 0) return "0%";
 
@@ -116,14 +116,40 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
 
     // ---------------------------
-    // CPU TEMP (BATTERY SENSOR)
+    // UNIVERSAL THERMAL ZONE TEMP
     // ---------------------------
     private String readCpuTemp() {
         try {
-            BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-            int t = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-            if (t > 0) return (t / 10f) + "°C";
+            File dir = new File("/sys/class/thermal/");
+            File[] list = dir.listFiles();
+            if (list == null) return "N/A";
+
+            for (File f : list) {
+                if (f.getName().contains("thermal_zone")) {
+                    File t = new File(f, "temp");
+                    if (t.exists()) {
+                        BufferedReader br = new BufferedReader(new FileReader(t));
+                        String s = br.readLine();
+                        br.close();
+
+                        if (s == null) continue;
+
+                        long v = Long.parseLong(s);
+
+                        if (v > 1000)          // e.g. 45000 → 45.0°C
+                            return (v / 1000f) + "°C";
+
+                        if (v > 100)            // e.g. 450 → 45°C
+                            return (v / 10f) + "°C";
+
+                        if (v > 0)              // fallback
+                            return v + "°C";
+                    }
+                }
+            }
+
             return "N/A";
+
         } catch (Exception e) {
             return "N/A";
         }

@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v6.0 (Full Report + Soft Expand v2.0)
+// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v7.0
+// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback
 // NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — χωρίς αλλαγές σε UI / XML.
 
 package com.gel.cleaner;
@@ -31,6 +32,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import android.graphics.Color;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -38,6 +44,8 @@ import java.io.InputStreamReader;
 
 public class DeviceInfoInternalActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
+
+    private static final String NEON_GREEN = "#39FF14";
 
     private boolean isRooted = false;
 
@@ -112,22 +120,36 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         isRooted = isDeviceRooted();
 
         // ============================================================
-        // FULL PRO CONTENT BUILD
+        // FULL PRO CONTENT BUILD (values in neon green via spans)
         // ============================================================
-        if (txtSystemContent != null)          txtSystemContent.setText(buildSystemInfo());
-        if (txtAndroidContent != null)         txtAndroidContent.setText(buildAndroidInfo());
-        if (txtCpuContent != null)             txtCpuContent.setText(buildCpuInfo());
-        if (txtGpuContent != null)             txtGpuContent.setText(buildGpuInfo());
-        if (txtThermalContent != null)         txtThermalContent.setText(buildThermalSensorsInfo());
-        if (txtThermalZonesContent != null)    txtThermalZonesContent.setText(buildThermalZonesInfo());
-        if (txtVulkanContent != null)          txtVulkanContent.setText(buildVulkanInfo());
-        if (txtThermalProfilesContent != null) txtThermalProfilesContent.setText(buildThermalProfilesInfo());
-        if (txtFpsGovernorContent != null)     txtFpsGovernorContent.setText(buildFpsGovernorInfo());
-        if (txtRamContent != null)             txtRamContent.setText(buildRamInfo());
-        if (txtStorageContent != null)         txtStorageContent.setText(buildStorageInfo());
-        if (txtScreenContent != null)          txtScreenContent.setText(buildScreenInfo());
-        if (txtConnectivityContent != null)    txtConnectivityContent.setText(buildConnectivityInfo());
-        if (txtRootContent != null)            txtRootContent.setText(buildRootInfo());
+        if (txtSystemContent != null)
+            setNeonSectionText(txtSystemContent, buildSystemInfo());
+        if (txtAndroidContent != null)
+            setNeonSectionText(txtAndroidContent, buildAndroidInfo());
+        if (txtCpuContent != null)
+            setNeonSectionText(txtCpuContent, buildCpuInfo());
+        if (txtGpuContent != null)
+            setNeonSectionText(txtGpuContent, buildGpuInfo());
+        if (txtThermalContent != null)
+            setNeonSectionText(txtThermalContent, buildThermalSensorsInfo());
+        if (txtThermalZonesContent != null)
+            setNeonSectionText(txtThermalZonesContent, buildThermalZonesInfo());
+        if (txtVulkanContent != null)
+            setNeonSectionText(txtVulkanContent, buildVulkanInfo());
+        if (txtThermalProfilesContent != null)
+            setNeonSectionText(txtThermalProfilesContent, buildThermalProfilesInfo());
+        if (txtFpsGovernorContent != null)
+            setNeonSectionText(txtFpsGovernorContent, buildFpsGovernorInfo());
+        if (txtRamContent != null)
+            setNeonSectionText(txtRamContent, buildRamInfo());
+        if (txtStorageContent != null)
+            setNeonSectionText(txtStorageContent, buildStorageInfo());
+        if (txtScreenContent != null)
+            setNeonSectionText(txtScreenContent, buildScreenInfo());
+        if (txtConnectivityContent != null)
+            setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
+        if (txtRootContent != null)
+            setNeonSectionText(txtRootContent, buildRootInfo());
 
         // EXPANDERS
         setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
@@ -167,84 +189,150 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-// EXPANDER LOGIC WITH ANIMATION (GEL Expand Engine v3.0 — FIXED)
-// ============================================================
+    // EXPANDER LOGIC WITH ANIMATION (GEL Expand Engine v3.0 — FIXED)
+    // ============================================================
 
-private void setupSection(View header, final TextView content, final TextView icon) {
-    if (header == null || content == null || icon == null) return;
-    header.setOnClickListener(v -> toggleSection(content, icon));
-}
+    private void setupSection(View header, final TextView content, final TextView icon) {
+        if (header == null || content == null || icon == null) return;
+        header.setOnClickListener(v -> toggleSection(content, icon));
+    }
 
-private void toggleSection(TextView targetContent, TextView targetIcon) {
+    private void toggleSection(TextView targetContent, TextView targetIcon) {
 
-    // Close all other sections
-    for (int i = 0; i < allContents.length; i++) {
-        TextView c = allContents[i];
-        TextView ic = allIcons[i];
+        // Close all other sections
+        for (int i = 0; i < allContents.length; i++) {
+            TextView c = allContents[i];
+            TextView ic = allIcons[i];
 
-        if (c == null || ic == null) continue;
+            if (c == null || ic == null) continue;
 
-        if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-            animateCollapse(c);
-            ic.setText("＋");
+            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
+                animateCollapse(c);
+                ic.setText("＋");
+            }
+        }
+
+        // Toggle only selected section
+        if (targetContent.getVisibility() == View.VISIBLE) {
+            animateCollapse(targetContent);
+            targetIcon.setText("＋");
+        } else {
+            animateExpand(targetContent);
+            targetIcon.setText("−");
         }
     }
 
-    // Toggle only selected section
-    if (targetContent.getVisibility() == View.VISIBLE) {
-        animateCollapse(targetContent);
-        targetIcon.setText("＋");
-    } else {
-        animateExpand(targetContent);
-        targetIcon.setText("−");
+    private void animateExpand(final View v) {
+
+        // SAFE POST-MEASURE FIX — prevents auto-collapse on Android 11–14
+        v.post(() -> {
+            v.measure(
+                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            );
+
+            final int target = v.getMeasuredHeight();
+
+            v.getLayoutParams().height = 0;
+            v.setVisibility(View.VISIBLE);
+            v.setAlpha(0f);
+
+            v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        v.getLayoutParams().height = target;
+                        v.requestLayout();
+                    })
+                    .start();
+        });
     }
-}
 
-private void animateExpand(final View v) {
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
 
-    // SAFE POST-MEASURE FIX — prevents auto-collapse on Android 11–14
-    v.post(() -> {
-        v.measure(
-                View.MeasureSpec.makeMeasureSpec(((View)v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        );
-
-        final int target = v.getMeasuredHeight();
-
-        v.getLayoutParams().height = 0;
-        v.setVisibility(View.VISIBLE);
-        v.setAlpha(0f);
+        final int initial = v.getHeight();
+        v.setAlpha(1f);
 
         v.animate()
-                .alpha(1f)
-                .setDuration(160)
+                .alpha(0f)
+                .setDuration(120)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
-                    v.getLayoutParams().height = target;
+                    v.setVisibility(View.GONE);
+                    v.getLayoutParams().height = initial;
+                    v.setAlpha(1f);
                     v.requestLayout();
                 })
                 .start();
-    });
-}
+    }
 
-private void animateCollapse(final View v) {
-    if (v.getVisibility() != View.VISIBLE) return;
+    // ============================================================
+    // NEON VALUE COLOR ENGINE (only values, not labels)
+    // ============================================================
 
-    final int initial = v.getHeight();
-    v.setAlpha(1f);
+    private void setNeonSectionText(TextView tv, String text) {
+        if (tv == null) return;
+        if (text == null) text = "";
+        tv.setText(applyNeonToValues(text));
+    }
 
-    v.animate()
-            .alpha(0f)
-            .setDuration(120)
-            .setInterpolator(new AccelerateDecelerateInterpolator())
-            .withEndAction(() -> {
-                v.setVisibility(View.GONE);
-                v.getLayoutParams().height = initial;
-                v.setAlpha(1f);
-                v.requestLayout();
-            })
-            .start();
-}
+    private CharSequence applyNeonToValues(String text) {
+        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+        String[] lines = text.split("\n", -1); // keep empty lines
+        int offset = 0;
+        boolean previousLabelOnly = false;
+
+        for (String line : lines) {
+            int len = line.length();
+            if (len > 0) {
+                int colonIdx = line.indexOf(':');
+                if (colonIdx >= 0) {
+                    // Label-only line (ends with ':')
+                    if (colonIdx == len - 1) {
+                        previousLabelOnly = true;
+                    } else {
+                        // Color from first non-space after ':' to end of line
+                        int valueStart = offset + colonIdx + 1;
+                        while (valueStart < offset + len &&
+                                Character.isWhitespace(line.charAt(valueStart - offset))) {
+                            valueStart++;
+                        }
+                        int valueEnd = offset + len;
+                        if (valueStart < valueEnd) {
+                            ssb.setSpan(
+                                    new ForegroundColorSpan(Color.parseColor(NEON_GREEN)),
+                                    valueStart,
+                                    valueEnd,
+                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                            );
+                        }
+                        previousLabelOnly = false;
+                    }
+                } else if (previousLabelOnly) {
+                    // Entire line is a value for the previous label-only line
+                    int valueStart = offset;
+                    int valueEnd = offset + len;
+                    ssb.setSpan(
+                            new ForegroundColorSpan(Color.parseColor(NEON_GREEN)),
+                            valueStart,
+                            valueEnd,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    );
+                    previousLabelOnly = false;
+                } else {
+                    previousLabelOnly = false;
+                }
+            } else {
+                previousLabelOnly = false;
+            }
+
+            offset += len + 1; // +1 for '\n'
+        }
+
+        return ssb;
+    }
 
     // ============================================================
     // SECTION BUILDERS — FULL PRO
@@ -268,7 +356,8 @@ private void animateCollapse(final View v) {
         try {
             androidId = Settings.Secure.getString(
                     getContentResolver(), Settings.Secure.ANDROID_ID);
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
         if (androidId != null) {
             sb.append("Android ID   : ").append(androidId).append("\n");
         }
@@ -410,7 +499,8 @@ private void animateCollapse(final View v) {
                     sb.append("OpenGL ES    : ").append(ci.getGlEsVersion()).append("\n");
                 }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         String egl = getProp("ro.hardware.egl");
         if (egl != null && !egl.isEmpty()) {
@@ -473,6 +563,9 @@ private void animateCollapse(final View v) {
 
         if (sb.length() == 0) {
             sb.append("No readable thermal sensors via sysfs.\n");
+            if (!isRooted) {
+                sb.append("Status       : N/A (Device is NOT rooted or sensors restricted)\n");
+            }
         }
 
         return sb.toString();
@@ -483,12 +576,18 @@ private void animateCollapse(final View v) {
         File dir = new File("/sys/class/thermal");
         if (!dir.exists() || !dir.isDirectory()) {
             sb.append("Thermal directory not accessible.\n");
+            if (!isRooted) {
+                sb.append("Status       : N/A (Device is NOT rooted or thermal interface restricted)\n");
+            }
             return sb.toString();
         }
 
         File[] zones = dir.listFiles();
         if (zones == null || zones.length == 0) {
             sb.append("No thermal zones found.\n");
+            if (!isRooted) {
+                sb.append("Status       : N/A (Device is NOT rooted or thermal zones hidden)\n");
+            }
             return sb.toString();
         }
 
@@ -513,6 +612,9 @@ private void animateCollapse(final View v) {
 
         if (sb.length() == 0) {
             sb.append("No readable thermal zones.\n");
+            if (!isRooted) {
+                sb.append("Status       : N/A (Device is NOT rooted or thermal zones restricted)\n");
+            }
         }
 
         return sb.toString();
@@ -528,7 +630,8 @@ private void animateCollapse(final View v) {
                     "android.hardware.vulkan.version");
             sb.append("Feature Level : ").append(hasLevel ? "Yes" : "No").append("\n");
             sb.append("Feature Vers  : ").append(hasVersion ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         String hw = getProp("ro.hardware.vulkan");
         if (hw != null && !hw.isEmpty()) {
@@ -587,7 +690,8 @@ private void animateCollapse(final View v) {
             int dpi = dm.densityDpi;
             sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
             sb.append("Density       : ").append(dpi).append(" dpi\n");
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         String refresh = getProp("ro.surface_flinger.refresh_rate");
         if (refresh != null && !refresh.isEmpty()) {
@@ -627,7 +731,7 @@ private void animateCollapse(final View v) {
 
                 long totalMb = mi.totalMem / (1024 * 1024);
                 long availMb = mi.availMem / (1024 * 1024);
-                long usedMb  = totalMb - availMb;
+                long usedMb = totalMb - availMb;
 
                 sb.append("Total RAM     : ").append(totalMb).append(" MB\n");
                 sb.append("Used RAM      : ").append(usedMb).append(" MB\n");
@@ -635,7 +739,8 @@ private void animateCollapse(final View v) {
                 sb.append("Low Memory    : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
                 sb.append("Threshold     : ").append(mi.threshold / (1024 * 1024)).append(" MB\n");
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         if (sb.length() == 0) {
             sb.append("Unable to read RAM information.\n");
@@ -655,7 +760,8 @@ private void animateCollapse(final View v) {
             if (ext != null && ext.exists()) {
                 appendStorageBlock(sb, "External (primary)", ext);
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         if (sb.length() == 0) {
             sb.append("Unable to read storage partitions.\n");
@@ -669,22 +775,22 @@ private void animateCollapse(final View v) {
             StatFs stat = new StatFs(path.getAbsolutePath());
             long blockSize, totalBlocks, availBlocks;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize   = stat.getBlockSizeLong();
+                blockSize = stat.getBlockSizeLong();
                 totalBlocks = stat.getBlockCountLong();
                 availBlocks = stat.getAvailableBlocksLong();
             } else {
-                blockSize   = stat.getBlockSize();
+                blockSize = stat.getBlockSize();
                 totalBlocks = stat.getBlockCount();
                 availBlocks = stat.getAvailableBlocks();
             }
 
             long totalBytes = blockSize * totalBlocks;
             long availBytes = blockSize * availBlocks;
-            long usedBytes  = totalBytes - availBytes;
+            long usedBytes = totalBytes - availBytes;
 
             long totalGb = totalBytes / (1024 * 1024 * 1024);
-            long usedGb  = usedBytes  / (1024 * 1024 * 1024);
-            long freeGb  = availBytes / (1024 * 1024 * 1024);
+            long usedGb = usedBytes / (1024 * 1024 * 1024);
+            long freeGb = availBytes / (1024 * 1024 * 1024);
 
             sb.append(label).append(":\n");
             sb.append("  Path   : ").append(path.getAbsolutePath()).append("\n");
@@ -692,7 +798,8 @@ private void animateCollapse(final View v) {
             sb.append("  Used   : ").append(usedGb).append(" GB\n");
             sb.append("  Free   : ").append(freeGb).append(" GB\n\n");
 
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
     }
 
     private String buildScreenInfo() {
@@ -708,12 +815,13 @@ private void animateCollapse(final View v) {
             sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
             sb.append("Density       : ").append(density).append(" (").append(dpi).append(" dpi)\n");
 
-            double widthInch  = w / (double) dpi;
+            double widthInch = w / (double) dpi;
             double heightInch = h / (double) dpi;
             double diag = Math.sqrt(widthInch * widthInch + heightInch * heightInch);
             sb.append("Approx. Size  : ").append(String.format("%.1f\"", diag)).append("\n");
 
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         if (sb.length() == 0) {
             sb.append("Unable to read screen metrics.\n");
@@ -779,7 +887,8 @@ private void animateCollapse(final View v) {
                 sb.append("  Network     : ").append(describeNetworkType(netType)).append("\n");
             }
 
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         if (sb.length() == 0) {
             sb.append("No connectivity details available.\n");
@@ -829,6 +938,8 @@ private void animateCollapse(final View v) {
                     sb.append("  ").append(p).append("\n");
                 }
             }
+        } else {
+            sb.append("\nAdvanced root-only diagnostics : N/A (Device is NOT rooted)\n");
         }
 
         return sb.toString();
@@ -854,7 +965,10 @@ private void animateCollapse(final View v) {
         } catch (Throwable ignore) {
             return null;
         } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
+            try {
+                if (br != null) br.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -870,7 +984,10 @@ private void animateCollapse(final View v) {
         } catch (Throwable ignore) {
             return null;
         } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
+            try {
+                if (br != null) br.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -931,15 +1048,24 @@ private void animateCollapse(final View v) {
 
     private String describeNetworkType(int type) {
         switch (type) {
-            case TelephonyManager.NETWORK_TYPE_GPRS: return "2G (GPRS)";
-            case TelephonyManager.NETWORK_TYPE_EDGE: return "2G (EDGE)";
-            case TelephonyManager.NETWORK_TYPE_UMTS: return "3G (UMTS)";
-            case TelephonyManager.NETWORK_TYPE_HSDPA: return "3G (HSDPA)";
-            case TelephonyManager.NETWORK_TYPE_HSUPA: return "3G (HSUPA)";
-            case TelephonyManager.NETWORK_TYPE_HSPA: return "3G (HSPA)";
-            case TelephonyManager.NETWORK_TYPE_LTE: return "4G (LTE)";
-            case TelephonyManager.NETWORK_TYPE_NR: return "5G (NR)";
-            default: return "Unknown";
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+                return "2G (GPRS)";
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+                return "2G (EDGE)";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                return "3G (UMTS)";
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+                return "3G (HSDPA)";
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+                return "3G (HSUPA)";
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+                return "3G (HSPA)";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                return "4G (LTE)";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5G (NR)";
+            default:
+                return "Unknown";
         }
     }
 

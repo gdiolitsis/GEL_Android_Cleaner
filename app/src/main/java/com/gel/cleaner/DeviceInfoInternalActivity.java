@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v7.0
-// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback
+// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v8.0
+// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback + Root-Extended Internals
 // NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — χωρίς αλλαγές σε UI / XML.
 
 package com.gel.cleaner;
@@ -335,7 +335,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // SECTION BUILDERS — FULL PRO
+    // SECTION BUILDERS — FULL PRO + ROOT EXTENDED
     // ============================================================
 
     private String buildSystemInfo() {
@@ -379,6 +379,20 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             sb.append("Vendor Name  : ").append(vendor).append("\n");
         }
 
+        // Root-extended boot / verified state (props are readable even without su on many devices)
+        String vbState = getProp("ro.boot.verifiedbootstate");
+        if (vbState != null && !vbState.isEmpty()) {
+            sb.append("VB State     : ").append(vbState).append("\n");
+        }
+        String vbDevice = getProp("ro.boot.vbmeta.device_state");
+        if (vbDevice != null && !vbDevice.isEmpty()) {
+            sb.append("VB Device    : ").append(vbDevice).append("\n");
+        }
+        String flashLock = getProp("ro.boot.flash.locked");
+        if (flashLock != null && !flashLock.isEmpty()) {
+            sb.append("Flash Lock   : ").append(flashLock).append("\n");
+        }
+
         return sb.toString();
     }
 
@@ -419,6 +433,12 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         String hyper = getProp("ro.mi.os.version.name");
         if (hyper != null && !hyper.isEmpty()) {
             sb.append("HyperOS      : ").append(hyper).append("\n");
+        }
+
+        // Small root-extended flavour: SELinux props
+        String seEnforce = getProp("ro.boot.selinux");
+        if (seEnforce != null && !seEnforce.isEmpty()) {
+            sb.append("SELinux Boot : ").append(seEnforce).append("\n");
         }
 
         return sb.toString();
@@ -484,6 +504,40 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             sb.append("Cluster Hint : big.LITTLE detected\n");
         }
 
+        // ROOT-EXTENDED CPU DETAILS
+        boolean addedRootCpu = false;
+        if (isRooted) {
+            sb.append("\n[Root CPU tables]\n");
+            try {
+                for (int i = 0; i < cores; i++) {
+                    String base = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
+                    long rMin = readSysLong(base + "cpuinfo_min_freq");
+                    long rMax = readSysLong(base + "cpuinfo_max_freq");
+                    long rCur = readSysLong(base + "scaling_cur_freq");
+                    if (rMin > 0 || rMax > 0 || rCur > 0) {
+                        sb.append("cpu").append(i).append("        : ");
+                        if (rCur > 0) sb.append("cur=").append(rCur / 1000).append("MHz ");
+                        if (rMin > 0) sb.append("min=").append(rMin / 1000).append("MHz ");
+                        if (rMax > 0) sb.append("max=").append(rMax / 1000).append("MHz");
+                        sb.append("\n");
+                        addedRootCpu = true;
+                    }
+                    String avail = readSysString(base + "scaling_available_frequencies");
+                    if (avail != null && !avail.isEmpty()) {
+                        sb.append("cpu").append(i).append(" avail   : ").append(avail.trim()).append("\n");
+                        addedRootCpu = true;
+                    }
+                }
+            } catch (Throwable ignore) {
+            }
+
+            if (!addedRootCpu) {
+                sb.append("Root CPU details not exposed by current kernel.\n");
+            }
+        } else {
+            sb.append("\nAdvanced CPU tables : N/A (Device is NOT rooted or CPU sysfs restricted)\n");
+        }
+
         return sb.toString();
     }
 
@@ -519,6 +573,44 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         if (sb.length() == 0) {
             sb.append("No GPU information available via system properties.\n");
+        }
+
+        // ROOT-EXTENDED GPU (KGSL / devfreq where available)
+        boolean addedRootGpu = false;
+        if (isRooted) {
+            sb.append("\n[Root GPU tables]\n");
+            try {
+                long cur = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/cur_freq");
+                long min = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/min_freq");
+                long max = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/max_freq");
+                if (cur > 0 || min > 0 || max > 0) {
+                    sb.append("Freq (MHz)   : ");
+                    if (cur > 0) sb.append("cur=").append(cur / 1000000).append(" ");
+                    if (min > 0) sb.append("min=").append(min / 1000000).append(" ");
+                    if (max > 0) sb.append("max=").append(max / 1000000);
+                    sb.append("\n");
+                    addedRootGpu = true;
+                }
+
+                String avail = readSysString("/sys/class/kgsl/kgsl-3d0/devfreq/available_frequencies");
+                if (avail != null && !avail.isEmpty()) {
+                    sb.append("Avail Freq   : ").append(avail.trim()).append("\n");
+                    addedRootGpu = true;
+                }
+
+                String busy = readSysString("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
+                if (busy != null && !busy.isEmpty()) {
+                    sb.append("Busy GPU     : ").append(busy.trim()).append(" %\n");
+                    addedRootGpu = true;
+                }
+            } catch (Throwable ignore) {
+            }
+
+            if (!addedRootGpu) {
+                sb.append("Root GPU metrics not exposed by current driver.\n");
+            }
+        } else {
+            sb.append("\nAdvanced GPU metrics : N/A (Device is NOT rooted or KGSL locked)\n");
         }
 
         return sb.toString();
@@ -673,6 +765,25 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             }
         }
 
+        // Root-extended: attempt to show thermal config file hints
+        String[] cfgFiles = {
+                "/vendor/etc/thermal-engine.conf",
+                "/system/etc/thermal-engine.conf",
+                "/vendor/etc/thermal/thermal-engine.conf"
+        };
+        boolean anyCfg = false;
+        for (String path : cfgFiles) {
+            File f = new File(path);
+            if (f.exists()) {
+                sb.append("Cfg File      : ").append(path).append("\n");
+                anyCfg = true;
+            }
+        }
+
+        if (!anyCfg && !isRooted) {
+            sb.append("Config Files  : N/A (Device is NOT rooted or vendor thermal configs hidden)\n");
+        }
+
         if (sb.length() == 0) {
             sb.append("No explicit thermal profile properties found.\n");
         }
@@ -742,6 +853,44 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         } catch (Throwable ignore) {
         }
 
+        // /proc/meminfo parsing (user + kernel view)
+        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+        if (meminfo != null && !meminfo.isEmpty()) {
+            sb.append("\n/proc/meminfo (core):\n");
+            String[] lines = meminfo.split("\n");
+            for (String line : lines) {
+                if (line.startsWith("MemTotal:")
+                        || line.startsWith("MemFree:")
+                        || line.startsWith("Buffers:")
+                        || line.startsWith("Cached:")
+                        || line.startsWith("SwapTotal:")
+                        || line.startsWith("SwapFree:")
+                        || line.startsWith("Inactive:")
+                        || line.startsWith("Active:")) {
+                    sb.append(line.trim()).append("\n");
+                }
+            }
+        }
+
+        // ZRAM / swap advanced
+        boolean anyZram = false;
+        try {
+            String zramSize = readSysString("/sys/block/zram0/disksize");
+            if (zramSize != null && !zramSize.isEmpty()) {
+                sb.append("ZRAM Size     : ").append(zramSize).append(" bytes\n");
+                anyZram = true;
+            }
+            String zramStat = readTextFile("/sys/block/zram0/mm_stat", 1024);
+            if (zramStat != null && !zramStat.isEmpty()) {
+                sb.append("ZRAM mm_stat  : ").append(zramStat.replace("\n", " ")).append("\n");
+                anyZram = true;
+            }
+        } catch (Throwable ignore) {
+        }
+        if (!anyZram && !isRooted) {
+            sb.append("ZRAM Details  : N/A (Device is NOT rooted or zram not present)\n");
+        }
+
         if (sb.length() == 0) {
             sb.append("Unable to read RAM information.\n");
         }
@@ -761,6 +910,42 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 appendStorageBlock(sb, "External (primary)", ext);
             }
         } catch (Throwable ignore) {
+        }
+
+        // /proc/mounts core partitions
+        String mounts = readTextFile("/proc/mounts", 32 * 1024);
+        if (mounts != null && !mounts.isEmpty()) {
+            sb.append("Core Mounts   :\n");
+            String[] lines = mounts.split("\n");
+            String[] interesting = {"/", "/system", "/vendor", "/product", "/data", "/cache", "/metadata", "/sdcard"};
+            for (String line : lines) {
+                String[] parts = line.split("\\s+");
+                if (parts.length < 3) continue;
+                String mountPoint = parts[1];
+                boolean hit = false;
+                for (String it : interesting) {
+                    if (mountPoint.equals(it)) {
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) {
+                    sb.append("  ").append(mountPoint)
+                            .append(" : ").append(parts[2]) // fstype
+                            .append(" (").append(parts[0]).append(")\n");
+                }
+            }
+        } else if (!isRooted) {
+            sb.append("Mount table   : N/A (Device is NOT rooted or /proc/mounts hidden)\n");
+        }
+
+        // /proc/partitions snapshot
+        String parts = readTextFile("/proc/partitions", 8 * 1024);
+        if (parts != null && !parts.isEmpty()) {
+            sb.append("\n/proc/partitions (snapshot):\n");
+            sb.append(parts.trim()).append("\n");
+        } else if (!isRooted) {
+            sb.append("Partitions    : N/A (Device is NOT rooted or /proc/partitions restricted)\n");
         }
 
         if (sb.length() == 0) {
@@ -888,6 +1073,20 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             }
 
         } catch (Throwable ignore) {
+        }
+
+        // Root-extended: /proc/net/dev snapshot
+        String netDev = readTextFile("/proc/net/dev", 8 * 1024);
+        if (netDev != null && !netDev.isEmpty()) {
+            sb.append("\n/proc/net/dev (core):\n");
+            String[] lines = netDev.split("\n");
+            for (String line : lines) {
+                if (line.contains("wlan0") || line.contains("rmnet") || line.contains("rmnet_data")) {
+                    sb.append(line.trim()).append("\n");
+                }
+            }
+        } else if (!isRooted) {
+            sb.append("Net device stats : N/A (Device is NOT rooted or /proc/net restricted)\n");
         }
 
         if (sb.length() == 0) {

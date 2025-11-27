@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// CpuRamLiveActivity.java — FINAL v18.0 (Gold Title + Neon CPU%)
+// GDiolitsis Engine Lab (GEL) — FINAL v20.0
+// CpuRamLiveActivity.java — CPU Neon + TEMP Neon + RAM USED Only Neon
 
 package com.gel.cleaner;
 
@@ -34,9 +34,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
 
         txtLive = findViewById(R.id.txtLiveInfo);
 
-        // ============================================================
-        // BUTTON: CORE MONITOR
-        // ============================================================
         Button btnCore = findViewById(R.id.btnCoreMonitor);
         btnCore.setOnClickListener(v ->
                 startActivity(new Intent(CpuRamLiveActivity.this, CoreMonitorActivity.class))
@@ -51,9 +48,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    // ============================================================
-    // LIVE LOOP — single-line output (no log flooding)
-    // ============================================================
     private void startLiveLoop() {
         new Thread(() -> {
             int counter = 1;
@@ -63,19 +57,34 @@ public class CpuRamLiveActivity extends AppCompatActivity {
                 int cpuVal = getCpuUsageNative();
                 EngineInfo info = EngineInfo.decode(cpuVal);
 
-                // Neon CPU%
-                String cpuColored = "<font color='#00FF66'>" + info.percent + "%</font>"
-                        + " [" + info.name + "]";
+                // CPU % NEON
+                String cpuColored =
+                        "<font color='#00FF66'>" + info.percent + "%</font>" +
+                                " [" + info.name + "]";
 
-                String temp = readCpuTemp();
-                String ram  = readRamUsage();
+                // TEMP NEON
+                String tempColored =
+                        "<font color='#00FF66'>" + readCpuTemp() + "</font>";
 
-                String line = "Live " + String.format("%02d", counter) +
-                        " | CPU: " + cpuColored +
-                        " | Temp: " + temp +
-                        " | RAM: " + ram;
+                // ================================
+                // RAM USED ONLY → NEON GREEN
+                // ================================
+                String ramRaw = readRamUsage();         // e.g. "2234 / 3479 MB"
+                String[] parts = ramRaw.split(" ");
 
-                final String htmlLine = line;
+                String used = parts[0];                 // 2234
+                String slash = parts[1];                // /
+                String total = parts[2];                // 3479
+
+                String ramColored =
+                        "<font color='#00FF66'>" + used + "</font> " +
+                                slash + " " + total;
+
+                String htmlLine =
+                        "Live " + String.format("%02d", counter) +
+                                " | CPU: " + cpuColored +
+                                " | Temp: " + tempColored +
+                                " | RAM: " + ramColored;
 
                 runOnUiThread(() ->
                         txtLive.setText(Html.fromHtml(htmlLine, Html.FROM_HTML_MODE_LEGACY))
@@ -90,9 +99,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }).start();
     }
 
-    // ============================================================
-    // ENGINE INFO DECODER
-    // ============================================================
     private static class EngineInfo {
         public final int percent;
         public final String name;
@@ -120,9 +126,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 
-    // ============================================================
-    // TEMP
-    // ============================================================
     private String readCpuTemp() {
         try {
             IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -141,9 +144,6 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         }
     }
 
-    // ============================================================
-    // RAM
-    // ============================================================
     private String readRamUsage() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

@@ -13,34 +13,41 @@
     <color name="colorAccent">#FFD700</color>
 
     <!-- ===== GEL BACKGROUNDS ===== -->
-    <color name="gel_bg">#121212</color>        <!-- κύριο μαύρο -->
-    <color name="gel_bg_dark">#0A0A0A</color>   <!-- πιο σκούρο -->
-    <color name="gel_bg_pressed">#1A1A1A</color> <!-- 🔥 για pressed state -->
+    <color name="gel_bg">#121212</color>        
+    <color name="gel_bg_dark">#0A0A0A</color>   
+    <color name="gel_bg_pressed">#1A1A1A</color>
 
     <!-- ===== TEXT ===== -->
-    <color name="gel_text_primary">#FFFFFFFF</color>   <!-- λευκό -->
-    <color name="gel_text_secondary">#B0B0B0</color>   <!-- γκρι -->
+    <color name="gel_text_primary">#FFFFFFFF</color>
+    <color name="gel_text_secondary">#B0B0B0</color>
 
-    <!-- ===== NEON GREEN FOR POPUPS ===== -->
-    <color name="gel_neon_green">#00FF66</color>   <!-- 🔥 neon electric green -->
+    <!-- ===== NEON GREEN ===== -->
+    <color name="gel_neon_green">#00FF66</color>
 
     <!-- ===== GOLD ===== -->
     <color name="gold">#FFD700</color>
     <color name="gel_gold">#FFD700</color>
     <color name="gel_gold_dark">#B8860B</color>
-    <color name="gel_gold_faint">#66FFD700</color> <!-- REQUIRED FIX -->
+    <color name="gel_gold_faint">#66FFD700</color>
 
     <!-- ===== RED (DANGER) ===== -->
     <color name="gel_red_danger">#FF3333</color>
     <color name="gel_red_danger_dark">#CC0000</color>
 
-    <!-- ===== BUTTON TEXT ===== -->
-    <color name="gel_btn_text_white">#FFFFFFFF</color>
+    <!-- ========================================= -->
+    <!-- 🔥 CORE MONITOR EXTRAS (NEW) -->
+    <!-- ========================================= -->
+
+    <!-- Gold title for Core Monitor -->
+    <color name="gel_core_title_gold">#FFD700</color>
+
+    <!-- Deep red border for gold button -->
+    <color name="gel_button_border_red">#990000</color>
 
     <!-- ========================================= -->
     <!-- 🔥 FIX FOR CPU/RAM LIVE BUTTON (GEL STYLE) -->
     <!-- ========================================= -->
-    <color name="gel_btn">#FFD700</color>               <!-- gold button -->
-    <color name="gel_text_button">#FF000000</color>     <!-- black text -->
+    <color name="gel_btn">#FFD700</color>        
+    <color name="gel_text_button">#FF000000</color>
 
 </resources>

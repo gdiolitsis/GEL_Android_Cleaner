@@ -7,47 +7,45 @@
     android:fillViewport="true">
 
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <!-- TITLE -->
+        <!-- GOLD TITLE -->
         <TextView
             android:id="@+id/txtTitleLive"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="📈 CPU / RAM LIVE"
-            android:textStyle="bold"
-            android:textSize="22sp"
             android:gravity="center"
+            android:textSize="22sp"
+            android:textStyle="bold"
             android:layout_marginBottom="12dp"
-            android:textColor="@color/gel_text_primary" />
+            android:textColor="@color/gel_gold"/>
 
-        <!-- LIVE TEXT -->
+        <!-- CONTENT -->
         <TextView
             android:id="@+id/txtLiveInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/gel_text_secondary"
-            android:textSize="14sp"
+            android:textColor="@color/gel_text_primary"
+            android:textSize="15sp"
+            android:lineSpacingExtra="3dp"
             android:typeface="monospace"
-            android:padding="6dp"
-            android:lineSpacingExtra="2dp" />
+            android:padding="6dp"/>
 
-        <!-- =========================================== -->
-        <!-- 🔥 CORE MONITOR BUTTON (GEL STYLE)          -->
-        <!-- =========================================== -->
+        <!-- CORE BUTTON -->
         <Button
             android:id="@+id/btnCoreMonitor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Core Monitor"
-            android:textSize="16sp"
+            android:text="GEL Cores Monitor"
             android:textStyle="bold"
-            android:layout_marginTop="16dp"
+            android:textSize="18sp"
+            android:layout_marginTop="18dp"
             android:padding="12dp"
-            android:background="@color/gel_btn"
-            android:textColor="@color/gel_text_button" />
+            android:textColor="@color/black"
+            android:background="@drawable/gel_btn_gold_bordo"/>
 
     </LinearLayout>
 

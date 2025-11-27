@@ -167,16 +167,17 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // EXPANDER LOGIC WITH ANIMATION (Soft Expand v2.0)
-    // ============================================================
-    private void setupSection(View header, final TextView content, final TextView icon) {
-        if (header == null || content == null || icon == null) return;
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
+// EXPANDER LOGIC WITH ANIMATION (GEL Expand Engine v3.0 — FIXED)
+// ============================================================
 
-    private void toggleSection(TextView targetContent, TextView targetIcon) {
+private void setupSection(View header, final TextView content, final TextView icon) {
+    if (header == null || content == null || icon == null) return;
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
 
-    // First: close EVERYTHING except the one we clicked
+private void toggleSection(TextView targetContent, TextView targetIcon) {
+
+    // Close all other sections
     for (int i = 0; i < allContents.length; i++) {
         TextView c = allContents[i];
         TextView ic = allIcons[i];
@@ -189,7 +190,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
     }
 
-    // Second: toggle ONLY the one we clicked
+    // Toggle only selected section
     if (targetContent.getVisibility() == View.VISIBLE) {
         animateCollapse(targetContent);
         targetIcon.setText("＋");
@@ -199,12 +200,15 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     }
 }
 
-    private void animateExpand(final View v) {
+private void animateExpand(final View v) {
+
+    // SAFE POST-MEASURE FIX — prevents auto-collapse on Android 11–14
+    v.post(() -> {
         v.measure(
-                View.MeasureSpec.makeMeasureSpec(
-                        ((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(((View)v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         );
+
         final int target = v.getMeasuredHeight();
 
         v.getLayoutParams().height = 0;
@@ -217,27 +221,30 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
                     v.getLayoutParams().height = target;
+                    v.requestLayout();
                 })
                 .start();
-    }
+    });
+}
 
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
+private void animateCollapse(final View v) {
+    if (v.getVisibility() != View.VISIBLE) return;
 
-        final int initial = v.getMeasuredHeight();
-        v.setAlpha(1f);
+    final int initial = v.getHeight();
+    v.setAlpha(1f);
 
-        v.animate()
-                .alpha(0f)
-                .setDuration(120)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = initial;
-                    v.setAlpha(1f);
-                })
-                .start();
-    }
+    v.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .setInterpolator(new AccelerateDecelerateInterpolator())
+            .withEndAction(() -> {
+                v.setVisibility(View.GONE);
+                v.getLayoutParams().height = initial;
+                v.setAlpha(1f);
+                v.requestLayout();
+            })
+            .start();
+}
 
     // ============================================================
     // SECTION BUILDERS — FULL PRO

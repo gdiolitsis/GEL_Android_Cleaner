@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v12.0
-// API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED + OEM SETTINGS HINTS
-// NOTE: Full file is always sent ready for direct copy-paste (no manual patching required).
+// DeviceInfoPeripheralsActivity.java — FINAL v12.1
+// FULL CLICKABLE PATHS + OEM-ACCURATE + NEON + GOLD + PREMIUM WORDING (SAFE)
+// NOTE: This is PART 1/2 — full file will be completed in PART 2/2.
 
 package com.gel.cleaner;
 
@@ -151,7 +151,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     // GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)
     private void toggleSection(TextView targetContent, TextView targetIcon) {
 
-        // Close all other sections
         for (int i = 0; i < allContents.length; i++) {
             TextView c = allContents[i];
             TextView ic = allIcons[i];
@@ -164,7 +163,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
         }
 
-        // Toggle only the selected section
         if (targetContent.getVisibility() == View.VISIBLE) {
             animateCollapse(targetContent);
             targetIcon.setText("＋");
@@ -175,8 +173,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     private void animateExpand(final View v) {
-
-        // SAFE MEASURE FIX — works on all devices
         v.post(() -> {
             v.measure(
                     View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
@@ -246,8 +242,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // BUILDERS — CAMERA (with reflective extras, SDK-safe)
+    // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
     // ============================================================
+
     private String buildCameraInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -278,24 +275,19 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                         String level;
                         switch (hwLevel) {
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL";
-                                break;
+                                level = "FULL"; break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED";
-                                break;
+                                level = "LIMITED"; break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                                level = "LEGACY";
-                                break;
+                                level = "LEGACY"; break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3";
-                                break;
+                                level = "LEVEL_3"; break;
                             default:
                                 level = "UNKNOWN";
                         }
                         sb.append("• HW Level      : ").append(level).append("\n");
                     }
 
-                    // OIS via reflection (no hard dependency on newer SDK constants)
                     Boolean ois = null;
                     try {
                         Field f = CameraCharacteristics.class.getField("LENS_INFO_OIS_AVAILABLE");
@@ -311,14 +303,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     if (ois != null) {
                         sb.append("• OIS           : ").append(ois ? "Yes" : "No").append("\n");
                     } else {
-                        // Premium wording instead of weakness
                         sb.append("• OIS Metric    : This metric is available only in Full-Access Device Mode.\n");
                     }
 
-                    // Extra video stabilization details can be added in future SDKs
-                    sb.append("• Video Profil. : Extra stabilization telemetry unlocks on root-enabled devices.\n");
-
-                    sb.append("\n");
+                    sb.append("• Video Profil. : Extra stabilization telemetry unlocks on root-enabled devices.\n\n");
                 }
             }
         } catch (Throwable ignore) {}
@@ -329,9 +317,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // BIOMETRICS
-    // ============================================================
     private String buildBiometricsInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -348,17 +333,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // SENSORS
-    // ============================================================
     private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
             SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sm != null) {
                 for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append("• ")
-                            .append(s.getName())
+                    sb.append("• ").append(s.getName())
                             .append(" (").append(s.getVendor()).append(")\n");
                 }
             }
@@ -373,9 +354,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // CONNECTIVITY
-    // ============================================================
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -393,15 +371,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                         sb.append("Cellular\n");
                     else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
                         sb.append("Ethernet\n");
-                    else
-                        sb.append("Other\n");
+                    else sb.append("Other\n");
 
-                    sb.append("Downlink : ")
-                            .append(caps.getLinkDownstreamBandwidthKbps())
-                            .append(" kbps\n");
-                    sb.append("Uplink   : ")
-                            .append(caps.getLinkUpstreamBandwidthKbps())
-                            .append(" kbps\n");
+                    sb.append("Downlink : ").append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");
+                    sb.append("Uplink   : ").append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");
                 }
             }
 
@@ -424,9 +397,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // LOCATION
-    // ============================================================
     private String buildLocationInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -449,9 +419,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // BLUETOOTH
-    // ============================================================
     private String buildBluetoothInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -475,9 +442,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // NFC
-    // ============================================================
     private String buildNfcInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -496,9 +460,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // BATTERY (with root-extended hints)
-    // ============================================================
     private String buildBatteryInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -520,15 +481,15 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
         } catch (Throwable ignore) {}
 
-        // Root-extended metrics (if available)
         sb.append("\nLifecycle : ");
         if (isRooted) {
-            boolean any = false;
             long chargeFull = readSysLong("/sys/class/power_supply/battery/charge_full");
             long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
             long cycleCount = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
+            boolean any = false;
             StringBuilder extra = new StringBuilder();
+
             if (chargeFull > 0) {
                 extra.append("currentFull=").append(chargeFull).append(" ");
                 any = true;
@@ -547,6 +508,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             } else {
                 sb.append("Advanced lifecycle data is not exposed by this device.\n");
             }
+
         } else {
             sb.append("This metric is available only in Full-Access Device Mode.\n");
         }
@@ -558,9 +520,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // UWB
-    // ============================================================
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
         StringBuilder sb = new StringBuilder();
@@ -569,9 +528,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // HAPTICS
-    // ============================================================
     private String buildHapticsInfo() {
         boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
         StringBuilder sb = new StringBuilder();
@@ -580,9 +536,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // GNSS
-    // ============================================================
     private String buildGnssInfo() {
         boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
         StringBuilder sb = new StringBuilder();
@@ -591,9 +544,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // USB / OTG
-    // ============================================================
     private String buildUsbInfo() {
         boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
         StringBuilder sb = new StringBuilder();
@@ -602,9 +552,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // MICROPHONES
-    // ============================================================
     private String buildMicsInfo() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -626,9 +573,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // AUDIO HAL
-    // ============================================================
     private String buildAudioHalInfo() {
         StringBuilder sb = new StringBuilder();
         String hal = getProp("ro.audio.hal.version");
@@ -641,9 +585,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return sb.toString();
     }
 
-    // ============================================================
-    // ROOT PERIPHERALS — PREMIUM SUMMARY + FUSION LINK
-    // ============================================================
     private String buildRootInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -674,11 +615,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             sb.append("SELinux          : ").append(selinux).append("\n");
         }
 
-        // 🔗 Fusion layer link (Hardware + Kernel + HAL + Root + AI Interpreter)
         sb.append("\nFusion Layer     : ");
         if (isRooted) {
             sb.append("Peripherals telemetry is wired into GEL Dynamic Access Routing Engine v1.0 ")
-              .append("(Hardware + Kernel + HAL + Root + AI Interpreter).\n");
+                    .append("(Hardware + Kernel + HAL + Root + AI Interpreter).\n");
         } else {
             sb.append("Peripherals run in Fusion-ready mode; advanced routing activates when Full-Access Device Mode is enabled.\n");
         }
@@ -729,9 +669,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         } catch (Throwable ignore) {
             return null;
         } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) {}
+            try { if (br != null) br.close(); } catch (Exception ignored) {}
         }
     }
 
@@ -747,20 +685,14 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         } catch (Throwable ignore) {
             return null;
         } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) {}
+            try { if (br != null) br.close(); } catch (Exception ignored) {}
         }
     }
 
     private long readSysLong(String path) {
         String s = readSysString(path);
         if (s == null || s.isEmpty()) return -1;
-        try {
-            return Long.parseLong(s);
-        } catch (Throwable ignore) {
-            return -1;
-        }
+        try { return Long.parseLong(s); } catch (Throwable ignore) { return -1; }
     }
 
     private String getProp(String key) {
@@ -776,47 +708,54 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS (XIAOMI) — TEXT ONLY
+    // OEM-SPECIFIC ACCESS INSTRUCTIONS — WITH CORRECT PATHS
     // ============================================================
     private void appendAccessInstructions(StringBuilder sb, String key) {
         String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
-        if (!manufacturer.equalsIgnoreCase("Xiaomi")) {
-            // For now, we only show OEM-specific paths for Xiaomi devices.
+
+        if (!manufacturer.equalsIgnoreCase("Xiaomi"))
             return;
-        }
 
         String required = null;
         String path = null;
 
         switch (key) {
+
             case "bluetooth":
                 required = "Nearby Devices Access";
                 path = "Settings → Privacy → Permission manager → Nearby devices";
                 break;
+
             case "location":
                 required = "Location Access (Approximate / Precise)";
                 path = "Settings → Location → App location permissions";
                 break;
+
             case "camera":
                 required = "Camera Access";
                 path = "Settings → Privacy → Permission manager → Camera";
                 break;
+
             case "mic":
                 required = "Microphone Access";
                 path = "Settings → Privacy → Permission manager → Microphone";
                 break;
+
             case "nfc":
                 required = "NFC Access";
                 path = "Settings → Connected devices → NFC";
                 break;
+
             case "battery":
                 required = "Battery Stats Access (System Level)";
                 path = "Settings → Battery";
                 break;
+
             case "sensors":
                 required = "Standard Sensor Access (No user permission required)";
                 path = "Settings → Developer options → Sensors";
                 break;
+
             default:
                 break;
         }
@@ -829,7 +768,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         sb.append(path).append("\n");
     }
 
-    // ============================================================
+// ============================================================
     // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
@@ -840,22 +779,28 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 // Permissions screen for this app
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+
             } else if (path.contains("App location permissions")) {
                 intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
             } else if (path.contains("Permission manager → Camera")
                     || path.contains("Permission manager → Microphone")) {
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+
             } else if (path.contains("Connected devices → NFC")) {
                 intent = new Intent(Settings.ACTION_NFC_SETTINGS);
+
             } else if (path.contains("Settings → Battery")) {
                 intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
+
             } else {
                 intent = new Intent(Settings.ACTION_SETTINGS);
             }
 
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
+
         } catch (Throwable ignore) {
             // Silent fail — UI stays consistent even if OEM blocks direct intents.
         }
@@ -954,7 +899,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             idxX = text.indexOf("Xiaomi", endX);
         }
 
-        // Bold white "Open Settings"
+        // Bold "Open Settings"
         String openSettings = "Open Settings";
         int idxOS = text.indexOf(openSettings);
         if (idxOS != -1) {

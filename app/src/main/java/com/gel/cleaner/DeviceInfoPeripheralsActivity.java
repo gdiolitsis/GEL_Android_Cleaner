@@ -708,65 +708,66 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS — WITH CORRECT PATHS
-    // ============================================================
-    private void appendAccessInstructions(StringBuilder sb, String key) {
-        String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
+// OEM-SPECIFIC ACCESS INSTRUCTIONS (XIAOMI) — TEXT ONLY
+// ============================================================
+private void appendAccessInstructions(StringBuilder sb, String key) {
 
-        if (!manufacturer.equalsIgnoreCase("Xiaomi"))
-            return;
+    String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
 
-        String required = null;
-        String path = null;
-
-        switch (key) {
-
-            case "bluetooth":
-                required = "Nearby Devices Access";
-                path = "Settings → Privacy → Permission manager → Nearby devices";
-                break;
-
-            case "location":
-                required = "Location Access (Approximate / Precise)";
-                path = "Settings → Location → App location permissions";
-                break;
-
-            case "camera":
-                required = "Camera Access";
-                path = "Settings → Privacy → Permission manager → Camera";
-                break;
-
-            case "mic":
-                required = "Microphone Access";
-                path = "Settings → Privacy → Permission manager → Microphone";
-                break;
-
-            case "nfc":
-                required = "NFC Access";
-                path = "Settings → Connected devices → NFC";
-                break;
-
-            case "battery":
-                required = "Battery Stats Access (System Level)";
-                path = "Settings → Battery";
-                break;
-
-            case "sensors":
-                required = "Standard Sensor Access (No user permission required)";
-                path = "Settings → Developer options → Sensors";
-                break;
-
-            default:
-                break;
-        }
-
-        if (required == null || path == null) return;
-
-        sb.append("\nRequired Access : ").append(required).append("\n");
-        sb.append("Xiaomi          →\n");
-        sb.append("Open Settings\n");
-        sb.append(path).append("\n");
+    // Προς το παρόν δείχνουμε ΜΟΝΟ Xiaomi, όπως το θέλεις.
+    if (!manufacturer.equalsIgnoreCase("Xiaomi")) {
+        return;
     }
+
+    String required = null;
+    String path = null;
+
+    switch (key) {
+
+        case "bluetooth":
+            required = "Nearby Devices Permission";
+            path = "Settings → Privacy → Permission manager → Nearby devices";
+            break;
+
+        case "location":
+            required = "Location Permission (Approximate / Precise)";
+            path = "Settings → Location → App location permissions";
+            break;
+
+        case "camera":
+            required = "Camera Permission";
+            path = "Settings → Privacy → Permission manager → Camera";
+            break;
+
+        case "mic":
+            required = "Microphone Permission";
+            path = "Settings → Privacy → Permission manager → Microphone";
+            break;
+
+        case "nfc":
+            required = "NFC Access";
+            path = "Settings → Connected devices → NFC";
+            break;
+
+        case "battery":
+            required = "Battery Stats Visibility";
+            path = "Settings → Battery";
+            break;
+
+        case "sensors":
+            required = "Sensor Access (no user permission required)";
+            path = "Settings → Additional settings → Developer options → Sensors";
+            break;
+
+        default:
+            return;
+    }
+
+    sb.append("\nRequired Access : ").append(required).append("\n");
+    sb.append("Xiaomi          →\n");
+    sb.append("Open Settings\n");
+    sb.append(path).append("\n");
+}
 
 // ============================================================
     // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)

@@ -1,8 +1,3 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v13 + AUTO-PATH ENGINE v4.0
-// FULL CLICKABLE PATHS + OEM-ACCURATE + NEON + GOLD + PREMIUM WORDING (SAFE)
-// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
-
 package com.gel.cleaner;
 
 import com.gel.cleaner.GELAutoActivityHook;
@@ -142,79 +137,90 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
         setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
-
+   
     private void setupSection(View header, final TextView content, final TextView icon) {
-        if (header == null || content == null || icon == null) return;
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
+    if (header == null || content == null || icon == null) return;
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
 
-    // GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)
-    private void toggleSection(TextView targetContent, TextView targetIcon) {
+// ============================================================
+// GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)
+// ============================================================
+private void toggleSection(TextView targetContent, TextView targetIcon) {
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
+    // Collapse all other sections
+    for (int i = 0; i < allContents.length; i++) {
+        TextView c = allContents[i];
+        TextView ic = allIcons[i];
 
-            if (c == null || ic == null) continue;
+        if (c == null || ic == null) continue;
 
-            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-                animateCollapse(c);
-                ic.setText("＋");
-            }
-        }
-
-        if (targetContent.getVisibility() == View.VISIBLE) {
-            animateCollapse(targetContent);
-            targetIcon.setText("＋");
-        } else {
-            animateExpand(targetContent);
-            targetIcon.setText("−");
+        if (c != targetContent && c.getVisibility() == View.VISIBLE) {
+            animateCollapse(c);
+            ic.setText("＋");
         }
     }
 
-    private void animateExpand(final View v) {
-        v.post(() -> {
-            v.measure(
-                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
-
-            final int target = v.getMeasuredHeight();
-
-            v.getLayoutParams().height = 0;
-            v.setVisibility(View.VISIBLE);
-            v.setAlpha(0f);
-
-            v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        v.getLayoutParams().height = target;
-                        v.requestLayout();
-                    })
-                    .start();
-        });
+    // Toggle current section
+    if (targetContent.getVisibility() == View.VISIBLE) {
+        animateCollapse(targetContent);
+        targetIcon.setText("＋");
+    } else {
+        animateExpand(targetContent);
+        targetIcon.setText("−");
     }
+}
 
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
+// ============================================================
+// EXPAND
+// ============================================================
+private void animateExpand(final View v) {
+    v.post(() -> {
 
-        final int initial = v.getHeight();
-        v.setAlpha(1f);
+        v.measure(
+                View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
+
+        final int target = v.getMeasuredHeight();
+
+        v.getLayoutParams().height = 0;
+        v.setVisibility(View.VISIBLE);
+        v.setAlpha(0f);
 
         v.animate()
-                .alpha(0f)
-                .setDuration(120)
+                .alpha(1f)
+                .setDuration(160)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = initial;
-                    v.setAlpha(1f);
+                    v.getLayoutParams().height = target;
                     v.requestLayout();
                 })
                 .start();
-    }
+    });
+}
+
+// ============================================================
+// COLLAPSE
+// ============================================================
+private void animateCollapse(final View v) {
+    if (v.getVisibility() != View.VISIBLE) return;
+
+    final int initial = v.getHeight();
+    v.setAlpha(1f);
+
+    v.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .setInterpolator(new AccelerateDecelerateInterpolator())
+            .withEndAction(() -> {
+                v.setVisibility(View.GONE);
+                v.getLayoutParams().height = initial;
+                v.setAlpha(1f);
+                v.requestLayout();
+            })
+            .start();
+}
 
     // ============================================================
     // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED)
@@ -699,16 +705,64 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
 
         // ============================================================
-        // FINAL APPEND
-        // ============================================================
-        if (required == null || path == null) {
-            // If in future we ever set required = "NO", we can still display it without link:
-            if ("NO".equalsIgnoreCase(required)) {
-                sb.append("\nRequired Access : NO\n");
-            }
+    // FINAL APPEND  (FIXED WORDING — NO ROOT CONFUSION)
+    // ============================================================
+    private void appendAccessInstructions(StringBuilder sb, String key) {
+
+        String required;
+        String path;
+        String oemLabel = "Settings";
+
+        switch (key) {
+
+            case "camera":
+                required = "Camera permission";
+                path = "Settings → Apps → Permissions → Camera";
+                break;
+
+            case "location":
+                required = "Location access (Approximate / Precise)";
+                path = "Settings → Location → App location permissions";
+                break;
+
+            case "bluetooth":
+                required = "Nearby devices access";
+                path = "Settings → Apps → Permissions → Nearby devices";
+                break;
+
+            case "nfc":
+                required = "NFC access";
+                path = "Settings → Connected devices → NFC";
+                break;
+
+            case "battery":
+                required = "NO";   // battery requires no runtime permission
+                path = null;
+                break;
+
+            case "sensors":
+                required = "NO";   // sensors also require no runtime permission
+                path = null;
+                break;
+
+            case "mic":
+                required = "Microphone access";
+                path = "Settings → Apps → Permissions → Microphone";
+                break;
+
+            default:
+                required = "NO";
+                path = null;
+                break;
+        }
+
+        // NO PERMISSION CASE
+        if ("NO".equalsIgnoreCase(required)) {
+            sb.append("\nRequired Access : NO\n");
             return;
         }
 
+        // STANDARD PERMISSION CASE
         sb.append("\nRequired Access : ").append(required).append("\n");
         sb.append(oemLabel).append(" →\n");
         sb.append("Open Settings\n");
@@ -813,17 +867,15 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     if (ois != null) {
                         sb.append("• OIS           : ").append(ois ? "Yes" : "No").append("\n");
                     } else {
-                        sb.append("• OIS Metric    : This metric is available only in Full-Access Device Mode.\n");
+                        sb.append("• OIS Metric    : This metric requires root access to be displayed.\n");
                     }
 
-                    sb.append("• Video Profil. : Extra stabilization telemetry unlocks on root-enabled devices.\n\n");
+                    sb.append("• Video Profil. : Additional stabilization diagnostics require root access.\n\n");
                 }
             }
         } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) {
-            sb.append("No camera data exposed by this device.\n");
-        }
+        if (sb.length() == 0) sb.append("No camera data exposed by this device.\n");
 
         appendAccessInstructions(sb, "camera");
         return sb.toString();
@@ -839,7 +891,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         sb.append("Fingerprint : ").append(fp ? "Yes" : "No").append("\n");
         sb.append("Face Unlock : ").append(face ? "Yes" : "No").append("\n");
         sb.append("Iris Scan   : ").append(iris ? "Yes" : "No").append("\n");
-        sb.append("Access Mode : Extended biometric telemetry is available only in Full-Access Device Mode.\n");
+        sb.append("Access Mode : Extended biometric telemetry requires root access.\n");
 
         return sb.toString();
     }
@@ -852,20 +904,15 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
             if (sm != null) {
                 for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append("• ")
-                            .append(s.getName())
-                            .append(" (")
-                            .append(s.getVendor())
-                            .append(")\n");
+                    sb.append("• ").append(s.getName()).append(" (").append(s.getVendor()).append(")\n");
                 }
             }
         } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) {
+        if (sb.length() == 0)
             sb.append("No sensors are exposed by this device at API level.\n");
-        }
 
-        sb.append("Advanced     : Advanced sensor subsystem tables are visible only on rooted systems.\n");
+        sb.append("Advanced     : Detailed sensor subsystem tables require root access.\n");
 
         appendAccessInstructions(sb, "sensors");
         return sb.toString();
@@ -910,13 +957,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
         } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) {
+        if (sb.length() == 0)
             sb.append("No connectivity info is exposed by this device.\n");
-        }
 
-        sb.append("Deep Stats : Advanced interface counters and raw net tables are visible only on rooted systems.\n");
+        sb.append("Deep Stats : Low-level net interface data requires root access.\n");
 
-        // Δεν ζητά συγκεκριμένο runtime permission → δεν καλούμε appendAccessInstructions εδώ.
         return sb.toString();
     }
 
@@ -934,11 +979,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) {
+        if (sb.length() == 0)
             sb.append("Location providers are not exposed at this moment.\n");
-        }
 
-        sb.append("Advanced : High-precision GNSS raw logs require elevated access.\n");
+        sb.append("Advanced : High-precision GNSS raw logs require root access.\n");
 
         appendAccessInstructions(sb, "location");
         return sb.toString();
@@ -962,7 +1006,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         } catch (Throwable ignore) { }
 
-        sb.append("Deep Scan : Extended Bluetooth controller diagnostics require elevated access.\n");
+        sb.append("Deep Scan : Extended controller diagnostics require root access.\n");
 
         appendAccessInstructions(sb, "bluetooth");
         return sb.toString();
@@ -977,13 +1021,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
             sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");
 
-            if (a != null) {
+            if (a != null)
                 sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
-            }
 
         } catch (Throwable ignore) { }
 
-        sb.append("Advanced : Secure element and low-level NFC routing tables unlock on Full-Access Device Mode.\n");
+        sb.append("Advanced : Secure element routing tables require root access.\n");
 
         appendAccessInstructions(sb, "nfc");
         return sb.toString();
@@ -1006,9 +1049,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 sb.append("Scale   : ").append(scale).append("\n");
                 sb.append("Status  : ").append(status).append("\n");
 
-                if (temp > 0) {
+                if (temp > 0)
                     sb.append("Temp    : ").append((temp / 10f)).append("°C\n");
-                }
             }
         } catch (Throwable ignore) { }
 
@@ -1045,11 +1087,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
 
         } else {
-            sb.append("This metric is available only in Full-Access Device Mode.\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Battery information is not exposed by this device.\n");
+            sb.append("This metric requires root access to be displayed.\n");
         }
 
         appendAccessInstructions(sb, "battery");
@@ -1061,7 +1099,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Supported : ").append(supported ? "Yes" : "No").append("\n");
-        sb.append("Advanced  : Fine-grain ranging diagnostics are available only in Full-Access Device Mode.\n");
+        sb.append("Advanced  : Detailed ranging diagnostics require root access.\n");
 
         return sb.toString();
     }
@@ -1071,7 +1109,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Supported : ").append(vib ? "Yes" : "No").append("\n");
-        sb.append("Profiles  : Advanced haptic waveform tables require elevated access.\n");
+        sb.append("Profiles  : Advanced waveform tables require root access.\n");
 
         return sb.toString();
     }
@@ -1081,7 +1119,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         StringBuilder sb = new StringBuilder();
 
         sb.append("GNSS     : ").append(gnss ? "Yes" : "No").append("\n");
-        sb.append("Raw Logs : Full GNSS measurement streams unlock on root-enabled devices.\n");
+        sb.append("Raw Logs : GNSS measurement streams require root access.\n");
 
         return sb.toString();
     }
@@ -1091,7 +1129,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         StringBuilder sb = new StringBuilder();
 
         sb.append("OTG Support : ").append(otg ? "Yes" : "No").append("\n");
-        sb.append("Advanced    : Low-level USB descriptors and power profiles require Full-Access Device Mode.\n");
+        sb.append("Advanced    : Low-level USB descriptors require root access.\n");
 
         return sb.toString();
     }
@@ -1104,17 +1142,15 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             if (am != null) {
                 AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
 
-                for (AudioDeviceInfo d : devs) {
+                for (AudioDeviceInfo d : devs)
                     sb.append("Mic: ").append(d.getProductName()).append("\n");
-                }
             }
         } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) {
+        if (sb.length() == 0)
             sb.append("No microphones are reported by the current audio service.\n");
-        }
 
-        sb.append("Advanced : Raw audio routing matrices are visible only on rooted systems.\n");
+        sb.append("Advanced : Raw audio routing matrices require root access.\n");
 
         appendAccessInstructions(sb, "mic");
         return sb.toString();
@@ -1125,13 +1161,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         String hal = getProp("ro.audio.hal.version");
 
-        if (hal != null && !hal.isEmpty()) {
+        if (hal != null && !hal.isEmpty())
             sb.append("Audio HAL : ").append(hal).append("\n");
-        } else {
+        else
             sb.append("Audio HAL : Not exposed at property level.\n");
-        }
 
-        sb.append("Deep Info : Extended hardware diagnostics require elevated access.\n");
+        sb.append("Deep Info : Detailed hardware diagnostics require root access.\n");
 
         return sb.toString();
     }
@@ -1140,41 +1175,37 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Root Access Mode : ")
-                .append(isRooted ? "Full-Access Device Mode" : "Standard Device Mode")
+                .append(isRooted ? "Rooted Device" : "Standard Device")
                 .append("\n");
 
         sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
 
         String secure = getProp("ro.secure");
-        if (secure != null && !secure.isEmpty()) {
+        if (secure != null && !secure.isEmpty())
             sb.append("ro.secure        : ").append(secure).append("\n");
-        }
 
         String dbg = getProp("ro.debuggable");
-        if (dbg != null && !dbg.isEmpty()) {
+        if (dbg != null && !dbg.isEmpty())
             sb.append("ro.debuggable    : ").append(dbg).append("\n");
-        }
 
         String verity = getProp("ro.boot.veritymode");
-        if (verity != null && !verity.isEmpty()) {
+        if (verity != null && !verity.isEmpty())
             sb.append("Verity Mode      : ").append(verity).append("\n");
-        }
 
         String selinux = getProp("ro.build.selinux");
-        if (selinux != null && !selinux.isEmpty()) {
+        if (selinux != null && !selinux.isEmpty())
             sb.append("SELinux          : ").append(selinux).append("\n");
-        }
 
         sb.append("\nFusion Layer     : ");
         if (isRooted) {
-            sb.append("Peripherals telemetry is wired into GEL Dynamic Access Routing Engine v1.0 (Hardware + Kernel + HAL + Root + AI Interpreter).\n");
+            sb.append("Kernel + HAL telemetry fully enabled.\n");
         } else {
-            sb.append("Peripherals run in Fusion-ready mode; advanced routing activates when Full-Access Device Mode is enabled.\n");
+            sb.append("Advanced hardware telemetry requires root access.\n");
         }
 
         if (isRooted) {
 
-            sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
+            sb.append("\nAdvanced subsystem tables are fully enabled.\n");
             sb.append("Extended hardware diagnostics are active.\n");
 
             sb.append("\nRoot indicators:\n");
@@ -1186,19 +1217,16 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
 
-            for (String p : paths) {
-                if (new File(p).exists()) {
+            for (String p : paths)
+                if (new File(p).exists())
                     sb.append("  ").append(p).append("\n");
-                }
-            }
 
-            sb.append("\nPeripherals telemetry is running in Full-Access Device Mode.\n");
+            sb.append("\nPeripherals telemetry is running with root access.\n");
 
         } else {
 
-            sb.append("\nThis device operates in Standard Device Mode.\n");
-            sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
-            sb.append("Extended hardware diagnostics require elevated access.\n");
+            sb.append("\nThis device is not rooted.\n");
+            sb.append("Advanced subsystem tables require root access.\n");
         }
 
         return sb.toString();
@@ -1282,7 +1310,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
+    // SETTINGS CLICK HANDLER (BLUE PATHS)
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
         try {
@@ -1317,13 +1345,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
 
-        } catch (Throwable ignore) {
-            // Silent fail — OEM may block direct intent; UI stays consistent.
-        }
+        } catch (Throwable ignore) { }
     }
 
     // ============================================================
-    // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+    // ON START — SET TEXT FOR ALL SECTIONS
     // ============================================================
     @Override
     protected void onStart() {
@@ -1345,7 +1371,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         set(R.id.txtAudioHalContent,     buildAudioHalInfo());
         set(R.id.txtRootContent,         buildRootInfo());
 
-        // "Other peripherals" static block
         TextView other = findViewById(R.id.txtOtherPeripheralsContent);
         if (other != null) {
             boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
@@ -1361,7 +1386,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
+    // APPLY NEON VALUES + GOLD OEM + CLICKABLE PATHS
     // ============================================================
     private void applyNeonValues(TextView tv, String text) {
         if (text == null) {
@@ -1376,7 +1401,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         int start = 0;
         int len = text.length();
 
-        // NEON GREEN for values (right of colon)
         while (start < len) {
             int colon = text.indexOf(':', start);
             if (colon == -1) break;
@@ -1401,7 +1425,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             start = lineEnd + 1;
         }
 
-        // GOLD for "Xiaomi" OEM label
         int idxX = text.indexOf("Xiaomi");
         while (idxX != -1) {
             int endX = idxX + "Xiaomi".length();
@@ -1414,7 +1437,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             idxX = text.indexOf("Xiaomi", endX);
         }
 
-        // BOLD "Open Settings"
         String openSettings = "Open Settings";
         int idxOS = text.indexOf(openSettings);
 
@@ -1427,7 +1449,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             );
         }
 
-        // BLUE CLICKABLE "Settings → …" PATHS
         boolean hasPathSpan = false;
         int idxPath = text.indexOf("Settings →");
 

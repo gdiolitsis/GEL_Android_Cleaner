@@ -1456,4 +1456,3 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         tv.setText(ssb);
     }
 }
-```0

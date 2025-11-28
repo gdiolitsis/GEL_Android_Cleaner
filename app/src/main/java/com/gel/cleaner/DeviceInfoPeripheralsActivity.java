@@ -1,6 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v11.0
-// API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED
+// DeviceInfoPeripheralsActivity.java — FINAL v12.0
+// API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED + OEM SETTINGS HINTS
+// NOTE: Full file is always sent ready for direct copy-paste (no manual patching required).
 
 package com.gel.cleaner;
 
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
@@ -22,6 +24,7 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
@@ -29,6 +32,7 @@ import android.nfc.NfcManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
@@ -37,7 +41,10 @@ import androidx.annotation.NonNull;
 
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,6 +55,8 @@ import java.lang.reflect.Field;
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private static final String NEON_GREEN = "#39FF14";
+    private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE = Color.parseColor("#1E90FF");
 
     private boolean isRooted = false;
 
@@ -315,6 +324,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         } catch (Throwable ignore) {}
 
         if (sb.length() == 0) sb.append("No camera data exposed by this device.\n");
+
+        appendAccessInstructions(sb, "camera");
         return sb.toString();
     }
 
@@ -358,6 +369,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("Advanced     : Advanced sensor subsystem tables are visible only on rooted systems.\n");
 
+        appendAccessInstructions(sb, "sensors");
         return sb.toString();
     }
 
@@ -433,6 +445,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("Advanced : High-precision GNSS raw logs require elevated access.\n");
 
+        appendAccessInstructions(sb, "location");
         return sb.toString();
     }
 
@@ -458,6 +471,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("Deep Scan : Extended Bluetooth controller diagnostics require elevated access.\n");
 
+        appendAccessInstructions(sb, "bluetooth");
         return sb.toString();
     }
 
@@ -478,6 +492,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("Advanced : Secure element and low-level NFC routing tables unlock on Full-Access Device Mode.\n");
 
+        appendAccessInstructions(sb, "nfc");
         return sb.toString();
     }
 
@@ -539,6 +554,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         if (sb.length() == 0)
             sb.append("Battery information is not exposed by this device.\n");
 
+        appendAccessInstructions(sb, "battery");
         return sb.toString();
     }
 
@@ -606,6 +622,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("Advanced : Raw audio routing matrices are visible only on rooted systems.\n");
 
+        appendAccessInstructions(sb, "mic");
         return sb.toString();
     }
 
@@ -759,6 +776,92 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
+    // OEM-SPECIFIC ACCESS INSTRUCTIONS (XIAOMI) — TEXT ONLY
+    // ============================================================
+    private void appendAccessInstructions(StringBuilder sb, String key) {
+        String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
+        if (!manufacturer.equalsIgnoreCase("Xiaomi")) {
+            // For now, we only show OEM-specific paths for Xiaomi devices.
+            return;
+        }
+
+        String required = null;
+        String path = null;
+
+        switch (key) {
+            case "bluetooth":
+                required = "Nearby Devices Access";
+                path = "Settings → Privacy → Permission manager → Nearby devices";
+                break;
+            case "location":
+                required = "Location Access (Approximate / Precise)";
+                path = "Settings → Location → App location permissions";
+                break;
+            case "camera":
+                required = "Camera Access";
+                path = "Settings → Privacy → Permission manager → Camera";
+                break;
+            case "mic":
+                required = "Microphone Access";
+                path = "Settings → Privacy → Permission manager → Microphone";
+                break;
+            case "nfc":
+                required = "NFC Access";
+                path = "Settings → Connected devices → NFC";
+                break;
+            case "battery":
+                required = "Battery Stats Access (System Level)";
+                path = "Settings → Battery";
+                break;
+            case "sensors":
+                required = "Standard Sensor Access (No user permission required)";
+                path = "Settings → Developer options → Sensors";
+                break;
+            default:
+                break;
+        }
+
+        if (required == null || path == null) return;
+
+        sb.append("\nRequired Access : ").append(required).append("\n");
+        sb.append("Xiaomi          →\n");
+        sb.append("Open Settings\n");
+        sb.append(path).append("\n");
+    }
+
+    // ============================================================
+    // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
+    // ============================================================
+    private void handleSettingsClick(Context context, String path) {
+        try {
+            Intent intent;
+
+            if (path.contains("Nearby devices")) {
+                // Permissions screen for this app
+                intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+            } else if (path.contains("App location permissions")) {
+                intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            } else if (path.contains("Permission manager → Camera")
+                    || path.contains("Permission manager → Microphone")) {
+                intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+            } else if (path.contains("Connected devices → NFC")) {
+                intent = new Intent(Settings.ACTION_NFC_SETTINGS);
+            } else if (path.contains("Settings → Battery")) {
+                intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
+            } else {
+                intent = new Intent(Settings.ACTION_SETTINGS);
+            }
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Throwable ignore) {
+            // Silent fail — UI stays consistent even if OEM blocks direct intents.
+        }
+    }
+
+    // ============================================================
     // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
     // ============================================================
     @Override
@@ -797,6 +900,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     /**
      * Applies neon green color ONLY to value parts (after ':') in each line.
+     * Additionally:
+     *  - Colors OEM label "Xiaomi" in gold.
+     *  - Makes "Open Settings" bold.
+     *  - Makes the "Settings → …" path blue & clickable.
      */
     private void applyNeonValues(TextView tv, String text) {
         if (text == null) {
@@ -805,6 +912,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
 
         int neon = Color.parseColor(NEON_GREEN);
+        int gold = Color.parseColor(GOLD_COLOR);
         SpannableStringBuilder ssb = new SpannableStringBuilder(text);
 
         int start = 0;
@@ -831,6 +939,69 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
 
             start = lineEnd + 1;
+        }
+
+        // Gold color for OEM label "Xiaomi"
+        int idxX = text.indexOf("Xiaomi");
+        while (idxX != -1) {
+            int endX = idxX + "Xiaomi".length();
+            ssb.setSpan(
+                    new ForegroundColorSpan(gold),
+                    idxX,
+                    endX,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            idxX = text.indexOf("Xiaomi", endX);
+        }
+
+        // Bold white "Open Settings"
+        String openSettings = "Open Settings";
+        int idxOS = text.indexOf(openSettings);
+        if (idxOS != -1) {
+            ssb.setSpan(
+                    new StyleSpan(Typeface.BOLD),
+                    idxOS,
+                    idxOS + openSettings.length(),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        // Blue clickable path: "Settings → …"
+        boolean hasPathSpan = false;
+        int idxPath = text.indexOf("Settings →");
+        while (idxPath != -1) {
+            int end = text.indexOf('\n', idxPath);
+            if (end == -1) end = len;
+
+            final String pathText = text.substring(idxPath, end);
+
+            ClickableSpan clickSpan = new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    handleSettingsClick(widget.getContext(), pathText);
+                }
+            };
+
+            ssb.setSpan(
+                    clickSpan,
+                    idxPath,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            ssb.setSpan(
+                    new ForegroundColorSpan(LINK_BLUE),
+                    idxPath,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+
+            hasPathSpan = true;
+            idxPath = text.indexOf("Settings →", end);
+        }
+
+        if (hasPathSpan) {
+            tv.setMovementMethod(LinkMovementMethod.getInstance());
+            tv.setHighlightColor(Color.TRANSPARENT);
         }
 
         tv.setText(ssb);

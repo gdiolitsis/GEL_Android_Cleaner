@@ -1,45 +1,40 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v10.0
-// API-SAFE + ROOT-EXTENDED + NEON VALUES + STEALTH MASKING
-// NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — μόνο ενίσχυση, όχι αλλαγή σε UI / XML.
+// DeviceInfoInternalActivity.java — GEL INTERNAL PRO v9.0
+// Full Report + Soft Expand v3.0 + Neon Values + Root Fallback + Root-Extended Internals + Stealth Masking
+// NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου — χωρίς αλλαγές σε UI / XML.
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.GELAutoActivityHook;
+import com.gel.cleaner.base.*;
 
-import android.Manifest;
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.location.LocationManager;
-import android.media.AudioDeviceInfo;
-import android.media.AudioManager;
+import android.content.pm.ConfigurationInfo;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.StatFs;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import android.text.Spannable;
+import android.graphics.Color;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 
 import java.io.BufferedReader;
@@ -47,9 +42,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
-public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
+public class DeviceInfoInternalActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
+
+    private static final String NEON_GREEN = "#39FF14";
 
     private boolean isRooted = false;
+
+    private GELFoldableDetector foldDetector;
+    private GELFoldableUIManager foldUI;
 
     private TextView[] allContents;
     private TextView[] allIcons;
@@ -62,85 +63,140 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_peripherals);
+        setContentView(R.layout.activity_device_info_internal);
+
+        foldUI = new GELFoldableUIManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
 
         TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) title.setText(getString(R.string.phone_info_peripherals));
+        if (title != null) title.setText(getString(R.string.phone_info_internal));
 
-        TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
-        TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
-        TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
-        TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);
-        TextView txtLocationContent      = findViewById(R.id.txtLocationContent);
-        TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);
-        TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
-        TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
-        TextView txtRootContent          = findViewById(R.id.txtRootContent);
-        TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-        TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
-        TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
-        TextView txtGnssContent          = findViewById(R.id.txtGnssContent);
-        TextView txtUsbContent           = findViewById(R.id.txtUsbContent);
-        TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
-        TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
+        // CONTENT
+        TextView txtSystemContent           = findViewById(R.id.txtSystemContent);
+        TextView txtAndroidContent          = findViewById(R.id.txtAndroidContent);
+        TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
+        TextView txtGpuContent              = findViewById(R.id.txtGpuContent);
+        TextView txtThermalContent          = findViewById(R.id.txtThermalContent);
+        TextView txtThermalZonesContent     = findViewById(R.id.txtThermalZonesContent);
+        TextView txtVulkanContent           = findViewById(R.id.txtVulkanContent);
+        TextView txtThermalProfilesContent  = findViewById(R.id.txtThermalProfilesContent);
+        TextView txtFpsGovernorContent      = findViewById(R.id.txtFpsGovernorContent);
+        TextView txtRamContent              = findViewById(R.id.txtRamContent);
+        TextView txtStorageContent          = findViewById(R.id.txtStorageContent);
+        TextView txtScreenContent           = findViewById(R.id.txtScreenContent);
+        TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
+        TextView txtRootContent             = findViewById(R.id.txtRootContent);
 
-        TextView iconCamera        = findViewById(R.id.iconCameraToggle);
-        TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
-        TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
-        TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);
-        TextView iconLocation      = findViewById(R.id.iconLocationToggle);
-        TextView iconOther         = findViewById(R.id.iconOtherPeripheralsToggle);
-        TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);
-        TextView iconNfc           = findViewById(R.id.iconNfcToggle);
-        TextView iconRoot          = findViewById(R.id.iconRootToggle);
-        TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
-        TextView iconUwb           = findViewById(R.id.iconUwbToggle);
-        TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);
-        TextView iconGnss          = findViewById(R.id.iconGnssToggle);
-        TextView iconUsb           = findViewById(R.id.iconUsbToggle);
-        TextView iconMics          = findViewById(R.id.iconMicsToggle);
-        TextView iconAudioHal      = findViewById(R.id.iconAudioHalToggle);
+        // ICONS
+        TextView iconSystem           = findViewById(R.id.iconSystemToggle);
+        TextView iconAndroid          = findViewById(R.id.iconAndroidToggle);
+        TextView iconCpu              = findViewById(R.id.iconCpuToggle);
+        TextView iconGpu              = findViewById(R.id.iconGpuToggle);
+        TextView iconThermal          = findViewById(R.id.iconThermalToggle);
+        TextView iconThermalZones     = findViewById(R.id.iconThermalZonesToggle);
+        TextView iconVulkan           = findViewById(R.id.iconVulkanToggle);
+        TextView iconThermalProfiles  = findViewById(R.id.iconThermalProfilesToggle);
+        TextView iconFpsGovernor      = findViewById(R.id.iconFpsGovernorToggle);
+        TextView iconRam              = findViewById(R.id.iconRamToggle);
+        TextView iconStorage          = findViewById(R.id.iconStorageToggle);
+        TextView iconScreen           = findViewById(R.id.iconScreenToggle);
+        TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
+        TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
         allContents = new TextView[]{
-                txtCameraContent, txtBiometricsContent, txtSensorsContent, txtConnectivityContent,
-                txtLocationContent, txtOtherPeripherals, txtBluetoothContent, txtNfcContent,
-                txtRootContent, txtBatteryContent, txtUwbContent, txtHapticsContent, txtGnssContent,
-                txtUsbContent, txtMicsContent, txtAudioHalContent
+                txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
+                txtThermalContent, txtThermalZonesContent, txtVulkanContent,
+                txtThermalProfilesContent, txtFpsGovernorContent, txtRamContent,
+                txtStorageContent, txtScreenContent, txtConnectivityContent,
+                txtRootContent
         };
 
         allIcons = new TextView[]{
-                iconCamera, iconBiometrics, iconSensors, iconConnectivity, iconLocation, iconOther,
-                iconBluetooth, iconNfc, iconRoot, iconBattery, iconUwb, iconHaptics, iconGnss,
-                iconUsb, iconMics, iconAudioHal
+                iconSystem, iconAndroid, iconCpu, iconGpu, iconThermal, iconThermalZones,
+                iconVulkan, iconThermalProfiles, iconFpsGovernor, iconRam,
+                iconStorage, iconScreen, iconConnectivity, iconRoot
         };
 
-        // Root state (shared with advanced diagnostics)
         isRooted = isDeviceRooted();
 
-        setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-        setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
-        setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+        // ============================================================
+        // FULL PRO CONTENT BUILD (values in neon green via spans)
+        // ============================================================
+        if (txtSystemContent != null)
+            setNeonSectionText(txtSystemContent, buildSystemInfo());
+        if (txtAndroidContent != null)
+            setNeonSectionText(txtAndroidContent, buildAndroidInfo());
+        if (txtCpuContent != null)
+            setNeonSectionText(txtCpuContent, buildCpuInfo());
+        if (txtGpuContent != null)
+            setNeonSectionText(txtGpuContent, buildGpuInfo());
+        if (txtThermalContent != null)
+            setNeonSectionText(txtThermalContent, buildThermalSensorsInfo());
+        if (txtThermalZonesContent != null)
+            setNeonSectionText(txtThermalZonesContent, buildThermalZonesInfo());
+        if (txtVulkanContent != null)
+            setNeonSectionText(txtVulkanContent, buildVulkanInfo());
+        if (txtThermalProfilesContent != null)
+            setNeonSectionText(txtThermalProfilesContent, buildThermalProfilesInfo());
+        if (txtFpsGovernorContent != null)
+            setNeonSectionText(txtFpsGovernorContent, buildFpsGovernorInfo());
+        if (txtRamContent != null)
+            setNeonSectionText(txtRamContent, buildRamInfo());
+        if (txtStorageContent != null)
+            setNeonSectionText(txtStorageContent, buildStorageInfo());
+        if (txtScreenContent != null)
+            setNeonSectionText(txtScreenContent, buildScreenInfo());
+        if (txtConnectivityContent != null)
+            setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
+        if (txtRootContent != null)
+            setNeonSectionText(txtRootContent, buildRootInfo());
+
+        // EXPANDERS
+        setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
+        setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
+        setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
+        setupSection(findViewById(R.id.headerGpu), txtGpuContent, iconGpu);
+        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+        setupSection(findViewById(R.id.headerThermalZones), txtThermalZonesContent, iconThermalZones);
+        setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
+        setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
+        setupSection(findViewById(R.id.headerFpsGovernor), txtFpsGovernorContent, iconFpsGovernor);
+        setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
+        setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
+        setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
         setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
-        setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
-        setupSection(findViewById(R.id.headerBluetooth), txtBluetoothContent, iconBluetooth);
-        setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
         setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
-        setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);
-        setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
-        setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
-        setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
-        setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
-        setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);
-        setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
-        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (foldDetector != null) foldDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        if (foldDetector != null) foldDetector.stop();
+        super.onPause();
+    }
+
+    @Override
+    public void onPostureChanged(@NonNull Posture posture) {}
+
+    @Override
+    public void onScreenChanged(boolean isInner) {
+        if (foldUI != null) foldUI.applyUI(isInner);
+    }
+
+    // ============================================================
+    // EXPANDER LOGIC WITH ANIMATION (GEL Expand Engine v3.0 — FIXED)
+    // ============================================================
 
     private void setupSection(View header, final TextView content, final TextView icon) {
         if (header == null || content == null || icon == null) return;
         header.setOnClickListener(v -> toggleSection(content, icon));
     }
 
-    // GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)
     private void toggleSection(TextView targetContent, TextView targetIcon) {
 
         // Close all other sections
@@ -156,7 +212,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
         }
 
-        // Toggle only the selected section
+        // Toggle only selected section
         if (targetContent.getVisibility() == View.VISIBLE) {
             animateCollapse(targetContent);
             targetIcon.setText("＋");
@@ -168,7 +224,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private void animateExpand(final View v) {
 
-        // SAFE MEASURE FIX — works on all devices
+        // SAFE POST-MEASURE FIX — prevents auto-collapse on Android 11–14
         v.post(() -> {
             v.measure(
                     View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
@@ -213,349 +269,824 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // ROOT CHECK
+    // NEON VALUE COLOR ENGINE (only values, not labels)
     // ============================================================
-    private boolean isDeviceRooted() {
-        try {
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-            };
-            for (String p : paths)
-                if (new File(p).exists()) return true;
 
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            in.close();
-            return line != null && line.trim().length() > 0;
+    private void setNeonSectionText(TextView tv, String text) {
+        if (tv == null) return;
+        if (text == null) text = "";
+        tv.setText(applyNeonToValues(text));
+    }
+
+    private CharSequence applyNeonToValues(String text) {
+        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+        String[] lines = text.split("\n", -1); // keep empty lines
+        int offset = 0;
+        boolean previousLabelOnly = false;
+
+        for (String line : lines) {
+            int len = line.length();
+            if (len > 0) {
+                int colonIdx = line.indexOf(':');
+                if (colonIdx >= 0) {
+                    // Label-only line (ends with ':')
+                    if (colonIdx == len - 1) {
+                        previousLabelOnly = true;
+                    } else {
+                        // Color from first non-space after ':' to end of line
+                        int valueStart = offset + colonIdx + 1;
+                        while (valueStart < offset + len &&
+                                Character.isWhitespace(line.charAt(valueStart - offset))) {
+                            valueStart++;
+                        }
+                        int valueEnd = offset + len;
+                        if (valueStart < valueEnd) {
+                            ssb.setSpan(
+                                    new ForegroundColorSpan(Color.parseColor(NEON_GREEN)),
+                                    valueStart,
+                                    valueEnd,
+                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                            );
+                        }
+                        previousLabelOnly = false;
+                    }
+                } else if (previousLabelOnly) {
+                    // Entire line is a value for the previous label-only line
+                    int valueStart = offset;
+                    int valueEnd = offset + len;
+                    ssb.setSpan(
+                            new ForegroundColorSpan(Color.parseColor(NEON_GREEN)),
+                            valueStart,
+                            valueEnd,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    );
+                    previousLabelOnly = false;
+                } else {
+                    previousLabelOnly = false;
+                }
+            } else {
+                previousLabelOnly = false;
+            }
+
+            offset += len + 1; // +1 for '\n'
+        }
+
+        return ssb;
+    }
+
+    // ============================================================
+    // SECTION BUILDERS — FULL PRO + ROOT EXTENDED + STEALTH
+    // ============================================================
+
+    private String buildSystemInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Manufacturer : ").append(Build.MANUFACTURER).append("\n");
+        sb.append("Brand        : ").append(Build.BRAND).append("\n");
+        sb.append("Model        : ").append(Build.MODEL).append("\n");
+        sb.append("Device       : ").append(Build.DEVICE).append("\n");
+        sb.append("Product      : ").append(Build.PRODUCT).append("\n");
+        sb.append("Hardware     : ").append(Build.HARDWARE).append("\n");
+        sb.append("Board        : ").append(Build.BOARD).append("\n");
+        sb.append("Bootloader   : ").append(Build.BOOTLOADER).append("\n\n");
+
+        sb.append("Fingerprint:\n").append(Build.FINGERPRINT).append("\n\n");
+
+        String androidId = "";
+        try {
+            androidId = Settings.Secure.getString(
+                    getContentResolver(), Settings.Secure.ANDROID_ID);
+        } catch (Throwable ignore) {
+        }
+        if (androidId != null) {
+            sb.append("Android ID   : ").append(androidId).append("\n");
+        }
+
+        sb.append("Device Type  : ");
+        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) {
+            sb.append("Tablet\n");
+        } else {
+            sb.append("Phone\n");
+        }
+
+        String region = getProp("ro.product.locale.region");
+        if (region != null && !region.isEmpty()) {
+            sb.append("Region       : ").append(region).append("\n");
+        }
+
+        String vendor = getProp("ro.product.vendor.name");
+        if (vendor != null && !vendor.isEmpty()) {
+            sb.append("Vendor Name  : ").append(vendor).append("\n");
+        }
+
+        // Root-extended boot / verified state (props are readable even without su on many devices)
+        String vbState = getProp("ro.boot.verifiedbootstate");
+        if (vbState != null && !vbState.isEmpty()) {
+            sb.append("VB State     : ").append(vbState).append("\n");
+        }
+        String vbDevice = getProp("ro.boot.vbmeta.device_state");
+        if (vbDevice != null && !vbDevice.isEmpty()) {
+            sb.append("VB Device    : ").append(vbDevice).append("\n");
+        }
+        String flashLock = getProp("ro.boot.flash.locked");
+        if (flashLock != null && !flashLock.isEmpty()) {
+            sb.append("Flash Lock   : ").append(flashLock).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildAndroidInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Android      : ").append(Build.VERSION.RELEASE)
+                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            sb.append("Security Pch : ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+        }
+
+        sb.append("Build ID     : ").append(Build.ID).append("\n");
+        sb.append("Build Type   : ").append(Build.TYPE).append("\n");
+        sb.append("Build Tags   : ").append(Build.TAGS).append("\n\n");
+
+        String incr = Build.VERSION.INCREMENTAL;
+        if (incr != null) {
+            sb.append("Incremental  : ").append(incr).append("\n");
+        }
+
+        String baseband = getProp("gsm.version.baseband");
+        if (baseband != null && !baseband.isEmpty()) {
+            sb.append("Baseband     : ").append(baseband).append("\n");
+        }
+
+        String vendorRel = getProp("ro.vendor.build.version.release");
+        if (vendorRel != null && !vendorRel.isEmpty()) {
+            sb.append("Vendor Rel   : ").append(vendorRel).append("\n");
+        }
+
+        String miui = getProp("ro.miui.ui.version.name");
+        if (miui != null && !miui.isEmpty()) {
+            sb.append("MIUI         : ").append(miui).append("\n");
+        }
+
+        String hyper = getProp("ro.mi.os.version.name");
+        if (hyper != null && !hyper.isEmpty()) {
+            sb.append("HyperOS      : ").append(hyper).append("\n");
+        }
+
+        // Small root-extended flavour: SELinux props
+        String seEnforce = getProp("ro.boot.selinux");
+        if (seEnforce != null && !seEnforce.isEmpty()) {
+            sb.append("SELinux Boot : ").append(seEnforce).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildCpuInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        // ABI
+        sb.append("ABI          : ");
+        if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
+            for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(Build.SUPPORTED_ABIS[i]);
+            }
+        } else {
+            sb.append(Build.CPU_ABI);
+        }
+        sb.append("\n");
+
+        int cores = Runtime.getRuntime().availableProcessors();
+        sb.append("CPU Cores    : ").append(cores).append("\n");
+
+        // /proc/cpuinfo key lines
+        String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
+        if (cpuinfo != null && !cpuinfo.isEmpty()) {
+            String[] lines = cpuinfo.split("\n");
+            for (String line : lines) {
+                String low = line.toLowerCase();
+                if (low.startsWith("hardware")) {
+                    sb.append(line.trim()).append("\n");
+                } else if (low.startsWith("model name")) {
+                    sb.append(line.trim()).append("\n");
+                } else if (low.startsWith("processor")) {
+                    sb.append(line.trim()).append("\n");
+                }
+            }
+        }
+
+        // Governor & frequency (if exposed)
+        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+        if (gov != null && !gov.isEmpty()) {
+            sb.append("Governor     : ").append(gov.trim()).append("\n");
+        }
+
+        long curFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
+        long minFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
+        long maxFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+
+        if (curFreq > 0 || minFreq > 0 || maxFreq > 0) {
+            sb.append("Freq (MHz)   : ");
+            if (curFreq > 0) sb.append("cur=").append(curFreq / 1000).append(" ");
+            if (minFreq > 0) sb.append("min=").append(minFreq / 1000).append(" ");
+            if (maxFreq > 0) sb.append("max=").append(maxFreq / 1000);
+            sb.append("\n");
+        }
+
+        // big.LITTLE hint from clusters (if exist)
+        String policy0 = readSysString("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq");
+        String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
+        if ((policy0 != null && !policy0.isEmpty()) ||
+                (policy7 != null && !policy7.isEmpty())) {
+            sb.append("Cluster Hint : big.LITTLE detected\n");
+        }
+
+        // ROOT-EXTENDED CPU DETAILS
+        boolean addedRootCpu = false;
+        if (isRooted) {
+            sb.append("\n[Root CPU tables]\n");
+            try {
+                for (int i = 0; i < cores; i++) {
+                    String base = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
+                    long rMin = readSysLong(base + "cpuinfo_min_freq");
+                    long rMax = readSysLong(base + "cpuinfo_max_freq");
+                    long rCur = readSysLong(base + "scaling_cur_freq");
+                    if (rMin > 0 || rMax > 0 || rCur > 0) {
+                        sb.append("cpu").append(i).append("        : ");
+                        if (rCur > 0) sb.append("cur=").append(rCur / 1000).append("MHz ");
+                        if (rMin > 0) sb.append("min=").append(rMin / 1000).append("MHz ");
+                        if (rMax > 0) sb.append("max=").append(rMax / 1000).append("MHz");
+                        sb.append("\n");
+                        addedRootCpu = true;
+                    }
+                    String avail = readSysString(base + "scaling_available_frequencies");
+                    if (avail != null && !avail.isEmpty()) {
+                        sb.append("cpu").append(i).append(" avail   : ").append(avail.trim()).append("\n");
+                        addedRootCpu = true;
+                    }
+                }
+            } catch (Throwable ignore) {
+            }
+
+            if (!addedRootCpu) {
+                sb.append("Root CPU details not exposed by current kernel.\n");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private String buildGpuInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            ActivityManager am =
+                    (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                ConfigurationInfo ci = am.getDeviceConfigurationInfo();
+                if (ci != null) {
+                    sb.append("OpenGL ES    : ").append(ci.getGlEsVersion()).append("\n");
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+
+        String egl = getProp("ro.hardware.egl");
+        if (egl != null && !egl.isEmpty()) {
+            sb.append("EGL HW       : ").append(egl).append("\n");
+        }
+
+        String driver0 = getProp("ro.gfx.driver.0");
+        if (driver0 != null && !driver0.isEmpty()) {
+            sb.append("GPU Driver   : ").append(driver0).append("\n");
+        }
+
+        String perf = getProp("ro.gpu.uv");
+        if (perf != null && !perf.isEmpty()) {
+            sb.append("GPU Mode     : ").append(perf).append("\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No GPU information available via system properties.\n");
+        }
+
+        // ROOT-EXTENDED GPU (KGSL / devfreq where available)
+        boolean addedRootGpu = false;
+        if (isRooted) {
+            sb.append("\n[Root GPU tables]\n");
+            try {
+                long cur = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/cur_freq");
+                long min = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/min_freq");
+                long max = readSysLong("/sys/class/kgsl/kgsl-3d0/devfreq/max_freq");
+                if (cur > 0 || min > 0 || max > 0) {
+                    sb.append("Freq (MHz)   : ");
+                    if (cur > 0) sb.append("cur=").append(cur / 1000000).append(" ");
+                    if (min > 0) sb.append("min=").append(min / 1000000).append(" ");
+                    if (max > 0) sb.append("max=").append(max / 1000000);
+                    sb.append("\n");
+                    addedRootGpu = true;
+                }
+
+                String avail = readSysString("/sys/class/kgsl/kgsl-3d0/devfreq/available_frequencies");
+                if (avail != null && !avail.isEmpty()) {
+                    sb.append("Avail Freq   : ").append(avail.trim()).append("\n");
+                    addedRootGpu = true;
+                }
+
+                String busy = readSysString("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
+                if (busy != null && !busy.isEmpty()) {
+                    sb.append("Busy GPU     : ").append(busy.trim()).append(" %\n");
+                    addedRootGpu = true;
+                }
+            } catch (Throwable ignore) {
+            }
+
+            if (!addedRootGpu) {
+                sb.append("Root GPU metrics not exposed by current driver.\n");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private String buildThermalSensorsInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        // Battery temp
+        long batt = readSysLong("/sys/class/power_supply/battery/temp");
+        if (batt > 0) {
+            double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
+            sb.append("Battery      : ").append(String.format("%.1f°C", c)).append("\n");
+        }
+
+        // A few key thermal zones by type
+        File dir = new File("/sys/class/thermal");
+        if (dir.exists() && dir.isDirectory()) {
+            File[] zones = dir.listFiles();
+            if (zones != null) {
+                for (File z : zones) {
+                    if (!z.getName().startsWith("thermal_zone")) continue;
+                    String type = readSysString(z.getAbsolutePath() + "/type");
+                    if (type == null) continue;
+                    String low = type.toLowerCase();
+
+                    if (low.contains("cpu") || low.contains("gpu")
+                            || low.contains("soc") || low.contains("skin")) {
+
+                        long t = readSysLong(z.getAbsolutePath() + "/temp");
+                        if (t <= 0) continue;
+
+                        double c = (t > 1000) ? t / 1000.0 : t / 10.0;
+                        sb.append(padRight(type, 12))
+                                .append(": ")
+                                .append(String.format("%.1f°C", c))
+                                .append("  (").append(z.getName()).append(")\n");
+                    }
+                }
+            }
+        }
+
+        if (sb.length() == 0) {
+            sb.append("Thermal sensors are not exposed by this device/firmware.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildThermalZonesInfo() {
+        StringBuilder sb = new StringBuilder();
+        File dir = new File("/sys/class/thermal");
+        if (!dir.exists() || !dir.isDirectory()) {
+            sb.append("Thermal directory not accessible (not exposed by this device).\n");
+            return sb.toString();
+        }
+
+        File[] zones = dir.listFiles();
+        if (zones == null || zones.length == 0) {
+            sb.append("No thermal zones exposed by this device.\n");
+            return sb.toString();
+        }
+
+        for (File z : zones) {
+            if (!z.getName().startsWith("thermal_zone")) continue;
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            long temp = readSysLong(z.getAbsolutePath() + "/temp");
+
+            if ((type == null || type.isEmpty()) && temp <= 0) continue;
+
+            sb.append(z.getName()).append(" | ");
+            if (type != null) sb.append(type.trim()).append(" | ");
+
+            if (temp > 0) {
+                double c = (temp > 1000) ? temp / 1000.0 : temp / 10.0;
+                sb.append(String.format("%.1f°C", c));
+            } else {
+                sb.append("N/A");
+            }
+            sb.append("\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No readable thermal zones (not exposed by current firmware).\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildVulkanInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            boolean hasLevel = getPackageManager().hasSystemFeature(
+                    "android.hardware.vulkan.level");
+            boolean hasVersion = getPackageManager().hasSystemFeature(
+                    "android.hardware.vulkan.version");
+            sb.append("Feature Level : ").append(hasLevel ? "Yes" : "No").append("\n");
+            sb.append("Feature Vers  : ").append(hasVersion ? "Yes" : "No").append("\n");
+        } catch (Throwable ignore) {
+        }
+
+        String hw = getProp("ro.hardware.vulkan");
+        if (hw != null && !hw.isEmpty()) {
+            sb.append("Vulkan HW     : ").append(hw).append("\n");
+        }
+
+        String enable = getProp("ro.vulkan.enable");
+        if (enable != null && !enable.isEmpty()) {
+            sb.append("Vulkan Enable : ").append(enable).append("\n");
+        }
+
+        String layers = getProp("debug.vulkan.layers");
+        if (layers != null && !layers.isEmpty()) {
+            sb.append("Debug Layers  : ").append(layers).append("\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No Vulkan information available.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildThermalProfilesInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        String[] keys = {
+                "ro.vendor.thermal.config",
+                "ro.hardware.thermal",
+                "ro.thermal_config",
+                "persist.vendor.thermal.config",
+                "persist.sys.thermal.config"
+        };
+
+        for (String k : keys) {
+            String v = getProp(k);
+            if (v != null && !v.isEmpty()) {
+                sb.append(k).append(" = ").append(v).append("\n");
+            }
+        }
+
+        // Root-extended: attempt to show thermal config file hints
+        String[] cfgFiles = {
+                "/vendor/etc/thermal-engine.conf",
+                "/system/etc/thermal-engine.conf",
+                "/vendor/etc/thermal/thermal-engine.conf"
+        };
+        boolean anyCfg = false;
+        for (String path : cfgFiles) {
+            File f = new File(path);
+            if (f.exists()) {
+                sb.append("Cfg File      : ").append(path).append("\n");
+                anyCfg = true;
+            }
+        }
+
+        if (!anyCfg) {
+            sb.append("Config Files  : Not exposed by this device.\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No explicit thermal profile properties found.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildFpsGovernorInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            DisplayMetrics dm = getResources().getDisplayMetrics();
+            int w = dm.widthPixels;
+            int h = dm.heightPixels;
+            int dpi = dm.densityDpi;
+            sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
+            sb.append("Density       : ").append(dpi).append(" dpi\n");
+        } catch (Throwable ignore) {
+        }
+
+        String refresh = getProp("ro.surface_flinger.refresh_rate");
+        if (refresh != null && !refresh.isEmpty()) {
+            sb.append("Default Ref   : ").append(refresh).append(" Hz\n");
+        }
+
+        String peak = getProp("ro.surface_flinger.max_refresh_rate");
+        if (peak != null && !peak.isEmpty()) {
+            sb.append("Max Refresh   : ").append(peak).append(" Hz\n");
+        }
+
+        String mode = getProp("ro.display.mode");
+        if (mode != null && !mode.isEmpty()) {
+            sb.append("Display Mode  : ").append(mode).append("\n");
+        }
+
+        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+        if (gov != null && !gov.isEmpty()) {
+            sb.append("CPU Governor  : ").append(gov.trim()).append("\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No FPS / governor hints available.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildRamInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+
+                long totalMb = mi.totalMem / (1024 * 1024);
+                long availMb = mi.availMem / (1024 * 1024);
+                long usedMb = totalMb - availMb;
+
+                sb.append("Total RAM     : ").append(totalMb).append(" MB\n");
+                sb.append("Used RAM      : ").append(usedMb).append(" MB\n");
+                sb.append("Free RAM      : ").append(availMb).append(" MB\n");
+                sb.append("Low Memory    : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
+                sb.append("Threshold     : ").append(mi.threshold / (1024 * 1024)).append(" MB\n");
+            }
+        } catch (Throwable ignore) {
+        }
+
+        // /proc/meminfo parsing (user + kernel view)
+        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+        if (meminfo != null && !meminfo.isEmpty()) {
+            sb.append("\n/proc/meminfo (core):\n");
+            String[] lines = meminfo.split("\n");
+            for (String line : lines) {
+                if (line.startsWith("MemTotal:")
+                        || line.startsWith("MemFree:")
+                        || line.startsWith("Buffers:")
+                        || line.startsWith("Cached:")
+                        || line.startsWith("SwapTotal:")
+                        || line.startsWith("SwapFree:")
+                        || line.startsWith("Inactive:")
+                        || line.startsWith("Active:")) {
+                    sb.append(line.trim()).append("\n");
+                }
+            }
+        }
+
+        // ZRAM / swap advanced
+        boolean anyZram = false;
+        try {
+            String zramSize = readSysString("/sys/block/zram0/disksize");
+            if (zramSize != null && !zramSize.isEmpty()) {
+                sb.append("ZRAM Size     : ").append(zramSize).append(" bytes\n");
+                anyZram = true;
+            }
+            String zramStat = readTextFile("/sys/block/zram0/mm_stat", 1024);
+            if (zramStat != null && !zramStat.isEmpty()) {
+                sb.append("ZRAM mm_stat  : ").append(zramStat.replace("\n", " ")).append("\n");
+                anyZram = true;
+            }
+        } catch (Throwable ignore) {
+        }
+        if (!anyZram) {
+            sb.append("ZRAM Details  : Not exposed by this device.\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("Unable to read RAM information.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String buildStorageInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            File internal = Environment.getDataDirectory();
+            appendStorageBlock(sb, "Internal", internal);
+
+            File ext = Environment.getExternalStorageDirectory();
+            if (ext != null && ext.exists()) {
+                appendStorageBlock(sb, "External (primary)", ext);
+            }
+        } catch (Throwable ignore) {
+        }
+
+        // /proc/mounts core partitions
+        String mounts = readTextFile("/proc/mounts", 32 * 1024);
+        if (mounts != null && !mounts.isEmpty()) {
+            sb.append("Core Mounts   :\n");
+            String[] lines = mounts.split("\n");
+            String[] interesting = {"/", "/system", "/vendor", "/product", "/data", "/cache", "/metadata", "/sdcard"};
+            for (String line : lines) {
+                String[] parts = line.split("\\s+");
+                if (parts.length < 3) continue;
+                String mountPoint = parts[1];
+                boolean hit = false;
+                for (String it : interesting) {
+                    if (mountPoint.equals(it)) {
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) {
+                    sb.append("  ").append(mountPoint)
+                            .append(" : ").append(parts[2]) // fstype
+                            .append(" (").append(parts[0]).append(")\n");
+                }
+            }
+        } else {
+            sb.append("Mount table   : Not exposed by this device.\n");
+        }
+
+        // /proc/partitions snapshot
+        String parts = readTextFile("/proc/partitions", 8 * 1024);
+        if (parts != null && !parts.isEmpty()) {
+            sb.append("\n/proc/partitions (snapshot):\n");
+            sb.append(parts.trim()).append("\n");
+        } else {
+            sb.append("Partitions    : Not exposed by this device.\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("Unable to read storage partitions.\n");
+        }
+
+        return sb.toString();
+    }
+
+    private void appendStorageBlock(StringBuilder sb, String label, File path) {
+        try {
+            StatFs stat = new StatFs(path.getAbsolutePath());
+            long blockSize, totalBlocks, availBlocks;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                blockSize = stat.getBlockSizeLong();
+                totalBlocks = stat.getBlockCountLong();
+                availBlocks = stat.getAvailableBlocksLong();
+            } else {
+                blockSize = stat.getBlockSize();
+                totalBlocks = stat.getBlockCount();
+                availBlocks = stat.getAvailableBlocks();
+            }
+
+            long totalBytes = blockSize * totalBlocks;
+            long availBytes = blockSize * availBlocks;
+            long usedBytes = totalBytes - availBytes;
+
+            long totalGb = totalBytes / (1024 * 1024 * 1024);
+            long usedGb = usedBytes / (1024 * 1024 * 1024);
+            long freeGb = availBytes / (1024 * 1024 * 1024);
+
+            sb.append(label).append(":\n");
+            sb.append("  Path   : ").append(path.getAbsolutePath()).append("\n");
+            sb.append("  Total  : ").append(totalGb).append(" GB\n");
+            sb.append("  Used   : ").append(usedGb).append(" GB\n");
+            sb.append("  Free   : ").append(freeGb).append(" GB\n\n");
 
         } catch (Throwable ignore) {
-            return false;
         }
     }
 
-    // ============================================================
-    // BUILDERS — CAMERA (API-SAFE, χωρίς OIS / VIDEO MODE constants)
-    // ============================================================
-    private String buildCameraInfo() {
+    private String buildScreenInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
-            CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            if (cm != null) {
+            DisplayMetrics dm = getResources().getDisplayMetrics();
+            int w = dm.widthPixels;
+            int h = dm.heightPixels;
+            int dpi = dm.densityDpi;
+            float density = dm.density;
 
-                for (String id : cm.getCameraIdList()) {
-                    CameraCharacteristics cc = cm.getCameraCharacteristics(id);
+            sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
+            sb.append("Density       : ").append(density).append(" (").append(dpi).append(" dpi)\n");
 
-                    Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
-                    float[] focals = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-                    float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                    Integer hwLevel = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+            double widthInch = w / (double) dpi;
+            double heightInch = h / (double) dpi;
+            double diag = Math.sqrt(widthInch * widthInch + heightInch * heightInch);
+            sb.append("Approx. Size  : ").append(String.format("%.1f\"", diag)).append("\n");
 
-                    sb.append("Camera ID : ").append(id).append("\n");
-                    sb.append("• Facing        : ");
-                    if (facing != null) {
-                        if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                            sb.append("Front\n");
-                        } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
-                            sb.append("Back\n");
-                        } else {
-                            sb.append("External\n");
-                        }
-                    } else {
-                        sb.append("Unknown\n");
-                    }
+        } catch (Throwable ignore) {
+        }
 
-                    if (focals != null && focals.length > 0)
-                        sb.append("• Focal         : ").append(focals[0]).append(" mm\n");
-
-                    if (apertures != null && apertures.length > 0)
-                        sb.append("• Aperture      : f/").append(apertures[0]).append("\n");
-
-                    if (hwLevel != null) {
-                        String level;
-                        switch (hwLevel) {
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                                level = "LEGACY";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3";
-                                break;
-                            default:
-                                level = "UNKNOWN";
-                        }
-                        sb.append("• HW Level      : ").append(level).append("\n");
-                    }
-
-                    sb.append("\n");
-                }
-            }
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional camera diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // BIOMETRICS
-    // ============================================================
-    private String buildBiometricsInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        boolean fp   = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-        boolean face = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");
-        boolean iris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");
-
-        sb.append("Fingerprint : ").append(fp ? "Yes" : "No").append("\n");
-        sb.append("Face Unlock : ").append(face ? "Yes" : "No").append("\n");
-        sb.append("Iris Scan   : ").append(iris ? "Yes" : "No").append("\n");
-
-        // Premium-style note (χωρίς αδυναμία)
-        sb.append("\nExtended biometrics telemetry is available only in Full-Access Device Mode.\n");
+        if (sb.length() == 0) {
+            sb.append("Unable to read screen metrics.\n");
+        }
 
         return sb.toString();
     }
 
-    // ============================================================
-    // SENSORS
-    // ============================================================
-    private String buildSensorsInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            if (sm != null) {
-                for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append("• ")
-                            .append(s.getName())
-                            .append(" (").append(s.getVendor()).append(")\n");
-                }
-            }
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional sensor diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // CONNECTIVITY
-    // ============================================================
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
 
         try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            ConnectivityManager cm =
+                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            TelephonyManager tm =
+                    (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
             if (cm != null) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                Network active = cm.getActiveNetwork();
+                NetworkCapabilities caps = cm.getNetworkCapabilities(active);
                 if (caps != null) {
-                    sb.append("Active   : ");
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                    sb.append("Active        : ");
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                         sb.append("Wi-Fi\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                         sb.append("Cellular\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
                         sb.append("Ethernet\n");
-                    else
+                    } else {
                         sb.append("Other\n");
+                    }
+
+                    sb.append("Downlink      : ")
+                            .append(caps.getLinkDownstreamBandwidthKbps())
+                            .append(" kbps\n");
+                    sb.append("Uplink        : ")
+                            .append(caps.getLinkUpstreamBandwidthKbps())
+                            .append(" kbps\n");
                 }
             }
 
+            WifiManager wm = (WifiManager) getApplicationContext()
+                    .getSystemService(Context.WIFI_SERVICE);
             if (wm != null) {
                 WifiInfo wi = wm.getConnectionInfo();
                 if (wi != null && wi.getNetworkId() != -1) {
-                    sb.append("SSID      : ").append(wi.getSSID()).append("\n");
-                    sb.append("LinkSpeed : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    sb.append("RSSI      : ").append(wi.getRssi()).append(" dBm\n");
+                    sb.append("\nWi-Fi:\n");
+                    sb.append("  SSID        : ").append(wi.getSSID()).append("\n");
+                    sb.append("  Link speed  : ").append(wi.getLinkSpeed()).append(" Mbps\n");
+                    sb.append("  RSSI        : ").append(wi.getRssi()).append(" dBm\n");
+                    sb.append("  Band        : ").append(describeWifiBand(wi.getFrequency())).append("\n");
                 }
             }
-        } catch (Throwable ignore) {}
 
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional connectivity diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // LOCATION
-    // ============================================================
-    private String buildLocationInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (lm != null) {
-                boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-                sb.append("GPS     : ").append(gps ? "Enabled" : "Disabled").append("\n");
-                sb.append("Network : ").append(net ? "Enabled" : "Disabled").append("\n");
-            }
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional location diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // BLUETOOTH
-    // ============================================================
-    private String buildBluetoothInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
-
-            if (ba != null) {
-                sb.append("Supported : Yes\n");
-                sb.append("Enabled   : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-                sb.append("Name      : ").append(ba.getName()).append("\n");
-                sb.append("Address   : ").append(ba.getAddress()).append("\n");
-            } else {
-                sb.append("Supported : No\n");
-            }
-
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional Bluetooth diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // NFC
-    // ============================================================
-    private String buildNfcInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);
-            NfcAdapter a = nfc != null ? nfc.getDefaultAdapter() : null;
-
-            sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");
-            if (a != null)
-                sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
-
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional NFC diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // BATTERY
-    // ============================================================
-    private String buildBatteryInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i = registerReceiver(null, f);
-
-            if (i != null) {
-                int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-
-                sb.append("Level   : ").append(level).append("%\n");
-                sb.append("Scale   : ").append(scale).append("\n");
-                sb.append("Status  : ").append(status).append("\n");
-
-                if (temp > 0)
-                    sb.append("Temp    : ").append((temp / 10f)).append("°C\n");
-            }
-        } catch (Throwable ignore) {}
-
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional battery diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // UWB
-    // ============================================================
-    private String buildUwbInfo() {
-        boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
-        return "Supported : " + (supported ? "Yes" : "No") + "\n";
-    }
-
-    // ============================================================
-    // HAPTICS
-    // ============================================================
-    private String buildHapticsInfo() {
-        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-        return "Supported : " + (vib ? "Yes" : "No") + "\n";
-    }
-
-    // ============================================================
-    // GNSS
-    // ============================================================
-    private String buildGnssInfo() {
-        boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
-        return "GNSS     : " + (gnss ? "Yes" : "No") + "\n";
-    }
-
-    // ============================================================
-    // USB / OTG
-    // ============================================================
-    private String buildUsbInfo() {
-        boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-        return "OTG Support : " + (otg ? "Yes" : "No") + "\n";
-    }
-
-    // ============================================================
-    // MICROPHONES
-    // ============================================================
-    private String buildMicsInfo() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
-                for (AudioDeviceInfo d : devs) {
-                    sb.append("Mic: ").append(d.getProductName()).append("\n");
+            if (tm != null) {
+                sb.append("\nCellular:\n");
+                String op = tm.getNetworkOperatorName();
+                if (op != null && !op.isEmpty()) {
+                    sb.append("  Operator    : ").append(op).append("\n");
                 }
+
+                int netType = tm.getDataNetworkType();
+                sb.append("  Network     : ").append(describeNetworkType(netType)).append("\n");
             }
-        } catch (Throwable ignore) {}
 
-        if (sb.length() == 0)
-            sb.append("This device does not expose additional microphone diagnostics.\n");
-        return sb.toString();
-    }
-
-    // ============================================================
-    // AUDIO HAL
-    // ============================================================
-    private String buildAudioHalInfo() {
-        String hal = getProp("ro.audio.hal.version");
-        if (hal == null || hal.isEmpty()) {
-            return "Audio HAL : Not exposed by this device.\n";
+        } catch (Throwable ignore) {
         }
-        return "Audio HAL : " + hal + "\n";
+
+        // Root-extended: /proc/net/dev snapshot
+        String netDev = readTextFile("/proc/net/dev", 8 * 1024);
+        if (netDev != null && !netDev.isEmpty()) {
+            sb.append("\n/proc/net/dev (core):\n");
+            String[] lines = netDev.split("\n");
+            for (String line : lines) {
+                if (line.contains("wlan0") || line.contains("rmnet") || line.contains("rmnet_data")) {
+                    sb.append(line.trim()).append("\n");
+                }
+            }
+        } else {
+            sb.append("Net device stats : Not exposed by this device.\n");
+        }
+
+        if (sb.length() == 0) {
+            sb.append("No connectivity details available.\n");
+        }
+
+        return sb.toString();
     }
 
-    // ============================================================
-    // ROOT PERIPHERALS — ADVANCED VIEW (STEALTH)
-    // ============================================================
     private String buildRootInfo() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Root Detected : ").append(isRooted ? "YES" : "NO").append("\n");
 
-        String tags = getProp("ro.build.tags");
-        if (tags == null || tags.isEmpty()) tags = android.os.Build.TAGS;
-        if (tags != null)
-            sb.append("Build Tags    : ").append(tags).append("\n");
+        String tags = Build.TAGS;
+        sb.append("Build Tags    : ").append(tags).append("\n");
 
         String secure = getProp("ro.secure");
         if (secure != null && !secure.isEmpty()) {
@@ -577,66 +1108,30 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             sb.append("SELinux       : ").append(selinux).append("\n");
         }
 
-        if (!isRooted) {
-            sb.append("\nExtended peripheral diagnostics are available only in Full-Access Device Mode.\n");
-            sb.append("To view premium hardware telemetry, enable Full-Access Device Mode in system settings.\n");
-            return sb.toString();
-        }
-
-        // ROOT-ENHANCED INFORMATION (read-only, diagnostics only)
-
-        // Battery extras
-        sb.append("\nBattery (extended telemetry):\n");
-        long chargeFull = readSysLong("/sys/class/power_supply/battery/charge_full");
-        long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-        long cycleCount = readSysLong("/sys/class/power_supply/battery/cycle_count");
-
-        if (chargeFull > 0) {
-            sb.append("  charge_full        : ").append(chargeFull).append("\n");
-        }
-        if (chargeFullDesign > 0) {
-            sb.append("  charge_full_design : ").append(chargeFullDesign).append("\n");
-        }
-        if (cycleCount > 0) {
-            sb.append("  cycle_count        : ").append(cycleCount).append("\n");
-        }
-
-        // Panel / display hints
-        sb.append("\nDisplay / Panel (extended hints):\n");
-        String panelInfo = readSysString("/sys/class/graphics/fb0/msm_fb_panel_info");
-        if (panelInfo != null && !panelInfo.isEmpty()) {
-            sb.append("  fb0 panel info     : ").append(panelInfo.replace("\n", " ")).append("\n");
+        if (isRooted) {
+            sb.append("\nRoot paths found:\n");
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su", "/system/bin/.ext/.su",
+                    "/system/usr/we-need-root/su-backup",
+                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
+            };
+            for (String p : paths) {
+                if (new File(p).exists()) {
+                    sb.append("  ").append(p).append("\n");
+                }
+            }
         } else {
-            sb.append("  fb0 panel info     : N/A\n");
+            sb.append("\nAdvanced diagnostics : Not exposed by this device.\n");
         }
 
-        // Audio / ALSA
-        sb.append("\nAudio (kernel-level view):\n");
-        String cards = readTextFile("/proc/asound/cards", 8 * 1024);
-        if (cards != null && !cards.trim().isEmpty()) {
-            sb.append("  /proc/asound/cards :\n");
-            sb.append(cards.trim()).append("\n");
-        } else {
-            sb.append("  /proc/asound/cards : N/A\n");
-        }
-
-        // Input devices
-        sb.append("\nInput (kernel devices):\n");
-        String input = readTextFile("/proc/bus/input/devices", 16 * 1024);
-        if (input != null && !input.trim().isEmpty()) {
-            sb.append("  /proc/bus/input/devices :\n");
-            sb.append(input.trim()).append("\n");
-        } else {
-            sb.append("  /proc/bus/input/devices : N/A\n");
-        }
-
-        sb.append("\nAdvanced subsystem tables are visible only on devices with elevated access.\n");
         return sb.toString();
     }
 
     // ============================================================
-    // HELPERS (ROOT / SYSFS)
+    // HELPERS
     // ============================================================
+
     private String readTextFile(String path, int maxLen) {
         BufferedReader br = null;
         try {
@@ -655,7 +1150,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         } finally {
             try {
                 if (br != null) br.close();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -673,7 +1169,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         } finally {
             try {
                 if (br != null) br.close();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -687,6 +1184,32 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
     }
 
+    private boolean isDeviceRooted() {
+        try {
+            String tags = Build.TAGS;
+            if (tags != null && tags.contains("test-keys")) return true;
+
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su", "/system/bin/.ext/.su",
+                    "/system/usr/we-need-root/su-backup",
+                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
+            };
+            for (String p : paths) {
+                if (new File(p).exists()) return true;
+            }
+
+            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String line = in.readLine();
+            in.close();
+            return line != null && line.trim().length() > 0;
+
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
+
     private String getProp(String key) {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
@@ -694,88 +1217,46 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             String line = br.readLine();
             br.close();
             return line != null ? line.trim() : "";
-        } catch (Throwable ignore) {
+        } catch (Exception e) {
             return "";
         }
     }
 
-    // ============================================================
-    // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
-    // ============================================================
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private String describeWifiBand(int freq) {
+        if (freq >= 2400 && freq < 2500) return "2.4 GHz";
+        if (freq >= 4900 && freq < 5900) return "5 GHz";
+        if (freq >= 5925 && freq < 7125) return "6 GHz";
+        return "Unknown";
+    }
 
-        set(R.id.txtCameraContent,       buildCameraInfo());
-        set(R.id.txtBiometricsContent,   buildBiometricsInfo());
-        set(R.id.txtSensorsContent,      buildSensorsInfo());
-        set(R.id.txtConnectivityContent, buildConnectivityInfo());
-        set(R.id.txtLocationContent,     buildLocationInfo());
-        set(R.id.txtBluetoothContent,    buildBluetoothInfo());
-        set(R.id.txtNfcContent,          buildNfcInfo());
-        set(R.id.txtBatteryContent,      buildBatteryInfo());
-        set(R.id.txtUwbContent,          buildUwbInfo());
-        set(R.id.txtHapticsContent,      buildHapticsInfo());
-        set(R.id.txtGnssContent,         buildGnssInfo());
-        set(R.id.txtUsbContent,          buildUsbInfo());
-        set(R.id.txtMicsContent,         buildMicsInfo());
-        set(R.id.txtAudioHalContent,     buildAudioHalInfo());
-        set(R.id.txtRootContent,         buildRootInfo());
-
-        TextView other = findViewById(R.id.txtOtherPeripheralsContent);
-        if (other != null) {
-            boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-            String txt = "Vibration Motor : " + (vib ? "Yes" : "No");
-            applyNeonValues(other, txt);
+    private String describeNetworkType(int type) {
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+                return "2G (GPRS)";
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+                return "2G (EDGE)";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                return "3G (UMTS)";
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+                return "3G (HSDPA)";
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+                return "3G (HSUPA)";
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+                return "3G (HSPA)";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                return "4G (LTE)";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5G (NR)";
+            default:
+                return "Unknown";
         }
     }
 
-    private void set(int id, String txt) {
-        TextView t = findViewById(id);
-        if (t == null) return;
-        applyNeonValues(t, txt);
-    }
-
-    /**
-     * Applies neon green color ONLY to value parts (after ':') in each line.
-     */
-    private void applyNeonValues(TextView tv, String text) {
-        if (text == null) {
-            tv.setText("");
-            return;
-        }
-
-        int neon = Color.parseColor("#39FF14"); // Neon green
-        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-        int start = 0;
-        int len = text.length();
-        while (start < len) {
-            int colon = text.indexOf(':', start);
-            if (colon == -1) break;
-
-            int lineEnd = text.indexOf('\n', colon);
-            if (lineEnd == -1) lineEnd = len;
-
-            int valueStart = colon + 1;
-            while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {
-                valueStart++;
-            }
-
-            if (valueStart < lineEnd) {
-                ssb.setSpan(
-                        new ForegroundColorSpan(neon),
-                        valueStart,
-                        lineEnd,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-
-            start = lineEnd + 1;
-        }
-
-        tv.setText(ssb);
+    private String padRight(String s, int n) {
+        if (s == null) s = "";
+        if (s.length() >= n) return s;
+        StringBuilder sb = new StringBuilder(s);
+        while (sb.length() < n) sb.append(' ');
+        return sb.toString();
     }
 }
-
-// NOTE (GEL Rule): Πάντα δίνουμε ΟΛΟΚΛΗΡΟ το ενημερωμένο αρχείο, έτοιμο για copy-paste.

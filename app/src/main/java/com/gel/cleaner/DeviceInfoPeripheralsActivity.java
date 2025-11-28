@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v12.0
+// DeviceInfoPeripheralsActivity.java — FINAL v12.1
 // API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED + OEM SETTINGS HINTS
 // NOTE: Full file is always sent ready for direct copy-paste (no manual patching required).
 
@@ -776,12 +776,20 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS (XIAOMI) — TEXT ONLY
+    // OEM-SPECIFIC ACCESS INSTRUCTIONS (PER-DEVICE, STARTING WITH XIAOMI REDMI 12)
     // ============================================================
     private void appendAccessInstructions(StringBuilder sb, String key) {
         String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
-        if (!manufacturer.equalsIgnoreCase("Xiaomi")) {
-            // For now, we only show OEM-specific paths for Xiaomi devices.
+        String model        = Build.MODEL != null ? Build.MODEL.trim() : "";
+
+        // Paths are *device-specific*. For now, we enable them only for Xiaomi Redmi 12.
+        boolean isRedmi12Xiaomi =
+                manufacturer.equalsIgnoreCase("Xiaomi") &&
+                model.toLowerCase().contains("redmi") &&
+                model.toLowerCase().contains("12");
+
+        if (!isRedmi12Xiaomi) {
+            // No generic / universal paths – only per recognized device.
             return;
         }
 
@@ -837,7 +845,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             Intent intent;
 
             if (path.contains("Nearby devices")) {
-                // Permissions screen for this app
+                // App-specific permission screen
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
             } else if (path.contains("App location permissions")) {
@@ -849,7 +857,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             } else if (path.contains("Connected devices → NFC")) {
                 intent = new Intent(Settings.ACTION_NFC_SETTINGS);
             } else if (path.contains("Settings → Battery")) {
-                intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
+                // More universal entry-point for battery stats / usage
+                intent = new Intent(Settings.ACTION_POWER_USAGE_SUMMARY);
             } else {
                 intent = new Intent(Settings.ACTION_SETTINGS);
             }
@@ -895,6 +904,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private void set(int id, String txt) {
         TextView t = findViewById(id);
         if (t == null) return;
+        // Ensure no line-limit blocks the path / link visibility
+        t.setMaxLines(Integer.MAX_VALUE);
         applyNeonValues(t, txt);
     }
 
@@ -1007,3 +1018,4 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         tv.setText(ssb);
     }
 }
+```0

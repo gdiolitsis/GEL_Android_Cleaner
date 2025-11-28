@@ -708,66 +708,304 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-// OEM-SPECIFIC ACCESS INSTRUCTIONS (XIAOMI) — TEXT ONLY
-// ============================================================
-private void appendAccessInstructions(StringBuilder sb, String key) {
+    // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED) — PREMIUM STYLE
+    // ============================================================
+    private void appendAccessInstructions(StringBuilder sb, String key) {
+        String manufacturerRaw = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
+        String modelRaw = Build.MODEL != null ? Build.MODEL.trim() : "";
 
-    String manufacturer = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
+        String manufacturer = manufacturerRaw.toLowerCase();
+        String model = modelRaw.toLowerCase();
 
-    // Προς το παρόν δείχνουμε ΜΟΝΟ Xiaomi, όπως το θέλεις.
-    if (!manufacturer.equalsIgnoreCase("Xiaomi")) {
-        return;
-    }
+        String required = null;
+        String oemLabel = null;
+        String path = null;
 
-    String required = null;
-    String path = null;
+        // -----------------------------
+        // Xiaomi / Redmi / POCO family
+        // -----------------------------
+        if (manufacturer.contains("xiaomi")
+                || manufacturer.contains("redmi")
+                || manufacturer.contains("poco")) {
 
-    switch (key) {
+            oemLabel = "Xiaomi / Redmi / POCO";
 
-        case "bluetooth":
-            required = "Nearby Devices Permission";
-            path = "Settings → Privacy → Permission manager → Nearby devices";
-            break;
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Nearby devices";
+                    break;
+                case "location":
+                    required = "Location Access (Approximate / Precise)";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connection & sharing → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connected devices → NFC";
+                    break;
+                case "battery":
+                    required = "Battery Stats Access (System Level)";
+                    path = "Settings → Battery";
+                    break;
+                case "sensors":
+                    required = "Standard Sensor Access (No user permission required)";
+                    path =
+                            "Settings → Additional settings → Developer options → Sensors\n" +
+                            "ή\n" +
+                            "Settings → About phone → tap Build number 7× → Developer options";
+                    break;
+                default:
+                    break;
+            }
+        }
+        // ---------------
+        // Samsung (One UI)
+        // ---------------
+        else if (manufacturer.contains("samsung")) {
 
-        case "location":
-            required = "Location Permission (Approximate / Precise)";
-            path = "Settings → Location → App location permissions";
-            break;
+            oemLabel = "Samsung (One UI)";
 
-        case "camera":
-            required = "Camera Permission";
-            path = "Settings → Privacy → Permission manager → Camera";
-            break;
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Location";
+                    break;
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Camera";
+                    break;
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Microphone";
+                    break;
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connections → NFC and contactless payments";
+                    break;
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery and device care → Battery";
+                    break;
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → Software information → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+                default:
+                    break;
+            }
+        }
+        // ---------------
+        // Google Pixel
+        // ---------------
+        else if (manufacturer.contains("google")) {
 
-        case "mic":
-            required = "Microphone Permission";
-            path = "Settings → Privacy → Permission manager → Microphone";
-            break;
+            oemLabel = "Google Pixel";
 
-        case "nfc":
-            required = "NFC Access";
-            path = "Settings → Connected devices → NFC";
-            break;
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Nearby devices";
+                    break;
+                case "location":
+                    required = "Location Access";
+                    path = "Settings → Location → App location permissions";
+                    break;
+                case "camera":
+                    required = "Camera Access";
+                    path = "Settings → Privacy → Permission manager → Camera";
+                    break;
+                case "mic":
+                    required = "Microphone Access";
+                    path = "Settings → Privacy → Permission manager → Microphone";
+                    break;
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connected devices → Connection preferences → NFC";
+                    break;
+                case "battery":
+                    required = "Battery Stats Access";
+                    path = "Settings → Battery";
+                    break;
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → Build number (tap 7×)\n" +
+                            "Settings → System → Developer options → Sensors";
+                    break;
+                default:
+                    break;
+            }
+        }
+        // ---------------
+        // OnePlus / Oppo / Realme (OxygenOS / ColorOS)
+        // ---------------
+        else if (manufacturer.contains("oneplus")
+                || manufacturer.contains("oppo")
+                || manufacturer.contains("realme")) {
 
-        case "battery":
-            required = "Battery Stats Visibility";
-            path = "Settings → Battery";
-            break;
+            oemLabel = "OnePlus / OPPO / realme";
 
-        case "sensors":
-            required = "Sensor Access (no user permission required)";
-            path = "Settings → Additional settings → Developer options → Sensors";
-            break;
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Nearby devices";
+                    break;
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permission\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Location";
+                    break;
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Camera";
+                    break;
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Microphone";
+                    break;
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connection & sharing → NFC";
+                    break;
+                case "battery":
+                    required = "Battery Optimization / Usage";
+                    path =
+                            "Settings → Battery\n" +
+                            "ή\n" +
+                            "Settings → Battery → More settings / Advanced";
+                    break;
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About device → tap Build number 7×\n" +
+                            "Settings → System settings → Developer options → Sensors";
+                    break;
+                default:
+                    break;
+            }
+        }
+        // ---------------
+        // Generic Android fallback
+        // ---------------
+        else {
 
-        default:
+            oemLabel = manufacturerRaw.isEmpty() ? "Android Device" : manufacturerRaw;
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Location";
+                    break;
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Camera";
+                    break;
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Microphone";
+                    break;
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connected devices → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connection preferences → NFC";
+                    break;
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery";
+                    break;
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (required == null || path == null) {
             return;
-    }
+        }
 
-    sb.append("\nRequired Access : ").append(required).append("\n");
-    sb.append("Xiaomi          →\n");
-    sb.append("Open Settings\n");
-    sb.append(path).append("\n");
-}
+        sb.append("\nRequired Access : ").append(required).append("\n");
+        sb.append(oemLabel).append(" →\n");
+        sb.append("Open Settings\n");
+        sb.append(path).append("\n");
+    }
 
 // ============================================================
     // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)

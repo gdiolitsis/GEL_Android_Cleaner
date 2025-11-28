@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v12.1
+// DeviceInfoPeripheralsActivity.java — FINAL v12.3
 // API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED + OEM SETTINGS HINTS
 // NOTE: Full file is always sent ready for direct copy-paste (no manual patching required).
 
@@ -857,8 +857,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             } else if (path.contains("Connected devices → NFC")) {
                 intent = new Intent(Settings.ACTION_NFC_SETTINGS);
             } else if (path.contains("Settings → Battery")) {
-                // More universal entry-point for battery stats / usage
-                intent = new Intent(Settings.ACTION_POWER_USAGE_SUMMARY);
+                // Use battery saver settings (widely available) as entry point
+                intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
             } else {
                 intent = new Intent(Settings.ACTION_SETTINGS);
             }
@@ -904,7 +904,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private void set(int id, String txt) {
         TextView t = findViewById(id);
         if (t == null) return;
-        // Ensure no line-limit blocks the path / link visibility
+        // Make sure content can scroll fully (no line limit cutting the path)
         t.setMaxLines(Integer.MAX_VALUE);
         applyNeonValues(t, txt);
     }
@@ -965,7 +965,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             idxX = text.indexOf("Xiaomi", endX);
         }
 
-        // Bold white "Open Settings"
+        // Bold "Open Settings"
         String openSettings = "Open Settings";
         int idxOS = text.indexOf(openSettings);
         if (idxOS != -1) {

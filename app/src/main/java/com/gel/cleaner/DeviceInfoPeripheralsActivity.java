@@ -1,7 +1,8 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v12.0
+// DeviceInfoPeripheralsActivity.java — FINAL v12.1
 // API-SAFE + ROOT-AWARE + NEON VALUES + PREMIUM WORDING + FUSION-LINKED + OEM SETTINGS HINTS
 // NOTE: Full file is always sent ready for direct copy-paste (no manual patching required).
+// REMINDER (GEL Rule): Σε επόμενες συνομιλίες να στέλνεται πάντα ΟΛΟ το ενημερωμένο αρχείο έτοιμο για copy-paste.
 
 package com.gel.cleaner;
 
@@ -831,26 +832,43 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     // ============================================================
     // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
+    // Xiaomi / MIUI / HyperOS tuned — opens the correct real screens.
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
         try {
             Intent intent;
 
+            // Nearby Devices → App Permissions (Privacy → Permission manager → Nearby devices)
             if (path.contains("Nearby devices")) {
-                // Permissions screen for this app
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
-            } else if (path.contains("App location permissions")) {
-                intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            } else if (path.contains("Permission manager → Camera")
+            }
+
+            // Microphone / Camera → App Permissions (Privacy → Permission manager → Mic/Camera)
+            else if (path.contains("Permission manager → Camera")
                     || path.contains("Permission manager → Microphone")) {
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
-            } else if (path.contains("Connected devices → NFC")) {
+            }
+
+            // Location → App location permissions
+            else if (path.contains("App location permissions")) {
+                intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+            }
+
+            // NFC
+            else if (path.contains("Connected devices → NFC")) {
                 intent = new Intent(Settings.ACTION_NFC_SETTINGS);
-            } else if (path.contains("Settings → Battery")) {
-                intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
-            } else {
+            }
+
+            // Battery entry — open battery usage summary / saver (OEM may redirect)
+            else if (path.contains("Settings → Battery")) {
+                intent = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
+            }
+
+            // Fallback → Main Settings
+            else {
                 intent = new Intent(Settings.ACTION_SETTINGS);
             }
 

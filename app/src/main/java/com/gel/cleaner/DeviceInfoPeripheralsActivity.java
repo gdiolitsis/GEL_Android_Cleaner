@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v12.1
+// DeviceInfoPeripheralsActivity.java — FINAL v13 + AUTO-PATH ENGINE v4.0
 // FULL CLICKABLE PATHS + OEM-ACCURATE + NEON + GOLD + PREMIUM WORDING (SAFE)
-// NOTE: This is PART 1/2 — full file will be completed in PART 2/2.
+// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
 
 package com.gel.cleaner;
 
@@ -217,6 +217,505 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
+    // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED)
+    // AUTO-PATH ENGINE v4.0 — Premium Global Resolver
+    // ============================================================
+    private void appendAccessInstructions(StringBuilder sb, String key) {
+
+        // -----------------------------
+        // NORMALIZE IDENTIFIERS
+        // -----------------------------
+        String manufacturerRaw = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
+        String modelRaw        = Build.MODEL        != null ? Build.MODEL.trim()        : "";
+        String displayRaw      = Build.DISPLAY      != null ? Build.DISPLAY.trim()      : "";
+
+        String manu    = manufacturerRaw.toLowerCase(java.util.Locale.US);
+        String model   = modelRaw.toLowerCase(java.util.Locale.US);
+        String display = displayRaw.toLowerCase(java.util.Locale.US);
+
+        // Region (future tuning hook)
+        String country = "";
+        try {
+            country = java.util.Locale.getDefault().getCountry();
+        } catch (Throwable ignore) {
+            country = "";
+        }
+        boolean isIndia = "IN".equalsIgnoreCase(country);
+        boolean isChina = "CN".equalsIgnoreCase(country);
+        // (isIndia / isChina reserved for future OEM tweaks)
+
+        String required = null;
+        String oemLabel = null;
+        String path     = null;
+
+        // -----------------------------
+        // OS-LAYER DETECTION (GLOBAL)
+        // -----------------------------
+        boolean isMIUI     = display.contains("miui")      || model.contains("miui");
+        boolean isHyperOS  = display.contains("hyperos")   || (manu.contains("xiaomi") && !isMIUI);
+        boolean isOneUI    = display.contains("oneui")     || manu.contains("samsung");
+        boolean isColorOS  = display.contains("coloros")   || manu.contains("oppo");
+        boolean isRealmeUI = display.contains("realmeui")  || manu.contains("realme");
+        boolean isOxygenOS = display.contains("oxygen")    || manu.contains("oneplus");
+        boolean isPixelUI  = manu.contains("google")       || model.contains("pixel");
+
+        boolean isHuawei   = manu.contains("huawei") || manu.contains("honor");
+        boolean isVivoUI   = manu.contains("vivo")   || display.contains("originos") || display.contains("funtouch");
+        boolean isMoto     = manu.contains("motorola") || manu.contains("moto");
+        boolean isSony     = manu.contains("sony");
+        boolean isAsus     = manu.contains("asus");
+        boolean isNokia    = manu.contains("nokia");
+
+        // ============================================================
+        // XIAOMI / REDMI / POCO (MIUI / HyperOS)
+        // ============================================================
+        if (manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")) {
+
+            if (isHyperOS)      oemLabel = "Xiaomi HyperOS";
+            else if (isMIUI)    oemLabel = "Xiaomi MIUI";
+            else                oemLabel = "Xiaomi / Redmi / POCO";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access (Approximate / Precise)";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connection & sharing → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connected devices → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Stats Access";
+                    path = "Settings → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → Additional settings → Developer options → Sensors\n" +
+                            "ή\n" +
+                            "Settings → About phone → tap Build number 7× → Developer options";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // SAMSUNG (ONE UI)
+        // ============================================================
+        else if (manu.contains("Samsung".toLowerCase(java.util.Locale.US))) {
+
+            oemLabel = isOneUI ? "Samsung One UI" : "Samsung";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → [This app] → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connections → NFC and contactless payments";
+                    break;
+
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery and device care → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → Software information → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // GOOGLE PIXEL
+        // ============================================================
+        else if (isPixelUI) {
+
+            oemLabel = "Google Pixel";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path = "Settings → Location → App location permissions";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path = "Settings → Privacy → Permission manager → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path = "Settings → Privacy → Permission manager → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connected devices → Connection preferences → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Stats Access";
+                    path = "Settings → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access";
+                    path =
+                            "Settings → About phone → Build number (tap 7×)\n" +
+                            "Settings → System → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // ONEPLUS / OPPO / REALME (OxygenOS / ColorOS / realme UI)
+        // ============================================================
+        else if (isOxygenOS || isColorOS || isRealmeUI) {
+
+            if (isOxygenOS)       oemLabel = "OnePlus OxygenOS";
+            else if (isColorOS)   oemLabel = "OPPO ColorOS";
+            else if (isRealmeUI)  oemLabel = "realme UI";
+            else                  oemLabel = "OPPO / OnePlus / realme";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path = "Settings → Connection & sharing → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Optimization / Usage";
+                    path =
+                            "Settings → Battery\n" +
+                            "ή\n" +
+                            "Settings → Battery → More settings / Advanced";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About device → tap Build number 7×\n" +
+                            "Settings → System settings → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // HUAWEI / HONOR (EMUI / MagicUI) → Generic AOSP-like paths
+        // ============================================================
+        else if (isHuawei) {
+
+            oemLabel = "Huawei / HONOR";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connected devices → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connection preferences → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // VIVO / iQOO (OriginOS / Funtouch) → Generic AOSP-like paths
+        // ============================================================
+        else if (isVivoUI) {
+
+            oemLabel = "vivo / iQOO";
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connected devices → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connection preferences → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // MOTOROLA / SONY / ASUS / NOKIA / OTHER OEMs → Generic paths
+        // ============================================================
+        else {
+
+            if (isMoto)        oemLabel = "Motorola";
+            else if (isSony)   oemLabel = "Sony Xperia";
+            else if (isAsus)   oemLabel = "ASUS";
+            else if (isNokia)  oemLabel = "Nokia";
+            else if (manufacturerRaw.isEmpty())
+                oemLabel = "Android Device";
+            else
+                oemLabel = manufacturerRaw;
+
+            switch (key) {
+                case "bluetooth":
+                    required = "Nearby Devices / Bluetooth Access";
+                    path =
+                            "Settings → Apps → Permissions → Nearby devices\n" +
+                            "ή\n" +
+                            "Settings → Privacy → Permission manager → Nearby devices";
+                    break;
+
+                case "location":
+                    required = "Location Access";
+                    path =
+                            "Settings → Location → App location permissions\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Location";
+                    break;
+
+                case "camera":
+                    required = "Camera Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Camera\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Camera";
+                    break;
+
+                case "mic":
+                    required = "Microphone Access";
+                    path =
+                            "Settings → Privacy → Permission manager → Microphone\n" +
+                            "ή\n" +
+                            "Settings → Apps → Permissions → Microphone";
+                    break;
+
+                case "nfc":
+                    required = "NFC Access";
+                    path =
+                            "Settings → Connected devices → NFC\n" +
+                            "ή\n" +
+                            "Settings → Connection preferences → NFC";
+                    break;
+
+                case "battery":
+                    required = "Battery Usage Access";
+                    path = "Settings → Battery";
+                    break;
+
+                case "sensors":
+                    required = "Standard Sensor Access (Developer options)";
+                    path =
+                            "Settings → About phone → tap Build number 7×\n" +
+                            "Settings → Developer options → Sensors";
+                    break;
+            }
+        }
+
+        // ============================================================
+        // FINAL APPEND
+        // ============================================================
+        if (required == null || path == null) {
+            // If in future we ever set required = "NO", we can still display it without link:
+            if ("NO".equalsIgnoreCase(required)) {
+                sb.append("\nRequired Access : NO\n");
+            }
+            return;
+        }
+
+        sb.append("\nRequired Access : ").append(required).append("\n");
+        sb.append(oemLabel).append(" →\n");
+        sb.append("Open Settings\n");
+        sb.append(path).append("\n");
+    }
+
+    // ============================================================
     // ROOT CHECK
     // ============================================================
     private boolean isDeviceRooted() {
@@ -227,8 +726,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     "/system/usr/we-need-root/su-backup",
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
-            for (String p : paths)
+
+            for (String p : paths) {
                 if (new File(p).exists()) return true;
+            }
 
             Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
             BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -247,41 +748,49 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildCameraInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
             if (cm != null) {
-
                 for (String id : cm.getCameraIdList()) {
+
                     CameraCharacteristics cc = cm.getCameraCharacteristics(id);
 
-                    Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
-                    float[] focals = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                    Integer facing    = cc.get(CameraCharacteristics.LENS_FACING);
+                    float[] focals    = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
                     float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                    Integer hwLevel = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+                    Integer hwLevel   = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
 
                     sb.append("Camera ID : ").append(id).append("\n");
+
                     sb.append("• Facing        : ")
                             .append(facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :
-                                    facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" :
-                                            "External").append("\n");
+                                    facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" : "External")
+                            .append("\n");
 
-                    if (focals != null && focals.length > 0)
+                    if (focals != null && focals.length > 0) {
                         sb.append("• Focal         : ").append(focals[0]).append(" mm\n");
+                    }
 
-                    if (apertures != null && apertures.length > 0)
+                    if (apertures != null && apertures.length > 0) {
                         sb.append("• Aperture      : f/").append(apertures[0]).append("\n");
+                    }
 
                     if (hwLevel != null) {
                         String level;
                         switch (hwLevel) {
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL"; break;
+                                level = "FULL";
+                                break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED"; break;
+                                level = "LIMITED";
+                                break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                                level = "LEGACY"; break;
+                                level = "LEGACY";
+                                break;
                             case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3"; break;
+                                level = "LEVEL_3";
+                                break;
                             default:
                                 level = "UNKNOWN";
                         }
@@ -292,13 +801,14 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     try {
                         Field f = CameraCharacteristics.class.getField("LENS_INFO_OIS_AVAILABLE");
                         Object keyObj = f.get(null);
+
                         if (keyObj instanceof CameraCharacteristics.Key) {
                             @SuppressWarnings("unchecked")
                             CameraCharacteristics.Key<Boolean> key =
                                     (CameraCharacteristics.Key<Boolean>) keyObj;
                             ois = cc.get(key);
                         }
-                    } catch (Throwable ignore) {}
+                    } catch (Throwable ignore) { }
 
                     if (ois != null) {
                         sb.append("• OIS           : ").append(ois ? "Yes" : "No").append("\n");
@@ -309,9 +819,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                     sb.append("• Video Profil. : Extra stabilization telemetry unlocks on root-enabled devices.\n\n");
                 }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
-        if (sb.length() == 0) sb.append("No camera data exposed by this device.\n");
+        if (sb.length() == 0) {
+            sb.append("No camera data exposed by this device.\n");
+        }
 
         appendAccessInstructions(sb, "camera");
         return sb.toString();
@@ -327,7 +839,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         sb.append("Fingerprint : ").append(fp ? "Yes" : "No").append("\n");
         sb.append("Face Unlock : ").append(face ? "Yes" : "No").append("\n");
         sb.append("Iris Scan   : ").append(iris ? "Yes" : "No").append("\n");
-
         sb.append("Access Mode : Extended biometric telemetry is available only in Full-Access Device Mode.\n");
 
         return sb.toString();
@@ -335,18 +846,24 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
             if (sm != null) {
                 for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append("• ").append(s.getName())
-                            .append(" (").append(s.getVendor()).append(")\n");
+                    sb.append("• ")
+                            .append(s.getName())
+                            .append(" (")
+                            .append(s.getVendor())
+                            .append(")\n");
                 }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
-        if (sb.length() == 0)
+        if (sb.length() == 0) {
             sb.append("No sensors are exposed by this device at API level.\n");
+        }
 
         sb.append("Advanced     : Advanced sensor subsystem tables are visible only on rooted systems.\n");
 
@@ -364,14 +881,17 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             if (cm != null) {
                 NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
                 if (caps != null) {
+
                     sb.append("Active   : ");
+
                     if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
                         sb.append("Wi-Fi\n");
                     else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
                         sb.append("Cellular\n");
                     else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
                         sb.append("Ethernet\n");
-                    else sb.append("Other\n");
+                    else
+                        sb.append("Other\n");
 
                     sb.append("Downlink : ").append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");
                     sb.append("Uplink   : ").append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");
@@ -381,24 +901,28 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             if (wm != null) {
                 WifiInfo wi = wm.getConnectionInfo();
                 if (wi != null && wi.getNetworkId() != -1) {
+
                     sb.append("\nWi-Fi:\n");
                     sb.append("  SSID      : ").append(wi.getSSID()).append("\n");
                     sb.append("  LinkSpeed : ").append(wi.getLinkSpeed()).append(" Mbps\n");
                     sb.append("  RSSI      : ").append(wi.getRssi()).append(" dBm\n");
                 }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
-        if (sb.length() == 0)
+        if (sb.length() == 0) {
             sb.append("No connectivity info is exposed by this device.\n");
+        }
 
         sb.append("Deep Stats : Advanced interface counters and raw net tables are visible only on rooted systems.\n");
 
+        // Δεν ζητά συγκεκριμένο runtime permission → δεν καλούμε appendAccessInstructions εδώ.
         return sb.toString();
     }
 
     private String buildLocationInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -408,10 +932,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             sb.append("GPS     : ").append(gps ? "Enabled" : "Disabled").append("\n");
             sb.append("Network : ").append(net ? "Enabled" : "Disabled").append("\n");
 
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
-        if (sb.length() == 0)
+        if (sb.length() == 0) {
             sb.append("Location providers are not exposed at this moment.\n");
+        }
 
         sb.append("Advanced : High-precision GNSS raw logs require elevated access.\n");
 
@@ -421,20 +946,21 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildBluetoothInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
 
             if (ba != null) {
-                sb.append("Supported : ").append("Yes").append("\n");
+                sb.append("Supported : Yes\n");
                 sb.append("Enabled   : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
                 sb.append("Name      : ").append(ba.getName()).append("\n");
                 sb.append("Address   : ").append(ba.getAddress()).append("\n");
             } else {
-                sb.append("Supported : ").append("No").append("\n");
+                sb.append("Supported : No\n");
             }
 
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
         sb.append("Deep Scan : Extended Bluetooth controller diagnostics require elevated access.\n");
 
@@ -444,15 +970,18 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildNfcInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);
-            NfcAdapter a = nfc != null ? nfc.getDefaultAdapter() : null;
+            NfcAdapter a   = nfc != null ? nfc.getDefaultAdapter() : null;
 
             sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");
-            if (a != null)
-                sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
 
-        } catch (Throwable ignore) {}
+            if (a != null) {
+                sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
+            }
+
+        } catch (Throwable ignore) { }
 
         sb.append("Advanced : Secure element and low-level NFC routing tables unlock on Full-Access Device Mode.\n");
 
@@ -462,30 +991,34 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildBatteryInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i = registerReceiver(null, f);
+            Intent i       = registerReceiver(null, f);
 
             if (i != null) {
-                int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                int level  = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale  = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
                 int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                int temp   = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 
                 sb.append("Level   : ").append(level).append("%\n");
                 sb.append("Scale   : ").append(scale).append("\n");
                 sb.append("Status  : ").append(status).append("\n");
 
-                if (temp > 0)
+                if (temp > 0) {
                     sb.append("Temp    : ").append((temp / 10f)).append("°C\n");
+                }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
         sb.append("\nLifecycle : ");
+
         if (isRooted) {
-            long chargeFull = readSysLong("/sys/class/power_supply/battery/charge_full");
+
+            long chargeFull       = readSysLong("/sys/class/power_supply/battery/charge_full");
             long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-            long cycleCount = readSysLong("/sys/class/power_supply/battery/cycle_count");
+            long cycleCount       = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
             boolean any = false;
             StringBuilder extra = new StringBuilder();
@@ -494,10 +1027,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 extra.append("currentFull=").append(chargeFull).append(" ");
                 any = true;
             }
+
             if (chargeFullDesign > 0) {
                 extra.append("designFull=").append(chargeFullDesign).append(" ");
                 any = true;
             }
+
             if (cycleCount > 0) {
                 extra.append("cycles=").append(cycleCount);
                 any = true;
@@ -513,8 +1048,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             sb.append("This metric is available only in Full-Access Device Mode.\n");
         }
 
-        if (sb.length() == 0)
+        if (sb.length() == 0) {
             sb.append("Battery information is not exposed by this device.\n");
+        }
 
         appendAccessInstructions(sb, "battery");
         return sb.toString();
@@ -523,49 +1059,60 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
         StringBuilder sb = new StringBuilder();
+
         sb.append("Supported : ").append(supported ? "Yes" : "No").append("\n");
         sb.append("Advanced  : Fine-grain ranging diagnostics are available only in Full-Access Device Mode.\n");
+
         return sb.toString();
     }
 
     private String buildHapticsInfo() {
         boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
         StringBuilder sb = new StringBuilder();
+
         sb.append("Supported : ").append(vib ? "Yes" : "No").append("\n");
         sb.append("Profiles  : Advanced haptic waveform tables require elevated access.\n");
+
         return sb.toString();
     }
 
     private String buildGnssInfo() {
         boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
         StringBuilder sb = new StringBuilder();
+
         sb.append("GNSS     : ").append(gnss ? "Yes" : "No").append("\n");
         sb.append("Raw Logs : Full GNSS measurement streams unlock on root-enabled devices.\n");
+
         return sb.toString();
     }
 
     private String buildUsbInfo() {
         boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
         StringBuilder sb = new StringBuilder();
+
         sb.append("OTG Support : ").append(otg ? "Yes" : "No").append("\n");
         sb.append("Advanced    : Low-level USB descriptors and power profiles require Full-Access Device Mode.\n");
+
         return sb.toString();
     }
 
     private String buildMicsInfo() {
         StringBuilder sb = new StringBuilder();
+
         try {
             AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
+
                 for (AudioDeviceInfo d : devs) {
                     sb.append("Mic: ").append(d.getProductName()).append("\n");
                 }
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
 
-        if (sb.length() == 0)
+        if (sb.length() == 0) {
             sb.append("No microphones are reported by the current audio service.\n");
+        }
 
         sb.append("Advanced : Raw audio routing matrices are visible only on rooted systems.\n");
 
@@ -575,13 +1122,17 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private String buildAudioHalInfo() {
         StringBuilder sb = new StringBuilder();
+
         String hal = getProp("ro.audio.hal.version");
+
         if (hal != null && !hal.isEmpty()) {
             sb.append("Audio HAL : ").append(hal).append("\n");
         } else {
             sb.append("Audio HAL : Not exposed at property level.\n");
         }
+
         sb.append("Deep Info : Extended hardware diagnostics require elevated access.\n");
+
         return sb.toString();
     }
 
@@ -592,8 +1143,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 .append(isRooted ? "Full-Access Device Mode" : "Standard Device Mode")
                 .append("\n");
 
-        String tags = Build.TAGS;
-        sb.append("Build Tags       : ").append(tags).append("\n");
+        sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
 
         String secure = getProp("ro.secure");
         if (secure != null && !secure.isEmpty()) {
@@ -617,23 +1167,25 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         sb.append("\nFusion Layer     : ");
         if (isRooted) {
-            sb.append("Peripherals telemetry is wired into GEL Dynamic Access Routing Engine v1.0 ")
-                    .append("(Hardware + Kernel + HAL + Root + AI Interpreter).\n");
+            sb.append("Peripherals telemetry is wired into GEL Dynamic Access Routing Engine v1.0 (Hardware + Kernel + HAL + Root + AI Interpreter).\n");
         } else {
             sb.append("Peripherals run in Fusion-ready mode; advanced routing activates when Full-Access Device Mode is enabled.\n");
         }
 
         if (isRooted) {
+
             sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
             sb.append("Extended hardware diagnostics are active.\n");
 
             sb.append("\nRoot indicators:\n");
+
             String[] paths = {
                     "/system/bin/su", "/system/xbin/su", "/sbin/su",
                     "/system/su", "/system/bin/.ext/.su",
                     "/system/usr/we-need-root/su-backup",
                     "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
             };
+
             for (String p : paths) {
                 if (new File(p).exists()) {
                     sb.append("  ").append(p).append("\n");
@@ -641,7 +1193,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             }
 
             sb.append("\nPeripherals telemetry is running in Full-Access Device Mode.\n");
+
         } else {
+
             sb.append("\nThis device operates in Standard Device Mode.\n");
             sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
             sb.append("Extended hardware diagnostics require elevated access.\n");
@@ -658,41 +1212,60 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         try {
             File f = new File(path);
             if (!f.exists()) return null;
+
             br = new BufferedReader(new FileReader(f));
             StringBuilder sb = new StringBuilder();
+
             char[] buf = new char[1024];
             int read;
+
             while ((read = br.read(buf)) > 0 && sb.length() < maxLen) {
                 sb.append(buf, 0, read);
             }
+
             return sb.toString();
+
         } catch (Throwable ignore) {
             return null;
+
         } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
+            try {
+                if (br != null) br.close();
+            } catch (Exception ignored) { }
         }
     }
 
     private String readSysString(String path) {
         BufferedReader br = null;
+
         try {
             File f = new File(path);
             if (!f.exists()) return null;
+
             br = new BufferedReader(new FileReader(f));
             String line = br.readLine();
-            if (line != null) return line.trim();
-            return null;
+
+            return line != null ? line.trim() : null;
+
         } catch (Throwable ignore) {
             return null;
+
         } finally {
-            try { if (br != null) br.close(); } catch (Exception ignored) {}
+            try {
+                if (br != null) br.close();
+            } catch (Exception ignored) { }
         }
     }
 
     private long readSysLong(String path) {
         String s = readSysString(path);
         if (s == null || s.isEmpty()) return -1;
-        try { return Long.parseLong(s); } catch (Throwable ignore) { return -1; }
+
+        try {
+            return Long.parseLong(s);
+        } catch (Throwable ignore) {
+            return -1;
+        }
     }
 
     private String getProp(String key) {
@@ -702,312 +1275,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             String line = br.readLine();
             br.close();
             return line != null ? line.trim() : "";
+
         } catch (Throwable ignore) {
             return "";
         }
     }
 
     // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED) — PREMIUM STYLE
-    // ============================================================
-    private void appendAccessInstructions(StringBuilder sb, String key) {
-        String manufacturerRaw = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
-        String modelRaw = Build.MODEL != null ? Build.MODEL.trim() : "";
-
-        String manufacturer = manufacturerRaw.toLowerCase();
-        String model = modelRaw.toLowerCase();
-
-        String required = null;
-        String oemLabel = null;
-        String path = null;
-
-        // -----------------------------
-        // Xiaomi / Redmi / POCO family
-        // -----------------------------
-        if (manufacturer.contains("xiaomi")
-                || manufacturer.contains("redmi")
-                || manufacturer.contains("poco")) {
-
-            oemLabel = "Xiaomi / Redmi / POCO";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Nearby devices";
-                    break;
-                case "location":
-                    required = "Location Access (Approximate / Precise)";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connection & sharing → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connected devices → NFC";
-                    break;
-                case "battery":
-                    required = "Battery Stats Access (System Level)";
-                    path = "Settings → Battery";
-                    break;
-                case "sensors":
-                    required = "Standard Sensor Access (No user permission required)";
-                    path =
-                            "Settings → Additional settings → Developer options → Sensors\n" +
-                            "ή\n" +
-                            "Settings → About phone → tap Build number 7× → Developer options";
-                    break;
-                default:
-                    break;
-            }
-        }
-        // ---------------
-        // Samsung (One UI)
-        // ---------------
-        else if (manufacturer.contains("samsung")) {
-
-            oemLabel = "Samsung (One UI)";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Location";
-                    break;
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Camera";
-                    break;
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Microphone";
-                    break;
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connections → NFC and contactless payments";
-                    break;
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery and device care → Battery";
-                    break;
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → Software information → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-                default:
-                    break;
-            }
-        }
-        // ---------------
-        // Google Pixel
-        // ---------------
-        else if (manufacturer.contains("google")) {
-
-            oemLabel = "Google Pixel";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Nearby devices";
-                    break;
-                case "location":
-                    required = "Location Access";
-                    path = "Settings → Location → App location permissions";
-                    break;
-                case "camera":
-                    required = "Camera Access";
-                    path = "Settings → Privacy → Permission manager → Camera";
-                    break;
-                case "mic":
-                    required = "Microphone Access";
-                    path = "Settings → Privacy → Permission manager → Microphone";
-                    break;
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connected devices → Connection preferences → NFC";
-                    break;
-                case "battery":
-                    required = "Battery Stats Access";
-                    path = "Settings → Battery";
-                    break;
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → Build number (tap 7×)\n" +
-                            "Settings → System → Developer options → Sensors";
-                    break;
-                default:
-                    break;
-            }
-        }
-        // ---------------
-        // OnePlus / Oppo / Realme (OxygenOS / ColorOS)
-        // ---------------
-        else if (manufacturer.contains("oneplus")
-                || manufacturer.contains("oppo")
-                || manufacturer.contains("realme")) {
-
-            oemLabel = "OnePlus / OPPO / realme";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Nearby devices";
-                    break;
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permission\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Location";
-                    break;
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Camera";
-                    break;
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Microphone";
-                    break;
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connection & sharing → NFC";
-                    break;
-                case "battery":
-                    required = "Battery Optimization / Usage";
-                    path =
-                            "Settings → Battery\n" +
-                            "ή\n" +
-                            "Settings → Battery → More settings / Advanced";
-                    break;
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About device → tap Build number 7×\n" +
-                            "Settings → System settings → Developer options → Sensors";
-                    break;
-                default:
-                    break;
-            }
-        }
-        // ---------------
-        // Generic Android fallback
-        // ---------------
-        else {
-
-            oemLabel = manufacturerRaw.isEmpty() ? "Android Device" : manufacturerRaw;
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Location";
-                    break;
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Camera";
-                    break;
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Microphone";
-                    break;
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connected devices → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connection preferences → NFC";
-                    break;
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery";
-                    break;
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if (required == null || path == null) {
-            return;
-        }
-
-        sb.append("\nRequired Access : ").append(required).append("\n");
-        sb.append(oemLabel).append(" →\n");
-        sb.append("Open Settings\n");
-        sb.append(path).append("\n");
-    }
-
-// ============================================================
     // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
@@ -1015,22 +1289,25 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             Intent intent;
 
             if (path.contains("Nearby devices")) {
-                // Permissions screen for this app
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
 
-            } else if (path.contains("App location permissions")) {
+            } else if (path.contains("App location permissions") || path.contains("Location →")) {
                 intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
 
             } else if (path.contains("Permission manager → Camera")
-                    || path.contains("Permission manager → Microphone")) {
+                    || path.contains("Permission manager → Microphone")
+                    || path.contains("Permissions → Camera")
+                    || path.contains("Permissions → Microphone")) {
                 intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.fromParts("package", context.getPackageName(), null));
 
-            } else if (path.contains("Connected devices → NFC")) {
+            } else if (path.contains("Connected devices → NFC")
+                    || path.contains("Connection & sharing → NFC")
+                    || path.contains("NFC")) {
                 intent = new Intent(Settings.ACTION_NFC_SETTINGS);
 
-            } else if (path.contains("Settings → Battery")) {
+            } else if (path.contains("Battery")) {
                 intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
 
             } else {
@@ -1041,7 +1318,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             context.startActivity(intent);
 
         } catch (Throwable ignore) {
-            // Silent fail — UI stays consistent even if OEM blocks direct intents.
+            // Silent fail — OEM may block direct intent; UI stays consistent.
         }
     }
 
@@ -1068,6 +1345,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         set(R.id.txtAudioHalContent,     buildAudioHalInfo());
         set(R.id.txtRootContent,         buildRootInfo());
 
+        // "Other peripherals" static block
         TextView other = findViewById(R.id.txtOtherPeripheralsContent);
         if (other != null) {
             boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
@@ -1082,13 +1360,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         applyNeonValues(t, txt);
     }
 
-    /**
-     * Applies neon green color ONLY to value parts (after ':') in each line.
-     * Additionally:
-     *  - Colors OEM label "Xiaomi" in gold.
-     *  - Makes "Open Settings" bold.
-     *  - Makes the "Settings → …" path blue & clickable.
-     */
+    // ============================================================
+    // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
+    // ============================================================
     private void applyNeonValues(TextView tv, String text) {
         if (text == null) {
             tv.setText("");
@@ -1101,6 +1375,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         int start = 0;
         int len = text.length();
+
+        // NEON GREEN for values (right of colon)
         while (start < len) {
             int colon = text.indexOf(':', start);
             if (colon == -1) break;
@@ -1125,7 +1401,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             start = lineEnd + 1;
         }
 
-        // Gold color for OEM label "Xiaomi"
+        // GOLD for "Xiaomi" OEM label
         int idxX = text.indexOf("Xiaomi");
         while (idxX != -1) {
             int endX = idxX + "Xiaomi".length();
@@ -1138,9 +1414,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             idxX = text.indexOf("Xiaomi", endX);
         }
 
-        // Bold "Open Settings"
+        // BOLD "Open Settings"
         String openSettings = "Open Settings";
         int idxOS = text.indexOf(openSettings);
+
         if (idxOS != -1) {
             ssb.setSpan(
                     new StyleSpan(Typeface.BOLD),
@@ -1150,9 +1427,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             );
         }
 
-        // Blue clickable path: "Settings → …"
+        // BLUE CLICKABLE "Settings → …" PATHS
         boolean hasPathSpan = false;
         int idxPath = text.indexOf("Settings →");
+
         while (idxPath != -1) {
             int end = text.indexOf('\n', idxPath);
             if (end == -1) end = len;
@@ -1166,18 +1444,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 }
             };
 
-            ssb.setSpan(
-                    clickSpan,
-                    idxPath,
-                    end,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-            ssb.setSpan(
-                    new ForegroundColorSpan(LINK_BLUE),
-                    idxPath,
-                    end,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
+            ssb.setSpan(clickSpan, idxPath, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idxPath, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             hasPathSpan = true;
             idxPath = text.indexOf("Settings →", end);

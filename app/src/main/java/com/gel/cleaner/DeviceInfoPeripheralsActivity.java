@@ -1,6 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v15 (Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v21)
-// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
+// DeviceInfoPeripheralsActivity.java — FINAL v22
+// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v22 (Auto Request All)
+// NOTE: Always send full updated file ready for copy-paste — no manual edits by user.
 
 package com.gel.cleaner;
 
@@ -53,52 +54,57 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 
-// ============================================================
-// GEL Permission Request Engine v1.0 — Option B (Auto Request All)
-// ============================================================
-private static final String[] PERMISSIONS_ALL = new String[]{
-        android.Manifest.permission.CAMERA,
-        android.Manifest.permission.RECORD_AUDIO,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        // ANDROID 12+ Bluetooth permissions:
-        android.Manifest.permission.BLUETOOTH_SCAN,
-        android.Manifest.permission.BLUETOOTH_CONNECT,
-        // Nearby devices (Android 12+)
-        android.Manifest.permission.NEARBY_WIFI_DEVICES
-};
+public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
-private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
+    // ============================================================
+    // GEL Permission Request Engine v1.0 — Option B (AUTO REQUEST ALL)
+    // ============================================================
+    private static final String[] PERMISSIONS_ALL = new String[]{
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            // ANDROID 12+ Bluetooth permissions:
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            // Nearby devices (Android 12+)
+            android.Manifest.permission.NEARBY_WIFI_DEVICES
+    };
 
-private void requestAllRuntimePermissions() {
+    private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
 
-    if (Build.VERSION.SDK_INT < 23) return; // no runtime perms
+    private void requestAllRuntimePermissions() {
 
-    java.util.List<String> toRequest = new java.util.ArrayList<>();
+        if (Build.VERSION.SDK_INT < 23) return; // no runtime perms
 
-    for (String p : PERMISSIONS_ALL) {
-        if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-            toRequest.add(p);
+        java.util.List<String> toRequest = new java.util.ArrayList<>();
+
+        for (String p : PERMISSIONS_ALL) {
+            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                toRequest.add(p);
+            }
+        }
+
+        if (!toRequest.isEmpty()) {
+            requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
         }
     }
 
-    if (!toRequest.isEmpty()) {
-        requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+            recreate();
+        }
     }
-}
 
-@Override
-public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        // Μόλις τελειώσουν → ξαναφορτώνουμε τα sections
-        recreate();
-    }
-}
-
-public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
-
+    // ============================================================
+    // MAIN CLASS FIELDS
+    // ============================================================
     private static final String NEON_GREEN = "#39FF14";
     private static final String GOLD_COLOR = "#FFD700";
     private static final int LINK_BLUE = Color.parseColor("#1E90FF");
@@ -158,8 +164,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         allContents = new TextView[]{
                 txtCameraContent, txtBiometricsContent, txtSensorsContent, txtConnectivityContent,
                 txtLocationContent, txtOtherPeripherals, txtBluetoothContent, txtNfcContent,
-                txtRootContent, txtBatteryContent, txtUwbContent, txtHapticsContent, txtGnssContent,
-                txtUsbContent, txtMicsContent, txtAudioHalContent
+                txtRootContent, txtBatteryContent, txtUwbContent, txtHapticsContent,
+                txtGnssContent, txtUsbContent, txtMicsContent, txtAudioHalContent
         };
 
         allIcons = new TextView[]{
@@ -193,7 +199,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         header.setOnClickListener(v -> toggleSection(content, icon));
     }
 
-    // GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)
+    // ============================================================
+    // GEL Expand Engine v3.0
+    // ============================================================
     private void toggleSection(TextView targetContent, TextView targetIcon) {
 
         for (int i = 0; i < allContents.length; i++) {
@@ -262,8 +270,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // GEL SettingsClick Engine v17 — Ultra-Safe Edition
-    // (Δεν ακολουθούμε ποτέ επιμέρους διαδρομές → μόνο ανοίγουμε Ρυθμίσεις)
+    // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
         try {
@@ -276,18 +283,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);
                 fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(fallback);
-            } catch (Throwable e) {
-                // fail-safe
-            }
+            } catch (Throwable e) { }
         }
     }
 
     // ============================================================
-    // GEL Permission Engine v21 — Final Unified Block
-    // (Show path ONLY when permission exists AND is not granted)
+    // GEL Permission Engine v22 — HIDE PATH IF PERMISSION GRANTED
     // ============================================================
-
-    // 1) Which sections actually have permissions
     private boolean sectionNeedsPermission(String type) {
 
         type = type.toLowerCase(Locale.US);
@@ -302,24 +304,20 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 type.contains("nfc");
     }
 
-    // 2) Check if THIS USER has granted the required Android permission
     private boolean userHasPermission(String type) {
 
         type = type.toLowerCase(Locale.US);
 
-        // CAMERA
         if (type.contains("camera")) {
             return checkSelfPermission(android.Manifest.permission.CAMERA)
                     == PackageManager.PERMISSION_GRANTED;
         }
 
-        // MICROPHONE
         if (type.contains("mic") || type.contains("microphone")) {
             return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
                     == PackageManager.PERMISSION_GRANTED;
         }
 
-        // LOCATION (coarse + fine)
         if (type.contains("location")) {
             boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED;
@@ -328,7 +326,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             return fine || coarse;
         }
 
-        // BLUETOOTH (Android 12+)
         if (type.contains("bluetooth")) {
             if (Build.VERSION.SDK_INT >= 31) {
                 boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
@@ -337,40 +334,36 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                         == PackageManager.PERMISSION_GRANTED;
                 return scan && connect;
             }
-            return true; // older Android → no permission needed
+            return true;
         }
 
-        // NFC → No permission required on modern Android
         if (type.contains("nfc")) {
             return true;
         }
 
-        // NEARBY DEVICES (Android 12+)
         if (type.contains("nearby")) {
             if (Build.VERSION.SDK_INT >= 31) {
                 return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)
                         == PackageManager.PERMISSION_GRANTED;
             }
-            return true; // no permission needed for older
+            return true;
         }
 
-        return true; // default safe
+        return true;
     }
 
-    // 3) Append path ONLY when permission is required AND not granted
     private void appendAccessInstructions(StringBuilder sb, String type) {
 
-        // If this section DOES NOT use permissions → hide path
         if (!sectionNeedsPermission(type)) return;
 
-        // If user ALREADY HAS permission → hide path
         if (userHasPermission(type)) return;
 
-        // Otherwise → show path + link
         sb.append("\nRequired Access : ").append(type).append("\n");
         sb.append("Open Settings\n");
         sb.append("Settings → Apps → Permissions\n");
     }
+
+        
 
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED

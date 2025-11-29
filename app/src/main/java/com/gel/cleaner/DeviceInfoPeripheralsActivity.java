@@ -494,7 +494,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         sb.append(path).append("\n");
     }
 ```0
-        
+                
 
     
     // ============================================================

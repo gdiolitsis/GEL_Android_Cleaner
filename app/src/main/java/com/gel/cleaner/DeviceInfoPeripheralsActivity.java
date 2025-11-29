@@ -336,7 +336,16 @@ private void handleSettingsClick(Context context, String path) {
     }
 }
         
-            
+    // ============================================================
+// GEL Access Instructions — Minimal Edition v1.0
+// (Needed because build sections call appendAccessInstructions())
+// ============================================================
+private void appendAccessInstructions(StringBuilder sb, String type) {
+
+    sb.append("\nRequired Access : ").append(type).append("\n");
+    sb.append("Open Settings\n");
+    sb.append("Settings → Apps → Permissions\n");
+}        
 
     // ============================================================
 // ROOT CHECK (GEL Stable v5.1) — FIXED

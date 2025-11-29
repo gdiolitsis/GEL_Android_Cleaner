@@ -55,6 +55,50 @@ import java.lang.reflect.Field;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
+// ============================================================
+// GEL Permission Request Engine v1.0 — Option B (Auto Request All)
+// ============================================================
+private static final String[] PERMISSIONS_ALL = new String[]{
+        android.Manifest.permission.CAMERA,
+        android.Manifest.permission.RECORD_AUDIO,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        // ANDROID 12+ Bluetooth permissions:
+        android.Manifest.permission.BLUETOOTH_SCAN,
+        android.Manifest.permission.BLUETOOTH_CONNECT,
+        // Nearby devices (Android 12+)
+        android.Manifest.permission.NEARBY_WIFI_DEVICES
+};
+
+private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
+
+private void requestAllRuntimePermissions() {
+
+    if (Build.VERSION.SDK_INT < 23) return; // no runtime perms
+
+    java.util.List<String> toRequest = new java.util.ArrayList<>();
+
+    for (String p : PERMISSIONS_ALL) {
+        if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+            toRequest.add(p);
+        }
+    }
+
+    if (!toRequest.isEmpty()) {
+        requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
+    }
+}
+
+@Override
+public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+        // Μόλις τελειώσουν → ξαναφορτώνουμε τα sections
+        recreate();
+    }
+}
+    
 private static final String NEON_GREEN = "#39FF14";  
 private static final String GOLD_COLOR = "#FFD700";  
 private static final int LINK_BLUE = Color.parseColor("#1E90FF");  
@@ -976,9 +1020,11 @@ private String getProp(String key) {
 // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING  
 // ============================================================  
 @Override  
-protected void onStart() {  
-    super.onStart();  
+protected void onStart() {
+    super.onStart();
 
+    // 🔥 ΖΗΤΑΜΕ ΟΛΑ ΤΑ RUNTIME PERMISSIONS ΕΔΩ
+    requestAllRuntimePermissions();
     set(R.id.txtCameraContent,       buildCameraInfo());  
     set(R.id.txtBiometricsContent,   buildBiometricsInfo());  
     set(R.id.txtSensorsContent,      buildSensorsInfo());  

@@ -1,5 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v15 (Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v21)
+// DeviceInfoPeripheralsActivity.java — FINAL v16
+// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v22 (Auto Request All, NO RECREATE FIX)
 // NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
 
 package com.gel.cleaner;
@@ -55,322 +56,312 @@ import java.lang.reflect.Field;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
-// ============================================================
-// GEL Permission Request Engine v1.0 — Option B (Auto Request All)
-// ============================================================
-private static final String[] PERMISSIONS_ALL = new String[]{
-        android.Manifest.permission.CAMERA,
-        android.Manifest.permission.RECORD_AUDIO,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        // ANDROID 12+ Bluetooth permissions:
-        android.Manifest.permission.BLUETOOTH_SCAN,
-        android.Manifest.permission.BLUETOOTH_CONNECT,
-        // Nearby devices (Android 12+)
-        android.Manifest.permission.NEARBY_WIFI_DEVICES
-};
+    // ============================================================
+    // GEL Permission Request Engine v1.0 — Option B (Auto Request All)
+    // ============================================================
+    private static final String[] PERMISSIONS_ALL = new String[]{
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.NEARBY_WIFI_DEVICES
+    };
 
-private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
+    private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
 
-private void requestAllRuntimePermissions() {
+    private void requestAllRuntimePermissions() {
 
-    if (Build.VERSION.SDK_INT < 23) return; // no runtime perms
+        if (Build.VERSION.SDK_INT < 23) return;
 
-    java.util.List<String> toRequest = new java.util.ArrayList<>();
+        java.util.List<String> toRequest = new java.util.ArrayList<>();
 
-    for (String p : PERMISSIONS_ALL) {
-        if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-            toRequest.add(p);
+        for (String p : PERMISSIONS_ALL) {
+            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                toRequest.add(p);
+            }
+        }
+
+        if (!toRequest.isEmpty()) {
+            requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
         }
     }
 
-    if (!toRequest.isEmpty()) {
-        requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+            // ❌ (REMOVED) recreate();
+            // FIX: No more animation freezes
+        }
     }
-}
 
-@Override
-public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    // ============================================================
+    // MAIN CLASS FIELDS
+    // ============================================================
+    private static final String NEON_GREEN = "#39FF14";
+    private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE = Color.parseColor("#1E90FF");
 
-    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        // Μόλις τελειώσουν → ξαναφορτώνουμε τα sections
-        recreate();
+    private boolean isRooted = false;
+
+    private TextView[] allContents;
+    private TextView[] allIcons;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
     }
-}
-    
-private static final String NEON_GREEN = "#39FF14";  
-private static final String GOLD_COLOR = "#FFD700";  
-private static final int LINK_BLUE = Color.parseColor("#1E90FF");  
 
-private boolean isRooted = false;  
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_device_info_peripherals);
 
-private TextView[] allContents;  
-private TextView[] allIcons;  
+        TextView title = findViewById(R.id.txtTitleDevice);
+        if (title != null) title.setText(getString(R.string.phone_info_peripherals));
 
-@Override  
-protected void attachBaseContext(Context base) {  
-    super.attachBaseContext(LocaleHelper.apply(base));  
-}  
+        TextView txtCameraContent        = findViewById(R.id.txtCameraContent);
+        TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);
+        TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);
+        TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);
+        TextView txtLocationContent      = findViewById(R.id.txtLocationContent);
+        TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);
+        TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);
+        TextView txtNfcContent           = findViewById(R.id.txtNfcContent);
+        TextView txtRootContent          = findViewById(R.id.txtRootContent);
+        TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+        TextView txtUwbContent           = findViewById(R.id.txtUwbContent);
+        TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);
+        TextView txtGnssContent          = findViewById(R.id.txtGnssContent);
+        TextView txtUsbContent           = findViewById(R.id.txtUsbContent);
+        TextView txtMicsContent          = findViewById(R.id.txtMicsContent);
+        TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);
 
-@Override  
-protected void onCreate(Bundle savedInstanceState) {  
-    super.onCreate(savedInstanceState);  
-    setContentView(R.layout.activity_device_info_peripherals);  
+        TextView iconCamera        = findViewById(R.id.iconCameraToggle);
+        TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);
+        TextView iconSensors       = findViewById(R.id.iconSensorsToggle);
+        TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);
+        TextView iconLocation      = findViewById(R.id.iconLocationToggle);
+        TextView iconOther         = findViewById(R.id.iconOtherPeripheralsToggle);
+        TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);
+        TextView iconNfc           = findViewById(R.id.iconNfcToggle);
+        TextView iconRoot          = findViewById(R.id.iconRootToggle);
+        TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
+        TextView iconUwb           = findViewById(R.id.iconUwbToggle);
+        TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);
+        TextView iconGnss          = findViewById(R.id.iconGnssToggle);
+        TextView iconUsb           = findViewById(R.id.iconUsbToggle);
+        TextView iconMics          = findViewById(R.id.iconMicsToggle);
+        TextView iconAudioHal      = findViewById(R.id.iconAudioHalToggle);
 
-    TextView title = findViewById(R.id.txtTitleDevice);  
-    if (title != null) title.setText(getString(R.string.phone_info_peripherals));  
+        allContents = new TextView[]{
+                txtCameraContent, txtBiometricsContent, txtSensorsContent, txtConnectivityContent,
+                txtLocationContent, txtOtherPeripherals, txtBluetoothContent, txtNfcContent,
+                txtRootContent, txtBatteryContent, txtUwbContent, txtHapticsContent,
+                txtGnssContent, txtUsbContent, txtMicsContent, txtAudioHalContent
+        };
 
-    TextView txtCameraContent        = findViewById(R.id.txtCameraContent);  
-    TextView txtBiometricsContent    = findViewById(R.id.txtBiometricsContent);  
-    TextView txtSensorsContent       = findViewById(R.id.txtSensorsContent);  
-    TextView txtConnectivityContent  = findViewById(R.id.txtConnectivityContent);  
-    TextView txtLocationContent      = findViewById(R.id.txtLocationContent);  
-    TextView txtOtherPeripherals     = findViewById(R.id.txtOtherPeripheralsContent);  
-    TextView txtBluetoothContent     = findViewById(R.id.txtBluetoothContent);  
-    TextView txtNfcContent           = findViewById(R.id.txtNfcContent);  
-    TextView txtRootContent          = findViewById(R.id.txtRootContent);  
-    TextView txtBatteryContent       = findViewById(R.id.txtBatteryContent);  
-    TextView txtUwbContent           = findViewById(R.id.txtUwbContent);  
-    TextView txtHapticsContent       = findViewById(R.id.txtHapticsContent);  
-    TextView txtGnssContent          = findViewById(R.id.txtGnssContent);  
-    TextView txtUsbContent           = findViewById(R.id.txtUsbContent);  
-    TextView txtMicsContent          = findViewById(R.id.txtMicsContent);  
-    TextView txtAudioHalContent      = findViewById(R.id.txtAudioHalContent);  
+        allIcons = new TextView[]{
+                iconCamera, iconBiometrics, iconSensors, iconConnectivity, iconLocation, iconOther,
+                iconBluetooth, iconNfc, iconRoot, iconBattery, iconUwb, iconHaptics, iconGnss,
+                iconUsb, iconMics, iconAudioHal
+        };
 
-    TextView iconCamera        = findViewById(R.id.iconCameraToggle);  
-    TextView iconBiometrics    = findViewById(R.id.iconBiometricsToggle);  
-    TextView iconSensors       = findViewById(R.id.iconSensorsToggle);  
-    TextView iconConnectivity  = findViewById(R.id.iconConnectivityToggle);  
-    TextView iconLocation      = findViewById(R.id.iconLocationToggle);  
-    TextView iconOther         = findViewById(R.id.iconOtherPeripheralsToggle);  
-    TextView iconBluetooth     = findViewById(R.id.iconBluetoothToggle);  
-    TextView iconNfc           = findViewById(R.id.iconNfcToggle);  
-    TextView iconRoot          = findViewById(R.id.iconRootToggle);  
-    TextView iconBattery       = findViewById(R.id.iconBatteryToggle);  
-    TextView iconUwb           = findViewById(R.id.iconUwbToggle);  
-    TextView iconHaptics       = findViewById(R.id.iconHapticsToggle);  
-    TextView iconGnss          = findViewById(R.id.iconGnssToggle);  
-    TextView iconUsb           = findViewById(R.id.iconUsbToggle);  
-    TextView iconMics          = findViewById(R.id.iconMicsToggle);  
-    TextView iconAudioHal      = findViewById(R.id.iconAudioHalToggle);  
+        isRooted = isDeviceRooted();
 
-    allContents = new TextView[]{  
-            txtCameraContent, txtBiometricsContent, txtSensorsContent, txtConnectivityContent,  
-            txtLocationContent, txtOtherPeripherals, txtBluetoothContent, txtNfcContent,  
-            txtRootContent, txtBatteryContent, txtUwbContent, txtHapticsContent, txtGnssContent,  
-            txtUsbContent, txtMicsContent, txtAudioHalContent  
-    };  
+        setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
+        setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
+        setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+        setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
+        setupSection(findViewById(R.id.headerBluetooth), txtBluetoothContent, iconBluetooth);
+        setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
+        setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+        setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);
+        setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
+        setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
+        setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
+        setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
+        setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);
+        setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);
+        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+    }
 
-    allIcons = new TextView[]{  
-            iconCamera, iconBiometrics, iconSensors, iconConnectivity, iconLocation, iconOther,  
-            iconBluetooth, iconNfc, iconRoot, iconBattery, iconUwb, iconHaptics, iconGnss,  
-            iconUsb, iconMics, iconAudioHal  
-    };  
+    private void setupSection(View header, final TextView content, final TextView icon) {
+        if (header == null || content == null || icon == null) return;
+        header.setOnClickListener(v -> toggleSection(content, icon));
+    }
 
-    isRooted = isDeviceRooted();  
+    // ============================================================
+    // GEL Expand Engine v3.0
+    // ============================================================
+    private void toggleSection(TextView targetContent, TextView targetIcon) {
 
-    setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
-    setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);  
-    setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);  
-    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  
-    setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);  
-    setupSection(findViewById(R.id.headerBluetooth), txtBluetoothContent, iconBluetooth);  
-    setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);  
-    setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);  
-    setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);  
-    setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);  
-    setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);  
-    setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);  
-    setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);  
-    setupSection(findViewById(R.id.headerMics), txtMicsContent, iconMics);  
-    setupSection(findViewById(R.id.headerAudioHal), txtAudioHalContent, iconAudioHal);  
-    setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);  
-}  
+        for (int i = 0; i < allContents.length; i++) {
+            TextView c = allContents[i];
+            TextView ic = allIcons[i];
 
-private void setupSection(View header, final TextView content, final TextView icon) {  
-    if (header == null || content == null || icon == null) return;  
-    header.setOnClickListener(v -> toggleSection(content, icon));  
-}  
+            if (c == null || ic == null) continue;
 
-// GEL Expand Engine v3.0 — FIXED (No Auto-Collapse Bug)  
-private void toggleSection(TextView targetContent, TextView targetIcon) {  
+            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
+                animateCollapse(c);
+                ic.setText("＋");
+            }
+        }
 
-    for (int i = 0; i < allContents.length; i++) {  
-        TextView c = allContents[i];  
-        TextView ic = allIcons[i];  
+        if (targetContent.getVisibility() == View.VISIBLE) {
+            animateCollapse(targetContent);
+            targetIcon.setText("＋");
+        } else {
+            animateExpand(targetContent);
+            targetIcon.setText("−");
+        }
+    }
 
-        if (c == null || ic == null) continue;  
+    private void animateExpand(final View v) {
+        v.post(() -> {
+            v.measure(
+                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            );
 
-        if (c != targetContent && c.getVisibility() == View.VISIBLE) {  
-            animateCollapse(c);  
-            ic.setText("＋");  
-        }  
-    }  
+            final int target = v.getMeasuredHeight();
 
-    if (targetContent.getVisibility() == View.VISIBLE) {  
-        animateCollapse(targetContent);  
-        targetIcon.setText("＋");  
-    } else {  
-        animateExpand(targetContent);  
-        targetIcon.setText("−");  
-    }  
-}  
+            v.getLayoutParams().height = 0;
+            v.setVisibility(View.VISIBLE);
+            v.setAlpha(0f);
 
-private void animateExpand(final View v) {  
-    v.post(() -> {  
-        v.measure(  
-                View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),  
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)  
-        );  
+            v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        v.getLayoutParams().height = target;
+                        v.requestLayout();
+                    })
+                    .start();
+        });
+    }
 
-        final int target = v.getMeasuredHeight();  
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
 
-        v.getLayoutParams().height = 0;  
-        v.setVisibility(View.VISIBLE);  
-        v.setAlpha(0f);  
+        final int initial = v.getHeight();
+        v.setAlpha(1f);
 
-        v.animate()  
-                .alpha(1f)  
-                .setDuration(160)  
-                .setInterpolator(new AccelerateDecelerateInterpolator())  
-                .withEndAction(() -> {  
-                    v.getLayoutParams().height = target;  
-                    v.requestLayout();  
-                })  
-                .start();  
-    });  
-}  
+        v.animate()
+                .alpha(0f)
+                .setDuration(120)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.setVisibility(View.GONE);
+                    v.getLayoutParams().height = initial;
+                    v.setAlpha(1f);
+                    v.requestLayout();
+                })
+                .start();
+    }
 
-private void animateCollapse(final View v) {  
-    if (v.getVisibility() != View.VISIBLE) return;  
+    // ============================================================
+    // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
+    // ============================================================
+    private void handleSettingsClick(Context context, String path) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }
+        catch (Throwable ignore) {
+            try {
+                Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(fallback);
+            } catch (Throwable e) { }
+        }
+    }
 
-    final int initial = v.getHeight();  
-    v.setAlpha(1f);  
+    // ============================================================
+    // GEL Permission Engine v22 — HIDE PATH IF PERMISSION GRANTED
+    // ============================================================
+    private boolean sectionNeedsPermission(String type) {
 
-    v.animate()  
-            .alpha(0f)  
-            .setDuration(120)  
-            .setInterpolator(new AccelerateDecelerateInterpolator())  
-            .withEndAction(() -> {  
-                v.setVisibility(View.GONE);  
-                v.getLayoutParams().height = initial;  
-                v.setAlpha(1f);  
-                v.requestLayout();  
-            })  
-            .start();  
-}  
+        type = type.toLowerCase(Locale.US);
 
-// ============================================================  
-// GEL SettingsClick Engine v17 — Ultra-Safe Edition  
-// (Δεν ακολουθούμε ποτέ επιμέρους διαδρομές → μόνο ανοίγουμε Ρυθμίσεις)  
-// ============================================================  
-private void handleSettingsClick(Context context, String path) {  
-    try {  
-        Intent intent = new Intent(Settings.ACTION_SETTINGS);  
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
-        context.startActivity(intent);  
-    }  
-    catch (Throwable ignore) {  
-        try {  
-            Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);  
-            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
-            context.startActivity(fallback);  
-        } catch (Throwable e) {  
-            // fail-safe  
-        }  
-    }  
-}  
+        return
+                type.contains("camera")      ||
+                type.contains("mic")         ||
+                type.contains("microphone")  ||
+                type.contains("location")    ||
+                type.contains("bluetooth")   ||
+                type.contains("nearby")      ||
+                type.contains("nfc");
+    }
 
-// ============================================================  
-// GEL Permission Engine v21 — Final Unified Block  
-// (Show path ONLY when permission exists AND is not granted)  
-// ============================================================  
+    private boolean userHasPermission(String type) {
 
-// 1) Which sections actually have permissions  
-private boolean sectionNeedsPermission(String type) {  
+        type = type.toLowerCase(Locale.US);
 
-    type = type.toLowerCase(Locale.US);  
+        if (type.contains("camera")) {
+            return checkSelfPermission(android.Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
 
-    return  
-            type.contains("camera")      ||  
-            type.contains("mic")         ||  
-            type.contains("microphone")  ||  
-            type.contains("location")    ||  
-            type.contains("bluetooth")   ||  
-            type.contains("nearby")      ||  
-            type.contains("nfc");  
-}  
+        if (type.contains("mic") || type.contains("microphone")) {
+            return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
 
-// 2) Check if THIS USER has granted the required Android permission  
-private boolean userHasPermission(String type) {  
+        if (type.contains("location")) {
+            boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
+            boolean coarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
+            return fine || coarse;
+        }
 
-    type = type.toLowerCase(Locale.US);  
+        if (type.contains("bluetooth")) {
+            if (Build.VERSION.SDK_INT >= 31) {
+                boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+                        == PackageManager.PERMISSION_GRANTED;
+                boolean connect = checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                        == PackageManager.PERMISSION_GRANTED;
+                return scan && connect;
+            }
+            return true;
+        }
 
-    // CAMERA  
-    if (type.contains("camera")) {  
-        return checkSelfPermission(android.Manifest.permission.CAMERA)  
-                == PackageManager.PERMISSION_GRANTED;  
-    }  
+        if (type.contains("nfc")) {
+            return true;
+        }
 
-    // MICROPHONE  
-    if (type.contains("mic") || type.contains("microphone")) {  
-        return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)  
-                == PackageManager.PERMISSION_GRANTED;  
-    }  
+        if (type.contains("nearby")) {
+            if (Build.VERSION.SDK_INT >= 31) {
+                return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+                        == PackageManager.PERMISSION_GRANTED;
+            }
+            return true;
+        }
 
-    // LOCATION (coarse + fine)  
-    if (type.contains("location")) {  
-        boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)  
-                == PackageManager.PERMISSION_GRANTED;  
-        boolean coarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)  
-                == PackageManager.PERMISSION_GRANTED;  
-        return fine || coarse;  
-    }  
+        return true;
+    }
 
-    // BLUETOOTH (Android 12+)  
-    if (type.contains("bluetooth")) {  
-        if (Build.VERSION.SDK_INT >= 31) {  
-            boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)  
-                    == PackageManager.PERMISSION_GRANTED;  
-            boolean connect = checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)  
-                    == PackageManager.PERMISSION_GRANTED;  
-            return scan && connect;  
-        }  
-        return true; // older Android → no permission needed  
-    }  
+    private void appendAccessInstructions(StringBuilder sb, String type) {
 
-    // NFC → No permission required on modern Android  
-    if (type.contains("nfc")) {  
-        return true;  
-    }  
+        if (!sectionNeedsPermission(type)) return;
 
-    // NEARBY DEVICES (Android 12+)  
-    if (type.contains("nearby")) {  
-        if (Build.VERSION.SDK_INT >= 31) {  
-            return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)  
-                    == PackageManager.PERMISSION_GRANTED;  
-        }  
-        return true; // no permission needed for older  
-    }  
+        if (userHasPermission(type)) return;
 
-    return true; // default safe  
-}  
+        sb.append("\nRequired Access : ").append(type).append("\n");
+        sb.append("Open Settings\n");
+        sb.append("Settings → Apps → Permissions\n");
+    }
 
-// 3) Append path ONLY when permission is required AND not granted  
-private void appendAccessInstructions(StringBuilder sb, String type) {  
-
-    // If this section DOES NOT use permissions → hide path  
-    if (!sectionNeedsPermission(type)) return;  
-
-    // If user ALREADY HAS permission → hide path  
-    if (userHasPermission(type)) return;  
-
-    // Otherwise → show path + link  
-    sb.append("\nRequired Access : ").append(type).append("\n");  
-    sb.append("Open Settings\n");  
-    sb.append("Settings → Apps → Permissions\n");  
-}  
 
 // ============================================================  
 // ROOT CHECK (GEL Stable v5.1) — FIXED  
@@ -1016,45 +1007,37 @@ private String getProp(String key) {
     }  
 }  
 
-// ============================================================  
-// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING  
-// ============================================================  
-@Override  
-protected void onStart() {
-    super.onStart();
+    // ============================================================
+    // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+    // ============================================================
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-    // 🔥 ΖΗΤΑΜΕ ΟΛΑ ΤΑ RUNTIME PERMISSIONS ΕΔΩ
-    requestAllRuntimePermissions();
-    set(R.id.txtCameraContent,       buildCameraInfo());  
-    set(R.id.txtBiometricsContent,   buildBiometricsInfo());  
-    set(R.id.txtSensorsContent,      buildSensorsInfo());  
-    set(R.id.txtConnectivityContent, buildConnectivityInfo());  
-    set(R.id.txtLocationContent,     buildLocationInfo());  
-    set(R.id.txtBluetoothContent,    buildBluetoothInfo());  
-    set(R.id.txtNfcContent,          buildNfcInfo());  
-    set(R.id.txtBatteryContent,      buildBatteryInfo());  
-    set(R.id.txtUwbContent,          buildUwbInfo());  
-    set(R.id.txtHapticsContent,      buildHapticsInfo());  
-    set(R.id.txtGnssContent,         buildGnssInfo());  
-    set(R.id.txtUsbContent,          buildUsbInfo());  
-    set(R.id.txtMicsContent,         buildMicsInfo());  
-    set(R.id.txtAudioHalContent,     buildAudioHalInfo());  
-    set(R.id.txtRootContent,         buildRootInfo());  
+        requestAllRuntimePermissions();
 
-    // "Other peripherals" static block  
-    TextView other = findViewById(R.id.txtOtherPeripheralsContent);  
-    if (other != null) {  
-        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");  
-        String txt = "Vibration Motor : " + (vib ? "Yes" : "No");  
-        applyNeonValues(other, txt);  
-    }  
-}  
+        set(R.id.txtCameraContent,       buildCameraInfo());
+        set(R.id.txtBiometricsContent,   buildBiometricsInfo());
+        set(R.id.txtSensorsContent,      buildSensorsInfo());
+        set(R.id.txtConnectivityContent, buildConnectivityInfo());
+        set(R.id.txtLocationContent,     buildLocationInfo());
+        set(R.id.txtBluetoothContent,    buildBluetoothInfo());
+        set(R.id.txtNfcContent,          buildNfcInfo());
+        set(R.id.txtBatteryContent,      buildBatteryInfo());
+        set(R.id.txtUwbContent,          buildUwbInfo());
+        set(R.id.txtHapticsContent,      buildHapticsInfo());
+        set(R.id.txtGnssContent,         buildGnssInfo());
+        set(R.id.txtUsbContent,          buildUsbInfo());
+        set(R.id.txtMicsContent,         buildMicsInfo());
+        set(R.id.txtAudioHalContent,     buildAudioHalInfo());
+        set(R.id.txtRootContent,         buildRootInfo());
+    }
 
-private void set(int id, String txt) {  
-    TextView t = findViewById(id);  
-    if (t == null) return;  
-    applyNeonValues(t, txt);  
-}  
+    private void set(int id, String txt) {
+        TextView t = findViewById(id);
+        if (t == null) return;
+        applyNeonValues(t, txt);
+    }
 
 // ============================================================  
 // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS  

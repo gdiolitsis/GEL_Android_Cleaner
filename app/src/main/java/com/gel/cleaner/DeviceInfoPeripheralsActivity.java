@@ -495,6 +495,8 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
                 
 
+
+
     
     // ============================================================
     // ROOT CHECK
@@ -518,7 +520,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             in.close();
             return line != null && line.trim().length() > 0;
 
-        } catch (Throwable ignore) 
+        } catch (Throwable ignore) {
             return false;
         }
     }

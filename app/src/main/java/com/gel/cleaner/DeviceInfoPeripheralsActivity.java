@@ -328,20 +328,7 @@ private void appendAccessInstructions(StringBuilder sb, String type) {
     sb.append("Settings → Apps → Permissions\n");
 }
 
-    // ============================================================
-// GEL Access Instructions — Smart Edition v18
-// (Show path ONLY when permission is actually needed)
-// ============================================================
-private void appendAccessInstructions(StringBuilder sb, String type) {
-
-    if (!sectionNeedsPermission(type)) {
-        return; // No permissions needed → no path shown
-    }
-
-    sb.append("\nRequired Access : ").append(type).append("\n");
-    sb.append("Open Settings\n");
-    sb.append("Settings → Apps → Permissions\n");
-}
+    
 
 // ============================================================
 // ROOT CHECK (GEL Stable v5.1) — FIXED
@@ -361,7 +348,7 @@ private boolean isDeviceRooted() {
         }
 
         Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-        BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        BufferedReader in = new BuffdReader(new InputStreamReader(proc.getInputStream()));
         String line = in.readLine();
         in.close();
 

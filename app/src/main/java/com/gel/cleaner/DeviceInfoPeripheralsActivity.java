@@ -216,300 +216,44 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 .start();
     }
 
-    // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED)
-    // AUTO-PATH ENGINE v5.3 — Global OEM Resolver (GEL)
-    // Includes: REAL HyperOS Path (confirmed by user)
-    // ============================================================
-    private void appendAccessInstructions(StringBuilder sb, String key) {
+// ============================================================
+// UNIVERSAL SETTINGS CLICK ENGINE v5 (GEL) 
+// Opens: Settings → Apps → Special App Access
+// Works on ALL OEMs (Xiaomi / HyperOS / Samsung / Pixel / Oppo…)
+// ============================================================
+private void handleSettingsClick(Context context, String ignoredPath) {
+    try {
 
-        // -----------------------------
-        // NORMALIZE IDENTIFIERS
-        // -----------------------------
-        String manuRaw    = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
-        String modelRaw   = Build.MODEL        != null ? Build.MODEL.trim()        : "";
-        String productRaw = Build.PRODUCT      != null ? Build.PRODUCT.trim()      : "";
-        String displayRaw = Build.DISPLAY      != null ? Build.DISPLAY.trim()      : "";
-        String fingerRaw  = Build.FINGERPRINT  != null ? Build.FINGERPRINT.trim()  : "";
+        // 1️⃣ HyperOS / MIUI / Xiaomi – safest universal permissions hub
+        Intent intent = new Intent(Settings.ACTION_MANAGE_SPECIAL_APP_ACCESS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        String manu    = manuRaw.toLowerCase(Locale.US);
-        String model   = modelRaw.toLowerCase(Locale.US);
-        String product = productRaw.toLowerCase(Locale.US);
-        String display = displayRaw.toLowerCase(Locale.US);
-        String finger  = fingerRaw.toLowerCase(Locale.US);
-
-        // -----------------------------
-        // ROM / OEM DETECTION
-        // -----------------------------
-        boolean isXiaomi   = manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")
-                || model.contains("xiaomi") || model.contains("redmi") || model.contains("poco")
-                || finger.contains("miui") || finger.contains("xiaomi");
-
-        boolean isSamsung  = manu.contains("samsung") || finger.contains("samsung");
-        boolean isPixel    = manu.contains("google")  || model.contains("pixel") || finger.contains("pixel");
-        boolean isOppo     = manu.contains("oppo")    || finger.contains("oppo");
-        boolean isRealme   = manu.contains("realme")  || finger.contains("realme");
-        boolean isOnePlus  = manu.contains("oneplus") || finger.contains("oneplus");
-        boolean isVivo     = manu.contains("vivo")    || manu.contains("iqoo") || finger.contains("vivo") || finger.contains("iqoo");
-        boolean isHuawei   = manu.contains("huawei")  || manu.contains("honor") || finger.contains("huawei") || finger.contains("honor");
-
-        boolean isMoto     = manu.contains("motorola") || manu.contains("moto");
-        boolean isSony     = manu.contains("sony");
-        boolean isAsus     = manu.contains("asus");
-        boolean isNokia    = manu.contains("nokia");
-        boolean isLenovo   = manu.contains("lenovo");
-        boolean isLG       = manu.contains("lg");
-        boolean isZTE      = manu.contains("zte");
-        boolean isTecno    = manu.contains("tecno");
-        boolean isInfinix  = manu.contains("infinix");
-        boolean isMeizu    = manu.contains("meizu");
-        boolean isNothing  = manu.contains("nothing");
-        boolean isSharp    = manu.contains("sharp");
-
-        boolean isMIUI     = display.contains("miui")     || finger.contains("miui");
-        boolean isHyperOS  = display.contains("hyperos")  || finger.contains("hyperos");
-        boolean isOneUI    = display.contains("oneui")    || finger.contains("oneui") || isSamsung;
-
-        // -----------------------------
-        // OEM LABEL (FOR DISPLAY ONLY)
-        // -----------------------------
-        String oemLabel;
-
-        if (isXiaomi) {
-            if (isHyperOS)      oemLabel = "Xiaomi HyperOS";
-            else if (isMIUI)    oemLabel = "Xiaomi MIUI";
-            else                oemLabel = "Xiaomi / Redmi / POCO";
-        } else if (isSamsung) {
-            oemLabel = "Samsung One UI";
-        } else if (isPixel) {
-            oemLabel = "Google Pixel";
-        } else if (isOppo) {
-            oemLabel = "OPPO ColorOS";
-        } else if (isRealme) {
-            oemLabel = "realme UI";
-        } else if (isOnePlus) {
-            oemLabel = "OnePlus OxygenOS";
-        } else if (isVivo) {
-            oemLabel = "vivo / iQOO";
-        } else if (isHuawei) {
-            oemLabel = "Huawei / HONOR";
-        } else if (isMoto) {
-            oemLabel = "Motorola";
-        } else if (isSony) {
-            oemLabel = "Sony Xperia";
-        } else if (isAsus) {
-            oemLabel = "ASUS";
-        } else if (isNokia) {
-            oemLabel = "Nokia";
-        } else if (isLenovo) {
-            oemLabel = "Lenovo";
-        } else if (isLG) {
-            oemLabel = "LG";
-        } else if (isZTE) {
-            oemLabel = "ZTE";
-        } else if (isTecno) {
-            oemLabel = "TECNO";
-        } else if (isInfinix) {
-            oemLabel = "Infinix";
-        } else if (isMeizu) {
-            oemLabel = "Meizu";
-        } else if (isNothing) {
-            oemLabel = "Nothing";
-        } else if (isSharp) {
-            oemLabel = "Sharp";
-        } else if (manuRaw.isEmpty()) {
-            oemLabel = "Android Device";
-        } else {
-            oemLabel = manuRaw;
-        }
-
-        // -----------------------------
-        // REQUIRED + PATHS (PRIMARY / ALT)
-        // -----------------------------
-        String required = null;
-        String primary  = null;
-        String alt      = null;
-
-        boolean isHyperOSDevice = isXiaomi && isHyperOS;
-
-        switch (key) {
-
-            // -----------------------------------------------------
-            // CAMERA
-            // -----------------------------------------------------
-            case "camera":
-                required = "Camera Access";
-
-                if (isHyperOSDevice) {
-                    primary = "Settings → Apps → Permissions → Permission management → Camera";
-                    alt     = "Settings → Apps → Permissions → Camera";
-                }
-                else if (isSamsung) {
-                    primary = "Settings → Apps → [This app] → Permissions → Camera";
-                    alt     = "Settings → Privacy → Permission manager → Camera";
-                }
-                else if (isPixel || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Privacy → Permission manager → Camera";
-                    alt     = "Settings → Apps → Permissions → Camera";
-                }
-                else {
-                    primary = "Settings → Apps → Permissions → Camera";
-                    alt     = "Settings → Privacy → Permission manager → Camera";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // MIC
-            // -----------------------------------------------------
-            case "mic":
-                required = "Microphone Access";
-
-                if (isHyperOSDevice) {
-                    primary = "Settings → Apps → Permissions → Permission management → Microphone";
-                    alt     = "Settings → Apps → Permissions → Microphone";
-                }
-                else if (isSamsung) {
-                    primary = "Settings → Apps → [This app] → Permissions → Microphone";
-                    alt     = "Settings → Privacy → Permission manager → Microphone";
-                }
-                else if (isPixel || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Privacy → Permission manager → Microphone";
-                    alt     = "Settings → Apps → Permissions → Microphone";
-                }
-                else {
-                    primary = "Settings → Apps → Permissions → Microphone";
-                    alt     = "Settings → Privacy → Permission manager → Microphone";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // LOCATION
-            // -----------------------------------------------------
-            case "location":
-                required = "Location Access";
-
-                if (isHyperOSDevice) {
-                    primary = "Settings → Apps → Permissions → Permission management → Location";
-                    alt     = "Settings → Apps → Permissions → Location";
-                }
-                else if (isSamsung) {
-                    primary = "Settings → Apps → [This app] → Permissions → Location";
-                    alt     = "Settings → Location → App permissions";
-                }
-                else if (isPixel || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Location → App location permissions";
-                    alt     = "Settings → Apps → Permissions → Location";
-                }
-                else {
-                    primary = "Settings → Apps → Permissions → Location";
-                    alt     = "Settings → Location → App location permissions";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // BLUETOOTH / NEARBY
-            // -----------------------------------------------------
-            case "bluetooth":
-                required = "Nearby Devices Access";
-
-                if (isHyperOSDevice) {
-                    primary = "Settings → Apps → Permissions → Permission management → Nearby devices";
-                    alt     = "Settings → Apps → Permissions → Nearby devices";
-                }
-                else if (isSamsung) {
-                    primary = "Settings → Apps → [This app] → Permissions → Nearby devices";
-                    alt     = "Settings → Privacy → Permission manager → Nearby devices";
-                }
-                else if (isPixel || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Privacy → Permission manager → Nearby devices";
-                    alt     = "Settings → Apps → Permissions → Nearby devices";
-                }
-                else {
-                    primary = "Settings → Apps → Permissions → Nearby devices";
-                    alt     = "Settings → Privacy → Permission manager → Nearby devices";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // NFC
-            // -----------------------------------------------------
-            case "nfc":
-                required = "NFC Access";
-
-                if (isSamsung) {
-                    primary = "Settings → Connections → NFC and contactless payments";
-                    alt     = "Settings → Connected devices → NFC";
-                } else if (isHyperOSDevice || isPixel || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Connected devices → NFC";
-                    alt     = "Settings → Connection preferences → NFC";
-                } else {
-                    primary = "Settings → Connected devices → NFC";
-                    alt     = "Settings → Connection preferences → NFC";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // BATTERY
-            // -----------------------------------------------------
-            case "battery":
-                required = "Battery Usage Access";
-
-                if (isSamsung) {
-                    primary = "Settings → Battery and device care → Battery";
-                    alt     = "Settings → Battery";
-                } else if (isHyperOSDevice || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → Battery → Battery usage";
-                    alt     = "Settings → Battery";
-                } else {
-                    primary = "Settings → Battery";
-                    alt     = "Settings → Battery → More settings";
-                }
-                break;
-
-            // -----------------------------------------------------
-            // SENSORS
-            // -----------------------------------------------------
-            case "sensors":
-                required = "Standard Sensor Access (Developer options)";
-
-                if (isSamsung || isPixel || isXiaomi || isOppo || isRealme || isOnePlus || isVivo || isHuawei) {
-                    primary = "Settings → About phone → Software information → tap Build number 7× → Developer options → Sensors";
-                    alt     = "Settings → Developer options → Sensors";
-                } else {
-                    primary = "Settings → About phone → tap Build number 7× → Developer options → Sensors";
-                    alt     = null;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        // -------------------------------------------------
-        // BUILD FINAL PATH STRING (PRIMARY + ALT IF EXISTS)
-        // -------------------------------------------------
-        String path = null;
-
-        if (primary != null && alt != null) {
-            path = primary + "\n" + "ή\n" + alt;
-        } else if (primary != null) {
-            path = primary;
-        } else if (alt != null) {
-            path = alt;
-        }
-
-        // ============================================================
-        // FINAL APPEND
-        // ============================================================
-        if (required == null || path == null) {
+        if (context.getPackageManager().resolveActivity(intent, 0) != null) {
+            context.startActivity(intent);
             return;
         }
 
-        sb.append("\nRequired Access : ").append(required).append("\n");
-        sb.append(oemLabel).append(" →\n");
-        sb.append("Open Settings\n");
-        sb.append(path).append("\n");
+        // 2️⃣ Fallback – App Details (never wrong)
+        intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        context.startActivity(intent);
+
+    } catch (Throwable ignore) {
+        // Last resort – open Settings home
+        try {
+            Intent i = new Intent(Settings.ACTION_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+        } catch (Exception e) {
+            // No crash no matter what
+        }
     }
+}
+    
+        
+            
 
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1)

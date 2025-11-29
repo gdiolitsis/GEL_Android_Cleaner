@@ -219,13 +219,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 // ============================================================
 // GEL SettingsClick Engine v16 — UNIVERSAL, CLEAN & NO DUPLICATE HANDLER
 // "Open Settings → Apps → Permissions" (1 step before details)
-// Works on: HyperOS, OneUI, Pixel, ColorOS, MIUI, EMUI, AOSP
+// Works on: HyperOS, OneUI, Pixel, MIUI, ColorOS, EMUI, AOSP
 // ============================================================
 private void handleSettingsClick(Context context, String path) {
     try {
 
         // ----------------------------------------------------
-        //  HYPEROS — Real Permission Manager (Confirmed working)
+        // HYPEROS — Real Permission Manager (Confirmed working)
         // ----------------------------------------------------
         if (Build.DISPLAY != null && Build.DISPLAY.toLowerCase().contains("hyperos")) {
 
@@ -302,12 +302,13 @@ private void handleSettingsClick(Context context, String path) {
         }
 
         // ----------------------------------------------------
-        // BATTERY — Works for all OEMs (Pixel, Samsung, Xiaomi)
+        // BATTERY — Works on ALL OEMs (Pixel, Samsung, Xiaomi)
         // ----------------------------------------------------
         if (path.contains("Battery")) {
 
             Intent batt = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
 
+            // If OEM blocks → fallback
             if (context.getPackageManager().resolveActivity(batt, 0) == null) {
                 batt = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
             }
@@ -318,23 +319,25 @@ private void handleSettingsClick(Context context, String path) {
         }
 
         // ----------------------------------------------------
-        // DEFAULT → Open Settings Home
+        // DEFAULT → SETTINGS HOME
         // ----------------------------------------------------
         Intent generic = new Intent(Settings.ACTION_SETTINGS);
         generic.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(generic);
 
     } catch (Throwable ignore) {
-        // Last safe fallback — never crash
         try {
             Intent i = new Intent(Settings.ACTION_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
         } catch (Exception ex) {
-            // Ignore everything safely
+            // fail-safe
         }
     }
-}==================================================
+}
+// ============================================================
+// ROOT CHECK (GEL Stable v5.1)
+// ============================================================
 
         
             

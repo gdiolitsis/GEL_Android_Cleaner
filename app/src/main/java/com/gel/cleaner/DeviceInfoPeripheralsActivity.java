@@ -217,126 +217,27 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
 // ============================================================
-// GEL SettingsClick Engine v16 — UNIVERSAL, CLEAN & NO DUPLICATE HANDLER
-// "Open Settings → Apps → Permissions" (1 step before details)
-// Works on: HyperOS, OneUI, Pixel, MIUI, ColorOS, EMUI, AOSP
+// GEL SettingsClick Engine v17 — Ultra-Safe Edition
+// (Δεν ακολουθούμε ποτέ επιμέρους διαδρομές → μόνο ανοίγουμε Ρυθμίσεις)
 // ============================================================
 private void handleSettingsClick(Context context, String path) {
     try {
-
-        // ----------------------------------------------------
-        // HYPEROS — Real Permission Manager (Confirmed working)
-        // ----------------------------------------------------
-        if (Build.DISPLAY != null && Build.DISPLAY.toLowerCase().contains("hyperos")) {
-
-            Intent hyper = null;
-
-            if (path.contains("Camera")) {
-                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
-                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
-                        "android.permission-group.CAMERA");
-            }
-            else if (path.contains("Microphone") || path.contains("Mic")) {
-                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
-                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
-                        "android.permission-group.MICROPHONE");
-            }
-            else if (path.contains("Location")) {
-                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
-                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
-                        "android.permission-group.LOCATION");
-            }
-            else if (path.contains("Nearby")) {
-                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
-                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
-                        "android.permission-group.NEARBY_DEVICES");
-            }
-
-            if (hyper != null) {
-                hyper.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(hyper);
-                return;
-            }
-        }
-
-        // ----------------------------------------------------
-        // BLUETOOTH / NEARBY DEVICES
-        // ----------------------------------------------------
-        if (path.contains("Nearby devices") || path.contains("Bluetooth")) {
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.setData(Uri.fromParts("package", context.getPackageName(), null));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-            return;
-        }
-
-        // ----------------------------------------------------
-        // LOCATION (universal)
-        // ----------------------------------------------------
-        if (path.contains("Location")) {
-            Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-            return;
-        }
-
-        // ----------------------------------------------------
-        // CAMERA / MICROPHONE (universal fallback)
-        // ----------------------------------------------------
-        if (path.contains("Camera") || path.contains("Microphone") || path.contains("Mic")) {
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.setData(Uri.fromParts("package", context.getPackageName(), null));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-            return;
-        }
-
-        // ----------------------------------------------------
-        // NFC SETTINGS
-        // ----------------------------------------------------
-        if (path.contains("NFC")) {
-            Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-            return;
-        }
-
-        // ----------------------------------------------------
-        // BATTERY — Works on ALL OEMs (Pixel, Samsung, Xiaomi)
-        // ----------------------------------------------------
-        if (path.contains("Battery")) {
-
-            Intent batt = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
-
-            // If OEM blocks → fallback
-            if (context.getPackageManager().resolveActivity(batt, 0) == null) {
-                batt = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
-            }
-
-            batt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(batt);
-            return;
-        }
-
-        // ----------------------------------------------------
-        // DEFAULT → SETTINGS HOME
-        // ----------------------------------------------------
-        Intent generic = new Intent(Settings.ACTION_SETTINGS);
-        generic.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(generic);
-
-    } catch (Throwable ignore) {
+        Intent intent = new Intent(Settings.ACTION_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+    catch (Throwable ignore) {
         try {
-            Intent i = new Intent(Settings.ACTION_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-        } catch (Exception ex) {
+            Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);
+            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(fallback);
+        } catch (Throwable e) {
             // fail-safe
         }
     }
 }
-        
-    // ============================================================
+
+// ============================================================
 // GEL Access Instructions — Minimal Edition v1.0
 // (Needed because build sections call appendAccessInstructions())
 // ============================================================
@@ -345,9 +246,9 @@ private void appendAccessInstructions(StringBuilder sb, String type) {
     sb.append("\nRequired Access : ").append(type).append("\n");
     sb.append("Open Settings\n");
     sb.append("Settings → Apps → Permissions\n");
-}        
+}
 
-    // ============================================================
+// ============================================================
 // ROOT CHECK (GEL Stable v5.1) — FIXED
 // ============================================================
 private boolean isDeviceRooted() {
@@ -364,7 +265,6 @@ private boolean isDeviceRooted() {
             if (new File(p).exists()) return true;
         }
 
-        // FIXED: Proper line reading + correct bracket placement
         Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
         BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
         String line = in.readLine();
@@ -376,7 +276,10 @@ private boolean isDeviceRooted() {
         return false;
     }
 }
-// ============================================================
+ 
+        
+    
+
 
     // ============================================================
     // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)

@@ -493,7 +493,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         sb.append("Open Settings\n");
         sb.append(path).append("\n");
     }
-```0
                 
 
     

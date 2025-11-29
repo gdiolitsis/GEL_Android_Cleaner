@@ -1033,45 +1033,62 @@ private boolean isDeviceRooted() {
     }
 
     // ============================================================
-    // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
-    // ============================================================
-    private void handleSettingsClick(Context context, String path) {
-        try {
-            Intent intent;
+// SETTINGS CLICK HANDLER — GEL Intent Router v5.1 (GLOBAL SAFE)
+// ============================================================
+private void handleSettingsClick(Context context, String path) {
+    try {
+        Intent intent = null;
 
-            if (path.contains("Nearby devices")) {
-                intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
-
-            } else if (path.contains("App location permissions") || path.contains("Location →")) {
-                intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-
-            } else if (path.contains("Permission manager → Camera")
-                    || path.contains("Permission manager → Microphone")
-                    || path.contains("Permissions → Camera")
-                    || path.contains("Permissions → Microphone")) {
-                intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
-
-            } else if (path.contains("Connected devices → NFC")
-                    || path.contains("Connection & sharing → NFC")
-                    || path.contains("NFC")) {
-                intent = new Intent(Settings.ACTION_NFC_SETTINGS);
-
-            } else if (path.contains("Battery")) {
-                intent = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
-
-            } else {
-                intent = new Intent(Settings.ACTION_SETTINGS);
-            }
-
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-
-        } catch (Throwable ignore) {
-            // Silent fail — OEM may block direct intent; UI stays consistent.
+        // --- 1. NFC Related ---
+        if (path.contains("NFC")) {
+            intent = new Intent(Settings.ACTION_NFC_SETTINGS);
         }
+
+        // --- 2. Location Related ---
+        else if (path.contains("Location")) {
+            intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        }
+
+        // --- 3. Bluetooth / Nearby Devices ---
+        else if (path.contains("Nearby") || path.contains("Bluetooth")) {
+            // safest: go to app details → permissions
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+        }
+
+        // --- 4. Camera / Microphone Permission ---
+        else if (path.contains("Camera") || path.contains("Microphone")) {
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+        }
+
+        // --- 5. Battery ---
+        else if (path.contains("Battery")) {
+            intent = new Intent(Settings.ACTION_BATTERY_SETTINGS);
+        }
+
+        // --- 6. Sensors / Developer options ---
+        else if (path.contains("Developer") || path.contains("Sensors")) {
+            intent = new Intent(Settings.ACTION_SETTINGS);
+        }
+
+        // --- 7. Generic fallback (always safe) ---
+        else {
+            intent = new Intent(Settings.ACTION_SETTINGS);
+        }
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+
+    } catch (Throwable ignore) {
+        // Silent fail — some OEMs block direct setting intents.
+        try {
+            Intent fallback = new Intent(Settings.ACTION_SETTINGS);
+            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(fallback);
+        } catch (Throwable ignored2) { }
     }
+}
 
     // ============================================================
     // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING

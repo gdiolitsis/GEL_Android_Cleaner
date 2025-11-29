@@ -217,15 +217,14 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
 // ============================================================
-// UNIVERSAL SETTINGS CLICK ENGINE v5 (GEL) 
-// Opens: Settings → Apps → Special App Access
-// Works on ALL OEMs (Xiaomi / HyperOS / Samsung / Pixel / Oppo…)
+// GEL SettingsClick Engine v15 — UNIVERSAL & SAFE
+// "Open Settings → Apps → Permissions" (1 step before details)
 // ============================================================
-private void handleSettingsClick(Context context, String ignoredPath) {
+private void handleSettingsClick(Context context, String path) {
     try {
 
-        // 1️⃣ HyperOS / MIUI / Xiaomi – safest universal permissions hub
-        Intent intent = new Intent(Settings.ACTION_MANAGE_SPECIAL_APP_ACCESS);
+        // 1️⃣ Most stable universal panel → All Apps list
+        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if (context.getPackageManager().resolveActivity(intent, 0) != null) {
@@ -233,25 +232,31 @@ private void handleSettingsClick(Context context, String ignoredPath) {
             return;
         }
 
-        // 2️⃣ Fallback – App Details (never wrong)
-        intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+        // 2️⃣ Fallback → Default Apps (has Permissions section)
+        intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
+        if (context.getPackageManager().resolveActivity(intent, 0) != null) {
+            context.startActivity(intent);
+            return;
+        }
+
+        // 3️⃣ Last resort → Settings home
+        intent = new Intent(Settings.ACTION_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
 
     } catch (Throwable ignore) {
-        // Last resort – open Settings home
+        // Absolutely no crash on OEMs that block this
         try {
             Intent i = new Intent(Settings.ACTION_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
-        } catch (Exception e) {
-            // No crash no matter what
+        } catch (Exception ex) {
+            // still no crash
         }
     }
 }
-    
         
             
 

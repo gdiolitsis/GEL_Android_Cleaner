@@ -1034,7 +1034,7 @@ private boolean isDeviceRooted() {
 
     // ============================================================
 // SETTINGS CLICK HANDLER (FOR BLUE CLICKABLE PATH)
-// GEL Engine 5.1 — Battery Intent Fix (GLOBAL SAFE)
+// GEL Engine 6.0 — Universal Battery Safe (API 21+)
 // ============================================================
 private void handleSettingsClick(Context context, String path) {
     try {
@@ -1065,9 +1065,8 @@ private void handleSettingsClick(Context context, String path) {
 
         } else if (path.contains("Battery")) {
 
-            // 🔥 FIX: ACTION_BATTERY_SETTINGS does NOT exist → build crash
-            // This opens the global battery usage page on ALL OEMs.
-            intent = new Intent(Settings.ACTION_POWER_USAGE_SUMMARY);
+            // 🔥 SAFE FIX: Global fallback – only option supported on GitHub Runner API levels
+            intent = new Intent(Settings.ACTION_SETTINGS);
 
         } else {
 

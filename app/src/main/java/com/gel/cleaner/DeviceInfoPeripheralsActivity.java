@@ -239,19 +239,93 @@ private void handleSettingsClick(Context context, String path) {
 }
 
 // ============================================================
-// GEL Permission Map v20 — FINAL (Only true runtime permissions)
+// GEL Permission Engine v21 — Final Unified Block
+// (Show path ONLY when permission exists AND is not granted)
 // ============================================================
+
+// 1) Which sections actually have permissions
 private boolean sectionNeedsPermission(String type) {
 
-    if (type == null) return false;
     type = type.toLowerCase(Locale.US);
 
-    // ONLY these sections require Android runtime permissions
     return
-            type.contains("camera")      ||   // android.permission.CAMERA
-            type.contains("mic")         ||   // android.permission.RECORD_AUDIO
+            type.contains("camera")      ||
+            type.contains("mic")         ||
             type.contains("microphone")  ||
-            type.contains("location");        // android.permission.ACCESS_FINE_LOCATION
+            type.contains("location")    ||
+            type.contains("bluetooth")   ||
+            type.contains("nearby")      ||
+            type.contains("nfc");
+}
+
+// 2) Check if THIS USER has granted the required Android permission
+private boolean userHasPermission(String type) {
+
+    type = type.toLowerCase(Locale.US);
+
+    // CAMERA
+    if (type.contains("camera")) {
+        return checkSelfPermission(android.Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // MICROPHONE
+    if (type.contains("mic") || type.contains("microphone")) {
+        return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // LOCATION (coarse + fine)
+    if (type.contains("location")) {
+        boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean coarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        return fine || coarse;
+    }
+
+    // BLUETOOTH (Android 12+)
+    if (type.contains("bluetooth")) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+                    == PackageManager.PERMISSION_GRANTED;
+            boolean connect = checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                    == PackageManager.PERMISSION_GRANTED;
+            return scan && connect;
+        }
+        return true; // older Android → no permission needed
+    }
+
+    // NFC → No permission required on modern Android
+    if (type.contains("nfc")) {
+        return true;
+    }
+
+    // NEARBY DEVICES (Android 12+)
+    if (type.contains("nearby")) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // no permission needed for older
+    }
+
+    return true; // default safe
+}
+
+// 3) Append path ONLY when permission is required AND not granted
+private void appendAccessInstructions(StringBuilder sb, String type) {
+
+    // If this section DOES NOT use permissions → hide path
+    if (!sectionNeedsPermission(type)) return;
+
+    // If user ALREADY HAS permission → hide path
+    if (userHasPermission(type)) return;
+
+    // Otherwise → show path + link
+    sb.append("\nRequired Access : ").append(type).append("\n");
+    sb.append("Open Settings\n");
+    sb.append("Settings → Apps → Permissions\n");
 }
 
     // ============================================================

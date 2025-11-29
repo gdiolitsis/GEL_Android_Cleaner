@@ -229,6 +229,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         String display = safe(Build.DISPLAY).toLowerCase();
         String finger  = safe(Build.FINGERPRINT).toLowerCase();
 
+        // System flags (AI-patterned)
         boolean isXiaomi   = containsAny(manu, model, product, finger, "xiaomi","redmi","poco","mi");
         boolean isHyperOS  = containsAny(display, finger, "hyperos");
         boolean isMIUI     = containsAny(display, finger, "miui");
@@ -241,18 +242,19 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         boolean isHuawei   = containsAny(manu, finger, "huawei","honor");
 
         // -------------------------------------------------------------
-        // 2. BUILD-TIER LOGIC
+        // 2. BUILD-TIER LOGIC : Detect Menu Style Automatically
         // -------------------------------------------------------------
         boolean usesPermissionManager =
              containsAny(display, finger, "permission","perm_manager","permservice");
 
-        boolean usesAppPermissions =
+        boolean usesAppsPermissions =
              containsAny(display, finger, "appops","packageinstaller");
 
         // -------------------------------------------------------------
-        // 3. OEM LABEL
+        // 3. OEM LABEL (for display)
         // -------------------------------------------------------------
         String oem = "Android Device";
+
         if (isXiaomi)    oem = isHyperOS ? "Xiaomi HyperOS" : isMIUI ? "Xiaomi MIUI" : "Xiaomi/Redmi/POCO";
         else if (isSamsung) oem = "Samsung OneUI";
         else if (isPixel)   oem = "Google Pixel";
@@ -263,7 +265,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         else if (isHuawei)  oem = "Huawei / HONOR";
 
         // -------------------------------------------------------------
-        // 4. PRIMARY & FALLBACK PATHS
+        // 4. PRIMARY PATH + FALLBACKS (AUTO-SELECTED)
         // -------------------------------------------------------------
         String required = null;
         String primary  = null;
@@ -303,7 +305,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             case "battery":
                 required = "Battery Usage Access";
                 primary  = "Settings → Battery";
-                fallback = "Settings → Battery → More settings / Advanced";
+                fallback = "Settings → Battery → Advanced";
                 break;
 
             case "sensors":
@@ -314,7 +316,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
 
         // -------------------------------------------------------------
-        // 5. AUTO-SELECT PATH (Engine 5.0 Logic)
+        // 5. AUTO-PATH ENGINE DECISION
         // -------------------------------------------------------------
         String finalPath;
 
@@ -330,10 +332,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         else if (isOppo || isRealme || isOnePlus) {
             finalPath = usesPermissionManager ? primary : fallback;
         }
-        else if (isVivo) {
-            finalPath = primary;
-        }
-        else if (isHuawei) {
+        else if (isVivo || isHuawei) {
             finalPath = primary;
         }
         else {
@@ -341,18 +340,36 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
 
         // -------------------------------------------------------------
-        // 6. FINAL APPEND (CLEAN & SAFE)
+        // 6. OUTPUT
         // -------------------------------------------------------------
-        if (required == null && finalPath == null) return;
-        if (required == null) required = "Required Access Not Specified";
-        if (finalPath == null) finalPath = "Settings → (No matching menu detected)";
-
-        sb.append("\nRequired Access : ").append(required).append("\n");
+        sb.append("Required Access : ").append(required).append("\n");
         sb.append(oem).append(" →\n");
         sb.append("Open Settings\n");
         sb.append(finalPath).append("\n");
     }
 
+    // =====================================================================
+    // UTILITY HELPERS — REQUIRED FOR ENGINE 5.0
+    // =====================================================================
+    private String safe(String s) {
+        return (s == null ? "" : s.trim());
+    }
+
+    private boolean containsAny(String... values) {
+        if (values == null || values.length == 0) return false;
+        String base = values[0];
+        if (base == null) return false;
+
+        String baseLower = base.toLowerCase();
+        for (int i = 1; i < values.length; i++) {
+            if (values[i] != null && baseLower.contains(values[i].toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
     // ============================================================
     // ROOT CHECK
     // ============================================================

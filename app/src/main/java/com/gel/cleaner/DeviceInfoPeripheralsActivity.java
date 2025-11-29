@@ -20,6 +20,7 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
+import android.Manifest;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -238,20 +239,71 @@ private void handleSettingsClick(Context context, String path) {
 }
 
 // ============================================================
-// GEL Permission Map v1.0 — Which sections need permissions
+// GEL Permission Map v19 — Show path ONLY if runtime perms missing
 // ============================================================
 private boolean sectionNeedsPermission(String type) {
 
-    type = type.toLowerCase(Locale.US);
+    // Αν δεν υπάρχουν runtime permissions (π.χ. Android < 6), δεν δείχνουμε path
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        return false;
+    }
 
-    return
-            type.contains("camera")      ||
-            type.contains("mic")         ||
-            type.contains("microphone")  ||
-            type.contains("location")    ||
-            type.contains("bluetooth")   ||
-            type.contains("nearby")      ||
-            type.contains("nfc");
+    if (type == null) return false;
+    String t = type.toLowerCase(Locale.US);
+
+    String[] perms = null;
+
+    // CAMERA
+    if (t.contains("camera")) {
+        perms = new String[] {
+                Manifest.permission.CAMERA
+        };
+    }
+    // LOCATION / GPS
+    else if (t.contains("location") || t.contains("gps")) {
+        perms = new String[] {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        };
+    }
+    // MICROPHONE
+    else if (t.contains("mic") || t.contains("microphone")) {
+        perms = new String[] {
+                Manifest.permission.RECORD_AUDIO
+        };
+    }
+    // BLUETOOTH (μόνο από Android 12+ έχει runtime permission)
+    else if (t.contains("bluetooth") || t.contains("nearby")) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            perms = new String[] {
+                    Manifest.permission.BLUETOOTH_CONNECT
+            };
+        } else {
+            // Σε παλιότερα δεν υπάρχει runtime BT permission → δεν δείχνουμε path
+            return false;
+        }
+    }
+    // NFC: δεν έχει runtime permission → δεν δείχνουμε path
+    else if (t.contains("nfc")) {
+        return false;
+    }
+    // Ό,τι άλλο (sensors, battery, usb, gnss κλπ) δεν έχει runtime perm → χωρίς path
+    else {
+        return false;
+    }
+
+    // Αν για ΟΛΑ τα permissions έχουμε ήδη GRANTED → ΔΕΝ χρειάζεται path
+    if (perms != null) {
+        for (String p : perms) {
+            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                // Λείπει έστω ένα permission → δείχνουμε path
+                return true;
+            }
+        }
+    }
+
+    // Όλα τα permissions είναι ήδη δοσμένα → δεν δείχνουμε path
+    return false;
 }
 
     // ============================================================

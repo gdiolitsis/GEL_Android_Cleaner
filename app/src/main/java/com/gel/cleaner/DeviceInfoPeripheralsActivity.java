@@ -200,84 +200,74 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-// GEL Expand Engine v3.0 — FINAL FIX (Auto measure height)
-// ============================================================
-private void toggleSection(TextView targetContent, TextView targetIcon) {
+    // GEL Expand Engine v3.0
+    // ============================================================
+    private void toggleSection(TextView targetContent, TextView targetIcon) {
 
-    for (int i = 0; i < allContents.length; i++) {
-        TextView c = allContents[i];
-        TextView ic = allIcons[i];
+        for (int i = 0; i < allContents.length; i++) {
+            TextView c = allContents[i];
+            TextView ic = allIcons[i];
 
-        if (c == null || ic == null) continue;
+            if (c == null || ic == null) continue;
 
-        if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-            animateCollapse(c);
-            ic.setText("＋");
+            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
+                animateCollapse(c);
+                ic.setText("＋");
+            }
+        }
+
+        if (targetContent.getVisibility() == View.VISIBLE) {
+            animateCollapse(targetContent);
+            targetIcon.setText("＋");
+        } else {
+            animateExpand(targetContent);
+            targetIcon.setText("−");
         }
     }
 
-    if (targetContent.getVisibility() == View.VISIBLE) {
-        animateCollapse(targetContent);
-        targetIcon.setText("＋");
-    } else {
-        animateExpand(targetContent);
-        targetIcon.setText("−");
-    }
-}
+    private void animateExpand(final View v) {
+        v.post(() -> {
+            v.measure(
+                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            );
 
-private void animateExpand(final View v) {
+            final int target = v.getMeasuredHeight();
 
-    v.post(() -> {
-
-        // measure REAL height of the inner text
-        v.measure(
-                View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        );
-
-        final int target = v.getMeasuredHeight();
-        if (target <= 0) {
+            v.getLayoutParams().height = 0;
             v.setVisibility(View.VISIBLE);
-            return;
-        }
+            v.setAlpha(0f);
 
-        v.getLayoutParams().height = 0;
-        v.setVisibility(View.VISIBLE);
+            v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        v.getLayoutParams().height = target;
+                        v.requestLayout();
+                    })
+                    .start();
+        });
+    }
+
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
+
+        final int initial = v.getHeight();
+        v.setAlpha(1f);
 
         v.animate()
-                .alpha(1f)
-                .setDuration(150)
+                .alpha(0f)
+                .setDuration(120)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
-                    v.getLayoutParams().height = target;
+                    v.setVisibility(View.GONE);
+                    v.getLayoutParams().height = initial;
+                    v.setAlpha(1f);
                     v.requestLayout();
                 })
                 .start();
-    });
-}
-
-private void animateCollapse(final View v) {
-    if (v.getVisibility() != View.VISIBLE) return;
-
-    final int initial = v.getHeight();
-    if (initial <= 0) {
-        v.setVisibility(View.GONE);
-        return;
     }
-
-    v.animate()
-            .alpha(0f)
-            .setDuration(120)
-            .setInterpolator(new AccelerateDecelerateInterpolator())
-            .withEndAction(() -> {
-                v.setVisibility(View.GONE);
-                v.getLayoutParams().height = initial;
-                v.setAlpha(1f);
-                v.requestLayout();
-            })
-            .start();
-}
-
     // ============================================================
     // GEL SettingsClick Engine v17 — Ultra-Safe Edition
     // ============================================================

@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — FINAL v14 (Auto-Path Engine 5.3 + Root v5.1)
+// DeviceInfoPeripheralsActivity.java — FINAL v15 (Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v21)
 // NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
 
 package com.gel.cleaner;
@@ -217,151 +217,145 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 .start();
     }
 
-// ============================================================
-// GEL SettingsClick Engine v17 — Ultra-Safe Edition
-// (Δεν ακολουθούμε ποτέ επιμέρους διαδρομές → μόνο ανοίγουμε Ρυθμίσεις)
-// ============================================================
-private void handleSettingsClick(Context context, String path) {
-    try {
-        Intent intent = new Intent(Settings.ACTION_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-    }
-    catch (Throwable ignore) {
+    // ============================================================
+    // GEL SettingsClick Engine v17 — Ultra-Safe Edition
+    // (Δεν ακολουθούμε ποτέ επιμέρους διαδρομές → μόνο ανοίγουμε Ρυθμίσεις)
+    // ============================================================
+    private void handleSettingsClick(Context context, String path) {
         try {
-            Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);
-            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(fallback);
-        } catch (Throwable e) {
-            // fail-safe
+            Intent intent = new Intent(Settings.ACTION_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }
+        catch (Throwable ignore) {
+            try {
+                Intent fallback = new Intent(android.provider.Settings.ACTION_SETTINGS);
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(fallback);
+            } catch (Throwable e) {
+                // fail-safe
+            }
         }
     }
-}
 
-// ============================================================
-// GEL Permission Engine v21 — Final Unified Block
-// (Show path ONLY when permission exists AND is not granted)
-// ============================================================
+    // ============================================================
+    // GEL Permission Engine v21 — Final Unified Block
+    // (Show path ONLY when permission exists AND is not granted)
+    // ============================================================
 
-// 1) Which sections actually have permissions
-private boolean sectionNeedsPermission(String type) {
+    // 1) Which sections actually have permissions
+    private boolean sectionNeedsPermission(String type) {
 
-    type = type.toLowerCase(Locale.US);
+        type = type.toLowerCase(Locale.US);
 
-    return
-            type.contains("camera")      ||
-            type.contains("mic")         ||
-            type.contains("microphone")  ||
-            type.contains("location")    ||
-            type.contains("bluetooth")   ||
-            type.contains("nearby")      ||
-            type.contains("nfc");
-}
-
-// 2) Check if THIS USER has granted the required Android permission
-private boolean userHasPermission(String type) {
-
-    type = type.toLowerCase(Locale.US);
-
-    // CAMERA
-    if (type.contains("camera")) {
-        return checkSelfPermission(android.Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED;
+        return
+                type.contains("camera")      ||
+                type.contains("mic")         ||
+                type.contains("microphone")  ||
+                type.contains("location")    ||
+                type.contains("bluetooth")   ||
+                type.contains("nearby")      ||
+                type.contains("nfc");
     }
 
-    // MICROPHONE
-    if (type.contains("mic") || type.contains("microphone")) {
-        return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
-                == PackageManager.PERMISSION_GRANTED;
-    }
+    // 2) Check if THIS USER has granted the required Android permission
+    private boolean userHasPermission(String type) {
 
-    // LOCATION (coarse + fine)
-    if (type.contains("location")) {
-        boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-        boolean coarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-        return fine || coarse;
-    }
+        type = type.toLowerCase(Locale.US);
 
-    // BLUETOOTH (Android 12+)
-    if (type.contains("bluetooth")) {
-        if (Build.VERSION.SDK_INT >= 31) {
-            boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
-                    == PackageManager.PERMISSION_GRANTED;
-            boolean connect = checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-                    == PackageManager.PERMISSION_GRANTED;
-            return scan && connect;
-        }
-        return true; // older Android → no permission needed
-    }
-
-    // NFC → No permission required on modern Android
-    if (type.contains("nfc")) {
-        return true;
-    }
-
-    // NEARBY DEVICES (Android 12+)
-    if (type.contains("nearby")) {
-        if (Build.VERSION.SDK_INT >= 31) {
-            return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+        // CAMERA
+        if (type.contains("camera")) {
+            return checkSelfPermission(android.Manifest.permission.CAMERA)
                     == PackageManager.PERMISSION_GRANTED;
         }
-        return true; // no permission needed for older
-    }
 
-    return true; // default safe
-}
-
-// 3) Append path ONLY when permission is required AND not granted
-private void appendAccessInstructions(StringBuilder sb, String type) {
-
-    // If this section DOES NOT use permissions → hide path
-    if (!sectionNeedsPermission(type)) return;
-
-    // If user ALREADY HAS permission → hide path
-    if (userHasPermission(type)) return;
-
-    // Otherwise → show path + link
-    sb.append("\nRequired Access : ").append(type).append("\n");
-    sb.append("Open Settings\n");
-    sb.append("Settings → Apps → Permissions\n");
-}
-
-    
-
-// ============================================================
-// ROOT CHECK (GEL Stable v5.1) — FIXED
-// ============================================================
-private boolean isDeviceRooted() {
-    try {
-        String[] paths = {
-                "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                "/system/su", "/system/bin/.ext/.su",
-                "/system/usr/we-need-root/su-backup",
-                "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
-                "/system/app/Magisk.apk", "/system/priv-app/Magisk"
-        };
-
-        for (String p : paths) {
-            if (new File(p).exists()) return true;
+        // MICROPHONE
+        if (type.contains("mic") || type.contains("microphone")) {
+            return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED;
         }
 
-        Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-        BufferedReader in = new BuffdReader(new InputStreamReader(proc.getInputStream()));
-        String line = in.readLine();
-        in.close();
+        // LOCATION (coarse + fine)
+        if (type.contains("location")) {
+            boolean fine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
+            boolean coarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
+            return fine || coarse;
+        }
 
-        return line != null && !line.trim().isEmpty();
+        // BLUETOOTH (Android 12+)
+        if (type.contains("bluetooth")) {
+            if (Build.VERSION.SDK_INT >= 31) {
+                boolean scan = checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+                        == PackageManager.PERMISSION_GRANTED;
+                boolean connect = checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                        == PackageManager.PERMISSION_GRANTED;
+                return scan && connect;
+            }
+            return true; // older Android → no permission needed
+        }
 
-    } catch (Throwable ignore) {
-        return false;
+        // NFC → No permission required on modern Android
+        if (type.contains("nfc")) {
+            return true;
+        }
+
+        // NEARBY DEVICES (Android 12+)
+        if (type.contains("nearby")) {
+            if (Build.VERSION.SDK_INT >= 31) {
+                return checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+                        == PackageManager.PERMISSION_GRANTED;
+            }
+            return true; // no permission needed for older
+        }
+
+        return true; // default safe
     }
-}
- 
-        
-    
 
+    // 3) Append path ONLY when permission is required AND not granted
+    private void appendAccessInstructions(StringBuilder sb, String type) {
+
+        // If this section DOES NOT use permissions → hide path
+        if (!sectionNeedsPermission(type)) return;
+
+        // If user ALREADY HAS permission → hide path
+        if (userHasPermission(type)) return;
+
+        // Otherwise → show path + link
+        sb.append("\nRequired Access : ").append(type).append("\n");
+        sb.append("Open Settings\n");
+        sb.append("Settings → Apps → Permissions\n");
+    }
+
+    // ============================================================
+    // ROOT CHECK (GEL Stable v5.1) — FIXED
+    // ============================================================
+    private boolean isDeviceRooted() {
+        try {
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su", "/system/bin/.ext/.su",
+                    "/system/usr/we-need-root/su-backup",
+                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
+                    "/system/app/Magisk.apk", "/system/priv-app/Magisk"
+            };
+
+            for (String p : paths) {
+                if (new File(p).exists()) return true;
+            }
+
+            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String line = in.readLine();
+            in.close();
+
+            return line != null && !line.trim().isEmpty();
+
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
 
     // ============================================================
     // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)
@@ -978,7 +972,6 @@ private boolean isDeviceRooted() {
         }
     }
 
-    
     // ============================================================
     // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
     // ============================================================

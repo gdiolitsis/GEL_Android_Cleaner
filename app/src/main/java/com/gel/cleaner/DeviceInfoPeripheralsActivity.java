@@ -339,31 +339,35 @@ private void handleSettingsClick(Context context, String path) {
             
 
     // ============================================================
-    // ROOT CHECK (GEL Stable v5.1)
-    // ============================================================
-    private boolean isDeviceRooted() {
-        try {
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
-                    "/system/app/Magisk.apk", "/system/priv-app/Magisk"
-            };
+// ROOT CHECK (GEL Stable v5.1) — FIXED
+// ============================================================
+private boolean isDeviceRooted() {
+    try {
+        String[] paths = {
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/su", "/system/bin/.ext/.su",
+                "/system/usr/we-need-root/su-backup",
+                "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
+                "/system/app/Magisk.apk", "/system/priv-app/Magisk"
+        };
 
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
-            }
-
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            in.close();
-
-            return line != null && !line.trim().isEmpty(      } catch (Throwable ignore) {
-            return false;
+        for (String p : paths) {
+            if (new File(p).exists()) return true;
         }
+
+        // FIXED: Proper line reading + correct bracket placement
+        Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
+        BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        String line = in.readLine();
+        in.close();
+
+        return line != null && !line.trim().isEmpty();
+
+    } catch (Throwable ignore) {
+        return false;
     }
+}
+// ============================================================
 
     // ============================================================
     // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)

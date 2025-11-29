@@ -288,21 +288,22 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // GEL Permission Engine v22 — HIDE PATH IF PERMISSION GRANTED
-    // ============================================================
-    private boolean sectionNeedsPermission(String type) {
+// GEL Permission Map v23 — FINAL
+// ============================================================
+private boolean sectionNeedsPermission(String type) {
 
-        type = type.toLowerCase(Locale.US);
+    type = type.toLowerCase(Locale.US);
 
-        return
-                type.contains("camera")      ||
-                type.contains("mic")         ||
-                type.contains("microphone")  ||
-                type.contains("location")    ||
-                type.contains("bluetooth")   ||
-                type.contains("nearby")      ||
-                type.contains("nfc");
-    }
+    return
+            type.contains("camera")      ||
+            type.contains("mic")         ||
+            type.contains("microphone")  ||
+            type.contains("location")    ||
+            type.contains("bluetooth")   ||
+            type.contains("nearby")      ||
+            type.contains("nfc")         ||
+            type.contains("battery");    
+}
 
     private boolean userHasPermission(String type) {
 

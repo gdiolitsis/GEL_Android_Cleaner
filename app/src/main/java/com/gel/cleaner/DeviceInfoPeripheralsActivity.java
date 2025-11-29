@@ -846,6 +846,75 @@ private void animateCollapse(final View v) {
         return sb.toString();
     }
 
+   // ============================================================
+   // GEL Other Peripherals Info v4.0 — FULL EDITION
+   // (No permissions required, 100% safe on all Android builds)
+   // ============================================================
+private String buildOtherPeripheralsInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("=== General Peripherals ===\n");
+
+    // Vibrator / Haptics
+    boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+    sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
+
+    // Flashlight / Torch Support
+    boolean flash = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+    sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
+
+    // IR Blaster
+    boolean ir = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
+    sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n\n");
+
+    sb.append("=== Display Info ===\n");
+
+    try {
+        android.view.Display display = getWindowManager().getDefaultDisplay();
+
+        float refresh = display.getRefreshRate();
+        sb.append("Refresh Rate    : ").append(refresh).append(" Hz\n");
+
+        android.util.DisplayMetrics dm = new android.util.DisplayMetrics();
+        display.getRealMetrics(dm);
+        sb.append("Resolution      : ").append(dm.widthPixels)
+                .append(" × ").append(dm.heightPixels).append("\n");
+    } catch (Throwable ignore) {
+        sb.append("Display info not available.\n");
+    }
+
+    sb.append("\n=== USB / I/O ===\n");
+
+    boolean usbHost = getPackageManager().hasSystemFeature("android.hardware.usb.host");
+    sb.append("USB Host (OTG)  : ").append(usbHost ? "Yes" : "No").append("\n");
+
+    boolean usbAcc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
+    sb.append("USB Accessory   : ").append(usbAcc ? "Yes" : "No").append("\n\n");
+
+    sb.append("=== Audio Output Devices ===\n");
+
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+
+            if (outs.length == 0) {
+                sb.append("No audio outputs detected.\n");
+            } else {
+                for (AudioDeviceInfo d : outs) {
+                    sb.append("• ").append(d.getProductName()).append("\n");
+                }
+            }
+        }
+    } catch (Throwable ignore) {
+        sb.append("Audio device info not available.\n");
+    }
+
+    sb.append("\n(Advanced peripheral diagnostics require root access.)\n");
+
+    return sb.toString();
+}
     private String buildMicsInfo() {
         StringBuilder sb = new StringBuilder();
 

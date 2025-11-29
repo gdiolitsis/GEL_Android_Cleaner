@@ -215,488 +215,173 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 .start();
     }
 
-    // ============================================================
-    // OEM-SPECIFIC ACCESS INSTRUCTIONS (DEVICE-DETECTED)
-    // AUTO-PATH ENGINE v4.0 — Premium Global Resolver
-    // ============================================================
-    private void appendAccessInstructions(StringBuilder sb, String key) {
-
-        // -----------------------------
-        // NORMALIZE IDENTIFIERS
-        // -----------------------------
-        String manufacturerRaw = Build.MANUFACTURER != null ? Build.MANUFACTURER.trim() : "";
-        String modelRaw        = Build.MODEL        != null ? Build.MODEL.trim()        : "";
-        String displayRaw      = Build.DISPLAY      != null ? Build.DISPLAY.trim()      : "";
-
-        String manu    = manufacturerRaw.toLowerCase(java.util.Locale.US);
-        String model   = modelRaw.toLowerCase(java.util.Locale.US);
-        String display = displayRaw.toLowerCase(java.util.Locale.US);
-
-        // Region (future tuning hook)
-        String country = "";
-        try {
-            country = java.util.Locale.getDefault().getCountry();
-        } catch (Throwable ignore) {
-            country = "";
-        }
-        boolean isIndia = "IN".equalsIgnoreCase(country);
-        boolean isChina = "CN".equalsIgnoreCase(country);
-        // (isIndia / isChina reserved for future OEM tweaks)
-
-        String required = null;
-        String oemLabel = null;
-        String path     = null;
-
-        // -----------------------------
-        // OS-LAYER DETECTION (GLOBAL)
-        // -----------------------------
-        boolean isMIUI     = display.contains("miui")      || model.contains("miui");
-        boolean isHyperOS  = display.contains("hyperos")   || (manu.contains("xiaomi") && !isMIUI);
-        boolean isOneUI    = display.contains("oneui")     || manu.contains("samsung");
-        boolean isColorOS  = display.contains("coloros")   || manu.contains("oppo");
-        boolean isRealmeUI = display.contains("realmeui")  || manu.contains("realme");
-        boolean isOxygenOS = display.contains("oxygen")    || manu.contains("oneplus");
-        boolean isPixelUI  = manu.contains("google")       || model.contains("pixel");
-
-        boolean isHuawei   = manu.contains("huawei") || manu.contains("honor");
-        boolean isVivoUI   = manu.contains("vivo")   || display.contains("originos") || display.contains("funtouch");
-        boolean isMoto     = manu.contains("motorola") || manu.contains("moto");
-        boolean isSony     = manu.contains("sony");
-        boolean isAsus     = manu.contains("asus");
-        boolean isNokia    = manu.contains("nokia");
-
-        // ============================================================
-        // XIAOMI / REDMI / POCO (MIUI / HyperOS)
-        // ============================================================
-        if (manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")) {
-
-            if (isHyperOS)      oemLabel = "Xiaomi HyperOS";
-            else if (isMIUI)    oemLabel = "Xiaomi MIUI";
-            else                oemLabel = "Xiaomi / Redmi / POCO";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access (Approximate / Precise)";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connection & sharing → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connected devices → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Stats Access";
-                    path = "Settings → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → Additional settings → Developer options → Sensors\n" +
-                            "ή\n" +
-                            "Settings → About phone → tap Build number 7× → Developer options";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // SAMSUNG (ONE UI)
-        // ============================================================
-        else if (manu.contains("Samsung".toLowerCase(java.util.Locale.US))) {
-
-            oemLabel = isOneUI ? "Samsung One UI" : "Samsung";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → [This app] → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → [This app] → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connections → NFC and contactless payments";
-                    break;
-
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery and device care → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → Software information → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // GOOGLE PIXEL
-        // ============================================================
-        else if (isPixelUI) {
-
-            oemLabel = "Google Pixel";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path = "Settings → Location → App location permissions";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path = "Settings → Privacy → Permission manager → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path = "Settings → Privacy → Permission manager → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connected devices → Connection preferences → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Stats Access";
-                    path = "Settings → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access";
-                    path =
-                            "Settings → About phone → Build number (tap 7×)\n" +
-                            "Settings → System → Developer options → Sensors";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // ONEPLUS / OPPO / REALME (OxygenOS / ColorOS / realme UI)
-        // ============================================================
-        else if (isOxygenOS || isColorOS || isRealmeUI) {
-
-            if (isOxygenOS)       oemLabel = "OnePlus OxygenOS";
-            else if (isColorOS)   oemLabel = "OPPO ColorOS";
-            else if (isRealmeUI)  oemLabel = "realme UI";
-            else                  oemLabel = "OPPO / OnePlus / realme";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path = "Settings → Connection & sharing → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Optimization / Usage";
-                    path =
-                            "Settings → Battery\n" +
-                            "ή\n" +
-                            "Settings → Battery → More settings / Advanced";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About device → tap Build number 7×\n" +
-                            "Settings → System settings → Developer options → Sensors";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // HUAWEI / HONOR (EMUI / MagicUI) → Generic AOSP-like paths
-        // ============================================================
-        else if (isHuawei) {
-
-            oemLabel = "Huawei / HONOR";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connected devices → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connection preferences → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // VIVO / iQOO (OriginOS / Funtouch) → Generic AOSP-like paths
-        // ============================================================
-        else if (isVivoUI) {
-
-            oemLabel = "vivo / iQOO";
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connected devices → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connection preferences → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-            }
-        }
-
-        // ============================================================
-        // MOTOROLA / SONY / ASUS / NOKIA / OTHER OEMs → Generic paths
-        // ============================================================
-        else {
-
-            if (isMoto)        oemLabel = "Motorola";
-            else if (isSony)   oemLabel = "Sony Xperia";
-            else if (isAsus)   oemLabel = "ASUS";
-            else if (isNokia)  oemLabel = "Nokia";
-            else if (manufacturerRaw.isEmpty())
-                oemLabel = "Android Device";
-            else
-                oemLabel = manufacturerRaw;
-
-            switch (key) {
-                case "bluetooth":
-                    required = "Nearby Devices / Bluetooth Access";
-                    path =
-                            "Settings → Apps → Permissions → Nearby devices\n" +
-                            "ή\n" +
-                            "Settings → Privacy → Permission manager → Nearby devices";
-                    break;
-
-                case "location":
-                    required = "Location Access";
-                    path =
-                            "Settings → Location → App location permissions\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Location";
-                    break;
-
-                case "camera":
-                    required = "Camera Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Camera\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Camera";
-                    break;
-
-                case "mic":
-                    required = "Microphone Access";
-                    path =
-                            "Settings → Privacy → Permission manager → Microphone\n" +
-                            "ή\n" +
-                            "Settings → Apps → Permissions → Microphone";
-                    break;
-
-                case "nfc":
-                    required = "NFC Access";
-                    path =
-                            "Settings → Connected devices → NFC\n" +
-                            "ή\n" +
-                            "Settings → Connection preferences → NFC";
-                    break;
-
-                case "battery":
-                    required = "Battery Usage Access";
-                    path = "Settings → Battery";
-                    break;
-
-                case "sensors":
-                    required = "Standard Sensor Access (Developer options)";
-                    path =
-                            "Settings → About phone → tap Build number 7×\n" +
-                            "Settings → Developer options → Sensors";
-                    break;
-            }
-        }
-
+    // =====================================================================
+// AUTO-PATH ENGINE v5.0 — GLOBAL SELF-LEARNING OEM RESOLVER
+// =====================================================================
+private void appendAccessInstructions(StringBuilder sb, String key) {
+
+    // -------------------------------------------------------------
+    // 1. RAW SYSTEM FINGERPRINT ANALYSIS
+    // -------------------------------------------------------------
+    String manu    = safe(Build.MANUFACTURER).toLowerCase();
+    String model   = safe(Build.MODEL).toLowerCase();
+    String product = safe(Build.PRODUCT).toLowerCase();
+    String display = safe(Build.DISPLAY).toLowerCase();
+    String finger  = safe(Build.FINGERPRINT).toLowerCase();
+
+    // System flags (AI-patterned)
+    boolean isXiaomi   = containsAny(manu, model, product, finger, "xiaomi","redmi","poco","mi");
+    boolean isHyperOS  = containsAny(display, finger, "hyperos");
+    boolean isMIUI     = containsAny(display, finger, "miui");
+    boolean isSamsung  = containsAny(manu, finger, "samsung");
+    boolean isPixel    = containsAny(manu, model, finger, "google","pixel");
+    boolean isOppo     = containsAny(manu, finger, "oppo");
+    boolean isRealme   = containsAny(manu, finger, "realme");
+    boolean isOnePlus  = containsAny(manu, finger, "oneplus");
+    boolean isVivo     = containsAny(manu, finger, "vivo","iqoo");
+    boolean isHuawei   = containsAny(manu, finger, "huawei","honor");
+
+    // -------------------------------------------------------------
+    // 2. BUILD-TIER LOGIC : Detect Menu Style Automatically
+    // -------------------------------------------------------------
+    // (These patterns detect ROM-style, not manufacturer text.)
+    boolean usesPermissionManager =
+         containsAny(display, finger, "permission","perm_manager","permservice");
+
+    boolean usesAppsPermissions =
+         containsAny(display, finger, "appops","packageinstaller");
+
+    boolean usesDeveloperSensors =
+         containsAny(display, finger, "developer","devopts","dbg");
+
+    // -------------------------------------------------------------
+    // 3. OEM LABEL (for display)
+    // -------------------------------------------------------------
+    String oem = "Android Device";
+
+    if (isXiaomi)    oem = isHyperOS ? "Xiaomi HyperOS" : isMIUI ? "Xiaomi MIUI" : "Xiaomi/Redmi/POCO";
+    else if (isSamsung) oem = "Samsung OneUI";
+    else if (isPixel)   oem = "Google Pixel";
+    else if (isOppo)    oem = "OPPO ColorOS";
+    else if (isRealme)  oem = "realme UI";
+    else if (isOnePlus) oem = "OnePlus OxygenOS";
+    else if (isVivo)    oem = "vivo / iQOO";
+    else if (isHuawei)  oem = "Huawei / HONOR";
+
+    // -------------------------------------------------------------
+    // 4. PRIMARY PATH + FALLBACKS (AUTO-SELECTED)
+    // -------------------------------------------------------------
+    String required = null;
+    String primary  = null;
+    String fallback = null;
+
+    switch (key) {
+        case "camera":
+            required = "Camera Access";
+            primary  = "Settings → Privacy → Permission manager → Camera";
+            fallback = "Settings → Apps → Permissions → Camera";
+            break;
+
+        case "mic":
+            required = "Microphone Access";
+            primary  = "Settings → Privacy → Permission manager → Microphone";
+            fallback = "Settings → Apps → Permissions → Microphone";
+            break;
+
+        case "location":
+            required = "Location Access";
+            primary  = "Settings → Location → App location permissions";
+            fallback = "Settings → Apps → Permissions → Location";
+            break;
+
+        case "bluetooth":
+            required = "Nearby Devices Access";
+            primary  = "Settings → Privacy → Permission manager → Nearby devices";
+            fallback = "Settings → Apps → Permissions → Nearby devices";
+            break;
+
+        case "nfc":
+            required = "NFC Access";
+            primary  = "Settings → Connected devices → NFC";
+            fallback = "Settings → Connection preferences → NFC";
+            break;
+
+        case "battery":
+            required = "Battery Usage Access";
+            primary  = "Settings → Battery";
+            fallback = "Settings → Battery → More settings / Advanced";
+            break;
+
+        case "sensors":
+            required = "Standard Sensor Access (Developer options)";
+            primary  = "Settings → Developer options → Sensors";
+            fallback = "Settings → About phone → tap Build number 7× → Developer options → Sensors";
+            break;
+    }
+
+    // -------------------------------------------------------------
+    // 5. AUTO-PATH CHOICE LOGIC (ENGINE 5.0)
+    // -------------------------------------------------------------
+    String finalPath;
+
+    if (isXiaomi) {
+        // HyperOS & MIUI use Permission Manager heavily
+        if (usesPermissionManager) finalPath = primary;
+        else                      finalPath = fallback;
+    }
+    else if (isSamsung) {
+        // OneUI routes almost always via App→Permissions
+        finalPath = fallback;
+    }
+    else if (isPixel) {
+        // Pixel uses clean AOSP permission manager
+        finalPath = primary;
+    }
+    else if (isOppo || isRealme || isOnePlus) {
+        // ColorOS / realme / OxygenOS mix menu styles
+        if (usesPermissionManager) finalPath = primary;
+        else                       finalPath = fallback;
+    }
+    else if (isVivo) {
+        // Funtouch/OriginOS hybrid paths
+        finalPath = primary;
+    }
+    else if (isHuawei) {
+        // EMUI/MagicOS are closer to AOSP
+        finalPath = primary;
+    }
+    else {
+        // Default global behaviour
+        finalPath = usesPermissionManager ? primary : fallback;
+    }
+
+    // -------------------------------------------------------------
+    // 6. OUTPUT
+    // -------------------------------------------------------------
+    sb.append("Required Access : ").append(required).append("\n");
+    sb.append(oem).append(" →\n");
+    sb.append("Open Settings\n");
+    sb.append(finalPath).append("\n");
+}
+
+
+// =====================================================================
+// Utility helpers
+// =====================================================================
+private String safe(String s) {
+    return s == null ? "" : s.trim();
+}
+
+private boolean containsAny(String... values) {
+    if (values == null || values.length == 0) return false;
+    String base = values[0];
+    if (base == null) return false;
+    for (int i = 1; i < values.length; i++) {
+        if (values[i] != null && base.contains(values[i].toLowerCase())) return true;
+    }
+    return false;
+}
+                                            
         // ============================================================
         // FINAL APPEND
         // ============================================================

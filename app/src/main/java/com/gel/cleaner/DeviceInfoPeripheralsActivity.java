@@ -238,10 +238,31 @@ private void handleSettingsClick(Context context, String path) {
 }
 
 // ============================================================
-// GEL Access Instructions — Minimal Edition v1.0
-// (Needed because build sections call appendAccessInstructions())
+// GEL Permission Map v1.0 — Which sections need permissions
+// ============================================================
+private boolean sectionNeedsPermission(String type) {
+
+    type = type.toLowerCase(Locale.US);
+
+    return
+            type.contains("camera")      ||
+            type.contains("mic")         ||
+            type.contains("microphone")  ||
+            type.contains("location")    ||
+            type.contains("bluetooth")   ||
+            type.contains("nearby")      ||
+            type.contains("nfc");
+}
+
+    // ============================================================
+// GEL Access Instructions — Smart Edition v18
+// (Show path ONLY when permission is actually needed)
 // ============================================================
 private void appendAccessInstructions(StringBuilder sb, String type) {
+
+    if (!sectionNeedsPermission(type)) {
+        return; // No permissions needed → no path shown
+    }
 
     sb.append("\nRequired Access : ").append(type).append("\n");
     sb.append("Open Settings\n");

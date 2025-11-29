@@ -335,10 +335,6 @@ private void handleSettingsClick(Context context, String path) {
         }
     }
 }
-// ============================================================
-// ROOT CHECK (GEL Stable v5.1)
-// ============================================================
-
         
             
 
@@ -364,9 +360,7 @@ private void handleSettingsClick(Context context, String path) {
             String line = in.readLine();
             in.close();
 
-            return line != null && !line.trim().isEmpty();
-
-        } catch (Throwable ignore) {
+            return line != null && !line.trim().isEmpty(      } catch (Throwable ignore) {
             return false;
         }
     }

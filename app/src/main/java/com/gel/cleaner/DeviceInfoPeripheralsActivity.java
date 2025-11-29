@@ -4,6 +4,7 @@
 
 package com.gel.cleaner;
 
+import java.util.Locale;
 import com.gel.cleaner.GELAutoActivityHook;
 
 import android.bluetooth.BluetoothAdapter;

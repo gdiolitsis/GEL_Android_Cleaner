@@ -217,46 +217,125 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
 // ============================================================
-// GEL SettingsClick Engine v15 — UNIVERSAL & SAFE
+// GEL SettingsClick Engine v16 — UNIVERSAL, CLEAN & NO DUPLICATE HANDLER
 // "Open Settings → Apps → Permissions" (1 step before details)
+// Works on: HyperOS, OneUI, Pixel, ColorOS, MIUI, EMUI, AOSP
 // ============================================================
 private void handleSettingsClick(Context context, String path) {
     try {
 
-        // 1️⃣ Most stable universal panel → All Apps list
-        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // ----------------------------------------------------
+        //  HYPEROS — Real Permission Manager (Confirmed working)
+        // ----------------------------------------------------
+        if (Build.DISPLAY != null && Build.DISPLAY.toLowerCase().contains("hyperos")) {
 
-        if (context.getPackageManager().resolveActivity(intent, 0) != null) {
-            context.startActivity(intent);
+            Intent hyper = null;
+
+            if (path.contains("Camera")) {
+                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
+                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
+                        "android.permission-group.CAMERA");
+            }
+            else if (path.contains("Microphone") || path.contains("Mic")) {
+                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
+                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
+                        "android.permission-group.MICROPHONE");
+            }
+            else if (path.contains("Location")) {
+                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
+                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
+                        "android.permission-group.LOCATION");
+            }
+            else if (path.contains("Nearby")) {
+                hyper = new Intent("android.settings.MANAGE_APP_PERMISSION");
+                hyper.putExtra("android.intent.extra.PERMISSION_GROUP_NAME",
+                        "android.permission-group.NEARBY_DEVICES");
+            }
+
+            if (hyper != null) {
+                hyper.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(hyper);
+                return;
+            }
+        }
+
+        // ----------------------------------------------------
+        // BLUETOOTH / NEARBY DEVICES
+        // ----------------------------------------------------
+        if (path.contains("Nearby devices") || path.contains("Bluetooth")) {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(Uri.fromParts("package", context.getPackageName(), null));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
             return;
         }
 
-        // 2️⃣ Fallback → Default Apps (has Permissions section)
-        intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        if (context.getPackageManager().resolveActivity(intent, 0) != null) {
-            context.startActivity(intent);
+        // ----------------------------------------------------
+        // LOCATION (universal)
+        // ----------------------------------------------------
+        if (path.contains("Location")) {
+            Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
             return;
         }
 
-        // 3️⃣ Last resort → Settings home
-        intent = new Intent(Settings.ACTION_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        // ----------------------------------------------------
+        // CAMERA / MICROPHONE (universal fallback)
+        // ----------------------------------------------------
+        if (path.contains("Camera") || path.contains("Microphone") || path.contains("Mic")) {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(Uri.fromParts("package", context.getPackageName(), null));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+            return;
+        }
+
+        // ----------------------------------------------------
+        // NFC SETTINGS
+        // ----------------------------------------------------
+        if (path.contains("NFC")) {
+            Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+            return;
+        }
+
+        // ----------------------------------------------------
+        // BATTERY — Works for all OEMs (Pixel, Samsung, Xiaomi)
+        // ----------------------------------------------------
+        if (path.contains("Battery")) {
+
+            Intent batt = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
+
+            if (context.getPackageManager().resolveActivity(batt, 0) == null) {
+                batt = new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS);
+            }
+
+            batt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(batt);
+            return;
+        }
+
+        // ----------------------------------------------------
+        // DEFAULT → Open Settings Home
+        // ----------------------------------------------------
+        Intent generic = new Intent(Settings.ACTION_SETTINGS);
+        generic.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(generic);
 
     } catch (Throwable ignore) {
-        // Absolutely no crash on OEMs that block this
+        // Last safe fallback — never crash
         try {
             Intent i = new Intent(Settings.ACTION_SETTINGS);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
         } catch (Exception ex) {
-            // still no crash
+            // Ignore everything safely
         }
     }
-}
+}==================================================
+
         
             
 

@@ -495,6 +495,85 @@ private boolean isDeviceRooted() {
 }
 
     // ============================================================
+// GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)
+// ============================================================
+private String getBatteryPathForDisplay() {
+
+    String manu = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.US);
+    String finger = Build.FINGERPRINT == null ? "" : Build.FINGERPRINT.toLowerCase(Locale.US);
+    String display = Build.DISPLAY == null ? "" : Build.DISPLAY.toLowerCase(Locale.US);
+
+    boolean isXiaomi  = manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco");
+    boolean isMIUI    = finger.contains("miui") || display.contains("miui");
+    boolean isHyperOS = finger.contains("hyperos") || display.contains("hyperos");
+
+    boolean isSamsung = manu.contains("samsung");
+    boolean isPixel   = manu.contains("google") || finger.contains("pixel");
+
+    boolean isOppo    = manu.contains("oppo");
+    boolean isRealme  = manu.contains("realme");
+    boolean isOnePlus = manu.contains("oneplus");
+
+    boolean isVivo    = manu.contains("vivo") || manu.contains("iqoo");
+    boolean isHuawei  = manu.contains("huawei") || manu.contains("honor");
+
+    boolean isMoto    = manu.contains("motorola") || manu.contains("moto");
+    boolean isSony    = manu.contains("sony");
+    boolean isAsus    = manu.contains("asus");
+    boolean isNokia   = manu.contains("nokia");
+    boolean isLenovo  = manu.contains("lenovo");
+    boolean isLG      = manu.contains("lg");
+    boolean isZTE     = manu.contains("zte");
+    boolean isTecno   = manu.contains("tecno");
+    boolean isInfinix = manu.contains("infinix");
+    boolean isMeizu   = manu.contains("meizu");
+    boolean isNothing = manu.contains("nothing");
+
+    // -----------------------------
+    // OEM-SPECIFIC HUMAN PATHS
+    // -----------------------------
+    if (isSamsung) {
+        return "Settings → Battery and device care → Battery";
+    }
+
+    if (isXiaomi) {
+        if (isHyperOS) return "Settings → Battery → Battery usage";
+        if (isMIUI)    return "Settings → Battery & performance → Battery usage";
+        return "Settings → Battery";
+    }
+
+    if (isPixel) {
+        return "Settings → Battery → Battery usage";
+    }
+
+    if (isOppo || isRealme) {
+        return "Settings → Battery → More settings";
+    }
+
+    if (isOnePlus) {
+        return "Settings → Battery → Advanced settings";
+    }
+
+    if (isVivo) {
+        return "Settings → Battery";
+    }
+
+    if (isHuawei) {
+        return "Settings → Battery → App launch";
+    }
+
+    if (isMoto) {
+        return "Settings → Battery";
+    }
+
+    if (isSony || isAsus || isNokia || isLenovo || isLG || isZTE || isTecno || isInfinix || isMeizu || isNothing) {
+        return "Settings → Battery";
+    }
+
+    return "Settings → Battery"; // universal fallback
+}
+    
+    // ============================================================
     // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
     // ============================================================
 

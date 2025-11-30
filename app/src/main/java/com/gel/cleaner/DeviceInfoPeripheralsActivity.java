@@ -1078,8 +1078,8 @@ private String getProp(String key) {
 }  
 
    // ============================================================
-   // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
-   // ============================================================
+// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+// ============================================================
 @Override
 protected void onStart() {
     super.onStart();
@@ -1097,7 +1097,7 @@ protected void onStart() {
     set(R.id.txtBluetoothContent,     buildBluetoothInfo());
     set(R.id.txtNfcContent,           buildNfcInfo());
     set(R.id.txtBatteryContent,       buildBatteryInfo());
-    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());   // ← FIXED
+    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
     set(R.id.txtUwbContent,           buildUwbInfo());
     set(R.id.txtHapticsContent,       buildHapticsInfo());
     set(R.id.txtGnssContent,          buildGnssInfo());
@@ -1161,103 +1161,105 @@ private void showPermissionDebugInfo() {
     android.util.Log.e("GEL-PERMS", dbg.toString());
 }
 
-// ============================================================  
-// APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS  
-// ============================================================  
-private void applyNeonValues(TextView tv, String text) {  
-    if (text == null) {  
-        tv.setText("");  
-        return;  
-    }  
+// ============================================================
+// SET METHOD — MUST BE OUTSIDE onStart()
+// ============================================================
+private void set(int id, String txt) {
+    TextView t = findViewById(id);
+    if (t == null) return;
+    applyNeonValues(t, txt);
+}
 
-    int neon = Color.parseColor(NEON_GREEN);  
-    int gold = Color.parseColor(GOLD_COLOR);  
-    SpannableStringBuilder ssb = new SpannableStringBuilder(text);  
+// ============================================================
+// APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
+// ============================================================
+private void applyNeonValues(TextView tv, String text) {
+    if (text == null) {
+        tv.setText("");
+        return;
+    }
 
-    int start = 0;  
-    int len = text.length();  
+    int neon = Color.parseColor(NEON_GREEN);
+    int gold = Color.parseColor(GOLD_COLOR);
+    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
 
-    // NEON GREEN for values (right of colon)  
-    while (start < len) {  
-        int colon = text.indexOf(':', start);  
-        if (colon == -1) break;  
+    int start = 0;
+    int len = text.length();
 
-        int lineEnd = text.indexOf('\n', colon);  
-        if (lineEnd == -1) lineEnd = len;  
+    // NEON GREEN after colon
+    while (start < len) {
+        int colon = text.indexOf(':', start);
+        if (colon == -1) break;
 
-        int valueStart = colon + 1;  
-        while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {  
-            valueStart++;  
-        }  
+        int lineEnd = text.indexOf('\n', colon);
+        if (lineEnd == -1) lineEnd = len;
 
-        if (valueStart < lineEnd) {  
-            ssb.setSpan(  
-                    new ForegroundColorSpan(neon),  
-                    valueStart,  
-                    lineEnd,  
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE  
-            );  
-        }  
+        int valueStart = colon + 1;
+        while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {
+            valueStart++;
+        }
 
-        start = lineEnd + 1;  
-    }  
+        if (valueStart < lineEnd) {
+            ssb.setSpan(
+                    new ForegroundColorSpan(neon),
+                    valueStart,
+                    lineEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
 
-    // GOLD for "Xiaomi" OEM label  
-    int idxX = text.indexOf("Xiaomi");  
-    while (idxX != -1) {  
-        int endX = idxX + "Xiaomi".length();  
-        ssb.setSpan(  
-                new ForegroundColorSpan(gold),  
-                idxX,  
-                endX,  
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE  
-        );  
-        idxX = text.indexOf("Xiaomi", endX);  
-    }  
+        start = lineEnd + 1;
+    }
 
-    // BOLD "Open Settings"  
-    String openSettings = "Open Settings";  
-    int idxOS = text.indexOf(openSettings);  
+    // GOLD "Xiaomi"
+    int idxX = text.indexOf("Xiaomi");
+    while (idxX != -1) {
+        int end = idxX + "Xiaomi".length();
+        ssb.setSpan(
+                new ForegroundColorSpan(gold),
+                idxX,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+        idxX = text.indexOf("Xiaomi", end);
+    }
 
-    if (idxOS != -1) {  
-        ssb.setSpan(  
-                new StyleSpan(Typeface.BOLD),  
-                idxOS,  
-                idxOS + openSettings.length(),  
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE  
-        );  
-    }  
+    // BOLD "Open Settings"
+    String os = "Open Settings";
+    int idxOS = text.indexOf(os);
+    if (idxOS != -1) {
+        ssb.setSpan(new StyleSpan(Typeface.BOLD), idxOS, idxOS + os.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
 
-    // BLUE CLICKABLE "Settings → …" PATHS  
-    boolean hasPathSpan = false;  
-    int idxPath = text.indexOf("Settings →");  
+    // BLUE CLICKABLE PATH SPANS
+    boolean hasPath = false;
+    int idx = text.indexOf("Settings →");
 
-    while (idxPath != -1) {  
-        int end = text.indexOf('\n', idxPath);  
-        if (end == -1) end = len;  
+    while (idx != -1) {
+        int end = text.indexOf('\n', idx);
+        if (end == -1) end = len;
 
-        final String pathText = text.substring(idxPath, end);  
+        final String pathText = text.substring(idx, end);
 
-        ClickableSpan clickSpan = new ClickableSpan() {  
-            @Override  
-            public void onClick(@NonNull View widget) {  
-                handleSettingsClick(widget.getContext(), pathText);  
-            }  
-        };  
+        ssb.setSpan(new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                handleSettingsClick(widget.getContext(), pathText);
+            }
+        }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        ssb.setSpan(clickSpan, idxPath, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);  
-        ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idxPath, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);  
+        ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        hasPathSpan = true;  
-        idxPath = text.indexOf("Settings →", end);  
-    }  
+        hasPath = true;
+        idx = text.indexOf("Settings →", end);
+    }
 
-    if (hasPathSpan) {  
-        tv.setMovementMethod(LinkMovementMethod.getInstance());  
-        tv.setHighlightColor(Color.TRANSPARENT);  
-    }  
+    if (hasPath) {
+        tv.setMovementMethod(LinkMovementMethod.getInstance());
+        tv.setHighlightColor(Color.TRANSPARENT);
+    }
 
-    tv.setText(ssb);  
+    tv.setText(ssb);
 }
 
 }

@@ -1903,51 +1903,62 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             return "";
         }
     }
+    
+// ============================================================
+// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+// ============================================================
+private void populateAllSections() {
 
-    // ============================================================
-    // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
-    // ============================================================
-    @Override
-    protected void onStart() {
-        super.onStart();
+    set(R.id.txtBatteryContent,          buildBatteryInfo());
+    set(R.id.txtCameraContent,           buildCameraInfo());
+    set(R.id.txtDisplayContent,          buildDisplayInfo());
+    set(R.id.txtMemoryContent,           buildMemoryInfo());
+    set(R.id.txtConnectivityContent,     buildConnectivityInfo());
+    set(R.id.txtLocationContent,         buildLocationInfo());
 
-        requestAllRuntimePermissions();
+    // Telephony / Modem
+    set(R.id.txtModemContent,            buildModemInfo());
 
-        // Debug log of REAL permission state for this app
-        showPermissionDebugInfo();
+    // Radio Systems – WiFi Advanced
+    set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
+    set(R.id.txtGnssUltraContent,        buildGnssUltraInfo());
 
-        // OLD CORE SECTIONS
-        set(R.id.txtCameraContent,            buildCameraInfo());
-        set(R.id.txtBiometricsContent,        buildBiometricsInfo());
-        set(R.id.txtSensorsContent,           buildSensorsInfo());
-        set(R.id.txtConnectivityContent,      buildConnectivityInfo());
-        set(R.id.txtLocationContent,          buildLocationInfo());
-        set(R.id.txtBluetoothContent,         buildBluetoothInfo());
-        set(R.id.txtNfcContent,               buildNfcInfo());
-        set(R.id.txtBatteryContent,           buildBatteryInfo());
-        set(R.id.txtOtherPeripheralsContent,  buildOtherPeripheralsInfo());
-        set(R.id.txtUwbContent,               buildUwbInfo());
-        set(R.id.txtHapticsContent,           buildHapticsInfo());
-        set(R.id.txtGnssContent,              buildGnssInfo());
-        set(R.id.txtUsbContent,               buildUsbInfo());
-        set(R.id.txtMicsContent,              buildMicsInfo());
-        set(R.id.txtAudioHalContent,          buildAudioHalInfo());
-        set(R.id.txtRootContent,              buildRootInfo());
+    // Audio + Multimedia
+    set(R.id.txtAudioHalContent,         buildAudioHalInfo());
+    set(R.id.txtAudioExtendedContent,    buildAudioExtendedInfo());
+    set(R.id.txtMicsContent,             buildMicsInfo());
 
-        // NEW MEGA-UPGRADE SECTIONS
-        set(R.id.txtThermalContent,           buildThermalInfo());
-        set(R.id.txtDisplayContent,           buildDisplayInfo());
-        set(R.id.txtCpuContent,               buildCpuInfo());
-        set(R.id.txtGpuContent,               buildGpuInfo());
-        set(R.id.txtMemoryContent,            buildMemoryInfo());
-        set(R.id.txtModemContent,             buildModemInfo());
-        set(R.id.txtWifiAdvancedContent,      buildWifiAdvancedInfo());
-        set(R.id.txtAudioExtendedContent,     buildAudioExtendedInfo());
-        set(R.id.txtSensorsExtendedContent,   buildSensorsExtendedInfo());
-        set(R.id.txtGnssUltraContent,         buildGnssUltraInfo());
-        set(R.id.txtSystemFeaturesContent,    buildSystemFeaturesInfo());
-        set(R.id.txtSecurityFlagsContent,     buildSecurityFlagsInfo());
-    }
+    // Sensors
+    set(R.id.txtSensorsContent,          buildSensorsInfo());
+    set(R.id.txtSensorsExtendedContent,  buildSensorsExtendedInfo());
+
+    // Biometrics
+    set(R.id.txtBiometricsContent,       buildBiometricsInfo());
+
+    // Bluetooth / NFC / GNSS base / UWB
+    set(R.id.txtBluetoothContent,        buildBluetoothInfo());
+    set(R.id.txtNfcContent,              buildNfcInfo());
+    set(R.id.txtGnssContent,             buildGnssInfo());
+    set(R.id.txtUwbContent,              buildUwbInfo());
+
+    // USB
+    set(R.id.txtUsbContent,              buildUsbInfo());
+
+    // Haptics
+    set(R.id.txtHapticsContent,          buildHapticsInfo());
+
+    // System Features
+    set(R.id.txtSystemFeaturesContent,   buildSystemFeaturesInfo());
+
+    // Security Flags
+    set(R.id.txtSecurityFlagsContent,    buildSecurityFlagsInfo());
+
+    // Root info
+    set(R.id.txtRootContent,             buildRootInfo());
+
+    // Other Peripherals
+    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
+}
 
     // ============================================================
     // GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)

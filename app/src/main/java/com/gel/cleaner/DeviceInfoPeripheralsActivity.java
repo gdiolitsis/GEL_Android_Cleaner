@@ -929,110 +929,133 @@ private void setupSection(View header, final TextView content, final TextView ic
     }
 
     private String buildBatteryInfo() {
-        StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i       = registerReceiver(null, f);
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
 
-            if (i != null) {
-                int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-                int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        if (i != null) {
+            int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
-                String statusStr;
-                switch (status) {
-                    case BatteryManager.BATTERY_STATUS_CHARGING:
-                        statusStr = "Charging";
-                        break;
-                    case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                        statusStr = "Discharging";
-                        break;
-                    case BatteryManager.BATTERY_STATUS_FULL:
-                        statusStr = "Full";
-                        break;
-                    case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                        statusStr = "Not charging";
-                        break;
-                    case BatteryManager.BATTERY_STATUS_UNKNOWN:
-                    default:
-                        statusStr = "Unknown";
-                        break;
-                }
-
-                String plugStr;
-                switch (plugged) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                        plugStr = "AC";
-                        break;
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                        plugStr = "USB";
-                        break;
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        plugStr = "Wireless";
-                        break;
-                    default:
-                        plugStr = "Not plugged";
-                        break;
-                }
-
-                sb.append("Level           : ").append(level).append("%\n");
-                sb.append("Scale           : ").append(scale).append("\n");
-                sb.append("Status          : ").append(statusStr).append("\n");
-                sb.append("Charging Source : ").append(plugStr).append("\n");
-
-                if (temp > 0) {
-                    sb.append("Temp            : ").append((temp / 10f)).append("°C\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        sb.append("\nLifecycle        : ");
-
-        if (isRooted) {
-
-            long chargeFull       = readSysLong("/sys/class/power_supply/battery/charge_full");
-            long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-            long cycleCount       = readSysLong("/sys/class/power_supply/battery/cycle_count");
-
-            boolean any = false;
-            StringBuilder extra = new StringBuilder();
-
-            if (chargeFull > 0) {
-                extra.append("currentFull=").append(chargeFull).append(" ");
-                any = true;
+            String statusStr;
+            switch (status) {
+                case BatteryManager.BATTERY_STATUS_CHARGING:
+                    statusStr = "Charging";
+                    break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                    statusStr = "Discharging";
+                    break;
+                case BatteryManager.BATTERY_STATUS_FULL:
+                    statusStr = "Full";
+                    break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                    statusStr = "Not charging";
+                    break;
+                default:
+                    statusStr = "Unknown";
+                    break;
             }
 
-            if (chargeFullDesign > 0) {
-                extra.append("designFull=").append(chargeFullDesign).append(" ");
-                any = true;
+            String plugStr;
+            switch (plugged) {
+                case BatteryManager.BATTERY_PLUGGED_AC:
+                    plugStr = "AC";
+                    break;
+                case BatteryManager.BATTERY_PLUGGED_USB:
+                    plugStr = "USB";
+                    break;
+                case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                    plugStr = "Wireless";
+                    break;
+                default:
+                    plugStr = "Not plugged";
+                    break;
             }
 
-            if (cycleCount > 0) {
-                extra.append("cycles=").append(cycleCount);
-                any = true;
-            }
+            sb.append("Level           : ").append(level).append("%\n");
+            sb.append("Scale           : ").append(scale).append("\n");
+            sb.append("Status          : ").append(statusStr).append("\n");
+            sb.append("Charging Source : ").append(plugStr).append("\n");
 
-            if (any) {
-                sb.append(extra.toString().trim()).append("\n");
-            } else {
-                sb.append("Advanced lifecycle data is not exposed by this device.\n");
+            if (temp > 0) {
+                sb.append("Temp            : ").append((temp / 10f)).append("°C\n");
             }
-
-        } else {
-            sb.append("This metric requires root access to be displayed.\n");
         }
+    } catch (Throwable ignore) {}
 
-        if (sb.length() == 0) {
-            sb.append("Battery information is not exposed by this device.\n");
-        }
-
-        appendAccessInstructions(sb, "battery");
-        return sb.toString();
+    // ===== BATTERY CAPACITY (mAh detection) =====
+    long capacityMah = detectBatteryMah();
+    if (capacityMah > 0) {
+        sb.append("Capacity (mAh)  : ").append(capacityMah).append("\n");
+    } else {
+        sb.append("Capacity (mAh)  : Not available\n");
     }
 
+    // ===== LIFECYCLE =====
+    sb.append("Lifecycle       : ");
+
+    if (isRooted) {
+        long chargeFull       = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+        long cycleCount       = readSysLong("/sys/class/power_supply/battery/cycle_count");
+
+        boolean any = false;
+        StringBuilder extra = new StringBuilder();
+
+        if (chargeFull > 0) {
+            extra.append("currentFull=").append(chargeFull).append(" ");
+            any = true;
+        }
+        if (chargeFullDesign > 0) {
+            extra.append("designFull=").append(chargeFullDesign).append(" ");
+            any = true;
+        }
+        if (cycleCount > 0) {
+            extra.append("cycles=").append(cycleCount);
+            any = true;
+        }
+
+        if (any) {
+            sb.append(extra.toString().trim()).append("\n");
+        } else {
+            sb.append("Lifecycle data not exposed\n");
+        }
+    } else {
+        sb.append("Requires root access\n");
+    }
+
+    appendAccessInstructions(sb, "battery");
+    return sb.toString();
+}
+
+private long detectBatteryMah() {
+    try {
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (bm != null) {
+            Long cap = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+            if (cap != null && cap > 0) return Math.abs(cap / 1000);
+        }
+    } catch (Throwable ignore) {}
+
+    long cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+    if (cap > 1000) return cap / 1000;
+
+    cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
+    if (cap > 1000) return cap / 1000;
+
+    cap = readSysLong("/sys/class/power_supply/battery/constant_charge_current");
+    if (cap > 1000) return cap / 1000;
+
+    cap = readSysLong("/sys/class/power_supply/maxim/capacity");
+    if (cap > 1000) return cap;
+
+    return -1;
+}
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
         StringBuilder sb = new StringBuilder();

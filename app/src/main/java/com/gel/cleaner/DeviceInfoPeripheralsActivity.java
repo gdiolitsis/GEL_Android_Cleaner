@@ -1401,57 +1401,58 @@ private long detectBatteryMah() {
     // ============================================================
 
     // 1. Thermal Engine / Cooling Profiles
-    private String buildThermalInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildThermalInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        File thermalDir = new File("/sys/class/thermal");
-        File[] zones = null;
-        File[] cools = null;
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+    File[] cools = null;
 
-        try {
-            if (thermalDir.exists() && thermalDir.isDirectory()) {
-                zones = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("thermal_zone");
-                    }
-                });
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
 
-                cools = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("cooling_device");
-                    }
-                });
-            }
-        } catch (Throwable ignore) { }
-
-        int zoneCount  = zones != null ? zones.length : 0;
-        int coolCount  = cools != null ? cools.length : 0;
-
-        sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
-        sb.append("Cooling Devices  : ").append(coolCount).append("\n");
-
-        if (zoneCount > 0) {
-            sb.append("\nSample Zone      :\n");
-            try {
-                File z0 = zones[0];
-                String type = readSysString(z0.getAbsolutePath() + "/type");
-                String temp = readSysString(z0.getAbsolutePath() + "/temp");
-                if (type != null) {
-                    sb.append("  Type           : ").append(type).append("\n");
-                }
-                if (temp != null) {
-                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
-                }
-            } catch (Throwable ignore) { }
+            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
         }
+    } catch (Throwable ignore) { }
 
-        sb.append("\nAdvanced         : Full thermal trip tables and throttling profiles\n");
-        sb.append("                   require root access and OEM-specific parsing.\n");
+    int zoneCount = zones != null ? zones.length : 0;
+    int coolCount = cools != null ? cools.length : 0;
 
+    sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
+    sb.append("Cooling Devices  : ").append(coolCount).append("\n");
+
+    // ===== ALWAYS SHOW INFO — EVEN IF THERE ARE ZERO ZONES =====
+    if (zoneCount == 0 && coolCount == 0) {
+        sb.append("\nXiaomi/MIUI devices restrict access to thermal nodes.\n");
+        sb.append("Basic thermal API: Temperature sensors available via Android.\n");
+        sb.append("Advanced throttling data requires root.\n");
         return sb.toString();
     }
+
+    // ===== SAMPLE ZONE =====
+    if (zoneCount > 0) {
+        sb.append("\nSample Zone      :\n");
+
+        try {
+            File z0 = zones[0];
+            String type = readSysString(z0.getAbsolutePath() + "/type");
+            String temp = readSysString(z0.getAbsolutePath() + "/temp");
+
+            if (type != null && type.trim().length() > 0)
+                sb.append("  Type           : ").append(type).append("\n");
+
+            if (temp != null && temp.trim().length() > 0)
+                sb.append("  Temp (raw)     : ").append(temp).append("\n");
+
+        } catch (Throwable ignore) { }
+    }
+
+    sb.append("\nAdvanced thermal trip tables / throttling\n");
+    sb.append("require root access & OEM-specific parsing.\n");
+
+    return sb.toString();
+}
 
     // 2. Display / HDR / Refresh
     private String buildDisplayInfo() {

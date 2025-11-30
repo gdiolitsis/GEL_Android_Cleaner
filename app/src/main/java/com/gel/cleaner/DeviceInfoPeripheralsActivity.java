@@ -1527,42 +1527,41 @@ private String buildDisplayInfo() {
         int cores = Runtime.getRuntime().availableProcessors();
         sb.append("Cores            : ").append(cores).append("\n");
 
-        String arch = System.getProperty("os.arch", "N/A");
+        String arch = System.getProperty("os.arch", "");
         sb.append("Arch             : ").append(arch).append("\n");
 
         String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
-                ? Build.SUPPORTED_ABIS[0] : "N/A";
+                ? Build.SUPPORTED_ABIS[0] : "Unknown";
         sb.append("Primary ABI      : ").append(abi).append("\n");
 
         long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
         long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
         String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
 
-        sb.append("CPU0 Max Freq    : ").append(max > 0 ? max + " kHz" : "N/A").append("\n");
-        sb.append("CPU0 Min Freq    : ").append(min > 0 ? min + " kHz" : "N/A").append("\n");
-        sb.append("Governor         : ").append(gov != null ? gov : "N/A").append("\n");
+        if (max > 0) sb.append("CPU0 Max Freq    : ").append(max).append(" kHz\n");
+        if (min > 0) sb.append("CPU0 Min Freq    : ").append(min).append(" kHz\n");
+        if (gov != null && !gov.isEmpty()) sb.append("Governor         : ").append(gov).append("\n");
 
-        // read features ALWAYS returns something
-        String features = "N/A";
+        // features
         try {
             BufferedReader br = new BufferedReader(new FileReader("/proc/cpuinfo"));
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.toLowerCase().contains("features")) {
-                    features = line.replace("Features\t:", "").trim();
+                if (line.toLowerCase().startsWith("features")) {
+                    sb.append("Features Line    : ").append(line).append("\n");
                     break;
                 }
             }
             br.close();
         } catch (Throwable ignore) {}
 
-        sb.append("Feature Set      : ").append(features).append("\n");
+    } catch (Throwable ignore) {}
 
-    } catch (Throwable ignore) {
-        sb.append("CPU Info         : Error reading CPU data\n");
+    if (sb.length() == 0) {
+        sb.append("CPU information is not exposed by this device.\n");
     }
 
-    sb.append("Advanced         : Big/Little topology requires root-level perf HAL.\n");
+    sb.append("Advanced         : Big/Little clusters & boost states require root access.\n");
 
     return sb.toString();
 }

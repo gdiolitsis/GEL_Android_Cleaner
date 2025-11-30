@@ -1629,52 +1629,69 @@ private String buildMemoryInfo() {
     return sb.toString();
 }
     // 6. Modem / Telephony
-    private String buildModemInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildModemInfo() {
+StringBuilder sb = new StringBuilder();
 
-        try {
-            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            if (tm != null) {
-                int phoneType = tm.getPhoneType();
-                String typeStr;
-                switch (phoneType) {
-                    case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
-                    case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
-                    case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
-                    case TelephonyManager.PHONE_TYPE_NONE:
-                    default:                               typeStr = "None";
-                }
+try {  
+    TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);  
+    if (tm != null) {  
+        int phoneType = tm.getPhoneType();  
+        String typeStr;  
+        switch (phoneType) {  
+            case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;  
+            case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;  
+            case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;  
+            case TelephonyManager.PHONE_TYPE_NONE:  
+            default:                               typeStr = "None";  
+        }  
 
-                sb.append("Phone Type       : ").append(typeStr).append("\n");
+        sb.append("Phone Type       : ").append(typeStr).append("\n");  
 
-                if (Build.VERSION.SDK_INT >= 24) {
-                    boolean volte = tm.isVolteAvailable();
-                    sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
-                }
 
-                if (Build.VERSION.SDK_INT >= 29) {
-                    boolean vowifi = tm.isWifiCallingAvailable();
-                    sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
-                }
-            }
+        // -------------------------------------------------------------  
+        // 🔥 VoLTE via reflection (avoids compile-time error)  
+        // -------------------------------------------------------------  
+        if (Build.VERSION.SDK_INT >= 24) {  
+            boolean volte = false;  
+            try {  
+                volte = (boolean) TelephonyManager.class  
+                        .getMethod("isVolteAvailable")  
+                        .invoke(tm);  
+            } catch (Exception ignored) {}  
+            sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");  
+        }  
 
-            if (Build.VERSION.SDK_INT >= 22) {
-                SubscriptionManager sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-                if (sm != null) {
-                    java.util.List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                    int count = subs != null ? subs.size() : 0;
-                    sb.append("Active SIM Slots : ").append(count).append("\n");
-                }
-            }
+        // -------------------------------------------------------------  
+        // 🔥 VoWiFi via reflection (avoids compile-time error)  
+        // -------------------------------------------------------------  
+        if (Build.VERSION.SDK_INT >= 29) {  
+            boolean vowifi = false;  
+            try {  
+                vowifi = (boolean) TelephonyManager.class  
+                        .getMethod("isWifiCallingAvailable")  
+                        .invoke(tm);  
+            } catch (Exception ignored) {}  
+            sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");  
+        }  
+    }  
 
-        } catch (Throwable ignore) { }
+    if (Build.VERSION.SDK_INT >= 22) {  
+        SubscriptionManager sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);  
+        if (sm != null) {  
+            java.util.List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();  
+            int count = subs != null ? subs.size() : 0;  
+            sb.append("Active SIM Slots : ").append(count).append("\n");  
+        }  
+    }  
 
-        sb.append("\nAdvanced         : Full RAT/band table and modem logging\n");
-        sb.append("                   require root access and OEM modem tools.\n");
+} catch (Throwable ignore) { }  
 
-        return sb.toString();
-    }
+sb.append("\nAdvanced         : Full RAT/band table and modem logging\n");  
+sb.append("                   require root access and OEM modem tools.\n");  
 
+return sb.toString();
+
+}
     // 7. WiFi Advanced
     private String buildWifiAdvancedInfo() {
         StringBuilder sb = new StringBuilder();

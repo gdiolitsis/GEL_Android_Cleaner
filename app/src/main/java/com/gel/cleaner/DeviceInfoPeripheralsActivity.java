@@ -962,7 +962,6 @@ private String buildUsbInfo() {
 
     return sb.toString();  
 }  
-```0
                                 
     // ============================================================
     // GEL Other Peripherals Info v4.0 — FULL EDITION

@@ -1305,4 +1305,3 @@ private String buildOtherPeripheralsInfo() {
         tv.setText(ssb);
     }
 }
-```0

@@ -891,15 +891,60 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     private String buildUsbInfo() {
-        boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-        StringBuilder sb = new StringBuilder();
 
-        sb.append("OTG Support : ").append(otg ? "Yes" : "No").append("\n");
-        sb.append("Advanced    : Low-level USB descriptors and power profiles require root access.\n");
+    StringBuilder sb = new StringBuilder();
+    sb.append("=== USB / OTG Diagnostics v25 ===\n");
 
-        return sb.toString();
+    boolean hasOtg = getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
+    boolean hasAccessory = getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY);
+
+    sb.append("OTG Support        : ").append(hasOtg ? "Yes" : "No").append("\n");
+    sb.append("USB Accessory      : ").append(hasAccessory ? "Yes" : "No").append("\n");
+
+    // Advanced USB Capability (Root required for low-level descriptors)
+    sb.append("Advanced           : Low-level USB descriptors and\n");
+    sb.append("                     power profiles require root access.\n\n");
+
+    // ==== EXTRA DISPLAY INFO (only USB-related) ====
+    sb.append("=== Display / Interface Info ===\n");
+    try {
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getRealSize(size);
+        int refresh = display.getMode().getRefreshRate();
+
+        sb.append("Refresh Rate       : ").append(String.format(Locale.US, "%.1f Hz", refresh)).append("\n");
+        sb.append("Resolution         : ").append(size.x).append(" × ").append(size.y).append("\n\n");
+    } catch (Exception e) {
+        sb.append("Display Info       : Unsupported\n\n");
     }
 
+    // ==== AUDIO OUTPUT DEVICES (USB DAC / USB Headsets if any) ====
+    sb.append("=== Audio Output Devices ===\n");
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+
+        boolean found = false;
+        for (AudioDeviceInfo d : outs) {
+            if (d.getType() == AudioDeviceInfo.TYPE_USB_DEVICE ||
+                d.getType() == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                d.getType() == AudioDeviceInfo.TYPE_USB_ACCESSORY) {
+
+                found = true;
+                String name = d.getProductName() != null ? d.getProductName().toString() : "USB Audio Device";
+                sb.append("• ").append(name).append("\n");
+            }
+        }
+
+        if (!found) sb.append("No USB audio devices detected.\n");
+
+    } catch (Exception e) {
+        sb.append("Audio Info         : Unsupported\n");
+    }
+
+    return sb.toString();
+}
     // ============================================================
     // GEL Other Peripherals Info v4.0 — FULL EDITION
     // ============================================================

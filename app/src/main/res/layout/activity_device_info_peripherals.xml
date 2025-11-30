@@ -76,7 +76,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- CAMERAS (2) -->
+        <!-- CAMERA (2) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerCamera"
@@ -117,7 +117,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- PERFORMANCE / THERMALS / DISPLAY (3) -->
+        <!-- DISPLAY (3) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerDisplay"
@@ -158,7 +158,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- CORE HARDWARE / MEMORY (4) -->
+        <!-- MEMORY (4) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerMemory"
@@ -239,7 +239,37 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- LOCATION DETAIL -->
+        <!-- ========================================================= -->
+        <!-- LOCATION (NEW) -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Location Services"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconLocationToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/txtLocationContent"
             android:visibility="gone"
@@ -248,9 +278,7 @@
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"/>
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
         <!-- TELEPHONY / MODEM (6) -->
@@ -294,7 +322,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- RADIO SYSTEMS (7) -->
+        <!-- RADIO / WIFI ADVANCED (7) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerWifiAdvanced"
@@ -334,7 +362,35 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- GNSS ULTRA DETAIL -->
+        <!-- GNSS ULTRA (NEW) -->
+        <LinearLayout
+            android:id="@+id/headerGnssUltra"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="GNSS Ultra Detail"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconGnssUltraToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/txtGnssUltraContent"
             android:visibility="gone"
@@ -343,12 +399,10 @@
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"/>
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- MULTIMEDIA & AUDIO (8) -->
+        <!-- MULTIMEDIA / AUDIO (8) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerMultimedia"
@@ -381,25 +435,84 @@
         <TextView
             android:id="@+id/txtAudioHalContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- AUDIO HAL (NEW) -->
+        <LinearLayout
+            android:id="@+id/headerAudioHal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Audio HAL"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconAudioHalToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/txtAudioExtendedContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"/>
+            android:padding="12dp"/>
 
+        <!-- AUDIO EXTENDED (NEW) -->
+        <LinearLayout
+            android:id="@+id/headerAudioExtended"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Audio Extended"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconAudioExtendedToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <!-- ========================================================= -->
+        <!-- MICROPHONES -->
+        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerMics"
             android:layout_width="match_parent"
@@ -431,7 +544,7 @@
         <TextView
             android:id="@+id/txtMicsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -472,24 +585,51 @@
         <TextView
             android:id="@+id/txtSensorsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- SENSORS EXTENDED (NEW) -->
+        <LinearLayout
+            android:id="@+id/headerSensorsExtended"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sensors — Extended"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconSensorsExtendedToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/txtSensorsExtendedContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"/>
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
         <!-- BIOMETRICS (10) -->
@@ -525,7 +665,7 @@
         <TextView
             android:id="@+id/txtBiometricsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -566,7 +706,7 @@
         <TextView
             android:id="@+id/txtBluetoothContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -607,7 +747,7 @@
         <TextView
             android:id="@+id/txtNfcContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -648,7 +788,7 @@
         <TextView
             android:id="@+id/txtGnssContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -689,7 +829,7 @@
         <TextView
             android:id="@+id/txtUwbContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -730,7 +870,7 @@
         <TextView
             android:id="@+id/txtUsbContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -771,7 +911,7 @@
         <TextView
             android:id="@+id/txtHapticsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -812,7 +952,7 @@
         <TextView
             android:id="@+id/txtSystemFeaturesContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -820,7 +960,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- SECURITY FLAGS -->
+        <!-- SECURITY -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSecurityFlags"
@@ -853,7 +993,7 @@
         <TextView
             android:id="@+id/txtSecurityFlagsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -894,7 +1034,7 @@
         <TextView
             android:id="@+id/txtRootContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -936,12 +1076,11 @@
         <TextView
             android:id="@+id/txtOtherPeripheralsContent"
             android:visibility="gone"
-            android:layout_width="match_parent" 
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
     </LinearLayout>
 </ScrollView>

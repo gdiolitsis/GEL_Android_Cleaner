@@ -1077,37 +1077,89 @@ private String getProp(String key) {
     }  
 }  
 
-    // ============================================================
-    // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
-    // ============================================================
-    @Override
-    protected void onStart() {
-        super.onStart();
+   // ============================================================
+   // SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+   // ============================================================
+@Override
+protected void onStart() {
+    super.onStart();
 
-        requestAllRuntimePermissions();
+    requestAllRuntimePermissions();
 
-        set(R.id.txtCameraContent,       buildCameraInfo());
-        set(R.id.txtBiometricsContent,   buildBiometricsInfo());
-        set(R.id.txtSensorsContent,      buildSensorsInfo());
-        set(R.id.txtConnectivityContent, buildConnectivityInfo());
-        set(R.id.txtLocationContent,     buildLocationInfo());
-        set(R.id.txtBluetoothContent,    buildBluetoothInfo());
-        set(R.id.txtNfcContent,          buildNfcInfo());
-        set(R.id.txtBatteryContent,      buildBatteryInfo());
-        set(R.id.txtUwbContent,          buildUwbInfo());
-        set(R.id.txtHapticsContent,      buildHapticsInfo());
-        set(R.id.txtGnssContent,         buildGnssInfo());
-        set(R.id.txtUsbContent,          buildUsbInfo());
-        set(R.id.txtMicsContent,         buildMicsInfo());
-        set(R.id.txtAudioHalContent,     buildAudioHalInfo());
-        set(R.id.txtRootContent,         buildRootInfo());
+    // Call Debug Mode
+    showPermissionDebugInfo();
+
+    set(R.id.txtCameraContent,        buildCameraInfo());
+    set(R.id.txtBiometricsContent,    buildBiometricsInfo());
+    set(R.id.txtSensorsContent,       buildSensorsInfo());
+    set(R.id.txtConnectivityContent,  buildConnectivityInfo());
+    set(R.id.txtLocationContent,      buildLocationInfo());
+    set(R.id.txtBluetoothContent,     buildBluetoothInfo());
+    set(R.id.txtNfcContent,           buildNfcInfo());
+    set(R.id.txtBatteryContent,       buildBatteryInfo());
+    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());   // ← FIXED
+    set(R.id.txtUwbContent,           buildUwbInfo());
+    set(R.id.txtHapticsContent,       buildHapticsInfo());
+    set(R.id.txtGnssContent,          buildGnssInfo());
+    set(R.id.txtUsbContent,           buildUsbInfo());
+    set(R.id.txtMicsContent,          buildMicsInfo());
+    set(R.id.txtAudioHalContent,      buildAudioHalInfo());
+    set(R.id.txtRootContent,          buildRootInfo());
+}
+
+// ============================================================
+// GEL Permission Debug Mode v24 — FULL BLOCK
+// ============================================================
+private void showPermissionDebugInfo() {
+
+    StringBuilder dbg = new StringBuilder();
+    dbg.append("=== GEL Permission Debug Mode v24 ===\n\n");
+
+    dbg.append("CAMERA            : ")
+            .append(checkSelfPermission(Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+            .append("\n");
+
+    dbg.append("MICROPHONE        : ")
+            .append(checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+                    PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+            .append("\n");
+
+    dbg.append("LOCATION (FINE)   : ")
+            .append(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+            .append("\n");
+
+    dbg.append("LOCATION (COARSE) : ")
+            .append(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+            .append("\n");
+
+    if (Build.VERSION.SDK_INT >= 31) {
+
+        dbg.append("BLUETOOTH SCAN    : ")
+                .append(checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) ==
+                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+                .append("\n");
+
+        dbg.append("BLUETOOTH CONNECT : ")
+                .append(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) ==
+                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+                .append("\n");
+
+        dbg.append("NEARBY DEVICES    : ")
+                .append(checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES) ==
+                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
+                .append("\n");
+    } else {
+        dbg.append("BLUETOOTH         : AUTO-ALLOWED (API<31)\n");
+        dbg.append("NEARBY DEVICES    : AUTO-ALLOWED (API<31)\n");
     }
 
-    private void set(int id, String txt) {
-        TextView t = findViewById(id);
-        if (t == null) return;
-        applyNeonValues(t, txt);
-    }
+    dbg.append("NFC               : NO PERMISSION NEEDED\n");
+
+    android.util.Log.e("GEL-PERMS", dbg.toString());
+}
 
 // ============================================================  
 // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS  

@@ -239,7 +239,7 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- LOCATION DETAIL (used by Java) -->
+        <!-- LOCATION DETAIL -->
         <TextView
             android:id="@+id/txtLocationContent"
             android:visibility="gone"
@@ -294,7 +294,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- RADIO SYSTEMS (7) – WiFi Advanced / GNSS Ultra / Radios -->
+        <!-- RADIO SYSTEMS (7) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerWifiAdvanced"
@@ -334,7 +334,7 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- GNSS ULTRA (detail block used by Java) -->
+        <!-- GNSS ULTRA DETAIL -->
         <TextView
             android:id="@+id/txtGnssUltraContent"
             android:visibility="gone"
@@ -378,22 +378,20 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
-        <!-- Base audio HAL info -->
         <TextView
             android:id="@+id/txtAudioHalContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- Extended audio info (used by Java) -->
         <TextView
             android:id="@+id/txtAudioExtendedContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -402,7 +400,6 @@
             android:paddingRight="12dp"
             android:paddingBottom="8dp"/>
 
-        <!-- MICROPHONES (part of multimedia/audio) -->
         <LinearLayout
             android:id="@+id/headerMics"
             android:layout_width="match_parent"
@@ -434,7 +431,7 @@
         <TextView
             android:id="@+id/txtMicsContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -475,18 +472,17 @@
         <TextView
             android:id="@+id/txtSensorsContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- SENSORS EXTENDED (used by Java) -->
         <TextView
             android:id="@+id/txtSensorsExtendedContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -529,7 +525,7 @@
         <TextView
             android:id="@+id/txtBiometricsContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -537,7 +533,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- BLUETOOTH (radio detail used by Java) -->
+        <!-- BLUETOOTH -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerBluetooth"
@@ -570,7 +566,7 @@
         <TextView
             android:id="@+id/txtBluetoothContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -611,7 +607,7 @@
         <TextView
             android:id="@+id/txtNfcContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -619,7 +615,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- GNSS (base) -->
+        <!-- GNSS BASE -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerGnss"
@@ -652,7 +648,7 @@
         <TextView
             android:id="@+id/txtGnssContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -693,7 +689,7 @@
         <TextView
             android:id="@+id/txtUwbContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -734,7 +730,7 @@
         <TextView
             android:id="@+id/txtUsbContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -775,7 +771,7 @@
         <TextView
             android:id="@+id/txtHapticsContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -783,7 +779,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- SYSTEM FEATURES MATRIX -->
+        <!-- SYSTEM FEATURES -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSystemFeatures"
@@ -816,7 +812,7 @@
         <TextView
             android:id="@+id/txtSystemFeaturesContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -857,7 +853,7 @@
         <TextView
             android:id="@+id/txtSecurityFlagsContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -898,7 +894,7 @@
         <TextView
             android:id="@+id/txtRootContent"
             android:visibility="gone"
-            android:layout_width="match_parent"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
@@ -906,7 +902,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- OTHER PERIPHERALS (LAST) -->
+        <!-- OTHER PERIPHERALS -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerOtherPeripherals"
@@ -939,12 +935,13 @@
 
         <TextView
             android:id="@+id/txtOtherPeripheralsContent"
-            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_width="match_parent" 
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
             android:typeface="monospace"
-            android:visibility="gone"
+            android:textSize="14sp"
             android:padding="12dp"/>
+
     </LinearLayout>
 </ScrollView>

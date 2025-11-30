@@ -1455,69 +1455,69 @@ private String buildThermalInfo() {
 }
 
     // 2. Display / HDR / Refresh
-    private String buildDisplayInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildDisplayInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-            if (wm != null) {
-                Display display = wm.getDefaultDisplay();
-                DisplayMetrics dm = new DisplayMetrics();
-                display.getRealMetrics(dm);
+    try {
+        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        if (wm != null) {
+            Display display = wm.getDefaultDisplay();
+            DisplayMetrics dm = new DisplayMetrics();
+            display.getRealMetrics(dm);
 
-                sb.append("Resolution       : ")
-                        .append(dm.widthPixels).append(" x ").append(dm.heightPixels)
-                        .append(" px\n");
-                sb.append("Density (DPI)    : ").append(dm.densityDpi).append("\n");
-                sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
+            sb.append("Resolution       : ")
+                    .append(dm.widthPixels).append(" x ").append(dm.heightPixels)
+                    .append(" px\n");
+            sb.append("Density (DPI)    : ").append(dm.densityDpi).append("\n");
+            sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
 
-                float refresh = display.getRefreshRate();
-                sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
+            float refresh = display.getRefreshRate();
+            sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
 
-                if (Build.VERSION.SDK_INT >= 30) {
-                    Display.Mode[] modes = display.getSupportedModes();
-                    float maxR = 0f;
-                    for (Display.Mode m : modes) {
-                        if (m.getRefreshRate() > maxR) {
-                            maxR = m.getRefreshRate();
-                        }
-                    }
-                    if (maxR > 0f) {
-                        sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
+            if (Build.VERSION.SDK_INT >= 30) {
+                Display.Mode[] modes = display.getSupportedModes();
+                float maxR = 0f;
+                for (Display.Mode m : modes) {
+                    if (m.getRefreshRate() > maxR) {
+                        maxR = m.getRefreshRate();
                     }
                 }
-
-                if (Build.VERSION.SDK_INT >= 26) {
-                    boolean wide = display.isWideColorGamut();
-                    sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
+                if (maxR > 0f) {
+                    sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
                 }
-
-                if (Build.VERSION.SDK_INT >= 24) {
-                    try {
-                        Display.HdrCapabilities hc = display.getHdrCapabilities();
-                        int[] types = hc.getSupportedHdrTypes();
-                        sb.append("HDR Modes        : ");
-                        if (types == null || types.length == 0) {
-                            sb.append("None\n");
-                        } else {
-                            sb.append(types.length).append(" modes\n");
-                        }
-                    } catch (Throwable ignore) { }
-                }
-
-                Configuration cfg = getResources().getConfiguration();
-                sb.append("Orientation      : ")
-                        .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ? "Landscape" : "Portrait")
-                        .append("\n");
             }
 
-        } catch (Throwable ignore) { }
+            if (Build.VERSION.SDK_INT >= 26) {
+                boolean wide = display.isWideColorGamut();
+                sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
+            }
 
-        sb.append("\nAdvanced         : Panel ID, HBM tables and OEM tone-mapping\n");
-        sb.append("                   require root access and vendor-specific hooks.\n");
+            if (Build.VERSION.SDK_INT >= 24) {
+                try {
+                    Display.HdrCapabilities hc = display.getHdrCapabilities();
+                    int[] types = hc.getSupportedHdrTypes();
+                    sb.append("HDR Modes        : ");
+                    if (types == null || types.length == 0) {
+                        sb.append("None\n");
+                    } else {
+                        sb.append(types.length).append(" modes\n");
+                    }
+                } catch (Throwable ignore) { }
+            }
 
-        return sb.toString();
-    }
+            Configuration cfg = getResources().getConfiguration();
+            sb.append("Orientation      : ")
+                    .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ? "Landscape" : "Portrait")
+                    .append("\n");
+        }
+
+    } catch (Throwable ignore) { }
+
+    // Continuous + Green text (handled by UI color logic)
+    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access and vendor-specific hooks.\n");
+
+    return sb.toString();
+}
 
     // 3. CPU Hardware Block
     private String buildCpuInfo() {

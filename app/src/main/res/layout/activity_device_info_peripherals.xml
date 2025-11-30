@@ -35,7 +35,7 @@
             android:layout_marginBottom="14dp"/>
 
         <!-- ========================================================= -->
-        <!-- 1️⃣ BATTERY -->
+        <!-- BATTERY (1) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerBattery"
@@ -76,7 +76,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 2️⃣ CAMERA SYSTEM -->
+        <!-- CAMERA (2) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerCamera"
@@ -117,144 +117,26 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 3️⃣ PERFORMANCE / THERMALS -->
+        <!-- DISPLAY / PERFORMANCE / THERMALS (3) -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerPerformance"
+            android:id="@+id/headerDisplay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
             android:layout_marginTop="6dp"
-            android:clickable="false">
+            android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Performance / Thermals"
+                android:text="Performance / Thermals / Display"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconPerformanceToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Performance (sub-button) -->
-        <LinearLayout
-            android:id="@+id/headerPerformanceMain"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Performance"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconPerformanceMainToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtPerformanceContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- Thermals (sub-button) -->
-        <LinearLayout
-            android:id="@+id/headerThermals"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thermals"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconThermalsToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtThermalsContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- Display (sub-button) -->
-        <LinearLayout
-            android:id="@+id/headerDisplay"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Display"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/iconDisplayToggle"
@@ -265,73 +147,61 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
+        <!-- Optional extra performance blocks (future use) -->
+        <TextView
+            android:id="@+id/txtPerformanceContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <TextView
+            android:id="@+id/txtThermalsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
         <TextView
             android:id="@+id/txtDisplayContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 4️⃣ CORE HARDWARE -->
+        <!-- CORE HARDWARE / MEMORY (4) -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerCoreHardware"
+            android:id="@+id/headerMemory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Core Hardware"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconCoreHardwareToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Memory & Storage -->
-        <LinearLayout
-            android:id="@+id/headerMemoryStorage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Memory &amp; Storage"
+                android:text="Core Hardware / Memory &amp; Storage"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
-                android:id="@+id/iconMemoryStorageToggle"
+                android:id="@+id/iconMemoryToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
@@ -344,100 +214,34 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- CPU / GPU -->
-        <LinearLayout
-            android:id="@+id/headerCpuGpu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="CPU / GPU"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconCpuGpuToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
+        <!-- Extra core hardware blocks (future use) -->
         <TextView
             android:id="@+id/txtCpuGpuContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- Hardware Blocks -->
-        <LinearLayout
-            android:id="@+id/headerHardwareBlocks"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Hardware Blocks"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconHardwareBlocksToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <TextView
             android:id="@+id/txtHardwareBlocksContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 5️⃣ CONNECTIVITY -->
+        <!-- CONNECTIVITY (5) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerConnectivity"
@@ -446,8 +250,8 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
+            android:layout_marginTop="6dp"
+            android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
@@ -462,238 +266,46 @@
                 android:id="@+id/iconConnectivityToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Connectivity Base Info -->
-        <LinearLayout
-            android:id="@+id/headerConnectivityBase"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Connectivity Base Info"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconConnectivityBaseToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
 
+        <!-- Base connectivity info -->
         <TextView
             android:id="@+id/txtConnectivityContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- Bluetooth -->
-        <LinearLayout
-            android:id="@+id/headerBluetooth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Bluetooth Details"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconBluetoothToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
+        <!-- LOCATION DETAIL (used by Java) -->
         <TextView
-            android:id="@+id/txtBluetoothContent"
+            android:id="@+id/txtLocationContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- NFC -->
-        <LinearLayout
-            android:id="@+id/headerNfc"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
+            android:textSize="14sp"
+            android:paddingLeft="12dp"
             android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
+            android:paddingBottom="8dp"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="NFC Details"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconNfcToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtNfcContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- USB / OTG -->
-        <LinearLayout
-            android:id="@+id/headerUsb"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="USB / OTG Speed"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconUsbToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtUsbContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- UWB -->
-        <LinearLayout
-            android:id="@+id/headerUwb"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="UWB Support"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconUwbToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtUwbContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- Location Services -->
+        <!-- ========================================================= -->
+        <!-- LOCATION (OPTIONAL SEPARATE HEADER, IF NEEDED) -->
+        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerLocation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
@@ -702,8 +314,8 @@
                 android:layout_weight="1"
                 android:text="Location Services"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconLocationToggle"
@@ -714,70 +326,38 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
+        <!-- Mirror of location content (can reuse same text in Java) -->
         <TextView
-            android:id="@+id/txtLocationContent"
+            android:id="@+id/txtLocationContentSecondary"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 6️⃣ TELEPHONY -->
+        <!-- TELEPHONY / MODEM (6) -->
         <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerTelephony"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Telephony"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconTelephonyToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Modem / VoLTE / VoWiFi -->
         <LinearLayout
             android:id="@+id/headerModem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Modem / VoLTE / VoWiFi"
+                android:text="Telephony / Modem"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconModemToggle"
@@ -793,151 +373,53 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- SIM / eSIM -->
-        <LinearLayout
-            android:id="@+id/headerSim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="SIM / eSIM"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconSimToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
+        <!-- Extra telephony blocks -->
         <TextView
             android:id="@+id/txtSimContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
-
-        <!-- Carrier Aggregation -->
-        <LinearLayout
-            android:id="@+id/headerCarrierAgg"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Carrier Aggregation"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconCarrierAggToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <TextView
             android:id="@+id/txtCarrierAggContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 7️⃣ RADIO SYSTEMS -->
+        <!-- RADIO SYSTEMS (7) – WiFi Advanced / GNSS Ultra / Radios -->
         <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerRadioSystems"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Radio Systems"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconRadioSystemsToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Wi-Fi Advanced -->
         <LinearLayout
             android:id="@+id/headerWifiAdvanced"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Wi-Fi Advanced"
+                android:text="Radio Systems / Wi-Fi Advanced"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconWifiAdvancedToggle"
@@ -953,34 +435,30 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- GNSS Base -->
+        <!-- GNSS BASE -->
         <LinearLayout
             android:id="@+id/headerGnss"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="GNSS Base"
+                android:text="GNSS Constellations"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconGnssToggle"
@@ -996,34 +474,30 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- GNSS Ultra -->
+        <!-- GNSS ULTRA (detail block used by Java / Spartan sub-section) -->
         <LinearLayout
             android:id="@+id/headerGnssUltra"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="GNSS Ultra"
+                android:text="GNSS Ultra Detail"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconGnssUltraToggle"
@@ -1039,14 +513,13 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 8️⃣ MULTIMEDIA / AUDIO -->
+        <!-- MULTIMEDIA & AUDIO (8) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerMultimedia"
@@ -1055,8 +528,8 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
+            android:layout_marginTop="6dp"
+            android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
@@ -1071,109 +544,44 @@
                 android:id="@+id/iconMultimediaToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Audio HAL -->
-        <LinearLayout
-            android:id="@+id/headerAudioHal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Audio HAL"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconAudioHalToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
 
+        <!-- Base audio HAL info -->
         <TextView
             android:id="@+id/txtAudioHalContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- Audio Extended -->
-        <LinearLayout
-            android:id="@+id/headerAudioExtended"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Audio Extended"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconAudioExtendedToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
+        <!-- Extended audio info (used by Spartan mapping) -->
         <TextView
             android:id="@+id/txtAudioExtendedContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="8dp"/>
 
-        <!-- Microphones -->
+        <!-- MICROPHONES (part of multimedia/audio) -->
         <LinearLayout
             android:id="@+id/headerMics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
@@ -1182,8 +590,8 @@
                 android:layout_weight="1"
                 android:text="Microphones"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconMicsToggle"
@@ -1199,14 +607,13 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 9️⃣ SENSORS -->
+        <!-- SENSORS (9) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSensors"
@@ -1215,8 +622,8 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
-            android:clickable="false">
+            android:layout_marginTop="6dp"
+            android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
@@ -1231,38 +638,6 @@
                 android:id="@+id/iconSensorsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <!-- Base Sensors -->
-        <LinearLayout
-            android:id="@+id/headerSensorsBase"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Base Sensors"
-                android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/iconSensorsBaseToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
@@ -1273,34 +648,30 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
-        <!-- Sensors Extended -->
+        <!-- SENSORS EXTENDED (used by Java) -->
         <LinearLayout
             android:id="@+id/headerSensorsExtended"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
-            android:layout_marginTop="4dp"
-            android:paddingLeft="24dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:padding="12dp"
             android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sensors Extended"
+                android:text="Sensors — Extended"
                 android:textColor="#00FFBF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
             <TextView
                 android:id="@+id/iconSensorsExtendedToggle"
@@ -1316,14 +687,13 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:paddingLeft="32dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 🔟 BIOMETRICS -->
+        <!-- BIOMETRICS (10) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerBiometrics"
@@ -1332,7 +702,7 @@
             android:background="@drawable/gel_btn_outline_selector"
             android:padding="12dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
@@ -1358,13 +728,341 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
             android:textColor="#FFFFFF"
             android:typeface="monospace"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- 1️⃣1️⃣ OTHER PERIPHERALS -->
+        <!-- BLUETOOTH (radio detail used by Java) -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerBluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Bluetooth Details"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconBluetoothToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtBluetoothContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- NFC -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerNfc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="NFC Details"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconNfcToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtNfcContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- UWB -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerUwb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="UWB Support"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconUwbToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtUwbContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- USB -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerUsb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="USB / OTG Speed"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconUsbToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtUsbContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- HAPTICS -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerHaptics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Haptics"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconHapticsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtHapticsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- SYSTEM FEATURES MATRIX -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerSystemFeatures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="System Feature Matrix"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconSystemFeaturesToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtSystemFeaturesContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- SECURITY FLAGS -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerSecurityFlags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Security Flags"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconSecurityFlagsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtSecurityFlagsContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- ROOT -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerRoot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Root Extras"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconRootToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtRootContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- OTHER PERIPHERALS (LAST) -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerOtherPeripherals"
@@ -1374,7 +1072,7 @@
             android:padding="12dp"
             android:background="@drawable/gel_btn_outline_selector"
             android:gravity="center_vertical"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:clickable="true">
 
             <TextView
@@ -1397,13 +1095,13 @@
 
         <TextView
             android:id="@+id/txtOtherPeripheralsContent"
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
-            android:typeface="monospace"
             android:textSize="14sp"
+            android:typeface="monospace"
+            android:visibility="gone"
             android:padding="12dp"/>
-
     </LinearLayout>
 </ScrollView>
+```0

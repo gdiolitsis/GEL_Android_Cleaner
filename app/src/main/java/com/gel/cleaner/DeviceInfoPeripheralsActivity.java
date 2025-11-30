@@ -1572,43 +1572,62 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // 5. Memory / Storage IO
-    private String buildMemoryInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildMemoryInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
+    //-------------------------------------------------------------
+    // RAM INFO
+    //-------------------------------------------------------------
+    try {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am != null) {
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
 
-                sb.append("Total RAM        : ").append(mi.totalMem / (1024 * 1024)).append(" MB\n");
-                sb.append("Avail RAM        : ").append(mi.availMem / (1024 * 1024)).append(" MB\n");
-                sb.append("Low Memory       : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
-            }
-        } catch (Throwable ignore) { }
+            long totalRamMb = mi.totalMem / (1024 * 1024);
+            long availRamMb = mi.availMem / (1024 * 1024);
 
-        try {
-            File dataDir = Environment.getDataDirectory();
-            StatFs sf = new StatFs(dataDir.getAbsolutePath());
-            long blockSize = sf.getBlockSizeLong();
-            long total     = sf.getBlockCountLong() * blockSize;
-            long avail     = sf.getAvailableBlocksLong() * blockSize;
-
-            sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
-            sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
-        } catch (Throwable ignore) { }
-
-        long zramSize = readSysLong("/sys/block/zram0/disksize");
-        if (zramSize > 0) {
-            sb.append("ZRAM Size        : ").append(zramSize / (1024 * 1024)).append(" MB\n");
+            sb.append("Total RAM        : ").append(totalRamMb).append(" MB\n");
+            sb.append("Avail RAM        : ").append(availRamMb).append(" MB\n");
+            sb.append("Low Memory       : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
         }
+    } catch (Throwable ignored) {}
 
-        sb.append("\nAdvanced         : I/O schedulers, UFS version and health metrics\n");
-        sb.append("                   require root access and vendor block-layer hooks.\n");
 
-        return sb.toString();
+    //-------------------------------------------------------------
+    // INTERNAL STORAGE
+    //-------------------------------------------------------------
+    try {
+        File dataDir = Environment.getDataDirectory();
+        StatFs sf = new StatFs(dataDir.getAbsolutePath());
+
+        long blockSize = sf.getBlockSizeLong();
+        long total = sf.getBlockCountLong() * blockSize;
+        long avail = sf.getAvailableBlocksLong() * blockSize;
+
+        sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
+        sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
+
+    } catch (Throwable ignored) {}
+
+
+    //-------------------------------------------------------------
+    // ZRAM INFO
+    //-------------------------------------------------------------
+    long zramSize = readSysLong("/sys/block/zram0/disksize");
+    if (zramSize > 0) {
+        sb.append("ZRAM Size        : ").append(zramSize / (1024 * 1024)).append(" MB\n");
     }
 
+
+    //-------------------------------------------------------------
+    // ADVANCED INFO (root-only)
+    //-------------------------------------------------------------
+    sb.append("\nAdvanced         : I/O schedulers, UFS version and health metrics\n");
+    sb.append("                   require root access and vendor block-layer hooks.\n");
+
+    return sb.toString();
+}
     // 6. Modem / Telephony
     private String buildModemInfo() {
         StringBuilder sb = new StringBuilder();

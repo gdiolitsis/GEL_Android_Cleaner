@@ -547,404 +547,423 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         return "Settings → Battery";
     }
 
-    // ============================================================
-    // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
-    // ============================================================
-
-    private String buildCameraInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            if (cm != null) {
-                for (String id : cm.getCameraIdList()) {
-
-                    CameraCharacteristics cc = cm.getCameraCharacteristics(id);
-
-                    Integer facing    = cc.get(CameraCharacteristics.LENS_FACING);
-                    float[] focals    = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-                    float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                    Integer hwLevel   = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-
-                    sb.append("Camera ID : ").append(id).append("\n");
-
-                    sb.append("• Facing        : ")
-                            .append(facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :
-                                    facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" : "External")
-                            .append("\n");
-
-                    if (focals != null && focals.length > 0) {
-                        sb.append("• Focal         : ").append(focals[0]).append(" mm\n");
-                    }
-
-                    if (apertures != null && apertures.length > 0) {
-                        sb.append("• Aperture      : f/").append(apertures[0]).append("\n");
-                    }
-
-                    if (hwLevel != null) {
-                        String level;
-                        switch (hwLevel) {
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                                level = "LEGACY";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3";
-                                break;
-                            default:
-                                level = "UNKNOWN";
-                        }
-                        sb.append("• HW Level      : ").append(level).append("\n");
-                    }
-
-                    Boolean ois = null;
-                    try {
-                        Field f = CameraCharacteristics.class.getField("LENS_INFO_OIS_AVAILABLE");
-                        Object keyObj = f.get(null);
-
-                        if (keyObj instanceof CameraCharacteristics.Key) {
-                            @SuppressWarnings("unchecked")
-                            CameraCharacteristics.Key<Boolean> key =
-                                    (CameraCharacteristics.Key<Boolean>) keyObj;
-                            ois = cc.get(key);
-                        }
-                    } catch (Throwable ignore) { }
-
-                    if (ois != null) {
-                        sb.append("• OIS           : ").append(ois ? "Yes" : "No").append("\n");
-                    } else {
-                        sb.append("• OIS Metric    : This metric requires root access to be displayed.\n");
-                    }
-
-                    sb.append("• Video Profil. : Extra stabilization telemetry requires root access.\n\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No camera data exposed by this device.\n");
-        }
-
-        appendAccessInstructions(sb, "camera");
-        return sb.toString();
-    }
-
-    private String buildBiometricsInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        boolean fp   = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-        boolean face = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");
-        boolean iris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");
-
-        sb.append("Fingerprint : ").append(fp ? "Yes" : "No").append("\n");
-        sb.append("Face Unlock : ").append(face ? "Yes" : "No").append("\n");
-        sb.append("Iris Scan   : ").append(iris ? "Yes" : "No").append("\n");
-        sb.append("Access Mode : Extended biometric telemetry requires root access.\n");
-
-        return sb.toString();
-    }
+    // ============================================================  
+// CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION  
+// ============================================================  
+
+private String buildCameraInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    try {  
+        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);  
+        if (cm != null) {  
+            for (String id : cm.getCameraIdList()) {  
+
+                CameraCharacteristics cc = cm.getCameraCharacteristics(id);  
+
+                Integer facing    = cc.get(CameraCharacteristics.LENS_FACING);  
+                float[] focals    = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);  
+                float[] apertures = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);  
+                Integer hwLevel   = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);  
+                Integer orientation = cc.get(CameraCharacteristics.SENSOR_ORIENTATION);  
+                Boolean flashAvail  = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);  
+
+                sb.append("Camera ID : ").append(id).append("\n");  
+
+                sb.append("• Facing        : ")  
+                        .append(facing == CameraCharacteristics.LENS_FACING_FRONT ? "Front" :  
+                                facing == CameraCharacteristics.LENS_FACING_BACK ? "Back" : "External")  
+                        .append("\n");  
+
+                if (orientation != null) {  
+                    sb.append("• Orientation   : ").append(orientation).append("°\n");  
+                }  
+
+                if (focals != null && focals.length > 0) {  
+                    sb.append("• Focal         : ").append(focals[0]).append(" mm\n");  
+                }  
+
+                if (apertures != null && apertures.length > 0) {  
+                    sb.append("• Aperture      : f/").append(apertures[0]).append("\n");  
+                }  
+
+                if (flashAvail != null) {  
+                    sb.append("• Flash         : ").append(flashAvail ? "Yes" : "No").append("\n");  
+                }  
+
+                // Basic stream configuration summary (no heavy details)  
+                try {  
+                    android.hardware.camera2.params.StreamConfigurationMap map =  
+                            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);  
+                    if (map != null) {  
+                        android.util.Size[] jpegSizes =  
+                                map.getOutputSizes(android.graphics.ImageFormat.JPEG);  
+                        if (jpegSizes != null && jpegSizes.length > 0) {  
+                            sb.append("• JPEG Modes    : ")  
+                              .append(jpegSizes.length)  
+                              .append(" available output sizes\n");  
+                        }  
+                    }  
+                } catch (Throwable ignore) { }  
+
+                if (hwLevel != null) {  
+                    String level;  
+                    switch (hwLevel) {  
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:  
+                            level = "FULL";  
+                            break;  
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:  
+                            level = "LIMITED";  
+                            break;  
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:  
+                            level = "LEGACY";  
+                            break;  
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:  
+                            level = "LEVEL_3";  
+                            break;  
+                        default:  
+                            level = "UNKNOWN";  
+                    }  
+                    sb.append("• HW Level      : ").append(level).append("\n");  
+                }  
+
+                Boolean ois = null;  
+                try {  
+                    Field f = CameraCharacteristics.class.getField("LENS_INFO_OIS_AVAILABLE");  
+                    Object keyObj = f.get(null);  
+
+                    if (keyObj instanceof CameraCharacteristics.Key) {  
+                        @SuppressWarnings("unchecked")  
+                        CameraCharacteristics.Key<Boolean> key =  
+                                (CameraCharacteristics.Key<Boolean>) keyObj;  
+                        ois = cc.get(key);  
+                    }  
+                } catch (Throwable ignore) { }  
+
+                if (ois != null) {  
+                    sb.append("• OIS           : ").append(ois ? "Yes" : "No").append("\n");  
+                } else {  
+                    sb.append("• OIS Metric    : This metric requires root access to be displayed.\n");  
+                }  
+
+                sb.append("• Video Profil. : Extra stabilization telemetry requires root access.\n\n");  
+            }  
+        }  
+    } catch (Throwable ignore) { }  
+
+    if (sb.length() == 0) {  
+        sb.append("No camera data exposed by this device.\n");  
+    }  
+
+    appendAccessInstructions(sb, "camera");  
+    return sb.toString();  
+}  
+
+private String buildBiometricsInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    boolean hasFp   = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);  
+    boolean hasFace = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");  
+    boolean hasIris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");  
+
+    sb.append("Fingerprint : ").append(hasFp   ? "Yes" : "No").append("\n");  
+    sb.append("Face Unlock : ").append(hasFace ? "Yes" : "No").append("\n");  
+    sb.append("Iris Scan   : ").append(hasIris ? "Yes" : "No").append("\n");  
+
+    // Simple "biometric profile" summary  
+    int modes = 0;  
+    if (hasFp)   modes++;  
+    if (hasFace) modes++;  
+    if (hasIris) modes++;  
+
+    sb.append("Profile     : ");  
+    if (modes == 0) {  
+        sb.append("No biometric hardware reported.\n");  
+    } else if (modes == 1) {  
+        sb.append("Single biometric modality.\n");  
+    } else {  
+        sb.append("Multi-biometric device (").append(modes).append(" modalities).\n");  
+    }  
+
+    sb.append("Access Mode : Enrolled templates and secure keys are never exposed to apps; \n");  
+    sb.append("              advanced biometric telemetry requires root access.\n");  
+
+    return sb.toString();  
+}  
+
+private String buildSensorsInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    int total = 0;  
+
+    try {  
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);  
+
+        if (sm != null) {  
+            java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);  
+            for (Sensor s : all) {  
+                total++;  
+                sb.append("• ")  
+                        .append(s.getName())  
+                        .append(" (")  
+                        .append(s.getVendor())  
+                        .append(")\n");  
+            }  
+
+            // Key sensor presence summary  
+            Sensor acc  = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);  
+            Sensor gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);  
+            Sensor mag  = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);  
+            Sensor baro = sm.getDefaultSensor(Sensor.TYPE_PRESSURE);  
+            Sensor step = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);  
+
+            sb.append("\nSummary:\n");  
+            sb.append("Accelerometer : ").append(acc  != null ? "Yes" : "No").append("\n");  
+            sb.append("Gyroscope     : ").append(gyro != null ? "Yes" : "No").append("\n");  
+            sb.append("Magnetometer  : ").append(mag  != null ? "Yes" : "No").append("\n");  
+            sb.append("Barometer     : ").append(baro != null ? "Yes" : "No").append("\n");  
+            sb.append("Step Counter  : ").append(step != null ? "Yes" : "No").append("\n");  
+
+            sb.append("Total Sensors : ").append(total).append("\n");  
+        }  
+    } catch (Throwable ignore) { }  
+
+    if (sb.length() == 0) {  
+        sb.append("No sensors are exposed by this device at API level.\n");  
+    }  
+
+    sb.append("Advanced     : Extended sensor subsystem tables and raw calibration data\n");  
+    sb.append("              are visible only on rooted systems.\n");  
+
+    appendAccessInstructions(sb, "sensors");  
+    return sb.toString();  
+}  
+
+private String buildConnectivityInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    try {  
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);  
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);  
+
+        if (cm != null) {  
+            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());  
+            if (caps != null) {  
+
+                sb.append("Active   : ");  
+
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))  
+                    sb.append("Wi-Fi\n");  
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))  
+                    sb.append("Cellular\n");  
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))  
+                    sb.append("Ethernet\n");  
+                else  
+                    sb.append("Other\n");  
+
+                sb.append("Downlink : ").append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");  
+                sb.append("Uplink   : ").append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");  
+            }  
+        }  
+
+        if (wm != null) {  
+            WifiInfo wi = wm.getConnectionInfo();  
+            if (wi != null && wi.getNetworkId() != -1) {  
+
+                sb.append("\nWi-Fi:\n");  
+                sb.append("  SSID      : ").append(wi.getSSID()).append("\n");  
+                sb.append("  LinkSpeed : ").append(wi.getLinkSpeed()).append(" Mbps\n");  
+                sb.append("  RSSI      : ").append(wi.getRssi()).append(" dBm\n");  
+            }  
+        }  
+    } catch (Throwable ignore) { }  
+
+    if (sb.length() == 0) {  
+        sb.append("No connectivity info is exposed by this device.\n");  
+    }  
+
+    sb.append("Deep Stats : Advanced interface counters and raw net tables are visible only on rooted systems.\n");  
 
-    private String buildSensorsInfo() {
-        StringBuilder sb = new StringBuilder();
+    return sb.toString();  
+}  
+
+private String buildLocationInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    try {  
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);  
+
+        boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);  
+        boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);  
 
-        try {
-            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sb.append("GPS     : ").append(gps ? "Enabled" : "Disabled").append("\n");  
+        sb.append("Network : ").append(net ? "Enabled" : "Disabled").append("\n");  
+
+    } catch (Throwable ignore) { }  
+
+    if (sb.length() == 0) {  
+        sb.append("Location providers are not exposed at this moment.\n");  
+    }  
+
+    sb.append("Advanced : High-precision GNSS raw logs require root access.\n");  
+
+    appendAccessInstructions(sb, "location");  
+    return sb.toString();  
+}  
+
+private String buildBluetoothInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    try {  
+        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);  
+        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;  
+
+        if (ba != null) {  
+            sb.append("Supported : Yes\n");  
+            sb.append("Enabled   : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");  
+            sb.append("Name      : ").append(ba.getName()).append("\n");  
+            sb.append("Address   : ").append(ba.getAddress()).append("\n");  
+        } else {  
+            sb.append("Supported : No\n");  
+        }  
+
+    } catch (Throwable ignore) { }  
+
+    sb.append("Deep Scan : Extended Bluetooth controller diagnostics require root access.\n");  
+
+    appendAccessInstructions(sb, "bluetooth");  
+    return sb.toString();  
+}  
+
+private String buildNfcInfo() {  
+    StringBuilder sb = new StringBuilder();  
+
+    try {  
+        NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);  
+        NfcAdapter a   = nfc != null ? nfc.getDefaultAdapter() : null;  
+
+        sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");  
 
-            if (sm != null) {
-                for (Sensor s : sm.getSensorList(Sensor.TYPE_ALL)) {
-                    sb.append("• ")
-                            .append(s.getName())
-                            .append(" (")
-                            .append(s.getVendor())
-                            .append(")\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No sensors are exposed by this device at API level.\n");
-        }
+        if (a != null) {  
+            sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");  
+        }  
 
-        sb.append("Advanced     : Advanced sensor subsystem tables are visible only on rooted systems.\n");
+    } catch (Throwable ignore) { }  
+
+    sb.append("Advanced : Secure element and low-level NFC routing tables require root access.\n");  
 
-        appendAccessInstructions(sb, "sensors");
-        return sb.toString();
-    }
+    appendAccessInstructions(sb, "nfc");  
+    return sb.toString();  
+}  
 
-    private String buildConnectivityInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildBatteryInfo() {  
+    StringBuilder sb = new StringBuilder();  
 
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    try {  
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);  
+        Intent i       = registerReceiver(null, f);  
 
-            if (cm != null) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                if (caps != null) {
-
-                    sb.append("Active   : ");
-
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-                        sb.append("Wi-Fi\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-                        sb.append("Cellular\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-                        sb.append("Ethernet\n");
-                    else
-                        sb.append("Other\n");
-
-                    sb.append("Downlink : ").append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");
-                    sb.append("Uplink   : ").append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");
-                }
-            }
-
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                if (wi != null && wi.getNetworkId() != -1) {
-
-                    sb.append("\nWi-Fi:\n");
-                    sb.append("  SSID      : ").append(wi.getSSID()).append("\n");
-                    sb.append("  LinkSpeed : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    sb.append("  RSSI      : ").append(wi.getRssi()).append(" dBm\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No connectivity info is exposed by this device.\n");
-        }
-
-        sb.append("Deep Stats : Advanced interface counters and raw net tables are visible only on rooted systems.\n");
-
-        return sb.toString();
-    }
-
-    private String buildLocationInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-            boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-            sb.append("GPS     : ").append(gps ? "Enabled" : "Disabled").append("\n");
-            sb.append("Network : ").append(net ? "Enabled" : "Disabled").append("\n");
-
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("Location providers are not exposed at this moment.\n");
-        }
-
-        sb.append("Advanced : High-precision GNSS raw logs require root access.\n");
-
-        appendAccessInstructions(sb, "location");
-        return sb.toString();
-    }
-
-    private String buildBluetoothInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
-
-            if (ba != null) {
-                sb.append("Supported : Yes\n");
-                sb.append("Enabled   : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-                sb.append("Name      : ").append(ba.getName()).append("\n");
-                sb.append("Address   : ").append(ba.getAddress()).append("\n");
-            } else {
-                sb.append("Supported : No\n");
-            }
-
-        } catch (Throwable ignore) { }
-
-        sb.append("Deep Scan : Extended Bluetooth controller diagnostics require root access.\n");
-
-        appendAccessInstructions(sb, "bluetooth");
-        return sb.toString();
-    }
-
-    private String buildNfcInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);
-            NfcAdapter a   = nfc != null ? nfc.getDefaultAdapter() : null;
-
-            sb.append("Supported : ").append(a != null ? "Yes" : "No").append("\n");
-
-            if (a != null) {
-                sb.append("Enabled   : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
-            }
-
-        } catch (Throwable ignore) { }
-
-        sb.append("Advanced : Secure element and low-level NFC routing tables require root access.\n");
-
-        // No runtime perm → no Settings link
-        return sb.toString();
-    }
-
-    private String buildBatteryInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent i       = registerReceiver(null, f);
-
-            if (i != null) {
-                int level  = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale  = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-                int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                int temp   = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-
-                sb.append("Level   : ").append(level).append("%\n");
-                sb.append("Scale   : ").append(scale).append("\n");
-                sb.append("Status  : ").append(status).append("\n");
-
-                if (temp > 0) {
-                    sb.append("Temp    : ").append((temp / 10f)).append("°C\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        sb.append("\nLifecycle : ");
-
-        if (isRooted) {
-
-            long chargeFull       = readSysLong("/sys/class/power_supply/battery/charge_full");
-            long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-            long cycleCount       = readSysLong("/sys/class/power_supply/battery/cycle_count");
-
-            boolean any = false;
-            StringBuilder extra = new StringBuilder();
-
-            if (chargeFull > 0) {
-                extra.append("currentFull=").append(chargeFull).append(" ");
-                any = true;
-            }
-
-            if (chargeFullDesign > 0) {
-                extra.append("designFull=").append(chargeFullDesign).append(" ");
-                any = true;
-            }
-
-            if (cycleCount > 0) {
-                extra.append("cycles=").append(cycleCount);
-                any = true;
-            }
-
-            if (any) {
-                sb.append(extra.toString().trim()).append("\n");
-            } else {
-                sb.append("Advanced lifecycle data is not exposed by this device.\n");
-            }
-
-        } else {
-            sb.append("This metric requires root access to be displayed.\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Battery information is not exposed by this device.\n");
-        }
-
-        // No runtime permission for battery → no link
-        return sb.toString();
-    }
-
-    private String buildUwbInfo() {
-        boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Supported : ").append(supported ? "Yes" : "No").append("\n");
-        sb.append("Advanced  : Fine-grain ranging diagnostics require root access.\n");
-
-        return sb.toString();
-    }
-
-    private String buildHapticsInfo() {
-        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Supported : ").append(vib ? "Yes" : "No").append("\n");
-        sb.append("Profiles  : Advanced haptic waveform tables require root access.\n");
-
-        return sb.toString();
-    }
-
-    private String buildGnssInfo() {
-        boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("GNSS     : ").append(gnss ? "Yes" : "No").append("\n");
-        sb.append("Raw Logs : Full GNSS measurement streams require root access.\n");
-
-        return sb.toString();
-    }
-
-    private String buildUsbInfo() {
-
-    StringBuilder sb = new StringBuilder();
-    sb.append("=== USB / OTG Diagnostics v25 ===\n");
-
-    boolean hasOtg = getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
-    boolean hasAccessory = getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY);
-
-    sb.append("OTG Support        : ").append(hasOtg ? "Yes" : "No").append("\n");
-    sb.append("USB Accessory      : ").append(hasAccessory ? "Yes" : "No").append("\n");
-
-    // Advanced USB Capability (Root required for low-level descriptors)
-    sb.append("Advanced           : Low-level USB descriptors and\n");
-    sb.append("                     power profiles require root access.\n\n");
-
-    // ==== EXTRA DISPLAY INFO (only USB-related) ====
-    sb.append("=== Display / Interface Info ===\n");
-    try {
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getRealSize(size);
-        int refresh = display.getMode().getRefreshRate();
-
-        sb.append("Refresh Rate       : ").append(String.format(Locale.US, "%.1f Hz", refresh)).append("\n");
-        sb.append("Resolution         : ").append(size.x).append(" × ").append(size.y).append("\n\n");
-    } catch (Exception e) {
-        sb.append("Display Info       : Unsupported\n\n");
-    }
-
-    // ==== AUDIO OUTPUT DEVICES (USB DAC / USB Headsets if any) ====
-    sb.append("=== Audio Output Devices ===\n");
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-
-        boolean found = false;
-        for (AudioDeviceInfo d : outs) {
-            if (d.getType() == AudioDeviceInfo.TYPE_USB_DEVICE ||
-                d.getType() == AudioDeviceInfo.TYPE_USB_HEADSET ||
-                d.getType() == AudioDeviceInfo.TYPE_USB_ACCESSORY) {
-
-                found = true;
-                String name = d.getProductName() != null ? d.getProductName().toString() : "USB Audio Device";
-                sb.append("• ").append(name).append("\n");
-            }
-        }
-
-        if (!found) sb.append("No USB audio devices detected.\n");
-
-    } catch (Exception e) {
-        sb.append("Audio Info         : Unsupported\n");
-    }
-
-    return sb.toString();
-}
+        if (i != null) {  
+            int level  = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);  
+            int scale  = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);  
+            int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);  
+            int temp   = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);  
+
+            sb.append("Level   : ").append(level).append("%\n");  
+            sb.append("Scale   : ").append(scale).append("\n");  
+            sb.append("Status  : ").append(status).append("\n");  
+
+            if (temp > 0) {  
+                sb.append("Temp    : ").append((temp / 10f)).append("°C\n");  
+            }  
+        }  
+    } catch (Throwable ignore) { }  
+
+    sb.append("\nLifecycle : ");  
+
+    if (isRooted) {  
+
+        long chargeFull       = readSysLong("/sys/class/power_supply/battery/charge_full");  
+        long chargeFullDesign = readSysLong("/sys/class/power_supply/battery/charge_full_design");  
+        long cycleCount       = readSysLong("/sys/class/power_supply/battery/cycle_count");  
+
+        boolean any = false;  
+        StringBuilder extra = new StringBuilder();  
+
+        if (chargeFull > 0) {  
+            extra.append("currentFull=").append(chargeFull).append(" ");  
+            any = true;  
+        }  
+
+        if (chargeFullDesign > 0) {  
+            extra.append("designFull=").append(chargeFullDesign).append(" ");  
+            any = true;  
+        }  
+
+        if (cycleCount > 0) {  
+            extra.append("cycles=").append(cycleCount);  
+            any = true;  
+        }  
+
+        if (any) {  
+            sb.append(extra.toString().trim()).append("\n");  
+        } else {  
+            sb.append("Advanced lifecycle data is not exposed by this device.\n");  
+        }  
+
+    } else {  
+        sb.append("This metric requires root access to be displayed.\n");  
+    }  
+
+    if (sb.length() == 0) {  
+        sb.append("Battery information is not exposed by this device.\n");  
+    }  
+
+    appendAccessInstructions(sb, "battery");  
+    return sb.toString();  
+}  
+
+private String buildUwbInfo() {  
+    boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");  
+    StringBuilder sb = new StringBuilder();  
+
+    sb.append("Supported : ").append(supported ? "Yes" : "No").append("\n");  
+    sb.append("Advanced  : Fine-grain ranging diagnostics require root access.\n");  
+
+    return sb.toString();  
+}  
+
+private String buildHapticsInfo() {  
+    boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");  
+    StringBuilder sb = new StringBuilder();  
+
+    sb.append("Supported : ").append(vib ? "Yes" : "No").append("\n");  
+    sb.append("Profiles  : Advanced haptic waveform tables require root access.\n");  
+
+    return sb.toString();  
+}  
+
+private String buildGnssInfo() {  
+    boolean gnss = getPackageManager().hasSystemFeature("android.hardware.location.gnss");  
+    StringBuilder sb = new StringBuilder();  
+
+    sb.append("GNSS     : ").append(gnss ? "Yes" : "No").append("\n");  
+    sb.append("Raw Logs : Full GNSS measurement streams require root access.\n");  
+
+    return sb.toString();  
+}  
+
+private String buildUsbInfo() {  
+    boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");  
+    StringBuilder sb = new StringBuilder();  
+
+    sb.append("OTG Support : ").append(otg ? "Yes" : "No").append("\n");  
+    sb.append("Advanced    : Low-level USB descriptors and power profiles require root access.\n");  
+
+    return sb.toString();  
+}  
+```0
+                                
     // ============================================================
     // GEL Other Peripherals Info v4.0 — FULL EDITION
     // ============================================================

@@ -1941,7 +1941,7 @@ return sb.toString();
     }
     
 // ============================================================
-// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING
+// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING (FIXED)
 // ============================================================
 private void populateAllSections() {
 
@@ -1952,10 +1952,10 @@ private void populateAllSections() {
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());
 
-    // Telephony / Modem
+    // MODEM / TELEPHONY (FIXED — THIS WAS MISSING)
     set(R.id.txtModemContent,            buildModemInfo());
 
-    // Radio Systems – WiFi Advanced
+    // WiFi + GNSS Ultra
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
     set(R.id.txtGnssUltraContent,        buildGnssUltraInfo());
 

@@ -1521,54 +1521,51 @@ private String buildDisplayInfo() {
 
     // 3. CPU Hardware Block
     private String buildCpuInfo() {
-        StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
+    try {
         int cores = Runtime.getRuntime().availableProcessors();
         sb.append("Cores            : ").append(cores).append("\n");
 
-        String arch = System.getProperty("os.arch", "");
+        String arch = System.getProperty("os.arch", "N/A");
         sb.append("Arch             : ").append(arch).append("\n");
 
-        String abiPrimary  = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0
-                ? Build.SUPPORTED_ABIS[0] : "";
-        sb.append("Primary ABI      : ").append(abiPrimary).append("\n");
+        String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
+                ? Build.SUPPORTED_ABIS[0] : "N/A";
+        sb.append("Primary ABI      : ").append(abi).append("\n");
 
-        long maxFreqKHz = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-        long minFreqKHz = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-        String gov      = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+        long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+        long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
+        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
 
-        if (maxFreqKHz > 0) {
-            sb.append("CPU0 Max Freq    : ").append(maxFreqKHz).append(" kHz\n");
-        }
-        if (minFreqKHz > 0) {
-            sb.append("CPU0 Min Freq    : ").append(minFreqKHz).append(" kHz\n");
-        }
-        if (gov != null && !gov.isEmpty()) {
-            sb.append("Governor         : ").append(gov).append("\n");
-        }
+        sb.append("CPU0 Max Freq    : ").append(max > 0 ? max + " kHz" : "N/A").append("\n");
+        sb.append("CPU0 Min Freq    : ").append(min > 0 ? min + " kHz" : "N/A").append("\n");
+        sb.append("Governor         : ").append(gov != null ? gov : "N/A").append("\n");
 
-        String features = null;
+        // read features ALWAYS returns something
+        String features = "N/A";
         try {
             BufferedReader br = new BufferedReader(new FileReader("/proc/cpuinfo"));
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.toLowerCase(Locale.US).startsWith("features")) {
-                    features = line;
+                if (line.toLowerCase().contains("features")) {
+                    features = line.replace("Features\t:", "").trim();
                     break;
                 }
             }
             br.close();
-        } catch (Throwable ignore) { }
+        } catch (Throwable ignore) {}
 
-        if (features != null) {
-            sb.append("Features Line    : ").append(features).append("\n");
-        }
+        sb.append("Feature Set      : ").append(features).append("\n");
 
-        sb.append("\nAdvanced         : Big/Little topology and per-core boost states\n");
-        sb.append("                   require root access and vendor perf HAL access.\n");
-
-        return sb.toString();
+    } catch (Throwable ignore) {
+        sb.append("CPU Info         : Error reading CPU data\n");
     }
+
+    sb.append("Advanced         : Big/Little topology requires root-level perf HAL.\n");
+
+    return sb.toString();
+}
 
     // 4. GPU Hardware Layer
     private String buildGpuInfo() {

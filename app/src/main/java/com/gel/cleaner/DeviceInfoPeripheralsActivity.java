@@ -964,181 +964,74 @@ private String buildUsbInfo() {
 }  
                                 
     // ============================================================
-    // GEL Other Peripherals Info v4.0 — FULL EDITION
-    // ============================================================
-    private String buildOtherPeripheralsInfo() {
+// GEL Other Peripherals Info v26 — Full Hardware Edition
+// (Only peripherals WITHOUT their own dedicated section)
+// ============================================================
+private String buildOtherPeripheralsInfo() {
 
-        StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
-        sb.append("=== General Peripherals ===\n");
+    sb.append("=== General Peripherals ===\n");
 
-        // Vibrator / Haptics
-        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-        sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
+    // Vibration Motor / Haptics
+    boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+    sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
 
-        // Flashlight / Torch Support
-        boolean flash = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-        sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
+    // Flashlight
+    boolean flash = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+    sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
 
-        // IR Blaster
-        boolean ir = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
-        sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n\n");
+    // IR Blaster
+    boolean ir = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
+    sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
 
-        sb.append("=== Display Info ===\n");
+    // FM Radio
+    boolean fm = getPackageManager().hasSystemFeature("android.hardware.fm");
+    sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
 
-        try {
-            android.view.Display display = getWindowManager().getDefaultDisplay();
+    // Hall Sensor (Flip Case Detect)
+    boolean hall = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
+    sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
 
-            float refresh = display.getRefreshRate();
-            sb.append("Refresh Rate    : ").append(refresh).append(" Hz\n");
+    // Thermal Hardware (OEM-Level)
+    boolean therm = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
+    sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
 
-            android.util.DisplayMetrics dm = new android.util.DisplayMetrics();
-            display.getRealMetrics(dm);
-            sb.append("Resolution      : ").append(dm.widthPixels)
-                    .append(" × ").append(dm.heightPixels).append("\n");
-        } catch (Throwable ignore) {
-            sb.append("Display info not available.\n");
-        }
+    // Hardware keyboard
+    boolean hwkbd = getPackageManager().hasSystemFeature(PackageManager.FEATURE_HARDWARE_KEYBOARD);
+    sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
 
-        sb.append("\n=== USB / I/O ===\n");
+    // Wireless Charging
+    boolean wireless = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
+    sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
 
-        boolean usbHost = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-        sb.append("USB Host (OTG)  : ").append(usbHost ? "Yes" : "No").append("\n");
+    // Step counter dedicated hardware module
+    boolean step = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
+    sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
 
-        boolean usbAcc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
-        sb.append("USB Accessory   : ").append(usbAcc ? "Yes" : "No").append("\n\n");
+    // Vulkan / RenderScript
+    boolean vulkan = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
+    sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
 
-        sb.append("=== Audio Output Devices ===\n");
+    boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
+    sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
 
-        try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+    // Barcode Scanner hardware (rare)
+    boolean barcode = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
+    sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
 
-                if (outs.length == 0) {
-                    sb.append("No audio outputs detected.\n");
-                } else {
-                    for (AudioDeviceInfo d : outs) {
-                        sb.append("• ").append(d.getProductName()).append("\n");
-                    }
-                }
-            }
-        } catch (Throwable ignore) {
-            sb.append("Audio device info not available.\n");
-        }
+    // TV Tuner
+    boolean tv = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
+    sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
 
-        sb.append("\n(Advanced peripheral diagnostics require root access.)\n");
+    // ALS Low-power ambient module (non-API)
+    boolean als = getPackageManager().hasSystemFeature("android.hardware.light");
+    sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
 
-        return sb.toString();
-    }
+    sb.append("\n(Advanced peripheral diagnostics require root access.)\n");
 
-    private String buildMicsInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
-
-                for (AudioDeviceInfo d : devs) {
-                    sb.append("Mic: ").append(d.getProductName()).append("\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No microphones are reported by the current audio service.\n");
-        }
-
-        sb.append("Advanced : Raw audio routing matrices are visible only on rooted systems.\n");
-
-        appendAccessInstructions(sb, "mic");
-        return sb.toString();
-    }
-
-    private String buildAudioHalInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        String hal = getProp("ro.audio.hal.version");
-
-        if (hal != null && !hal.isEmpty()) {
-            sb.append("Audio HAL : ").append(hal).append("\n");
-        } else {
-            sb.append("Audio HAL : Not exposed at property level.\n");
-        }
-
-        sb.append("Deep Info : Extended hardware diagnostics require root access.\n");
-
-        return sb.toString();
-    }
-
-    private String buildRootInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Root Access Mode : ")
-                .append(isRooted ? "Rooted device (superuser access detected)" : "Non-rooted device (standard access)")
-                .append("\n");
-
-        sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
-
-        String secure = getProp("ro.secure");
-        if (secure != null && !secure.isEmpty()) {
-            sb.append("ro.secure        : ").append(secure).append("\n");
-        }
-
-        String dbg = getProp("ro.debuggable");
-        if (dbg != null && !dbg.isEmpty()) {
-            sb.append("ro.debuggable    : ").append(dbg).append("\n");
-        }
-
-        String verity = getProp("ro.boot.veritymode");
-        if (verity != null && !verity.isEmpty()) {
-            sb.append("Verity Mode      : ").append(verity).append("\n");
-        }
-
-        String selinux = getProp("ro.build.selinux");
-        if (selinux != null && !selinux.isEmpty()) {
-            sb.append("SELinux          : ").append(selinux).append("\n");
-        }
-
-        sb.append("\nFusion Layer     : ");
-        if (isRooted) {
-            sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
-        } else {
-            sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
-        }
-
-        if (isRooted) {
-
-            sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
-            sb.append("Extended hardware diagnostics are active.\n");
-
-            sb.append("\nRoot indicators:\n");
-
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-            };
-
-            for (String p : paths) {
-                if (new File(p).exists()) {
-                    sb.append("  ").append(p).append("\n");
-                }
-            }
-
-            sb.append("\nPeripherals telemetry is running with root access.\n");
-
-        } else {
-
-            sb.append("\nThis device is not rooted.\n");
-            sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
-            sb.append("Extended hardware diagnostics require root access.\n");
-        }
-
-        return sb.toString();
-    }
+    return sb.toString();
+}
 
     // ============================================================
     // HELPERS (ROOT / SYSFS)

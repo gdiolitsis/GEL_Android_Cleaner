@@ -75,7 +75,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
         <!-- CAMERA -->
         <!-- ========================================================= -->
@@ -117,12 +116,11 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
-        <!-- TELEPHONY / MODEM -->
+        <!-- THERMALS -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerModem"
+            android:id="@+id/headerThermal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -135,13 +133,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Telephony / Modem"
+                android:text="Thermal Engine / Cooling"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
 
             <TextView
-                android:id="@+id/iconModemToggle"
+                android:id="@+id/iconThermalToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
@@ -150,7 +148,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtModemContent"
+            android:id="@+id/txtThermalContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -158,9 +156,40 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- DISPLAY -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Display / Refresh / HDR"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconDisplayToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/txtSimContent"
+            android:id="@+id/txtDisplayContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -168,9 +197,40 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- CPU -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerCpu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CPU Hardware"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconCpuToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/txtCarrierAggContent"
+            android:id="@+id/txtCpuContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -179,6 +239,87 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- ========================================================= -->
+        <!-- GPU -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerGpu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="GPU / Graphics Layer"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconGpuToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtGpuContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+        <!-- MEMORY / STORAGE -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerMemory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Core Hardware / Memory &amp; Storage"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconMemoryToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtMemoryContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
         <!-- CONNECTIVITY -->
@@ -221,6 +362,7 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- LOCATION DETAIL (used by Java) -->
         <TextView
             android:id="@+id/txtLocationContent"
             android:visibility="gone"
@@ -229,11 +371,12 @@
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:padding="12dp"/>
-
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="8dp"/>
 
         <!-- ========================================================= -->
-        <!-- LOCATION SERVICES -->
+        <!-- LOCATION -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerLocation"
@@ -263,6 +406,7 @@
                 android:textSize="18sp"/>
         </LinearLayout>
 
+        <!-- Optional mirror (not used in Java but kept) -->
         <TextView
             android:id="@+id/txtLocationContentSecondary"
             android:visibility="gone"
@@ -273,9 +417,70 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- ========================================================= -->
+        <!-- TELEPHONY / MODEM -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerModem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Telephony / Modem"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconModemToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtModemContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- Extra telephony blocks (reserved) -->
+        <TextView
+            android:id="@+id/txtSimContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <TextView
+            android:id="@+id/txtCarrierAggContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- RADIO SYSTEMS / WIFI -->
+        <!-- RADIO SYSTEMS / WIFI ADVANCED -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerWifiAdvanced"
@@ -315,10 +520,7 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
-        <!-- ========================================================= -->
         <!-- GNSS BASE -->
-        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerGnss"
             android:layout_width="match_parent"
@@ -357,10 +559,7 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
-        <!-- ========================================================= -->
         <!-- GNSS ULTRA -->
-        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerGnssUltra"
             android:layout_width="match_parent"
@@ -399,40 +598,9 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
-        <!-- MULTIMEDIA / AUDIO -->
+        <!-- AUDIO HAL -->
         <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerMultimedia"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Multimedia / Audio"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconMultimediaToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-
-        <!-- AUDIO HAL (needed by Java!) -->
         <LinearLayout
             android:id="@+id/headerAudioHal"
             android:layout_width="match_parent"
@@ -447,7 +615,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Audio HAL Details"
+                android:text="Audio HAL / Output Devices"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -471,7 +639,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- AUDIO EXTENDED -->
         <LinearLayout
             android:id="@+id/headerAudioExtended"
@@ -487,7 +654,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Audio Extended Info"
+                android:text="Audio — Extended Routing"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -509,8 +676,9 @@
             android:textColor="#FFFFFF"
             android:typeface="monospace"
             android:textSize="14sp"
-            android:padding="12dp"/>
-
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="8dp"/>
 
         <!-- MICROPHONES -->
         <LinearLayout
@@ -550,7 +718,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- SENSORS -->
@@ -593,7 +760,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- SENSORS EXTENDED -->
         <LinearLayout
             android:id="@+id/headerSensorsExtended"
@@ -632,7 +798,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- BIOMETRICS -->
@@ -675,7 +840,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
         <!-- BLUETOOTH -->
         <!-- ========================================================= -->
@@ -716,7 +880,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- NFC -->
@@ -759,7 +922,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
         <!-- UWB -->
         <!-- ========================================================= -->
@@ -800,7 +962,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- USB -->
@@ -843,7 +1004,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
         <!-- HAPTICS -->
         <!-- ========================================================= -->
@@ -885,9 +1045,8 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
-        <!-- SYSTEM FEATURES -->
+        <!-- SYSTEM FEATURES MATRIX -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSystemFeatures"
@@ -926,7 +1085,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- SECURITY FLAGS -->
@@ -969,7 +1127,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-
         <!-- ========================================================= -->
         <!-- ROOT -->
         <!-- ========================================================= -->
@@ -1010,7 +1167,6 @@
             android:typeface="monospace"
             android:textSize="14sp"
             android:padding="12dp"/>
-
 
         <!-- ========================================================= -->
         <!-- OTHER PERIPHERALS (LAST) -->
@@ -1056,3 +1212,4 @@
 
     </LinearLayout>
 </ScrollView>
+```0

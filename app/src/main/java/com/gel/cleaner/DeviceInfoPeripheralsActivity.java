@@ -164,7 +164,6 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView txtWifiAdvancedContent     = findViewById(R.id.txtWifiAdvancedContent);
     TextView txtAudioExtendedContent    = findViewById(R.id.txtAudioExtendedContent);
     TextView txtSensorsExtendedContent  = findViewById(R.id.txtSensorsExtendedContent);
-    TextView txtGnssUltraContent        = findViewById(R.id.txtGnssUltraContent);
     TextView txtSystemFeaturesContent   = findViewById(R.id.txtSystemFeaturesContent);
     TextView txtSecurityFlagsContent    = findViewById(R.id.txtSecurityFlagsContent);
 
@@ -195,7 +194,6 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView iconWifiAdvanced           = findViewById(R.id.iconWifiAdvancedToggle);
     TextView iconAudioExtended          = findViewById(R.id.iconAudioExtendedToggle);
     TextView iconSensorsExtended        = findViewById(R.id.iconSensorsExtendedToggle);
-    TextView iconGnssUltra              = findViewById(R.id.iconGnssUltraToggle);
     TextView iconSystemFeatures         = findViewById(R.id.iconSystemFeaturesToggle);
     TextView iconSecurityFlags          = findViewById(R.id.iconSecurityFlagsToggle);
 
@@ -215,13 +213,13 @@ protected void onCreate(Bundle savedInstanceState) {
     allIcons = new TextView[]{
             // old
             iconCamera, iconBiometrics, iconSensors, iconConnectivity,
-            iconLocation, iconBluetooth, iconNfc, iconBattery,
+            iconLocation, iconNfc, iconBattery,
             iconOther, iconUwb, iconHaptics, iconGnss,
             iconUsb, iconMics, iconAudioHal, iconRoot,
             // new
             iconThermal, iconDisplay, iconCpu, iconGpu,
             iconMemory, iconModem, iconWifiAdvanced, iconAudioExtended,
-            iconSensorsExtended, iconGnssUltra, iconSystemFeatures,
+            iconSensorsExtended, iconSystemFeatures,
             iconSecurityFlags
     };
 
@@ -257,7 +255,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerWifiAdvanced),        txtWifiAdvancedContent,    iconWifiAdvanced);
     setupSection(findViewById(R.id.headerAudioExtended),       txtAudioExtendedContent,   iconAudioExtended);
     setupSection(findViewById(R.id.headerSensorsExtended),     txtSensorsExtendedContent, iconSensorsExtended);
-    setupSection(findViewById(R.id.headerGnssUltra),           txtGnssUltraContent,       iconGnssUltra);
     setupSection(findViewById(R.id.headerSystemFeatures),      txtSystemFeaturesContent,  iconSystemFeatures);
     setupSection(findViewById(R.id.headerSecurityFlags),       txtSecurityFlagsContent,   iconSecurityFlags);
 }
@@ -2213,7 +2210,6 @@ private void populateAllSections() {
 
     // ADVANCED NETWORKING
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
-    set(R.id.txtGnssUltraContent,        buildGnssUltraInfo());
 
     // AUDIO + MULTIMEDIA
     set(R.id.txtAudioHalContent,         buildAudioHalInfo());

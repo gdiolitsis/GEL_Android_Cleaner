@@ -1917,10 +1917,11 @@ private String buildSecurityFlagsInfo() {
     }
     
 // ============================================================
-// SET TEXT FOR ALL SECTIONS — WITH NEON VALUE COLORING (FIXED)
+// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
 // ============================================================
 private void populateAllSections() {
 
+    // CORE HARDWARE
     set(R.id.txtBatteryContent,          buildBatteryInfo());
     set(R.id.txtCameraContent,           buildCameraInfo());
     set(R.id.txtDisplayContent,          buildDisplayInfo());
@@ -1928,26 +1929,31 @@ private void populateAllSections() {
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());
 
-    // MODEM / TELEPHONY (FIXED — THIS WAS MISSING)
+    // 🔥 MEGA-UPGRADE BLOCKS (THESE WERE MISSING)
+    set(R.id.txtThermalContent,          buildThermalInfo());   // FIXED
+    set(R.id.txtCpuContent,              buildCpuInfo());       // FIXED
+    set(R.id.txtGpuContent,              buildGpuInfo());       // FIXED
+
+    // MODEM / TELEPHONY
     set(R.id.txtModemContent,            buildModemInfo());
 
-    // WiFi + GNSS Ultra
+    // ADVANCED NETWORKING
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
     set(R.id.txtGnssUltraContent,        buildGnssUltraInfo());
 
-    // Audio + Multimedia
+    // AUDIO + MULTIMEDIA
     set(R.id.txtAudioHalContent,         buildAudioHalInfo());
     set(R.id.txtAudioExtendedContent,    buildAudioExtendedInfo());
     set(R.id.txtMicsContent,             buildMicsInfo());
 
-    // Sensors
+    // SENSORS
     set(R.id.txtSensorsContent,          buildSensorsInfo());
     set(R.id.txtSensorsExtendedContent,  buildSensorsExtendedInfo());
 
-    // Biometrics
+    // BIOMETRICS
     set(R.id.txtBiometricsContent,       buildBiometricsInfo());
 
-    // Bluetooth / NFC / GNSS base / UWB
+    // WIRELESS PERIPHERALS
     set(R.id.txtBluetoothContent,        buildBluetoothInfo());
     set(R.id.txtNfcContent,              buildNfcInfo());
     set(R.id.txtGnssContent,             buildGnssInfo());
@@ -1956,19 +1962,19 @@ private void populateAllSections() {
     // USB
     set(R.id.txtUsbContent,              buildUsbInfo());
 
-    // Haptics
+    // HAPTICS
     set(R.id.txtHapticsContent,          buildHapticsInfo());
 
-    // System Features
+    // SYSTEM FEATURES
     set(R.id.txtSystemFeaturesContent,   buildSystemFeaturesInfo());
 
-    // Security Flags
+    // SECURITY FLAGS
     set(R.id.txtSecurityFlagsContent,    buildSecurityFlagsInfo());
 
-    // Root info
+    // ROOT
     set(R.id.txtRootContent,             buildRootInfo());
 
-    // Other Peripherals
+    // OTHER PERIPHERALS
     set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
 }
 

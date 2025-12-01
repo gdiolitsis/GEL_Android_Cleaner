@@ -958,17 +958,15 @@ import java.lang.reflect.Field;
             }
 
         } catch (Throwable ignore) {}
+       
+       // ADVANCED INFO (green comments single line)
+       
+sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables,\n");
+sb.append("                   Bluetooth controller logs and HCI traces\n");
+sb.append("                   require root access.\n");
 
-        // ============================================================
-        // ADVANCED INFO
-        // ============================================================
-        sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables,\n");
-        sb.append("                   Bluetooth controller logs and HCI traces\n");
-        sb.append("                   require root access.\n");
-
-        return sb.toString();
-    }
-
+return sb.toString();
+}
     private String buildLocationInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -1120,28 +1118,19 @@ import java.lang.reflect.Field;
     }
 
     private long detectBatteryMah() {
-        try {
-            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-            if (bm != null) {
-                long cap = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-                if (cap > 0) return Math.abs(cap / 1000);
-            }
-        } catch (Throwable ignore) { }
+    // 1) Try design capacity (most accurate)
+    long cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+    if (cap > 1000) return cap / 1000;
 
-        long cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-        if (cap > 1000) return cap / 1000;
+    // 2) Try nominal capacity (Samsung, Xiaomi, Pixel)
+    cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
+    if (cap > 1000) return cap / 1000;
 
-        cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
-        if (cap > 1000) return cap / 1000;
-
-        cap = readSysLong("/sys/class/power_supply/battery/constant_charge_current");
-        if (cap > 1000) return cap / 1000;
-
-        cap = readSysLong("/sys/class/power_supply/maxim/capacity");
-        if (cap > 1000) return cap;
-
-        return -1;
-    }
+    // 3) Try "full" capacity as fallback
+    cap = readSysLong("/sys/class/power_supply/battery/charge_full");
+    if (cap > 1000) return cap / 1000;
+    return -1;
+}
 
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
@@ -1242,18 +1231,13 @@ private String buildGnssInfo() {
                 .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
                 .append("\n");
 
-        // ---------------------------------------------------
-        // FINAL NOTE
-        // ---------------------------------------------------
-        sb.append("\nAdvanced         : Constellation breakdown, carrier phases,\n");
-        sb.append("                   GNSS logging and raw measurements require\n");
-        sb.append("                   system-level permissions or root access.\n");
+// FINAL NOTE — GNSS (GREEN SINGLE LINE)
+sb.append("\nAdvanced         : GNSS constellation breakdown, carrier phases, logging and raw measurements require root access.\n");
+} catch (Throwable ignore) {
+    sb.append("GNSS information is not exposed on this device.\n");
+}
 
-    } catch (Throwable ignore) {
-        sb.append("GNSS information is not exposed on this device.\n");
-    }
-
-    return sb.toString();
+return sb.toString();
 }
       
 // ============================================================

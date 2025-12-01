@@ -1829,156 +1829,125 @@ private String buildUsbInfo() {
         return sb.toString();
     }
 
-    // 6. Modem / Telephony (GEL Extended Edition)
-    private String buildModemInfo() {
-        StringBuilder sb = new StringBuilder();
+    // 6. Modem / Telephony (GEL Safe Edition)
+private String buildModemInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+    try {
+        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-            if (tm != null) {
+        if (tm != null) {
 
-                // -----------------------------
-                // BASIC PHONE TYPE
-                // -----------------------------
-                String typeStr;
-                switch (tm.getPhoneType()) {
-                    case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
-                    case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
-                    case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
-                    default:                                typeStr = "None";
-                }
-                sb.append("Phone Type       : ").append(typeStr).append("\n");
+            // -----------------------------
+            // BASIC PHONE TYPE
+            // -----------------------------
+            String typeStr;
+            switch (tm.getPhoneType()) {
+                case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
+                case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
+                case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
+                default:                                typeStr = "None";
+            }
+            sb.append("Phone Type       : ").append(typeStr).append("\n");
 
+            // -----------------------------
+            // DATA NETWORK TYPE
+            // -----------------------------
+            int net = tm.getDataNetworkType();
+            sb.append("Data Network     : ").append(networkName(net)).append("\n");
 
-                // -----------------------------
-                // DATA NETWORK TYPE (4G/5G detection)
-                // -----------------------------
-                int net = tm.getDataNetworkType();
-                sb.append("Data Network     : ").append(networkName(net)).append("\n");
+            boolean is5G = (net == TelephonyManager.NETWORK_TYPE_NR);
+            sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
 
-                boolean is5G =
-                        net == TelephonyManager.NETWORK_TYPE_NR;   // NR = New Radio (5G)
-                sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
+            // -----------------------------
+            // IMS / VoLTE / VoWiFi / VoNR (SDK-safe: use reflection or mark Unknown)
+            // -----------------------------
+            sb.append("IMS Registered   : Unknown (SDK level)\n");
 
-
-                // -----------------------------
-                // IMS REGISTRATION (VoLTE / VoWiFi / VoNR)
-                // -----------------------------
-                if (Build.VERSION.SDK_INT >= 30) {
-                    try {
-                        boolean ims = tm.isImsRegistered();
-                        sb.append("IMS Registered   : ").append(ims ? "Yes" : "No").append("\n");
-                    } catch (Throwable ignore) { }
-                }
-
-                // VoLTE
-                try {
-                    boolean volte =
-                            (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-                    sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("VoLTE Support    : Unknown\n");
-                }
-
-                // VoWiFi
-                try {
-                    boolean vowifi =
-                            (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-                    sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("VoWiFi Support   : Unknown\n");
-                }
-
-                // VoNR (Android 13+)
-                if (Build.VERSION.SDK_INT >= 33) {
-                    try {
-                        boolean vonr =
-                                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-                        sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
-                    } catch (Throwable ignore) {
-                        sb.append("VoNR Support     : Unknown\n");
-                    }
-                }
-
-
-                // -----------------------------
-                // SIGNAL STRENGTH (RSRP/RSRQ etc.)
-                // -----------------------------
-                try {
-                    SignalStrength ss = tm.getSignalStrength();
-                    if (ss != null) {
-                        sb.append("Signal Strength  : ").append(ss.getLevel()).append("/4\n");
-
-                        if (Build.VERSION.SDK_INT >= 29) {
-                            CellSignalStrength cs = ss.getCellSignalStrengths().stream()
-                                    .findFirst().orElse(null);
-                            if (cs != null) {
-                                sb.append("  RSRP           : ").append(cs.getDbm()).append(" dBm\n");
-                            }
-                        }
-                    }
-                } catch (Throwable ignore) { }
-
-
-                // -----------------------------
-                // CARRIER INFORMATION
-                // -----------------------------
-                try {
-                    String carrier = tm.getNetworkOperatorName();
-                    sb.append("Carrier          : ")
-                            .append(carrier != null ? carrier : "Unknown")
-                            .append("\n");
-                } catch (Throwable ignore) { }
-
-
-                // -----------------------------
-                // ACTIVE SIM COUNT
-                // -----------------------------
-                if (Build.VERSION.SDK_INT >= 22) {
-                    SubscriptionManager sm = (SubscriptionManager)
-                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-
-                    if (sm != null) {
-                        List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                        sb.append("Active SIM Slots : ")
-                                .append(subs != null ? subs.size() : 0)
-                                .append("\n");
-                    }
-                }
-
-
-                // -----------------------------
-                // CARRIER AGGREGATION (4G+)
-                // -----------------------------
-                if (Build.VERSION.SDK_INT >= 29) {
-                    try {
-                        ServiceState ss = tm.getServiceState();
-                        if (ss != null) {
-                            boolean ca = ss.isUsingCarrierAggregation();
-                            sb.append("4G+ CA           : ").append(ca ? "Yes" : "No").append("\n");
-                        }
-                    } catch (Throwable ignore) { }
-                }
-
-
-                // -----------------------------
-                // ROAMING
-                // -----------------------------
-                try {
-                    boolean roam = tm.isNetworkRoaming();
-                    sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) { }
+            try {
+                boolean volte =
+                        (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
+                sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("VoLTE Support    : Unknown\n");
             }
 
-        } catch (Throwable ignore) { }
+            try {
+                boolean vowifi =
+                        (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
+                sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("VoWiFi Support   : Unknown\n");
+            }
 
-        sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
-        sb.append("                   require root access and OEM modem tools.\n");
+            if (Build.VERSION.SDK_INT >= 33) {
+                try {
+                    boolean vonr =
+                            (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
+                    sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {
+                    sb.append("VoNR Support     : Unknown\n");
+                }
+            } else {
+                sb.append("VoNR Support     : Unknown (Android < 13)\n");
+            }
 
-        return sb.toString();
-    }
+            // -----------------------------
+            // SIGNAL STRENGTH (basic)
+            // -----------------------------
+            try {
+                SignalStrength ss = tm.getSignalStrength();
+                if (ss != null) {
+                    sb.append("Signal Strength  : ").append(ss.getLevel()).append("/4\n");
+                }
+            } catch (Throwable ignore) { }
 
+            // -----------------------------
+            // CARRIER INFORMATION
+            // -----------------------------
+            try {
+                String carrier = tm.getNetworkOperatorName();
+                sb.append("Carrier          : ")
+                        .append(carrier != null ? carrier : "Unknown")
+                        .append("\n");
+            } catch (Throwable ignore) { }
+
+            // -----------------------------
+            // ACTIVE SIM COUNT
+            // -----------------------------
+            if (Build.VERSION.SDK_INT >= 22) {
+                SubscriptionManager sm = (SubscriptionManager)
+                        getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+                if (sm != null) {
+                    List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
+                    sb.append("Active SIM Slots : ")
+                            .append(subs != null ? subs.size() : 0)
+                            .append("\n");
+                }
+            }
+
+            // -----------------------------
+            // CARRIER AGGREGATION (removed direct API)
+            // -----------------------------
+            sb.append("4G+ CA           : Unknown (SDK level)\n");
+
+            // -----------------------------
+            // ROAMING
+            // -----------------------------
+            try {
+                boolean roam = tm.isNetworkRoaming();
+                sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) { }
+        }
+
+    } catch (Throwable ignore) { }
+
+    sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
+    sb.append("                   require root access and OEM modem tools.\n");
+
+    return sb.toString();
+}                
 
     // ============================================================
     // Helper for data network type → readable label
@@ -1997,112 +1966,103 @@ private String buildUsbInfo() {
         }
     }
 
-    // 7. WiFi Advanced (Ultra Enriched Edition)
-    private String buildWifiAdvancedInfo() {
-        StringBuilder sb = new StringBuilder();
+// 7. WiFi Advanced (Safe Edition)
+private String buildWifiAdvancedInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            PackageManager pm = getPackageManager();
+    try {
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        PackageManager pm = getPackageManager();
 
-            if (wm != null) {
+        if (wm != null) {
 
-                // ---- BASIC HW SUPPORT ----
-                boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
-                sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
+            // ---- BASIC HW SUPPORT ----
+            boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
+            sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
 
-                // ---- FREQUENCY BANDS ----
-                if (Build.VERSION.SDK_INT >= 21) {
-                    boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
-                    sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
-                }
+            // ---- FREQUENCY BANDS ----
+            if (Build.VERSION.SDK_INT >= 21) {
+                boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
+                sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
+            }
 
-                if (Build.VERSION.SDK_INT >= 21) {
-                    boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-                    sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
-                }
+            if (Build.VERSION.SDK_INT >= 21) {
+                boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+                sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
+            }
 
-                if (Build.VERSION.SDK_INT >= 30) {
-                    try {
-                        boolean six = wm.is6GHzBandSupported();
-                        sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
-                    } catch (Throwable ignore) {}
-                }
-
-                // ---- SECURITY MODES ----
-                if (Build.VERSION.SDK_INT >= 29) {
-                    try {
-                        boolean wpa3 = wm.isWpa3SaeSupported();
-                        sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
-                    } catch (Throwable ignore) {}
-
-                    try {
-                        boolean wpa3Trans = wm.isWpa3SuiteBSupported();
-                        sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
-                    } catch (Throwable ignore) {}
-                }
-
-                // ---- WIFI RTT (distance measurement) ----
-                if (Build.VERSION.SDK_INT >= 28) {
-                    boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
-                    sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
-                      .append("  (Indoor distance)\n");
-                }
-
-                // ---- WI-FI AWARE / NAN ----
-                if (Build.VERSION.SDK_INT >= 26) {
-                    boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
-                    sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
-                      .append("  (Device proximity)\n");
-                }
-
-                // ---- EASY CONNECT (DPP QR CODE) ----
-                if (Build.VERSION.SDK_INT >= 29) {
-                    boolean dpp = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DPP);
-                    sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
-                }
-
-                // ---- PASSPOINT / HOTSPOT 2.0 ----
-                if (Build.VERSION.SDK_INT >= 26) {
-                    boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
-                    sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
-                }
-
-                // ---- WI-FI DIRECT / P2P ----
-                boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-                sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
-
-                // ---- MAC RANDOMIZATION ----
-                if (Build.VERSION.SDK_INT >= 29) {
-                    boolean macRand = wm.isEnhancedPowerReportingSupported();
-                    sb.append("MAC Randomization: ").append(macRand ? "Yes" : "No").append("\n");
-                }
-
-                // ---- LINK LAYER STATS ----
+            if (Build.VERSION.SDK_INT >= 30) {
                 try {
-                    boolean stats = wm.isVerboseLoggingEnabled();
-                    sb.append("Link Layer Stats : ").append(stats ? "Available" : "No").append("\n");
-                } catch (Throwable ignore) {}
-
-                // ---- POWER SAVE MODE ----
-                try {
-                    boolean psm = wm.isScanAlwaysAvailable();
-                    sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-
-                // ---- REGULATORY DOMAIN ----
-                try {
-                    String country = wm.getCountryCode();
-                    sb.append("Country Code     : ").append(country != null ? country : "Unknown").append("\n");
+                    boolean six = wm.is6GHzBandSupported();
+                    sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
                 } catch (Throwable ignore) {}
             }
-        } catch (Throwable ignore) {}
 
-        sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\n");
-        sb.append("                   and per-band limits require root access.\n");
+            // ---- SECURITY MODES ----
+            if (Build.VERSION.SDK_INT >= 29) {
+                try {
+                    boolean wpa3 = wm.isWpa3SaeSupported();
+                    sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
 
-        return sb.toString();
-    }
+                try {
+                    boolean wpa3Trans = wm.isWpa3SuiteBSupported();
+                    sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
+            }
+
+            // ---- WIFI RTT (distance measurement) ----
+            if (Build.VERSION.SDK_INT >= 28) {
+                boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
+                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
+                        .append("  (Indoor distance)\n");
+            }
+
+            // ---- WI-FI AWARE / NAN ----
+            if (Build.VERSION.SDK_INT >= 26) {
+                boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
+                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
+                        .append("  (Device proximity)\n");
+            }
+
+            // ---- EASY CONNECT (DPP QR CODE) — use string instead of constant
+            if (Build.VERSION.SDK_INT >= 29) {
+                boolean dpp = pm.hasSystemFeature("android.hardware.wifi.dpp");
+                sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
+            }
+
+            // ---- PASSPOINT / HOTSPOT 2.0 ----
+            if (Build.VERSION.SDK_INT >= 26) {
+                boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
+                sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
+            }
+
+            // ---- WI-FI DIRECT / P2P ----
+            boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+            sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
+
+            // ---- MAC RANDOMIZATION (fake check, keep text) ----
+            sb.append("MAC Randomization: Unknown (SDK level)\n");
+
+            // ---- LINK LAYER STATS ----
+            sb.append("Link Layer Stats : Unknown (hidden API)\n");
+
+            // ---- POWER SAVE MODE ----
+            try {
+                boolean psm = wm.isScanAlwaysAvailable();
+                sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {}
+
+            // ---- REGULATORY DOMAIN ----
+            sb.append("Country Code     : Not exposed\n");
+        }
+    } catch (Throwable ignore) {}
+
+    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\n");
+    sb.append("                   and per-band limits require root access.\n");
+
+    return sb.toString();
+}
 
     // 8. Sensors EXTENDED
     private String buildSensorsExtendedInfo() {

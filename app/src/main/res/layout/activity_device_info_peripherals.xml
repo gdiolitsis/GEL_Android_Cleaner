@@ -376,123 +376,6 @@
             android:paddingBottom="8dp"/>
 
         <!-- ========================================================= -->
-<!-- LOCATION -->
-<!-- ========================================================= -->
-<LinearLayout
-    android:id="@+id/headerLocation"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:padding="12dp"
-    android:gravity="center_vertical"
-    android:layout_marginTop="6dp"
-    android:clickable="true">
-
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Location Services"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp"/>
-
-    <TextView
-        android:id="@+id/iconLocationToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp"/>
-</LinearLayout>
-
-<!-- 🔥 THIS is the real content block the Java expects -->
-<TextView
-    android:id="@+id/txtLocationContent"
-    android:visibility="gone"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#00FFBF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"/>
-
-<!-- Remove this — NOT needed -->
-<!--
-<TextView
-    android:id="@+id/txtLocationContentSecondary"
-    android:visibility="gone"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"/>
--->
-
-        <!-- ========================================================= -->
-        <!-- TELEPHONY / MODEM -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerModem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Telephony / Modem"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/iconModemToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtModemContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp"/>
-
-        <!-- Extra telephony blocks (reserved) -->
-        <TextView
-            android:id="@+id/txtSimContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp"/>
-
-        <TextView
-            android:id="@+id/txtCarrierAggContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp"/>
-
-        <!-- ========================================================= -->
         <!-- RADIO SYSTEMS / WIFI ADVANCED -->
         <!-- ========================================================= -->
         <LinearLayout
@@ -603,6 +486,123 @@
 
         <TextView
             android:id="@+id/txtGnssUltraContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- ========================================================= -->
+<!-- LOCATION -->
+<!-- ========================================================= -->
+<LinearLayout
+    android:id="@+id/headerLocation"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:layout_marginTop="6dp"
+    android:clickable="true">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Location Services"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/iconLocationToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="＋"
+        android:textColor="#00FFBF"
+        android:textSize="18sp"/>
+</LinearLayout>
+
+<!-- 🔥 THIS is the real content block the Java expects -->
+<TextView
+    android:id="@+id/txtLocationContent"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textColor="#00FFBF"
+    android:typeface="monospace"
+    android:textSize="14sp"
+    android:padding="12dp"/>
+
+<!-- Remove this — NOT needed -->
+<!--
+<TextView
+    android:id="@+id/txtLocationContentSecondary"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textColor="#FFFFFF"
+    android:typeface="monospace"
+    android:textSize="14sp"
+    android:padding="12dp"/>
+-->
+
+        <!-- ========================================================= -->
+        <!-- TELEPHONY / MODEM -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerModem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Telephony / Modem"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/iconModemToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtModemContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <!-- Extra telephony blocks (reserved) -->
+        <TextView
+            android:id="@+id/txtSimContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <TextView
+            android:id="@+id/txtCarrierAggContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

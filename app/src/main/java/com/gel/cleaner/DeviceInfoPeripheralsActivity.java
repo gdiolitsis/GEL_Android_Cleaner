@@ -1874,33 +1874,109 @@ private String networkName(int type) {
     }
 }
 
-// 7. WiFi Advanced
+// 7. WiFi Advanced (Ultra Enriched Edition)
 private String buildWifiAdvancedInfo() {
     StringBuilder sb = new StringBuilder();
 
     try {
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        PackageManager pm = getPackageManager();
+
         if (wm != null) {
-            boolean wifiHw = getPackageManager().hasSystemFeature("android.hardware.wifi");
-            sb.append("Wi-Fi HW        : ").append(wifiHw ? "Present" : "Missing").append("\n");
+
+            // ---- BASIC HW SUPPORT ----
+            boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
+            sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
+
+            // ---- FREQUENCY BANDS ----
+            if (Build.VERSION.SDK_INT >= 21) {
+                boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
+                sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
+            }
+
+            if (Build.VERSION.SDK_INT >= 21) {
+                boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+                sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
+            }
 
             if (Build.VERSION.SDK_INT >= 30) {
                 try {
                     boolean six = wm.is6GHzBandSupported();
-                    sb.append("6 GHz Support   : ").append(six ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) { }
+                    sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
             }
 
+            // ---- SECURITY MODES ----
             if (Build.VERSION.SDK_INT >= 29) {
                 try {
                     boolean wpa3 = wm.isWpa3SaeSupported();
-                    sb.append("WPA3 SAE        : ").append(wpa3 ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) { }
-            }
-        }
-    } catch (Throwable ignore) { }
+                    sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
 
-    sb.append("Advanced         : Regulatory region, DFS tables and per-band power limits require root access and driver-level hooks.\n");
+                try {
+                    boolean wpa3Trans = wm.isWpa3SuiteBSupported();
+                    sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
+            }
+
+            // ---- WIFI RTT (distance measurement) ----
+            if (Build.VERSION.SDK_INT >= 28) {
+                boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
+                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
+                  .append("  (Indoor distance)\n");
+            }
+
+            // ---- WI-FI AWARE / NAN ----
+            if (Build.VERSION.SDK_INT >= 26) {
+                boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
+                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
+                  .append("  (Device proximity)\n");
+            }
+
+            // ---- EASY CONNECT (DPP QR CODE) ----
+            if (Build.VERSION.SDK_INT >= 29) {
+                boolean dpp = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DPP);
+                sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
+            }
+
+            // ---- PASSPOINT / HOTSPOT 2.0 ----
+            if (Build.VERSION.SDK_INT >= 26) {
+                boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
+                sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
+            }
+
+            // ---- WI-FI DIRECT / P2P ----
+            boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+            sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
+
+            // ---- MAC RANDOMIZATION ----
+            if (Build.VERSION.SDK_INT >= 29) {
+                boolean macRand = wm.isEnhancedPowerReportingSupported();
+                sb.append("MAC Randomization: ").append(macRand ? "Yes" : "No").append("\n");
+            }
+
+            // ---- LINK LAYER STATS ----
+            try {
+                boolean stats = wm.isVerboseLoggingEnabled();
+                sb.append("Link Layer Stats : ").append(stats ? "Available" : "No").append("\n");
+            } catch (Throwable ignore) {}
+
+            // ---- POWER SAVE MODE ----
+            try {
+                boolean psm = wm.isScanAlwaysAvailable();
+                sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {}
+
+            // ---- REGULATORY DOMAIN ----
+            try {
+                String country = wm.getCountryCode();
+                sb.append("Country Code     : ").append(country != null ? country : "Unknown").append("\n");
+            } catch (Throwable ignore) {}
+        }
+    } catch (Throwable ignore) {}
+
+    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\n");
+    sb.append("                   and per-band limits require root access.\n");
 
     return sb.toString();
 }

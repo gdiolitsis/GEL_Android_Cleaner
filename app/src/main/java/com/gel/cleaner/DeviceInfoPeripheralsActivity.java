@@ -1211,74 +1211,97 @@ import java.lang.reflect.Field;
         } catch (Throwable ignore) {}
 
         // ---------------------------------------------------
-        // GNSS BATCHING (Android 7+)
-        // ---------------------------------------------------
-        try {
-            boolean batch = pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GNSS_BATCHING);
-            sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {}
+// GNSS BATCHING (Android 7+) — use string feature, όχι constant
+// ---------------------------------------------------
+try {
+    boolean batch = pm.hasSystemFeature("android.hardware.location.gnss_batching");
+    sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
+} catch (Throwable ignore) {}
 
-        // ---------------------------------------------------
-        // ANTENNA INFO (Android 12+)
-        // ---------------------------------------------------
-        if (Build.VERSION.SDK_INT >= 31 && lm != null) {
-            try {
-                List<GnssAntennaInfo> antennas = lm.getGnssAntennaInfos();
-                sb.append("Antenna Info     : ").append(antennas != null && !antennas.isEmpty() ? "Present" : "None").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("Antenna Info     : Not exposed\n");
-            }
-        }
-
-        // ---------------------------------------------------
-        // NMEA Support (Android 7+)
-        // ---------------------------------------------------
-        sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
-
-        // ---------------------------------------------------
-        // GNSS CAPABILITIES (Android 11+)
-        // ---------------------------------------------------
-        if (Build.VERSION.SDK_INT >= 30 && lm != null) {
-            try {
-                GnssCapabilities caps = lm.getGnssCapabilities();
-                sb.append("\nCapabilities     :\n");
-                sb.append("  Synchronous    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_SATELLITE_BLACKLIST) ? "Yes" : "No").append("\n");
-                sb.append("  Correlation    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_MEASUREMENT_CORRECTION) ? "Yes" : "No").append("\n");
-                sb.append("  Power Phase    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_LOW_POWER_MODE) ? "Yes" : "No").append("\n");
-                sb.append("  Nav Msg        : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_NAV_MESSAGES) ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("\nCapabilities     : Not exposed\n");
-            }
-        }
-
-        // ---------------------------------------------------
-        // SUPL / AGNSS (Assisted-GNSS)
-        // ---------------------------------------------------
-        sb.append("\nAssisted GNSS    :\n");
-        sb.append("  SUPL Support   : ").append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown").append("\n");
-        sb.append("  AGNSS Injection: ").append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No").append("\n");
-
-        // ---------------------------------------------------
-        // FINAL NOTE
-        // ---------------------------------------------------
-        sb.append("\nAdvanced         : Constellation breakdown, carrier phases,\n");
-        sb.append("                   GNSS logging and raw measurements require\n");
-        sb.append("                   system-level permissions or root access.\n");
-
-        return sb.toString();
+// ---------------------------------------------------
+// ANTENNA INFO (Android 12+)
+// ---------------------------------------------------
+if (Build.VERSION.SDK_INT >= 31 && lm != null) {
+    try {
+        List<GnssAntennaInfo> antennas = lm.getGnssAntennaInfos();
+        sb.append("Antenna Info     : ")
+          .append(antennas != null && !antennas.isEmpty() ? "Present" : "None")
+          .append("\n");
+    } catch (Throwable ignore) {
+        sb.append("Antenna Info     : Not exposed\n");
     }
+}
 
-    private String buildUsbInfo() {
-        boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-        boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
-        StringBuilder sb = new StringBuilder();
+// ---------------------------------------------------
+// NMEA Support (Android 7+)
+// ---------------------------------------------------
+sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
 
-        sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
-        sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
-        sb.append("Advanced        : Low-level USB descriptors and power profiles require root access.\n");
+// ---------------------------------------------------
+// GNSS CAPABILITIES (Android 11+) — remove invalid constants
+// ---------------------------------------------------
+if (Build.VERSION.SDK_INT >= 30 && lm != null) {
+    try {
+        GnssCapabilities caps = lm.getGnssCapabilities();
+        sb.append("\nCapabilities     :\n");
 
-        return sb.toString();
+        sb.append("  Satellite BL   : ")
+          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_SATELLITE_BLACKLIST) ? "Yes" : "No")
+          .append("\n");
+
+        sb.append("  Measure Corr   : ")
+          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_MEASUREMENT_CORRECTION) ? "Yes" : "No")
+          .append("\n");
+
+        sb.append("  Low Power      : ")
+          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_LOW_POWER_MODE) ? "Yes" : "No")
+          .append("\n");
+
+        sb.append("  Nav Messages   : ")
+          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_NAV_MESSAGES) ? "Yes" : "No")
+          .append("\n");
+
+    } catch (Throwable ignore) {
+        sb.append("\nCapabilities     : Not exposed\n");
     }
+}
+
+// ---------------------------------------------------
+// SUPL / AGNSS (Assisted-GNSS)
+// ---------------------------------------------------
+sb.append("\nAssisted GNSS    :\n");
+sb.append("  SUPL Support   : ")
+        .append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown")
+        .append("\n");
+
+sb.append("  AGNSS Injection: ")
+        .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
+        .append("\n");
+
+// ---------------------------------------------------
+// FINAL NOTE
+// ---------------------------------------------------
+sb.append("\nAdvanced         : Constellation breakdown, carrier phases,\n");
+sb.append("                   GNSS logging and raw measurements require\n");
+sb.append("                   system-level permissions or root access.\n");
+
+return sb.toString();
+}
+
+// ============================================================
+// USB
+// ============================================================
+private String buildUsbInfo() {
+    boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
+    boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
+    sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
+    sb.append("Advanced        : Low-level USB descriptors and power profiles require root access.\n");
+
+    return sb.toString();
+}
 
     // ============================================================
     // GEL Other Peripherals Info v26 — Full Hardware Edition

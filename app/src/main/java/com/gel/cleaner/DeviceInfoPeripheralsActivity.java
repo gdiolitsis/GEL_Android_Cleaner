@@ -796,6 +796,9 @@ private String buildSensorsInfo() {
 private String buildConnectivityInfo() {
     StringBuilder sb = new StringBuilder();
 
+    // ============================================================
+    // NETWORK TRANSPORTS (Wi-Fi / Cellular / Ethernet)
+    // ============================================================
     try {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -804,7 +807,7 @@ private String buildConnectivityInfo() {
             NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
             if (caps != null) {
 
-                sb.append("Active           : ");
+                sb.append("Connection Type  : ");
 
                 if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
                     sb.append("Wi-Fi\n");
@@ -825,28 +828,122 @@ private String buildConnectivityInfo() {
             }
         }
 
+        // ============================================================
+        // WI-FI DETAILS
+        // ============================================================
         if (wm != null) {
             WifiInfo wi = wm.getConnectionInfo();
             if (wi != null && wi.getNetworkId() != -1) {
 
-                sb.append("\nWi-Fi:\n");
+                sb.append("\nWi-Fi Details:\n");
                 sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
                 sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
                 sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
                 sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
+                sb.append("  MAC            : ").append(wi.getMacAddress()).append("\n");
             }
         }
-    } catch (Throwable ignore) { }
 
-    if (sb.length() == 0) {
-        sb.append("No connectivity info is exposed by this device.\n");
-    }
+    } catch (Throwable ignore) {}
 
-    sb.append("Deep Stats       : Advanced interface counters and raw net tables are visible only on rooted systems.\n");
+
+    // ============================================================
+    // BLUETOOTH — FULL DETAIL (INTEGRATED)
+    // ============================================================
+    sb.append("\nBluetooth:\n");
+
+    try {
+        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+
+        if (ba == null) {
+            sb.append("  Supported      : No\n");
+        } else {
+            sb.append("  Supported      : Yes\n");
+            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+
+            // State
+            int state = ba.getState();
+            String stateStr;
+            switch (state) {
+                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+                default:                                 stateStr = "Off";         break;
+            }
+            sb.append("  State          : ").append(stateStr).append("\n");
+
+            // Identity
+            sb.append("  Name           : ").append(ba.getName()).append("\n");
+            sb.append("  Address        : ").append(ba.getAddress()).append("\n");
+
+            // Version detection (API-safe)
+            try {
+                int btVer = Build.VERSION.SDK_INT >= 31 ?
+                        BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner() != null ? 5 : 4
+                        :
+                        (Build.VERSION.SDK_INT >= 21 ? 4 : 3);
+                sb.append("  Version        : Bluetooth ").append(btVer).append("\n");
+            } catch (Throwable e) {
+                sb.append("  Version        : Unknown\n");
+            }
+
+            // Classic Features
+            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
+            sb.append("  Discoverable   : ").append(
+                    ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No"
+            ).append("\n");
+
+            // BLE Support
+            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+
+            // Hardware Capabilities
+            sb.append("  Multiple Adv   : ");
+            try {
+                boolean multi = ba.isMultipleAdvertisementSupported();
+                sb.append(multi ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            sb.append("  LE Scanner     : ");
+            try {
+                boolean leScan = ba.getBluetoothLeScanner() != null;
+                sb.append(leScan ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            sb.append("  Offloaded Filt.: ");
+            try {
+                boolean off = ba.isOffloadedFilteringSupported();
+                sb.append(off ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            // Connected Devices
+            try {
+                java.util.List<BluetoothDevice> con =
+                        bm.getConnectedDevices(BluetoothProfile.GATT);
+                sb.append("  GATT Devices   : ").append(con.size()).append("\n");
+            } catch (Throwable ignore) {
+                sb.append("  GATT Devices   : Unknown\n");
+            }
+        }
+
+    } catch (Throwable ignore) {}
+
+    // ============================================================
+    // ADVANCED INFO
+    // ============================================================
+    sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables,\n");
+    sb.append("                   Bluetooth controller logs and HCI traces\n");
+    sb.append("                   require root access.\n");
 
     return sb.toString();
 }
-
 private String buildLocationInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -868,42 +965,6 @@ private String buildLocationInfo() {
     sb.append("Advanced         : High-precision GNSS raw logs require root access.\n");
 
     appendAccessInstructions(sb, "location");
-    return sb.toString();
-}
-
-private String buildBluetoothInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
-
-        if (ba != null) {
-            sb.append("Supported        : Yes\n");
-            sb.append("Enabled          : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-
-            int state = ba.getState();
-            String stateStr;
-            switch (state) {
-                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-                case BluetoothAdapter.STATE_OFF:
-                default:                                 stateStr = "Off";
-            }
-
-            sb.append("State            : ").append(stateStr).append("\n");
-            sb.append("Name             : ").append(ba.getName()).append("\n");
-            sb.append("Address          : ").append(ba.getAddress()).append("\n");
-        } else {
-            sb.append("Supported        : No\n");
-        }
-
-    } catch (Throwable ignore) { }
-
-    sb.append("Advanced         : Extended Bluetooth controller diagnostics require root access.\n");
-
-    appendAccessInstructions(sb, "bluetooth");
     return sb.toString();
 }
 

@@ -294,6 +294,21 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }  // 🔥🔥🔥 ΕΔΩ ΤΕΛΕΙΩΝΕΙ ΤΟ onCreate() — ΜΗΝ ΤΟ ΑΓΓΙΞΕΙΣ !!!
 
     // ============================================================
+// GEL Section Setup Engine — FINAL FIX (Missing Method Error)
+// ============================================================
+private void setupSection(View header, TextView content, TextView icon) {
+
+    if (header == null || content == null || icon == null)
+        return;
+
+    // Start collapsed
+    content.setVisibility(View.GONE);
+    icon.setText("＋");
+
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
+    
+    // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================
     private void toggleSection(TextView targetContent, TextView targetIcon) {

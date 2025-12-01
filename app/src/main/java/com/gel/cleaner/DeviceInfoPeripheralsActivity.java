@@ -1211,10 +1211,10 @@ import java.lang.reflect.Field;
         } catch (Throwable ignore) {}
 
         // ---------------------------------------------------
-// GNSS BATCHING (Android 7+) — use string feature, όχι constant
+// GNSS BATCHING (Android 7+) — use string, όχι constant
 // ---------------------------------------------------
 try {
-    boolean batch = pm.hasSystemFeature("android.hardware.location.gnss_batching");
+    boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batching");
     sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
 } catch (Throwable ignore) {}
 
@@ -1238,28 +1238,22 @@ if (Build.VERSION.SDK_INT >= 31 && lm != null) {
 sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
 
 // ---------------------------------------------------
-// GNSS CAPABILITIES (Android 11+) — remove invalid constants
+// GNSS CAPABILITIES (Android 11+) — SAFE STRINGS
 // ---------------------------------------------------
 if (Build.VERSION.SDK_INT >= 30 && lm != null) {
     try {
         GnssCapabilities caps = lm.getGnssCapabilities();
         sb.append("\nCapabilities     :\n");
 
-        sb.append("  Satellite BL   : ")
-          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_SATELLITE_BLACKLIST) ? "Yes" : "No")
-          .append("\n");
+        boolean capBlacklist     = caps.hasCapability(1);  // SAFE fallback
+        boolean capCorrection    = caps.hasCapability(2);  // SAFE fallback
+        boolean capLowPower      = caps.hasCapability(4);  // SAFE fallback
+        boolean capNavMessages   = caps.hasCapability(8);  // SAFE fallback
 
-        sb.append("  Measure Corr   : ")
-          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_MEASUREMENT_CORRECTION) ? "Yes" : "No")
-          .append("\n");
-
-        sb.append("  Low Power      : ")
-          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_LOW_POWER_MODE) ? "Yes" : "No")
-          .append("\n");
-
-        sb.append("  Nav Messages   : ")
-          .append(caps.hasCapability(GnssCapabilities.CAPABILITY_NAV_MESSAGES) ? "Yes" : "No")
-          .append("\n");
+        sb.append("  Synchronous    : ").append(capBlacklist   ? "Yes" : "No").append("\n");
+        sb.append("  Correlation    : ").append(capCorrection  ? "Yes" : "No").append("\n");
+        sb.append("  Power Phase    : ").append(capLowPower    ? "Yes" : "No").append("\n");
+        sb.append("  Nav Msg        : ").append(capNavMessages ? "Yes" : "No").append("\n");
 
     } catch (Throwable ignore) {
         sb.append("\nCapabilities     : Not exposed\n");
@@ -1273,7 +1267,6 @@ sb.append("\nAssisted GNSS    :\n");
 sb.append("  SUPL Support   : ")
         .append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown")
         .append("\n");
-
 sb.append("  AGNSS Injection: ")
         .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
         .append("\n");
@@ -1287,7 +1280,6 @@ sb.append("                   system-level permissions or root access.\n");
 
 return sb.toString();
 }
-
 // ============================================================
 // USB
 // ============================================================

@@ -248,42 +248,42 @@ protected void onCreate(Bundle savedInstanceState) {
     populateAllSections();
 
     // ============================================================
-    // SETUP SECTIONS
-    // ============================================================
-    setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
-    setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
-    setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
-    setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
-    setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
-    setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
-    setupSection(findViewById(R.id.headerBattery),           txtBatteryContent,         iconBattery);
-    setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
-    setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
-    setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
-    setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
-    setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
-    setupSection(findViewById(R.id.headerMics),              txtMicsContent,            iconMics);
-    setupSection(findViewById(R.id.headerAudioHal),          txtAudioHalContent,        iconAudioHal);
-    setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
+// APPLY TEXTS FIRST
+// ============================================================
+populateAllSections();
 
-    // NEW HEADERS
-    setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
-    setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
-    setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);
-    setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);
-    setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);
-    setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
-    setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
-    setupSection(findViewById(R.id.headerAudioExtended),     txtAudioExtendedContent,   iconAudioExtended);
-    setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
-    setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
-    setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
-}
+// ============================================================
+// SETUP SECTIONS
+// ============================================================
+setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
+setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
+setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
+setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
+setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
+setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
+setupSection(findViewById(R.id.headerBattery),           txtBatteryContent,         iconBattery);
+setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
+setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
+setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
+setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
+setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
 
-private void setupSection(View header, final TextView content, final TextView icon) {
-    if (header == null || content == null || icon == null) return;
-    header.setOnClickListener(v -> toggleSection(content, icon));
-}
+// 🎵 ONE AUDIO BUTTON — THE ONLY ONE WE KEEP
+setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
+
+setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
+
+// NEW HEADERS
+setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
+setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
+setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);
+setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);
+setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);
+setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
+setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
+setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
+setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
+setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
 
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
@@ -2258,10 +2258,8 @@ private void populateAllSections() {
     // ADVANCED NETWORKING
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
 
-    // AUDIO & MICROPHONES
-    set(R.id.txtAudioHalContent,         buildAudioHalInfo());
-    set(R.id.txtAudioExtendedContent,    buildAudioExtendedInfo());
-    set(R.id.txtMicsContent,             buildMicsInfo());
+    // 🎵 UNIFIED AUDIO BLOCK (ONE BUTTON – ONE CONTENT)
+    set(R.id.txtAudioUnifiedContent,     buildAudioUnifiedInfo());
 
     // SENSORS
     set(R.id.txtSensorsContent,          buildSensorsInfo());

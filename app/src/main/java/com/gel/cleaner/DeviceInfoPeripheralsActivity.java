@@ -285,7 +285,9 @@ setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedConte
 setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
 setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
 
-    // ============================================================
+}  // 🔥🔥🔥 ΕΔΩ ΤΕΛΕΙΩΝΕΙ ΤΟ onCreate() — ΜΗΝ ΤΟ ΑΓΓΙΞΕΙΣ !!!
+
+// ============================================================
 // GEL Expand Engine v3.0 — FINAL
 // ============================================================
 private void toggleSection(TextView targetContent, TextView targetIcon) {
@@ -302,7 +304,6 @@ private void toggleSection(TextView targetContent, TextView targetIcon) {
         }
     }
 
-    // Toggle target
     if (targetContent.getVisibility() == View.VISIBLE) {
         animateCollapse(targetContent);
         targetIcon.setText("＋");

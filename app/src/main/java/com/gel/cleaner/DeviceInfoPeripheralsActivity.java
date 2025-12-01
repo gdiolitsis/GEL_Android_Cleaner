@@ -1286,6 +1286,7 @@ sb.append("                   GNSS logging and raw measurements require\n");
 sb.append("                   system-level permissions or root access.\n");
 
 return sb.toString();
+    }
       
 // ============================================================
 // USB

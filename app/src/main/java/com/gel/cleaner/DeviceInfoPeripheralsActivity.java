@@ -2032,23 +2032,6 @@ private String buildSensorsExtendedInfo() {
     return sb.toString();
 }
 
-// 10. GNSS ULTRA
-private String buildGnssUltraInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    boolean gnss    = getPackageManager().hasSystemFeature("android.hardware.location.gnss");
-    boolean gps     = getPackageManager().hasSystemFeature("android.hardware.location.gps");
-    boolean network = getPackageManager().hasSystemFeature("android.hardware.location.network");
-
-    sb.append("GNSS Core       : ").append(gnss ? "Yes" : "No").append("\n");
-    sb.append("GPS Provider    : ").append(gps ? "Yes" : "No").append("\n");
-    sb.append("Network Locate  : ").append(network ? "Yes" : "No").append("\n");
-
-    sb.append("Advanced         : Constellation breakdown and raw measurement logs require root access.\n");
-
-    return sb.toString();
-}
-
 // 11. System Feature Matrix
 private String buildSystemFeaturesInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2065,7 +2048,7 @@ private String buildSystemFeaturesInfo() {
             for (FeatureInfo fi : feats) {
                 if (fi == null) continue;
                 if (fi.name != null) {
-                    sb.append("• ").append(fi.name).append("\n");
+                    sb.appe"• ").append(fi.name).append("\n");
                     shown++;
                 }
                 if (shown >= 120) break;

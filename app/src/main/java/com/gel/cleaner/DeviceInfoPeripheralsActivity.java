@@ -137,126 +137,147 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView title = findViewById(R.id.txtTitleDevice);
     if (title != null) title.setText(getString(R.string.phone_info_peripherals));
 
-    // CORE / OLD SECTIONS
-    TextView txtCameraContent           = findViewById(R.id.txtCameraContent);
-    TextView txtBiometricsContent       = findViewById(R.id.txtBiometricsContent);
-    TextView txtSensorsContent          = findViewById(R.id.txtSensorsContent);
-    TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
-    TextView txtLocationContent         = findViewById(R.id.txtLocationContent);
-    TextView txtNfcContent              = findViewById(R.id.txtNfcContent);
-    TextView txtBatteryContent          = findViewById(R.id.txtBatteryContent);
-    TextView txtOtherPeripherals        = findViewById(R.id.txtOtherPeripheralsContent);
-    TextView txtUwbContent              = findViewById(R.id.txtUwbContent);
-    TextView txtHapticsContent          = findViewById(R.id.txtHapticsContent);
-    TextView txtGnssContent             = findViewById(R.id.txtGnssContent);
-    TextView txtUsbContent              = findViewById(R.id.txtUsbContent);
-    TextView txtMicsContent             = findViewById(R.id.txtMicsContent);
-    TextView txtAudioHalContent         = findViewById(R.id.txtAudioHalContent);
-    TextView txtRootContent             = findViewById(R.id.txtRootContent);
+    // ============================================================
+    // OLD SECTIONS (EXACT MATCH WITH XML)
+    // ============================================================
+    TextView txtCameraContent         = findViewById(R.id.txtCameraContent);
+    TextView txtBiometricsContent     = findViewById(R.id.txtBiometricsContent);
+    TextView txtSensorsContent        = findViewById(R.id.txtSensorsContent);
+    TextView txtConnectivityContent   = findViewById(R.id.txtConnectivityContent);
+    TextView txtLocationContent       = findViewById(R.id.txtLocationContent);
+    TextView txtNfcContent            = findViewById(R.id.txtNfcContent);
+    TextView txtBatteryContent        = findViewById(R.id.txtBatteryContent);
+    TextView txtOtherPeripherals      = findViewById(R.id.txtOtherPeripheralsContent);
+    TextView txtUwbContent            = findViewById(R.id.txtUwbContent);
+    TextView txtHapticsContent        = findViewById(R.id.txtHapticsContent);
+    TextView txtGnssContent           = findViewById(R.id.txtGnssContent);
+    TextView txtUsbContent            = findViewById(R.id.txtUsbContent);
+    TextView txtMicsContent           = findViewById(R.id.txtMicsContent);
+    TextView txtAudioHalContent       = findViewById(R.id.txtAudioHalContent);
+    TextView txtRootContent           = findViewById(R.id.txtRootContent);
 
+    // ============================================================
     // NEW MEGA-UPGRADE SECTIONS
-    TextView txtThermalContent          = findViewById(R.id.txtThermalContent);
-    TextView txtDisplayContent          = findViewById(R.id.txtDisplayContent);
-    TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
-    TextView txtGpuContent              = findViewById(R.id.txtGpuContent);
-    TextView txtMemoryContent           = findViewById(R.id.txtMemoryContent);
-    TextView txtModemContent            = findViewById(R.id.txtModemContent);
-    TextView txtWifiAdvancedContent     = findViewById(R.id.txtWifiAdvancedContent);
-    TextView txtAudioExtendedContent    = findViewById(R.id.txtAudioExtendedContent);
-    TextView txtSensorsExtendedContent  = findViewById(R.id.txtSensorsExtendedContent);
-    TextView txtSystemFeaturesContent   = findViewById(R.id.txtSystemFeaturesContent);
-    TextView txtSecurityFlagsContent    = findViewById(R.id.txtSecurityFlagsContent);
+    // ============================================================
+    TextView txtThermalContent        = findViewById(R.id.txtThermalContent);
+    TextView txtDisplayContent        = findViewById(R.id.txtDisplayContent);
+    TextView txtCpuContent            = findViewById(R.id.txtCpuContent);
+    TextView txtGpuContent            = findViewById(R.id.txtGpuContent);
+    TextView txtMemoryContent         = findViewById(R.id.txtMemoryContent);
+    TextView txtModemContent          = findViewById(R.id.txtModemContent);
+    TextView txtWifiAdvancedContent   = findViewById(R.id.txtWifiAdvancedContent);
+    TextView txtAudioExtendedContent  = findViewById(R.id.txtAudioExtendedContent);
+    TextView txtSensorsExtendedContent= findViewById(R.id.txtSensorsExtendedContent);
+    TextView txtSystemFeaturesContent = findViewById(R.id.txtSystemFeaturesContent);
+    TextView txtSecurityFlagsContent  = findViewById(R.id.txtSecurityFlagsContent);
 
+    // ============================================================
     // ICONS — OLD
-    TextView iconCamera                 = findViewById(R.id.iconCameraToggle);
-    TextView iconBiometrics             = findViewById(R.id.iconBiometricsToggle);
-    TextView iconSensors                = findViewById(R.id.iconSensorsToggle);
-    TextView iconConnectivity           = findViewById(R.id.iconConnectivityToggle);
-    TextView iconLocation               = findViewById(R.id.iconLocationToggle);
-    TextView iconNfc                    = findViewById(R.id.iconNfcToggle);
-    TextView iconBattery                = findViewById(R.id.iconBatteryToggle);
-    TextView iconOther                  = findViewById(R.id.iconOtherPeripheralsToggle);
-    TextView iconUwb                    = findViewById(R.id.iconUwbToggle);
-    TextView iconHaptics                = findViewById(R.id.iconHapticsToggle);
-    TextView iconGnss                   = findViewById(R.id.iconGnssToggle);
-    TextView iconUsb                    = findViewById(R.id.iconUsbToggle);
-    TextView iconMics                   = findViewById(R.id.iconMicsToggle);
-    TextView iconAudioHal               = findViewById(R.id.iconAudioHalToggle);
-    TextView iconRoot                   = findViewById(R.id.iconRootToggle);
+    // ============================================================
+    TextView iconCamera               = findViewById(R.id.iconCameraToggle);
+    TextView iconBiometrics           = findViewById(R.id.iconBiometricsToggle);
+    TextView iconSensors              = findViewById(R.id.iconSensorsToggle);
+    TextView iconConnectivity         = findViewById(R.id.iconConnectivityToggle);
+    TextView iconLocation             = findViewById(R.id.iconLocationToggle);
+    TextView iconNfc                  = findViewById(R.id.iconNfcToggle);
+    TextView iconBattery              = findViewById(R.id.iconBatteryToggle);
+    TextView iconOther                = findViewById(R.id.iconOtherPeripheralsToggle);
+    TextView iconUwb                  = findViewById(R.id.iconUwbToggle);
+    TextView iconHaptics              = findViewById(R.id.iconHapticsToggle);
+    TextView iconGnss                 = findViewById(R.id.iconGnssToggle);
+    TextView iconUsb                  = findViewById(R.id.iconUsbToggle);
+    TextView iconMics                 = findViewById(R.id.iconMicsToggle);
+    TextView iconAudioHal             = findViewById(R.id.iconAudioHalToggle);
+    TextView iconRoot                 = findViewById(R.id.iconRootToggle);
 
-    // ICONS — NEW MEGA-UPGRADE
-    TextView iconThermal                = findViewById(R.id.iconThermalToggle);
-    TextView iconDisplay                = findViewById(R.id.iconDisplayToggle);
-    TextView iconCpu                    = findViewById(R.id.iconCpuToggle);
-    TextView iconGpu                    = findViewById(R.id.iconGpuToggle);
-    TextView iconMemory                 = findViewById(R.id.iconMemoryToggle);
-    TextView iconModem                  = findViewById(R.id.iconModemToggle);
-    TextView iconWifiAdvanced           = findViewById(R.id.iconWifiAdvancedToggle);
-    TextView iconAudioExtended          = findViewById(R.id.iconAudioExtendedToggle);
-    TextView iconSensorsExtended        = findViewById(R.id.iconSensorsExtendedToggle);
-    TextView iconSystemFeatures         = findViewById(R.id.iconSystemFeaturesToggle);
-    TextView iconSecurityFlags          = findViewById(R.id.iconSecurityFlagsToggle);
+    // ============================================================
+    // ICONS — NEW SECTIONS
+    // ============================================================
+    TextView iconThermal              = findViewById(R.id.iconThermalToggle);
+    TextView iconDisplay              = findViewById(R.id.iconDisplayToggle);
+    TextView iconCpu                  = findViewById(R.id.iconCpuToggle);
+    TextView iconGpu                  = findViewById(R.id.iconGpuToggle);
+    TextView iconMemory               = findViewById(R.id.iconMemoryToggle);
+    TextView iconModem                = findViewById(R.id.iconModemToggle);
+    TextView iconWifiAdvanced         = findViewById(R.id.iconWifiAdvancedToggle);
+    TextView iconAudioExtended        = findViewById(R.id.iconAudioExtendedToggle);
+    TextView iconSensorsExtended      = findViewById(R.id.iconSensorsExtendedToggle);
+    TextView iconSystemFeatures       = findViewById(R.id.iconSystemFeaturesToggle);
+    TextView iconSecurityFlags        = findViewById(R.id.iconSecurityFlagsToggle);
 
+    // ============================================================
+    // ALL CONTENTS (EXACT ORDER TO AVOID NULLS)
+    // ============================================================
     allContents = new TextView[]{
-            // old
-            txtCameraContent, txtBiometricsContent, txtSensorsContent, txtConnectivityContent,
-            txtLocationContent, txtBluetoothContent, txtNfcContent, txtBatteryContent,
-            txtOtherPeripherals, txtUwbContent, txtHapticsContent, txtGnssContent,
-            txtUsbContent, txtMicsContent, txtAudioHalContent, txtRootContent,
-            // new
+            // OLD
+            txtCameraContent, txtBiometricsContent, txtSensorsContent,
+            txtConnectivityContent, txtLocationContent, txtNfcContent,
+            txtBatteryContent, txtOtherPeripherals, txtUwbContent,
+            txtHapticsContent, txtGnssContent, txtUsbContent,
+            txtMicsContent, txtAudioHalContent, txtRootContent,
+
+            // NEW
             txtThermalContent, txtDisplayContent, txtCpuContent, txtGpuContent,
-            txtMemoryContent, txtModemContent, txtWifiAdvancedContent, txtAudioExtendedContent,
-            txtSensorsExtendedContent, txtGnssUltraContent, txtSystemFeaturesContent,
-            txtSecurityFlagsContent
+            txtMemoryContent, txtModemContent, txtWifiAdvancedContent,
+            txtAudioExtendedContent, txtSensorsExtendedContent,
+            txtSystemFeaturesContent, txtSecurityFlagsContent
     };
 
+    // ============================================================
+    // ALL ICONS
+    // ============================================================
     allIcons = new TextView[]{
-            // old
+            // OLD
             iconCamera, iconBiometrics, iconSensors, iconConnectivity,
-            iconLocation, iconNfc, iconBattery,
-            iconOther, iconUwb, iconHaptics, iconGnss,
-            iconUsb, iconMics, iconAudioHal, iconRoot,
-            // new
+            iconLocation, iconNfc, iconBattery, iconOther,
+            iconUwb, iconHaptics, iconGnss, iconUsb,
+            iconMics, iconAudioHal, iconRoot,
+
+            // NEW
             iconThermal, iconDisplay, iconCpu, iconGpu,
-            iconMemory, iconModem, iconWifiAdvanced, iconAudioExtended,
-            iconSensorsExtended, iconSystemFeatures,
-            iconSecurityFlags
+            iconMemory, iconModem, iconWifiAdvanced,
+            iconAudioExtended, iconSensorsExtended,
+            iconSystemFeatures, iconSecurityFlags
     };
 
     isRooted = isDeviceRooted();
 
-    // ----- APPLY ALL SECTION TEXTS IMMEDIATELY (the missing call!) -----
+    // ============================================================
+    // APPLY TEXTS FIRST
+    // ============================================================
     populateAllSections();
 
-    // OLD HEADERS
-    setupSection(findViewById(R.id.headerCamera),              txtCameraContent,          iconCamera);
-    setupSection(findViewById(R.id.headerBiometrics),          txtBiometricsContent,      iconBiometrics);
-    setupSection(findViewById(R.id.headerSensors),             txtSensorsContent,         iconSensors);
-    setupSection(findViewById(R.id.headerConnectivity),        txtConnectivityContent,    iconConnectivity);
-    setupSection(findViewById(R.id.headerLocation),            txtLocationContent,        iconLocation);
-    setupSection(findViewById(R.id.headerNfc),                 txtNfcContent,             iconNfc);
-    setupSection(findViewById(R.id.headerBattery),             txtBatteryContent,         iconBattery);
-    setupSection(findViewById(R.id.headerOtherPeripherals),    txtOtherPeripherals,       iconOther);
-    setupSection(findViewById(R.id.headerUwb),                 txtUwbContent,             iconUwb);
-    setupSection(findViewById(R.id.headerHaptics),             txtHapticsContent,         iconHaptics);
-    setupSection(findViewById(R.id.headerGnss),                txtGnssContent,            iconGnss);
-    setupSection(findViewById(R.id.headerUsb),                 txtUsbContent,             iconUsb);
-    setupSection(findViewById(R.id.headerMics),                txtMicsContent,            iconMics);
-    setupSection(findViewById(R.id.headerAudioHal),            txtAudioHalContent,        iconAudioHal);
-    setupSection(findViewById(R.id.headerRoot),                txtRootContent,            iconRoot);
+    // ============================================================
+    // SETUP SECTIONS
+    // ============================================================
+    setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
+    setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
+    setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
+    setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
+    setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
+    setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
+    setupSection(findViewById(R.id.headerBattery),           txtBatteryContent,         iconBattery);
+    setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
+    setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
+    setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
+    setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
+    setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
+    setupSection(findViewById(R.id.headerMics),              txtMicsContent,            iconMics);
+    setupSection(findViewById(R.id.headerAudioHal),          txtAudioHalContent,        iconAudioHal);
+    setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
 
     // NEW HEADERS
-    setupSection(findViewById(R.id.headerThermal),             txtThermalContent,         iconThermal);
-    setupSection(findViewById(R.id.headerDisplay),             txtDisplayContent,         iconDisplay);
-    setupSection(findViewById(R.id.headerCpu),                 txtCpuContent,             iconCpu);
-    setupSection(findViewById(R.id.headerGpu),                 txtGpuContent,             iconGpu);
-    setupSection(findViewById(R.id.headerMemory),              txtMemoryContent,          iconMemory);
-    setupSection(findViewById(R.id.headerModem),               txtModemContent,           iconModem);
-    setupSection(findViewById(R.id.headerWifiAdvanced),        txtWifiAdvancedContent,    iconWifiAdvanced);
-    setupSection(findViewById(R.id.headerAudioExtended),       txtAudioExtendedContent,   iconAudioExtended);
-    setupSection(findViewById(R.id.headerSensorsExtended),     txtSensorsExtendedContent, iconSensorsExtended);
-    setupSection(findViewById(R.id.headerSystemFeatures),      txtSystemFeaturesContent,  iconSystemFeatures);
-    setupSection(findViewById(R.id.headerSecurityFlags),       txtSecurityFlagsContent,   iconSecurityFlags);
+    setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
+    setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
+    setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);
+    setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);
+    setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);
+    setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
+    setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
+    setupSection(findViewById(R.id.headerAudioExtended),     txtAudioExtendedContent,   iconAudioExtended);
+    setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
+    setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
+    setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
 }
 
 private void setupSection(View header, final TextView content, final TextView icon) {
@@ -1291,21 +1312,16 @@ private String buildOtherPeripheralsInfo() {
     return sb.toString();
 }
 
-// ============================================================
-// Microphones v27 — Absolute Input Routing + Fake ID Filter
-// ============================================================
+// ============================================================================
+// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
+// ============================================================================
+
+// 1) MICROPHONES (v27)
 private String buildMicsInfo() {
     StringBuilder sb = new StringBuilder();
 
-    int wiredCount = 0;
-    int btCount    = 0;
-    int usbCount   = 0;
-
-    boolean hasBuiltin = false;
-    boolean hasTele    = false;
-    boolean hasWired   = false;
-    boolean hasBT      = false;
-    boolean hasUSB     = false;
+    int wiredCount = 0, btCount = 0, usbCount = 0;
+    boolean hasBuiltin=false, hasTele=false, hasWired=false, hasBT=false, hasUSB=false;
 
     try {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -1313,13 +1329,10 @@ private String buildMicsInfo() {
             AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
 
             for (AudioDeviceInfo d : devs) {
-
-                String name = d.getProductName() != null
-                        ? d.getProductName().toString().trim() : "";
-
+                String name = d.getProductName() != null ? d.getProductName().toString().trim() : "";
                 int type = d.getType();
 
-                boolean looksFakeName =
+                boolean fakeName =
                         name.isEmpty() ||
                         name.equalsIgnoreCase(Build.MODEL) ||
                         name.matches("^[A-Z0-9_-]{8,}$");
@@ -1328,66 +1341,40 @@ private String buildMicsInfo() {
 
                 switch (type) {
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                        label = "Built-in Mic";
-                        hasBuiltin = true;
-                        break;
+                        label = "Built-in Mic"; hasBuiltin = true; break;
                     case AudioDeviceInfo.TYPE_TELEPHONY:
-                        label = "Telephony Mic";
-                        hasTele = true;
-                        break;
+                        label = "Telephony Mic"; hasTele = true; break;
                     case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        label = "Wired Headset Mic";
-                        wiredCount++;
-                        hasWired = true;
-                        break;
+                        label = "Wired Headset Mic"; wiredCount++; hasWired = true; break;
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        label = "Bluetooth Mic";
-                        btCount++;
-                        hasBT = true;
-                        break;
+                        label = "Bluetooth Mic"; btCount++; hasBT = true; break;
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
                     case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Mic";
-                        usbCount++;
-                        hasUSB = true;
-                        break;
+                        label = "USB Mic"; usbCount++; hasUSB = true; break;
                     default:
-                        label = "Input Type " + type;
-                        break;
+                        label = "Input Type " + type; break;
                 }
 
                 sb.append("• ").append(label).append("\n");
                 sb.append("   Present       : Yes\n");
-
-                if (!name.isEmpty()) {
-                    sb.append("   Name          : ").append(name).append("\n");
-                }
-
-                sb.append("   Fake-ID       : ")
-                  .append(looksFakeName ? "Yes" : "No")
-                  .append("\n");
-
+                if (!name.isEmpty()) sb.append("   Name          : ").append(name).append("\n");
+                sb.append("   Fake-ID       : ").append(fakeName ? "Yes" : "No").append("\n");
                 sb.append("   Device ID     : ").append(d.getId()).append("\n\n");
             }
         }
+    } catch (Throwable ignore) {}
 
-    } catch (Throwable ignore) { }
-
-    if (sb.length() == 0) {
+    if (sb.length() == 0)
         sb.append("No microphones are reported by the current audio service.\n");
-    }
 
     sb.append("=== Summary ===\n");
     sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
     sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
-    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No")
-      .append(" (").append(wiredCount).append(")\n");
-    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No")
-      .append(" (").append(btCount).append(")\n");
-    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No")
-      .append(" (").append(usbCount).append(")\n");
+    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No").append(" (").append(wiredCount).append(")\n");
+    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
+    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
 
     sb.append("\nAdvanced         : Raw audio routing matrices require root access.\n");
 
@@ -1395,58 +1382,38 @@ private String buildMicsInfo() {
     return sb.toString();
 }
 
-// ============================================================
-// Audio HAL v26 — HAL Version + Output Routing Snapshot
-// ============================================================
+
+
+// 2) AUDIO HAL
 private String buildAudioHalInfo() {
     StringBuilder sb = new StringBuilder();
 
     String hal = getProp("ro.audio.hal.version");
+    sb.append("Audio HAL        : ")
+      .append(hal != null && !hal.isEmpty() ? hal : "Not exposed")
+      .append("\n\n");
 
-    if (hal != null && !hal.isEmpty()) {
-        sb.append("Audio HAL        : ").append(hal).append("\n\n");
-    } else {
-        sb.append("Audio HAL        : Not exposed at property level.\n\n");
-    }
-
-    boolean speaker = false;
-    boolean wired   = false;
-    boolean bt      = false;
-    boolean usb     = false;
-    boolean hdmi    = false;
+    boolean speaker=false, wired=false, bt=false, usb=false, hdmi=false;
 
     try {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
             AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
             for (AudioDeviceInfo d : outs) {
-                int type = d.getType();
-                switch (type) {
-                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                        speaker = true;
-                        break;
+                switch (d.getType()) {
+                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:  speaker = true; break;
                     case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        wired = true;
-                        break;
+                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES: wired = true; break;
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                        bt = true;
-                        break;
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:   bt = true; break;
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        usb = true;
-                        break;
+                    case AudioDeviceInfo.TYPE_USB_HEADSET:     usb = true; break;
                     case AudioDeviceInfo.TYPE_HDMI:
-                    case AudioDeviceInfo.TYPE_HDMI_ARC:
-                        hdmi = true;
-                        break;
-                    default:
-                        break;
+                    case AudioDeviceInfo.TYPE_HDMI_ARC:        hdmi = true; break;
                 }
             }
         }
-    } catch (Throwable ignore) { }
+    } catch (Throwable ignore) {}
 
     sb.append("=== Output Devices ===\n");
     sb.append("Speaker          : ").append(speaker ? "Yes" : "No").append("\n");
@@ -1456,6 +1423,34 @@ private String buildAudioHalInfo() {
     sb.append("HDMI Audio       : ").append(hdmi    ? "Yes" : "No").append("\n");
 
     sb.append("\nAdvanced         : Mix paths and full routing graphs require root access.\n");
+
+    return sb.toString();
+}
+
+
+
+// 3) AUDIO EXTENDED
+private String buildAudioExtendedInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+
+            // Legacy routing snapshot
+            String r = am.getParameters("routing");
+            if (r != null && !r.isEmpty())
+                sb.append("Legacy Routing   : ").append(r).append("\n");
+
+            // Hardware flag
+            if (Build.VERSION.SDK_INT >= 23) {
+                boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
+                sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths require root access.\n");
 
     return sb.toString();
 }
@@ -2072,32 +2067,7 @@ private String buildWifiAdvancedInfo() {
     return sb.toString();
 }
 
-// 8. Audio EXTENDED
-private String buildAudioExtendedInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            String out = am.getParameters("routing");
-            if (out != null && !out.isEmpty()) {
-                sb.append("Legacy Routing   : ").append(out).append("\n");
-            }
-
-            if (Build.VERSION.SDK_INT >= 23) {
-                boolean audioOut = getPackageManager().hasSystemFeature("android.hardware.audio.output");
-                sb.append("Audio Output HW  : ").append(audioOut ? "Yes" : "No").append("\n");
-            }
-        }
-    } catch (Throwable ignore) { }
-
-    sb.append("Advanced         : Spatial audio flags, multi-mic noise models and per-stream audio paths require root access.\n");
-
-    return sb.toString();
-}
-
-// 9. Sensors EXTENDED
+// 8. Sensors EXTENDED
 private String buildSensorsExtendedInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2126,7 +2096,7 @@ private String buildSensorsExtendedInfo() {
     return sb.toString();
 }
 
-// 11. System Feature Matrix
+// 9. System Feature Matrix
 private String buildSystemFeaturesInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2157,7 +2127,7 @@ private String buildSystemFeaturesInfo() {
     return sb.toString();
 }
 
-// 12. SELinux / Security Flags
+// 10. SELinux / Security Flags
 private String buildSecurityFlagsInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2277,10 +2247,10 @@ private void populateAllSections() {
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());
 
-    // 🔥 MEGA-UPGRADE BLOCKS (THESE WERE MISSING)
-    set(R.id.txtThermalContent,          buildThermalInfo());   // FIXED
-    set(R.id.txtCpuContent,              buildCpuInfo());       // FIXED
-    set(R.id.txtGpuContent,              buildGpuInfo());       // FIXED
+    // MEGA-UPGRADE BLOCKS
+    set(R.id.txtThermalContent,          buildThermalInfo());
+    set(R.id.txtCpuContent,              buildCpuInfo());
+    set(R.id.txtGpuContent,              buildGpuInfo());
 
     // MODEM / TELEPHONY
     set(R.id.txtModemContent,            buildModemInfo());
@@ -2288,7 +2258,7 @@ private void populateAllSections() {
     // ADVANCED NETWORKING
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
 
-    // AUDIO + MULTIMEDIA
+    // AUDIO & MICROPHONES
     set(R.id.txtAudioHalContent,         buildAudioHalInfo());
     set(R.id.txtAudioExtendedContent,    buildAudioExtendedInfo());
     set(R.id.txtMicsContent,             buildMicsInfo());

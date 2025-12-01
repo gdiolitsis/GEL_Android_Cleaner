@@ -1211,10 +1211,10 @@ import java.lang.reflect.Field;
         } catch (Throwable ignore) {}
 
 // ---------------------------------------------------
-// GNSS BATCHING (Android 7+) — SAFE reflection fallback
+// GNSS BATCHING (Android 7+) — SAFE / NO CONSTANTS
 // ---------------------------------------------------
 try {
-    boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batching");
+    boolean batch = pm.hasSystemFeature("android.hardware.location.gnss_batching");
     sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
 } catch (Throwable ignore) {
     sb.append("GNSS Batching    : Unknown\n");
@@ -1225,7 +1225,7 @@ try {
 // ---------------------------------------------------
 if (Build.VERSION.SDK_INT >= 31 && lm != null) {
     try {
-        List<GnssAntennaInfo> antennas = lm.getGnssAntennaInfos();
+        List<?> antennas = lm.getGnssAntennaInfos();
         sb.append("Antenna Info     : ")
           .append(antennas != null && !antennas.isEmpty() ? "Present" : "None")
           .append("\n");
@@ -1240,31 +1240,30 @@ if (Build.VERSION.SDK_INT >= 31 && lm != null) {
 sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
 
 // ---------------------------------------------------
-// GNSS CAPABILITIES (Reflection SAFE)
+// GNSS CAPABILITIES — SAFE REFLECTION (NO CONSTANTS)
 // ---------------------------------------------------
-if (Build.VERSION.SDK_INT >= 30 && lm != null) {
-    try {
-        Method mGetCaps = LocationManager.class.getMethod("getGnssCapabilities");
-        Object caps = mGetCaps.invoke(lm);
+try {
+    Method mGetCaps = LocationManager.class.getMethod("getGnssCapabilities");
+    Object caps = mGetCaps.invoke(lm);
 
-        if (caps != null) {
-            // Reflection: hasCapability(int)
-            Method mHas = caps.getClass().getMethod("hasCapability", int.class);
+    if (caps != null) {
+        Method mHas = caps.getClass().getMethod("hasCapability", int.class);
 
-            boolean capBlacklist   = (boolean) mHas.invoke(caps, 1);
-            boolean capCorrection  = (boolean) mHas.invoke(caps, 2);
-            boolean capLowPower    = (boolean) mHas.invoke(caps, 4);
-            boolean capNavMessages = (boolean) mHas.invoke(caps, 8);
+        boolean capBlacklist   = (boolean) mHas.invoke(caps, 1);
+        boolean capCorrection  = (boolean) mHas.invoke(caps, 2);
+        boolean capLowPower    = (boolean) mHas.invoke(caps, 4);
+        boolean capNavMessages = (boolean) mHas.invoke(caps, 8);
 
-            sb.append("\nCapabilities     :\n");
-            sb.append("  Synchronous    : ").append(capBlacklist   ? "Yes" : "No").append("\n");
-            sb.append("  Correlation    : ").append(capCorrection  ? "Yes" : "No").append("\n");
-            sb.append("  Low Power      : ").append(capLowPower    ? "Yes" : "No").append("\n");
-            sb.append("  Nav Messages   : ").append(capNavMessages ? "Yes" : "No").append("\n");
-        }
-    } catch (Throwable ignore) {
+        sb.append("\nCapabilities     :\n");
+        sb.append("  Synchronous    : ").append(capBlacklist   ? "Yes" : "No").append("\n");
+        sb.append("  Correlation    : ").append(capCorrection  ? "Yes" : "No").append("\n");
+        sb.append("  Low Power      : ").append(capLowPower    ? "Yes" : "No").append("\n");
+        sb.append("  Nav Messages   : ").append(capNavMessages ? "Yes" : "No").append("\n");
+    } else {
         sb.append("\nCapabilities     : Not exposed\n");
     }
+} catch (Throwable ignore) {
+    sb.append("\nCapabilities     : Not available\n");
 }
 
 // ---------------------------------------------------
@@ -1272,11 +1271,11 @@ if (Build.VERSION.SDK_INT >= 30 && lm != null) {
 // ---------------------------------------------------
 sb.append("\nAssisted GNSS    :\n");
 sb.append("  SUPL Support   : ")
-        .append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown")
-        .append("\n");
+  .append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown")
+  .append("\n");
 sb.append("  AGNSS Injection: ")
-        .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
-        .append("\n");
+  .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
+  .append("\n");
 
 // ---------------------------------------------------
 // FINAL NOTE
@@ -1286,7 +1285,6 @@ sb.append("                   GNSS logging and raw measurements require\n");
 sb.append("                   system-level permissions or root access.\n");
 
 return sb.toString();
-    }
       
 // ============================================================
 // USB

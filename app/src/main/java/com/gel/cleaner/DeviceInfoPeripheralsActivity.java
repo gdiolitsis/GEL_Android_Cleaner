@@ -1706,60 +1706,172 @@ private String buildMemoryInfo() {
     return sb.toString();
 }
 
-// 6. Modem / Telephony
+// 6. Modem / Telephony (GEL Extended Edition)
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
 
     try {
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
         if (tm != null) {
-            int phoneType = tm.getPhoneType();
+
+            // -----------------------------
+            // BASIC PHONE TYPE
+            // -----------------------------
             String typeStr;
-            switch (phoneType) {
+            switch (tm.getPhoneType()) {
                 case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
                 case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
                 case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
-                case TelephonyManager.PHONE_TYPE_NONE:
-                default:                               typeStr = "None";
+                default:                                typeStr = "None";
             }
-
             sb.append("Phone Type       : ").append(typeStr).append("\n");
 
-            if (Build.VERSION.SDK_INT >= 24) {
-                boolean volte = false;
+
+            // -----------------------------
+            // DATA NETWORK TYPE (4G/5G detection)
+            // -----------------------------
+            int net = tm.getDataNetworkType();
+            sb.append("Data Network     : ").append(networkName(net)).append("\n");
+
+            boolean is5G =
+                    net == TelephonyManager.NETWORK_TYPE_NR;   // NR = New Radio (5G)
+            sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
+
+
+            // -----------------------------
+            // IMS REGISTRATION (VoLTE / VoWiFi / VoNR)
+            // -----------------------------
+            if (Build.VERSION.SDK_INT >= 30) {
                 try {
-                    volte = (boolean) TelephonyManager.class
-                            .getMethod("isVolteAvailable")
-                            .invoke(tm);
-                } catch (Exception ignored) { }
+                    boolean ims = tm.isImsRegistered();
+                    sb.append("IMS Registered   : ").append(ims ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) { }
+            }
+
+            // VoLTE
+            try {
+                boolean volte =
+                        (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
                 sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("VoLTE Support    : Unknown\n");
             }
 
-            if (Build.VERSION.SDK_INT >= 29) {
-                boolean vowifi = false;
-                try {
-                    vowifi = (boolean) TelephonyManager.class
-                            .getMethod("isWifiCallingAvailable")
-                            .invoke(tm);
-                } catch (Exception ignored) { }
+            // VoWiFi
+            try {
+                boolean vowifi =
+                        (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
                 sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("VoWiFi Support   : Unknown\n");
             }
-        }
 
-        if (Build.VERSION.SDK_INT >= 22) {
-            SubscriptionManager sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-            if (sm != null) {
-                java.util.List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                int count = subs != null ? subs.size() : 0;
-                sb.append("Active SIM Slots : ").append(count).append("\n");
+            // VoNR (Android 13+)
+            if (Build.VERSION.SDK_INT >= 33) {
+                try {
+                    boolean vonr =
+                            (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
+                    sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {
+                    sb.append("VoNR Support     : Unknown\n");
+                }
             }
+
+
+            // -----------------------------
+            // SIGNAL STRENGTH (RSRP/RSRQ etc.)
+            // -----------------------------
+            try {
+                SignalStrength ss = tm.getSignalStrength();
+                if (ss != null) {
+                    sb.append("Signal Strength  : ").append(ss.getLevel()).append("/4\n");
+
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        CellSignalStrength cs = ss.getCellSignalStrengths().stream()
+                                .findFirst().orElse(null);
+                        if (cs != null) {
+                            sb.append("  RSRP           : ").append(cs.getDbm()).append(" dBm\n");
+                        }
+                    }
+                }
+            } catch (Throwable ignore) { }
+
+
+            // -----------------------------
+            // CARRIER INFORMATION
+            // -----------------------------
+            try {
+                String carrier = tm.getNetworkOperatorName();
+                sb.append("Carrier          : ")
+                        .append(carrier != null ? carrier : "Unknown")
+                        .append("\n");
+            } catch (Throwable ignore) { }
+
+
+            // -----------------------------
+            // ACTIVE SIM COUNT
+            // -----------------------------
+            if (Build.VERSION.SDK_INT >= 22) {
+                SubscriptionManager sm = (SubscriptionManager)
+                        getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+                if (sm != null) {
+                    List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
+                    sb.append("Active SIM Slots : ")
+                            .append(subs != null ? subs.size() : 0)
+                            .append("\n");
+                }
+            }
+
+
+            // -----------------------------
+            // CARRIER AGGREGATION (4G+)
+            // -----------------------------
+            if (Build.VERSION.SDK_INT >= 29) {
+                try {
+                    ServiceState ss = tm.getServiceState();
+                    if (ss != null) {
+                        boolean ca = ss.isUsingCarrierAggregation();
+                        sb.append("4G+ CA           : ").append(ca ? "Yes" : "No").append("\n");
+                    }
+                } catch (Throwable ignore) { }
+            }
+
+
+            // -----------------------------
+            // ROAMING
+            // -----------------------------
+            try {
+                boolean roam = tm.isNetworkRoaming();
+                sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) { }
         }
 
     } catch (Throwable ignore) { }
 
-    sb.append("Advanced         : Full RAT/band table and modem logging require root access and OEM modem tools.\n");
+    sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
+    sb.append("                   require root access and OEM modem tools.\n");
 
     return sb.toString();
+}
+
+
+// ============================================================
+// Helper for data network type → readable label
+// ============================================================
+private String networkName(int type) {
+    switch (type) {
+        case TelephonyManager.NETWORK_TYPE_NR:  return "5G NR";
+        case TelephonyManager.NETWORK_TYPE_LTE: return "4G LTE";
+        case TelephonyManager.NETWORK_TYPE_HSPAP:
+        case TelephonyManager.NETWORK_TYPE_HSPA: return "3.5G HSPA";
+        case TelephonyManager.NETWORK_TYPE_UMTS: return "3G UMTS";
+        case TelephonyManager.NETWORK_TYPE_EDGE: return "2.75G EDGE";
+        case TelephonyManager.NETWORK_TYPE_GPRS: return "2.5G GPRS";
+        case TelephonyManager.NETWORK_TYPE_CDMA: return "2G CDMA";
+        default: return "Unknown";
+    }
 }
 
 // 7. WiFi Advanced

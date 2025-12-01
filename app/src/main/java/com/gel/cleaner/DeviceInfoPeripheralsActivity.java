@@ -1107,26 +1107,102 @@ return sb.toString();
             } else {
                 sb.append("Lifecycle data not exposed\n");
             }
-        } else {
-            sb.append("Requires root access\n");
-        }
+// ============================================================
+// BATTERY + TRUE DESIGN CAPACITY (Stable mAh)
+// ============================================================
+private String buildBatteryInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        appendAccessInstructions(sb, "battery");
-        return sb.toString();
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+
+        if (i != null) {
+            int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+
+            String statusStr;
+            switch (status) {
+                case BatteryManager.BATTERY_STATUS_CHARGING:     statusStr = "Charging"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:  statusStr = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:         statusStr = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: statusStr = "Not charging"; break;
+                default: statusStr = "Unknown"; break;
+            }
+
+            String plugStr;
+            switch (plugged) {
+                case BatteryManager.BATTERY_PLUGGED_AC:       plugStr = "AC"; break;
+                case BatteryManager.BATTERY_PLUGGED_USB:      plugStr = "USB"; break;
+                case BatteryManager.BATTERY_PLUGGED_WIRELESS: plugStr = "Wireless"; break;
+                default: plugStr = "Not plugged"; break;
+            }
+
+            sb.append("Level           : ").append(level).append("%\n");
+            sb.append("Scale           : ").append(scale).append("\n");
+            sb.append("Status          : ").append(statusStr).append("\n");
+            sb.append("Charging Source : ").append(plugStr).append("\n");
+
+            if (temp > 0) {
+                sb.append("Temp            : ").append((temp / 10f)).append("°C\n");
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    // ---- TRUE & STABLE BATTERY CAPACITY ----
+    long capMah = detectBatteryMah();
+    if (capMah > 0) {
+        sb.append("Capacity (mAh)  : ").append(capMah).append("\n");
+    } else {
+        sb.append("Capacity (mAh)  : Not available\n");
     }
 
-    private long detectBatteryMah() {
-    // 1) Try design capacity (most accurate)
+    // ---- LIFECYCLE ----
+    sb.append("Lifecycle       : ");
+    if (isRooted) {
+        long full = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+        long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
+
+        boolean any = false;
+        StringBuilder ex = new StringBuilder();
+
+        if (full > 0)    { ex.append("currentFull=").append(full).append(" "); any=true; }
+        if (design > 0)  { ex.append("designFull=").append(design).append(" "); any=true; }
+        if (cycles > 0)  { ex.append("cycles=").append(cycles); any=true; }
+
+        if (any) sb.append(ex.toString().trim()).append("\n");
+        else sb.append("Lifecycle data not exposed\n");
+
+    } else {
+        sb.append("Requires root access\n");
+    }
+
+    appendAccessInstructions(sb, "battery");
+    return sb.toString();
+}
+
+// ============================================================
+// TRUE BATTERY CAPACITY DETECTION — FIXED & STABLE
+// ============================================================
+private long detectBatteryMah() {
+
+    // 1) Design capacity (most stable)
     long cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-    if (cap > 1000) return cap / 1000;
+    if (cap > 2000) return cap / 1000;
 
-    // 2) Try nominal capacity (Samsung, Xiaomi, Pixel)
+    // 2) Nominal capacity (Samsung, Xiaomi)
     cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
-    if (cap > 1000) return cap / 1000;
+    if (cap > 2000) return cap / 1000;
 
-    // 3) Try "full" capacity as fallback
+    // 3) Full charge capacity (fallback)
     cap = readSysLong("/sys/class/power_supply/battery/charge_full");
-    if (cap > 1000) return cap / 1000;
+    if (cap > 2000) return cap / 1000;
+
+    // 4) If all fail → return -1
     return -1;
 }
 

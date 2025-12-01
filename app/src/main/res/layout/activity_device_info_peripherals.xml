@@ -362,21 +362,8 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- LOCATION DETAIL (used by Java) -->
-        <TextView
-            android:id="@+id/txtLocationContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"/>
-
         <!-- ========================================================= -->
-        <!-- RADIO SYSTEMS / WIFI ADVANCED -->
+        <!-- WIFI ADVANCED -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerWifiAdvanced"
@@ -416,7 +403,9 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- GNSS BASE -->
+        <!-- ========================================================= -->
+        <!-- GNSS -->
+        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerGnss"
             android:layout_width="match_parent"
@@ -456,59 +445,45 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-<!-- LOCATION -->
-<!-- ========================================================= -->
-<LinearLayout
-    android:id="@+id/headerLocation"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:padding="12dp"
-    android:gravity="center_vertical"
-    android:layout_marginTop="6dp"
-    android:clickable="true">
+        <!-- LOCATION -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Location Services"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Location Services"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
-    <TextView
-        android:id="@+id/iconLocationToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp"/>
-</LinearLayout>
+            <TextView
+                android:id="@+id/iconLocationToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
 
-<!-- 🔥 THIS is the real content block the Java expects -->
-<TextView
-    android:id="@+id/txtLocationContent"
-    android:visibility="gone"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#00FFBF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"/>
-
-<!-- Remove this — NOT needed -->
-<!--
-<TextView
-    android:id="@+id/txtLocationContentSecondary"
-    android:visibility="gone"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"/>
--->
+        <TextView
+            android:id="@+id/txtLocationContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
         <!-- TELEPHONY / MODEM -->
@@ -551,7 +526,6 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
-        <!-- Extra telephony blocks (reserved) -->
         <TextView
             android:id="@+id/txtSimContent"
             android:visibility="gone"
@@ -573,45 +547,45 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-<!-- AUDIO / SPEAKERS / MICROPHONES -->
-<!-- ========================================================= -->
-<LinearLayout
-    android:id="@+id/headerAudioUnified"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:padding="12dp"
-    android:gravity="center_vertical"
-    android:layout_marginTop="6dp"
-    android:clickable="true">
+        <!-- AUDIO UNIFIED -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerAudioUnified"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:clickable="true">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Audio / Speakers / Microphones"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Audio / Speakers / Microphones"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
 
-    <TextView
-        android:id="@+id/iconAudioUnifiedToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp"/>
-</LinearLayout>
+            <TextView
+                android:id="@+id/iconAudioUnifiedToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp"/>
+        </LinearLayout>
 
-<TextView
-    android:id="@+id/txtAudioUnifiedContent"
-    android:visibility="gone"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"/>
+        <TextView
+            android:id="@+id/txtAudioUnifiedContent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"/>
 
         <!-- ========================================================= -->
         <!-- SENSORS -->
@@ -654,7 +628,9 @@
             android:textSize="14sp"
             android:padding="12dp"/>
 
+        <!-- ========================================================= -->
         <!-- SENSORS EXTENDED -->
+        <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSensorsExtended"
             android:layout_width="match_parent"
@@ -899,7 +875,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- SYSTEM FEATURES MATRIX -->
+        <!-- SYSTEM FEATURES -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerSystemFeatures"
@@ -1022,7 +998,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- OTHER PERIPHERALS (LAST) -->
+        <!-- OTHER PERIPHERALS -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerOtherPeripherals"

@@ -1383,11 +1383,12 @@ private String buildMicsInfo() {
     return sb.toString();
     }
 
+// ============================================================================
 // 2) AUDIO HAL — FIXED & CLEAN
+// ============================================================================
 private String buildAudioHalInfo() {
     StringBuilder sb = new StringBuilder();
 
-    // HAL version
     String hal = getProp("ro.audio.hal.version");
     sb.append("Audio HAL        : ")
       .append(hal != null && !hal.isEmpty() ? hal : "Not exposed")
@@ -1401,53 +1402,47 @@ private String buildAudioHalInfo() {
 
             AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
 
-            for (AudioDeviceInfo d : outs) {
-                int type = d.getType();
-                String label;
+            for (AudioDeviceInfo fi : outs) {
 
+                String name = fi.getProductName() != null ? fi.getProductName().toString() : "";
+                int type = fi.getType();
+
+                String label;
                 switch (type) {
                     case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
                         label = "Built-in Speaker"; speaker = true; break;
-
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                         label = "Wired Output"; wired = true; break;
-
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
                         label = "Bluetooth Output"; bt = true; break;
-
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
                     case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Audio Output"; usb = true; break;
-
+                        label = "USB Output"; usb = true; break;
                     case AudioDeviceInfo.TYPE_HDMI:
                         label = "HDMI Output"; hdmi = true; break;
-
                     default:
-                        label = "Output Type " + type;
+                        label = "Output Type " + type; break;
                 }
 
                 sb.append("• ").append(label).append("\n");
-                sb.append("   Device ID     : ").append(d.getId()).append("\n");
-
-                CharSequence p = d.getProductName();
-                if (p != null && p.length() > 0)
-                    sb.append("   Name          : ").append(p).append("\n");
-
-                sb.append("\n");
+                sb.append("   Present       : Yes\n");
+                sb.append("   Name          : ").append(name.isEmpty() ? "N/A" : name).append("\n");
+                sb.append("   Device ID     : ").append(fi.getId()).append("\n\n");
             }
         }
+
     } catch (Throwable ignore) {}
 
     sb.append("=== Summary ===\n");
-    sb.append("Speaker          : ").append(speaker ? "Yes" : "No").append("\n");
+    sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
     sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
     sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
-    sb.append("USB Audio        : ").append(usb     ? "Yes" : "No").append("\n");
-    sb.append("HDMI             : ").append(hdmi    ? "Yes" : "No").append("\n");
+    sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
+    sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : Full mixer paths, gain tables, audio policy require root access.\n");
+    sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles require root.\n");
 
     return sb.toString();
 }

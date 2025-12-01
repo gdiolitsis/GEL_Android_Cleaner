@@ -143,7 +143,6 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView txtSensorsContent          = findViewById(R.id.txtSensorsContent);
     TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
     TextView txtLocationContent         = findViewById(R.id.txtLocationContent);
-    TextView txtBluetoothContent        = findViewById(R.id.txtBluetoothContent);
     TextView txtNfcContent              = findViewById(R.id.txtNfcContent);
     TextView txtBatteryContent          = findViewById(R.id.txtBatteryContent);
     TextView txtOtherPeripherals        = findViewById(R.id.txtOtherPeripheralsContent);
@@ -175,7 +174,6 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView iconSensors                = findViewById(R.id.iconSensorsToggle);
     TextView iconConnectivity           = findViewById(R.id.iconConnectivityToggle);
     TextView iconLocation               = findViewById(R.id.iconLocationToggle);
-    TextView iconBluetooth              = findViewById(R.id.iconBluetoothToggle);
     TextView iconNfc                    = findViewById(R.id.iconNfcToggle);
     TextView iconBattery                = findViewById(R.id.iconBatteryToggle);
     TextView iconOther                  = findViewById(R.id.iconOtherPeripheralsToggle);
@@ -238,7 +236,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerSensors),             txtSensorsContent,         iconSensors);
     setupSection(findViewById(R.id.headerConnectivity),        txtConnectivityContent,    iconConnectivity);
     setupSection(findViewById(R.id.headerLocation),            txtLocationContent,        iconLocation);
-    setupSection(findViewById(R.id.headerBluetooth),           txtBluetoothContent,       iconBluetooth);
     setupSection(findViewById(R.id.headerNfc),                 txtNfcContent,             iconNfc);
     setupSection(findViewById(R.id.headerBattery),             txtBatteryContent,         iconBattery);
     setupSection(findViewById(R.id.headerOtherPeripherals),    txtOtherPeripherals,       iconOther);
@@ -2043,7 +2040,6 @@ private void populateAllSections() {
     set(R.id.txtBiometricsContent,       buildBiometricsInfo());
 
     // WIRELESS PERIPHERALS
-    set(R.id.txtBluetoothContent,        buildBluetoothInfo());
     set(R.id.txtNfcContent,              buildNfcInfo());
     set(R.id.txtGnssContent,             buildGnssInfo());
     set(R.id.txtUwbContent,              buildUwbInfo());

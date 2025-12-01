@@ -146,9 +146,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         TextView title = findViewById(R.id.txtTitleDevice);
         if (title != null) title.setText(getString(R.string.phone_info_peripherals));
 
-        // ============================================================
-// OLD SECTIONS (EXACT MATCH WITH XML)
-// ============================================================
 TextView txtCameraContent         = findViewById(R.id.txtCameraContent);
 TextView txtBiometricsContent     = findViewById(R.id.txtBiometricsContent);
 TextView txtSensorsContent        = findViewById(R.id.txtSensorsContent);
@@ -162,10 +159,6 @@ TextView txtHapticsContent        = findViewById(R.id.txtHapticsContent);
 TextView txtGnssContent           = findViewById(R.id.txtGnssContent);
 TextView txtUsbContent            = findViewById(R.id.txtUsbContent);
 TextView txtRootContent           = findViewById(R.id.txtRootContent);
-
-// ============================================================
-// NEW MEGA-UPGRADE SECTIONS
-// ============================================================
 TextView txtThermalContent        = findViewById(R.id.txtThermalContent);
 TextView txtDisplayContent        = findViewById(R.id.txtDisplayContent);
 TextView txtCpuContent            = findViewById(R.id.txtCpuContent);
@@ -177,10 +170,6 @@ TextView txtAudioUnifiedContent   = findViewById(R.id.txtAudioUnifiedContent);
 TextView txtSensorsExtendedContent= findViewById(R.id.txtSensorsExtendedContent);
 TextView txtSystemFeaturesContent = findViewById(R.id.txtSystemFeaturesContent);
 TextView txtSecurityFlagsContent  = findViewById(R.id.txtSecurityFlagsContent);
-
-// ============================================================
-// ICONS — OLD
-// ============================================================
 TextView iconCamera               = findViewById(R.id.iconCameraToggle);
 TextView iconBiometrics           = findViewById(R.id.iconBiometricsToggle);
 TextView iconSensors              = findViewById(R.id.iconSensorsToggle);
@@ -194,10 +183,6 @@ TextView iconHaptics              = findViewById(R.id.iconHapticsToggle);
 TextView iconGnss                 = findViewById(R.id.iconGnssToggle);
 TextView iconUsb                  = findViewById(R.id.iconUsbToggle);
 TextView iconRoot                 = findViewById(R.id.iconRootToggle);
-
-// ============================================================
-// ICONS — NEW SECTIONS
-// ============================================================
 TextView iconThermal              = findViewById(R.id.iconThermalToggle);
 TextView iconDisplay              = findViewById(R.id.iconDisplayToggle);
 TextView iconCpu                  = findViewById(R.id.iconCpuToggle);
@@ -214,14 +199,11 @@ TextView iconSecurityFlags        = findViewById(R.id.iconSecurityFlagsToggle);
 // ALL CONTENTS
 // ============================================================
 allContents = new TextView[]{
-        // OLD
         txtCameraContent, txtBiometricsContent, txtSensorsContent,
         txtConnectivityContent, txtLocationContent, txtNfcContent,
         txtBatteryContent, txtOtherPeripherals, txtUwbContent,
         txtHapticsContent, txtGnssContent, txtUsbContent,
         txtRootContent,
-
-        // NEW
         txtThermalContent, txtDisplayContent, txtCpuContent, txtGpuContent,
         txtMemoryContent, txtModemContent, txtWifiAdvancedContent,
         txtAudioUnifiedContent, txtSensorsExtendedContent,
@@ -232,12 +214,9 @@ allContents = new TextView[]{
 // ALL ICONS
 // ============================================================
 allIcons = new TextView[]{
-        // OLD
         iconCamera, iconBiometrics, iconSensors, iconConnectivity,
         iconLocation, iconNfc, iconBattery, iconOther,
         iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
-
-        // NEW
         iconThermal, iconDisplay, iconCpu, iconGpu,
         iconMemory, iconModem, iconWifiAdvanced,
         iconAudioUnified, iconSensorsExtended,
@@ -265,11 +244,7 @@ setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,     
 setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
 setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
 setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
-
-// ONE AUDIO BLOCK
 setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
-
-// NEW HEADERS
 setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
 setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
 setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);

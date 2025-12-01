@@ -30,6 +30,8 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
+import android.location.GnssAntennaInfo;
+import android.location.GnssCapabilities;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -294,20 +296,20 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }  // 🔥🔥🔥 ΕΔΩ ΤΕΛΕΙΩΝΕΙ ΤΟ onCreate() — ΜΗΝ ΤΟ ΑΓΓΙΞΕΙΣ !!!
 
     // ============================================================
-// GEL Section Setup Engine — FINAL FIX (Missing Method Error)
-// ============================================================
-private void setupSection(View header, TextView content, TextView icon) {
+    // GEL Section Setup Engine — FINAL FIX (Missing Method Error)
+    // ============================================================
+    private void setupSection(View header, TextView content, TextView icon) {
 
-    if (header == null || content == null || icon == null)
-        return;
+        if (header == null || content == null || icon == null)
+            return;
 
-    // Start collapsed
-    content.setVisibility(View.GONE);
-    icon.setText("＋");
+        // Start collapsed
+        content.setVisibility(View.GONE);
+        icon.setText("＋");
 
-    header.setOnClickListener(v -> toggleSection(content, icon));
-}
-    
+        header.setOnClickListener(v -> toggleSection(content, icon));
+    }
+
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================
@@ -1225,978 +1227,996 @@ private void setupSection(View header, TextView content, TextView icon) {
         } catch (Throwable ignore) {}
 
         // ---------------------------------------------------
-    // GNSS BATCHING (Android 7+)
-    // ---------------------------------------------------
-    try {
-        boolean batch = pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GNSS_BATCHING);
-        sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
-    } catch (Throwable ignore) {}
-
-    // ---------------------------------------------------
-    // ANTENNA INFO (Android 12+)
-    // ---------------------------------------------------
-    if (Build.VERSION.SDK_INT >= 31 && lm != null) {
+        // GNSS BATCHING (Android 7+)
+        // ---------------------------------------------------
         try {
-            List<GnssAntennaInfo> antennas = lm.getGnssAntennaInfos();
-            sb.append("Antenna Info     : ").append(antennas != null && !antennas.isEmpty() ? "Present" : "None").append("\n");
-        } catch (Throwable ignore) {
-            sb.append("Antenna Info     : Not exposed\n");
-        }
-    }
+            boolean batch = pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GNSS_BATCHING);
+            sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
+        } catch (Throwable ignore) {}
 
-    // ---------------------------------------------------
-    // NMEA Support (Android 7+)
-    // ---------------------------------------------------
-    sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
-
-    // ---------------------------------------------------
-    // GNSS CAPABILITIES (Android 11+)
-    // ---------------------------------------------------
-    if (Build.VERSION.SDK_INT >= 30 && lm != null) {
-        try {
-            GnssCapabilities caps = lm.getGnssCapabilities();
-            sb.append("\nCapabilities     :\n");
-            sb.append("  Synchronous    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_SATELLITE_BLACKLIST) ? "Yes" : "No").append("\n");
-            sb.append("  Correlation    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_MEASUREMENT_CORRECTION) ? "Yes" : "No").append("\n");
-            sb.append("  Power Phase    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_LOW_POWER_MODE) ? "Yes" : "No").append("\n");
-            sb.append("  Nav Msg        : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_NAV_MESSAGES) ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {
-            sb.append("\nCapabilities     : Not exposed\n");
-        }
-    }
-
-    // ---------------------------------------------------
-    // SUPL / AGNSS (Assisted-GNSS)
-    // ---------------------------------------------------
-    sb.append("\nAssisted GNSS    :\n");
-    sb.append("  SUPL Support   : ").append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown").append("\n");
-    sb.append("  AGNSS Injection: ").append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No").append("\n");
-
-    // ---------------------------------------------------
-    // FINAL NOTE
-    // ---------------------------------------------------
-    sb.append("\nAdvanced         : Constellation breakdown, carrier phases,\n");
-    sb.append("                   GNSS logging and raw measurements require\n");
-    sb.append("                   system-level permissions or root access.\n");
-
-    return sb.toString();
-}
-
-private String buildUsbInfo() {
-    boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-    boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
-    sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced        : Low-level USB descriptors and power profiles require root access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================
-// GEL Other Peripherals Info v26 — Full Hardware Edition
-// ============================================================
-private String buildOtherPeripheralsInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("=== General Peripherals ===\n");
-
-    boolean vib          = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-    boolean flash        = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-    boolean ir           = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
-    boolean fm           = getPackageManager().hasSystemFeature("android.hardware.fm");
-    boolean hall         = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
-    boolean therm        = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
-    boolean hwkbd        = getPackageManager().hasSystemFeature("android.hardware.keyboard");
-    boolean wireless     = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
-    boolean step         = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
-    boolean vulkan       = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
-    boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
-    boolean barcode      = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
-    boolean tv           = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
-    boolean als          = getPackageManager().hasSystemFeature("android.hardware.light");
-
-    sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
-    sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
-    sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
-    sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
-    sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
-    sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
-    sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
-    sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
-    sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
-    sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
-    sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
-    sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
-    sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
-    sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
-
-    sb.append("\nAdvanced         : Extended peripheral diagnostics require root access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================================
-// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
-// ============================================================================
-
-// 1) MICROPHONES (v27)
-private String buildMicsInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    int wiredCount = 0, btCount = 0, usbCount = 0;
-    boolean hasBuiltin=false, hasTele=false, hasWired=false, hasBT=false, hasUSB=false;
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
-
-            for (AudioDeviceInfo d : devs) {
-                String name = d.getProductName() != null ? d.getProductName().toString().trim() : "";
-                int type = d.getType();
-
-                boolean fakeName =
-                        name.isEmpty() ||
-                        name.equalsIgnoreCase(Build.MODEL) ||
-                        name.matches("^[A-Z0-9_-]{8,}$");
-
-                String label;
-
-                switch (type) {
-                    case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                        label = "Built-in Mic"; hasBuiltin = true; break;
-                    case AudioDeviceInfo.TYPE_TELEPHONY:
-                        label = "Telephony Mic"; hasTele = true; break;
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        label = "Wired Headset Mic"; wiredCount++; hasWired = true; break;
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        label = "Bluetooth Mic"; btCount++; hasBT = true; break;
-                    case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Mic"; usbCount++; hasUSB = true; break;
-                    default:
-                        label = "Input Type " + type; break;
-                }
-
-                sb.append("• ").append(label).append("\n");
-                sb.append("   Present       : Yes\n");
-                if (!name.isEmpty()) sb.append("   Name          : ").append(name).append("\n");
-                sb.append("   Fake-ID       : ").append(fakeName ? "Yes" : "No").append("\n");
-                sb.append("   Device ID     : ").append(d.getId()).append("\n\n");
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    if (sb.length() == 0)
-        sb.append("No microphones are reported by the current audio service.\n");
-
-    sb.append("=== Summary ===\n");
-    sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
-    sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
-    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No").append(" (").append(wiredCount).append(")\n");
-    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
-    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
-
-    sb.append("\nAdvanced         : Raw audio routing matrices require root access.\n");
-
-    appendAccessInstructions(sb, "mic");
-    return sb.toString();
-    }
-
-// ============================================================================
-// 2) AUDIO HAL — FIXED & CLEAN
-// ============================================================================
-private String buildAudioHalInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    String hal = getProp("ro.audio.hal.version");
-    sb.append("Audio HAL        : ")
-      .append(hal != null && !hal.isEmpty() ? hal : "Not exposed")
-      .append("\n\n");
-
-    boolean speaker = false, wired = false, bt = false, usb = false, hdmi = false;
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-
-            for (AudioDeviceInfo fi : outs) {
-
-                String name = fi.getProductName() != null ? fi.getProductName().toString() : "";
-                int type = fi.getType();
-
-                String label;
-                switch (type) {
-                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                        label = "Built-in Speaker"; speaker = true; break;
-                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                        label = "Wired Output"; wired = true; break;
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                        label = "Bluetooth Output"; bt = true; break;
-                    case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Output"; usb = true; break;
-                    case AudioDeviceInfo.TYPE_HDMI:
-                        label = "HDMI Output"; hdmi = true; break;
-                    default:
-                        label = "Output Type " + type; break;
-                }
-
-                sb.append("• ").append(label).append("\n");
-                sb.append("   Present       : Yes\n");
-                sb.append("   Name          : ").append(name.isEmpty() ? "N/A" : name).append("\n");
-                sb.append("   Device ID     : ").append(fi.getId()).append("\n\n");
+        // ---------------------------------------------------
+        // ANTENNA INFO (Android 12+)
+        // ---------------------------------------------------
+        if (Build.VERSION.SDK_INT >= 31 && lm != null) {
+            try {
+                List<GnssAntennaInfo> antennas = lm.getGnssAntennaInfos();
+                sb.append("Antenna Info     : ").append(antennas != null && !antennas.isEmpty() ? "Present" : "None").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Antenna Info     : Not exposed\n");
             }
         }
 
-    } catch (Throwable ignore) {}
+        // ---------------------------------------------------
+        // NMEA Support (Android 7+)
+        // ---------------------------------------------------
+        sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
 
-    sb.append("=== Summary ===\n");
-    sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
-    sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
-    sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
-    sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
-    sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
-
-    sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles require root.\n");
-
-    return sb.toString();
-}
-
-// 3) AUDIO EXTENDED
-private String buildAudioExtendedInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            // Legacy routing snapshot
-            String r = am.getParameters("routing");
-            if (r != null && !r.isEmpty())
-                sb.append("Legacy Routing   : ").append(r).append("\n");
-
-            // Hardware flag
-            if (Build.VERSION.SDK_INT >= 23) {
-                boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
-                sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths require root access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================
-// Root Info
-// ============================================================
-private String buildRootInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("Root Access Mode : ")
-      .append(isRooted ? "Rooted device (superuser access detected)"
-                       : "Non-rooted device (standard access)")
-      .append("\n");
-
-    sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
-
-    String secure = getProp("ro.secure");
-    if (secure != null && !secure.isEmpty()) {
-        sb.append("ro.secure        : ").append(secure).append("\n");
-    }
-
-    String dbg = getProp("ro.debuggable");
-    if (dbg != null && !dbg.isEmpty()) {
-        sb.append("ro.debuggable    : ").append(dbg).append("\n");
-    }
-
-    String verity = getProp("ro.boot.veritymode");
-    if (verity != null && !verity.isEmpty()) {
-        sb.append("Verity Mode      : ").append(verity).append("\n");
-    }
-
-    String selinux = getProp("ro.build.selinux");
-    if (selinux != null && !selinux.isEmpty()) {
-        sb.append("SELinux          : ").append(selinux).append("\n");
-    }
-
-    sb.append("\nFusion Layer     : ");
-    if (isRooted) {
-        sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
-    } else {
-        sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
-    }
-
-    if (isRooted) {
-        sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
-        sb.append("Extended hardware diagnostics are active.\n");
-
-        sb.append("\nRoot indicators:\n");
-
-        String[] paths = {
-                "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                "/system/su", "/system/bin/.ext/.su",
-                "/system/usr/we-need-root/su-backup",
-                "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-        };
-
-        for (String p : paths) {
-            if (new File(p).exists()) {
-                sb.append("  ").append(p).append("\n");
+        // ---------------------------------------------------
+        // GNSS CAPABILITIES (Android 11+)
+        // ---------------------------------------------------
+        if (Build.VERSION.SDK_INT >= 30 && lm != null) {
+            try {
+                GnssCapabilities caps = lm.getGnssCapabilities();
+                sb.append("\nCapabilities     :\n");
+                sb.append("  Synchronous    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_SATELLITE_BLACKLIST) ? "Yes" : "No").append("\n");
+                sb.append("  Correlation    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_MEASUREMENT_CORRECTION) ? "Yes" : "No").append("\n");
+                sb.append("  Power Phase    : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_LOW_POWER_MODE) ? "Yes" : "No").append("\n");
+                sb.append("  Nav Msg        : ").append(caps.hasCapability(GnssCapabilities.CAPABILITY_NAV_MESSAGES) ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("\nCapabilities     : Not exposed\n");
             }
         }
 
-        sb.append("\nPeripherals telemetry is running with root access.\n");
+        // ---------------------------------------------------
+        // SUPL / AGNSS (Assisted-GNSS)
+        // ---------------------------------------------------
+        sb.append("\nAssisted GNSS    :\n");
+        sb.append("  SUPL Support   : ").append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown").append("\n");
+        sb.append("  AGNSS Injection: ").append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No").append("\n");
 
-    } else {
-        sb.append("\nThis device is not rooted.\n");
-        sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
-        sb.append("Extended hardware diagnostics require root access.\n");
-    }
+        // ---------------------------------------------------
+        // FINAL NOTE
+        // ---------------------------------------------------
+        sb.append("\nAdvanced         : Constellation breakdown, carrier phases,\n");
+        sb.append("                   GNSS logging and raw measurements require\n");
+        sb.append("                   system-level permissions or root access.\n");
 
-    return sb.toString();
-}
-
-// ============================================================
-// NEW MEGA-UPGRADE SECTIONS (1–12)
-// ============================================================
-
-// 1. Thermal Engine / Cooling Profiles
-private String buildThermalInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
-    File[] cools = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("thermal_zone");
-                }
-            });
-            cools = thermalDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("cooling_device");
-                }
-            });
-        }
-    } catch (Throwable ignore) { }
-
-    int zoneCount = zones != null ? zones.length : 0;
-    int coolCount = cools != null ? cools.length : 0;
-
-    sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
-    sb.append("Cooling Devices  : ").append(coolCount).append("\n");
-
-    if (zoneCount == 0 && coolCount == 0) {
-        sb.append("Advanced         : Some devices restrict /sys thermal nodes; basic sensors use Android APIs, full trip tables require root.\n");
         return sb.toString();
     }
 
-    if (zoneCount > 0) {
-        sb.append("\nSample Zone      :\n");
-        try {
-            File z0 = zones[0];
-            String type = readSysString(z0.getAbsolutePath() + "/type");
-            String temp = readSysString(z0.getAbsolutePath() + "/temp");
+    private String buildUsbInfo() {
+        boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
+        boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
+        StringBuilder sb = new StringBuilder();
 
-            if (type != null && type.trim().length() > 0) {
-                sb.append("  Type           : ").append(type).append("\n");
-            }
-            if (temp != null && temp.trim().length() > 0) {
-                sb.append("  Temp (raw)     : ").append(temp).append("\n");
-            }
-        } catch (Throwable ignore) { }
+        sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
+        sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
+        sb.append("Advanced        : Low-level USB descriptors and power profiles require root access.\n");
+
+        return sb.toString();
     }
 
-    sb.append("Advanced         : Full thermal trip tables and throttling profiles require root access and OEM-specific parsing.\n");
+    // ============================================================
+    // GEL Other Peripherals Info v26 — Full Hardware Edition
+    // ============================================================
+    private String buildOtherPeripheralsInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    return sb.toString();
-}
+        sb.append("=== General Peripherals ===\n");
 
-// 2. Display / HDR / Refresh + Accurate Diagonal (inches)
-private String buildDisplayInfo() {
-    StringBuilder sb = new StringBuilder();
+        boolean vib          = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+        boolean flash        = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+        boolean ir           = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
+        boolean fm           = getPackageManager().hasSystemFeature("android.hardware.fm");
+        boolean hall         = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
+        boolean therm        = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
+        boolean hwkbd        = getPackageManager().hasSystemFeature("android.hardware.keyboard");
+        boolean wireless     = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
+        boolean step         = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
+        boolean vulkan       = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
+        boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
+        boolean barcode      = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
+        boolean tv           = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
+        boolean als          = getPackageManager().hasSystemFeature("android.hardware.light");
 
-    try {
-        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        if (wm != null) {
-            Display display = wm.getDefaultDisplay();
-            DisplayMetrics dm = new DisplayMetrics();
-            display.getRealMetrics(dm);
+        sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
+        sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
+        sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
+        sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
+        sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
+        sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
+        sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
+        sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
+        sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
+        sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
+        sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
+        sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
+        sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
+        sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
 
-            // -------------------------------------------
-            // BASIC SCREEN METRICS
-            // -------------------------------------------
-            int w = dm.widthPixels;
-            int h = dm.heightPixels;
-            int dpi = dm.densityDpi;
-            float sx = dm.xdpi;
-            float sy = dm.ydpi;
+        sb.append("\nAdvanced         : Extended peripheral diagnostics require root access.\n");
 
-            sb.append("Resolution       : ")
-                    .append(w).append(" x ").append(h).append(" px\n");
-            sb.append("Density (DPI)    : ").append(dpi).append("\n");
-            sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
+        return sb.toString();
+    }
 
-            // -------------------------------------------
-            // REFRESH RATE
-            // -------------------------------------------
-            float refresh = display.getRefreshRate();
-            sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
+    // ============================================================================
+    // AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
+    // ============================================================================
 
-            if (Build.VERSION.SDK_INT >= 30) {
-                Display.Mode[] modes = display.getSupportedModes();
-                float maxR = 0f;
-                for (Display.Mode m : modes) {
-                    if (m.getRefreshRate() > maxR) {
-                        maxR = m.getRefreshRate();
+    // 1) MICROPHONES (v27)
+    private String buildMicsInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        int wiredCount = 0, btCount = 0, usbCount = 0;
+        boolean hasBuiltin=false, hasTele=false, hasWired=false, hasBT=false, hasUSB=false;
+
+        try {
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
+
+                for (AudioDeviceInfo d : devs) {
+                    String name = d.getProductName() != null ? d.getProductName().toString().trim() : "";
+                    int type = d.getType();
+
+                    boolean fakeName =
+                            name.isEmpty() ||
+                            name.equalsIgnoreCase(Build.MODEL) ||
+                            name.matches("^[A-Z0-9_-]{8,}$");
+
+                    String label;
+
+                    switch (type) {
+                        case AudioDeviceInfo.TYPE_BUILTIN_MIC:
+                            label = "Built-in Mic"; hasBuiltin = true; break;
+                        case AudioDeviceInfo.TYPE_TELEPHONY:
+                            label = "Telephony Mic"; hasTele = true; break;
+                        case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                        case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                            label = "Wired Headset Mic"; wiredCount++; hasWired = true; break;
+                        case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                        case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                            label = "Bluetooth Mic"; btCount++; hasBT = true; break;
+                        case AudioDeviceInfo.TYPE_USB_DEVICE:
+                        case AudioDeviceInfo.TYPE_USB_HEADSET:
+                            label = "USB Mic"; usbCount++; hasUSB = true; break;
+                        default:
+                            label = "Input Type " + type; break;
                     }
+
+                    sb.append("• ").append(label).append("\n");
+                    sb.append("   Present       : Yes\n");
+                    if (!name.isEmpty()) sb.append("   Name          : ").append(name).append("\n");
+                    sb.append("   Fake-ID       : ").append(fakeName ? "Yes" : "No").append("\n");
+                    sb.append("   Device ID     : ").append(d.getId()).append("\n\n");
                 }
-                if (maxR > 0f) {
-                    sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
-                }
             }
+        } catch (Throwable ignore) {}
 
-            // -------------------------------------------
-            // WIDE COLOR & HDR
-            // -------------------------------------------
-            if (Build.VERSION.SDK_INT >= 26) {
-                boolean wide = display.isWideColorGamut();
-                sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
-            }
+        if (sb.length() == 0)
+            sb.append("No microphones are reported by the current audio service.\n");
 
-            if (Build.VERSION.SDK_INT >= 24) {
-                try {
-                    Display.HdrCapabilities hc = display.getHdrCapabilities();
-                    int[] types = hc.getSupportedHdrTypes();
-                    sb.append("HDR Modes        : ");
-                    if (types == null || types.length == 0) sb.append("None\n");
-                    else sb.append(types.length).append(" modes\n");
-                } catch (Throwable ignore) {}
-            }
+        sb.append("=== Summary ===\n");
+        sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
+        sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
+        sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No").append(" (").append(wiredCount).append(")\n");
+        sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
+        sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
 
-            // -------------------------------------------
-            // ORIENTATION
-            // -------------------------------------------
-            Configuration cfg = getResources().getConfiguration();
-            sb.append("Orientation      : ")
-                    .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ?
-                            "Landscape" : "Portrait")
-                    .append("\n");
+        sb.append("\nAdvanced         : Raw audio routing matrices require root access.\n");
 
-            // -------------------------------------------
-            // DIAGONAL SIZE (INCHES)
-            // -------------------------------------------
-            double inchW = (double) w / sx;
-            double inchH = (double) h / sy;
-            double diag = Math.sqrt(inchW * inchW + inchH * inchH);
+        appendAccessInstructions(sb, "mic");
+        return sb.toString();
+    }
 
-            sb.append("Screen Size      : ")
-                    .append(String.format(Locale.US, "%.2f", diag))
-                    .append("\"\n");
-        }
+    // ============================================================================
+    // 2) AUDIO HAL — FIXED & CLEAN
+    // ============================================================================
+    private String buildAudioHalInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    } catch (Throwable ignore) { }
+        String hal = getProp("ro.audio.hal.version");
+        sb.append("Audio HAL        : ")
+          .append(hal != null && !hal.isEmpty() ? hal : "Not exposed")
+          .append("\n\n");
 
-    // -------------------------------------------
-    // ADVANCED (green block text)
-    // -------------------------------------------
-    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access and vendor-specific hooks.\n");
-
-    return sb.toString();
-}
-// 3. CPU Hardware Block
-private String buildCpuInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        int cores = Runtime.getRuntime().availableProcessors();
-        sb.append("Cores            : ").append(cores).append("\n");
-
-        String arch = System.getProperty("os.arch", "");
-        sb.append("Arch             : ").append(arch).append("\n");
-
-        String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
-                ? Build.SUPPORTED_ABIS[0] : "Unknown";
-        sb.append("Primary ABI      : ").append(abi).append("\n");
-
-        long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-        long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-
-        if (max > 0) sb.append("CPU0 Max Freq    : ").append(max).append(" kHz\n");
-        if (min > 0) sb.append("CPU0 Min Freq    : ").append(min).append(" kHz\n");
-        if (gov != null && !gov.isEmpty()) sb.append("Governor         : ").append(gov).append("\n");
+        boolean speaker = false, wired = false, bt = false, usb = false, hdmi = false;
 
         try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/cpuinfo"));
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.toLowerCase(Locale.US).startsWith("features")) {
-                    sb.append("Features Line    : ").append(line).append("\n");
-                    break;
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+
+                AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+
+                for (AudioDeviceInfo fi : outs) {
+
+                    String name = fi.getProductName() != null ? fi.getProductName().toString() : "";
+                    int type = fi.getType();
+
+                    String label;
+                    switch (type) {
+                        case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
+                            label = "Built-in Speaker"; speaker = true; break;
+                        case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                        case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                            label = "Wired Output"; wired = true; break;
+                        case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                        case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                            label = "Bluetooth Output"; bt = true; break;
+                        case AudioDeviceInfo.TYPE_USB_DEVICE:
+                        case AudioDeviceInfo.TYPE_USB_HEADSET:
+                            label = "USB Output"; usb = true; break;
+                        case AudioDeviceInfo.TYPE_HDMI:
+                            label = "HDMI Output"; hdmi = true; break;
+                        default:
+                            label = "Output Type " + type; break;
+                    }
+
+                    sb.append("• ").append(label).append("\n");
+                    sb.append("   Present       : Yes\n");
+                    sb.append("   Name          : ").append(name.isEmpty() ? "N/A" : name).append("\n");
+                    sb.append("   Device ID     : ").append(fi.getId()).append("\n\n");
                 }
             }
-            br.close();
+
+        } catch (Throwable ignore) {}
+
+        sb.append("=== Summary ===\n");
+        sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
+        sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
+        sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
+        sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
+        sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
+
+        sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles require root.\n");
+
+        return sb.toString();
+    }
+
+    // 3) AUDIO EXTENDED
+    private String buildAudioExtendedInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+
+                // Legacy routing snapshot
+                String r = am.getParameters("routing");
+                if (r != null && !r.isEmpty())
+                    sb.append("Legacy Routing   : ").append(r).append("\n");
+
+                // Hardware flag
+                if (Build.VERSION.SDK_INT >= 23) {
+                    boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
+                    sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
+                }
+            }
+        } catch (Throwable ignore) {}
+
+        sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths require root access.\n");
+
+        return sb.toString();
+    }
+
+    // 4) UNIFIED AUDIO BLOCK (for headerAudioUnified)
+    private String buildAudioUnifiedInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("=== Microphones ===\n");
+        sb.append(buildMicsInfo()).append("\n\n");
+
+        sb.append("=== Audio Outputs / HAL ===\n");
+        sb.append(buildAudioHalInfo()).append("\n\n");
+
+        sb.append("=== Extended Audio Paths ===\n");
+        sb.append(buildAudioExtendedInfo()).append("\n");
+
+        return sb.toString();
+    }
+
+    // ============================================================
+    // Root Info
+    // ============================================================
+    private String buildRootInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Root Access Mode : ")
+          .append(isRooted ? "Rooted device (superuser access detected)"
+                           : "Non-rooted device (standard access)")
+          .append("\n");
+
+        sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
+
+        String secure = getProp("ro.secure");
+        if (secure != null && !secure.isEmpty()) {
+            sb.append("ro.secure        : ").append(secure).append("\n");
+        }
+
+        String dbg = getProp("ro.debuggable");
+        if (dbg != null && !dbg.isEmpty()) {
+            sb.append("ro.debuggable    : ").append(dbg).append("\n");
+        }
+
+        String verity = getProp("ro.boot.veritymode");
+        if (verity != null && !verity.isEmpty()) {
+            sb.append("Verity Mode      : ").append(verity).append("\n");
+        }
+
+        String selinux = getProp("ro.build.selinux");
+        if (selinux != null && !selinux.isEmpty()) {
+            sb.append("SELinux          : ").append(selinux).append("\n");
+        }
+
+        sb.append("\nFusion Layer     : ");
+        if (isRooted) {
+            sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
+        } else {
+            sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
+        }
+
+        if (isRooted) {
+            sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
+            sb.append("Extended hardware diagnostics are active.\n");
+
+            sb.append("\nRoot indicators:\n");
+
+            String[] paths = {
+                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                    "/system/su", "/system/bin/.ext/.su",
+                    "/system/usr/we-need-root/su-backup",
+                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
+            };
+
+            for (String p : paths) {
+                if (new File(p).exists()) {
+                    sb.append("  ").append(p).append("\n");
+                }
+            }
+
+            sb.append("\nPeripherals telemetry is running with root access.\n");
+
+        } else {
+            sb.append("\nThis device is not rooted.\n");
+            sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
+            sb.append("Extended hardware diagnostics require root access.\n");
+        }
+
+        return sb.toString();
+    }
+
+    // ============================================================
+    // NEW MEGA-UPGRADE SECTIONS (1–12)
+    // ============================================================
+
+    // 1. Thermal Engine / Cooling Profiles
+    private String buildThermalInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        File thermalDir = new File("/sys/class/thermal");
+        File[] zones = null;
+        File[] cools = null;
+
+        try {
+            if (thermalDir.exists() && thermalDir.isDirectory()) {
+                zones = thermalDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return f.getName().startsWith("thermal_zone");
+                    }
+                });
+                cools = thermalDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return f.getName().startsWith("cooling_device");
+                    }
+                });
+            }
         } catch (Throwable ignore) { }
 
-    } catch (Throwable ignore) { }
+        int zoneCount = zones != null ? zones.length : 0;
+        int coolCount = cools != null ? cools.length : 0;
 
-    if (sb.length() == 0) {
-        sb.append("CPU information is not exposed by this device.\n");
-    }
+        sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
+        sb.append("Cooling Devices  : ").append(coolCount).append("\n");
 
-    sb.append("Advanced         : Big/Little clusters and per-core boost states require root access.\n");
-
-    return sb.toString();
-}
-
-// 4. GPU Hardware Layer
-private String buildGpuInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    String renderer = getProp("ro.hardware.egl");
-    String glesVer  = getProp("ro.opengles.version");
-    String vulkan   = getProp("ro.hardware.vulkan");
-
-    if (renderer != null && !renderer.isEmpty()) {
-        sb.append("Renderer         : ").append(renderer).append("\n");
-    } else {
-        sb.append("Renderer         : Not exposed at property level.\n");
-    }
-
-    if (glesVer != null && !glesVer.isEmpty()) {
-        sb.append("OpenGL ES Prop   : ").append(glesVer).append("\n");
-    }
-
-    if (vulkan != null && !vulkan.isEmpty()) {
-        sb.append("Vulkan Prop      : ").append(vulkan).append("\n");
-    }
-
-    sb.append("Advanced         : GPU clock states, queues and temperatures require root access and vendor-specific drivers.\n");
-
-    return sb.toString();
-}
-
-// 5. Memory / Storage IO
-private String buildMemoryInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        if (am != null) {
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-
-            long totalRamMb = mi.totalMem / (1024 * 1024);
-            long availRamMb = mi.availMem / (1024 * 1024);
-
-            sb.append("Total RAM        : ").append(totalRamMb).append(" MB\n");
-            sb.append("Avail RAM        : ").append(availRamMb).append(" MB\n");
-            sb.append("Low Memory       : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
+        if (zoneCount == 0 && coolCount == 0) {
+            sb.append("Advanced         : Some devices restrict /sys thermal nodes; basic sensors use Android APIs, full trip tables require root.\n");
+            return sb.toString();
         }
-    } catch (Throwable ignore) { }
 
-    try {
-        File dataDir = Environment.getDataDirectory();
-        StatFs sf = new StatFs(dataDir.getAbsolutePath());
+        if (zoneCount > 0) {
+            sb.append("\nSample Zone      :\n");
+            try {
+                File z0 = zones[0];
+                String type = readSysString(z0.getAbsolutePath() + "/type");
+                String temp = readSysString(z0.getAbsolutePath() + "/temp");
 
-        long blockSize = sf.getBlockSizeLong();
-        long total = sf.getBlockCountLong() * blockSize;
-        long avail = sf.getAvailableBlocksLong() * blockSize;
+                if (type != null && type.trim().length() > 0) {
+                    sb.append("  Type           : ").append(type).append("\n");
+                }
+                if (temp != null && temp.trim().length() > 0) {
+                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
+                }
+            } catch (Throwable ignore) { }
+        }
 
-        sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
-        sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
-    } catch (Throwable ignore) { }
+        sb.append("Advanced         : Full thermal trip tables and throttling profiles require root access and OEM-specific parsing.\n");
 
-    long zramSize = readSysLong("/sys/block/zram0/disksize");
-    if (zramSize > 0) {
-        sb.append("ZRAM Size        : ").append(zramSize / (1024 * 1024)).append(" MB\n");
+        return sb.toString();
     }
 
-    sb.append("Advanced         : I/O schedulers, UFS version and health metrics require root access and vendor block-layer hooks.\n");
+    // 2. Display / HDR / Refresh + Accurate Diagonal (inches)
+    private String buildDisplayInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    return sb.toString();
-}
+        try {
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) {
+                Display display = wm.getDefaultDisplay();
+                DisplayMetrics dm = new DisplayMetrics();
+                display.getRealMetrics(dm);
 
-// 6. Modem / Telephony (GEL Extended Edition)
-private String buildModemInfo() {
-    StringBuilder sb = new StringBuilder();
+                // -------------------------------------------
+                // BASIC SCREEN METRICS
+                // -------------------------------------------
+                int w = dm.widthPixels;
+                int h = dm.heightPixels;
+                int dpi = dm.densityDpi;
+                float sx = dm.xdpi;
+                float sy = dm.ydpi;
 
-    try {
-        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                sb.append("Resolution       : ")
+                        .append(w).append(" x ").append(h).append(" px\n");
+                sb.append("Density (DPI)    : ").append(dpi).append("\n");
+                sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
 
-        if (tm != null) {
+                // -------------------------------------------
+                // REFRESH RATE
+                // -------------------------------------------
+                float refresh = display.getRefreshRate();
+                sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
 
-            // -----------------------------
-            // BASIC PHONE TYPE
-            // -----------------------------
-            String typeStr;
-            switch (tm.getPhoneType()) {
-                case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
-                case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
-                case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
-                default:                                typeStr = "None";
-            }
-            sb.append("Phone Type       : ").append(typeStr).append("\n");
-
-
-            // -----------------------------
-            // DATA NETWORK TYPE (4G/5G detection)
-            // -----------------------------
-            int net = tm.getDataNetworkType();
-            sb.append("Data Network     : ").append(networkName(net)).append("\n");
-
-            boolean is5G =
-                    net == TelephonyManager.NETWORK_TYPE_NR;   // NR = New Radio (5G)
-            sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
-
-
-            // -----------------------------
-            // IMS REGISTRATION (VoLTE / VoWiFi / VoNR)
-            // -----------------------------
-            if (Build.VERSION.SDK_INT >= 30) {
-                try {
-                    boolean ims = tm.isImsRegistered();
-                    sb.append("IMS Registered   : ").append(ims ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) { }
-            }
-
-            // VoLTE
-            try {
-                boolean volte =
-                        (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-                sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("VoLTE Support    : Unknown\n");
-            }
-
-            // VoWiFi
-            try {
-                boolean vowifi =
-                        (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-                sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("VoWiFi Support   : Unknown\n");
-            }
-
-            // VoNR (Android 13+)
-            if (Build.VERSION.SDK_INT >= 33) {
-                try {
-                    boolean vonr =
-                            (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-                    sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("VoNR Support     : Unknown\n");
-                }
-            }
-
-
-            // -----------------------------
-            // SIGNAL STRENGTH (RSRP/RSRQ etc.)
-            // -----------------------------
-            try {
-                SignalStrength ss = tm.getSignalStrength();
-                if (ss != null) {
-                    sb.append("Signal Strength  : ").append(ss.getLevel()).append("/4\n");
-
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        CellSignalStrength cs = ss.getCellSignalStrengths().stream()
-                                .findFirst().orElse(null);
-                        if (cs != null) {
-                            sb.append("  RSRP           : ").append(cs.getDbm()).append(" dBm\n");
+                if (Build.VERSION.SDK_INT >= 30) {
+                    Display.Mode[] modes = display.getSupportedModes();
+                    float maxR = 0f;
+                    for (Display.Mode m : modes) {
+                        if (m.getRefreshRate() > maxR) {
+                            maxR = m.getRefreshRate();
                         }
                     }
+                    if (maxR > 0f) {
+                        sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
+                    }
                 }
-            } catch (Throwable ignore) { }
 
+                // -------------------------------------------
+                // WIDE COLOR & HDR
+                // -------------------------------------------
+                if (Build.VERSION.SDK_INT >= 26) {
+                    boolean wide = display.isWideColorGamut();
+                    sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
+                }
 
-            // -----------------------------
-            // CARRIER INFORMATION
-            // -----------------------------
-            try {
-                String carrier = tm.getNetworkOperatorName();
-                sb.append("Carrier          : ")
-                        .append(carrier != null ? carrier : "Unknown")
+                if (Build.VERSION.SDK_INT >= 24) {
+                    try {
+                        Display.HdrCapabilities hc = display.getHdrCapabilities();
+                        int[] types = hc.getSupportedHdrTypes();
+                        sb.append("HDR Modes        : ");
+                        if (types == null || types.length == 0) sb.append("None\n");
+                        else sb.append(types.length).append(" modes\n");
+                    } catch (Throwable ignore) {}
+                }
+
+                // -------------------------------------------
+                // ORIENTATION
+                // -------------------------------------------
+                Configuration cfg = getResources().getConfiguration();
+                sb.append("Orientation      : ")
+                        .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ?
+                                "Landscape" : "Portrait")
                         .append("\n");
-            } catch (Throwable ignore) { }
 
+                // -------------------------------------------
+                // DIAGONAL SIZE (INCHES)
+                // -------------------------------------------
+                double inchW = (double) w / sx;
+                double inchH = (double) h / sy;
+                double diag = Math.sqrt(inchW * inchW + inchH * inchH);
 
-            // -----------------------------
-            // ACTIVE SIM COUNT
-            // -----------------------------
-            if (Build.VERSION.SDK_INT >= 22) {
-                SubscriptionManager sm = (SubscriptionManager)
-                        getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-
-                if (sm != null) {
-                    List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                    sb.append("Active SIM Slots : ")
-                            .append(subs != null ? subs.size() : 0)
-                            .append("\n");
-                }
+                sb.append("Screen Size      : ")
+                        .append(String.format(Locale.US, "%.2f", diag))
+                        .append("\"\n");
             }
 
+        } catch (Throwable ignore) { }
 
-            // -----------------------------
-            // CARRIER AGGREGATION (4G+)
-            // -----------------------------
-            if (Build.VERSION.SDK_INT >= 29) {
-                try {
-                    ServiceState ss = tm.getServiceState();
-                    if (ss != null) {
-                        boolean ca = ss.isUsingCarrierAggregation();
-                        sb.append("4G+ CA           : ").append(ca ? "Yes" : "No").append("\n");
+        // -------------------------------------------
+        // ADVANCED (green block text)
+        // -------------------------------------------
+        sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access and vendor-specific hooks.\n");
+
+        return sb.toString();
+    }
+
+    // 3. CPU Hardware Block
+    private String buildCpuInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            int cores = Runtime.getRuntime().availableProcessors();
+            sb.append("Cores            : ").append(cores).append("\n");
+
+            String arch = System.getProperty("os.arch", "");
+            sb.append("Arch             : ").append(arch).append("\n");
+
+            String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
+                    ? Build.SUPPORTED_ABIS[0] : "Unknown";
+            sb.append("Primary ABI      : ").append(abi).append("\n");
+
+            long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+            long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
+            String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+
+            if (max > 0) sb.append("CPU0 Max Freq    : ").append(max).append(" kHz\n");
+            if (min > 0) sb.append("CPU0 Min Freq    : ").append(min).append(" kHz\n");
+            if (gov != null && !gov.isEmpty()) sb.append("Governor         : ").append(gov).append("\n");
+
+            try {
+                BufferedReader br = new BufferedReader(new FileReader("/proc/cpuinfo"));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line.toLowerCase(Locale.US).startsWith("features")) {
+                        sb.append("Features Line    : ").append(line).append("\n");
+                        break;
                     }
+                }
+                br.close();
+            } catch (Throwable ignore) { }
+
+        } catch (Throwable ignore) { }
+
+        if (sb.length() == 0) {
+            sb.append("CPU information is not exposed by this device.\n");
+        }
+
+        sb.append("Advanced         : Big/Little clusters and per-core boost states require root access.\n");
+
+        return sb.toString();
+    }
+
+    // 4. GPU Hardware Layer
+    private String buildGpuInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        String renderer = getProp("ro.hardware.egl");
+        String glesVer  = getProp("ro.opengles.version");
+        String vulkan   = getProp("ro.hardware.vulkan");
+
+        if (renderer != null && !renderer.isEmpty()) {
+            sb.append("Renderer         : ").append(renderer).append("\n");
+        } else {
+            sb.append("Renderer         : Not exposed at property level.\n");
+        }
+
+        if (glesVer != null && !glesVer.isEmpty()) {
+            sb.append("OpenGL ES Prop   : ").append(glesVer).append("\n");
+        }
+
+        if (vulkan != null && !vulkan.isEmpty()) {
+            sb.append("Vulkan Prop      : ").append(vulkan).append("\n");
+        }
+
+        sb.append("Advanced         : GPU clock states, queues and temperatures require root access and vendor-specific drivers.\n");
+
+        return sb.toString();
+    }
+
+    // 5. Memory / Storage IO
+    private String buildMemoryInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+
+                long totalRamMb = mi.totalMem / (1024 * 1024);
+                long availRamMb = mi.availMem / (1024 * 1024);
+
+                sb.append("Total RAM        : ").append(totalRamMb).append(" MB\n");
+                sb.append("Avail RAM        : ").append(availRamMb).append(" MB\n");
+                sb.append("Low Memory       : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
+            }
+        } catch (Throwable ignore) { }
+
+        try {
+            File dataDir = Environment.getDataDirectory();
+            StatFs sf = new StatFs(dataDir.getAbsolutePath());
+
+            long blockSize = sf.getBlockSizeLong();
+            long total = sf.getBlockCountLong() * blockSize;
+            long avail = sf.getAvailableBlocksLong() * blockSize;
+
+            sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
+            sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
+        } catch (Throwable ignore) { }
+
+        long zramSize = readSysLong("/sys/block/zram0/disksize");
+        if (zramSize > 0) {
+            sb.append("ZRAM Size        : ").append(zramSize / (1024 * 1024)).append(" MB\n");
+        }
+
+        sb.append("Advanced         : I/O schedulers, UFS version and health metrics require root access and vendor block-layer hooks.\n");
+
+        return sb.toString();
+    }
+
+    // 6. Modem / Telephony (GEL Extended Edition)
+    private String buildModemInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+            if (tm != null) {
+
+                // -----------------------------
+                // BASIC PHONE TYPE
+                // -----------------------------
+                String typeStr;
+                switch (tm.getPhoneType()) {
+                    case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
+                    case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
+                    case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
+                    default:                                typeStr = "None";
+                }
+                sb.append("Phone Type       : ").append(typeStr).append("\n");
+
+
+                // -----------------------------
+                // DATA NETWORK TYPE (4G/5G detection)
+                // -----------------------------
+                int net = tm.getDataNetworkType();
+                sb.append("Data Network     : ").append(networkName(net)).append("\n");
+
+                boolean is5G =
+                        net == TelephonyManager.NETWORK_TYPE_NR;   // NR = New Radio (5G)
+                sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
+
+
+                // -----------------------------
+                // IMS REGISTRATION (VoLTE / VoWiFi / VoNR)
+                // -----------------------------
+                if (Build.VERSION.SDK_INT >= 30) {
+                    try {
+                        boolean ims = tm.isImsRegistered();
+                        sb.append("IMS Registered   : ").append(ims ? "Yes" : "No").append("\n");
+                    } catch (Throwable ignore) { }
+                }
+
+                // VoLTE
+                try {
+                    boolean volte =
+                            (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
+                    sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {
+                    sb.append("VoLTE Support    : Unknown\n");
+                }
+
+                // VoWiFi
+                try {
+                    boolean vowifi =
+                            (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
+                    sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {
+                    sb.append("VoWiFi Support   : Unknown\n");
+                }
+
+                // VoNR (Android 13+)
+                if (Build.VERSION.SDK_INT >= 33) {
+                    try {
+                        boolean vonr =
+                                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
+                        sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
+                    } catch (Throwable ignore) {
+                        sb.append("VoNR Support     : Unknown\n");
+                    }
+                }
+
+
+                // -----------------------------
+                // SIGNAL STRENGTH (RSRP/RSRQ etc.)
+                // -----------------------------
+                try {
+                    SignalStrength ss = tm.getSignalStrength();
+                    if (ss != null) {
+                        sb.append("Signal Strength  : ").append(ss.getLevel()).append("/4\n");
+
+                        if (Build.VERSION.SDK_INT >= 29) {
+                            CellSignalStrength cs = ss.getCellSignalStrengths().stream()
+                                    .findFirst().orElse(null);
+                            if (cs != null) {
+                                sb.append("  RSRP           : ").append(cs.getDbm()).append(" dBm\n");
+                            }
+                        }
+                    }
+                } catch (Throwable ignore) { }
+
+
+                // -----------------------------
+                // CARRIER INFORMATION
+                // -----------------------------
+                try {
+                    String carrier = tm.getNetworkOperatorName();
+                    sb.append("Carrier          : ")
+                            .append(carrier != null ? carrier : "Unknown")
+                            .append("\n");
+                } catch (Throwable ignore) { }
+
+
+                // -----------------------------
+                // ACTIVE SIM COUNT
+                // -----------------------------
+                if (Build.VERSION.SDK_INT >= 22) {
+                    SubscriptionManager sm = (SubscriptionManager)
+                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+                    if (sm != null) {
+                        List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
+                        sb.append("Active SIM Slots : ")
+                                .append(subs != null ? subs.size() : 0)
+                                .append("\n");
+                    }
+                }
+
+
+                // -----------------------------
+                // CARRIER AGGREGATION (4G+)
+                // -----------------------------
+                if (Build.VERSION.SDK_INT >= 29) {
+                    try {
+                        ServiceState ss = tm.getServiceState();
+                        if (ss != null) {
+                            boolean ca = ss.isUsingCarrierAggregation();
+                            sb.append("4G+ CA           : ").append(ca ? "Yes" : "No").append("\n");
+                        }
+                    } catch (Throwable ignore) { }
+                }
+
+
+                // -----------------------------
+                // ROAMING
+                // -----------------------------
+                try {
+                    boolean roam = tm.isNetworkRoaming();
+                    sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
                 } catch (Throwable ignore) { }
             }
 
+        } catch (Throwable ignore) { }
 
-            // -----------------------------
-            // ROAMING
-            // -----------------------------
-            try {
-                boolean roam = tm.isNetworkRoaming();
-                sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) { }
-        }
+        sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
+        sb.append("                   require root access and OEM modem tools.\n");
 
-    } catch (Throwable ignore) { }
-
-    sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
-    sb.append("                   require root access and OEM modem tools.\n");
-
-    return sb.toString();
-}
-
-
-// ============================================================
-// Helper for data network type → readable label
-// ============================================================
-private String networkName(int type) {
-    switch (type) {
-        case TelephonyManager.NETWORK_TYPE_NR:  return "5G NR";
-        case TelephonyManager.NETWORK_TYPE_LTE: return "4G LTE";
-        case TelephonyManager.NETWORK_TYPE_HSPAP:
-        case TelephonyManager.NETWORK_TYPE_HSPA: return "3.5G HSPA";
-        case TelephonyManager.NETWORK_TYPE_UMTS: return "3G UMTS";
-        case TelephonyManager.NETWORK_TYPE_EDGE: return "2.75G EDGE";
-        case TelephonyManager.NETWORK_TYPE_GPRS: return "2.5G GPRS";
-        case TelephonyManager.NETWORK_TYPE_CDMA: return "2G CDMA";
-        default: return "Unknown";
-    }
-}
-
-// 7. WiFi Advanced (Ultra Enriched Edition)
-private String buildWifiAdvancedInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        PackageManager pm = getPackageManager();
-
-        if (wm != null) {
-
-            // ---- BASIC HW SUPPORT ----
-            boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
-            sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
-
-            // ---- FREQUENCY BANDS ----
-            if (Build.VERSION.SDK_INT >= 21) {
-                boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
-                sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
-            }
-
-            if (Build.VERSION.SDK_INT >= 21) {
-                boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-                sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
-            }
-
-            if (Build.VERSION.SDK_INT >= 30) {
-                try {
-                    boolean six = wm.is6GHzBandSupported();
-                    sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-            }
-
-            // ---- SECURITY MODES ----
-            if (Build.VERSION.SDK_INT >= 29) {
-                try {
-                    boolean wpa3 = wm.isWpa3SaeSupported();
-                    sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-
-                try {
-                    boolean wpa3Trans = wm.isWpa3SuiteBSupported();
-                    sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-            }
-
-            // ---- WIFI RTT (distance measurement) ----
-            if (Build.VERSION.SDK_INT >= 28) {
-                boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
-                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
-                  .append("  (Indoor distance)\n");
-            }
-
-            // ---- WI-FI AWARE / NAN ----
-            if (Build.VERSION.SDK_INT >= 26) {
-                boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
-                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
-                  .append("  (Device proximity)\n");
-            }
-
-            // ---- EASY CONNECT (DPP QR CODE) ----
-            if (Build.VERSION.SDK_INT >= 29) {
-                boolean dpp = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DPP);
-                sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
-            }
-
-            // ---- PASSPOINT / HOTSPOT 2.0 ----
-            if (Build.VERSION.SDK_INT >= 26) {
-                boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
-                sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
-            }
-
-            // ---- WI-FI DIRECT / P2P ----
-            boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-            sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
-
-            // ---- MAC RANDOMIZATION ----
-            if (Build.VERSION.SDK_INT >= 29) {
-                boolean macRand = wm.isEnhancedPowerReportingSupported();
-                sb.append("MAC Randomization: ").append(macRand ? "Yes" : "No").append("\n");
-            }
-
-            // ---- LINK LAYER STATS ----
-            try {
-                boolean stats = wm.isVerboseLoggingEnabled();
-                sb.append("Link Layer Stats : ").append(stats ? "Available" : "No").append("\n");
-            } catch (Throwable ignore) {}
-
-            // ---- POWER SAVE MODE ----
-            try {
-                boolean psm = wm.isScanAlwaysAvailable();
-                sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {}
-
-            // ---- REGULATORY DOMAIN ----
-            try {
-                String country = wm.getCountryCode();
-                sb.append("Country Code     : ").append(country != null ? country : "Unknown").append("\n");
-            } catch (Throwable ignore) {}
-        }
-    } catch (Throwable ignore) {}
-
-    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\n");
-    sb.append("                   and per-band limits require root access.\n");
-
-    return sb.toString();
-}
-
-// 8. Sensors EXTENDED
-private String buildSensorsExtendedInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sm != null) {
-            java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-            for (Sensor s : all) {
-                sb.append("• ").append(s.getName()).append("\n");
-                sb.append("   Type          : ").append(s.getType()).append("\n");
-                sb.append("   Vendor        : ").append(s.getVendor()).append("\n");
-                sb.append("   Max Range     : ").append(s.getMaximumRange()).append("\n");
-                sb.append("   Resolution    : ").append(s.getResolution()).append("\n");
-                sb.append("   Power (mA)    : ").append(s.getPower()).append("\n");
-                sb.append("   Min Delay     : ").append(s.getMinDelay()).append(" µs\n\n");
-            }
-        }
-    } catch (Throwable ignore) { }
-
-    if (sb.length() == 0) {
-        sb.append("Sensor extended metadata is not exposed by this device.\n");
+        return sb.toString();
     }
 
-    sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines require root access and vendor sensor HAL.\n");
 
-    return sb.toString();
-}
+    // ============================================================
+    // Helper for data network type → readable label
+    // ============================================================
+    private String networkName(int type) {
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_NR:  return "5G NR";
+            case TelephonyManager.NETWORK_TYPE_LTE: return "4G LTE";
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_HSPA: return "3.5G HSPA";
+            case TelephonyManager.NETWORK_TYPE_UMTS: return "3G UMTS";
+            case TelephonyManager.NETWORK_TYPE_EDGE: return "2.75G EDGE";
+            case TelephonyManager.NETWORK_TYPE_GPRS: return "2.5G GPRS";
+            case TelephonyManager.NETWORK_TYPE_CDMA: return "2G CDMA";
+            default: return "Unknown";
+        }
+    }
 
-// 9. System Feature Matrix
-private String buildSystemFeaturesInfo() {
-    StringBuilder sb = new StringBuilder();
+    // 7. WiFi Advanced (Ultra Enriched Edition)
+    private String buildWifiAdvancedInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    try {
-        PackageManager pm = getPackageManager();
-        FeatureInfo[] feats = pm.getSystemAvailableFeatures();
-        int count = feats != null ? feats.length : 0;
+        try {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            PackageManager pm = getPackageManager();
 
-        sb.append("Feature Count    : ").append(count).append("\n\n");
+            if (wm != null) {
 
-        if (feats != null) {
-            int shown = 0;
-            for (FeatureInfo fi : feats) {
-                if (fi == null) continue;
-                if (fi.name != null) {
-                    sb.append("• ").append(fi.name).append("\n");
-                    shown++;
+                // ---- BASIC HW SUPPORT ----
+                boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
+                sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
+
+                // ---- FREQUENCY BANDS ----
+                if (Build.VERSION.SDK_INT >= 21) {
+                    boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
+                    sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
                 }
-                if (shown >= 120) break;
+
+                if (Build.VERSION.SDK_INT >= 21) {
+                    boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+                    sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
+                }
+
+                if (Build.VERSION.SDK_INT >= 30) {
+                    try {
+                        boolean six = wm.is6GHzBandSupported();
+                        sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
+                    } catch (Throwable ignore) {}
+                }
+
+                // ---- SECURITY MODES ----
+                if (Build.VERSION.SDK_INT >= 29) {
+                    try {
+                        boolean wpa3 = wm.isWpa3SaeSupported();
+                        sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
+                    } catch (Throwable ignore) {}
+
+                    try {
+                        boolean wpa3Trans = wm.isWpa3SuiteBSupported();
+                        sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
+                    } catch (Throwable ignore) {}
+                }
+
+                // ---- WIFI RTT (distance measurement) ----
+                if (Build.VERSION.SDK_INT >= 28) {
+                    boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
+                    sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
+                      .append("  (Indoor distance)\n");
+                }
+
+                // ---- WI-FI AWARE / NAN ----
+                if (Build.VERSION.SDK_INT >= 26) {
+                    boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
+                    sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
+                      .append("  (Device proximity)\n");
+                }
+
+                // ---- EASY CONNECT (DPP QR CODE) ----
+                if (Build.VERSION.SDK_INT >= 29) {
+                    boolean dpp = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DPP);
+                    sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
+                }
+
+                // ---- PASSPOINT / HOTSPOT 2.0 ----
+                if (Build.VERSION.SDK_INT >= 26) {
+                    boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
+                    sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
+                }
+
+                // ---- WI-FI DIRECT / P2P ----
+                boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+                sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
+
+                // ---- MAC RANDOMIZATION ----
+                if (Build.VERSION.SDK_INT >= 29) {
+                    boolean macRand = wm.isEnhancedPowerReportingSupported();
+                    sb.append("MAC Randomization: ").append(macRand ? "Yes" : "No").append("\n");
+                }
+
+                // ---- LINK LAYER STATS ----
+                try {
+                    boolean stats = wm.isVerboseLoggingEnabled();
+                    sb.append("Link Layer Stats : ").append(stats ? "Available" : "No").append("\n");
+                } catch (Throwable ignore) {}
+
+                // ---- POWER SAVE MODE ----
+                try {
+                    boolean psm = wm.isScanAlwaysAvailable();
+                    sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
+                } catch (Throwable ignore) {}
+
+                // ---- REGULATORY DOMAIN ----
+                try {
+                    String country = wm.getCountryCode();
+                    sb.append("Country Code     : ").append(country != null ? country : "Unknown").append("\n");
+                } catch (Throwable ignore) {}
             }
+        } catch (Throwable ignore) {}
+
+        sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\n");
+        sb.append("                   and per-band limits require root access.\n");
+
+        return sb.toString();
+    }
+
+    // 8. Sensors EXTENDED
+    private String buildSensorsExtendedInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm != null) {
+                java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
+                for (Sensor s : all) {
+                    sb.append("• ").append(s.getName()).append("\n");
+                    sb.append("   Type          : ").append(s.getType()).append("\n");
+                    sb.append("   Vendor        : ").append(s.getVendor()).append("\n");
+                    sb.append("   Max Range     : ").append(s.getMaximumRange()).append("\n");
+                    sb.append("   Resolution    : ").append(s.getResolution()).append("\n");
+                    sb.append("   Power (mA)    : ").append(s.getPower()).append("\n");
+                    sb.append("   Min Delay     : ").append(s.getMinDelay()).append(" µs\n\n");
+                }
+            }
+        } catch (Throwable ignore) { }
+
+        if (sb.length() == 0) {
+            sb.append("Sensor extended metadata is not exposed by this device.\n");
         }
-    } catch (Throwable ignore) { }
 
-    if (sb.length() == 0) {
-        sb.append("No feature matrix exposed by PackageManager on this device.\n");
+        sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines require root access and vendor sensor HAL.\n");
+
+        return sb.toString();
     }
 
-    return sb.toString();
-}
-// 10. SELinux / Security Flags
-private String buildSecurityFlagsInfo() {
-    StringBuilder sb = new StringBuilder();
+    // 9. System Feature Matrix
+    private String buildSystemFeaturesInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    String kernel = readSysString("/proc/version");
-    if (kernel != null && !kernel.isEmpty()) {
-        sb.append("Kernel          : ").append(kernel).append("\n");
+        try {
+            PackageManager pm = getPackageManager();
+            FeatureInfo[] feats = pm.getSystemAvailableFeatures();
+            int count = feats != null ? feats.length : 0;
+
+            sb.append("Feature Count    : ").append(count).append("\n\n");
+
+            if (feats != null) {
+                int shown = 0;
+                for (FeatureInfo fi : feats) {
+                    if (fi == null) continue;
+                    if (fi.name != null) {
+                        sb.append("• ").append(fi.name).append("\n");
+                        shown++;
+                    }
+                    if (shown >= 120) break;
+                }
+            }
+        } catch (Throwable ignore) { }
+
+        if (sb.length() == 0) {
+            sb.append("No feature matrix exposed by PackageManager on this device.\n");
+        }
+
+        return sb.toString();
     }
 
-    String patch = Build.VERSION.SECURITY_PATCH;
-    if (patch != null && !patch.isEmpty()) {
-        sb.append("Security Patch  : ").append(patch).append("\n");
+    // 10. SELinux / Security Flags
+    private String buildSecurityFlagsInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        String kernel = readSysString("/proc/version");
+        if (kernel != null && !kernel.isEmpty()) {
+            sb.append("Kernel          : ").append(kernel).append("\n");
+        }
+
+        String patch = Build.VERSION.SECURITY_PATCH;
+        if (patch != null && !patch.isEmpty()) {
+            sb.append("Security Patch  : ").append(patch).append("\n");
+        }
+
+        String vbState = getProp("ro.boot.verifiedbootstate");
+        if (vbState != null && !vbState.isEmpty()) {
+            sb.append("Verified Boot   : ").append(vbState).append("\n");
+        }
+
+        boolean strongBox = getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
+        sb.append("StrongBox       : ").append(strongBox ? "Yes" : "No").append("\n");
+
+        boolean hce = getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
+        sb.append("HCE / Secure NFC: ").append(hce ? "Yes" : "No").append("\n");
+
+        sb.append("Advanced         : Full SELinux policy dump and keymaster internals require root access and are not exposed to apps.\n");
+
+        return sb.toString();
     }
-
-    String vbState = getProp("ro.boot.verifiedbootstate");
-    if (vbState != null && !vbState.isEmpty()) {
-        sb.append("Verified Boot   : ").append(vbState).append("\n");
-    }
-
-    boolean strongBox = getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
-    sb.append("StrongBox       : ").append(strongBox ? "Yes" : "No").append("\n");
-
-    boolean hce = getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
-    sb.append("HCE / Secure NFC: ").append(hce ? "Yes" : "No").append("\n");
-
-    sb.append("Advanced         : Full SELinux policy dump and keymaster internals require root access and are not exposed to apps.\n");
-
-    return sb.toString();
-}
 
     // ============================================================
     // HELPERS (ROOT / SYSFS)
@@ -2274,8 +2294,8 @@ private String buildSecurityFlagsInfo() {
             return "";
         }
     }
-    
-// ============================================================
+
+    // ============================================================
 // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
 // ============================================================
 private void populateAllSections() {

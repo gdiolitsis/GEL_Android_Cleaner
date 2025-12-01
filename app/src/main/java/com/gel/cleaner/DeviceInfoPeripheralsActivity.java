@@ -302,12 +302,13 @@ private void toggleSection(TextView targetContent, TextView targetIcon) {
         }
     }
 
+    // Toggle target
     if (targetContent.getVisibility() == View.VISIBLE) {
         animateCollapse(targetContent);
         targetIcon.setText("＋");
     } else {
         animateExpand(targetContent);
-        targetIcon.setText("−");
+        targetIcon.setText("－");
     }
 }
 

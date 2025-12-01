@@ -961,9 +961,7 @@ import java.lang.reflect.Field;
        
        // ADVANCED INFO (green comments single line)
        
-sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables,\n");
-sb.append("                   Bluetooth controller logs and HCI traces\n");
-sb.append("                   require root access.\n");
+sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, Bluetooth controller logs and HCI traces, require root access.\n");
 
 return sb.toString();
 }
@@ -1927,9 +1925,8 @@ private String buildModemInfo() {
 
     } catch (Throwable ignore) { }
 
-    sb.append("Advanced         : Full RAT tables, NR bands, CA combos\n");
-    sb.append("                   require root access and OEM modem tools.\n");
-
+    sb.append("Advanced         : Full RAT tables, NR bands, CA combos, require root access and OEM modem tools.\n");
+    
     return sb.toString();
 }                
 
@@ -2042,7 +2039,8 @@ private String buildWifiAdvancedInfo() {
         }
     } catch (Throwable ignore) {}
 
-    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power\nand per-band limits require root access.\n");return sb.toString();
+    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power and per-band limits, require root access.\n");
+   return sb.toString();
 }
 
     // 8. Sensors EXTENDED

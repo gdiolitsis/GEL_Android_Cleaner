@@ -1442,7 +1442,7 @@ private String buildThermalInfo() {
     return sb.toString();
 }
 
-// 2. Display / HDR / Refresh
+// 2. Display / HDR / Refresh + Accurate Diagonal (inches)
 private String buildDisplayInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -1453,12 +1453,23 @@ private String buildDisplayInfo() {
             DisplayMetrics dm = new DisplayMetrics();
             display.getRealMetrics(dm);
 
+            // -------------------------------------------
+            // BASIC SCREEN METRICS
+            // -------------------------------------------
+            int w = dm.widthPixels;
+            int h = dm.heightPixels;
+            int dpi = dm.densityDpi;
+            float sx = dm.xdpi;
+            float sy = dm.ydpi;
+
             sb.append("Resolution       : ")
-              .append(dm.widthPixels).append(" x ").append(dm.heightPixels)
-              .append(" px\n");
-            sb.append("Density (DPI)    : ").append(dm.densityDpi).append("\n");
+                    .append(w).append(" x ").append(h).append(" px\n");
+            sb.append("Density (DPI)    : ").append(dpi).append("\n");
             sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
 
+            // -------------------------------------------
+            // REFRESH RATE
+            // -------------------------------------------
             float refresh = display.getRefreshRate();
             sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
 
@@ -1475,6 +1486,9 @@ private String buildDisplayInfo() {
                 }
             }
 
+            // -------------------------------------------
+            // WIDE COLOR & HDR
+            // -------------------------------------------
             if (Build.VERSION.SDK_INT >= 26) {
                 boolean wide = display.isWideColorGamut();
                 sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
@@ -1485,27 +1499,41 @@ private String buildDisplayInfo() {
                     Display.HdrCapabilities hc = display.getHdrCapabilities();
                     int[] types = hc.getSupportedHdrTypes();
                     sb.append("HDR Modes        : ");
-                    if (types == null || types.length == 0) {
-                        sb.append("None\n");
-                    } else {
-                        sb.append(types.length).append(" modes\n");
-                    }
-                } catch (Throwable ignore) { }
+                    if (types == null || types.length == 0) sb.append("None\n");
+                    else sb.append(types.length).append(" modes\n");
+                } catch (Throwable ignore) {}
             }
 
+            // -------------------------------------------
+            // ORIENTATION
+            // -------------------------------------------
             Configuration cfg = getResources().getConfiguration();
             sb.append("Orientation      : ")
-              .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ? "Landscape" : "Portrait")
-              .append("\n");
+                    .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ?
+                            "Landscape" : "Portrait")
+                    .append("\n");
+
+            // -------------------------------------------
+            // DIAGONAL SIZE (INCHES)
+            // -------------------------------------------
+            double inchW = (double) w / sx;
+            double inchH = (double) h / sy;
+            double diag = Math.sqrt(inchW * inchW + inchH * inchH);
+
+            sb.append("Screen Size      : ")
+                    .append(String.format(Locale.US, "%.2f", diag))
+                    .append("\"\n");
         }
 
     } catch (Throwable ignore) { }
 
+    // -------------------------------------------
+    // ADVANCED (green block text)
+    // -------------------------------------------
     sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access and vendor-specific hooks.\n");
 
     return sb.toString();
 }
-
 // 3. CPU Hardware Block
 private String buildCpuInfo() {
     StringBuilder sb = new StringBuilder();

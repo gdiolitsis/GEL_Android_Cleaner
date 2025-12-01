@@ -257,20 +257,19 @@ setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesConten
 setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
         
     // ============================================================
-    // GEL Section Setup Engine — FINAL FIX (Missing Method Error)
-    // ============================================================
-    private void setupSection(View header, TextView content, TextView icon) {
+// GEL Section Setup Engine — FINAL FIX
+// ============================================================
+private void setupSection(View header, TextView content, TextView icon) {
 
-        if (header == null || content == null || icon == null)
-            return;
+    if (header == null || content == null || icon == null)
+        return;
 
-        // Start collapsed
-        content.setVisibility(View.GONE);
-        icon.setText("＋");
+    // Start collapsed
+    content.setVisibility(View.GONE);
+    icon.setText("＋");
 
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
-
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================

@@ -1427,8 +1427,6 @@ private String buildAudioHalInfo() {
     return sb.toString();
 }
 
-
-
 // 3) AUDIO EXTENDED
 private String buildAudioExtendedInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2112,7 +2110,7 @@ private String buildSystemFeaturesInfo() {
             for (FeatureInfo fi : feats) {
                 if (fi == null) continue;
                 if (fi.name != null) {
-                    sb.appe"• ").append(fi.name).append("\n");
+                    sb.append("• ").append(fi.name).append("\n");
                     shown++;
                 }
                 if (shown >= 120) break;
@@ -2126,7 +2124,6 @@ private String buildSystemFeaturesInfo() {
 
     return sb.toString();
 }
-
 // 10. SELinux / Security Flags
 private String buildSecurityFlagsInfo() {
     StringBuilder sb = new StringBuilder();

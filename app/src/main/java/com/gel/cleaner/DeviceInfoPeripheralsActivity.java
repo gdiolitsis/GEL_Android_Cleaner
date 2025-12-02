@@ -2396,8 +2396,11 @@ private String buildWifiAdvancedInfo() {
     // ============================================================
 private void populateAllSections() {
 
+    // BATTERY (FULL BLOCK: text + button refresh)
+    set(R.id.txtBatteryContent, buildBatteryInfo());
+    refreshBatteryButton();   // 🔥 IMPORTANT — updates the "(tap to set)" or "5000 mAh"
+
     // CORE HARDWARE
-    set(R.id.txtBatteryContent,          buildBatteryInfo());
     set(R.id.txtCameraContent,           buildCameraInfo());
     set(R.id.txtDisplayContent,          buildDisplayInfo());
     set(R.id.txtMemoryContent,           buildMemoryInfo());
@@ -2447,6 +2450,17 @@ private void populateAllSections() {
 
     // OTHER PERIPHERALS
     set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
+}
+private void refreshBatteryButton() {
+    TextView btn = findViewById(R.id.txtBatteryModelCapacity);
+    if (btn != null) {
+        long cap = getStoredModelCapacity();
+        if (cap > 0) {
+            btn.setText("Set model capacity (" + cap + " mAh)");
+        } else {
+            btn.setText("Set model capacity");
+        }
+    }
 }
 
     // ============================================================

@@ -34,7 +34,7 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="14dp"/>
 
-    <!-- ========================================================= -->
+<!-- ========================================================= -->
 <!-- BATTERY -->
 <!-- ========================================================= -->
 <LinearLayout
@@ -80,7 +80,7 @@
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/battery_set_model_capacity"
+        android:text="Set model capacity"
         android:textColor="#00E7FF"
         android:textStyle="bold"
         android:textSize="14sp"
@@ -94,14 +94,15 @@
     <!-- Battery Info Text -->
     <TextView
         android:id="@+id/txtBatteryContent"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:typeface="monospace"
         android:textSize="14sp"
-        android:padding="12dp" />
+        android:padding="12dp"
+        android:visibility="visible" />
 </LinearLayout>
+       
         <!-- ========================================================= -->
         <!-- CAMERA -->
         <!-- ========================================================= -->

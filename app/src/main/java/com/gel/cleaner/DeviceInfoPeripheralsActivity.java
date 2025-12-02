@@ -1077,7 +1077,7 @@ private String buildBatteryInfo() {
     if (userCap > 0) {
         sb.append("Model Capacity  : ").append(userCap).append(" mAh\n");
     } else {
-        sb.append("Model Capacity  : (tap to set)\n");
+        sb.append("Model Capacity  : ").append("[tap]").append("\n");
     }
 
     // ------------------------------------------------------------
@@ -1097,12 +1097,20 @@ private String buildBatteryInfo() {
         if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
 
         sb.append(any ? extra.toString().trim() + "\n" : "Lifecycle data not exposed\n");
-    } else {
-        sb.append("Requires root access\n");
-    }
+} else {
+    sb.append("Requires root access\n");
+}
 
-    appendAccessInstructions(sb, "battery");
-    return sb.toString();
+// Enable click for Model Capacity text
+runOnUiThread(() -> {
+    TextView txt = findViewById(R.id.txtBatteryModelCapacity);
+    if (txt != null) {
+        txt.setOnClickListener(v -> showBatteryCapacityDialog());
+    }
+});
+
+appendAccessInstructions(sb, "battery");
+return sb.toString();
 }
 
 // ============================================================
@@ -2243,8 +2251,8 @@ private String buildWifiAdvancedInfo() {
     }
 
     // ============================================================
-// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
-// ============================================================
+    // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
+    // ============================================================
 private void populateAllSections() {
 
     // CORE HARDWARE

@@ -260,7 +260,11 @@ setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,     
 setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
 setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
 setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
-setupSection(findViewById(R.id.headerBattery),           txtBatteryContent,         iconBattery);
+
+setupSection(findViewById(R.id.headerBattery),
+             findViewById(R.id.batteryContainer),
+             iconBattery);
+
 setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
 setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
 setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
@@ -280,9 +284,8 @@ setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,      
 setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
 setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
 setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
-setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
-setupSection(findViewById(R.id.headerSecurityFlags),  txtSecurityFlagsContent,  iconSecurityFlags);
-
+setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
+setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
 }  // 🔥 ΤΕΛΟΣ onCreate()
 
 // ============================================================

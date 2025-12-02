@@ -280,13 +280,14 @@ setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,      
 setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
 setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
 setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
-setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
-setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
+setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
+setupSection(findViewById(R.id.headerSecurityFlags),  txtSecurityFlagsContent,  iconSecurityFlags);
 
+}  // 🔥 ΤΕΛΟΣ onCreate()
 
-    // ============================================================
-    // GEL Section Setup Engine — FINAL FIX
-    // ============================================================
+// ============================================================
+// GEL Section Setup Engine — FINAL FIX
+// ============================================================
     private void setupSection(View header, TextView content, TextView icon) {
 
         if (header == null || content == null || icon == null)

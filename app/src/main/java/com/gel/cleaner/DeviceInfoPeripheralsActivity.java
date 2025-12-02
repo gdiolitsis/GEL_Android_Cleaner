@@ -1030,10 +1030,10 @@ private String buildBatteryInfo() {
             String statusStr;
             switch (status) {
                 case BatteryManager.BATTERY_STATUS_CHARGING:     statusStr = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING: statusStr = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:        statusStr = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:statusStr = "Not charging"; break;
-                default:                                        statusStr = "Unknown"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:  statusStr = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:         statusStr = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: statusStr = "Not charging"; break;
+                default:                                         statusStr = "Unknown"; break;
             }
 
             String plugStr;
@@ -1055,7 +1055,9 @@ private String buildBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // --- TRUE + ESTIMATED CAPACITY ---
+    // ============================================================
+    // TRUE + ESTIMATED CAPACITY
+    // ============================================================
     long realCap = detectBatteryMah();
     long estCap  = estimateCapacityMah();
 
@@ -1066,10 +1068,12 @@ private String buildBatteryInfo() {
         sb.append("Estimated       : ").append(estCap).append(" mAh\n");
     }
 
-    // --- Lifecycle Block ---
+    // ============================================================
+    // LIFECYCLE (Root only)
+    // ============================================================
     sb.append("Lifecycle       : ");
     if (isRooted) {
-        long full  = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long full   = readSysLong("/sys/class/power_supply/battery/charge_full");
         long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
         long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
@@ -1118,12 +1122,13 @@ private long estimateCapacityMah() {
     // Simple estimator: most devices are 3000–6000mAh
     int screen = getResources().getDisplayMetrics().heightPixels;
 
-    if (screen >= 2800) return 5000;  // large phones
-    if (screen >= 2400) return 4200;
-    if (screen >= 2000) return 3500;
+    if (screen >= 2800) return 5000;  // very large phones
+    if (screen >= 2400) return 4200;  // flagship size
+    if (screen >= 2000) return 3500;  // mid-range
 
     return 3000; // safe default
 }
+    
 
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");

@@ -22,14 +22,14 @@
     <string name="phone_info_internal">📱 PHONE INFO\n(Internal)</string>
     <string name="phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
 
-    <!-- Battery Capacity Dialog -->
-    <string name="battery_capacity_dialog_title">Battery Capacity</string>
-    <string name="battery_capacity_dialog_message">If you know the factory battery capacity of your device, enter it below (in mAh).</string>
-    <string name="battery_capacity_dialog_hint">Enter capacity (mAh)</string>
-    <string name="battery_capacity_dialog_save">Save</string>
-    <string name="battery_capacity_dialog_cancel">Cancel</string>
+    <!-- Battery Capacity Popup -->
+    <string name="battery_popup_title">Battery Capacity</string>
+    <string name="battery_popup_msg">If you know the factory battery capacity of your device, enter it below (in mAh).</string>
+    <string name="battery_popup_hint">Enter capacity (mAh)</string>
+    <string name="battery_popup_ok">Save</string>
+    <string name="battery_popup_cancel">Cancel</string>
 
-    <!-- Button inside Battery Section -->
+    <!-- Button in battery section -->
     <string name="battery_set_model_capacity">Set model capacity</string>
     
     <!-- CLEANER -->

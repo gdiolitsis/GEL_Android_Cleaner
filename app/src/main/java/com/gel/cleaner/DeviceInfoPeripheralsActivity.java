@@ -10,6 +10,11 @@ import java.util.List;
 
 import com.gel.cleaner.GELAutoActivityHook;
 
+import android.app.AlertDialog;
+import android.content.SharedPreferences;
+import android.text.InputType;
+import android.widget.EditText;
+import static android.content.Context.MODE_PRIVATE;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;

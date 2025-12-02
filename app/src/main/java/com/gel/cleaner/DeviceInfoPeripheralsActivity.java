@@ -262,7 +262,7 @@ setupSection(findViewById(R.id.headerLocation),          txtLocationContent,    
 setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
 
 setupSection(findViewById(R.id.headerBattery),
-             findViewById(R.id.batteryContainer),
+             findViewById(R.id.txtBatteryContent),
              iconBattery);
 
 setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);

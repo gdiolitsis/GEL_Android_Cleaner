@@ -1255,7 +1255,7 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ============================================================
-// POPUP DIALOG — User Model Capacity (localized strings)
+// POPUP DIALOG — User Model Capacity (GEL Dark-Gold Edition)
 // ============================================================
 private void showBatteryCapacityDialog() {
     runOnUiThread(() -> {
@@ -1264,6 +1264,7 @@ private void showBatteryCapacityDialog() {
             b.setTitle(getString(R.string.battery_popup_title));
             b.setMessage(getString(R.string.battery_popup_msg));
 
+            // --- EditText ---
             final EditText input = new EditText(this);
             input.setInputType(InputType.TYPE_CLASS_NUMBER);
             input.setHint(getString(R.string.battery_popup_hint));
@@ -1274,8 +1275,22 @@ private void showBatteryCapacityDialog() {
                 input.setSelection(input.getText().length());
             }
 
-            b.setView(input);
+            // --- Dark-Gold container layout ---
+            LinearLayout container = new LinearLayout(this);
+            container.setOrientation(LinearLayout.VERTICAL);
 
+            int pad = (int) (18 * getResources().getDisplayMetrics().density);
+            container.setPadding(pad, pad, pad, pad);
+
+            // 🔥 Apply the GEL black background with gold border
+            container.setBackgroundResource(R.drawable.gel_dialog_battery_bg);
+
+            // Add the input into our styled container
+            container.addView(input);
+
+            b.setView(container);
+
+            // Buttons
             b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
                 String txt = input.getText().toString().trim();
                 if (!txt.isEmpty()) {
@@ -1291,10 +1306,13 @@ private void showBatteryCapacityDialog() {
                                 content.setText(info);
                             }
 
-                            // Refresh button label
+                            // Refresh the "Set model capacity" button
                             TextView btn = findViewById(R.id.txtBatteryModelCapacity);
                             if (btn != null) {
-                                btn.setText(getString(R.string.battery_set_model_capacity) + " (" + val + " mAh)");
+                                btn.setText(
+                                    getString(R.string.battery_set_model_capacity)
+                                    + " (" + val + " mAh)"
+                                );
                             }
                         }
                     } catch (NumberFormatException ignore2) { }
@@ -1302,15 +1320,29 @@ private void showBatteryCapacityDialog() {
             });
 
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
-            b.show();
+
+            AlertDialog dialog = b.create();
+
+            // Make dialog background transparent so our custom bg is visible
+            dialog.setOnShowListener(d -> {
+                Window w = dialog.getWindow();
+                if (w != null) {
+                    w.setBackgroundDrawable(
+                        new ColorDrawable(Color.TRANSPARENT)
+                    );
+                }
+            });
+
+            dialog.show();
+
         } catch (Throwable ignore) { }
     });
 }
   
       
-      // ============================================================
-  // UwB Info
-  // ====================================================== 
+ // ============================================================
+ // UwB Info
+ // ====================================================== 
       private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
         StringBuilder sb = new StringBuilder();

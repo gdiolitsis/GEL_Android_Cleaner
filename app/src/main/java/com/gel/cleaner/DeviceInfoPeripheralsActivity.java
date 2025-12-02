@@ -10,11 +10,14 @@ import java.util.List;
 
 import com.gel.cleaner.GELAutoActivityHook;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+
 import android.content.SharedPreferences;
 import android.text.InputType;
 import android.widget.EditText;
+
 import static android.content.Context.MODE_PRIVATE;
+
 import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
@@ -1016,7 +1019,7 @@ return sb.toString();
     }
       
 // ============================================================
-// BATTERY + mAh (Final GEL Edition) — FULL BLOCK
+// BATTERY + mAh (Final GEL Edition – real + model capacity)
 // ============================================================
 private String buildBatteryInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1034,19 +1037,37 @@ private String buildBatteryInfo() {
 
             String statusStr;
             switch (status) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:     statusStr = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING: statusStr = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:        statusStr = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:statusStr = "Not charging"; break;
-                default:                                        statusStr = "Unknown"; break;
+                case BatteryManager.BATTERY_STATUS_CHARGING:
+                    statusStr = "Charging";
+                    break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                    statusStr = "Discharging";
+                    break;
+                case BatteryManager.BATTERY_STATUS_FULL:
+                    statusStr = "Full";
+                    break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                    statusStr = "Not charging";
+                    break;
+                default:
+                    statusStr = "Unknown";
+                    break;
             }
 
             String plugStr;
             switch (plugged) {
-                case BatteryManager.BATTERY_PLUGGED_AC:       plugStr = "AC"; break;
-                case BatteryManager.BATTERY_PLUGGED_USB:      plugStr = "USB"; break;
-                case BatteryManager.BATTERY_PLUGGED_WIRELESS: plugStr = "Wireless"; break;
-                default:                                       plugStr = "Not plugged"; break;
+                case BatteryManager.BATTERY_PLUGGED_AC:
+                    plugStr = "AC";
+                    break;
+                case BatteryManager.BATTERY_PLUGGED_USB:
+                    plugStr = "USB";
+                    break;
+                case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                    plugStr = "Wireless";
+                    break;
+                default:
+                    plugStr = "Not plugged";
+                    break;
             }
 
             sb.append("Level           : ").append(level).append("%\n");
@@ -1058,56 +1079,50 @@ private String buildBatteryInfo() {
                 sb.append("Temp            : ").append((temp / 10f)).append("°C\n");
             }
         }
-    } catch (Throwable ignore) {}
+    } catch (Throwable ignore) { }
 
-    // ------------------------------------------------------------
-    // REAL CAPACITY + MODEL CAPACITY
-    // ------------------------------------------------------------
-    long realCap = detectBatteryMah();
-
-    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    long modelCap = sp.getLong("battery_model_capacity", -1);
+    // ---------- REAL + MODEL CAPACITY ----------
+    long realCap   = detectBatteryMah();       // από /sys (real capacity όταν υπάρχει)
+    long modelCap  = getStoredModelCapacity(); // νούμερο που δήλωσε ο χρήστης
 
     if (realCap > 0) {
-        sb.append("Real Capacity   : ").append(realCap).append(" mAh\n");
+        sb.append("Real capacity   : ").append(realCap).append(" mAh\n");
     } else {
-        sb.append("Real Capacity   : Not available\n");
+        sb.append("Real capacity   : Not available\n");
     }
 
     if (modelCap > 0) {
-        sb.append("Model Capacity  : ").append(modelCap).append(" mAh\n");
+        sb.append("Model capacity  : ").append(modelCap).append(" mAh\n");
     } else {
-        sb.append("Model Capacity  : (tap to set)\n");
+        sb.append("Model capacity  : (tap to set)\n");
     }
 
-    // ------------------------------------------------------------
-    // LIFECYCLE
-    // ------------------------------------------------------------
+    // ---------- LIFECYCLE (root-only προχωρημένα) ----------
     sb.append("Lifecycle       : ");
     if (isRooted) {
-        long full  = readSysLong("/sys/class/power_supply/battery/charge_full");
-        long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-        long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
+        long full    = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long design  = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+        long cycles  = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
         boolean any = false;
         StringBuilder extra = new StringBuilder();
 
-        if (full > 0)   { extra.append("currentFull=").append(full).append(" "); any = true; }
+        if (full > 0)   { extra.append("currentFull=").append(full).append(" ");   any = true; }
         if (design > 0) { extra.append("designFull=").append(design).append(" "); any = true; }
-        if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
+        if (cycles > 0) { extra.append("cycles=").append(cycles).append(" ");     any = true; }
 
         sb.append(any ? extra.toString().trim() + "\n" : "Lifecycle data not exposed\n");
     } else {
         sb.append("Requires root access\n");
     }
 
-    // ------------------------------------------------------------
-    // ENABLE POPUP CLICK
-    // ------------------------------------------------------------
+    // ---------- popup μία φορά + click πάνω στο Battery περιεχόμενο ----------
+    maybeShowBatteryCapacityDialogOnce();
+
     runOnUiThread(() -> {
-        TextView txt = findViewById(R.id.txtBatteryModelCapacity);
-        if (txt != null) {
-            txt.setOnClickListener(v -> showBatteryCapacityDialog());
+        TextView batteryView = findViewById(R.id.txtBatteryContent);
+        if (batteryView != null) {
+            batteryView.setOnClickListener(v -> showBatteryCapacityDialog());
         }
     });
 
@@ -1116,53 +1131,106 @@ private String buildBatteryInfo() {
 }
 
 // ============================================================
-// REAL CAPACITY SCAN
+// TRUE BATTERY CAPACITY DETECTION — full scan (no estimation)
 // ============================================================
 private long detectBatteryMah() {
     long cap;
 
+    // 1) Design capacity (most stable)
     cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
     if (cap > 2000) return cap / 1000;
 
+    // 2) Nominal capacity (Samsung, Xiaomi, Pixel)
     cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
     if (cap > 2000) return cap / 1000;
 
+    // 3) Full charge capacity (fallback)
     cap = readSysLong("/sys/class/power_supply/battery/charge_full");
     if (cap > 2000) return cap / 1000;
 
+    // τίποτα αξιόπιστο → -1
     return -1;
 }
 
 // ============================================================
-// POPUP – USER MODEL CAPACITY
+// MODEL CAPACITY — αποθήκευση & ανάγνωση από SharedPreferences
 // ============================================================
-private void showBatteryCapacityDialog() {
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setTitle(getString(R.string.battery_popup_title));
-    b.setMessage(getString(R.string.battery_popup_msg));
-
-    final EditText input = new EditText(this);
-    input.setInputType(InputType.TYPE_CLASS_NUMBER);
-    input.setHint(getString(R.string.battery_popup_hint));
-    b.setView(input);
-
-    b.setPositiveButton(getString(R.string.battery_popup_ok), (d, w) -> {
-        String txt = input.getText().toString().trim();
-        if (!txt.isEmpty()) {
-            long value = Long.parseLong(txt);
-
-            SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-            sp.edit().putLong("battery_model_capacity", value).apply();
-
-            populateAllSections(); // refresh UI
-        }
-    });
-
-    b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
-    b.show();
+private long getStoredModelCapacity() {
+    try {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return sp.getLong(PREF_BATTERY_MODEL_MAH, -1);
+    } catch (Throwable ignore) {
+        return -1;
+    }
 }
 
+private void saveModelCapacity(long valueMah) {
+    try {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        sp.edit()
+                .putLong(PREF_BATTERY_MODEL_MAH, valueMah)
+                .putBoolean(PREF_BATTERY_POPUP_SHOWN, true)
+                .apply();
+    } catch (Throwable ignore) { }
+}
+
+// ============================================================
+// POPUP: δείξε μία φορά στην πρώτη εκκίνηση (αν δεν έχει δηλωθεί)
+// ============================================================
+private void maybeShowBatteryCapacityDialogOnce() {
+    try {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        long stored = sp.getLong(PREF_BATTERY_MODEL_MAH, -1);
+        boolean shown = sp.getBoolean(PREF_BATTERY_POPUP_SHOWN, false);
+
+        if (stored <= 0 && !shown) {
+            sp.edit().putBoolean(PREF_BATTERY_POPUP_SHOWN, true).apply();
+            runOnUiThread(this::showBatteryCapacityDialog);
+        }
+    } catch (Throwable ignore) { }
+}
+
+// ============================================================
+// POPUP DIALOG — ο χρήστης δηλώνει mAh (με strings για γλώσσες)
+// ============================================================
+private void showBatteryCapacityDialog() {
+    try {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        long existing = sp.getLong(PREF_BATTERY_MODEL_MAH, -1);
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle(getString(R.string.battery_popup_title));
+        b.setMessage(getString(R.string.battery_popup_msg));
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        if (existing > 0) {
+            input.setText(String.valueOf(existing));
+            input.setSelection(input.getText().length());
+        }
+        input.setHint(getString(R.string.battery_popup_hint));
+        b.setView(input);
+
+        b.setPositiveButton(getString(R.string.battery_popup_ok), (d, w) -> {
+            String txt = input.getText().toString().trim();
+            if (!txt.isEmpty()) {
+                try {
+                    long val = Long.parseLong(txt);
+                    // sanity check 500mAh–20000mAh
+                    if (val >= 500 && val <= 20000) {
+                        saveModelCapacity(val);
+                        // refresh μόνο το Battery section
+                        set(R.id.txtBatteryContent, buildBatteryInfo());
+                    }
+                } catch (NumberFormatException ignore) { }
+            }
+        });
+
+        b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
+        b.show();
+
+    } catch (Throwable ignore) { }
+}
   // ============================================================
   // UwB Info
   // ====================================================== 

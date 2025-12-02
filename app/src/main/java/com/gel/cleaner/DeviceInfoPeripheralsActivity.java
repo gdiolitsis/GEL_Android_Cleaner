@@ -275,33 +275,34 @@ setupSection(findViewById(R.id.headerRoot),              txtRootContent,        
 // ONE AUDIO BLOCK
 setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
 
-// NEW HEADERS
-setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
-setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
-setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);
-setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);
-setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);
-setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
-setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
-setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
-setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
-setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
-}  // 🔥 ΤΕΛΟΣ onCreate()
+// NEW HEADERS  
+setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);  
+setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);  
+setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);  
+setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);  
+setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);  
+setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);  
+setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);  
+setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);  
+setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);  
+setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);  
 
-// ============================================================
-// GEL Section Setup Engine — FINAL FIX
-// ============================================================
-    private void setupSection(View header, TextView content, TextView icon) {
+}  // 🔥 ΤΕΛΟΣ onCreate()  
 
-        if (header == null || content == null || icon == null)
-            return;
+// ============================================================  
+// GEL Section Setup Engine — FINAL FIX  
+// ============================================================  
+private void setupSection(View header, TextView content, TextView icon) {  
 
-        // Start collapsed
-        content.setVisibility(View.GONE);
-        icon.setText("＋");
+    if (header == null || content == null || icon == null)  
+        return;  
 
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
+    // Start collapsed  
+    content.setVisibility(View.GONE);  
+    icon.setText("＋");  
+
+    header.setOnClickListener(v -> toggleSection(content, icon));  
+}
 
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL

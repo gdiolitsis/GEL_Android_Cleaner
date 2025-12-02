@@ -18,16 +18,15 @@
     <string name="cpu_ram_info">📱 Πληροφορίες Συσκευής</string>
     <string name="cpu_ram_live">📈 CPU / RAM Ζωντανή Παρακολούθηση</string>
 
-    <!-- Battery Capacity Dialog -->
-    <string name="battery_capacity_dialog_title">Χωρητικότητα Μπαταρίας</string>
-    <string name="battery_capacity_dialog_message">Αν γνωρίζετε την εργοστασιακή χωρητικότητα της μπαταρίας της συσκευής σας, συμπληρώστε την παρακάτω (σε mAh).</string>
-    <string name="battery_capacity_dialog_hint">Εισαγωγή χωρητικότητας (mAh)</string>
-    <string name="battery_capacity_dialog_save">Αποθήκευση</string>
-    <string name="battery_capacity_dialog_cancel">Άκυρο</string>
+    <!-- Battery Capacity Popup (Greek) -->
+    <string name="battery_popup_title">Χωρητικότητα Μπαταρίας</string>
+    <string name="battery_popup_msg">Αν γνωρίζετε την εργοστασιακή χωρητικότητα της μπαταρίας της συσκευής σας, πληκτρολογήστε την παρακάτω (σε mAh).</string>
+    <string name="battery_popup_hint">Εισάγετε χωρητικότητα (mAh)</string>
+    <string name="battery_popup_ok">Αποθήκευση</string>
+    <string name="battery_popup_cancel">Άκυρο</string>
 
-    <!-- Button inside Battery Section -->
-    <string name="battery_set_model_capacity">Δήλωση mAh</string>
-    
+    <!-- Button in battery section (Greek) -->
+    <string name="battery_set_model_capacity">Δηλωση mAh μοντέλου</string>
     <!-- PHONE INFO -->
     <string name="phone_info_internal">📱 Πληρ. Συσκευής\n(Εσωτερικά)</string>
     <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n(Περιφερειακά)</string>

@@ -262,7 +262,7 @@ setupSection(findViewById(R.id.headerLocation),          txtLocationContent,    
 setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
 
 setupSection(findViewById(R.id.headerBattery),
-             findViewById(R.id.txtBatteryContent),
+             findViewById(R.id.batteryContainer),
              iconBattery);
 
 setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
@@ -290,20 +290,27 @@ setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent
 }  // 🔥 ΤΕΛΟΣ onCreate()  
 
 // ============================================================  
-// GEL Section Setup Engine — FINAL FIX  
+// GEL Section Setup Engine — UNIVERSAL VERSION  
 // ============================================================  
-private void setupSection(View header, TextView content, TextView icon) {  
+private void setupSection(View header, View content, TextView icon) {
 
-    if (header == null || content == null || icon == null)  
-        return;  
+    if (header == null || content == null || icon == null)
+        return;
 
-    // Start collapsed  
-    content.setVisibility(View.GONE);  
-    icon.setText("＋");  
+    // Start collapsed
+    content.setVisibility(View.GONE);
+    icon.setText("＋");
 
-    header.setOnClickListener(v -> toggleSection(content, icon));  
+    header.setOnClickListener(v -> {
+        if (content.getVisibility() == View.GONE) {
+            content.setVisibility(View.VISIBLE);
+            icon.setText("－");
+        } else {
+            content.setVisibility(View.GONE);
+            icon.setText("＋");
+        }
+    });
 }
-
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================

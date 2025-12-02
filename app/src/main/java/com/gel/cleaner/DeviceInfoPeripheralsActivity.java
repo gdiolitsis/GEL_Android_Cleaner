@@ -1011,7 +1011,7 @@ return sb.toString();
     }
       
 // ============================================================
-// BATTERY + TRUE DESIGN CAPACITY (Stable mAh)
+// BATTERY + mAh (Final GEL Edition)
 // ============================================================
 private String buildBatteryInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1030,10 +1030,10 @@ private String buildBatteryInfo() {
             String statusStr;
             switch (status) {
                 case BatteryManager.BATTERY_STATUS_CHARGING:     statusStr = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:  statusStr = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:         statusStr = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: statusStr = "Not charging"; break;
-                default: statusStr = "Unknown"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING: statusStr = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:        statusStr = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:statusStr = "Not charging"; break;
+                default:                                        statusStr = "Unknown"; break;
             }
 
             String plugStr;
@@ -1041,7 +1041,7 @@ private String buildBatteryInfo() {
                 case BatteryManager.BATTERY_PLUGGED_AC:       plugStr = "AC"; break;
                 case BatteryManager.BATTERY_PLUGGED_USB:      plugStr = "USB"; break;
                 case BatteryManager.BATTERY_PLUGGED_WIRELESS: plugStr = "Wireless"; break;
-                default: plugStr = "Not plugged"; break;
+                default:                                       plugStr = "Not plugged"; break;
             }
 
             sb.append("Level           : ").append(level).append("%\n");
@@ -1055,31 +1055,32 @@ private String buildBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // ---- TRUE & STABLE BATTERY CAPACITY ----
-    long capMah = detectBatteryMah();
-    if (capMah > 0) {
-        sb.append("Capacity (mAh)  : ").append(capMah).append("\n");
+    // --- TRUE + ESTIMATED CAPACITY ---
+    long realCap = detectBatteryMah();
+    long estCap  = estimateCapacityMah();
+
+    if (realCap > 0) {
+        sb.append("Capacity (mAh)  : ").append(realCap).append("\n");
     } else {
         sb.append("Capacity (mAh)  : Not available\n");
+        sb.append("Estimated       : ").append(estCap).append(" mAh\n");
     }
 
-    // ---- LIFECYCLE ----
+    // --- Lifecycle Block ---
     sb.append("Lifecycle       : ");
     if (isRooted) {
-        long full = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long full  = readSysLong("/sys/class/power_supply/battery/charge_full");
         long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
         long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
         boolean any = false;
-        StringBuilder ex = new StringBuilder();
+        StringBuilder extra = new StringBuilder();
 
-        if (full > 0)    { ex.append("currentFull=").append(full).append(" "); any=true; }
-        if (design > 0)  { ex.append("designFull=").append(design).append(" "); any=true; }
-        if (cycles > 0)  { ex.append("cycles=").append(cycles); any=true; }
+        if (full > 0)   { extra.append("currentFull=").append(full).append(" "); any = true; }
+        if (design > 0) { extra.append("designFull=").append(design).append(" "); any = true; }
+        if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
 
-        if (any) sb.append(ex.toString().trim()).append("\n");
-        else sb.append("Lifecycle data not exposed\n");
-
+        sb.append(any ? extra.toString().trim() + "\n" : "Lifecycle data not exposed\n");
     } else {
         sb.append("Requires root access\n");
     }
@@ -1089,12 +1090,14 @@ private String buildBatteryInfo() {
 }
 
 // ============================================================
-// TRUE BATTERY CAPACITY DETECTION — FIXED & STABLE
+// TRUE BATTERY CAPACITY DETECTION — Full Scan
 // ============================================================
 private long detectBatteryMah() {
 
+    long cap;
+
     // 1) Design capacity (most stable)
-    long cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+    cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
     if (cap > 2000) return cap / 1000;
 
     // 2) Nominal capacity (Samsung, Xiaomi)
@@ -1105,8 +1108,21 @@ private long detectBatteryMah() {
     cap = readSysLong("/sys/class/power_supply/battery/charge_full");
     if (cap > 2000) return cap / 1000;
 
-    // 4) If all fail → return -1
     return -1;
+}
+
+// ============================================================
+// ESTIMATED CAPACITY (fallback)
+// ============================================================
+private long estimateCapacityMah() {
+    // Simple estimator: most devices are 3000–6000mAh
+    int screen = getResources().getDisplayMetrics().heightPixels;
+
+    if (screen >= 2800) return 5000;  // large phones
+    if (screen >= 2400) return 4200;
+    if (screen >= 2000) return 3500;
+
+    return 3000; // safe default
 }
 
     private String buildUwbInfo() {

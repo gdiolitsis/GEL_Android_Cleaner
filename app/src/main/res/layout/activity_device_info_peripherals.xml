@@ -35,7 +35,7 @@
             android:layout_marginBottom="14dp"/>
 
 <!-- ========================================================= -->
-<!-- BATTERY -->
+<!-- BATTERY                                                  -->
 <!-- ========================================================= -->
 <LinearLayout
     android:id="@+id/headerBattery"
@@ -65,13 +65,15 @@
         android:textSize="18sp"/>
 </LinearLayout>
 
-<!-- Battery Content -->
+<!-- BATTERY CONTENT -->
 <LinearLayout
+    android:id="@+id/batteryContentBlock"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:visibility="gone"
-    android:id="@+id/txtBatteryContentWrapper">
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:visibility="gone">
 
     <TextView
         android:id="@+id/txtBatteryContent"
@@ -80,20 +82,21 @@
         android:textColor="#FFFFFF"
         android:typeface="monospace"
         android:textSize="14sp"
-        android:padding="12dp" />
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"/>
 
-    <!-- ★ MODEL CAPACITY CLICKABLE FIELD (tap to set) -->
+    <!-- MODEL CAPACITY BUTTON (CLICKABLE) -->
     <TextView
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="@string/battery_set_model_capacity"
         android:textColor="#00FFBF"
-        android:textStyle="bold"
         android:textSize="14sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="10dp"
-        android:text="Model capacity: tap to set" />
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:clickable="true"
+        android:focusable="true"/>
 </LinearLayout>
 
         <!-- ========================================================= -->

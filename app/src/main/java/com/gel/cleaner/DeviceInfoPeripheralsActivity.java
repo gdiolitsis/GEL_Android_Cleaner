@@ -130,33 +130,33 @@ import java.lang.reflect.Field;
     }
 
     // ============================================================
-    // MAIN CLASS FIELDS
-    // ============================================================
-    private static final String NEON_GREEN = "#39FF14";
-    private static final String GOLD_COLOR = "#FFD700";
-    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+// MAIN CLASS FIELDS
+// ============================================================
+private static final String NEON_GREEN = "#39FF14";
+private static final String GOLD_COLOR = "#FFD700";
+private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
-    private boolean isRooted = false;
+private boolean isRooted = false;
 
-    private TextView[] allContents;
-    private TextView[] allIcons;
+private TextView[] allContents;
+private TextView[] allIcons;
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
+@Override
+protected void attachBaseContext(Context base) {
+    super.attachBaseContext(LocaleHelper.apply(base));
+}
 
-    @Override
-    protected void onCreate(Bundle savedInsanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_peripherals);
+@Override
+protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
+    super.onCreate(savedInstanceState);                // ✅ FIXED NAME
+    setContentView(R.layout.activity_device_info_peripherals);
 
-        TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) title.setText(getString(R.string.phone_info_peripherals));
+    TextView title = findViewById(R.id.txtTitleDevice);
+    if (title != null)
+        title.setText(getString(R.string.phone_info_peripherals));
 
-        // (optional) auto-request runtime permissions
-        requestAllRuntimePermissions();
-
+    // (optional) auto-request runtime permissions
+    requestAllRuntimePermissions();
        
        // ============================================================
 // TEXT CONTENT VIEWS

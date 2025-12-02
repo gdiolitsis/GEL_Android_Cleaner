@@ -35,10 +35,10 @@
             android:layout_marginBottom="14dp"/>
 
     <!-- ========================================================= -->
-    <!-- BATTERY -->
-    <!-- ========================================================= -->
+<!-- BATTERY (FINAL — GEL EDITION v1.0) -->
+<!-- ========================================================= -->
 
-        <LinearLayout
+<LinearLayout
     android:id="@+id/headerBattery"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -66,6 +66,7 @@
         android:textSize="18sp"/>
 </LinearLayout>
 
+<!-- BATTERY CONTAINER -->
 <LinearLayout
     android:id="@+id/batteryContainer"
     android:layout_width="match_parent"
@@ -74,7 +75,7 @@
     android:visibility="gone"
     android:padding="8dp">
 
-    <!-- Button: Set Model Capacity -->
+    <!-- BUTTON: Set Model Capacity -->
     <TextView
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
@@ -90,16 +91,16 @@
         android:focusable="true"
         android:layout_marginBottom="6dp"/>
 
-    <!-- Battery Content -->
+    <!-- BATTERY CONTENT -->
     <TextView
         android:id="@+id/txtBatteryContent"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:typeface="monospace"
         android:textSize="14sp"
-        android:padding="12dp"/>
+        android:padding="12dp"
+        android:visibility="gone"/>
 </LinearLayout>
 
         <!-- ========================================================= -->

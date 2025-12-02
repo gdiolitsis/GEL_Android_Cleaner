@@ -35,9 +35,8 @@
             android:layout_marginBottom="14dp"/>
 
     <!-- ========================================================= -->
-<!-- BATTERY (FINAL — GEL EDITION v1.0) -->
+<!-- BATTERY -->
 <!-- ========================================================= -->
-
 <LinearLayout
     android:id="@+id/headerBattery"
     android:layout_width="match_parent"
@@ -46,7 +45,8 @@
     android:padding="12dp"
     android:gravity="center_vertical"
     android:layout_marginTop="6dp"
-    android:clickable="true">
+    android:clickable="true"
+    android:focusable="true">
 
     <TextView
         android:layout_width="0dp"
@@ -55,7 +55,7 @@
         android:text="Battery"
         android:textColor="#00FFBF"
         android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/iconBatteryToggle"
@@ -63,10 +63,10 @@
         android:layout_height="wrap_content"
         android:text="＋"
         android:textColor="#00FFBF"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 </LinearLayout>
 
-<!-- BATTERY CONTAINER -->
+<!-- Battery Content Container -->
 <LinearLayout
     android:id="@+id/batteryContainer"
     android:layout_width="match_parent"
@@ -75,7 +75,7 @@
     android:visibility="gone"
     android:padding="8dp">
 
-    <!-- BUTTON: Set Model Capacity -->
+    <!-- Model Capacity Button -->
     <TextView
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
@@ -89,20 +89,19 @@
         android:gravity="center"
         android:clickable="true"
         android:focusable="true"
-        android:layout_marginBottom="6dp"/>
+        android:layout_marginBottom="6dp" />
 
-    <!-- BATTERY CONTENT -->
+    <!-- Battery Info Text -->
     <TextView
         android:id="@+id/txtBatteryContent"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:typeface="monospace"
         android:textSize="14sp"
-        android:padding="12dp"
-        android:visibility="gone"/>
+        android:padding="12dp" />
 </LinearLayout>
-
         <!-- ========================================================= -->
         <!-- CAMERA -->
         <!-- ========================================================= -->

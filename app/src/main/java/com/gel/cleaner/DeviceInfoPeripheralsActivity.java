@@ -1101,27 +1101,28 @@ private String buildBatteryInfo() {
         sb.append("Model capacity  : (tap to set)\n");
     }
 
-    // ---------- LIFECYCLE (root μόνο) ----------
-    sb.append("Lifecycle       : ");
-    if (isRooted) {
-        long full    = readSysLong("/sys/class/power_supply/battery/charge_full");
-        long design  = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-        long cycles  = readSysLong("/sys/class/power_supply/battery/cycle_count");
+    // ---------- LIFECYCLE ----------
+sb.append("Lifecycle       : ");
+if (isRooted) {
 
-        boolean any = false;
-        StringBuilder extra = new StringBuilder();
+    long full   = readSysLong("/sys/class/power_supply/battery/charge_full");
+    long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
+    long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
-        if (full > 0)   { extra.append("currentFull=").append(full).append(" ");   any = true; }
-        if (design > 0) { extra.append("designFull=").append(design).append(" "); any = true; }
-        if (cycles > 0) { extra.append("cycles=").append(cycles).append(" ");     any = true; }
+    boolean any = false;
+    StringBuilder extra = new StringBuilder();
 
-        sb.append(any ? extra.toString().trim()).append(any ? "\n" : "");
-        if (!any) {
-            sb.append("Lifecycle data not exposed\n");
-        }
-    } else {
-        sb.append("Requires root access\n");
-    }
+    if (full > 0)   { extra.append("currentFull=").append(full).append(" "); any = true; }
+    if (design > 0) { extra.append("designFull=").append(design).append(" "); any = true; }
+    if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
+
+    sb.append(any
+            ? extra.toString().trim() + "\n"
+            : "Lifecycle data not exposed\n");
+
+} else {
+    sb.append("Requires root access\n");
+}
 
     // ---------- Popup (μία φορά) + click στο κουμπί ----------
     maybeShowBatteryCapacityDialogOnce();

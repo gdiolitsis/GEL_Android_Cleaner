@@ -17,7 +17,9 @@ import android.text.InputType;
 import android.widget.EditText;
 
 import static android.content.Context.MODE_PRIVATE;
-
+import android.widget.LinearLayout;
+import android.view.Window;
+import android.graphics.drawable.ColorDrawable;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;

@@ -34,46 +34,67 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="14dp"/>
 
-        <!-- ========================================================= -->
-        <!-- BATTERY -->
-        <!-- ========================================================= -->
-        <LinearLayout
-            android:id="@+id/headerBattery"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:clickable="true">
+<!-- ========================================================= -->
+<!-- BATTERY -->
+<!-- ========================================================= -->
+<LinearLayout
+    android:id="@+id/headerBattery"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:layout_marginTop="6dp"
+    android:clickable="true">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Battery"
-                android:textColor="#00FFBF"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Battery"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="16sp"/>
 
-            <TextView
-                android:id="@+id/iconBatteryToggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="＋"
-                android:textColor="#00FFBF"
-                android:textSize="18sp"/>
-        </LinearLayout>
+    <TextView
+        android:id="@+id/iconBatteryToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="＋"
+        android:textColor="#00FFBF"
+        android:textSize="18sp"/>
+</LinearLayout>
 
-        <TextView
-            android:id="@+id/txtBatteryContent"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:typeface="monospace"
-            android:textSize="14sp"
-            android:padding="12dp"/>
+<!-- Battery Content -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="gone"
+    android:id="@+id/txtBatteryContentWrapper">
+
+    <TextView
+        android:id="@+id/txtBatteryContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:typeface="monospace"
+        android:textSize="14sp"
+        android:padding="12dp" />
+
+    <!-- ★ MODEL CAPACITY CLICKABLE FIELD (tap to set) -->
+    <TextView
+        android:id="@+id/txtBatteryModelCapacity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#00FFBF"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp"
+        android:text="Model capacity: tap to set" />
+</LinearLayout>
 
         <!-- ========================================================= -->
         <!-- CAMERA -->

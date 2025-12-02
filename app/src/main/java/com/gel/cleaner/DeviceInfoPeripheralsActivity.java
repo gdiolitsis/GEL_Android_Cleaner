@@ -147,7 +147,7 @@ import java.lang.reflect.Field;
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInsanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
 
@@ -157,7 +157,8 @@ import java.lang.reflect.Field;
         // (optional) auto-request runtime permissions
         requestAllRuntimePermissions();
 
-        // ============================================================
+       
+       // ============================================================
 // TEXT CONTENT VIEWS
 // ============================================================
 TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
@@ -216,7 +217,7 @@ TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
 TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
 
 // ============================================================
-// ALL CONTENT BLOCKS
+// ALL CONTENTS
 // ============================================================
 allContents = new TextView[]{
         txtCameraContent, txtBiometricsContent, txtSensorsContent,
@@ -246,12 +247,12 @@ allIcons = new TextView[]{
 };
 
 // ============================================================
-// APPLY TEXT CONTENT FIRST
+// APPLY TEXTS FIRST
 // ============================================================
 populateAllSections();
 
 // ============================================================
-// SETUP CLICK TOGGLES — FINAL
+// SETUP SECTIONS
 // ============================================================
 setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
 setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
@@ -259,10 +260,7 @@ setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,     
 setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
 setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
 setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
-
-// 🔥 FINAL FIX — BATTERY SECTION OPENS PROPERLY
 setupSection(findViewById(R.id.headerBattery),           txtBatteryContent,         iconBattery);
-
 setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
 setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
 setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
@@ -270,10 +268,10 @@ setupSection(findViewById(R.id.headerGnss),              txtGnssContent,        
 setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
 setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
 
-// UNIQUE AUDIO BLOCK
+// ONE AUDIO BLOCK
 setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
 
-// NEW SECTIONS
+// NEW HEADERS
 setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
 setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);
 setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);
@@ -284,6 +282,7 @@ setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,
 setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
 setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
 setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
+
 
     // ============================================================
     // GEL Section Setup Engine — FINAL FIX

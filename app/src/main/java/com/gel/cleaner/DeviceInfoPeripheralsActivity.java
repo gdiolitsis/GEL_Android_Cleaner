@@ -1011,7 +1011,7 @@ return sb.toString();
     }
       
 // ============================================================
-// BATTERY + mAh (Final GEL Edition)
+// BATTERY + mAh (GEL Final Edition)
 // ============================================================
 private String buildBatteryInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1030,10 +1030,10 @@ private String buildBatteryInfo() {
             String statusStr;
             switch (status) {
                 case BatteryManager.BATTERY_STATUS_CHARGING:     statusStr = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:  statusStr = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:         statusStr = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: statusStr = "Not charging"; break;
-                default:                                         statusStr = "Unknown"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING: statusStr = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:        statusStr = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:statusStr = "Not charging"; break;
+                default:                                        statusStr = "Unknown"; break;
             }
 
             String plugStr;
@@ -1055,25 +1055,32 @@ private String buildBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // ============================================================
-    // TRUE + ESTIMATED CAPACITY
-    // ============================================================
+    // ------------------------------------------------------------
+    // REAL CAPACITY
+    // ------------------------------------------------------------
     long realCap = detectBatteryMah();
-    long estCap  = estimateCapacityMah();
-
     if (realCap > 0) {
-        sb.append("Capacity (mAh)  : ").append(realCap).append("\n");
+        sb.append("Real Capacity   : ").append(realCap).append(" mAh\n");
     } else {
-        sb.append("Capacity (mAh)  : Not available\n");
-        sb.append("Estimated       : ").append(estCap).append(" mAh\n");
+        sb.append("Real Capacity   : Not available\n");
     }
 
-    // ============================================================
-    // LIFECYCLE (Root only)
-    // ============================================================
+    // ------------------------------------------------------------
+    // USER MODEL CAPACITY (stored)
+    // ------------------------------------------------------------
+    long userCap = getUserBatteryCapacity();
+    if (userCap > 0) {
+        sb.append("Model Capacity  : ").append(userCap).append(" mAh\n");
+    } else {
+        sb.append("Model Capacity  : (tap to set)\n");
+    }
+
+    // ------------------------------------------------------------
+    // Lifecycle (root only)
+    // ------------------------------------------------------------
     sb.append("Lifecycle       : ");
     if (isRooted) {
-        long full   = readSysLong("/sys/class/power_supply/battery/charge_full");
+        long full  = readSysLong("/sys/class/power_supply/battery/charge_full");
         long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
         long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
 
@@ -1097,18 +1104,14 @@ private String buildBatteryInfo() {
 // TRUE BATTERY CAPACITY DETECTION — Full Scan
 // ============================================================
 private long detectBatteryMah() {
-
     long cap;
 
-    // 1) Design capacity (most stable)
     cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
     if (cap > 2000) return cap / 1000;
 
-    // 2) Nominal capacity (Samsung, Xiaomi)
     cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
     if (cap > 2000) return cap / 1000;
 
-    // 3) Full charge capacity (fallback)
     cap = readSysLong("/sys/class/power_supply/battery/charge_full");
     if (cap > 2000) return cap / 1000;
 
@@ -1116,19 +1119,43 @@ private long detectBatteryMah() {
 }
 
 // ============================================================
-// ESTIMATED CAPACITY (fallback)
+// USER-MODEL BATTERY CAPACITY (Saved in SharedPreferences)
 // ============================================================
-private long estimateCapacityMah() {
-    // Simple estimator: most devices are 3000–6000mAh
-    int screen = getResources().getDisplayMetrics().heightPixels;
-
-    if (screen >= 2800) return 5000;  // very large phones
-    if (screen >= 2400) return 4200;  // flagship size
-    if (screen >= 2000) return 3500;  // mid-range
-
-    return 3000; // safe default
+private long getUserBatteryCapacity() {
+    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    return sp.getLong("battery_user_capacity", -1);
 }
-    
+
+private void setUserBatteryCapacity(long value) {
+    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    sp.edit().putLong("battery_user_capacity", value).apply();
+}
+
+// ============================================================
+// POPUP: Ask user for battery capacity (mAh)
+// ============================================================
+private void showBatteryCapacityDialog() {
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setTitle(getString(R.string.battery_popup_title));
+    b.setMessage(getString(R.string.battery_popup_msg));
+
+    final EditText input = new EditText(this);
+    input.setInputType(InputType.TYPE_CLASS_NUMBER);
+    input.setHint("5000");
+    b.setView(input);
+
+    b.setPositiveButton(getString(R.string.battery_popup_ok), (d, w) -> {
+        try {
+            long v = Long.parseLong(input.getText().toString().trim());
+            if (v > 500 && v < 20000) {
+                setUserBatteryCapacity(v);
+            }
+        } catch (Exception ignored) {}
+    });
+
+    b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
+    b.show();
+}
 
     private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");

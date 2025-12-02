@@ -34,9 +34,9 @@
             android:textColor="@color/gel_gold"
             android:layout_marginBottom="14dp"/>
 
-<!-- ========================================================= -->
-<!-- BATTERY                                                  -->
-<!-- ========================================================= -->
+    <!-- ========================================================= -->
+    <!-- BATTERY -->
+    <!-- ========================================================= -->
 <LinearLayout
     android:id="@+id/headerBattery"
     android:layout_width="match_parent"
@@ -65,39 +65,42 @@
         android:textSize="18sp"/>
 </LinearLayout>
 
-<!-- BATTERY CONTENT -->
 <LinearLayout
-    android:id="@+id/batteryContentBlock"
+    android:id="@+id/batteryContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
-    android:visibility="gone">
+    android:visibility="gone"
+    android:padding="8dp">
 
-    <TextView
-        android:id="@+id/txtBatteryContent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:typeface="monospace"
-        android:textSize="14sp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"/>
-
-    <!-- MODEL CAPACITY BUTTON (CLICKABLE) -->
+    <!-- Button: Set Model Capacity -->
     <TextView
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/battery_set_model_capacity"
-        android:textColor="#00FFBF"
+        android:textColor="#00E7FF"
+        android:textStyle="bold"
         android:textSize="14sp"
-        android:paddingTop="6dp"
-        android:paddingBottom="6dp"
+        android:padding="8dp"
+        android:background="@drawable/gel_btn_outline_selector"
+        android:gravity="center"
         android:clickable="true"
-        android:focusable="true"/>
+        android:focusable="true"
+        android:layout_marginBottom="6dp"/>
+
+    <!-- Battery Content -->
+    <TextView
+        android:id="@+id/txtBatteryContent"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:typeface="monospace"
+        android:textSize="14sp"
+        android:padding="12dp"/>
 </LinearLayout>
+
 
         <!-- ========================================================= -->
         <!-- CAMERA -->

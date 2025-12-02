@@ -1145,26 +1145,69 @@ if (isRooted) {
     return sb.toString();
 }
 
-// ============================================================
-// TRUE BATTERY CAPACITY DETECTION — full scan (no estimation)
-// ============================================================
+// ===================================================================
+// REAL BATTERY CAPACITY DETECTOR — FULL OEM SCAN (2025 GEL EDITION)
+// ===================================================================
 private long detectBatteryMah() {
+
     long cap;
 
-    // 1) Design capacity (most stable)
-    cap = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-    if (cap > 2000) return cap / 1000;
+    // --- 1) Standard Linux power_supply paths ---
+    String[] paths = new String[]{
+            "/sys/class/power_supply/battery/charge_full_design",
+            "/sys/class/power_supply/battery/charge_full",
+            "/sys/class/power_supply/battery/charge_full_raw",
+            "/sys/class/power_supply/battery/fg_fullcapnom",
+            "/sys/class/power_supply/battery/fg_fullcaprep",
+            "/sys/class/power_supply/maxfg/capacity",
+            "/sys/class/power_supply/maxfg/fullcap",
+            "/sys/class/power_supply/maxfg/fullcapnom",
+            "/sys/class/power_supply/maxfg/designcap",
+            "/sys/class/power_supply/bms/charge_full",
+            "/sys/class/power_supply/bms/charge_full_design",
+            "/sys/class/power_supply/bms/fullcapnom",
+            "/sys/class/power_supply/bms/fullcap",
+            "/sys/class/power_supply/bms/fcc_data"
+    };
 
-    // 2) Nominal capacity (Samsung, Xiaomi, Pixel)
-    cap = readSysLong("/sys/class/power_supply/battery/fg_fullcapnom");
-    if (cap > 2000) return cap / 1000;
+    for (String p : paths) {
+        cap = readSysLong(p);
+        if (cap > 2000) {
+            // Samsung/Pixel: value in microAh → divide by 1000
+            if (cap > 200000) return cap / 1000;
+            return cap;
+        }
+    }
 
-    // 3) Full charge capacity (fallback)
-    cap = readSysLong("/sys/class/power_supply/battery/charge_full");
-    if (cap > 2000) return cap / 1000;
+    // --- 2) BatteryManager fallback ---
+    try {
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (bm != null) {
+            long c = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+            if (c > 2000) return Math.abs(c / 1000);
+        }
+    } catch (Throwable ignore) {}
 
-    // Τίποτα αξιόπιστο → -1
+    // --- 3) Some OEM store capacity inside prop (rare) ---
+    try {
+        String prop = getSystemProperty("persist.battery.capacity");
+        if (prop != null) {
+            long n = Long.parseLong(prop.trim());
+            if (n > 1000) return n;
+        }
+    } catch (Throwable ignore) {}
+
+    // --- 4) Nothing found ---
     return -1;
+}
+
+// Safe system property reader
+private String getSystemProperty(String name) {
+    try {
+        Class<?> sp = Class.forName("android.os.SystemProperties");
+        return (String) sp.getMethod("get", String.class).invoke(null, name);
+    } catch (Throwable ignore) {}
+    return null;
 }
 
 // ============================================================

@@ -1016,7 +1016,7 @@ return sb.toString();
     }
       
 // ============================================================
-// BATTERY + mAh (GEL Final Edition)
+// BATTERY + mAh (Final GEL Edition) — FULL BLOCK
 // ============================================================
 private String buildBatteryInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1061,27 +1061,27 @@ private String buildBatteryInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // REAL CAPACITY
+    // REAL CAPACITY + MODEL CAPACITY
     // ------------------------------------------------------------
     long realCap = detectBatteryMah();
+
+    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    long modelCap = sp.getLong("battery_model_capacity", -1);
+
     if (realCap > 0) {
         sb.append("Real Capacity   : ").append(realCap).append(" mAh\n");
     } else {
         sb.append("Real Capacity   : Not available\n");
     }
 
-    // ------------------------------------------------------------
-    // USER MODEL CAPACITY (stored)
-    // ------------------------------------------------------------
-    long userCap = getUserBatteryCapacity();
-    if (userCap > 0) {
-        sb.append("Model Capacity  : ").append(userCap).append(" mAh\n");
+    if (modelCap > 0) {
+        sb.append("Model Capacity  : ").append(modelCap).append(" mAh\n");
     } else {
-        sb.append("Model Capacity  : ").append("[tap]").append("\n");
+        sb.append("Model Capacity  : (tap to set)\n");
     }
 
     // ------------------------------------------------------------
-    // Lifecycle (root only)
+    // LIFECYCLE
     // ------------------------------------------------------------
     sb.append("Lifecycle       : ");
     if (isRooted) {
@@ -1097,24 +1097,26 @@ private String buildBatteryInfo() {
         if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
 
         sb.append(any ? extra.toString().trim() + "\n" : "Lifecycle data not exposed\n");
-} else {
-    sb.append("Requires root access\n");
-}
-
-// Enable click for Model Capacity text
-runOnUiThread(() -> {
-    TextView txt = findViewById(R.id.txtBatteryModelCapacity);
-    if (txt != null) {
-        txt.setOnClickListener(v -> showBatteryCapacityDialog());
+    } else {
+        sb.append("Requires root access\n");
     }
-});
 
-appendAccessInstructions(sb, "battery");
-return sb.toString();
+    // ------------------------------------------------------------
+    // ENABLE POPUP CLICK
+    // ------------------------------------------------------------
+    runOnUiThread(() -> {
+        TextView txt = findViewById(R.id.txtBatteryModelCapacity);
+        if (txt != null) {
+            txt.setOnClickListener(v -> showBatteryCapacityDialog());
+        }
+    });
+
+    appendAccessInstructions(sb, "battery");
+    return sb.toString();
 }
 
 // ============================================================
-// TRUE BATTERY CAPACITY DETECTION — Full Scan
+// REAL CAPACITY SCAN
 // ============================================================
 private long detectBatteryMah() {
     long cap;
@@ -1132,45 +1134,39 @@ private long detectBatteryMah() {
 }
 
 // ============================================================
-// USER-MODEL BATTERY CAPACITY (Saved in SharedPreferences)
-// ============================================================
-private long getUserBatteryCapacity() {
-    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    return sp.getLong("battery_user_capacity", -1);
-}
-
-private void setUserBatteryCapacity(long value) {
-    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    sp.edit().putLong("battery_user_capacity", value).apply();
-}
-
-// ============================================================
-// POPUP: Ask user for battery capacity (mAh)
+// POPUP – USER MODEL CAPACITY
 // ============================================================
 private void showBatteryCapacityDialog() {
+
     AlertDialog.Builder b = new AlertDialog.Builder(this);
     b.setTitle(getString(R.string.battery_popup_title));
     b.setMessage(getString(R.string.battery_popup_msg));
 
     final EditText input = new EditText(this);
     input.setInputType(InputType.TYPE_CLASS_NUMBER);
-    input.setHint("5000");
+    input.setHint(getString(R.string.battery_popup_hint));
     b.setView(input);
 
     b.setPositiveButton(getString(R.string.battery_popup_ok), (d, w) -> {
-        try {
-            long v = Long.parseLong(input.getText().toString().trim());
-            if (v > 500 && v < 20000) {
-                setUserBatteryCapacity(v);
-            }
-        } catch (Exception ignored) {}
+        String txt = input.getText().toString().trim();
+        if (!txt.isEmpty()) {
+            long value = Long.parseLong(txt);
+
+            SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+            sp.edit().putLong("battery_model_capacity", value).apply();
+
+            populateAllSections(); // refresh UI
+        }
     });
 
     b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
     b.show();
 }
 
-    private String buildUwbInfo() {
+  // ============================================================
+  // UwB Info
+  // ====================================================== 
+      private String buildUwbInfo() {
         boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
         StringBuilder sb = new StringBuilder();
 

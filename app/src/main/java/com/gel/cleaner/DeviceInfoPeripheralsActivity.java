@@ -153,6 +153,8 @@ protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
     super.onCreate(savedInstanceState);                // ✅ FIXED NAME
     setContentView(R.layout.activity_device_info_peripherals);
 
+        maybeShowBatteryCapacityDialogOnce();
+
     TextView title = findViewById(R.id.txtTitleDevice);
     if (title != null)
         title.setText(getString(R.string.phone_info_peripherals));
@@ -218,25 +220,11 @@ TextView iconSensorsExtended  = findViewById(R.id.iconSensorsExtendedToggle);
 TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
 TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
 
-
-
-        // GEL NOTE: CPU / GPU / MEMORY belong to Internals (not Peripherals).
-        // We keep builders/code for future use, but hide these sections in this screen.
-        try {
-            View headerCpu    = findViewById(R.id.headerCpu);
-            View headerGpu    = findViewById(R.id.headerGpu);
-            View headerMemory = findViewById(R.id.headerMemory);
-
-            if (headerCpu != null)    headerCpu.setVisibility(View.GONE);
-            if (headerGpu != null)    headerGpu.setVisibility(View.GONE);
-            if (headerMemory != null) headerMemory.setVisibility(View.GONE);
-
-            if (txtCpuContent != null)    txtCpuContent.setVisibility(View.GONE);
-            if (txtGpuContent != null)    txtGpuContent.setVisibility(View.GONE);
-            if (txtMemoryContent != null) txtMemoryContent.setVisibility(View.GONE);
-        } catch (Throwable ignore) {
-            // Fail-safe: never crash UI if any of these views are missing.
-        }
+// Battery model capacity button click
+TextView btnBatteryModel = findViewById(R.id.txtBatteryModelCapacity);
+if (btnBatteryModel != null) {
+    btnBatteryModel.setOnClickListener(v -> showBatteryCapacityDialog());
+}
 
 // ============================================================
 // ALL CONTENTS
@@ -276,38 +264,60 @@ populateAllSections();
 // ============================================================
 // SETUP SECTIONS
 // ============================================================
-setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
-setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
-setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
-setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
-setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
-setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
+findViewById(R.id.headerCamera).setOnClickListener(v ->
+        toggleSection(txtCameraContent, iconCamera));
+findViewById(R.id.headerBiometrics).setOnClickListener(v ->
+        toggleSection(txtBiometricsContent, iconBiometrics));
+findViewById(R.id.headerSensors).setOnClickListener(v ->
+        toggleSection(txtSensorsContent, iconSensors));
+findViewById(R.id.headerConnectivity).setOnClickListener(v ->
+        toggleSection(txtConnectivityContent, iconConnectivity));
+findViewById(R.id.headerLocation).setOnClickListener(v ->
+        toggleSection(txtLocationContent, iconLocation));
+findViewById(R.id.headerNfc).setOnClickListener(v ->
+        toggleSection(txtNfcContent, iconNfc));
 
-setupSection(findViewById(R.id.headerBattery),
-             findViewById(R.id.batteryContainer),
-             iconBattery);
+findViewById(R.id.headerBattery).setOnClickListener(v ->
+        toggleSection(txtBatteryContent, iconBattery));
 
-setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
-setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
-setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
-setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
-setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
-setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
+findViewById(R.id.headerOtherPeripherals).setOnClickListener(v ->
+        toggleSection(txtOtherPeripherals, iconOther));
+findViewById(R.id.headerUwb).setOnClickListener(v ->
+        toggleSection(txtUwbContent, iconUwb));
+findViewById(R.id.headerHaptics).setOnClickListener(v ->
+        toggleSection(txtHapticsContent, iconHaptics));
+findViewById(R.id.headerGnss).setOnClickListener(v ->
+        toggleSection(txtGnssContent, iconGnss));
+findViewById(R.id.headerUsb).setOnClickListener(v ->
+        toggleSection(txtUsbContent, iconUsb));
+findViewById(R.id.headerRoot).setOnClickListener(v ->
+        toggleSection(txtRootContent, iconRoot));
 
 // ONE AUDIO BLOCK
-setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
+findViewById(R.id.headerAudioUnified).setOnClickListener(v ->
+        toggleSection(txtAudioUnifiedContent, iconAudioUnified));
 
 // NEW HEADERS  
-setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);  
-setupSection(findViewById(R.id.headerDisplay),           txtDisplayContent,         iconDisplay);  
-setupSection(findViewById(R.id.headerCpu),               txtCpuContent,             iconCpu);  
-setupSection(findViewById(R.id.headerGpu),               txtGpuContent,             iconGpu);  
-setupSection(findViewById(R.id.headerMemory),            txtMemoryContent,          iconMemory);  
-setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);  
-setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);  
-setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);  
-setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);  
-setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);  
+findViewById(R.id.headerThermal).setOnClickListener(v ->
+        toggleSection(txtThermalContent, iconThermal));
+findViewById(R.id.headerDisplay).setOnClickListener(v ->
+        toggleSection(txtDisplayContent, iconDisplay));
+findViewById(R.id.headerCpu).setOnClickListener(v ->
+        toggleSection(txtCpuContent, iconCpu));
+findViewById(R.id.headerGpu).setOnClickListener(v ->
+        toggleSection(txtGpuContent, iconGpu));
+findViewById(R.id.headerMemory).setOnClickListener(v ->
+        toggleSection(txtMemoryContent, iconMemory));
+findViewById(R.id.headerModem).setOnClickListener(v ->
+        toggleSection(txtModemContent, iconModem));
+findViewById(R.id.headerWifiAdvanced).setOnClickListener(v ->
+        toggleSection(txtWifiAdvancedContent, iconWifiAdvanced));
+findViewById(R.id.headerSensorsExtended).setOnClickListener(v ->
+        toggleSection(txtSensorsExtendedContent, iconSensorsExtended));
+findViewById(R.id.headerSystemFeatures).setOnClickListener(v ->
+        toggleSection(txtSystemFeaturesContent, iconSystemFeatures));
+findViewById(R.id.headerSecurityFlags).setOnClickListener(v ->
+        toggleSection(txtSecurityFlagsContent, iconSecurityFlags));
 
 }  // 🔥 ΤΕΛΟΣ onCreate()  
 
@@ -1230,7 +1240,7 @@ private String buildBatteryInfo() {
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
-        sb.append("Real capacity  (Now) : ").append(bi.oemFullMah).append(" mAh\n");
+        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
 
         // ⭐ New logic: estimated 100% from OEM if level>0
         if (level > 0 && level < 100) {
@@ -1273,7 +1283,6 @@ private String buildBatteryInfo() {
 
     return sb.toString();
 }
-        
       
 // ===================================================================
 // SHOW POPUP ONLY ONCE
@@ -1327,7 +1336,6 @@ private void showBatteryCapacityDialog() {
                                 content.setText(buildBatteryInfo());
 
                             TextView btn = findViewById(R.id.txtBatteryModelCapacity);
-        findViewById(R.id.txtBatteryModelCapacity).setOnClickListener(v -> { showBatteryCapacityDialog(); });
                             if (btn != null) {
                                 btn.setText(getString(R.string.battery_set_model_capacity)
                                         + " (" + val + " mAh)");
@@ -1471,7 +1479,8 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles\n");
+    sb.append("                   require root access.\n");
 
     return sb.toString();
 }
@@ -1770,61 +1779,7 @@ private String buildUsbInfo() {
     // ============================================================
 
     // 1. Thermal Engine / Cooling Profiles
-        // Helper: map raw thermal zone names to human-friendly labels
-    private String mapThermalLabel(String raw) {
-        if (raw == null) return "Generic thermal zone";
-        String t = raw.toLowerCase(Locale.US);
-
-        if (t.contains("cpu")) {
-            if (t.contains("big") || t.contains("cpu1") || t.contains("cpu2") || t.contains("cpu3")) {
-                return "CPU Cluster (big cores)";
-            }
-            if (t.contains("little") || t.contains("cpu0")) {
-                return "CPU Cluster (little cores)";
-            }
-            return "CPU / SoC core thermal sensor";
-        }
-
-        if (t.contains("gpu")) {
-            return "GPU / Graphics subsystem";
-        }
-
-        if (t.contains("mdm") || t.contains("modem") || t.contains("baseband") || t.contains("xmm")) {
-            return "Modem / Baseband radio";
-        }
-
-        if (t.contains("batt") || t.contains("battery")) {
-            return "Battery thermal sensor";
-        }
-
-        if (t.contains("pa") || t.contains("qcom-pa")) {
-            return "RF Power Amplifier (PA)";
-        }
-
-        if (t.contains("xo") || t.contains("xothrm") || t.contains("xo_therm")) {
-            return "Crystal oscillator / RF reference (XO)";
-        }
-
-        if (t.contains("wlan") || t.contains("wifi")) {
-            return "Wi‑Fi / WLAN radio";
-        }
-
-        if (t.contains("skin") || t.contains("shell")) {
-            return "Device skin / chassis temperature";
-        }
-
-        if (t.contains("tsens")) {
-            return "SoC TSENS thermal array";
-        }
-
-        if (t.contains("charger") || t.contains("chg") || t.contains("pmic")) {
-            return "Charging / PMIC thermal sensor";
-        }
-
-        return "Thermal zone (" + raw + ")";
-    }
-
-private String buildThermalInfo() {
+    private String buildThermalInfo() {
         StringBuilder sb = new StringBuilder();
 
         File thermalDir = new File("/sys/class/thermal");
@@ -1864,32 +1819,13 @@ private String buildThermalInfo() {
             try {
                 File z0 = zones[0];
                 String type = readSysString(z0.getAbsolutePath() + "/type");
-                String tempRaw = readSysString(z0.getAbsolutePath() + "/temp");
+                String temp = readSysString(z0.getAbsolutePath() + "/temp");
 
                 if (type != null && type.trim().length() > 0) {
-                    String cleanType = type.trim();
-                    sb.append("  Sensor Type    : ").append(mapThermalLabel(cleanType)).append("\n");
-                    sb.append("  Raw Name       : ").append(cleanType).append("\n");
+                    sb.append("  Type           : ").append(type).append("\n");
                 }
-
-                if (tempRaw != null && tempRaw.trim().length() > 0) {
-                    String tr = tempRaw.trim();
-                    long rawLong = -1L;
-                    try {
-                        rawLong = Long.parseLong(tr);
-                    } catch (Throwable ignore) { }
-
-                    if (rawLong != Long.MIN_VALUE && rawLong != -1L) {
-                        if (Math.abs(rawLong) > 1000) {
-                            float c = rawLong / 1000f;
-                            sb.append("  Temperature    : ").append(c).append(" °C\n");
-                            sb.append("  Raw Value      : ").append(rawLong).append(" (millidegree)\n");
-                        } else {
-                            sb.append("  Temperature    : ").append(rawLong).append(" °C\n");
-                        }
-                    } else {
-                        sb.append("  Temperature    : ").append(tr).append("\n");
-                    }
+                if (temp != null && temp.trim().length() > 0) {
+                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
                 }
             } catch (Throwable ignore) { }
         }

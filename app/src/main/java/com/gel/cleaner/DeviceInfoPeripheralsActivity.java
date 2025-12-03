@@ -182,7 +182,6 @@ TextView txtRootContent            = findViewById(R.id.txtRootContent);
 TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
 TextView txtCpuContent             = findViewById(R.id.txtCpuContent);
 TextView txtGpuContent             = findViewById(R.id.txtGpuContent);
-TextView txtMemoryContent          = findViewById(R.id.txtMemoryContent);
 TextView txtModemContent           = findViewById(R.id.txtModemContent);
 TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
 TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
@@ -233,7 +232,7 @@ allContents = new TextView[]{
         txtHapticsContent, txtGnssContent, txtUsbContent,
         txtRootContent,
 
-        txtMemoryContent, txtModemContent, txtWifiAdvancedContent,
+        txtModemContent, txtWifiAdvancedContent,
         txtAudioUnifiedContent, txtSensorsExtendedContent,
         txtSystemFeaturesContent, txtSecurityFlagsContent
 };
@@ -247,7 +246,7 @@ allIcons = new TextView[]{
         iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
 
         iconThermal, iconDisplay, iconCpu, iconGpu,
-        iconMemory, iconModem, iconWifiAdvanced,
+        iconModem, iconWifiAdvanced,
         iconAudioUnified, iconSensorsExtended,
         iconSystemFeatures, iconSecurityFlags
 };
@@ -300,7 +299,6 @@ findViewById(R.id.headerCpu).setOnClickListener(v ->
         toggleSection(txtCpuContent, iconCpu));
 findViewById(R.id.headerGpu).setOnClickListener(v ->
         toggleSection(txtGpuContent, iconGpu));
-        toggleSection(txtMemoryContent, iconMemory));
 findViewById(R.id.headerModem).setOnClickListener(v ->
         toggleSection(txtModemContent, iconModem));
 findViewById(R.id.headerWifiAdvanced).setOnClickListener(v ->

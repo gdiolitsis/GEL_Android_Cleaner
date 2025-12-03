@@ -263,6 +263,8 @@ populateAllSections();
         maybeShowBatteryCapacityDialogOnce();
 
 // ============================================================
+// SETUP SECTIONS
+// ============================================================
 setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
 setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
 setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
@@ -787,7 +789,31 @@ private void setupSection(View header, View content, TextView icon) {
         return sb.toString();
     }
 
-    private String buildSensorsInfo() {
+        // Helper: map sensor type id to human-readable category
+    private String sensorTypeName(int type) {
+        switch (type) {
+            case Sensor.TYPE_ACCELEROMETER:         return "Accelerometer";
+            case Sensor.TYPE_GYROSCOPE:             return "Gyroscope";
+            case Sensor.TYPE_MAGNETIC_FIELD:        return "Magnetometer";
+            case Sensor.TYPE_PRESSURE:              return "Barometer";
+            case Sensor.TYPE_PROXIMITY:             return "Proximity Sensor";
+            case Sensor.TYPE_LIGHT:                 return "Ambient Light Sensor";
+            case Sensor.TYPE_STEP_COUNTER:          return "Step Counter";
+            case Sensor.TYPE_STEP_DETECTOR:         return "Step Detector";
+            case Sensor.TYPE_GRAVITY:               return "Gravity Sensor";
+            case Sensor.TYPE_LINEAR_ACCELERATION:   return "Linear Acceleration";
+            case Sensor.TYPE_ROTATION_VECTOR:       return "Rotation Vector";
+            case Sensor.TYPE_GAME_ROTATION_VECTOR:  return "Game Rotation Vector";
+            case Sensor.TYPE_ORIENTATION:           return "Orientation (legacy)";
+            case Sensor.TYPE_RELATIVE_HUMIDITY:     return "Humidity Sensor";
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:   return "Ambient Temperature";
+            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR: return "Geomagnetic Rotation Vector";
+            default:
+                return "Sensor type " + type;
+        }
+    }
+
+private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
         int total = 0;
 
@@ -797,11 +823,17 @@ private void setupSection(View header, View content, TextView icon) {
                 java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
                 for (Sensor s : all) {
                     total++;
+                    String label  = sensorTypeName(s.getType());
+                    String name   = s.getName();
+                    String vendor = s.getVendor();
+
                     sb.append("• ")
-                            .append(s.getName())
-                            .append(" (")
-                            .append(s.getVendor())
-                            .append(")\n");
+                      .append(label)
+                      .append(" — ")
+                      .append(name != null ? name : "Unknown")
+                      .append(" (")
+                      .append(vendor != null ? vendor : "Unknown")
+                      .append(")\n");
                 }
 
                 Sensor acc   = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -833,6 +865,8 @@ private void setupSection(View header, View content, TextView icon) {
         appendAccessInstructions(sb, "sensors");
         return sb.toString();
     }
+
+
 
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
@@ -1748,7 +1782,61 @@ private String buildUsbInfo() {
     // ============================================================
 
     // 1. Thermal Engine / Cooling Profiles
-    private String buildThermalInfo() {
+        // Helper: map raw thermal zone names to human-friendly labels
+    private String mapThermalLabel(String raw) {
+        if (raw == null) return "Generic thermal zone";
+        String t = raw.toLowerCase(Locale.US);
+
+        if (t.contains("cpu")) {
+            if (t.contains("big") || t.contains("cpu1") || t.contains("cpu2") || t.contains("cpu3")) {
+                return "CPU Cluster (big cores)";
+            }
+            if (t.contains("little") || t.contains("cpu0")) {
+                return "CPU Cluster (little cores)";
+            }
+            return "CPU / SoC core thermal sensor";
+        }
+
+        if (t.contains("gpu")) {
+            return "GPU / Graphics subsystem";
+        }
+
+        if (t.contains("mdm") || t.contains("modem") || t.contains("baseband") || t.contains("xmm")) {
+            return "Modem / Baseband radio";
+        }
+
+        if (t.contains("batt") || t.contains("battery")) {
+            return "Battery thermal sensor";
+        }
+
+        if (t.contains("pa") || t.contains("qcom-pa")) {
+            return "RF Power Amplifier (PA)";
+        }
+
+        if (t.contains("xo") || t.contains("xothrm") || t.contains("xo_therm")) {
+            return "Crystal oscillator / RF reference (XO)";
+        }
+
+        if (t.contains("wlan") || t.contains("wifi")) {
+            return "Wi‑Fi / WLAN radio";
+        }
+
+        if (t.contains("skin") || t.contains("shell")) {
+            return "Device skin / chassis temperature";
+        }
+
+        if (t.contains("tsens")) {
+            return "SoC TSENS thermal array";
+        }
+
+        if (t.contains("charger") || t.contains("chg") || t.contains("pmic")) {
+            return "Charging / PMIC thermal sensor";
+        }
+
+        return "Thermal zone (" + raw + ")";
+    }
+
+private String buildThermalInfo() {
         StringBuilder sb = new StringBuilder();
 
         File thermalDir = new File("/sys/class/thermal");
@@ -1788,13 +1876,32 @@ private String buildUsbInfo() {
             try {
                 File z0 = zones[0];
                 String type = readSysString(z0.getAbsolutePath() + "/type");
-                String temp = readSysString(z0.getAbsolutePath() + "/temp");
+                String tempRaw = readSysString(z0.getAbsolutePath() + "/temp");
 
                 if (type != null && type.trim().length() > 0) {
-                    sb.append("  Type           : ").append(type).append("\n");
+                    String cleanType = type.trim();
+                    sb.append("  Sensor Type    : ").append(mapThermalLabel(cleanType)).append("\n");
+                    sb.append("  Raw Name       : ").append(cleanType).append("\n");
                 }
-                if (temp != null && temp.trim().length() > 0) {
-                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
+
+                if (tempRaw != null && tempRaw.trim().length() > 0) {
+                    String tr = tempRaw.trim();
+                    long rawLong = -1L;
+                    try {
+                        rawLong = Long.parseLong(tr);
+                    } catch (Throwable ignore) { }
+
+                    if (rawLong != Long.MIN_VALUE && rawLong != -1L) {
+                        if (Math.abs(rawLong) > 1000) {
+                            float c = rawLong / 1000f;
+                            sb.append("  Temperature    : ").append(c).append(" °C\n");
+                            sb.append("  Raw Value      : ").append(rawLong).append(" (millidegree)\n");
+                        } else {
+                            sb.append("  Temperature    : ").append(rawLong).append(" °C\n");
+                        }
+                    } else {
+                        sb.append("  Temperature    : ").append(tr).append("\n");
+                    }
                 }
             } catch (Throwable ignore) { }
         }
@@ -1803,6 +1910,8 @@ private String buildUsbInfo() {
 
         return sb.toString();
     }
+
+
 
     // 2. Display / HDR / Refresh + Accurate Diagonal (inches)
     private String buildDisplayInfo() {
@@ -2042,7 +2151,15 @@ private String buildModemInfo() {
             sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
 
             // -----------------------------
-            // IMS / VoLTE / VoWiFi / VoNR (SDK-safe: use reflection or mark Unknown)
+            // MOBILE DATA STATE
+            // -----------------------------
+            try {
+                boolean data = tm.isDataEnabled();
+                sb.append("Mobile Data      : ").append(data ? "Enabled" : "Disabled").append("\n");
+            } catch (Throwable ignore) { }
+
+            // -----------------------------
+            // IMS / VoLTE / VoWiFi / VoNR
             // -----------------------------
             sb.append("IMS Registered   : Unknown (SDK level)\n");
 
@@ -2094,25 +2211,68 @@ private String buildModemInfo() {
                         .append("\n");
             } catch (Throwable ignore) { }
 
+            try {
+                String oper = tm.getNetworkOperator();
+                if (oper != null && oper.length() >= 5) {
+                    String mcc = oper.substring(0, 3);
+                    String mnc = oper.substring(3);
+                    sb.append("MCC / MNC        : ").append(mcc).append(" / ").append(mnc).append("\n");
+                }
+            } catch (Throwable ignore) { }
+
             // -----------------------------
-            // ACTIVE SIM COUNT
+            // ACTIVE SIM / eSIM PROFILES
             // -----------------------------
             if (Build.VERSION.SDK_INT >= 22) {
-                SubscriptionManager sm = (SubscriptionManager)
-                        getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+                try {
+                    SubscriptionManager sm = (SubscriptionManager)
+                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
 
-                if (sm != null) {
-                    List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                    sb.append("Active SIM Slots : ")
-                            .append(subs != null ? subs.size() : 0)
-                            .append("\n");
-                }
+                    if (sm != null) {
+                        List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
+                        int count = (subs != null ? subs.size() : 0);
+                        sb.append("Active SIM Slots : ").append(count).append("\n");
+
+                        if (subs != null && !subs.isEmpty()) {
+                            for (SubscriptionInfo info : subs) {
+                                sb.append("\nSIM Slot ").append(info.getSimSlotIndex()).append(":\n");
+
+                                CharSequence cname = info.getCarrierName();
+                                CharSequence dname = info.getDisplayName();
+                                sb.append("  Carrier        : ")
+                                        .append(cname != null ? cname : "Unknown")
+                                        .append("\n");
+                                sb.append("  Profile Name   : ")
+                                        .append(dname != null ? dname : "N/A")
+                                        .append("\n");
+                                sb.append("  Country / MCC  : ")
+                                        .append(info.getMcc())
+                                        .append(" / ")
+                                        .append(info.getMnc())
+                                        .append("\n");
+
+                                boolean isEsim = false;
+                                try {
+                                    isEsim = (boolean) SubscriptionInfo.class
+                                            .getMethod("isEmbedded")
+                                            .invoke(info);
+                                } catch (Throwable ignore) { }
+
+                                if (isEsim) {
+                                    sb.append("  Profile Type   : eSIM\n");
+                                } else {
+                                    sb.append("  Profile Type   : Physical SIM / Unknown\n");
+                                }
+
+                                try {
+                                    int subId = info.getSubscriptionId();
+                                    sb.append("  SubscriptionId : ").append(subId).append("\n");
+                                } catch (Throwable ignore) { }
+                            }
+                        }
+                    }
+                } catch (Throwable ignore) { }
             }
-
-            // -----------------------------
-            // CARRIER AGGREGATION (removed direct API)
-            // -----------------------------
-            sb.append("4G+ CA           : Unknown (SDK level)\n");
 
             // -----------------------------
             // ROAMING
@@ -2125,10 +2285,13 @@ private String buildModemInfo() {
 
     } catch (Throwable ignore) { }
 
-    sb.append("Advanced         : Full RAT tables, NR bands, CA combos, require root access and OEM modem tools.\n");
+    sb.append("Advanced         : Full RAT tables, NR bands, CA combos, SIM/eSIM provisioning logs and modem diagnostics require root access and OEM tools.\n");
     
     return sb.toString();
-}                
+}
+
+
+                
 
     // ============================================================
     // Helper for data network type → readable label

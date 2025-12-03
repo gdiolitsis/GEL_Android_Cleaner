@@ -1770,7 +1770,61 @@ private String buildUsbInfo() {
     // ============================================================
 
     // 1. Thermal Engine / Cooling Profiles
-    private String buildThermalInfo() {
+        // Helper: map raw thermal zone names to human-friendly labels
+    private String mapThermalLabel(String raw) {
+        if (raw == null) return "Generic thermal zone";
+        String t = raw.toLowerCase(Locale.US);
+
+        if (t.contains("cpu")) {
+            if (t.contains("big") || t.contains("cpu1") || t.contains("cpu2") || t.contains("cpu3")) {
+                return "CPU Cluster (big cores)";
+            }
+            if (t.contains("little") || t.contains("cpu0")) {
+                return "CPU Cluster (little cores)";
+            }
+            return "CPU / SoC core thermal sensor";
+        }
+
+        if (t.contains("gpu")) {
+            return "GPU / Graphics subsystem";
+        }
+
+        if (t.contains("mdm") || t.contains("modem") || t.contains("baseband") || t.contains("xmm")) {
+            return "Modem / Baseband radio";
+        }
+
+        if (t.contains("batt") || t.contains("battery")) {
+            return "Battery thermal sensor";
+        }
+
+        if (t.contains("pa") || t.contains("qcom-pa")) {
+            return "RF Power Amplifier (PA)";
+        }
+
+        if (t.contains("xo") || t.contains("xothrm") || t.contains("xo_therm")) {
+            return "Crystal oscillator / RF reference (XO)";
+        }
+
+        if (t.contains("wlan") || t.contains("wifi")) {
+            return "Wi‑Fi / WLAN radio";
+        }
+
+        if (t.contains("skin") || t.contains("shell")) {
+            return "Device skin / chassis temperature";
+        }
+
+        if (t.contains("tsens")) {
+            return "SoC TSENS thermal array";
+        }
+
+        if (t.contains("charger") || t.contains("chg") || t.contains("pmic")) {
+            return "Charging / PMIC thermal sensor";
+        }
+
+        return "Thermal zone (" + raw + ")";
+    }
+
+private String buildThermalInfo() {
         StringBuilder sb = new StringBuilder();
 
         File thermalDir = new File("/sys/class/thermal");
@@ -1810,13 +1864,32 @@ private String buildUsbInfo() {
             try {
                 File z0 = zones[0];
                 String type = readSysString(z0.getAbsolutePath() + "/type");
-                String temp = readSysString(z0.getAbsolutePath() + "/temp");
+                String tempRaw = readSysString(z0.getAbsolutePath() + "/temp");
 
                 if (type != null && type.trim().length() > 0) {
-                    sb.append("  Type           : ").append(type).append("\n");
+                    String cleanType = type.trim();
+                    sb.append("  Sensor Type    : ").append(mapThermalLabel(cleanType)).append("\n");
+                    sb.append("  Raw Name       : ").append(cleanType).append("\n");
                 }
-                if (temp != null && temp.trim().length() > 0) {
-                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
+
+                if (tempRaw != null && tempRaw.trim().length() > 0) {
+                    String tr = tempRaw.trim();
+                    long rawLong = -1L;
+                    try {
+                        rawLong = Long.parseLong(tr);
+                    } catch (Throwable ignore) { }
+
+                    if (rawLong != Long.MIN_VALUE && rawLong != -1L) {
+                        if (Math.abs(rawLong) > 1000) {
+                            float c = rawLong / 1000f;
+                            sb.append("  Temperature    : ").append(c).append(" °C\n");
+                            sb.append("  Raw Value      : ").append(rawLong).append(" (millidegree)\n");
+                        } else {
+                            sb.append("  Temperature    : ").append(rawLong).append(" °C\n");
+                        }
+                    } else {
+                        sb.append("  Temperature    : ").append(tr).append("\n");
+                    }
                 }
             } catch (Throwable ignore) { }
         }

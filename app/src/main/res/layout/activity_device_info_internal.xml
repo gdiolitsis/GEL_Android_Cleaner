@@ -28,7 +28,7 @@
             android:id="@+id/txtSectionHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📂 INTERNAL SYSTEM REPORT — Full Device Profile"
+            android:text="ðŸ“‚ INTERNAL SYSTEM REPORT â€” Full Device Profile"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/gel_gold"
@@ -60,7 +60,7 @@
                 android:id="@+id/iconSystemToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -101,7 +101,7 @@
                 android:id="@+id/iconAndroidToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -142,7 +142,7 @@
                 android:id="@+id/iconCpuToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -183,7 +183,7 @@
                 android:id="@+id/iconGpuToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -224,7 +224,7 @@
                 android:id="@+id/iconThermalToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -265,7 +265,7 @@
                 android:id="@+id/iconThermalZonesToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -306,7 +306,7 @@
                 android:id="@+id/iconVulkanToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -347,7 +347,7 @@
                 android:id="@+id/iconThermalProfilesToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -388,7 +388,7 @@
                 android:id="@+id/iconFpsGovernorToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -429,7 +429,7 @@
                 android:id="@+id/iconRamToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -470,7 +470,7 @@
                 android:id="@+id/iconStorageToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -511,7 +511,7 @@
                 android:id="@+id/iconScreenToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -552,7 +552,7 @@
                 android:id="@+id/iconConnectivityToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -593,7 +593,7 @@
                 android:id="@+id/iconRootToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp" />
         </LinearLayout>

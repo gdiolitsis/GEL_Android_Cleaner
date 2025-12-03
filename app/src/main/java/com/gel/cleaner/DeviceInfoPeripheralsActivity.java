@@ -1257,12 +1257,12 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ============================================================
-// POPUP DIALOG — User Model Capacity (Opaque GEL Edition)
+// POPUP DIALOG — GEL SIMPLE EDITION (Best Version)
 // ============================================================
 private void showBatteryCapacityDialog() {
     runOnUiThread(() -> {
         try {
-            AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.GELDialogTheme);
+            AlertDialog.Builder b = new AlertDialog.Builder(this);
             b.setTitle(getString(R.string.battery_popup_title));
             b.setMessage(getString(R.string.battery_popup_msg));
 
@@ -1276,18 +1276,7 @@ private void showBatteryCapacityDialog() {
                 input.setSelection(input.getText().length());
             }
 
-            // Container με μαύρο background + χρυσό περίγραμμα
-            LinearLayout container = new LinearLayout(this);
-            container.setOrientation(LinearLayout.VERTICAL);
-
-            int pad = (int) (20 * getResources().getDisplayMetrics().density);
-            container.setPadding(pad, pad, pad, pad);
-
-            container.setBackgroundResource(R.drawable.gel_dialog_battery_full_black);
-
-            container.addView(input);
-
-            b.setView(container);
+            b.setView(input);
 
             b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
                 String txt = input.getText().toString().trim();
@@ -1316,9 +1305,14 @@ private void showBatteryCapacityDialog() {
 
             AlertDialog dialog = b.create();
 
+            // 🔥 ΕΔΩ είναι όλη η μαγεία
+            dialog.getWindow().setBackgroundDrawableResource(
+                    R.drawable.gel_dialog_battery_full_black
+            );
+
             dialog.show();
 
-        } catch (Throwable ignore) { }
+        } catch (Throwable ignore) {}
     });
 }
       

@@ -189,7 +189,7 @@
         <!-- DISPLAY -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerDisplay"
+            android:id="@+id/headerScreen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -202,13 +202,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Display / Refresh / HDR"
+                android:text="Screen / Refresh / HDR"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
 
             <TextView
-                android:id="@+id/iconDisplayToggle"
+                android:id="@+id/iconScreenToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ï¼‹"
@@ -217,7 +217,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtDisplayContent"
+            android:id="@+id/txtScreenContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -448,7 +448,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="GNSS Constellations"
+                android:text="GPS & Satellites"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -780,7 +780,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- UWB -->
+        <!-- Ultra-Wideband -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerUwb"
@@ -796,7 +796,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="UWB Support"
+                android:text="Ultra-Wideband Support"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -865,7 +865,7 @@
         <!-- HAPTICS -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerHaptics"
+            android:id="@+id/headerVibration & Haptics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -878,13 +878,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Haptics"
+                android:text="Vibration & Haptics"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
 
             <TextView
-                android:id="@+id/iconHapticsToggle"
+                android:id="@+id/iconVibration & HapticsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ï¼‹"
@@ -893,7 +893,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtHapticsContent"
+            android:id="@+id/txtVibration & HapticsContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

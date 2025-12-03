@@ -1257,16 +1257,15 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ============================================================
-// POPUP DIALOG — User Model Capacity (GEL Dark-Gold Edition)
+// POPUP DIALOG — User Model Capacity (Opaque GEL Edition)
 // ============================================================
 private void showBatteryCapacityDialog() {
     runOnUiThread(() -> {
         try {
-            AlertDialog.Builder b = new AlertDialog.Builder(this);
+            AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.GELDialogTheme);
             b.setTitle(getString(R.string.battery_popup_title));
             b.setMessage(getString(R.string.battery_popup_msg));
 
-            // --- EditText ---
             final EditText input = new EditText(this);
             input.setInputType(InputType.TYPE_CLASS_NUMBER);
             input.setHint(getString(R.string.battery_popup_hint));
@@ -1277,22 +1276,19 @@ private void showBatteryCapacityDialog() {
                 input.setSelection(input.getText().length());
             }
 
-            // --- Dark-Gold container layout ---
+            // Container με μαύρο background + χρυσό περίγραμμα
             LinearLayout container = new LinearLayout(this);
             container.setOrientation(LinearLayout.VERTICAL);
 
-            int pad = (int) (18 * getResources().getDisplayMetrics().density);
+            int pad = (int) (20 * getResources().getDisplayMetrics().density);
             container.setPadding(pad, pad, pad, pad);
 
-            // 🔥 Apply the GEL black background with gold border
-            container.setBackgroundResource(R.drawable.gel_dialog_battery_bg);
+            container.setBackgroundResource(R.drawable.gel_dialog_battery_full_black);
 
-            // Add the input into our styled container
             container.addView(input);
 
             b.setView(container);
 
-            // Buttons
             b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
                 String txt = input.getText().toString().trim();
                 if (!txt.isEmpty()) {
@@ -1301,23 +1297,18 @@ private void showBatteryCapacityDialog() {
                         if (val > 0) {
                             saveModelCapacity(val);
 
-                            // Refresh battery text
-                            String info = buildBatteryInfo();
                             TextView content = findViewById(R.id.txtBatteryContent);
                             if (content != null) {
-                                content.setText(info);
+                                content.setText(buildBatteryInfo());
                             }
 
-                            // Refresh the "Set model capacity" button
                             TextView btn = findViewById(R.id.txtBatteryModelCapacity);
                             if (btn != null) {
-                                btn.setText(
-                                    getString(R.string.battery_set_model_capacity)
-                                    + " (" + val + " mAh)"
-                                );
+                                btn.setText(getString(R.string.battery_set_model_capacity) +
+                                        " (" + val + " mAh)");
                             }
                         }
-                    } catch (NumberFormatException ignore2) { }
+                    } catch (Throwable ignore) { }
                 }
             });
 
@@ -1325,22 +1316,11 @@ private void showBatteryCapacityDialog() {
 
             AlertDialog dialog = b.create();
 
-            // Make dialog background transparent so our custom bg is visible
-            dialog.setOnShowListener(d -> {
-                Window w = dialog.getWindow();
-                if (w != null) {
-                    w.setBackgroundDrawable(
-                        new ColorDrawable(Color.TRANSPARENT)
-                    );
-                }
-            });
-
             dialog.show();
 
         } catch (Throwable ignore) { }
     });
 }
-  
       
  // ============================================================
  // UwB Info

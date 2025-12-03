@@ -459,6 +459,13 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
         sb.append("\n");
 
+
+        // Arch (from OS)
+        String arch = System.getProperty("os.arch", "");
+        if (arch != null && !arch.isEmpty()) {
+            sb.append("Arch         : ").append(arch).append("\n");
+        }
+
         int cores = Runtime.getRuntime().availableProcessors();
         sb.append("CPU Cores    : ").append(cores).append("\n");
 
@@ -474,6 +481,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                     sb.append(line.trim()).append("\n");
                 } else if (low.startsWith("processor")) {
                     sb.append(line.trim()).append("\n");
+                } else if (low.startsWith("features")) {
+                    sb.append("Features      : ").append(line.trim()).append("\n");
                 }
             }
         }
@@ -562,6 +571,17 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         String driver0 = getProp("ro.gfx.driver.0");
         if (driver0 != null && !driver0.isEmpty()) {
             sb.append("GPU Driver   : ").append(driver0).append("\n");
+        }
+
+
+        String glesProp = getProp("ro.opengles.version");
+        if (glesProp != null && !glesProp.isEmpty()) {
+            sb.append("OpenGL ES Prop: ").append(glesProp).append("\n");
+        }
+
+        String vulkanProp = getProp("ro.hardware.vulkan");
+        if (vulkanProp != null && !vulkanProp.isEmpty()) {
+            sb.append("Vulkan Prop  : ").append(vulkanProp).append("\n");
         }
 
         String perf = getProp("ro.gpu.uv");

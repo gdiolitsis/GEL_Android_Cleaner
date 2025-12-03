@@ -97,8 +97,7 @@ import java.lang.reflect.Field;
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.NEARBY_WIFI_DEVICES,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.NEARBY_WIFI_DEVICES
     };
 
     private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
@@ -141,7 +140,7 @@ private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
 private boolean isRooted = false;
 
-private View[] allContents;
+private TextView[] allContents;
 private TextView[] allIcons;
 
 @Override
@@ -219,15 +218,33 @@ TextView iconSensorsExtended  = findViewById(R.id.iconSensorsExtendedToggle);
 TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
 TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
 
+
+
+        // GEL NOTE: CPU / GPU / MEMORY belong to Internals (not Peripherals).
+        // We keep builders/code for future use, but hide these sections in this screen.
+        try {
+            View headerCpu    = findViewById(R.id.headerCpu);
+            View headerGpu    = findViewById(R.id.headerGpu);
+            View headerMemory = findViewById(R.id.headerMemory);
+
+            if (headerCpu != null)    headerCpu.setVisibility(View.GONE);
+            if (headerGpu != null)    headerGpu.setVisibility(View.GONE);
+            if (headerMemory != null) headerMemory.setVisibility(View.GONE);
+
+            if (txtCpuContent != null)    txtCpuContent.setVisibility(View.GONE);
+            if (txtGpuContent != null)    txtGpuContent.setVisibility(View.GONE);
+            if (txtMemoryContent != null) txtMemoryContent.setVisibility(View.GONE);
+        } catch (Throwable ignore) {
+            // Fail-safe: never crash UI if any of these views are missing.
+        }
+
 // ============================================================
 // ALL CONTENTS
 // ============================================================
-View batteryContainer = findViewById(R.id.batteryContainer);
-
-allContents = new View[]{
+allContents = new TextView[]{
         txtCameraContent, txtBiometricsContent, txtSensorsContent,
         txtConnectivityContent, txtLocationContent, txtNfcContent,
-        batteryContainer, txtOtherPeripherals, txtUwbContent,
+        txtBatteryContent, txtOtherPeripherals, txtUwbContent,
         txtHapticsContent, txtGnssContent, txtUsbContent,
         txtRootContent,
 
@@ -255,13 +272,6 @@ allIcons = new TextView[]{
 // APPLY TEXTS FIRST
 // ============================================================
 populateAllSections();
-
-        // BATTERY MODEL CAPACITY BUTTON + FIRST-TIME POPUP
-        TextView txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
-        if (txtBatteryModelCapacity != null) {
-            txtBatteryModelCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-        }
-        maybeShowBatteryCapacityDialogOnce();
 
 // ============================================================
 // SETUP SECTIONS
@@ -313,15 +323,23 @@ private void setupSection(View header, View content, TextView icon) {
     content.setVisibility(View.GONE);
     icon.setText("＋");
 
-    header.setOnClickListener(v -> toggleSection(content, icon));
+    header.setOnClickListener(v -> {
+        if (content.getVisibility() == View.GONE) {
+            content.setVisibility(View.VISIBLE);
+            icon.setText("－");
+        } else {
+            content.setVisibility(View.GONE);
+            icon.setText("＋");
+        }
+    });
 }
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================
-    private void toggleSection(View targetContent, TextView targetIcon) {
+    private void toggleSection(TextView targetContent, TextView targetIcon) {
 
         for (int i = 0; i < allContents.length; i++) {
-            View c  = allContents[i];
+            TextView c  = allContents[i];
             TextView ic = allIcons[i];
 
             if (c == null || ic == null) continue;
@@ -790,31 +808,7 @@ private void setupSection(View header, View content, TextView icon) {
         return sb.toString();
     }
 
-        // Helper: map sensor type id to human-readable category
-    private String sensorTypeName(int type) {
-        switch (type) {
-            case Sensor.TYPE_ACCELEROMETER:         return "Accelerometer";
-            case Sensor.TYPE_GYROSCOPE:             return "Gyroscope";
-            case Sensor.TYPE_MAGNETIC_FIELD:        return "Magnetometer";
-            case Sensor.TYPE_PRESSURE:              return "Barometer";
-            case Sensor.TYPE_PROXIMITY:             return "Proximity Sensor";
-            case Sensor.TYPE_LIGHT:                 return "Ambient Light Sensor";
-            case Sensor.TYPE_STEP_COUNTER:          return "Step Counter";
-            case Sensor.TYPE_STEP_DETECTOR:         return "Step Detector";
-            case Sensor.TYPE_GRAVITY:               return "Gravity Sensor";
-            case Sensor.TYPE_LINEAR_ACCELERATION:   return "Linear Acceleration";
-            case Sensor.TYPE_ROTATION_VECTOR:       return "Rotation Vector";
-            case Sensor.TYPE_GAME_ROTATION_VECTOR:  return "Game Rotation Vector";
-            case Sensor.TYPE_ORIENTATION:           return "Orientation (legacy)";
-            case Sensor.TYPE_RELATIVE_HUMIDITY:     return "Humidity Sensor";
-            case Sensor.TYPE_AMBIENT_TEMPERATURE:   return "Ambient Temperature";
-            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR: return "Geomagnetic Rotation Vector";
-            default:
-                return "Sensor type " + type;
-        }
-    }
-
-private String buildSensorsInfo() {
+    private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
         int total = 0;
 
@@ -824,17 +818,11 @@ private String buildSensorsInfo() {
                 java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
                 for (Sensor s : all) {
                     total++;
-                    String label  = sensorTypeName(s.getType());
-                    String name   = s.getName();
-                    String vendor = s.getVendor();
-
                     sb.append("• ")
-                      .append(label)
-                      .append(" — ")
-                      .append(name != null ? name : "Unknown")
-                      .append(" (")
-                      .append(vendor != null ? vendor : "Unknown")
-                      .append(")\n");
+                            .append(s.getName())
+                            .append(" (")
+                            .append(s.getVendor())
+                            .append(")\n");
                 }
 
                 Sensor acc   = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -866,8 +854,6 @@ private String buildSensorsInfo() {
         appendAccessInstructions(sb, "sensors");
         return sb.toString();
     }
-
-
 
     private String buildConnectivityInfo() {
         StringBuilder sb = new StringBuilder();
@@ -1783,61 +1769,7 @@ private String buildUsbInfo() {
     // ============================================================
 
     // 1. Thermal Engine / Cooling Profiles
-        // Helper: map raw thermal zone names to human-friendly labels
-    private String mapThermalLabel(String raw) {
-        if (raw == null) return "Generic thermal zone";
-        String t = raw.toLowerCase(Locale.US);
-
-        if (t.contains("cpu")) {
-            if (t.contains("big") || t.contains("cpu1") || t.contains("cpu2") || t.contains("cpu3")) {
-                return "CPU Cluster (big cores)";
-            }
-            if (t.contains("little") || t.contains("cpu0")) {
-                return "CPU Cluster (little cores)";
-            }
-            return "CPU / SoC core thermal sensor";
-        }
-
-        if (t.contains("gpu")) {
-            return "GPU / Graphics subsystem";
-        }
-
-        if (t.contains("mdm") || t.contains("modem") || t.contains("baseband") || t.contains("xmm")) {
-            return "Modem / Baseband radio";
-        }
-
-        if (t.contains("batt") || t.contains("battery")) {
-            return "Battery thermal sensor";
-        }
-
-        if (t.contains("pa") || t.contains("qcom-pa")) {
-            return "RF Power Amplifier (PA)";
-        }
-
-        if (t.contains("xo") || t.contains("xothrm") || t.contains("xo_therm")) {
-            return "Crystal oscillator / RF reference (XO)";
-        }
-
-        if (t.contains("wlan") || t.contains("wifi")) {
-            return "Wi‑Fi / WLAN radio";
-        }
-
-        if (t.contains("skin") || t.contains("shell")) {
-            return "Device skin / chassis temperature";
-        }
-
-        if (t.contains("tsens")) {
-            return "SoC TSENS thermal array";
-        }
-
-        if (t.contains("charger") || t.contains("chg") || t.contains("pmic")) {
-            return "Charging / PMIC thermal sensor";
-        }
-
-        return "Thermal zone (" + raw + ")";
-    }
-
-private String buildThermalInfo() {
+    private String buildThermalInfo() {
         StringBuilder sb = new StringBuilder();
 
         File thermalDir = new File("/sys/class/thermal");
@@ -1877,32 +1809,13 @@ private String buildThermalInfo() {
             try {
                 File z0 = zones[0];
                 String type = readSysString(z0.getAbsolutePath() + "/type");
-                String tempRaw = readSysString(z0.getAbsolutePath() + "/temp");
+                String temp = readSysString(z0.getAbsolutePath() + "/temp");
 
                 if (type != null && type.trim().length() > 0) {
-                    String cleanType = type.trim();
-                    sb.append("  Sensor Type    : ").append(mapThermalLabel(cleanType)).append("\n");
-                    sb.append("  Raw Name       : ").append(cleanType).append("\n");
+                    sb.append("  Type           : ").append(type).append("\n");
                 }
-
-                if (tempRaw != null && tempRaw.trim().length() > 0) {
-                    String tr = tempRaw.trim();
-                    long rawLong = -1L;
-                    try {
-                        rawLong = Long.parseLong(tr);
-                    } catch (Throwable ignore) { }
-
-                    if (rawLong != Long.MIN_VALUE && rawLong != -1L) {
-                        if (Math.abs(rawLong) > 1000) {
-                            float c = rawLong / 1000f;
-                            sb.append("  Temperature    : ").append(c).append(" °C\n");
-                            sb.append("  Raw Value      : ").append(rawLong).append(" (millidegree)\n");
-                        } else {
-                            sb.append("  Temperature    : ").append(rawLong).append(" °C\n");
-                        }
-                    } else {
-                        sb.append("  Temperature    : ").append(tr).append("\n");
-                    }
+                if (temp != null && temp.trim().length() > 0) {
+                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
                 }
             } catch (Throwable ignore) { }
         }
@@ -1911,8 +1824,6 @@ private String buildThermalInfo() {
 
         return sb.toString();
     }
-
-
 
     // 2. Display / HDR / Refresh + Accurate Diagonal (inches)
     private String buildDisplayInfo() {
@@ -2130,17 +2041,6 @@ private String buildModemInfo() {
 
         if (tm != null) {
 
-            boolean hasReadPhone = true;
-            try {
-                if (Build.VERSION.SDK_INT >= 23) {
-                    hasReadPhone =
-                            (checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
-                                    == PackageManager.PERMISSION_GRANTED);
-                }
-            } catch (Throwable ignore) {
-                hasReadPhone = true;
-            }
-
             // -----------------------------
             // BASIC PHONE TYPE
             // -----------------------------
@@ -2163,15 +2063,7 @@ private String buildModemInfo() {
             sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
 
             // -----------------------------
-            // MOBILE DATA STATE
-            // -----------------------------
-            try {
-                boolean data = tm.isDataEnabled();
-                sb.append("Mobile Data      : ").append(data ? "Enabled" : "Disabled").append("\n");
-            } catch (Throwable ignore) { }
-
-            // -----------------------------
-            // IMS / VoLTE / VoWiFi / VoNR
+            // IMS / VoLTE / VoWiFi / VoNR (SDK-safe: use reflection or mark Unknown)
             // -----------------------------
             sb.append("IMS Registered   : Unknown (SDK level)\n");
 
@@ -2223,101 +2115,25 @@ private String buildModemInfo() {
                         .append("\n");
             } catch (Throwable ignore) { }
 
-            try {
-                String oper = tm.getNetworkOperator();
-                if (oper != null && oper.length() >= 5) {
-                    String mcc = oper.substring(0, 3);
-                    String mnc = oper.substring(3);
-                    sb.append("MCC / MNC        : ").append(mcc).append(" / ").append(mnc).append("\n");
+            // -----------------------------
+            // ACTIVE SIM COUNT
+            // -----------------------------
+            if (Build.VERSION.SDK_INT >= 22) {
+                SubscriptionManager sm = (SubscriptionManager)
+                        getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+                if (sm != null) {
+                    List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
+                    sb.append("Active SIM Slots : ")
+                            .append(subs != null ? subs.size() : 0)
+                            .append("\n");
                 }
-            } catch (Throwable ignore) { }
-
-            // -----------------------------
-            // ACTIVE SIM / eSIM PROFILES (requires READ_PHONE_STATE)
-            // -----------------------------
-            if (Build.VERSION.SDK_INT >= 22 && hasReadPhone) {
-                try {
-                    SubscriptionManager sm = (SubscriptionManager)
-                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-
-                    if (sm != null) {
-                        List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                        int count = (subs != null ? subs.size() : 0);
-                        sb.append("Active SIM Slots : ").append(count).append("\n");
-
-                        int defaultDataSubId  = SubscriptionManager.getDefaultDataSubscriptionId();
-                        int defaultVoiceSubId = SubscriptionManager.getDefaultVoiceSubscriptionId();
-
-                        if (subs != null && !subs.isEmpty()) {
-                            for (SubscriptionInfo info : subs) {
-                                sb.append("\nSIM Slot ").append(info.getSimSlotIndex()).append(":\n");
-
-                                CharSequence cname = info.getCarrierName();
-                                CharSequence dname = info.getDisplayName();
-                                sb.append("  Carrier        : ")
-                                        .append(cname != null ? cname : "Unknown")
-                                        .append("\n");
-                                sb.append("  Profile Name   : ")
-                                        .append(dname != null ? dname : "N/A")
-                                        .append("\n");
-                                sb.append("  Country / MCC  : ")
-                                        .append(info.getMcc())
-                                        .append(" / ")
-                                        .append(info.getMnc())
-                                        .append("\n");
-
-                                boolean isEsim = false;
-                                try {
-                                    isEsim = (boolean) SubscriptionInfo.class
-                                            .getMethod("isEmbedded")
-                                            .invoke(info);
-                                } catch (Throwable ignore) { }
-
-                                if (isEsim) {
-                                    sb.append("  Profile Type   : eSIM\n");
-                                } else {
-                                    sb.append("  Profile Type   : Physical SIM / Unknown\n");
-                                }
-
-                                int subId = info.getSubscriptionId();
-                                sb.append("  SubscriptionId : ").append(subId).append("\n");
-
-                                if (subId == defaultDataSubId) {
-                                    sb.append("  Default Data   : Yes\n");
-                                }
-                                if (subId == defaultVoiceSubId) {
-                                    sb.append("  Default Voice  : Yes\n");
-                                }
-
-                                // Best-effort masked device ID (IMEI) per slot
-                                try {
-                                    String imei = null;
-                                    if (Build.VERSION.SDK_INT >= 26) {
-                                        TelephonyManager perSubTm = tm;
-                                        try {
-                                            perSubTm = tm.createForSubscriptionId(subId);
-                                        } catch (Throwable ignore) { }
-
-                                        if (perSubTm != null) {
-                                            imei = perSubTm.getImei();
-                                        }
-                                    } else {
-                                        imei = tm.getDeviceId();
-                                    }
-
-                                    if (imei != null && imei.length() >= 6) {
-                                        String masked =
-                                                imei.substring(0, 2) + "********" + imei.substring(imei.length() - 2);
-                                        sb.append("  Device ID      : ").append(masked).append(" (masked)\n");
-                                    }
-                                } catch (Throwable ignore) { }
-                            }
-                        }
-                    }
-                } catch (Throwable ignore) { }
-            } else {
-                sb.append("Active SIM Slots : Unknown (permission READ_PHONE_STATE not granted)\n");
             }
+
+            // -----------------------------
+            // CARRIER AGGREGATION (removed direct API)
+            // -----------------------------
+            sb.append("4G+ CA           : Unknown (SDK level)\n");
 
             // -----------------------------
             // ROAMING
@@ -2330,14 +2146,10 @@ private String buildModemInfo() {
 
     } catch (Throwable ignore) { }
 
-    sb.append("Advanced         : Full RAT tables, NR bands, CA combos, SIM/eSIM provisioning logs and modem diagnostics require root access and OEM tools.\n");
-
+    sb.append("Advanced         : Full RAT tables, NR bands, CA combos, require root access and OEM modem tools.\n");
+    
     return sb.toString();
-}
-
-
-
-                
+}                
 
     // ============================================================
     // Helper for data network type → readable label

@@ -97,7 +97,8 @@ import java.lang.reflect.Field;
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.NEARBY_WIFI_DEVICES
+            Manifest.permission.NEARBY_WIFI_DEVICES,
+            Manifest.permission.READ_PHONE_STATE
     };
 
     private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
@@ -1482,7 +1483,8 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles\n");
+    sb.append("                   require root access.\n");
 
     return sb.toString();
 }
@@ -2105,8 +2107,8 @@ private String buildThermalInfo() {
             long total = sf.getBlockCountLong() * blockSize;
             long avail = sf.getAvailableBlocksLong() * blockSize;
 
-            sb.append("Internal Storage Total  : ").append(total / (1024 * 1024)).append(" MB\n");
-            sb.append("Internal Storage Free   : ").append(avail / (1024 * 1024)).append(" MB\n");
+            sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
+            sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
         } catch (Throwable ignore) { }
 
         long zramSize = readSysLong("/sys/block/zram0/disksize");
@@ -2127,6 +2129,17 @@ private String buildModemInfo() {
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
         if (tm != null) {
+
+            boolean hasReadPhone = true;
+            try {
+                if (Build.VERSION.SDK_INT >= 23) {
+                    hasReadPhone =
+                            (checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
+                                    == PackageManager.PERMISSION_GRANTED);
+                }
+            } catch (Throwable ignore) {
+                hasReadPhone = true;
+            }
 
             // -----------------------------
             // BASIC PHONE TYPE
@@ -2220,9 +2233,9 @@ private String buildModemInfo() {
             } catch (Throwable ignore) { }
 
             // -----------------------------
-            // ACTIVE SIM / eSIM PROFILES
+            // ACTIVE SIM / eSIM PROFILES (requires READ_PHONE_STATE)
             // -----------------------------
-            if (Build.VERSION.SDK_INT >= 22) {
+            if (Build.VERSION.SDK_INT >= 22 && hasReadPhone) {
                 try {
                     SubscriptionManager sm = (SubscriptionManager)
                             getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
@@ -2231,6 +2244,9 @@ private String buildModemInfo() {
                         List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
                         int count = (subs != null ? subs.size() : 0);
                         sb.append("Active SIM Slots : ").append(count).append("\n");
+
+                        int defaultDataSubId  = SubscriptionManager.getDefaultDataSubscriptionId();
+                        int defaultVoiceSubId = SubscriptionManager.getDefaultVoiceSubscriptionId();
 
                         if (subs != null && !subs.isEmpty()) {
                             for (SubscriptionInfo info : subs) {
@@ -2263,14 +2279,44 @@ private String buildModemInfo() {
                                     sb.append("  Profile Type   : Physical SIM / Unknown\n");
                                 }
 
+                                int subId = info.getSubscriptionId();
+                                sb.append("  SubscriptionId : ").append(subId).append("\n");
+
+                                if (subId == defaultDataSubId) {
+                                    sb.append("  Default Data   : Yes\n");
+                                }
+                                if (subId == defaultVoiceSubId) {
+                                    sb.append("  Default Voice  : Yes\n");
+                                }
+
+                                // Best-effort masked device ID (IMEI) per slot
                                 try {
-                                    int subId = info.getSubscriptionId();
-                                    sb.append("  SubscriptionId : ").append(subId).append("\n");
+                                    String imei = null;
+                                    if (Build.VERSION.SDK_INT >= 26) {
+                                        TelephonyManager perSubTm = tm;
+                                        try {
+                                            perSubTm = tm.createForSubscriptionId(subId);
+                                        } catch (Throwable ignore) { }
+
+                                        if (perSubTm != null) {
+                                            imei = perSubTm.getImei();
+                                        }
+                                    } else {
+                                        imei = tm.getDeviceId();
+                                    }
+
+                                    if (imei != null && imei.length() >= 6) {
+                                        String masked =
+                                                imei.substring(0, 2) + "********" + imei.substring(imei.length() - 2);
+                                        sb.append("  Device ID      : ").append(masked).append(" (masked)\n");
+                                    }
                                 } catch (Throwable ignore) { }
                             }
                         }
                     }
                 } catch (Throwable ignore) { }
+            } else {
+                sb.append("Active SIM Slots : Unknown (permission READ_PHONE_STATE not granted)\n");
             }
 
             // -----------------------------
@@ -2285,9 +2331,10 @@ private String buildModemInfo() {
     } catch (Throwable ignore) { }
 
     sb.append("Advanced         : Full RAT tables, NR bands, CA combos, SIM/eSIM provisioning logs and modem diagnostics require root access and OEM tools.\n");
-    
+
     return sb.toString();
 }
+
 
 
                 

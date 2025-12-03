@@ -865,7 +865,7 @@
         <!-- HAPTICS -->
         <!-- ========================================================= -->
         <LinearLayout
-            android:id="@+id/headerVibration & Haptics"
+            android:id="@+id/headerHaptics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/gel_btn_outline_selector"
@@ -884,7 +884,7 @@
                 android:textSize="16sp"/>
 
             <TextView
-                android:id="@+id/iconVibration & HapticsToggle"
+                android:id="@+id/iconHapticsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="＋"
@@ -893,7 +893,7 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtVibration & HapticsContent"
+            android:id="@+id/txtHapticsContent"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

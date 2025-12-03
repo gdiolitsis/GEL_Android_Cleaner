@@ -1052,14 +1052,16 @@ private void saveModelCapacity(long value) {
     } catch (Throwable ignore) {}
 }
 
+
 // ===================================================================
 // BATTERY DATA STRUCT (GEL ENGINE v1.0)
 // ===================================================================
 private static class BatteryInfo {
-    long oemFullMah = -1;        // OEM Factory capacity (if available)
-    long chargeCounterMah = -1;  // Current charge content (mAh)
-    long estimatedFullMah = -1;  // Estimated 100% capacity
+    long oemFullMah = -1;
+    long chargeCounterMah = -1;
+    long estimatedFullMah = -1;
 }
+
 
 // ===================================================================
 // REAL BATTERY CAPACITY SCANNER — OEM Paths (GEL Edition)
@@ -1069,46 +1071,44 @@ private long detectBatteryMah() {
     long cap;
 
     String[] paths = new String[]{
-            "/sys/class/power_supply/battery/charge_full_design",
-            "/sys/class/power_supply/battery/charge_full",
-            "/sys/class/power_supply/battery/charge_full_raw",
-            "/sys/class/power_supply/battery/fg_fullcapnom",
-            "/sys/class/power_supply/battery/fg_fullcaprep",
-            "/sys/class/power_supply/maxfg/capacity",
-            "/sys/class/power_supply/maxfg/fullcap",
-            "/sys/class/power_supply/maxfg/fullcapnom",
-            "/sys/class/power_supply/maxfg/designcap",
-            "/sys/class/power_supply/bms/charge_full",
-            "/sys/class/power_supply/bms/charge_full_design",
-            "/sys/class/power_supply/bms/fullcapnom",
-            "/sys/class/power_supply/bms/fullcap",
-            "/sys/class/power_supply/bms/fcc_data"
+        "/sys/class/power_supply/battery/charge_full_design",
+        "/sys/class/power_supply/battery/charge_full",
+        "/sys/class/power_supply/battery/charge_full_raw",
+        "/sys/class/power_supply/battery/fg_fullcapnom",
+        "/sys/class/power_supply/battery/fg_fullcaprep",
+        "/sys/class/power_supply/maxfg/capacity",
+        "/sys/class/power_supply/maxfg/fullcap",
+        "/sys/class/power_supply/maxfg/fullcapnom",
+        "/sys/class/power_supply/maxfg/designcap",
+        "/sys/class/power_supply/bms/charge_full",
+        "/sys/class/power_supply/bms/charge_full_design",
+        "/sys/class/power_supply/bms/fullcapnom",
+        "/sys/class/power_supply/bms/fullcap",
+        "/sys/class/power_supply/bms/fcc_data"
     };
 
     for (String p : paths) {
-        cap = readSysLong(p);
+        cap = readSysLong(p);  // ✔ uses your existing helper
         if (cap > 2000) {
-            if (cap > 200000) return cap / 1000; // μAh → mAh
+            if (cap > 200000) return cap / 1000;
             return cap;
         }
     }
 
-    // Fallback: BatteryManager charge counter
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
             long c = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
             if (c > 0) {
-                if (c > 200000) c = c / 1000;
+                if (c > 200000) c /= 1000;
                 return Math.abs(c);
             }
         }
     } catch (Throwable ignore) {}
 
-    // Fallback: OEM property
     try {
-        String prop = getSystemProperty("persist.battery.capacity");
-        if (prop != null) {
+        String prop = getProp("persist.battery.capacity");
+        if (prop != null && !prop.isEmpty()) {
             long n = Long.parseLong(prop.trim());
             if (n > 1000) return n;
         }
@@ -1117,32 +1117,6 @@ private long detectBatteryMah() {
     return -1;
 }
 
-// ===================================================================
-// SAFE SYSFS READER  (ΜΟΝΟ ΑΥΤΟ – ΤΟ ΔΕΥΤΕΡΟ ΣΒΗΣΤΗΚΕ)
-// ===================================================================
-private long readSysLong(String path) {
-    try {
-        File f = new File(path);
-        if (f.exists()) {
-            BufferedReader br = new BufferedReader(new FileReader(f));
-            String line = br.readLine();
-            br.close();
-            if (line != null) return Long.parseLong(line.trim());
-        }
-    } catch (Throwable ignore) {}
-    return -1;
-}
-
-// ===================================================================
-// SYSTEM PROPERTY READER
-// ===================================================================
-private String getSystemProperty(String name) {
-    try {
-        Class<?> sp = Class.forName("android.os.SystemProperties");
-        return (String) sp.getMethod("get", String.class).invoke(null, name);
-    } catch (Throwable ignore) {}
-    return null;
-}
 
 // ===================================================================
 // GEL BATTERY ENGINE v1.0 (OEM + Charge Counter + Estimation)
@@ -1151,11 +1125,9 @@ private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
-    // 1) OEM FACTORY capacity
     long oem = detectBatteryMah();
     if (oem > 2000) bi.oemFullMah = oem;
 
-    // 2) LIVE charge counter
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
@@ -1167,9 +1139,9 @@ private BatteryInfo getBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // 3) ESTIMATE full capacity (counter / %)
     try {
         if (bi.chargeCounterMah > 0) {
+
             IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent i = registerReceiver(null, f);
 
@@ -1177,7 +1149,7 @@ private BatteryInfo getBatteryInfo() {
                 int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 if (level > 0 && level <= 100) {
                     float pct = level / 100f;
-                    bi.estimatedFullMah = (long) (bi.chargeCounterMah / pct);
+                    bi.estimatedFullMah = (long)(bi.chargeCounterMah / pct);
                 }
             }
         }
@@ -1185,6 +1157,7 @@ private BatteryInfo getBatteryInfo() {
 
     return bi;
 }
+
 
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition)
@@ -1198,11 +1171,11 @@ private String buildBatteryInfo() {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        int level   = i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
-        int scale   = i != null ? i.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
-        int status  = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-        int temp    = i != null ? i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) : -1;
-        int plugged = i != null ? i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) : -1;
+        int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
         String statusStr;
         switch (status) {
@@ -1231,6 +1204,7 @@ private String buildBatteryInfo() {
 
     } catch (Throwable ignore) {}
 
+
     if (bi.oemFullMah > 0) {
         sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
         sb.append("Source               : OEM\n");
@@ -1248,19 +1222,22 @@ private String buildBatteryInfo() {
         sb.append("Source               : Unknown\n");
     }
 
+
     long modelCap = getStoredModelCapacity();
     if (modelCap > 0)
         sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
     else
         sb.append("Model capacity       : (tap to set)\n");
 
+
     sb.append("Lifecycle            : Requires root access\n");
 
     return sb.toString();
 }
 
+
 // ===================================================================
-// POPUP ONLY ONCE
+// SHOW POPUP ONLY ONCE
 // ===================================================================
 private void maybeShowBatteryCapacityDialogOnce() {
     try {
@@ -1275,8 +1252,9 @@ private void maybeShowBatteryCapacityDialogOnce() {
     } catch (Throwable ignore) {}
 }
 
+
 // ===================================================================
-// POPUP DIALOG (GEL SIMPLE EDITION)
+// POPUP — GEL BLACK+GOLD FINAL
 // ===================================================================
 private void showBatteryCapacityDialog() {
     runOnUiThread(() -> {
@@ -1323,7 +1301,7 @@ private void showBatteryCapacityDialog() {
 
             AlertDialog dialog = b.create();
             dialog.getWindow().setBackgroundDrawableResource(
-                    R.drawable.gel_dialog_battery_full_black
+                R.drawable.gel_dialog_battery_full_black
             );
 
             dialog.show();

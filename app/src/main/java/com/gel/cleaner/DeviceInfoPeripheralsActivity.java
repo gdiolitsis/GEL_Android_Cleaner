@@ -180,7 +180,6 @@ TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
 TextView txtRootContent            = findViewById(R.id.txtRootContent);
 
 TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
-TextView txtDisplayContent         = findViewById(R.id.txtDisplayContent);
 TextView txtCpuContent             = findViewById(R.id.txtCpuContent);
 TextView txtGpuContent             = findViewById(R.id.txtGpuContent);
 TextView txtMemoryContent          = findViewById(R.id.txtMemoryContent);
@@ -209,10 +208,8 @@ TextView iconUsb              = findViewById(R.id.iconUsbToggle);
 TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
 TextView iconThermal          = findViewById(R.id.iconThermalToggle);
-TextView iconDisplay          = findViewById(R.id.iconDisplayToggle);
 TextView iconCpu              = findViewById(R.id.iconCpuToggle);
 TextView iconGpu              = findViewById(R.id.iconGpuToggle);
-TextView iconMemory           = findViewById(R.id.iconMemoryToggle);
 TextView iconModem            = findViewById(R.id.iconModemToggle);
 TextView iconWifiAdvanced     = findViewById(R.id.iconWifiAdvancedToggle);
 TextView iconAudioUnified     = findViewById(R.id.iconAudioUnifiedToggle);
@@ -236,7 +233,6 @@ allContents = new TextView[]{
         txtHapticsContent, txtGnssContent, txtUsbContent,
         txtRootContent,
 
-        txtThermalContent, txtDisplayContent, txtCpuContent, txtGpuContent,
         txtMemoryContent, txtModemContent, txtWifiAdvancedContent,
         txtAudioUnifiedContent, txtSensorsExtendedContent,
         txtSystemFeaturesContent, txtSecurityFlagsContent
@@ -300,13 +296,10 @@ findViewById(R.id.headerAudioUnified).setOnClickListener(v ->
 // NEW HEADERS  
 findViewById(R.id.headerThermal).setOnClickListener(v ->
         toggleSection(txtThermalContent, iconThermal));
-findViewById(R.id.headerDisplay).setOnClickListener(v ->
-        toggleSection(txtDisplayContent, iconDisplay));
 findViewById(R.id.headerCpu).setOnClickListener(v ->
         toggleSection(txtCpuContent, iconCpu));
 findViewById(R.id.headerGpu).setOnClickListener(v ->
         toggleSection(txtGpuContent, iconGpu));
-findViewById(R.id.headerMemory).setOnClickListener(v ->
         toggleSection(txtMemoryContent, iconMemory));
 findViewById(R.id.headerModem).setOnClickListener(v ->
         toggleSection(txtModemContent, iconModem));
@@ -2452,7 +2445,6 @@ private void populateAllSections() {
 
     // CORE HARDWARE
     set(R.id.txtCameraContent,           buildCameraInfo());
-    set(R.id.txtDisplayContent,          buildDisplayInfo());
     set(R.id.txtMemoryContent,           buildMemoryInfo());
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());

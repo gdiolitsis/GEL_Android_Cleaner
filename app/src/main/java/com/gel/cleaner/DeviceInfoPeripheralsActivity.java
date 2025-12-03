@@ -1118,7 +1118,7 @@ private long detectBatteryMah() {
 }
 
 // ===================================================================
-// SAFE SYSFS READER
+// SAFE SYSFS READER  (ΜΟΝΟ ΑΥΤΟ – ΤΟ ΔΕΥΤΕΡΟ ΣΒΗΣΤΗΚΕ)
 // ===================================================================
 private long readSysLong(String path) {
     try {
@@ -1151,11 +1151,11 @@ private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
-    // 1) OEM FACTORY / DESIGN capacity
+    // 1) OEM FACTORY capacity
     long oem = detectBatteryMah();
     if (oem > 2000) bi.oemFullMah = oem;
 
-    // 2) LIVE charge content (Charge Counter)
+    // 2) LIVE charge counter
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
@@ -1170,7 +1170,6 @@ private BatteryInfo getBatteryInfo() {
     // 3) ESTIMATE full capacity (counter / %)
     try {
         if (bi.chargeCounterMah > 0) {
-
             IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent i = registerReceiver(null, f);
 
@@ -1261,7 +1260,7 @@ private String buildBatteryInfo() {
 }
 
 // ===================================================================
-// SHOW POPUP ONLY ONCE (First run, if user has no model capacity)
+// POPUP ONLY ONCE
 // ===================================================================
 private void maybeShowBatteryCapacityDialogOnce() {
     try {
@@ -1277,7 +1276,7 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ===================================================================
-// POPUP DIALOG — GEL SIMPLE EDITION
+// POPUP DIALOG (GEL SIMPLE EDITION)
 // ===================================================================
 private void showBatteryCapacityDialog() {
     runOnUiThread(() -> {

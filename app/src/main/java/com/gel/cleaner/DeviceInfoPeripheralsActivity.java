@@ -2105,8 +2105,8 @@ private String buildThermalInfo() {
             long total = sf.getBlockCountLong() * blockSize;
             long avail = sf.getAvailableBlocksLong() * blockSize;
 
-            sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
-            sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
+            sb.append("Internal Storage Total  : ").append(total / (1024 * 1024)).append(" MB\n");
+            sb.append("Internal Storage Free   : ").append(avail / (1024 * 1024)).append(" MB\n");
         } catch (Throwable ignore) { }
 
         long zramSize = readSysLong("/sys/block/zram0/disksize");

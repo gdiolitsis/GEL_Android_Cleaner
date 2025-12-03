@@ -1029,141 +1029,93 @@ return sb.toString();
         return sb.toString();
     }
       
-// ============================================================
-// BATTERY + mAh (Final GEL Edition)
-// ============================================================
-private static final String PREFS_NAME_BATTERY          = "gel_prefs";
-private static final String KEY_BATTERY_MODEL_CAPACITY  = "battery_model_capacity";
-private static final String KEY_BATTERY_DIALOG_SHOWN    = "battery_dialog_shown";
-
+// ===================================================================
+// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition)
+// ===================================================================
 private String buildBatteryInfo() {
+
+    BatteryInfo bi = getBatteryInfo();
     StringBuilder sb = new StringBuilder();
 
+    // ---------------- BASIC ANDROID BATTERY DATA ----------------
     try {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        if (i != null) {
-            int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        int level   = i != null ? i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+        int scale   = i != null ? i.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+        int status  = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+        int temp    = i != null ? i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) : -1;
+        int plugged = i != null ? i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) : -1;
 
-            String statusStr;
-            switch (status) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:
-                    statusStr = "Charging";
-                    break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                    statusStr = "Discharging";
-                    break;
-                case BatteryManager.BATTERY_STATUS_FULL:
-                    statusStr = "Full";
-                    break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                    statusStr = "Not charging";
-                    break;
-                default:
-                    statusStr = "Unknown";
-                    break;
-            }
-
-            String plugStr;
-            switch (plugged) {
-                case BatteryManager.BATTERY_PLUGGED_AC:
-                    plugStr = "AC";
-                    break;
-                case BatteryManager.BATTERY_PLUGGED_USB:
-                    plugStr = "USB";
-                    break;
-                case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                    plugStr = "Wireless";
-                    break;
-                default:
-                    plugStr = "Not plugged";
-                    break;
-            }
-
-            sb.append("Level           : ").append(level).append("%\n");
-            sb.append("Scale           : ").append(scale).append("\n");
-            sb.append("Status          : ").append(statusStr).append("\n");
-            sb.append("Charging Source : ").append(plugStr).append("\n");
-
-            if (temp > 0) {
-                sb.append("Temp            : ").append((temp / 10f)).append("°C\n");
-            }
+        // Status string
+        String statusStr;
+        switch (status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:      statusStr = "Charging"; break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:   statusStr = "Discharging"; break;
+            case BatteryManager.BATTERY_STATUS_FULL:          statusStr = "Full"; break;
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  statusStr = "Not charging"; break;
+            default:                                          statusStr = "Unknown"; break;
         }
-    } catch (Throwable ignore) { }
 
-    // ---------- REAL + MODEL CAPACITY ----------
-    long realCap  = detectBatteryMah();        // από /sys (πραγματική όταν υπάρχει)
-    long modelCap = getStoredModelCapacity();  // νούμερο που δήλωσε ο χρήστης
+        // Plugged string
+        String plugStr;
+        switch (plugged) {
+            case BatteryManager.BATTERY_PLUGGED_AC:        plugStr = "AC"; break;
+            case BatteryManager.BATTERY_PLUGGED_USB:       plugStr = "USB"; break;
+            case BatteryManager.BATTERY_PLUGGED_WIRELESS:  plugStr = "Wireless"; break;
+            default:                                       plugStr = "Not plugged"; break;
+        }
 
-    if (realCap > 0) {
-        sb.append("Real capacity   : ").append(realCap).append(" mAh\n");
-    } else {
-        sb.append("Real capacity   : Not available\n");
+        sb.append("Level                : ").append(level).append("%\n");
+        sb.append("Scale                : ").append(scale).append("\n");
+        sb.append("Status               : ").append(statusStr).append("\n");
+        sb.append("Charging Source      : ").append(plugStr).append("\n");
+
+        if (temp > 0)
+            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
+
+    } catch (Throwable ignore) {}
+
+    // ---------------------- CAPACITY SECTION ----------------------
+    if (bi.oemFullMah > 0) {
+        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
+        sb.append("Source               : OEM\n");
+    }
+    else if (bi.chargeCounterMah > 0) {
+        sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
+
+        if (bi.estimatedFullMah > 0)
+            sb.append("Estimated full (100%): ").append(bi.estimatedFullMah).append(" mAh\n");
+
+        sb.append("Source               : Charge Counter\n");
+    }
+    else {
+        sb.append("Real capacity        : N/A\n");
+        sb.append("Source               : Unknown\n");
     }
 
-    if (modelCap > 0) {
-        sb.append("Model capacity  : ").append(modelCap).append(" mAh\n");
-    } else {
-        sb.append("Model capacity  : (tap to set)\n");
-    }
+    // ------------------- USER MODEL CAPACITY ---------------------
+    long modelCap = getStoredModelCapacity();
+    if (modelCap > 0)
+        sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
+    else
+        sb.append("Model capacity       : (tap to set)\n");
 
-    // ---------- LIFECYCLE ----------
-sb.append("Lifecycle       : ");
-if (isRooted) {
+    // ------------------- ROOT LIFECYCLE --------------------------
+    sb.append("Lifecycle            : Requires root access\n");
 
-    long full   = readSysLong("/sys/class/power_supply/battery/charge_full");
-    long design = readSysLong("/sys/class/power_supply/battery/charge_full_design");
-    long cycles = readSysLong("/sys/class/power_supply/battery/cycle_count");
-
-    boolean any = false;
-    StringBuilder extra = new StringBuilder();
-
-    if (full > 0)   { extra.append("currentFull=").append(full).append(" "); any = true; }
-    if (design > 0) { extra.append("designFull=").append(design).append(" "); any = true; }
-    if (cycles > 0) { extra.append("cycles=").append(cycles).append(" "); any = true; }
-
-    sb.append(any
-            ? extra.toString().trim() + "\n"
-            : "Lifecycle data not exposed\n");
-
-} else {
-    sb.append("Requires root access\n");
-}
-
-    // ---------- Popup (μία φορά) + click στο κουμπί ----------
-    maybeShowBatteryCapacityDialogOnce();
-
-    runOnUiThread(() -> {
-        // Κουμπί στο battery section
-        TextView btn = findViewById(R.id.txtBatteryModelCapacity);
-        if (btn != null) {
-            long cap = getStoredModelCapacity();
-            if (cap > 0) {
-                btn.setText(getString(R.string.battery_set_model_capacity) + " (" + cap + " mAh)");
-            } else {
-                btn.setText(getString(R.string.battery_set_model_capacity));
-            }
-            btn.setOnClickListener(v -> showBatteryCapacityDialog());
-        }
-    });
-
-    appendAccessInstructions(sb, "battery");
     return sb.toString();
 }
 
+    
 // ===================================================================
-// REAL BATTERY CAPACITY DETECTOR — FULL OEM SCAN (2025 GEL EDITION)
+// REAL BATTERY CAPACITY SCANNER — OEM Paths (GEL Edition)
 // ===================================================================
 private long detectBatteryMah() {
 
     long cap;
 
-    // --- 1) Standard Linux power_supply paths ---
     String[] paths = new String[]{
             "/sys/class/power_supply/battery/charge_full_design",
             "/sys/class/power_supply/battery/charge_full",
@@ -1184,22 +1136,24 @@ private long detectBatteryMah() {
     for (String p : paths) {
         cap = readSysLong(p);
         if (cap > 2000) {
-            // Samsung/Pixel: value in microAh → divide by 1000
-            if (cap > 200000) return cap / 1000;
+            if (cap > 200000) return cap / 1000; // μAh → mAh
             return cap;
         }
     }
 
-    // --- 2) BatteryManager fallback ---
+    // Fallback: BatteryManager charge counter
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
             long c = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-            if (c > 2000) return Math.abs(c / 1000);
+            if (c > 0) {
+                if (c > 200000) c = c / 1000;
+                return Math.abs(c);
+            }
         }
     } catch (Throwable ignore) {}
 
-    // --- 3) Some OEM store capacity inside prop (rare) ---
+    // Fallback: OEM property (rare)
     try {
         String prop = getSystemProperty("persist.battery.capacity");
         if (prop != null) {
@@ -1208,11 +1162,22 @@ private long detectBatteryMah() {
         }
     } catch (Throwable ignore) {}
 
-    // --- 4) Nothing found ---
     return -1;
 }
 
-// Safe system property reader
+private long readSysLong(String path) {
+    try {
+        File f = new File(path);
+        if (f.exists()) {
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            String line = br.readLine();
+            br.close();
+            if (line != null) return Long.parseLong(line.trim());
+        }
+    } catch (Throwable ignore) {}
+    return -1;
+}
+
 private String getSystemProperty(String name) {
     try {
         Class<?> sp = Class.forName("android.os.SystemProperties");
@@ -1221,23 +1186,55 @@ private String getSystemProperty(String name) {
     return null;
 }
 
-// ============================================================
-// MODEL CAPACITY STORAGE (SharedPreferences)
-// ============================================================
-private long getStoredModelCapacity() {
-    try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
-    } catch (Throwable ignore) {
-        return -1L;
-    }
+// ===================================================================
+// BATTERY DATA STRUCT (GEL ENGINE v1.0)
+// ===================================================================
+private static class BatteryInfo {
+    long oemFullMah = -1;        // OEM Factory capacity (if available)
+    long chargeCounterMah = -1;  // Current charge content (mAh)
+    long estimatedFullMah = -1;  // Estimated 100% capacity
 }
 
-private void saveModelCapacity(long value) {
+// ===================================================================
+// GEL BATTERY ENGINE v1.0 (OEM + Charge Counter + Estimation)
+// ===================================================================
+private BatteryInfo getBatteryInfo() {
+
+    BatteryInfo bi = new BatteryInfo();
+
+    // 1) OEM FACTORY / DESIGN capacity
+    long oem = detectBatteryMah();
+    if (oem > 2000) bi.oemFullMah = oem;
+
+    // 2) LIVE charge content (Charge Counter)
     try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        sp.edit().putLong(KEY_BATTERY_MODEL_CAPACITY, value).apply();
-    } catch (Throwable ignore) { }
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (bm != null) {
+            long cc = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+            if (cc > 0) {
+                if (cc > 200000) cc /= 1000;
+                bi.chargeCounterMah = Math.abs(cc);
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    // 3) ESTIMATE full capacity (counter / %)
+    try {
+        if (bi.chargeCounterMah > 0) {
+            IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent i = registerReceiver(null, f);
+
+            if (i != null) {
+                int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                if (level > 0 && level <= 100) {
+                    float pct = level / 100f;
+                    bi.estimatedFullMah = (long) (bi.chargeCounterMah / pct);
+                }
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    return bi;
 }
 
 // ============================================================

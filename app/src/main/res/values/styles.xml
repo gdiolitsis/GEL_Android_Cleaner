@@ -3,11 +3,11 @@
 
     <!-- ========================================================= -->
     <!-- GEL DARK-GOLD EDITION v5.0                               -->
-    <!-- Custom theme for GEL Cleaner / Foldable UI Ready          -->
+    <!-- Custom theme for GEL Cleaner / Foldable UI Ready         -->
     <!-- ========================================================= -->
 
     <style name="Theme.GEL.DarkGold" parent="Theme.AppCompat.Light.NoActionBar">
-        
+
         <!-- Background -->
         <item name="android:windowBackground">@color/gel_bg</item>
 
@@ -41,6 +41,21 @@
         <!-- Buttons elevation -->
         <item name="android:stateListAnimator">@null</item>
 
+    </style>
+
+
+    <!-- ========================================================= -->
+    <!-- GEL POPUP DIALOG THEME (Black background + Gold border)  -->
+    <!-- ========================================================= -->
+    <style name="GELDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <!-- Black background -->
+        <item name="android:windowBackground">@android:color/black</item>
+
+        <!-- Ensure title & message appear white -->
+        <item name="android:textColor">#FFFFFF</item>
+
+        <!-- Buttons gold -->
+        <item name="android:buttonTint">@color/gel_gold</item>
     </style>
 
 </resources>

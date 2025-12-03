@@ -1273,6 +1273,7 @@ private String buildBatteryInfo() {
 
     return sb.toString();
 }
+        
       
 // ===================================================================
 // SHOW POPUP ONLY ONCE

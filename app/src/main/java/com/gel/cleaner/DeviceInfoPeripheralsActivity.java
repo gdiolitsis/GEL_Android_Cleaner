@@ -1160,18 +1160,20 @@ private BatteryInfo getBatteryInfo() {
 
 
 // ===================================================================
-// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition)
+// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL
 // ===================================================================
 private String buildBatteryInfo() {
 
     BatteryInfo bi = getBatteryInfo();
     StringBuilder sb = new StringBuilder();
 
+    int level = -1;
+
     try {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        int level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
@@ -1203,13 +1205,27 @@ private String buildBatteryInfo() {
             sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
+    
 
-
+    // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
+
         sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
+
+        // ⭐ New logic: estimated 100% from OEM if level>0
+        if (level > 0 && level < 100) {
+            float pct = level / 100f;
+            long est = (long)(bi.oemFullMah / pct);
+
+            sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
+        }
+
         sb.append("Source               : OEM\n");
     }
+
+    // ---------------------- CHARGE COUNTER SOURCE ----------------------
     else if (bi.chargeCounterMah > 0) {
+
         sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
 
         if (bi.estimatedFullMah > 0)
@@ -1217,12 +1233,15 @@ private String buildBatteryInfo() {
 
         sb.append("Source               : Charge Counter\n");
     }
+
+    // ---------------------- NO DATA ----------------------
     else {
         sb.append("Real capacity        : N/A\n");
         sb.append("Source               : Unknown\n");
     }
 
 
+    // Model capacity (user input)
     long modelCap = getStoredModelCapacity();
     if (modelCap > 0)
         sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
@@ -1234,8 +1253,7 @@ private String buildBatteryInfo() {
 
     return sb.toString();
 }
-
-
+      
 // ===================================================================
 // SHOW POPUP ONLY ONCE
 // ===================================================================

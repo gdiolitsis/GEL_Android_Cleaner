@@ -1230,7 +1230,7 @@ private String buildBatteryInfo() {
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
-        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
+        sb.append("Real capacity  (Now) : ").append(bi.oemFullMah).append(" mAh\n");
 
         // ⭐ New logic: estimated 100% from OEM if level>0
         if (level > 0 && level < 100) {

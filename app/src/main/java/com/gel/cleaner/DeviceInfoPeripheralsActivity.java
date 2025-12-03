@@ -162,7 +162,7 @@ protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
     // (optional) auto-request runtime permissions
     requestAllRuntimePermissions();
        
-       // ============================================================
+// ============================================================
 // TEXT CONTENT VIEWS
 // ============================================================
 TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
@@ -216,7 +216,7 @@ TextView iconSensorsExtended  = findViewById(R.id.iconSensorsExtendedToggle);
 TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
 TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
 
-// Battery model capacity button click
+// Battery model capacity button
 TextView btnBatteryModel = findViewById(R.id.txtBatteryModelCapacity);
 if (btnBatteryModel != null) {
     btnBatteryModel.setOnClickListener(v -> showBatteryCapacityDialog());
@@ -238,14 +238,14 @@ allContents = new TextView[]{
 };
 
 // ============================================================
-// ALL ICONS
+// ALL ICONS  (🔥 iconDisplay ΑΦΑΙΡΕΘΗΚΕ)
 // ============================================================
 allIcons = new TextView[]{
         iconCamera, iconBiometrics, iconSensors, iconConnectivity,
         iconLocation, iconNfc, iconBattery, iconOther,
         iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
 
-        iconThermal, iconDisplay, iconCpu, iconGpu,
+        iconThermal, iconCpu, iconGpu,
         iconModem, iconWifiAdvanced,
         iconAudioUnified, iconSensorsExtended,
         iconSystemFeatures, iconSecurityFlags
@@ -271,10 +271,8 @@ findViewById(R.id.headerLocation).setOnClickListener(v ->
         toggleSection(txtLocationContent, iconLocation));
 findViewById(R.id.headerNfc).setOnClickListener(v ->
         toggleSection(txtNfcContent, iconNfc));
-
 findViewById(R.id.headerBattery).setOnClickListener(v ->
         toggleSection(txtBatteryContent, iconBattery));
-
 findViewById(R.id.headerOtherPeripherals).setOnClickListener(v ->
         toggleSection(txtOtherPeripherals, iconOther));
 findViewById(R.id.headerUwb).setOnClickListener(v ->

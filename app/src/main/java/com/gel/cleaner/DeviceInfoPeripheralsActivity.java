@@ -1482,8 +1482,7 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles\n");
-    sb.append("                   require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
 
     return sb.toString();
 }

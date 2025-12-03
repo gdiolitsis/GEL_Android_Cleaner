@@ -11,11 +11,10 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"/>
-
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <!-- ============================================================
-         USAGE ACCESS (needed for installed apps footprint)
+         USAGE ACCESS
          ============================================================ -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -33,9 +32,18 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- ============================================================
-         SIM & MOBILE NETWORK STATE (LAB 12)
+         SIM / MOBILE NETWORK (FULL REQUIRED)
          ============================================================ -->
+    <!-- Basic SIM access -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- Needed for correct SIMSlotInfo + SubscriptionManager on Xiaomi/HyperOS -->
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+
+    <!-- Required by MIUI for MCC/MNC, CarrierName & SubscriptionInfo list -->
+    <uses-permission android:name="android.permission.READ_SMS"/>
+
+    <!-- READ_PRIVILEGED_PHONE_STATE only works for system apps, keep for compatibility -->
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
 
@@ -45,22 +53,20 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-    <!-- Android 13+ WiFi Scanning -->
     <uses-permission
         android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation" />
 
-    <!-- Required for SSID access on Android 10+ -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- ============================================================
-         BLUETOOTH (read-only status)
+         BLUETOOTH
          ============================================================ -->
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <!-- ============================================================
-         CAMERA (needed for QR scan in LAB 11)
+         CAMERA
          ============================================================ -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
@@ -94,70 +100,28 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".AppListActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"/>
-
-        <activity android:name=".CleanerActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"/>
-
-        <activity android:name=".PermissionsActivity"
-            android:exported="false"/>
-
-        <activity android:name=".DeviceInfoInternalActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".DeviceInfoPeripheralsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".CpuRamLiveActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- ============================================================
-             🔥 Core Monitor (FIX — crash λύθηκε)
-             ============================================================ -->
-        <activity
-            android:name=".CoreMonitorActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- SERVICE MENU -->
-        <activity android:name=".DiagnosisMenuActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- MANUAL LABS -->
-        <activity android:name=".ManualTestsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".PerformanceDiagnosticsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".ServiceReportActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- AUTO DIAG -->
-        <activity android:name=".AutoDiagnosisActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+        <!-- OTHER ACTIVITIES (unchanged) -->
+        <activity android:name=".AppListActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CleanerActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".PermissionsActivity" android:exported="false"/>
+        <activity android:name=".DeviceInfoInternalActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".DeviceInfoPeripheralsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CpuRamLiveActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CoreMonitorActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".DiagnosisMenuActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".ManualTestsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".PerformanceDiagnosticsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".ServiceReportActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".AutoDiagnosisActivity" android:exported="false" android:screenOrientation="portrait"/>
 
         <!-- ACCESSIBILITY -->
         <service
             android:name=".GELAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
-
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/gel_accessibility_service"/>

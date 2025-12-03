@@ -1327,6 +1327,7 @@ private void showBatteryCapacityDialog() {
                                 content.setText(buildBatteryInfo());
 
                             TextView btn = findViewById(R.id.txtBatteryModelCapacity);
+        findViewById(R.id.txtBatteryModelCapacity).setOnClickListener(v -> { showBatteryCapacityDialog(); });
                             if (btn != null) {
                                 btn.setText(getString(R.string.battery_set_model_capacity)
                                         + " (" + val + " mAh)");

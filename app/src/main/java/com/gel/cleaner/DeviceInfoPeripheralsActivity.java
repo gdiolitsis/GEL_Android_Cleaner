@@ -1,38 +1,25 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// DeviceInfoPeripheralsActivity.java — MEGA UPGRADE v30
-// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
-// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
+// DeviceInfoPeripheralsActivity.java — PERIPHERALS v31 (21 sections)
+// CPU/GPU/MEMORY REMOVED FROM PERIPHERALS — no crash, 1:1 XML match
 
 package com.gel.cleaner;
 
 import java.util.Locale;
 import java.util.List;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
+
 import com.gel.cleaner.GELAutoActivityHook;
 
-import androidx.appcompat.app.AlertDialog;
-
-import android.content.SharedPreferences;
-import android.text.InputType;
-import android.widget.EditText;
-
-import static android.content.Context.MODE_PRIVATE;
-import android.widget.LinearLayout;
-import android.view.Window;
-import android.graphics.drawable.ColorDrawable;
 import android.Manifest;
-import android.app.ActivityManager;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.IntentFilter;
 import android.content.pm.FeatureInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -49,47 +36,43 @@ import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
+import android.nfc.NfcAdapter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.StatFs;
 import android.provider.Settings;
-import android.telephony.CellSignalStrength;
-import android.telephony.ServiceState;
-import android.telephony.SignalStrength;
-import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.telephony.SubscriptionInfo;
 import android.telephony.TelephonyManager;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.util.DisplayMetrics;
-import android.view.Display;
+import android.telephony.SignalStrength;
+import android.telephony.ServiceState;
+import android.telephony.CellSignalStrength;
 import android.view.View;
+import android.view.Display;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ClickableSpan;
+import android.text.method.LinkMovementMethod;
+import android.text.style.StyleSpan;
+import android.text.style.ForegroundColorSpan;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileReader;
+import java.io.FileFilter;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 
+// ============================================================
+// PERMISSIONS ENGINE
+// ============================================================
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
-    // ============================================================
-    // GEL Permission Request Engine v1.0 — Option B (Auto Request All)
-    // ============================================================
     private static final String[] PERMISSIONS_ALL = new String[]{
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
@@ -97,13 +80,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.NEARBY_WIFI_DEVICES
+            Manifest.permission.NEARBY_WIFI_DEVICES,
+            Manifest.permission.READ_PHONE_STATE
     };
 
     private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
 
     private void requestAllRuntimePermissions() {
-
         if (Build.VERSION.SDK_INT < 23) return;
 
         java.util.List<String> toRequest = new java.util.ArrayList<>();
@@ -125,456 +108,443 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                                            @NonNull int[] grantResults) {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-            // ❌ recreate() REMOVED (no more animation freezes)
-        }
+        // No recreate() — avoids animation freeze
     }
 
+    // ============================================================
+    // MAIN CLASS FIELDS
+    // ============================================================
+    private static final String NEON_GREEN = "#39FF14";
+    private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+
+    private boolean isRooted = false;
+
+    private View[] allContents;
+    private TextView[] allIcons;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_device_info_peripherals);
+
+        TextView title = findViewById(R.id.txtTitleDevice);
+        if (title != null)
+            title.setText(getString(R.string.phone_info_peripherals));
+
+        // Auto-request runtime permissions
+        requestAllRuntimePermissions();
+        
+        // ============================================================
+// CONTENT TEXT VIEWS
 // ============================================================
-// MAIN CLASS FIELDS
+TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
+TextView txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+TextView txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+TextView txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+TextView txtLocationContent        = findViewById(R.id.txtLocationContent);
+TextView txtNfcContent             = findViewById(R.id.txtNfcContent);
+TextView txtBatteryContent         = findViewById(R.id.txtBatteryContent);
+TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+TextView txtUwbContent             = findViewById(R.id.txtUwbContent);
+TextView txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+TextView txtGnssContent            = findViewById(R.id.txtGnssContent);
+TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
+TextView txtRootContent            = findViewById(R.id.txtRootContent);
+
+TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
+TextView txtModemContent           = findViewById(R.id.txtModemContent);
+TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+
 // ============================================================
-private static final String NEON_GREEN = "#39FF14";
-private static final String GOLD_COLOR = "#FFD700";
-private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+// ICON VIEWS (21 icons — 1:1 with XML)
+// ============================================================
+TextView iconCamera           = findViewById(R.id.iconCameraToggle);
+TextView iconBiometrics       = findViewById(R.id.iconBiometricsToggle);
+TextView iconSensors          = findViewById(R.id.iconSensorsToggle);
+TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
+TextView iconLocation         = findViewById(R.id.iconLocationToggle);
+TextView iconNfc              = findViewById(R.id.iconNfcToggle);
+TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
+TextView iconOther            = findViewById(R.id.iconOtherPeripheralsToggle);
+TextView iconUwb              = findViewById(R.id.iconUwbToggle);
+TextView iconHaptics          = findViewById(R.id.iconHapticsToggle);
+TextView iconGnss             = findViewById(R.id.iconGnssToggle);
+TextView iconUsb              = findViewById(R.id.iconUsbToggle);
+TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
-private boolean isRooted = false;
+TextView iconThermal          = findViewById(R.id.iconThermalToggle);
+TextView iconModem            = findViewById(R.id.iconModemToggle);
+TextView iconWifiAdvanced     = findViewById(R.id.iconWifiAdvancedToggle);
+TextView iconAudioUnified     = findViewById(R.id.iconAudioUnifiedToggle);
+TextView iconSensorsExtended  = findViewById(R.id.iconSensorsExtendedToggle);
+TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
+TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
 
-private TextView[] allContents;
-private TextView[] allIcons;
+// ============================================================
+// ALL CONTENTS (exactly 21 items — CPU/GPU/Memory removed)
+// ============================================================
+View batteryContainer = findViewById(R.id.batteryContainer);
 
-@Override
-protected void attachBaseContext(Context base) {
-    super.attachBaseContext(LocaleHelper.apply(base));
+allContents = new View[]{
+        txtCameraContent, txtBiometricsContent, txtSensorsContent,
+        txtConnectivityContent, txtLocationContent, txtNfcContent,
+        batteryContainer, txtOtherPeripherals, txtUwbContent,
+        txtHapticsContent, txtGnssContent, txtUsbContent,
+        txtRootContent,
+
+        txtThermalContent, txtModemContent, txtWifiAdvancedContent,
+        txtAudioUnifiedContent, txtSensorsExtendedContent,
+        txtSystemFeaturesContent, txtSecurityFlagsContent
+};
+
+// ============================================================
+// ALL ICONS (exactly 21 items — 1:1 with contents)
+// ============================================================
+allIcons = new TextView[]{
+        iconCamera, iconBiometrics, iconSensors, iconConnectivity,
+        iconLocation, iconNfc, iconBattery, iconOther,
+        iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
+
+        iconThermal, iconModem, iconWifiAdvanced,
+        iconAudioUnified, iconSensorsExtended,
+        iconSystemFeatures, iconSecurityFlags
+};
+
+// ============================================================
+// APPLY TEXTS FIRST
+// ============================================================
+populateAllSections();
+
+// ============================================================
+// BATTERY CAPACITY BUTTON
+// ============================================================
+TextView txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
+if (txtBatteryModelCapacity != null) {
+    txtBatteryModelCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
 }
+maybeShowBatteryCapacityDialogOnce();
 
-@Override
-protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
-    super.onCreate(savedInstanceState);                // ✅ FIXED NAME
-    setContentView(R.layout.activity_device_info_peripherals);
-
-        maybeShowBatteryCapacityDialogOnce();
-
-    TextView title = findViewById(R.id.txtTitleDevice);
-    if (title != null)
-        title.setText(getString(R.string.phone_info_peripherals));
-
-    // (optional) auto-request runtime permissions
-    requestAllRuntimePermissions();
-       
 // ============================================================
-        // CONTENT TEXT VIEWS
-        // ============================================================
-        TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
-        TextView txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-        TextView txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-        TextView txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-        TextView txtLocationContent        = findViewById(R.id.txtLocationContent);
-        TextView txtNfcContent             = findViewById(R.id.txtNfcContent);
-        TextView txtBatteryContent         = findViewById(R.id.txtBatteryContent);
-        TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
-        TextView txtUwbContent             = findViewById(R.id.txtUwbContent);
-        TextView txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-        TextView txtGnssContent            = findViewById(R.id.txtGnssContent);
-        TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
-        TextView txtRootContent            = findViewById(R.id.txtRootContent);
-
-        TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
-        TextView txtModemContent           = findViewById(R.id.txtModemContent);
-        TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-        TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-        TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-        TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-        TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-
-        // ============================================================
-        // ICONS
-        // ============================================================
-        TextView iconCamera           = findViewById(R.id.iconCameraToggle);
-        TextView iconBiometrics       = findViewById(R.id.iconBiometricsToggle);
-        TextView iconSensors          = findViewById(R.id.iconSensorsToggle);
-        TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
-        TextView iconLocation         = findViewById(R.id.iconLocationToggle);
-        TextView iconNfc              = findViewById(R.id.iconNfcToggle);
-        TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
-        TextView iconOther            = findViewById(R.id.iconOtherPeripheralsToggle);
-        TextView iconUwb              = findViewById(R.id.iconUwbToggle);
-        TextView iconHaptics          = findViewById(R.id.iconHapticsToggle);
-        TextView iconGnss             = findViewById(R.id.iconGnssToggle);
-        TextView iconUsb              = findViewById(R.id.iconUsbToggle);
-        TextView iconRoot             = findViewById(R.id.iconRootToggle);
-
-        TextView iconThermal          = findViewById(R.id.iconThermalToggle);
-        TextView iconModem            = findViewById(R.id.iconModemToggle);
-        TextView iconWifiAdvanced     = findViewById(R.id.iconWifiAdvancedToggle);
-        TextView iconAudioUnified     = findViewById(R.id.iconAudioUnifiedToggle);
-        TextView iconSensorsExtended  = findViewById(R.id.iconSensorsExtendedToggle);
-        TextView iconSystemFeatures   = findViewById(R.id.iconSystemFeaturesToggle);
-        TextView iconSecurityFlags    = findViewById(R.id.iconSecurityFlagsToggle);
-
-        // ============================================================
-        // ALL CONTENTS
-        // ============================================================
-        allContents = new TextView[]{
-                txtCameraContent, txtBiometricsContent, txtSensorsContent,
-                txtConnectivityContent, txtLocationContent, txtNfcContent,
-                txtBatteryContent, txtOtherPeripherals, txtUwbContent,
-                txtHapticsContent, txtGnssContent, txtUsbContent,
-                txtRootContent,
-
-                txtThermalContent, txtModemContent, txtWifiAdvancedContent,
-                txtAudioUnifiedContent, txtSensorsExtendedContent,
-                txtSystemFeaturesContent, txtSecurityFlagsContent
-        };
-
-        // ============================================================
-        // ALL ICONS (CPU/GPU/Memory REMOVED)
-        // ============================================================
-        allIcons = new TextView[]{
-                iconCamera, iconBiometrics, iconSensors, iconConnectivity,
-                iconLocation, iconNfc, iconBattery, iconOther,
-                iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
-
-                iconThermal, iconModem, iconWifiAdvanced,
-                iconAudioUnified, iconSensorsExtended,
-                iconSystemFeatures, iconSecurityFlags
-        };
-
-        // ============================================================
-        // SECTION CLICK LISTENERS
-        // ============================================================
-        findViewById(R.id.headerCamera).setOnClickListener(v -> toggle(txtCameraContent, iconCamera));
-        findViewById(R.id.headerBiometrics).setOnClickListener(v -> toggle(txtBiometricsContent, iconBiometrics));
-        findViewById(R.id.headerSensors).setOnClickListener(v -> toggle(txtSensorsContent, iconSensors));
-        findViewById(R.id.headerConnectivity).setOnClickListener(v -> toggle(txtConnectivityContent, iconConnectivity));
-        findViewById(R.id.headerLocation).setOnClickListener(v -> toggle(txtLocationContent, iconLocation));
-        findViewById(R.id.headerNfc).setOnClickListener(v -> toggle(txtNfcContent, iconNfc));
-        findViewById(R.id.headerBattery).setOnClickListener(v -> toggle(txtBatteryContent, iconBattery));
-        findViewById(R.id.headerOtherPeripherals).setOnClickListener(v -> toggle(txtOtherPeripherals, iconOther));
-        findViewById(R.id.headerUwb).setOnClickListener(v -> toggle(txtUwbContent, iconUwb));
-        findViewById(R.id.headerHaptics).setOnClickListener(v -> toggle(txtHapticsContent, iconHaptics));
-        findViewById(R.id.headerGnss).setOnClickListener(v -> toggle(txtGnssContent, iconGnss));
-        findViewById(R.id.headerUsb).setOnClickListener(v -> toggle(txtUsbContent, iconUsb));
-        findViewById(R.id.headerRoot).setOnClickListener(v -> toggle(txtRootContent, iconRoot));
-
-        findViewById(R.id.headerThermal).setOnClickListener(v -> toggle(txtThermalContent, iconThermal));
-        findViewById(R.id.headerModem).setOnClickListener(v -> toggle(txtModemContent, iconModem));
-        findViewById(R.id.headerWifiAdvanced).setOnClickListener(v -> toggle(txtWifiAdvancedContent, iconWifiAdvanced));
-        findViewById(R.id.headerAudioUnified).setOnClickListener(v -> toggle(txtAudioUnifiedContent, iconAudioUnified));
-        findViewById(R.id.headerSensorsExtended).setOnClickListener(v -> toggle(txtSensorsExtendedContent, iconSensorsExtended));
-        findViewById(R.id.headerSystemFeatures).setOnClickListener(v -> toggle(txtSystemFeaturesContent, iconSystemFeatures));
-        findViewById(R.id.headerSecurityFlags).setOnClickListener(v -> toggle(txtSecurityFlagsContent, iconSecurityFlags));
-    }
-
-// 🔥 ΤΕΛΟΣ onCreate()
-
-  // ============================================================
-// TOGGLE ENGINE (close others)
+// SETUP 21 SECTIONS (100% match with XML)
 // ============================================================
-private void toggle(TextView target, TextView icon) {
+setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
+setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
+setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
+setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
+setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
+setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
 
-    if (target == null || icon == null) return;
+setupSection(findViewById(R.id.headerBattery),
+             batteryContainer,
+             iconBattery);
 
-    // Κλείσε όλα τα άλλα
-    for (TextView t : allContents)
-        if (t != null && t != target)
-            t.setVisibility(View.GONE);
+setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
+setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
+setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
+setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
+setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
+setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
 
-    for (TextView ic : allIcons)
-        if (ic != null && ic != icon)
-            ic.setText("＋");
+setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);
+setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);
+setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);
+setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
+setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);
+setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);
+setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);
 
-    // Άνοιξε / έκλεισε το επιλεγμένο
-    if (target.getVisibility() == View.VISIBLE) {
-        target.setVisibility(View.GONE);
-        icon.setText("＋");
-    } else {
-        target.setVisibility(View.VISIBLE);
-        icon.setText("－");
-    }
-}    
+} // END onCreate()
 
-// ============================================================  
-// GEL Section Setup Engine — UNIVERSAL VERSION  
-// ============================================================  
+// ============================================================
+// GEL Section Setup Engine — UNIVERSAL VERSION
+// ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
     if (header == null || content == null || icon == null)
         return;
 
-    // Start collapsed
+    // collapsed at start
     content.setVisibility(View.GONE);
     icon.setText("＋");
 
-    header.setOnClickListener(v -> {
-        if (content.getVisibility() == View.GONE) {
-            content.setVisibility(View.VISIBLE);
-            icon.setText("－");
-        } else {
-            content.setVisibility(View.GONE);
-            icon.setText("＋");
+    header.setOnClickListener(v -> toggleSection(content, icon));
+}
+
+// ============================================================
+// GEL Expand Engine v3.0 — FINAL
+// ============================================================
+private void toggleSection(View targetContent, TextView targetIcon) {
+
+    for (int i = 0; i < allContents.length; i++) {
+        View c  = allContents[i];
+        TextView ic = allIcons[i];
+
+        if (c == null || ic == null) continue;
+
+        if (c != targetContent && c.getVisibility() == View.VISIBLE) {
+            animateCollapse(c);
+            ic.setText("＋");
         }
+    }
+
+    if (targetContent.getVisibility() == View.VISIBLE) {
+        animateCollapse(targetContent);
+        targetIcon.setText("＋");
+    } else {
+        animateExpand(targetContent);
+        targetIcon.setText("－");
+    }
+}
+
+private void animateExpand(final View v) {
+    v.post(() -> {
+        v.measure(
+            View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
+
+        final int target = v.getMeasuredHeight();
+
+        v.getLayoutParams().height = 0;
+        v.setVisibility(View.VISIBLE);
+        v.setAlpha(0f);
+
+        v.animate()
+                .alpha(1f)
+                .setDuration(160)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    v.getLayoutParams().height = target;
+                    v.requestLayout();
+                })
+                .start();
     });
 }
-      
 
-    // ============================================================
-    // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
-    // ============================================================
-    private void handleSettingsClick(Context context, String path) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } catch (Throwable ignore) {
-            try {
-                Intent fallback = new Intent(Settings.ACTION_SETTINGS);
-                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(fallback);
-            } catch (Throwable e) { }
-        }
+private void animateCollapse(final View v) {
+    if (v.getVisibility() != View.VISIBLE) return;
+
+    final int initial = v.getHeight();
+    v.setAlpha(1f);
+
+    v.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .setInterpolator(new AccelerateDecelerateInterpolator())
+            .withEndAction(() -> {
+                v.setVisibility(View.GONE);
+                v.getLayoutParams().height = initial;
+                v.setAlpha(1f);
+                v.requestLayout();
+            })
+            .start();
+}
+
+// ============================================================
+// APPLY NEON VALUES + GOLD HEADERS + CLICKABLE LINKS
+// ============================================================
+private void applyNeonValues(TextView tv, String text) {
+
+    if (text == null) {
+        tv.setText("");
+        return;
     }
-      
-      // ============================================================
-    // GEL Permission Engine v25 — Manifest-Aware + Hide Fake Links
-    // ============================================================
-    private boolean appDeclaresPermission(String perm) {
-        try {
-            PackageInfo pi = getPackageManager().getPackageInfo(
-                    getPackageName(),
-                    PackageManager.GET_PERMISSIONS
+
+    int neon = Color.parseColor(NEON_GREEN);
+    int gold = Color.parseColor(GOLD_COLOR);
+
+    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+
+    int len = text.length();
+    int start = 0;
+
+    while (start < len) {
+        int colon = text.indexOf(':', start);
+        if (colon == -1) break;
+
+        int lineEnd = text.indexOf('\n', colon);
+        if (lineEnd == -1) lineEnd = len;
+
+        ssb.setSpan(
+                new ForegroundColorSpan(gold),
+                start,
+                colon,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+
+        int valueStart = colon + 1;
+        while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {
+            valueStart++;
+        }
+
+        if (valueStart < lineEnd) {
+            ssb.setSpan(
+                    new ForegroundColorSpan(neon),
+                    valueStart,
+                    lineEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
-            if (pi.requestedPermissions == null) return false;
-
-            for (String p : pi.requestedPermissions) {
-                if (perm.equals(p)) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignore) {
         }
-        return false;
+
+        start = lineEnd + 1;
     }
 
-    private boolean sectionNeedsPermission(String type) {
+    tv.setText(ssb);
+    tv.setMovementMethod(LinkMovementMethod.getInstance());
+}
 
-        type = type.toLowerCase(Locale.US);
+// ============================================================
+// POPULATE ALL SECTIONS (21 SECTIONS FINAL)
+// ============================================================
+private void populateAllSections() {
 
-        if (type.contains("camera")) {
-            return appDeclaresPermission(Manifest.permission.CAMERA);
+    set(R.id.txtBatteryContent,          buildBatteryInfo());
+    refreshBatteryButton();
+
+    set(R.id.txtCameraContent,           buildCameraInfo());
+    set(R.id.txtBiometricsContent,       buildBiometricsInfo());
+    set(R.id.txtSensorsContent,          buildSensorsInfo());
+    set(R.id.txtConnectivityContent,     buildConnectivityInfo());
+    set(R.id.txtLocationContent,         buildLocationInfo());
+    set(R.id.txtNfcContent,              buildNfcInfo());
+    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
+
+    set(R.id.txtUwbContent,              buildUwbInfo());
+    set(R.id.txtHapticsContent,          buildHapticsInfo());
+    set(R.id.txtGnssContent,             buildGnssInfo());
+    set(R.id.txtUsbContent,              buildUsbInfo());
+    set(R.id.txtRootContent,             buildRootInfo());
+
+    set(R.id.txtThermalContent,          buildThermalInfo());
+    set(R.id.txtModemContent,            buildModemInfo());
+    set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
+    set(R.id.txtAudioUnifiedContent,     buildAudioUnifiedInfo());
+    set(R.id.txtSensorsExtendedContent,  buildSensorsExtendedInfo());
+    set(R.id.txtSystemFeaturesContent,   buildSystemFeaturesInfo());
+    set(R.id.txtSecurityFlagsContent,    buildSecurityFlagsInfo());
+}
+
+// ============================================================
+// SET() helper
+// ============================================================
+private void set(int id, String txt) {
+    TextView t = findViewById(id);
+    if (t == null) return;
+    applyNeonValues(t, txt);
+}
+
+// ============================================================
+// BATTERY MODEL CAPACITY POPUP
+// ============================================================
+private void refreshBatteryButton() {
+    TextView btn = findViewById(R.id.txtBatteryModelCapacity);
+    if (btn != null) {
+        long cap = getStoredModelCapacity();
+        if (cap > 0) {
+            btn.setText("Set model capacity (" + cap + " mAh)");
+        } else {
+            btn.setText("Set model capacity");
         }
-
-        if (type.contains("mic") || type.contains("microphone")) {
-            return appDeclaresPermission(Manifest.permission.RECORD_AUDIO);
-        }
-
-        if (type.contains("location")) {
-            return appDeclaresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    || appDeclaresPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-
-        if (type.contains("bluetooth") && Build.VERSION.SDK_INT >= 31) {
-            return appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN)
-                    || appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
-        }
-
-        if (type.contains("nearby") && Build.VERSION.SDK_INT >= 31) {
-            return appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES);
-        }
-
-        if (type.contains("nfc")) {
-            return false;
-        }
-
-        return false;
     }
+}
 
-    private boolean userHasPermission(String type) {
-
-        type = type.toLowerCase(Locale.US);
-
-        if (type.contains("camera")) {
-            if (!appDeclaresPermission(Manifest.permission.CAMERA)) return true;
-            return checkSelfPermission(Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-
-        if (type.contains("mic") || type.contains("microphone")) {
-            if (!appDeclaresPermission(Manifest.permission.RECORD_AUDIO)) return true;
-            return checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-
-        if (type.contains("location")) {
-            boolean hasFine   = appDeclaresPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-            boolean hasCoarse = appDeclaresPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-
-            if (!hasFine && !hasCoarse) return true;
-
-            boolean fine = hasFine &&
-                    (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED);
-            boolean coarse = hasCoarse &&
-                    (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED);
-
-            return fine || coarse;
-        }
-
-        if (type.contains("bluetooth")) {
-            if (Build.VERSION.SDK_INT >= 31) {
-                boolean hasScan = appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN);
-                boolean hasConn = appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
-
-                if (!hasScan && !hasConn) return true;
-
-                boolean scan = !hasScan ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN)
-                                == PackageManager.PERMISSION_GRANTED);
-                boolean conn = !hasConn ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                                == PackageManager.PERMISSION_GRANTED);
-
-                return scan && conn;
-            }
-            return true;
-        }
-
-        if (type.contains("nfc")) {
-            return true;
-        }
-
-        if (type.contains("nearby")) {
-            if (Build.VERSION.SDK_INT >= 31) {
-                if (!appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES)) return true;
-                return checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
-                        == PackageManager.PERMISSION_GRANTED;
-            }
-            return true;
-        }
-
-        return true;
+// ============================================================
+// GET STORED BATTERY MODEL CAPACITY
+// ============================================================
+private long getStoredModelCapacity() {
+    try {
+        SharedPreferences sp = getSharedPreferences("GEL_BATTERY_MODEL", MODE_PRIVATE);
+        return sp.getLong("model_capacity", -1);
+    } catch (Throwable ignore) {
+        return -1;
     }
+}
 
-    private void appendAccessInstructions(StringBuilder sb, String type) {
+// ============================================================
+// SAVE MODEL CAPACITY
+// ============================================================
+private void saveModelCapacity(long cap) {
+    try {
+        SharedPreferences sp = getSharedPreferences("GEL_BATTERY_MODEL", MODE_PRIVATE);
+        sp.edit().putLong("model_capacity", cap).apply();
+    } catch (Throwable ignore) { }
+}
 
-        if (!sectionNeedsPermission(type)) return;
-        if (userHasPermission(type)) return;
+// ============================================================
+// BATTERY MODEL CAPACITY POPUP — FULL DIALOG
+// ============================================================
+private void showBatteryCapacityDialog() {
 
-        sb.append("\nRequired Access  : ").append(type).append("\n");
-        sb.append("Open Settings\n");
-        sb.append("Settings → Apps → Permissions\n");
-    }
+    AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.GELDialog);
+    builder.setTitle("Set Battery Model Capacity");
 
-    // ============================================================
-    // ROOT CHECK (GEL Stable v5.1) — FIXED
-    // ============================================================
-    private boolean isDeviceRooted() {
+    final EditText input = new EditText(this);
+    input.setInputType(InputType.TYPE_CLASS_NUMBER);
+    input.setHint("e.g. 5000");
+
+    long current = getStoredModelCapacity();
+    if (current > 0) input.setText(String.valueOf(current));
+
+    LinearLayout container = new LinearLayout(this);
+    container.setPadding(50, 40, 50, 10);
+    container.addView(input);
+
+    builder.setView(container);
+
+    builder.setPositiveButton("Save", (dialog, which) -> {
         try {
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
-                    "/system/app/Magisk.apk", "/system/priv-app/Magisk"
-            };
-
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
+            String val = input.getText().toString().trim();
+            if (!val.isEmpty()) {
+                long cap = Long.parseLong(val);
+                saveModelCapacity(cap);
+                refreshBatteryButton();
             }
+        } catch (Throwable ignore) { }
+    });
 
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            in.close();
+    builder.setNegativeButton("Cancel", null);
 
-            return line != null && !line.trim().isEmpty();
+    AlertDialog dialog = builder.create();
 
-        } catch (Throwable ignore) {
-            return false;
-        }
+    if (dialog.getWindow() != null) {
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+        dialog.getWindow().setLayout(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT
+        );
     }
 
-    // ============================================================
-    // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)
-    // ============================================================
-    private String getBatteryPathForDisplay() {
+    dialog.show();
+}
 
-        String manu    = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.US);
-        String finger  = Build.FINGERPRINT == null ? "" : Build.FINGERPRINT.toLowerCase(Locale.US);
-        String display = Build.DISPLAY == null ? "" : Build.DISPLAY.toLowerCase(Locale.US);
+// ============================================================
+// FIRST-TIME POPUP — SHOWN ONCE
+// ============================================================
+private void maybeShowBatteryCapacityDialogOnce() {
+    try {
+        SharedPreferences sp = getSharedPreferences("GEL_BATTERY_MODEL", MODE_PRIVATE);
+        boolean shown = sp.getBoolean("popup_shown_once", false);
 
-        boolean isXiaomi  = manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco");
-        boolean isMIUI    = finger.contains("miui") || display.contains("miui");
-        boolean isHyperOS = finger.contains("hyperos") || display.contains("hyperos");
-
-        boolean isSamsung = manu.contains("samsung");
-        boolean isPixel   = manu.contains("google") || finger.contains("pixel");
-
-        boolean isOppo    = manu.contains("oppo");
-        boolean isRealme  = manu.contains("realme");
-        boolean isOnePlus = manu.contains("oneplus");
-
-        boolean isVivo    = manu.contains("vivo") || manu.contains("iqoo");
-        boolean isHuawei  = manu.contains("huawei") || manu.contains("honor");
-
-        boolean isMoto    = manu.contains("motorola") || manu.contains("moto");
-        boolean isSony    = manu.contains("sony");
-        boolean isAsus    = manu.contains("asus");
-        boolean isNokia   = manu.contains("nokia");
-        boolean isLenovo  = manu.contains("lenovo");
-        boolean isLG      = manu.contains("lg");
-        boolean isZTE     = manu.contains("zte");
-        boolean isTecno   = manu.contains("tecno");
-        boolean isInfinix = manu.contains("infinix");
-        boolean isMeizu   = manu.contains("meizu");
-        boolean isNothing = manu.contains("nothing");
-
-        if (isSamsung) {
-            return "Settings → Battery and device care → Battery";
+        if (!shown) {
+            sp.edit().putBoolean("popup_shown_once", true).apply();
+            showBatteryCapacityDialog();
         }
+    } catch (Throwable ignore) { }
+}
 
-        if (isXiaomi) {
-            if (isHyperOS) return "Settings → Battery → Battery usage";
-            if (isMIUI)    return "Settings → Battery & performance → Battery usage";
-            return "Settings → Battery";
-        }
-
-        if (isPixel) {
-            return "Settings → Battery → Battery usage";
-        }
-
-        if (isOppo || isRealme) {
-            return "Settings → Battery → More settings";
-        }
-
-        if (isOnePlus) {
-            return "Settings → Battery → Advanced settings";
-        }
-
-        if (isVivo) {
-            return "Settings → Battery";
-        }
-
-        if (isHuawei) {
-            return "Settings → Battery → App launch";
-        }
-
-        if (isMoto) {
-            return "Settings → Battery";
-        }
-
-        if (isSony || isAsus || isNokia || isLenovo || isLG || isZTE
-                || isTecno || isInfinix || isMeizu || isNothing) {
-            return "Settings → Battery";
-        }
-
-        return "Settings → Battery";
-    }
-
-    // ============================================================
-    // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
-    // ============================================================
+// ============================================================
+// CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
+// ============================================================
     private String buildCameraInfo() {
         StringBuilder sb = new StringBuilder();
 

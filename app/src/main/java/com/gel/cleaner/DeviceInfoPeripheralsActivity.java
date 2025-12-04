@@ -238,17 +238,32 @@ allContents = new TextView[]{
 };
 
 // ============================================================
-// ALL ICONS  (🔥 iconDisplay ΑΦΑΙΡΕΘΗΚΕ)
+// ALL ICONS 
 // ============================================================
 allIcons = new TextView[]{
-        iconCamera, iconBiometrics, iconSensors, iconConnectivity,
-        iconLocation, iconNfc, iconBattery, iconOther,
-        iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
+        iconCamera,
+        iconBiometrics,
+        iconSensors,
+        iconConnectivity,
+        iconLocation,
+        iconNfc,
+        iconBattery,
+        iconOther,
+        iconUwb,
+        iconHaptics,
+        iconGnss,
+        iconUsb,
+        iconRoot,
 
-        iconThermal, iconCpu, iconGpu,
-        iconModem, iconWifiAdvanced,
-        iconAudioUnified, iconSensorsExtended,
-        iconSystemFeatures, iconSecurityFlags
+        iconThermal,
+        iconCpu,
+        iconGpu,
+        iconModem,
+        iconWifiAdvanced,
+        iconAudioUnified,
+        iconSensorsExtended,
+        iconSystemFeatures,
+        iconSecurityFlags
 };
 
 // ============================================================

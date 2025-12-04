@@ -238,32 +238,17 @@ allContents = new TextView[]{
 };
 
 // ============================================================
-// ALL ICONS 
+// ALL ICONS
 // ============================================================
 allIcons = new TextView[]{
-        iconCamera,
-        iconBiometrics,
-        iconSensors,
-        iconConnectivity,
-        iconLocation,
-        iconNfc,
-        iconBattery,
-        iconOther,
-        iconUwb,
-        iconHaptics,
-        iconGnss,
-        iconUsb,
-        iconRoot,
+        iconCamera, iconBiometrics, iconSensors, iconConnectivity,
+        iconLocation, iconNfc, iconBattery, iconOther,
+        iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
 
-        iconThermal,
-        iconCpu,
-        iconGpu,
-        iconModem,
-        iconWifiAdvanced,
-        iconAudioUnified,
-        iconSensorsExtended,
-        iconSystemFeatures,
-        iconSecurityFlags
+        iconThermal, iconCpu, iconGpu,
+        iconModem, iconWifiAdvanced,
+        iconAudioUnified, iconSensorsExtended,
+        iconSystemFeatures, iconSecurityFlags
 };
 
 // ============================================================
@@ -272,58 +257,76 @@ allIcons = new TextView[]{
 populateAllSections();
 
 // ============================================================
-// SETUP SECTIONS
+// SETUP SECTIONS  (🔥 SAFE WITH NULL CHECKS)
 // ============================================================
-findViewById(R.id.headerCamera).setOnClickListener(v ->
-        toggleSection(txtCameraContent, iconCamera));
-findViewById(R.id.headerBiometrics).setOnClickListener(v ->
-        toggleSection(txtBiometricsContent, iconBiometrics));
-findViewById(R.id.headerSensors).setOnClickListener(v ->
-        toggleSection(txtSensorsContent, iconSensors));
-findViewById(R.id.headerConnectivity).setOnClickListener(v ->
-        toggleSection(txtConnectivityContent, iconConnectivity));
-findViewById(R.id.headerLocation).setOnClickListener(v ->
-        toggleSection(txtLocationContent, iconLocation));
-findViewById(R.id.headerNfc).setOnClickListener(v ->
-        toggleSection(txtNfcContent, iconNfc));
-findViewById(R.id.headerBattery).setOnClickListener(v ->
-        toggleSection(txtBatteryContent, iconBattery));
-findViewById(R.id.headerOtherPeripherals).setOnClickListener(v ->
-        toggleSection(txtOtherPeripherals, iconOther));
-findViewById(R.id.headerUwb).setOnClickListener(v ->
-        toggleSection(txtUwbContent, iconUwb));
-findViewById(R.id.headerHaptics).setOnClickListener(v ->
-        toggleSection(txtHapticsContent, iconHaptics));
-findViewById(R.id.headerGnss).setOnClickListener(v ->
-        toggleSection(txtGnssContent, iconGnss));
-findViewById(R.id.headerUsb).setOnClickListener(v ->
-        toggleSection(txtUsbContent, iconUsb));
-findViewById(R.id.headerRoot).setOnClickListener(v ->
-        toggleSection(txtRootContent, iconRoot));
 
-// ONE AUDIO BLOCK
-findViewById(R.id.headerAudioUnified).setOnClickListener(v ->
-        toggleSection(txtAudioUnifiedContent, iconAudioUnified));
+if (findViewById(R.id.headerCamera) != null)
+    findViewById(R.id.headerCamera).setOnClickListener(v -> toggleSection(txtCameraContent, iconCamera));
 
-// NEW HEADERS  
-findViewById(R.id.headerThermal).setOnClickListener(v ->
-        toggleSection(txtThermalContent, iconThermal));
-findViewById(R.id.headerCpu).setOnClickListener(v ->
-        toggleSection(txtCpuContent, iconCpu));
-findViewById(R.id.headerGpu).setOnClickListener(v ->
-        toggleSection(txtGpuContent, iconGpu));
-findViewById(R.id.headerModem).setOnClickListener(v ->
-        toggleSection(txtModemContent, iconModem));
-findViewById(R.id.headerWifiAdvanced).setOnClickListener(v ->
-        toggleSection(txtWifiAdvancedContent, iconWifiAdvanced));
-findViewById(R.id.headerSensorsExtended).setOnClickListener(v ->
-        toggleSection(txtSensorsExtendedContent, iconSensorsExtended));
-findViewById(R.id.headerSystemFeatures).setOnClickListener(v ->
-        toggleSection(txtSystemFeaturesContent, iconSystemFeatures));
-findViewById(R.id.headerSecurityFlags).setOnClickListener(v ->
-        toggleSection(txtSecurityFlagsContent, iconSecurityFlags));
+if (findViewById(R.id.headerBiometrics) != null)
+    findViewById(R.id.headerBiometrics).setOnClickListener(v -> toggleSection(txtBiometricsContent, iconBiometrics));
 
-}  // 🔥 ΤΕΛΟΣ onCreate()  
+if (findViewById(R.id.headerSensors) != null)
+    findViewById(R.id.headerSensors).setOnClickListener(v -> toggleSection(txtSensorsContent, iconSensors));
+
+if (findViewById(R.id.headerConnectivity) != null)
+    findViewById(R.id.headerConnectivity).setOnClickListener(v -> toggleSection(txtConnectivityContent, iconConnectivity));
+
+if (findViewById(R.id.headerLocation) != null)
+    findViewById(R.id.headerLocation).setOnClickListener(v -> toggleSection(txtLocationContent, iconLocation));
+
+if (findViewById(R.id.headerNfc) != null)
+    findViewById(R.id.headerNfc).setOnClickListener(v -> toggleSection(txtNfcContent, iconNfc));
+
+if (findViewById(R.id.headerBattery) != null)
+    findViewById(R.id.headerBattery).setOnClickListener(v -> toggleSection(txtBatteryContent, iconBattery));
+
+if (findViewById(R.id.headerOtherPeripherals) != null)
+    findViewById(R.id.headerOtherPeripherals).setOnClickListener(v -> toggleSection(txtOtherPeripherals, iconOther));
+
+if (findViewById(R.id.headerUwb) != null)
+    findViewById(R.id.headerUwb).setOnClickListener(v -> toggleSection(txtUwbContent, iconUwb));
+
+if (findViewById(R.id.headerHaptics) != null)
+    findViewById(R.id.headerHaptics).setOnClickListener(v -> toggleSection(txtHapticsContent, iconHaptics));
+
+if (findViewById(R.id.headerGnss) != null)
+    findViewById(R.id.headerGnss).setOnClickListener(v -> toggleSection(txtGnssContent, iconGnss));
+
+if (findViewById(R.id.headerUsb) != null)
+    findViewById(R.id.headerUsb).setOnClickListener(v -> toggleSection(txtUsbContent, iconUsb));
+
+if (findViewById(R.id.headerRoot) != null)
+    findViewById(R.id.headerRoot).setOnClickListener(v -> toggleSection(txtRootContent, iconRoot));
+
+if (findViewById(R.id.headerAudioUnified) != null)
+    findViewById(R.id.headerAudioUnified).setOnClickListener(v -> toggleSection(txtAudioUnifiedContent, iconAudioUnified));
+
+if (findViewById(R.id.headerThermal) != null)
+    findViewById(R.id.headerThermal).setOnClickListener(v -> toggleSection(txtThermalContent, iconThermal));
+
+if (findViewById(R.id.headerCpu) != null)
+    findViewById(R.id.headerCpu).setOnClickListener(v -> toggleSection(txtCpuContent, iconCpu));
+
+if (findViewById(R.id.headerGpu) != null)
+    findViewById(R.id.headerGpu).setOnClickListener(v -> toggleSection(txtGpuContent, iconGpu));
+
+if (findViewById(R.id.headerModem) != null)
+    findViewById(R.id.headerModem).setOnClickListener(v -> toggleSection(txtModemContent, iconModem));
+
+if (findViewById(R.id.headerWifiAdvanced) != null)
+    findViewById(R.id.headerWifiAdvanced).setOnClickListener(v -> toggleSection(txtWifiAdvancedContent, iconWifiAdvanced));
+
+if (findViewById(R.id.headerSensorsExtended) != null)
+    findViewById(R.id.headerSensorsExtended).setOnClickListener(v -> toggleSection(txtSensorsExtendedContent, iconSensorsExtended));
+
+if (findViewById(R.id.headerSystemFeatures) != null)
+    findViewById(R.id.headerSystemFeatures).setOnClickListener(v -> toggleSection(txtSystemFeaturesContent, iconSystemFeatures));
+
+if (findViewById(R.id.headerSecurityFlags) != null)
+    findViewById(R.id.headerSecurityFlags).setOnClickListener(v -> toggleSection(txtSecurityFlagsContent, iconSecurityFlags));
+} 
+      // 🔥 ΤΕΛΟΣ onCreate()  
 
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION  

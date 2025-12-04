@@ -304,11 +304,20 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // Battery dialog one-time
-    // ============================================================
-    catch (Throwable ignore) {
+// Battery dialog one-time
+// ============================================================
+private void maybeShowBatteryCapacityDialogOnce() {
+    try {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
+        boolean shown = sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
+        long existing = sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
+
+        if (!shown && existing <= 0) {
+            sp.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
+            runOnUiThread(this::showBatteryCapacityDialog);
         }
-    }
+    } catch (Throwable ignore) { }
+}
 
     // ============================================================
     // PERMISSION LOGIC (unchanged from your version)
@@ -430,7 +439,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             return false;
         }
     }
-
 
     // ============================================================
     // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)

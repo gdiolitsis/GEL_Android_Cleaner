@@ -305,31 +305,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         // [ΕΔΩ ΜΕΝΕΙ ΟΠΩΣ ΗΤΑΝ ΣΤΟ ΔΙΚΟ ΣΟΥ ΑΡΧΕΙΟ]
     }
 
-    // ============================================================
-    // Battery dialog one-time
-    // ============================================================
-    private void maybeShowBatteryCapacityDialogOnce() {
-
-        try {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            boolean shown = prefs.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
-            if (shown) return;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Battery Capacity");
-            builder.setMessage("If you know your device's real battery capacity (mAh), you can store it in settings to improve accuracy.");
-            builder.setPositiveButton("OK", (d, w) -> d.dismiss());
-            builder.setNegativeButton("Don't show again", (d, w) -> {
-                prefs.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
-                d.dismiss();
-            });
-
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
-        } catch (Throwable ignore) {
-        }
-    }
 
     // ============================================================
     // PERMISSION LOGIC (unchanged from your version)
@@ -927,7 +902,7 @@ return sb.toString();
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
-private static final String KEY_BATTERY_DIALOG_SHOWN = "battery_dialog_shown";
+// ❗ Removed duplicate KEY_BATTERY_DIALOG_SHOWN
 
 private long getStoredModelCapacity() {
     try {
@@ -944,7 +919,6 @@ private void saveModelCapacity(long value) {
         sp.edit().putLong(KEY_BATTERY_MODEL_CAPACITY, value).apply();
     } catch (Throwable ignore) {}
 }
-
 
 // ===================================================================
 // BATTERY DATA STRUCT (GEL ENGINE v1.0)
@@ -1148,7 +1122,7 @@ private String buildBatteryInfo() {
 }
       
 // ===================================================================
-// SHOW POPUP ONLY ONCE
+// SHOW POPUP ONLY ONCE — FINAL GEL VERSION
 // ===================================================================
 private void maybeShowBatteryCapacityDialogOnce() {
     try {
@@ -2558,4 +2532,15 @@ private void refreshBatteryButton() {
 
         tv.setText(ssb);
     }
+}
+
+// ===================================================================
+// HANDLE SETTINGS PATH CLICK — GEL SAFE VERSION
+// ===================================================================
+private void handleSettingsClick(Context ctx, String path) {
+    try {
+        Intent intent = new Intent(Settings.ACTION_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(intent);
+    } catch (Throwable ignore) {}
 }

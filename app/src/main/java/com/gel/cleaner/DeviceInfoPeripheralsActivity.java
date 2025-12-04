@@ -268,6 +268,32 @@ protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
 
 // 🔥 ΤΕΛΟΣ onCreate()
 
+  // ============================================================
+// TOGGLE ENGINE (close others)
+// ============================================================
+private void toggle(TextView target, TextView icon) {
+
+    if (target == null || icon == null) return;
+
+    // Κλείσε όλα τα άλλα
+    for (TextView t : allContents)
+        if (t != null && t != target)
+            t.setVisibility(View.GONE);
+
+    for (TextView ic : allIcons)
+        if (ic != null && ic != icon)
+            ic.setText("＋");
+
+    // Άνοιξε / έκλεισε το επιλεγμένο
+    if (target.getVisibility() == View.VISIBLE) {
+        target.setVisibility(View.GONE);
+        icon.setText("＋");
+    } else {
+        target.setVisibility(View.VISIBLE);
+        icon.setText("－");
+    }
+}    
+
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION  
 // ============================================================  
@@ -291,24 +317,7 @@ private void setupSection(View header, View content, TextView icon) {
     });
 }
       
-// ============================================================
-// TOGGLE ENGINE (close others)
-// ============================================================
-private void toggle(TextView target, TextView icon) {
-    for (TextView tv : allContents)
-        if (tv != target) tv.setVisibility(TextView.GONE);
-
-    for (TextView ic : allIcons)
-        if (ic != icon) ic.setRotation(0);
-
-    if (target.getVisibility() == TextView.VISIBLE) {
-        target.setVisibility(TextView.GONE);
-        icon.setRotation(0);
-    } else {
-        target.setVisibility(TextView.VISIBLE);
-        icon.setRotation(90);
-    }
-}
+/
 
     // ============================================================
     // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
@@ -326,8 +335,8 @@ private void toggle(TextView target, TextView icon) {
             } catch (Throwable e) { }
         }
     }
-
-    // ============================================================
+      
+      // ============================================================
     // GEL Permission Engine v25 — Manifest-Aware + Hide Fake Links
     // ============================================================
     private boolean appDeclaresPermission(String perm) {

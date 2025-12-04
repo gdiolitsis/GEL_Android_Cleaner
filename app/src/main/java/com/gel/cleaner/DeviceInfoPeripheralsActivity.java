@@ -2391,7 +2391,6 @@ private void populateAllSections() {
 
     // CORE HARDWARE
     set(R.id.txtCameraContent,           buildCameraInfo());
-    set(R.id.txtMemoryContent,           buildMemoryInfo());
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());
 

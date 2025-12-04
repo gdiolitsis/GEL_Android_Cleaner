@@ -317,7 +317,6 @@ private void setupSection(View header, View content, TextView icon) {
     });
 }
       
-/
 
     // ============================================================
     // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY

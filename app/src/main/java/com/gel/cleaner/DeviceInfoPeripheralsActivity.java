@@ -399,6 +399,8 @@ findViewById(R.id.headerRoot)
 findViewById(R.id.headerOtherPeripherals)
         .setOnClickListener(v -> toggle(txtOtherPeripherals, iconOther));
 
+}  
+
     // 🔥 ΤΕΛΟΣ onCreate()
 
     // ============================================================

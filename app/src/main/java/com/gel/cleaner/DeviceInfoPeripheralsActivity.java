@@ -180,6 +180,7 @@ TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
 TextView txtRootContent            = findViewById(R.id.txtRootContent);
 
 TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
+TextView txtScreenContent          = findViewById(R.id.txtScreenContent);
 TextView txtCpuContent             = findViewById(R.id.txtCpuContent);
 TextView txtGpuContent             = findViewById(R.id.txtGpuContent);
 TextView txtModemContent           = findViewById(R.id.txtModemContent);
@@ -188,6 +189,9 @@ TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
 TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
 TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
 TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+
+// Battery container (ολόκληρο το block)
+View batteryContainer              = findViewById(R.id.batteryContainer);
 
 // ============================================================
 // ICON VIEWS
@@ -207,6 +211,7 @@ TextView iconUsb              = findViewById(R.id.iconUsbToggle);
 TextView iconRoot             = findViewById(R.id.iconRootToggle);
 
 TextView iconThermal          = findViewById(R.id.iconThermalToggle);
+TextView iconScreen           = findViewById(R.id.iconScreenToggle);
 TextView iconCpu              = findViewById(R.id.iconCpuToggle);
 TextView iconGpu              = findViewById(R.id.iconGpuToggle);
 TextView iconModem            = findViewById(R.id.iconModemToggle);
@@ -223,32 +228,40 @@ if (btnBatteryModel != null) {
 }
 
 // ============================================================
-// ALL CONTENTS
+// ALL CONTENTS  (Battery = ολόκληρο το container)
 // ============================================================
 allContents = new TextView[]{
+        // battery: content view used για mapping, αλλά η αναδίπλωση γίνεται στο container
+        txtBatteryContent,
+
         txtCameraContent, txtBiometricsContent, txtSensorsContent,
         txtConnectivityContent, txtLocationContent, txtNfcContent,
-        txtBatteryContent, txtOtherPeripherals, txtUwbContent,
-        txtHapticsContent, txtGnssContent, txtUsbContent,
+        txtUwbContent, txtHapticsContent, txtGnssContent, txtUsbContent,
         txtRootContent,
 
-        txtModemContent, txtWifiAdvancedContent,
-        txtAudioUnifiedContent, txtSensorsExtendedContent,
-        txtSystemFeaturesContent, txtSecurityFlagsContent
+        txtThermalContent, txtScreenContent,
+        txtCpuContent, txtGpuContent, txtModemContent,
+        txtWifiAdvancedContent, txtAudioUnifiedContent,
+        txtSensorsExtendedContent, txtSystemFeaturesContent,
+        txtSecurityFlagsContent
 };
 
 // ============================================================
 // ALL ICONS
 // ============================================================
 allIcons = new TextView[]{
-        iconCamera, iconBiometrics, iconSensors, iconConnectivity,
-        iconLocation, iconNfc, iconBattery, iconOther,
-        iconUwb, iconHaptics, iconGnss, iconUsb, iconRoot,
+        iconBattery,
 
-        iconThermal, iconCpu, iconGpu,
-        iconModem, iconWifiAdvanced,
-        iconAudioUnified, iconSensorsExtended,
-        iconSystemFeatures, iconSecurityFlags
+        iconCamera, iconBiometrics, iconSensors,
+        iconConnectivity, iconLocation, iconNfc,
+        iconUwb, iconHaptics, iconGnss, iconUsb,
+        iconRoot,
+
+        iconThermal, iconScreen,
+        iconCpu, iconGpu, iconModem,
+        iconWifiAdvanced, iconAudioUnified,
+        iconSensorsExtended, iconSystemFeatures,
+        iconSecurityFlags
 };
 
 // ============================================================
@@ -257,76 +270,63 @@ allIcons = new TextView[]{
 populateAllSections();
 
 // ============================================================
-// SETUP SECTIONS  (🔥 SAFE WITH NULL CHECKS)
+// SETUP SECTIONS (one-at-a-time open)
 // ============================================================
+findViewById(R.id.headerBattery).setOnClickListener(v ->
+        toggleSection(txtBatteryContent, iconBattery, batteryContainer));
 
-if (findViewById(R.id.headerCamera) != null)
-    findViewById(R.id.headerCamera).setOnClickListener(v -> toggleSection(txtCameraContent, iconCamera));
+findViewById(R.id.headerCamera).setOnClickListener(v ->
+        toggleSection(txtCameraContent, iconCamera, null));
+findViewById(R.id.headerBiometrics).setOnClickListener(v ->
+        toggleSection(txtBiometricsContent, iconBiometrics, null));
+findViewById(R.id.headerSensors).setOnClickListener(v ->
+        toggleSection(txtSensorsContent, iconSensors, null));
+findViewById(R.id.headerConnectivity).setOnClickListener(v ->
+        toggleSection(txtConnectivityContent, iconConnectivity, null));
+findViewById(R.id.headerLocation).setOnClickListener(v ->
+        toggleSection(txtLocationContent, iconLocation, null));
+findViewById(R.id.headerNfc).setOnClickListener(v ->
+        toggleSection(txtNfcContent, iconNfc, null));
+findViewById(R.id.headerOtherPeripherals).setOnClickListener(v ->
+        toggleSection(txtOtherPeripherals, iconOther, null));
+findViewById(R.id.headerUwb).setOnClickListener(v ->
+        toggleSection(txtUwbContent, iconUwb, null));
+findViewById(R.id.headerHaptics).setOnClickListener(v ->
+        toggleSection(txtHapticsContent, iconHaptics, null));
+findViewById(R.id.headerGnss).setOnClickListener(v ->
+        toggleSection(txtGnssContent, iconGnss, null));
+findViewById(R.id.headerUsb).setOnClickListener(v ->
+        toggleSection(txtUsbContent, iconUsb, null));
+findViewById(R.id.headerRoot).setOnClickListener(v ->
+        toggleSection(txtRootContent, iconRoot, null));
 
-if (findViewById(R.id.headerBiometrics) != null)
-    findViewById(R.id.headerBiometrics).setOnClickListener(v -> toggleSection(txtBiometricsContent, iconBiometrics));
+// THERMALS + SCREEN + CPU/GPU/MODEM/WIFI
+findViewById(R.id.headerThermal).setOnClickListener(v ->
+        toggleSection(txtThermalContent, iconThermal, null));
+findViewById(R.id.headerScreen).setOnClickListener(v ->
+        toggleSection(txtScreenContent, iconScreen, null));
+findViewById(R.id.headerCpu).setOnClickListener(v ->
+        toggleSection(txtCpuContent, iconCpu, null));
+findViewById(R.id.headerGpu).setOnClickListener(v ->
+        toggleSection(txtGpuContent, iconGpu, null));
+findViewById(R.id.headerModem).setOnClickListener(v ->
+        toggleSection(txtModemContent, iconModem, null));
+findViewById(R.id.headerWifiAdvanced).setOnClickListener(v ->
+        toggleSection(txtWifiAdvancedContent, iconWifiAdvanced, null));
 
-if (findViewById(R.id.headerSensors) != null)
-    findViewById(R.id.headerSensors).setOnClickListener(v -> toggleSection(txtSensorsContent, iconSensors));
+// AUDIO
+findViewById(R.id.headerAudioUnified).setOnClickListener(v ->
+        toggleSection(txtAudioUnifiedContent, iconAudioUnified, null));
 
-if (findViewById(R.id.headerConnectivity) != null)
-    findViewById(R.id.headerConnectivity).setOnClickListener(v -> toggleSection(txtConnectivityContent, iconConnectivity));
+// SENSORS EXTENDED + FEATURES + SECURITY
+findViewById(R.id.headerSensorsExtended).setOnClickListener(v ->
+        toggleSection(txtSensorsExtendedContent, iconSensorsExtended, null));
+findViewById(R.id.headerSystemFeatures).setOnClickListener(v ->
+        toggleSection(txtSystemFeaturesContent, iconSystemFeatures, null));
+findViewById(R.id.headerSecurityFlags).setOnClickListener(v ->
+        toggleSection(txtSecurityFlagsContent, iconSecurityFlags, null));
 
-if (findViewById(R.id.headerLocation) != null)
-    findViewById(R.id.headerLocation).setOnClickListener(v -> toggleSection(txtLocationContent, iconLocation));
-
-if (findViewById(R.id.headerNfc) != null)
-    findViewById(R.id.headerNfc).setOnClickListener(v -> toggleSection(txtNfcContent, iconNfc));
-
-if (findViewById(R.id.headerBattery) != null)
-    findViewById(R.id.headerBattery).setOnClickListener(v -> toggleSection(txtBatteryContent, iconBattery));
-
-if (findViewById(R.id.headerOtherPeripherals) != null)
-    findViewById(R.id.headerOtherPeripherals).setOnClickListener(v -> toggleSection(txtOtherPeripherals, iconOther));
-
-if (findViewById(R.id.headerUwb) != null)
-    findViewById(R.id.headerUwb).setOnClickListener(v -> toggleSection(txtUwbContent, iconUwb));
-
-if (findViewById(R.id.headerHaptics) != null)
-    findViewById(R.id.headerHaptics).setOnClickListener(v -> toggleSection(txtHapticsContent, iconHaptics));
-
-if (findViewById(R.id.headerGnss) != null)
-    findViewById(R.id.headerGnss).setOnClickListener(v -> toggleSection(txtGnssContent, iconGnss));
-
-if (findViewById(R.id.headerUsb) != null)
-    findViewById(R.id.headerUsb).setOnClickListener(v -> toggleSection(txtUsbContent, iconUsb));
-
-if (findViewById(R.id.headerRoot) != null)
-    findViewById(R.id.headerRoot).setOnClickListener(v -> toggleSection(txtRootContent, iconRoot));
-
-if (findViewById(R.id.headerAudioUnified) != null)
-    findViewById(R.id.headerAudioUnified).setOnClickListener(v -> toggleSection(txtAudioUnifiedContent, iconAudioUnified));
-
-if (findViewById(R.id.headerThermal) != null)
-    findViewById(R.id.headerThermal).setOnClickListener(v -> toggleSection(txtThermalContent, iconThermal));
-
-if (findViewById(R.id.headerCpu) != null)
-    findViewById(R.id.headerCpu).setOnClickListener(v -> toggleSection(txtCpuContent, iconCpu));
-
-if (findViewById(R.id.headerGpu) != null)
-    findViewById(R.id.headerGpu).setOnClickListener(v -> toggleSection(txtGpuContent, iconGpu));
-
-if (findViewById(R.id.headerModem) != null)
-    findViewById(R.id.headerModem).setOnClickListener(v -> toggleSection(txtModemContent, iconModem));
-
-if (findViewById(R.id.headerWifiAdvanced) != null)
-    findViewById(R.id.headerWifiAdvanced).setOnClickListener(v -> toggleSection(txtWifiAdvancedContent, iconWifiAdvanced));
-
-if (findViewById(R.id.headerSensorsExtended) != null)
-    findViewById(R.id.headerSensorsExtended).setOnClickListener(v -> toggleSection(txtSensorsExtendedContent, iconSensorsExtended));
-
-if (findViewById(R.id.headerSystemFeatures) != null)
-    findViewById(R.id.headerSystemFeatures).setOnClickListener(v -> toggleSection(txtSystemFeaturesContent, iconSystemFeatures));
-
-if (findViewById(R.id.headerSecurityFlags) != null)
-    findViewById(R.id.headerSecurityFlags).setOnClickListener(v -> toggleSection(txtSecurityFlagsContent, iconSecurityFlags));
-} 
-      // 🔥 ΤΕΛΟΣ onCreate()  
+}  // 🔥 ΤΕΛΟΣ onCreate()
 
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION  
@@ -350,75 +350,111 @@ private void setupSection(View header, View content, TextView icon) {
         }
     });
 }
-    // ============================================================
-    // GEL Expand Engine v3.0 — FINAL
-    // ============================================================
-    private void toggleSection(TextView targetContent, TextView targetIcon) {
+      
+// ============================================================
+// GEL Expand Engine v3.1 — Peripherals (one-open-at-a-time)
+// ============================================================
+private void toggleSection(TextView targetContent,
+                           TextView targetIcon,
+                           @Nullable View explicitContainer) {
 
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c  = allContents[i];
+    if (targetContent == null || targetIcon == null) return;
+
+    // Ποιο view πραγματικά ανοίγουμε/κλείνουμε;
+    View targetView = (explicitContainer != null)
+            ? explicitContainer
+            : targetContent;
+
+    // Κλείσε όλα τα άλλα
+    if (allContents != null && allIcons != null) {
+        for (int i = 0; i < allContents.length && i < allIcons.length; i++) {
+            TextView c = allContents[i];
             TextView ic = allIcons[i];
-
             if (c == null || ic == null) continue;
 
-            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-                animateCollapse(c);
+            View sectionView;
+            // Battery: αν ο γονιός είναι το batteryContainer, χειριζόμαστε τον γονιό
+            View parent = (View) c.getParent();
+            if (parent != null && parent.getId() == R.id.batteryContainer) {
+                sectionView = parent;
+            } else {
+                sectionView = c;
+            }
+
+            if (sectionView == targetView) continue;
+
+            if (sectionView.getVisibility() == View.VISIBLE) {
+                animateCollapse(sectionView);
                 ic.setText("＋");
             }
         }
+    }
 
-        if (targetContent.getVisibility() == View.VISIBLE) {
-            animateCollapse(targetContent);
-            targetIcon.setText("＋");
-        } else {
-            animateExpand(targetContent);
-            targetIcon.setText("－");
+    // Toggle στόχου
+    if (targetView.getVisibility() == View.VISIBLE) {
+        animateCollapse(targetView);
+        targetIcon.setText("＋");
+    } else {
+        targetView.setVisibility(View.VISIBLE);
+        animateExpand(targetView);
+        targetIcon.setText("－");
+    }
+}
+
+private void animateExpand(View view) {
+    view.measure(
+            View.MeasureSpec.makeMeasureSpec(((View) view.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    );
+    final int targetHeight = view.getMeasuredHeight();
+
+    view.getLayoutParams().height = 0;
+    view.setVisibility(View.VISIBLE);
+
+    Animation a = new Animation() {
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            view.getLayoutParams().height =
+                    interpolatedTime == 1
+                            ? ViewGroup.LayoutParams.WRAP_CONTENT
+                            : (int) (targetHeight * interpolatedTime);
+            view.requestLayout();
         }
-    }
 
-    private void animateExpand(final View v) {
-        v.post(() -> {
-            v.measure(
-                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
+        @Override
+        public boolean willChangeBounds() {
+            return true;
+        }
+    };
 
-            final int target = v.getMeasuredHeight();
+    a.setDuration(180);
+    view.startAnimation(a);
+}
 
-            v.getLayoutParams().height = 0;
-            v.setVisibility(View.VISIBLE);
-            v.setAlpha(0f);
+private void animateCollapse(View view) {
+    final int initialHeight = view.getMeasuredHeight();
 
-            v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        v.getLayoutParams().height = target;
-                        v.requestLayout();
-                    })
-                    .start();
-        });
-    }
+    Animation a = new Animation() {
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            if (interpolatedTime == 1) {
+                view.setVisibility(View.GONE);
+            } else {
+                view.getLayoutParams().height =
+                        initialHeight - (int) (initialHeight * interpolatedTime);
+                view.requestLayout();
+            }
+        }
 
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
+        @Override
+        public boolean willChangeBounds() {
+            return true;
+        }
+    };
 
-        final int initial = v.getHeight();
-        v.setAlpha(1f);
-
-        v.animate()
-                .alpha(0f)
-                .setDuration(120)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = initial;
-                    v.setAlpha(1f);
-                    v.requestLayout();
-                })
-                .start();
-    }
+    a.setDuration(180);
+    view.startAnimation(a);
+}
 
     // ============================================================
     // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
@@ -1785,62 +1821,95 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-    // 1. Thermal Engine / Cooling Profiles
-    private String buildThermalInfo() {
-        StringBuilder sb = new StringBuilder();
+    // ============================================================
+// 1. Thermal Engine / Cooling Profiles (GEL Modem-Aware Edition)
+// ============================================================
+private String buildThermalInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        File thermalDir = new File("/sys/class/thermal");
-        File[] zones = null;
-        File[] cools = null;
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+    File[] cools = null;
 
-        try {
-            if (thermalDir.exists() && thermalDir.isDirectory()) {
-                zones = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("thermal_zone");
-                    }
-                });
-                cools = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("cooling_device");
-                    }
-                });
-            }
-        } catch (Throwable ignore) { }
-
-        int zoneCount = zones != null ? zones.length : 0;
-        int coolCount = cools != null ? cools.length : 0;
-
-        sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
-        sb.append("Cooling Devices  : ").append(coolCount).append("\n");
-
-        if (zoneCount == 0 && coolCount == 0) {
-            sb.append("Advanced         : Some devices restrict /sys thermal nodes; basic sensors use Android APIs, full trip tables require root.\n");
-            return sb.toString();
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
         }
+    } catch (Throwable ignore) { }
 
-        if (zoneCount > 0) {
-            sb.append("\nSample Zone      :\n");
-            try {
-                File z0 = zones[0];
-                String type = readSysString(z0.getAbsolutePath() + "/type");
-                String temp = readSysString(z0.getAbsolutePath() + "/temp");
+    int zoneCount = zones != null ? zones.length : 0;
+    int coolCount = cools != null ? cools.length : 0;
 
-                if (type != null && type.trim().length() > 0) {
-                    sb.append("  Type           : ").append(type).append("\n");
-                }
-                if (temp != null && temp.trim().length() > 0) {
-                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
-                }
-            } catch (Throwable ignore) { }
-        }
+    sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
+    sb.append("Cooling Devices  : ").append(coolCount).append("\n");
 
-        sb.append("Advanced         : Full thermal trip tables and throttling profiles require root access and OEM-specific parsing.\n");
-
+    if (zoneCount == 0 && coolCount == 0) {
+        sb.append("Advanced         : This device limits /sys thermal nodes. Full trip tables require root.\n");
         return sb.toString();
     }
+
+    // ------------------------------------------------------------
+    //   HUMAN-READABLE LABELS FOR COMMON THERMAL ZONES
+    // ------------------------------------------------------------
+    java.util.function.Function<String, String> label = (raw) -> {
+        if (raw == null) return "Thermal Zone";
+
+        String t = raw.toLowerCase(Locale.US);
+
+        // MODEM / BASEBAND / RF
+        if (t.contains("modem") || t.contains("mdm") ||
+            t.contains("baseband") || t.contains("bb") ||
+            t.contains("pa-therm") || t.contains("xo-therm") ||
+            t.contains("qcom,pmic") || t.contains("rf")) {
+            return "Cellular Modem / RF Front-End";
+        }
+
+        // CPU clusters
+        if (t.contains("cpu") || t.contains("big") || t.contains("little")
+            || t.contains("silver") || t.contains("gold") || t.contains("prime")) {
+            return "CPU Cluster / SoC";
+        }
+
+        // GPU
+        if (t.contains("gpu")) return "GPU / Graphics Engine";
+
+        // battery
+        if (t.contains("batt") || t.contains("battery")) return "Battery Pack";
+
+        // skin / chassis
+        if (t.contains("skin") || t.contains("shell")) return "Device Shell / Chassis";
+
+        // pcb / mainboard
+        if (t.contains("pcb")) return "Mainboard / PCB Area";
+
+        return "Thermal Zone (" + raw + ")";
+    };
+
+    // ------------------------------------------------------------
+    // SAMPLE FIRST ZONE
+    // ------------------------------------------------------------
+    if (zoneCount > 0) {
+        File z0 = zones[0];
+        String type = readSysString(z0.getAbsolutePath() + "/type");
+        String temp = readSysString(z0.getAbsolutePath() + "/temp");
+
+        sb.append("\nSample Zone      :\n");
+
+        if (type != null && !type.trim().isEmpty()) {
+            sb.append("  Raw Type       : ").append(type).append("\n");
+            sb.append("  Friendly       : ").append(label.apply(type)).append("\n");
+        }
+
+        if (temp != null && !temp.trim().isEmpty()) {
+            sb.append("  Temp (raw)     : ").append(temp).append("\n");
+        }
+    }
+
+    sb.append("\nAdvanced         : Full thermal trip tables and throttling profiles require root access.\n");
+
+    return sb.toString();
+}
 
     // 2. Display / HDR / Refresh + Accurate Diagonal (inches)
     private String buildDisplayInfo() {

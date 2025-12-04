@@ -2434,8 +2434,8 @@ private void refreshBatteryButton() {
         if (t == null) return;
         applyNeonValues(t, txt);
     }
-
-    // ============================================================
+    
+// ============================================================
 // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
 // ============================================================
 private void applyNeonValues(TextView tv, String text) {
@@ -2465,10 +2465,10 @@ private void applyNeonValues(TextView tv, String text) {
 
         if (valueStart < lineEnd) {
             ssb.setSpan(
-                    new ForegroundColorSpan(neon),
-                    valueStart,
-                    lineEnd,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                new ForegroundColorSpan(neon),
+                valueStart,
+                lineEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
         }
 
@@ -2478,24 +2478,15 @@ private void applyNeonValues(TextView tv, String text) {
     int idxX = text.indexOf("Xiaomi");
     while (idxX != -1) {
         int end = idxX + "Xiaomi".length();
-        ssb.setSpan(
-                new ForegroundColorSpan(gold),
-                idxX,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+        ssb.setSpan(new ForegroundColorSpan(gold), idxX, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         idxX = text.indexOf("Xiaomi", end);
     }
 
     String os = "Open Settings";
     int idxOS = text.indexOf(os);
     if (idxOS != -1) {
-        ssb.setSpan(
-                new StyleSpan(Typeface.BOLD),
-                idxOS,
-                idxOS + os.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+        ssb.setSpan(new StyleSpan(Typeface.BOLD), idxOS, idxOS + os.length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     boolean hasPath = false;
@@ -2514,12 +2505,8 @@ private void applyNeonValues(TextView tv, String text) {
             }
         }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        ssb.setSpan(
-                new ForegroundColorSpan(LINK_BLUE),
-                idx,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+        ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idx, end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         hasPath = true;
         idx = text.indexOf("Settings →", end);
@@ -2542,4 +2529,7 @@ private void handleSettingsClick(Context ctx, String path) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         ctx.startActivity(intent);
     } catch (Throwable ignore) {}
+}
+
+// END OF CLASS
 }

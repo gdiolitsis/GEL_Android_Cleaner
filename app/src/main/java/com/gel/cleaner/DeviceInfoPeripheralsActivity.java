@@ -292,108 +292,22 @@ private void setupSection(View header, View content, TextView icon) {
 }
       
 // ============================================================
-// GEL Expand Engine v3.1 — Peripherals (one-open-at-a-time)
+// TOGGLE ENGINE (close others)
 // ============================================================
-private void toggleSection(TextView targetContent,
-                           TextView targetIcon,
-                           @Nullable View explicitContainer) {
+private void toggle(TextView target, TextView icon) {
+    for (TextView tv : allContents)
+        if (tv != target) tv.setVisibility(TextView.GONE);
 
-    if (targetContent == null || targetIcon == null) return;
+    for (TextView ic : allIcons)
+        if (ic != icon) ic.setRotation(0);
 
-    // Ποιο view πραγματικά ανοίγουμε/κλείνουμε;
-    View targetView = (explicitContainer != null)
-            ? explicitContainer
-            : targetContent;
-
-    // Κλείσε όλα τα άλλα
-    if (allContents != null && allIcons != null) {
-        for (int i = 0; i < allContents.length && i < allIcons.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-            if (c == null || ic == null) continue;
-
-            View sectionView;
-            // Battery: αν ο γονιός είναι το batteryContainer, χειριζόμαστε τον γονιό
-            View parent = (View) c.getParent();
-            if (parent != null && parent.getId() == R.id.batteryContainer) {
-                sectionView = parent;
-            } else {
-                sectionView = c;
-            }
-
-            if (sectionView == targetView) continue;
-
-            if (sectionView.getVisibility() == View.VISIBLE) {
-                animateCollapse(sectionView);
-                ic.setText("＋");
-            }
-        }
-    }
-
-    // Toggle στόχου
-    if (targetView.getVisibility() == View.VISIBLE) {
-        animateCollapse(targetView);
-        targetIcon.setText("＋");
+    if (target.getVisibility() == TextView.VISIBLE) {
+        target.setVisibility(TextView.GONE);
+        icon.setRotation(0);
     } else {
-        targetView.setVisibility(View.VISIBLE);
-        animateExpand(targetView);
-        targetIcon.setText("－");
+        target.setVisibility(TextView.VISIBLE);
+        icon.setRotation(90);
     }
-}
-
-private void animateExpand(View view) {
-    view.measure(
-            View.MeasureSpec.makeMeasureSpec(((View) view.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    );
-    final int targetHeight = view.getMeasuredHeight();
-
-    view.getLayoutParams().height = 0;
-    view.setVisibility(View.VISIBLE);
-
-    Animation a = new Animation() {
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            view.getLayoutParams().height =
-                    interpolatedTime == 1
-                            ? ViewGroup.LayoutParams.WRAP_CONTENT
-                            : (int) (targetHeight * interpolatedTime);
-            view.requestLayout();
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
-    };
-
-    a.setDuration(180);
-    view.startAnimation(a);
-}
-
-private void animateCollapse(View view) {
-    final int initialHeight = view.getMeasuredHeight();
-
-    Animation a = new Animation() {
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            if (interpolatedTime == 1) {
-                view.setVisibility(View.GONE);
-            } else {
-                view.getLayoutParams().height =
-                        initialHeight - (int) (initialHeight * interpolatedTime);
-                view.requestLayout();
-            }
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
-    };
-
-    a.setDuration(180);
-    view.startAnimation(a);
 }
 
     // ============================================================

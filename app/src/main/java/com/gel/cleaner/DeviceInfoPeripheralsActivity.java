@@ -85,7 +85,7 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 
-   public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
+public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     // ============================================================
     // GEL Permission Request Engine v1.0 — Option B (Auto Request All)

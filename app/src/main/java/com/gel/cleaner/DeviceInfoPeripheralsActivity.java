@@ -475,97 +475,136 @@ findViewById(R.id.headerOtherPeripherals)
     }
 
 
-    // ============================================================
-    // PERMISSION LOGIC (unchanged from your version)
-    // ============================================================
-    private boolean appDeclaresPermission(String perm) {
-        try {
-            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_PERMISSIONS);
-            if (pi.requestedPermissions == null) return false;
-            for (String p : pi.requestedPermissions) {
-                if (perm.equals(p)) return true;
-            }
-            return false;
-        } catch (Throwable e) {
-            return false;
+// ============================================================
+// PERMISSION LOGIC (GEL Stable Final Version)
+// ============================================================
+private boolean appDeclaresPermission(String perm) {
+    try {
+        PackageInfo pi = getPackageManager().getPackageInfo(
+                getPackageName(), PackageManager.GET_PERMISSIONS);
+
+        if (pi.requestedPermissions == null) return false;
+
+        for (String p : pi.requestedPermissions) {
+            if (perm.equals(p)) return true;
         }
-    }
+        return false;
 
-    private boolean sectionNeedsPermission(String type) {
-        if (type == null) return false;
-        type = type.toLowerCase(Locale.US);
-
-        if (type.contains("camera")) return true;
-        if (type.contains("bluetooth")) return true;
-        if (type.contains("location")) return true;
-        if (type.contains("phone") || type.contains("modem")) return true;
-        if (type.contains("contacts")) return true;
-        if (type.contains("calendar")) return true;
-        if (type.contains("sms")) return true;
-        if (type.contains("call_log")) return true;
-        if (type.contains("storage")) return true;
-        if (type.contains("microphone")) return true;
-        if (type.contains("sensors")) return true;
-        if (type.contains("wifi")) return true;
-        if (type.contains("nearby")) return true;
-
+    } catch (Throwable e) {
         return false;
     }
+}
 
-    private boolean userHasPermission(String type) {
+private boolean sectionNeedsPermission(String type) {
+    if (type == null) return false;
+    type = type.toLowerCase(Locale.US);
 
-        if (type == null) return true;
-        type = type.toLowerCase(Locale.US);
+    if (type.contains("camera")) return true;
+    if (type.contains("bluetooth")) return true;
+    if (type.contains("location")) return true;
+    if (type.contains("microphone")) return true;
+    if (type.contains("sensors")) return true;
+    if (type.contains("wifi")) return true;
+    if (type.contains("nearby")) return true;
+    if (type.contains("modem")) return true;
 
-        if (type.contains("camera")) {
-            if (!appDeclaresPermission(Manifest.permission.CAMERA)) return true;
-            return checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    return false;
+}
+
+private boolean userHasPermission(String type) {
+
+    if (type == null) return true;
+    type = type.toLowerCase(Locale.US);
+
+    // CAMERA
+    if (type.contains("camera")) {
+        if (!appDeclaresPermission(Manifest.permission.CAMERA)) return true;
+        return checkSelfPermission(Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // MICROPHONE
+    if (type.contains("microphone")) {
+        if (!appDeclaresPermission(Manifest.permission.RECORD_AUDIO)) return true;
+        return checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // LOCATION
+    if (type.contains("location")) {
+
+        boolean hasFine = appDeclaresPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+        boolean hasCoarse = appDeclaresPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        boolean fine = !hasFine || (
+                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
+        );
+
+        boolean coarse = !hasCoarse || (
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
+        );
+
+        return fine || coarse;
+    }
+
+    // BLUETOOTH (SCAN + CONNECT for Android 12+)
+    if (type.contains("bluetooth")) {
+
+        boolean reqScan = appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN);
+        boolean reqConn = appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
+
+        if (Build.VERSION.SDK_INT >= 31 && (reqScan || reqConn)) {
+
+            boolean scan = !reqScan ||
+                    (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN)
+                            == PackageManager.PERMISSION_GRANTED);
+
+            boolean conn = !reqConn ||
+                    (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                            == PackageManager.PERMISSION_GRANTED);
+
+            return scan && conn;
         }
 
-        if (type.contains("bluetooth")) {
+        return true; // auto-pass for API < 31
+    }
 
-            boolean hasScan = appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN);
-            boolean hasConn = appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
-
-            if (Build.VERSION.SDK_INT >= 31 && (hasScan || hasConn)) {
-
-                boolean scan = !hasScan ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN)
-                                == PackageManager.PERMISSION_GRANTED);
-                boolean conn = !hasConn ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                                == PackageManager.PERMISSION_GRANTED);
-
-                return scan && conn;
-            }
-            return true;
+    // NEARBY WIFI DEVICES
+    if (type.contains("nearby")) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            if (!appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES)) return true;
+            return checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
+                    == PackageManager.PERMISSION_GRANTED;
         }
-
-        if (type.contains("nfc")) {
-            return true;
-        }
-
-        if (type.contains("nearby")) {
-            if (Build.VERSION.SDK_INT >= 31) {
-                if (!appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES)) return true;
-                return checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
-                        == PackageManager.PERMISSION_GRANTED;
-            }
-            return true;
-        }
-
         return true;
     }
 
-    private void appendAccessInstructions(StringBuilder sb, String type) {
-
-        if (!sectionNeedsPermission(type)) return;
-        if (userHasPermission(type)) return;
-
-        sb.append("\nRequired Access  : ").append(type).append("\n");
-        sb.append("Open Settings\n");
-        sb.append("Settings → Apps → Permissions\n");
+    // SENSORS (no runtime permission needed)
+    if (type.contains("sensors")) {
+        return true;
     }
+
+    // MODEM (phone state)
+    if (type.contains("modem")) {
+        if (!appDeclaresPermission(Manifest.permission.READ_PHONE_STATE)) return true;
+        return checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    return true;
+}
+
+private void appendAccessInstructions(StringBuilder sb, String type) {
+
+    if (!sectionNeedsPermission(type)) return;
+    if (userHasPermission(type)) return;
+
+    sb.append("\nRequired Access  : ").append(type).append("\n");
+    sb.append("Open Settings\n");
+    sb.append("Settings → Apps → Permissions\n");
+}
 
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED

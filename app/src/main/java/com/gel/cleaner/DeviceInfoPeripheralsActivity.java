@@ -2381,31 +2381,23 @@ private String buildWifiAdvancedInfo() {
     }
 
     // ============================================================
-    // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
-    // ============================================================
+// SET TEXT FOR ALL SECTIONS — CLEAN VERSION (Peripherals Only)
+// ============================================================
 private void populateAllSections() {
 
-    // BATTERY (FULL BLOCK: text + button refresh)
+    // BATTERY (FULL BLOCK)
     set(R.id.txtBatteryContent, buildBatteryInfo());
-    refreshBatteryButton();   // 🔥 IMPORTANT — updates the "(tap to set)" or "5000 mAh"
+    refreshBatteryButton();
 
-    // CORE HARDWARE
+    // CORE HARDWARE (Peripherals)
     set(R.id.txtCameraContent,           buildCameraInfo());
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());
 
-    // MEGA-UPGRADE BLOCKS
+    // ADVANCED PERIPHERALS
     set(R.id.txtThermalContent,          buildThermalInfo());
-    set(R.id.txtCpuContent,              buildCpuInfo());
-    set(R.id.txtGpuContent,              buildGpuInfo());
-
-    // MODEM / TELEPHONY
     set(R.id.txtModemContent,            buildModemInfo());
-
-    // ADVANCED NETWORKING
     set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
-
-    // 🎵 UNIFIED AUDIO BLOCK (ONE BUTTON – ONE CONTENT)
     set(R.id.txtAudioUnifiedContent,     buildAudioUnifiedInfo());
 
     // SENSORS
@@ -2415,7 +2407,7 @@ private void populateAllSections() {
     // BIOMETRICS
     set(R.id.txtBiometricsContent,       buildBiometricsInfo());
 
-    // WIRELESS PERIPHERALS
+    // WIRELESS
     set(R.id.txtNfcContent,              buildNfcInfo());
     set(R.id.txtGnssContent,             buildGnssInfo());
     set(R.id.txtUwbContent,              buildUwbInfo());
@@ -2426,10 +2418,8 @@ private void populateAllSections() {
     // HAPTICS
     set(R.id.txtHapticsContent,          buildHapticsInfo());
 
-    // SYSTEM FEATURES
+    // SYSTEM / SECURITY
     set(R.id.txtSystemFeaturesContent,   buildSystemFeaturesInfo());
-
-    // SECURITY FLAGS
     set(R.id.txtSecurityFlagsContent,    buildSecurityFlagsInfo());
 
     // ROOT
@@ -2438,6 +2428,7 @@ private void populateAllSections() {
     // OTHER PERIPHERALS
     set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
 }
+      
 private void refreshBatteryButton() {
     TextView btn = findViewById(R.id.txtBatteryModelCapacity);
     if (btn != null) {

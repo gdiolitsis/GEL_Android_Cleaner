@@ -88,8 +88,6 @@ import java.lang.reflect.Field;
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private static final String PREFS_NAME = "GEL_Prefs";
-    private static final String KEY_BATTERY_DIALOG_SHOWN = "battery_dialog_shown";
-
     private static final String NEON_GREEN = "#39FF14";
     private static final String GOLD_COLOR = "#FFD700";
     private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
@@ -308,26 +306,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     // ============================================================
     // Battery dialog one-time
     // ============================================================
-    private void maybeShowBatteryCapacityDialogOnce() {
-
-        try {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            boolean shown = prefs.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
-            if (shown) return;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Battery Capacity");
-            builder.setMessage("If you know your device's real battery capacity (mAh), you can store it in settings to improve accuracy.");
-            builder.setPositiveButton("OK", (d, w) -> d.dismiss());
-            builder.setNegativeButton("Don't show again", (d, w) -> {
-                prefs.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
-                d.dismiss();
-            });
-
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
-        } catch (Throwable ignore) {
+    catch (Throwable ignore) {
         }
     }
 
@@ -2558,4 +2537,20 @@ private void refreshBatteryButton() {
 
         tv.setText(ssb);
     }
+
+
+    // ============================================================
+    // Settings Path Click Handler (GEL-safe)
+    // ============================================================
+    private void handleSettingsClick(Context ctx, String pathText) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(intent);
+        } catch (Throwable ignore) {
+            // no-op
+        }
+    }
+
 }

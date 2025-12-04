@@ -173,7 +173,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Connectivity (WiFi &amp; BT)"
+                android:text="Connectivity (WiFi & BT)"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp" />
@@ -565,90 +565,90 @@
             android:visibility="gone" />
 
 
-<!-- ========================================================= -->
-<!-- SYSTEM FEATURES -->
-<!-- ========================================================= -->
-<LinearLayout
-    android:id="@+id/headerSystemFeatures"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:layout_marginTop="6dp"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:gravity="center_vertical"
-    android:clickable="true"
-    android:focusable="true">
+        <!-- ========================================================= -->
+        <!-- SYSTEM FEATURES -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerSystemFeatures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="System Feature Matrix"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="System Feature Matrix"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/iconSystemFeaturesToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp" />
-</LinearLayout>
+            <TextView
+                android:id="@+id/iconSystemFeaturesToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
 
-<TextView
-    android:id="@+id/txtSystemFeaturesContent"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"
-    android:visibility="gone" />
+        <TextView
+            android:id="@+id/txtSystemFeaturesContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
 
         <!-- ========================================================= -->
-<!-- SECURITY FLAGS -->
-<!-- ========================================================= -->
-<LinearLayout
-    android:id="@+id/headerSecurityFlags"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:layout_marginTop="6dp"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:gravity="center_vertical"
-    android:clickable="true"
-    android:focusable="true">
+        <!-- SECURITY FLAGS -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerSecurityFlags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Security Flags"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Security Flags"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/iconSecurityFlagsToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp" />
-</LinearLayout>
+            <TextView
+                android:id="@+id/iconSecurityFlagsToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
 
-<TextView
-    android:id="@+id/txtSecurityFlagsContent"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp"
-    android:visibility="gone" />
+        <TextView
+            android:id="@+id/txtSecurityFlagsContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:visibility="gone" />
 
 
 
@@ -911,5 +911,48 @@
             android:visibility="gone" />
 
 
-    </LinearLayout>
+        <!-- ========================================================= -->
+        <!-- THERMAL ENGINE / COOLING -->
+        <!-- ========================================================= -->
+        <LinearLayout
+            android:id="@+id/headerThermal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Thermal Engine / Cooling"
+                android:textColor="#00FFBF"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/iconThermalToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="＋"
+                android:textColor="#00FFBF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtThermalContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:visibility="gone" />
+
+    </LinearLayout>  <!-- ΤΩΡΑ ΚΛΕΙΝΕΙ ΣΩΣΤΑ ΤΟ MAIN LAYOUT -->
+
 </ScrollView>

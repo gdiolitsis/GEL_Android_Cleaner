@@ -178,39 +178,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
         }
 
-// ============================================================
-// BATTERY — FORCE INFO WHEN OPENING
-// ============================================================
-findViewById(R.id.headerBattery).setOnClickListener(v -> {
-
-    // 1) Close ALL other sections except battery TEXTVIEW
-    for (int i = 0; i < allContents.length; i++) {
-        View section = allContents[i];
-
-        // ✔ ΜΟΝΟ αυτό είναι σωστό
-        if (section != txtBatteryContent) {
-            section.setVisibility(View.GONE);
-            allIcons[i].setText("＋");
-        }
-    }
-
-    // 2) Toggle battery section
-    if (batteryContainer.getVisibility() == View.GONE) {
-
-        // Open full block
-        batteryContainer.setVisibility(View.VISIBLE);
-        iconBattery.setText("－");
-
-        // Show battery info
-        txtBatteryContent.setVisibility(View.VISIBLE);
-        txtBatteryContent.setText(buildBatteryInfo());
-
-    } else {
-        batteryContainer.setVisibility(View.GONE);
-        iconBattery.setText("＋");
-    }
-});
-
         // ============================================================
         // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
         // ============================================================

@@ -192,11 +192,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 // ============================================================
 findViewById(R.id.headerBattery).setOnClickListener(v -> {
 
-    // 1) Close ALL other sections except batteryContainer
+    // 1) Close ALL other sections except battery TEXTVIEW
     for (int i = 0; i < allContents.length; i++) {
         View section = allContents[i];
 
-        if (section != txtBatteryContent) {  // ✔ σωστή σύγκριση για TextView array
+        // ✔ ΜΟΝΟ αυτό είναι σωστό
+        if (section != txtBatteryContent) {
             section.setVisibility(View.GONE);
             allIcons[i].setText("＋");
         }
@@ -205,11 +206,11 @@ findViewById(R.id.headerBattery).setOnClickListener(v -> {
     // 2) Toggle battery section
     if (batteryContainer.getVisibility() == View.GONE) {
 
-        // 🔥 ΑΝΟΙΓΕΙ ΟΛΟ ΤΟ LAYOUT (και τα παιδιά του)
+        // Open full block
         batteryContainer.setVisibility(View.VISIBLE);
         iconBattery.setText("－");
 
-        // 🔥 Βεβαιώσου ότι το information block εμφανίζεται
+        // Show battery info
         txtBatteryContent.setVisibility(View.VISIBLE);
         txtBatteryContent.setText(buildBatteryInfo());
 

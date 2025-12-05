@@ -171,6 +171,17 @@ try {
     txtBatteryContent.setText(buildBatteryInfo());
 } catch (Exception ignored) {}
 
+// ============================================================
+// BATTERY — CLICK HANDLER FOR POPUP
+// ============================================================
+TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
+if (btnCapacity != null) {
+    btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
+}
+
+// ============================================================
+// BATTERY — SETUP SECTION (CONTAINER MODE)
+// ============================================================
 setupSection(
         findViewById(R.id.headerBattery),
         batteryContainer,

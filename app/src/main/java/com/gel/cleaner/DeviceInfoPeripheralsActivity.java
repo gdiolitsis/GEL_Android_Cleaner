@@ -1802,9 +1802,9 @@ private String buildUsbInfo() {
     // ============================================================
 
 // ===================================================================
-// 1. THERMAL ENGINE / COOLING — FINAL
+// THERMAL ENGINE / COOLING  —  GEL Human-Readable Edition
 // ===================================================================
-private String buildThermalInfo() {
+private CharSequence buildThermalInfo() {
 
     SpannableStringBuilder sb = new SpannableStringBuilder();
 
@@ -1812,118 +1812,154 @@ private String buildThermalInfo() {
     final int GOLD  = Color.parseColor("#FFD700");
 
     // helper
-    java.util.function.BiConsumer<String, Integer> add =
-            (txt, col) -> {
-                int s = sb.length();
-                sb.append(txt);
-                sb.setSpan(new ForegroundColorSpan(col), s, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            };
+    BiConsumer<String, Integer> add = (text, color) -> {
+        int s = sb.length();
+        sb.append(text);
+        sb.setSpan(new ForegroundColorSpan(color), s, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    };
 
-    // ---------------- SYSTEM COUNTS ----------------
-    int zoneCount = 0;
-    int coolCount = 0;
+    // ---------------------------------------------------------------
+    // 1) Count thermal zones + cooling devices
+    // ---------------------------------------------------------------
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+    File[] cools = null;
 
     try {
-        File d = new File("/sys/class/thermal");
-        File[] zones = d.listFiles(f -> f.getName().startsWith("thermal_zone"));
-        File[] cools = d.listFiles(f -> f.getName().startsWith("cooling_device"));
-
-        zoneCount = (zones != null ? zones.length : 0);
-        coolCount = (cools != null ? cools.length : 0);
-
-    } catch (Throwable ignore) {}
-
-    add.accept("Thermal Zones        : ", GOLD);
-    add.accept(zoneCount + "\n", GREEN);
-
-    add.accept("Cooling Devices      : ", GOLD);
-    add.accept(coolCount + "\n\n", GREEN);
-
-    // ---------------- SAMPLE ZONE ----------------
-    try {
-        File d = new File("/sys/class/thermal");
-        File[] zones = d.listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-        if (zones != null && zones.length > 0) {
-
-            File z = zones[0];
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            String temp = readSysString(z.getAbsolutePath() + "/temp");
-
-            add.accept("Sample Zone          :\n", GOLD);
-
-            add.accept("  Type               : ", GOLD);
-            add.accept((type != null ? type : "N/A") + "\n", GREEN);
-
-            add.accept("  Temp (raw)         : ", GOLD);
-            add.accept((temp != null ? temp : "N/A") + "\n\n", GREEN);
+        if (thermalDir.exists()) {
+            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
         }
+    } catch (Throwable ignored) {}
 
-    } catch (Throwable ignore) {}
+    int zoneCount = zones != null ? zones.length : 0;
+    int coolCount = cools != null ? cools.length : 0;
 
-    // ---------------- MODEM / RF ----------------
-    add.accept("Modem / RF           :\n", GOLD);
+    add.accept("Thermal Zones        : ", GOLD); add.accept(zoneCount + "\n", GREEN);
+    add.accept("Cooling Devices      : ", GOLD); add.accept(coolCount + "\n\n", GREEN);
+
+    // ---------------------------------------------------------------
+    // 2) SECTION HEADER
+    // ---------------------------------------------------------------
+    add.accept("Hardware Thermals\n\n", GOLD);
+
+    // Utility for reading temps
+    Function<String, Float> readC = (path) -> {
+        try {
+            String v = readSysString(path);
+            if (v == null) return null;
+
+            v = v.trim();
+            if (v.length() == 0) return null;
+
+            float raw = Float.parseFloat(v);
+            if (raw < -1000) return null;   // invalid (e.g. -273000)
+            if (raw > 10000) raw /= 1000f;  // µ°C → m°C
+            if (raw > 200)   raw /= 10f;    // deci°C → °C
+
+            return raw;
+        } catch (Throwable e) {
+            return null;
+        }
+    };
+
+    // ---------------------------------------------------------------
+    // Helper: Print section title
+    // ---------------------------------------------------------------
+    Consumer<String> title = (t) -> {
+        add.accept(t + "\n", GOLD);
+    };
+
+    // ===============================================================
+    // 3) MODEM / RF
+    // ===============================================================
+    title.accept("Modem / RF");
+
+    Float mainModem = null;
+    Float secModem  = null;
+
+    // Common Qualcomm zones
+    String[] modemCandidates = {
+            "mdmss-3", "mdmss-1", "mdmss-0", "mdmss-2"
+    };
+
+    for (String name : modemCandidates) {
+        File z = findZoneByType(name);
+        if (z != null && mainModem == null)
+            mainModem = readC.apply(z.getAbsolutePath() + "/temp");
+        else if (z != null && secModem == null)
+            secModem = readC.apply(z.getAbsolutePath() + "/temp");
+    }
 
     add.accept("  Main modem         : ", GOLD);
-    add.accept(getTherm("mdmss-3") + "\n", GREEN);
+    add.accept((mainModem != null ? (mainModem + "°C") : "N/A") + "\n", GREEN);
 
     add.accept("  Secondary modem    : ", GOLD);
-    add.accept(getTherm("mdmss-1") + "\n", GREEN);
+    add.accept((secModem != null ? (secModem + "°C") : "N/A") + "\n\n", GREEN);
 
-    add.accept("  mmWave / NR        : ", GOLD);
-    add.accept(getTherm("sub1_scg_fr1_cc") + "\n\n", GREEN);
+    // ===============================================================
+    // 4) BATTERY
+    // ===============================================================
+    title.accept("Battery");
 
-    // ---------------- BATTERY ----------------
-    add.accept("Battery              :\n", GOLD);
+    Float batteryPack = null;
+    Float batteryShell = null;
 
-    add.accept("  battery_therm      : ", GOLD);
-    add.accept(getTherm("battery_therm") + "\n", GREEN);
+    File zBattTherm = findZoneByType("battery_therm");
+    if (zBattTherm != null)
+        batteryPack = readC.apply(zBattTherm.getAbsolutePath() + "/temp");
 
-    add.accept("  battery            : ", GOLD);
-    add.accept(getTherm("battery") + "\n\n", GREEN);
+    File zBatt = findZoneByType("battery");
+    if (zBatt != null)
+        batteryShell = readC.apply(zBatt.getAbsolutePath() + "/temp");
 
-    // ---------------- CHARGER ----------------
-    add.accept("Charger              :\n", GOLD);
+    add.accept("  Battery pack       : ", GOLD);
+    add.accept((batteryPack != null ? batteryPack + "°C" : "N/A") + "\n", GREEN);
 
-    add.accept("  charger_therm      : ", GOLD);
-    add.accept(getTherm("charger_therm") + "\n\n", GREEN);
+    add.accept("  Battery shell      : ", GOLD);
+    add.accept((batteryShell != null ? batteryShell + "°C" : "N/A") + "\n\n", GREEN);
 
-    // ---------------- PMIC ----------------
-    add.accept("PMIC                 :\n", GOLD);
+    // ===============================================================
+    // 5) CHARGER
+    // ===============================================================
+    title.accept("Charger");
 
-    add.accept("  pmic-thermal       : ", GOLD);
-    add.accept(getTherm("pm6450_tz") + "\n", GREEN);
+    Float chargerTemp = null;
 
-    add.accept("  vbatt              : ", GOLD);
-    add.accept(getTherm("vbat") + "\n", GREEN);
+    File zChg = findZoneByType("charger_therm");
+    if (zChg != null)
+        chargerTemp = readC.apply(zChg.getAbsolutePath() + "/temp");
 
-    add.accept("  pm8010e            : ", GOLD);
-    add.accept(getTherm("pm8010e_tz") + "\n", GREEN);
+    add.accept("  Charger temp       : ", GOLD);
+    add.accept((chargerTemp != null ? chargerTemp + "°C" : "N/A") + "\n\n", GREEN);
 
-    return sb.toString();   // <- KEY FIX. ALWAYS STRING!
+    // ===============================================================
+    // 6) PMIC
+    // ===============================================================
+    title.accept("PMIC");
+
+    Float pmicTherm = null, vbat = null, pmic8010 = null;
+
+    File zPT = findZoneByType("pmic-thermal");
+    if (zPT != null) pmicTherm = readC.apply(zPT.getAbsolutePath() + "/temp");
+
+    File zV = findZoneByType("vbatt");
+    if (zV != null) vbat = readC.apply(zV.getAbsolutePath() + "/temp");
+
+    File z8010 = findZoneByType("pm8010e");
+    if (z8010 != null) pmic8010 = readC.apply(z8010.getAbsolutePath() + "/temp");
+
+    add.accept("  PMIC core          : ", GOLD);
+    add.accept((pmicTherm != null ? pmicTherm + "°C" : "N/A") + "\n", GREEN);
+
+    add.accept("  Battery sensor     : ", GOLD);
+    add.accept((vbat != null ? vbat + "°C" : "N/A") + "\n", GREEN);
+
+    add.accept("  PM8010 module      : ", GOLD);
+    add.accept((pmic8010 != null ? pmic8010 + "°C" : "N/A") + "\n", GREEN);
+
+    return sb;
 }
-
-// Helper to read temperature and convert to °C
-private String getTherm(String label) {
-    try {
-        File d = new File("/sys/class/thermal");
-        File[] zones = d.listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-        if (zones == null) return "N/A";
-
-        for (File z : zones) {
-            String t = readSysString(z.getAbsolutePath() + "/type");
-            if (t != null && t.trim().equalsIgnoreCase(label)) {
-                String raw = readSysString(z.getAbsolutePath() + "/temp");
-                if (raw == null) return "N/A";
-                return (Integer.parseInt(raw) / 1000f) + "°C";
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    return "N/A";
-}
-
 
 // ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)

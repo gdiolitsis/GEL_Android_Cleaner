@@ -163,13 +163,14 @@ protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
 // ============================================================
 // 1. BATTERY — FIND VIEWS
 // ============================================================
-LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
-TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
-TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
+final LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
+final TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
+final TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
 
 try {
     txtBatteryContent.setText(buildBatteryInfo());
 } catch (Exception ignored) {}
+
 
 // ============================================================
 // BATTERY — CLICK HANDLER FOR POPUP
@@ -178,6 +179,7 @@ TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 if (btnCapacity != null) {
     btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
 }
+
 
 // ============================================================
 // BATTERY — SETUP SECTION (CONTAINER MODE)
@@ -188,29 +190,29 @@ setupSection(
         iconBattery
 );
 
+
 // ============================================================
 // BATTERY — FORCE INFO WHEN OPENING
 // ============================================================
 findViewById(R.id.headerBattery).setOnClickListener(v -> {
 
-    // 1) Close all other TEXT sections (ignore the LinearLayout)
+    // 1) Close ALL other sections except batteryContainer
     for (int i = 0; i < allContents.length; i++) {
         View section = allContents[i];
 
-        // Μην συγκρίνεις τύπους — απλά κλείσε ό,τι ΔΕΝ είναι το batteryContainer
-        if (section != txtBatteryContent) {
+        if (section != batteryContainer) {
             section.setVisibility(View.GONE);
             allIcons[i].setText("＋");
         }
     }
 
-    // 2) Toggle battery section (FULL BLOCK)
+    // 2) Toggle battery section
     if (batteryContainer.getVisibility() == View.GONE) {
 
         batteryContainer.setVisibility(View.VISIBLE);
         iconBattery.setText("－");
 
-        // 🔥 Always refresh the info when opening
+        // Always refresh info when opening
         txtBatteryContent.setVisibility(View.VISIBLE);
         txtBatteryContent.setText(buildBatteryInfo());
 
@@ -220,6 +222,7 @@ findViewById(R.id.headerBattery).setOnClickListener(v -> {
     }
 });
 
+   
 // ============================================================
 // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
 // ============================================================

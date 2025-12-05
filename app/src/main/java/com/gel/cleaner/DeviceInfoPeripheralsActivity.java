@@ -363,7 +363,7 @@ populateAllSections();
 // ============================================================
 
 setupSection(findViewById(R.id.headerBattery),
-             findViewById(R.id.batteryContainer),
+             findViewById(R.id.txtBatteryContent),
              iconBattery);
 setupSection(findViewById(R.id.headerScreen),            txtScreenContent,          iconScreen);  
 setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);

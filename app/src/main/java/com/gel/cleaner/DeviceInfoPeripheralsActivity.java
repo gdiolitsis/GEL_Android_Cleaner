@@ -1298,7 +1298,7 @@ private BatteryInfo getBatteryInfo() {
     sb.append("Lifecycle            : Requires root access\n");
 
     return sb.toString();
-}              .
+} 
 
 // ===================================================================
 // SHOW POPUP ONLY ONCE

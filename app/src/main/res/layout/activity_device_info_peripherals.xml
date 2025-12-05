@@ -32,12 +32,16 @@
             android:id="@+id/headerBattery"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconBatteryToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp" />
+
             <TextView
                 android:text="Battery"
                 android:textColor="#FFD700"
@@ -48,18 +52,24 @@
         <LinearLayout
             android:id="@+id/batteryContainer"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/txtBatteryContent"
                 android:textColor="#39FF14"
-                android:padding="10dp"/>
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
             <TextView
                 android:id="@+id/txtBatteryModelCapacity"
                 android:text="Set model capacity"
                 android:padding="10dp"
-                android:textColor="#1E90FF"/>
+                android:textColor="#1E90FF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
         </LinearLayout>
 
         <!-- ========================================================= -->
@@ -69,12 +79,16 @@
             android:id="@+id/headerScreen"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconScreenToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Screen / HDR / Refresh Rate"
                 android:textColor="#FFD700"
@@ -86,7 +100,10 @@
             android:id="@+id/txtScreenContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 3. CAMERA -->
@@ -95,12 +112,16 @@
             android:id="@+id/headerCamera"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconCameraToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Camera"
                 android:textColor="#FFD700"
@@ -112,7 +133,10 @@
             android:id="@+id/txtCameraContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 4. CONNECTIVITY -->
@@ -121,12 +145,16 @@
             android:id="@+id/headerConnectivity"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconConnectivityToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Connectivity"
                 android:textColor="#FFD700"
@@ -138,7 +166,10 @@
             android:id="@+id/txtConnectivityContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 5. LOCATION -->
@@ -147,12 +178,16 @@
             android:id="@+id/headerLocation"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconLocationToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Location"
                 android:textColor="#FFD700"
@@ -164,7 +199,10 @@
             android:id="@+id/txtLocationContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 6. THERMAL -->
@@ -173,12 +211,16 @@
             android:id="@+id/headerThermal"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconThermalToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Thermal"
                 android:textColor="#FFD700"
@@ -190,7 +232,10 @@
             android:id="@+id/txtThermalContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 7. MODEM -->
@@ -199,12 +244,16 @@
             android:id="@+id/headerModem"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconModemToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Modem"
                 android:textColor="#FFD700"
@@ -216,7 +265,10 @@
             android:id="@+id/txtModemContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 8. WIFI ADVANCED -->
@@ -225,12 +277,16 @@
             android:id="@+id/headerWifiAdvanced"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconWifiAdvancedToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Wifi Advanced"
                 android:textColor="#FFD700"
@@ -242,7 +298,10 @@
             android:id="@+id/txtWifiAdvancedContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 9. AUDIO UNIFIED -->
@@ -251,12 +310,16 @@
             android:id="@+id/headerAudioUnified"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconAudioUnifiedToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Audio Unified"
                 android:textColor="#FFD700"
@@ -268,7 +331,10 @@
             android:id="@+id/txtAudioUnifiedContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 10. SENSORS -->
@@ -277,12 +343,16 @@
             android:id="@+id/headerSensors"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconSensorsToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Sensors"
                 android:textColor="#FFD700"
@@ -294,7 +364,10 @@
             android:id="@+id/txtSensorsContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 11. SENSORS EXTENDED -->
@@ -303,12 +376,16 @@
             android:id="@+id/headerSensorsExtended"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconSensorsExtendedToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Sensors Extended"
                 android:textColor="#FFD700"
@@ -320,7 +397,10 @@
             android:id="@+id/txtSensorsExtendedContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 12. BIOMETRICS -->
@@ -329,12 +409,16 @@
             android:id="@+id/headerBiometrics"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconBiometricsToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Biometrics"
                 android:textColor="#FFD700"
@@ -346,7 +430,10 @@
             android:id="@+id/txtBiometricsContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 13. NFC -->
@@ -355,12 +442,16 @@
             android:id="@+id/headerNfc"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconNfcToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="NFC"
                 android:textColor="#FFD700"
@@ -372,7 +463,10 @@
             android:id="@+id/txtNfcContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 14. GNSS -->
@@ -381,12 +475,16 @@
             android:id="@+id/headerGnss"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconGnssToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="GNSS"
                 android:textColor="#FFD700"
@@ -398,7 +496,10 @@
             android:id="@+id/txtGnssContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 15. UWB -->
@@ -407,12 +508,16 @@
             android:id="@+id/headerUwb"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconUwbToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="UWB"
                 android:textColor="#FFD700"
@@ -424,7 +529,10 @@
             android:id="@+id/txtUwbContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 16. USB -->
@@ -433,12 +541,16 @@
             android:id="@+id/headerUsb"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconUsbToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="USB"
                 android:textColor="#FFD700"
@@ -450,7 +562,10 @@
             android:id="@+id/txtUsbContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 17. HAPTICS -->
@@ -459,12 +574,16 @@
             android:id="@+id/headerHaptics"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconHapticsToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Haptics"
                 android:textColor="#FFD700"
@@ -476,7 +595,10 @@
             android:id="@+id/txtHapticsContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 18. SYSTEM FEATURES -->
@@ -485,12 +607,16 @@
             android:id="@+id/headerSystemFeatures"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconSystemFeaturesToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="System Features"
                 android:textColor="#FFD700"
@@ -502,7 +628,10 @@
             android:id="@+id/txtSystemFeaturesContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 19. SECURITY FLAGS -->
@@ -511,12 +640,16 @@
             android:id="@+id/headerSecurityFlags"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconSecurityFlagsToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Security Flags"
                 android:textColor="#FFD700"
@@ -528,7 +661,10 @@
             android:id="@+id/txtSecurityFlagsContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 20. ROOT -->
@@ -537,12 +673,16 @@
             android:id="@+id/headerRoot"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconRootToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Root"
                 android:textColor="#FFD700"
@@ -554,7 +694,10 @@
             android:id="@+id/txtRootContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
 
         <!-- ========================================================= -->
         <!-- 21. OTHER PERIPHERALS -->
@@ -563,12 +706,16 @@
             android:id="@+id/headerOtherPeripherals"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/iconOtherPeripheralsToggle"
                 android:text="＋"
                 android:textColor="#FFD700"
                 android:textSize="22sp"/>
+
             <TextView
                 android:text="Other Peripherals"
                 android:textColor="#FFD700"
@@ -580,7 +727,10 @@
             android:id="@+id/txtOtherPeripheralsContent"
             android:visibility="gone"
             android:textColor="#39FF14"
-            android:padding="10dp"/>
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
+
 </ScrollView>

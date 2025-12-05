@@ -1219,21 +1219,10 @@ private BatteryInfo getBatteryInfo() {
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL
 // ===================================================================
+
 private String buildBatteryInfo() {
 
-    SpannableStringBuilder sb = new SpannableStringBuilder();
-
-    // Colors
-    final int GREEN = Color.parseColor("#39FF14");
-    final int GOLD  = Color.parseColor("#FFD700");
-
-    // Quick colored append
-    java.util.function.BiConsumer<String, Integer> add = (text, color) -> {
-        int start = sb.length();
-        sb.append(text);
-        sb.setSpan(new ForegroundColorSpan(color), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    };
-
+    StringBuilder sb = new StringBuilder();
     BatteryInfo bi = getBatteryInfo();
 
     int level = -1;
@@ -1265,68 +1254,57 @@ private String buildBatteryInfo() {
             default:                                       plugStr = "Not plugged"; break;
         }
 
-        // ---------- BASIC VALUES ----------
-        add.accept("Level                : ", GOLD);   add.accept(level + "%\n", GREEN);
-        add.accept("Scale                : ", GOLD);   add.accept(scale + "\n", GREEN);
-        add.accept("Status               : ", GOLD);   add.accept(statusStr + "\n", GREEN);
-        add.accept("Charging Source      : ", GOLD);   add.accept(plugStr + "\n", GREEN);
+        sb.append("Level                : ").append(level).append("%\n");
+        sb.append("Scale                : ").append(scale).append("\n");
+        sb.append("Status               : ").append(statusStr).append("\n");
+        sb.append("Charging Source      : ").append(plugStr).append("\n");
 
-        if (temp > 0) {
-            add.accept("Temp                 : ", GOLD);
-            add.accept((temp / 10f) + "°C\n", GREEN);
-        }
+        if (temp > 0)
+            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
 
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
-        add.accept("Real capacity        : ", GOLD);
-        add.accept(bi.oemFullMah + " mAh\n", GREEN);
+        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
 
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
 
-            add.accept("Estimated full (100%): ", GOLD);
-            add.accept(est + " mAh\n", GREEN);
+            sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
         }
 
-        add.accept("Source               : ", GOLD);
-        add.accept("OEM\n", GREEN);
+        sb.append("Source               : OEM\n");
     }
 
     // ---------------------- CHARGE COUNTER ----------------------
     else if (bi.chargeCounterMah > 0) {
 
-        add.accept("Current charge       : ", GOLD);
-        add.accept(bi.chargeCounterMah + " mAh\n", GREEN);
+        sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
 
-        if (bi.estimatedFullMah > 0) {
-            add.accept("Estimated full (100%): ", GOLD);
-            add.accept(bi.estimatedFullMah + " mAh\n", GREEN);
-        }
+        if (bi.estimatedFullMah > 0)
+            sb.append("Estimated full (100%): ").append(bi.estimatedFullMah).append(" mAh\n");
 
-        add.accept("Source               : ", GOLD);
-        add.accept("Charge Counter\n", GREEN);
+        sb.append("Source               : Charge Counter\n");
     }
 
     // ---------------------- NO DATA ----------------------
     else {
-        add.accept("Real capacity        : ", GOLD);  add.accept("N/A\n", GREEN);
-        add.accept("Source               : ", GOLD);  add.accept("Unknown\n", GREEN);
+        sb.append("Real capacity        : N/A\n");
+        sb.append("Source               : Unknown\n");
     }
 
     // ---------------------- MODEL CAPACITY ----------------------
     long modelCap = getStoredModelCapacity();
-    add.accept("Model capacity       : ", GOLD);
-    add.accept((modelCap > 0 ? (modelCap + " mAh") : "(tap to set)") + "\n", GREEN);
+    sb.append("Model capacity       : ")
+            .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
+            .append("\n");
 
     // ---------------------- COMMENT ----------------------
-    add.accept("Lifecycle            : ", GOLD);
-    add.accept("Requires root access\n", GREEN);
+    sb.append("Lifecycle            : Requires root access\n");
 
-    // IMPORTANT → convert CharSequence → String so your set() method works
     return sb.toString();
 }
       

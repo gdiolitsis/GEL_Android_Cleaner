@@ -17,16 +17,12 @@
             android:id="@+id/txtTitleDevice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Phone Info — Peripherals"
+            android:text="📡 PHONE INFO\n(Peripherals)"
             android:textColor="#FFD700"
             android:textStyle="bold"
             android:textSize="20sp"
             android:gravity="center"
             android:paddingBottom="10dp" />
-
-        <!-- ========================================================= -->
-        <!-- TEMPLATE FOR EVERY SECTION (APPLIED BELOW 1–21) -->
-        <!-- ========================================================= -->
 
         <!-- ========================================================= -->
         <!-- 1. BATTERY -->
@@ -48,9 +44,11 @@
                 android:textSize="22sp" />
 
             <TextView
-                android:text="Battery"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtBatteryTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Battery"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
                 android:layout_marginStart="10dp" />
@@ -61,7 +59,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="gone"
+            android:background="#111">
 
             <TextView
                 android:id="@+id/txtBatteryContent"
@@ -88,7 +87,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconScreenToggle"
@@ -96,15 +96,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Screen / HDR / Refresh Rate"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtScreenTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Screen / HDR / Refresh Rate"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -124,7 +126,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconCameraToggle"
@@ -132,15 +135,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Camera"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtCameraTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Camera"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -160,7 +165,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconConnectivityToggle"
@@ -168,15 +174,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Connectivity"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtConnectivityTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Connectivity"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -196,7 +204,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconLocationToggle"
@@ -204,15 +213,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Location"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtLocationTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Location"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -232,7 +243,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconThermalToggle"
@@ -240,15 +252,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Thermal"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtThermalTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Thermal"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -268,7 +282,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconModemToggle"
@@ -276,15 +291,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Modem"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtModemTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Modem"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -304,7 +321,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconWifiAdvancedToggle"
@@ -312,15 +330,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Wifi Advanced"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtWifiAdvancedTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Wifi Advanced"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -340,7 +360,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconAudioUnifiedToggle"
@@ -348,15 +369,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Audio Unified"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtAudioUnifiedTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Audio Unified"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -376,7 +399,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconSensorsToggle"
@@ -384,15 +408,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Sensors"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtSensorsTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sensors"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -412,7 +438,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconSensorsExtendedToggle"
@@ -420,15 +447,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Sensors Extended"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtSensorsExtendedTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sensors Extended"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -448,7 +477,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconBiometricsToggle"
@@ -456,15 +486,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Biometrics"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtBiometricsTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Biometrics"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -484,7 +516,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconNfcToggle"
@@ -492,15 +525,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="NFC"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtNfcTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="NFC"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -520,7 +555,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconGnssToggle"
@@ -528,15 +564,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="GNSS"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtGnssTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="GNSS"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -556,7 +594,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconUwbToggle"
@@ -564,15 +603,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="UWB"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtUwbTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="UWB"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -583,7 +624,6 @@
             android:textColor="#39FF14"
             android:padding="10dp" />
 
-
         <!-- ========================================================= -->
         <!-- 16. USB -->
         <!-- ========================================================= -->
@@ -593,7 +633,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconUsbToggle"
@@ -601,15 +642,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="USB"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtUsbTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="USB"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -629,7 +672,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconHapticsToggle"
@@ -637,15 +681,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Haptics"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtHapticsTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Haptics"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -665,7 +711,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconSystemFeaturesToggle"
@@ -673,15 +720,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="System Features"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtSystemFeaturesTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="System Features"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -701,7 +750,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconSecurityFlagsToggle"
@@ -709,15 +759,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Security Flags"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtSecurityFlagsTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Security Flags"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -737,7 +789,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconRootToggle"
@@ -745,15 +798,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Root"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtRootTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Root"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView
@@ -773,7 +828,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="10dp"
-            android:background="#111">
+            android:background="#111"
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/iconOtherPeripheralsToggle"
@@ -781,15 +837,17 @@
                 android:layout_height="wrap_content"
                 android:text="＋"
                 android:textColor="#FFD700"
-                android:textSize="22sp"/>
+                android:textSize="22sp" />
 
             <TextView
-                android:text="Other Peripherals"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtOtherPeripheralsTitle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Other Peripherals"
                 android:textColor="#FFD700"
                 android:textSize="18sp"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <TextView

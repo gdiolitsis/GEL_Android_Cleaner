@@ -399,7 +399,7 @@ setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,   
 }  // 🔥 ΤΕΛΟΣ onCreate()  
 
 // ============================================================  
-// GEL Section Setup Engine — UNIVERSAL VERSION  
+// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  
 // ============================================================  
 private void setupSection(View header, View content, TextView icon) {
 
@@ -411,6 +411,16 @@ private void setupSection(View header, View content, TextView icon) {
     icon.setText("＋");
 
     header.setOnClickListener(v -> {
+
+        // 1️⃣ Κλείσε όλα τα άλλα sections (accordion behavior)
+        for (int i = 0; i < allContents.length; i++) {
+            if (allContents[i] != content) {
+                allContents[i].setVisibility(View.GONE);
+                allIcons[i].setText("＋");
+            }
+        }
+
+        // 2️⃣ Toggle μόνο το δικό του
         if (content.getVisibility() == View.GONE) {
             content.setVisibility(View.VISIBLE);
             icon.setText("－");

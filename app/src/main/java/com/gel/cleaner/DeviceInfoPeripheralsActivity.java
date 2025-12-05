@@ -2518,7 +2518,7 @@ private void populateAllSections() {
     refreshBatteryButton();   // 🔥 IMPORTANT — updates the "(tap to set)" or "5000 mAh"
 
     // CORE HARDWARE
-    set(R.id.txtDisplayContent,          buildDisplayInfo());
+    set(R.id.txtScreenContent,          buildScreenInfo());
     set(R.id.txtCameraContent,           buildCameraInfo());
     set(R.id.txtConnectivityContent,     buildConnectivityInfo());
     set(R.id.txtLocationContent,         buildLocationInfo());

@@ -189,6 +189,35 @@ setupSection(
 );
 
 // ============================================================
+// BATTERY — FORCE INFO WHEN OPENING
+// ============================================================
+findViewById(R.id.headerBattery).setOnClickListener(v -> {
+
+    // 1) Close all other sections
+    for (int i = 0; i < allContents.length; i++) {
+        if (allContents[i] != batteryContainer) {
+            allContents[i].setVisibility(View.GONE);
+            allIcons[i].setText("＋");
+        }
+    }
+
+    // 2) Toggle battery section
+    if (batteryContainer.getVisibility() == View.GONE) {
+
+        batteryContainer.setVisibility(View.VISIBLE);
+        iconBattery.setText("－");
+
+        // 🔥 SHOW INFO BELOW “Set battery capacity”
+        txtBatteryContent.setVisibility(View.VISIBLE);
+        txtBatteryContent.setText(buildBatteryInfo());
+
+    } else {
+        batteryContainer.setVisibility(View.GONE);
+        iconBattery.setText("＋");
+    }
+});
+
+// ============================================================
 // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
 // ============================================================
 // 2. Screen

@@ -256,6 +256,34 @@ TextView iconRoot           = findViewById(R.id.iconRootToggle);
 
 // 21. Other Peripherals
 TextView iconOther          = findViewById(R.id.iconOtherPeripheralsToggle);
+        
+    // ============================================================
+    // FILL CONTENT INTO SECTIONS — THIS FIXES THE "EMPTY PANELS"
+    // ============================================================
+
+    try { txtBatteryContent.setText(buildBatteryInfo()); } catch(Exception ignored) {}
+    try { txtScreenContent.setText(buildDisplayInfo()); } catch(Exception ignored) {}
+    try { txtCameraContent.setText(buildCameraInfo()); } catch(Exception ignored) {}
+    try { txtConnectivityContent.setText(buildConnectivityInfo()); } catch(Exception ignored) {}
+    try { txtLocationContent.setText(buildLocationInfo()); } catch(Exception ignored) {}
+    try { txtThermalContent.setText(buildThermalInfo()); } catch(Exception ignored) {}
+    try { txtModemContent.setText(buildModemInfo()); } catch(Exception ignored) {}
+    try { txtWifiAdvancedContent.setText(buildWifiAdvancedInfo()); } catch(Exception ignored) {}
+    try { txtAudioUnifiedContent.setText(buildAudioUnifiedInfo()); } catch(Exception ignored) {}
+    try { txtSensorsContent.setText(buildSensorsInfo()); } catch(Exception ignored) {}
+    try { txtSensorsExtendedContent.setText(buildSensorsExtendedInfo()); } catch(Exception ignored) {}
+    try { txtBiometricsContent.setText(buildBiometricsInfo()); } catch(Exception ignored) {}
+    try { txtNfcContent.setText(buildNfcInfo()); } catch(Exception ignored) {}
+    try { txtGnssContent.setText(buildGnssInfo()); } catch(Exception ignored) {}
+    try { txtUwbContent.setText(buildUwbInfo()); } catch(Exception ignored) {}
+    try { txtUsbContent.setText(buildUsbInfo()); } catch(Exception ignored) {}
+    try { txtHapticsContent.setText(buildHapticsInfo()); } catch(Exception ignored) {}
+    try { txtSystemFeaturesContent.setText(buildSystemFeaturesInfo()); } catch(Exception ignored) {}
+    try { txtSecurityFlagsContent.setText(buildSecurityFlagsInfo()); } catch(Exception ignored) {}
+    try { txtRootContent.setText(buildRootInfo()); } catch(Exception ignored) {}
+    try { txtOtherPeripherals.setText(buildOtherPeripheralsInfo()); } catch(Exception ignored) {}
+   
+        
         // ============================================================
 // ALL CONTENTS — EXACT ORDER OF SECTIONS
 // ============================================================

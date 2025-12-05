@@ -1828,159 +1828,190 @@ private String buildUsbInfo() {
 // ===================================================================
 // THERMAL ENGINE / COOLING  —  GEL Human-Readable Edition
 // ===================================================================
- 
-private String buildThermalInfo() {
+// ===================================================================
+// HELPER – FORMAT THERMAL SENSOR VALUE TO °C (SAFE)
+// ===================================================================
+private String formatThermalC(String raw) {
+    if (raw == null) return null;
 
-    final String GREEN = "#39FF14";
-    final String GOLD  = "#FFD700";
+    raw = raw.trim();
+    if (raw.isEmpty()) return null;
+
+    try {
+        int val = Integer.parseInt(raw);
+
+        // Άκυρες / "κρύες" τιμές σένσορα
+        if (val <= -200000 || val == 0) return null;
+
+        float c;
+        // Συνήθως οι θερμοκρασίες είναι σε milli-degrees (π.χ. 39300 = 39.3°C)
+        if (Math.abs(val) > 1000) {
+            c = val / 1000f;
+        } else {
+            // fallback για αισθητήρες που δίνουν δεκάδες (π.χ. 334 = 33.4°C)
+            c = val / 10f;
+        }
+
+        return String.format(Locale.US, "%.1f°C", c);
+    } catch (Throwable ignore) {
+        // Αν δεν παρσάρεται, γύρνα raw string
+        return raw;
+    }
+}
+
+// ===================================================================
+// THERMAL ENGINE / COOLING INFO — SAFE AUTO-DETECT VERSION
+// ===================================================================
+private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
-    // --------- System Counts ---------
-    int zones = countThermalType("thermal_zone");
-    int cools = countThermalType("cooling_device");
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+    File[] cools = null;
 
-    sb.append("Thermal zones        : ").append(zones).append("\n");
-    sb.append("Cooling devices      : ").append(cools).append("\n\n");
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            zones = thermalDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().startsWith("thermal_zone");
+                }
+            });
+            cools = thermalDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().startsWith("cooling_device");
+                }
+            });
+        }
+    } catch (Throwable ignore) { }
 
-    sb.append("Hardware Thermals\n");
+    int zoneCount = (zones != null) ? zones.length : 0;
+    int coolCount = (cools != null) ? cools.length : 0;
 
-    
-    // 1) MODEM / RF
-    
-    String mainModem = readZoneSafely("mdmss-3");
-    String secModem  = readZoneSafely("mdmss-1");
-    String rfTrans   = readZoneSafely("modem-cfg");
+    sb.append("Thermal zones        : ").append(zoneCount).append("\n");
+    sb.append("Cooling devices      : ").append(coolCount).append("\n");
 
-    boolean modemHasData =
-            hasValue(mainModem) ||
-            hasValue(secModem)  ||
-            hasValue(rfTrans);
-
-    if (modemHasData) {
-        sb.append("\nModem / RF\n");
-        if (hasValue(mainModem))
-            sb.append("  Main modem           : ").append(color(mainModem, GREEN)).append("\n");
-        if (hasValue(secModem))
-            sb.append("  Secondary modem      : ").append(color(secModem, GREEN)).append("\n");
-        if (hasValue(rfTrans))
-            sb.append("  RF transceiver       : ").append(color(rfTrans, GREEN)).append("\n");
+    // Αν δεν έχουμε καθόλου nodes, τελείωσε εδώ
+    if (zoneCount == 0 && coolCount == 0) {
+        sb.append("Hardware Thermals    : N/A (device hides thermal nodes)\n");
+        return sb.toString();
     }
 
-    // 2) BATTERY
+    // -------------------------------------------------------------------
+    //  Σάρωση όλων των thermal_zoneX και map σε γνωστούς τύπους
+    // -------------------------------------------------------------------
+    String mainModem     = null;
+    String secondaryModem= null;
+    String batteryPack   = null;
+    String batteryShell  = null;
+    String chargerIc     = null;
+    String pmicTherm     = null;
 
-    String battMain  = readZoneSafely("battery");
-    String battShell = readZoneSafely("battery_therm");
+    if (zones != null) {
+        for (File z : zones) {
+            try {
+                String base = z.getAbsolutePath();
+                String type = readSysString(base + "/type");
+                String temp = readSysString(base + "/temp");
 
-    boolean batteryHasData =
-            hasValue(battMain) ||
-            hasValue(battShell);
+                if (type == null || temp == null) continue;
 
-    if (batteryHasData) {
-        sb.append("\nBattery\n");
-        if (hasValue(battMain))
-            sb.append("  Battery pack (main)  : ").append(color(battMain, GREEN)).append("\n");
-        if (hasValue(battShell))
-            sb.append("  Battery shell        : ").append(color(battShell, GREEN)).append("\n");
+                type = type.trim();
+                temp = temp.trim();
+                if (type.isEmpty() || temp.isEmpty()) continue;
+
+                // Modem / RF (Qualcomm style: mdmss-X)
+                if (type.startsWith("mdmss")) {
+                    if (mainModem == null) {
+                        mainModem = temp;
+                    } else if (secondaryModem == null) {
+                        secondaryModem = temp;
+                    }
+                }
+                // Battery core
+                else if ("battery".equals(type)) {
+                    batteryPack = temp;
+                }
+                // Battery shell / case
+                else if ("battery_therm".equals(type) || "battery-therm".equals(type)) {
+                    batteryShell = temp;
+                }
+                // Charger IC
+                else if ("charger_therm".equals(type) || "charger-therm".equals(type)) {
+                    chargerIc = temp;
+                }
+                // PMIC / power management
+                else if (type.startsWith("pmic")) {
+                    pmicTherm = temp;
+                }
+
+            } catch (Throwable ignore) { }
+        }
     }
 
-    // 3) CHARGER
-    
-    String chargerTherm = readZoneSafely("charger_therm");
+    // -------------------------------------------------------------------
+    //  Ανθρώπινο report
+    // -------------------------------------------------------------------
+    sb.append("\nHardware Thermals\n\n");
 
-    if (hasValue(chargerTherm)) {
-        sb.append("\nCharger\n");
-        sb.append("  Charger thermal       : ").append(color(chargerTherm, GREEN)).append("\n");
+    boolean anySection = false;
+
+    // 1) Modem / RF
+    String vMainModem = formatThermalC(mainModem);
+    String vSecModem  = formatThermalC(secondaryModem);
+
+    if (vMainModem != null || vSecModem != null) {
+        anySection = true;
+        sb.append("Modem / RF\n");
+        if (vMainModem != null) {
+            sb.append("  Main modem         : ").append(vMainModem).append("\n");
+        }
+        if (vSecModem != null) {
+            sb.append("  Secondary modem    : ").append(vSecModem).append("\n");
+        }
+        sb.append("\n");
+    }
+
+    // 2) Battery
+    String vBattPack  = formatThermalC(batteryPack);
+    String vBattShell = formatThermalC(batteryShell);
+
+    if (vBattPack != null || vBattShell != null) {
+        anySection = true;
+        sb.append("Battery\n");
+        if (vBattPack != null) {
+            sb.append("  Battery pack (main): ").append(vBattPack).append("\n");
+        }
+        if (vBattShell != null) {
+            sb.append("  Battery shell      : ").append(vBattShell).append("\n");
+        }
+        sb.append("\n");
+    }
+
+    // 3) Charger
+    String vCharger = formatThermalC(chargerIc);
+    if (vCharger != null) {
+        anySection = true;
+        sb.append("Charger\n");
+        sb.append("  Charging IC        : ").append(vCharger).append("\n\n");
     }
 
     // 4) PMIC
-    
-    String pmicTherm = readZoneSafely("pmic-thermal");
-    String pm8010e   = readZoneSafely("pm8010e_tz");
-    String vbatt     = readZoneSafely("vbat");
+    String vPmic = formatThermalC(pmicTherm);
+    if (vPmic != null) {
+        anySection = true;
+        sb.append("PMIC\n");
+        sb.append("  Power management IC: ").append(vPmic).append("\n\n");
+    }
 
-    boolean pmicHasData =
-            hasValue(pmicTherm) ||
-            hasValue(pm8010e)   ||
-            hasValue(vbatt);
-
-    if (pmicHasData) {
-        sb.append("\nPMIC\n");
-        if (hasValue(pmicTherm))
-            sb.append("  Power IC (PMIC)      : ").append(color(pmicTherm, GREEN)).append("\n");
-        if (hasValue(pm8010e))
-            sb.append("  PM8010e module       : ").append(color(pm8010e, GREEN)).append("\n");
-        if (hasValue(vbatt))
-            sb.append("  VBAT monitor         : ").append(color(vbatt, GREEN)).append("\n");
+    if (!anySection) {
+        sb.append("  (No detailed thermal sensors reported by this device.)\n");
     }
 
     return sb.toString();
 }
-
-
-// ============================================================
-// HELPERS 
-// ============================================================
-
-// Count system thermal folders
-private int countThermalType(String prefix) {
-    try {
-        File f = new File("/sys/class/thermal");
-        if (!f.exists()) return 0;
-
-        File[] list = f.listFiles((file) -> file.getName().startsWith(prefix));
-        return list != null ? list.length : 0;
-
-    } catch (Throwable ignored) { return 0; }
-}
-
-// Read a thermal node safely
-private String readZoneSafely(String name) {
-    try {
-        File thermalDir = new File("/sys/class/thermal");
-        if (!thermalDir.exists()) return null;
-
-        File[] zones = thermalDir.listFiles();
-        if (zones == null) return null;
-
-        for (File z : zones) {
-            if (z.getName().contains(name)) {
-
-                File t = new File(z, "temp");
-                if (!t.exists()) continue;
-
-                String raw = readFirstLine(t.getAbsolutePath());
-                if (raw == null) return null;
-
-                raw = raw.trim();
-
-                if (raw.length() > 2) {
-                    float c = Float.parseFloat(raw) / 10f;
-                    return String.format(Locale.US, "%.1f°C", c);
-                } else if (raw.length() > 0) {
-                    return raw + "°C";
-                }
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    return null;
-}
-
-private boolean hasValue(String v) {
-    return v != null && v.trim().length() > 0;
-}
-
-private String color(String text, String hexColor) {
-    return "<font color='" + hexColor + "'>" + text + "</font>";
-}
-
-private String readFirstLine(String path) {
-    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-        return br.readLine();
-    } catch (Throwable ignore) { return null; }
-}
-    
 
 // ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)

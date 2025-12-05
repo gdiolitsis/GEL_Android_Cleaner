@@ -159,14 +159,27 @@ protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
 
     // (optional) auto-request runtime permissions
     requestAllRuntimePermissions();
-       
+
+// ============================================================
+// 1. BATTERY — FIND VIEWS
+// ============================================================
+LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
+TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
+TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
+
+try {
+    txtBatteryContent.setText(buildBatteryInfo());
+} catch (Exception ignored) {}
+
+setupSection(
+        findViewById(R.id.headerBattery),
+        batteryContainer,
+        iconBattery
+);
+
 // ============================================================
 // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
 // ============================================================
-
-// 1. Battery
-TextView txtBatteryContent         = findViewById(R.id.txtBatteryContent);
-
 // 2. Screen
 TextView txtScreenContent          = findViewById(R.id.txtScreenContent);
 

@@ -187,36 +187,37 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 iconBattery
         );
 
-        // ============================================================
-        // BATTERY — FORCE INFO WHEN OPENING
-        // ============================================================
-        findViewById(R.id.headerBattery).setOnClickListener(v -> {
+// ============================================================
+// BATTERY — FORCE INFO WHEN OPENING
+// ============================================================
+findViewById(R.id.headerBattery).setOnClickListener(v -> {
 
-            // 1) Close ALL other sections except batteryContainer
-            for (int i = 0; i < allContents.length; i++) {
-                View section = allContents[i];
+    // 1) Close ALL other sections except batteryContainer
+    for (int i = 0; i < allContents.length; i++) {
+        View section = allContents[i];
 
-                if (section != batteryContainer) {
-                    section.setVisibility(View.GONE);
-                    allIcons[i].setText("＋");
-                }
-            }
+        if (section != txtBatteryContent) {  // ✔ σωστή σύγκριση για TextView array
+            section.setVisibility(View.GONE);
+            allIcons[i].setText("＋");
+        }
+    }
 
-            // 2) Toggle battery section
-            if (batteryContainer.getVisibility() == View.GONE) {
+    // 2) Toggle battery section
+    if (batteryContainer.getVisibility() == View.GONE) {
 
-                batteryContainer.setVisibility(View.VISIBLE);
-                iconBattery.setText("－");
+        // 🔥 ΑΝΟΙΓΕΙ ΟΛΟ ΤΟ LAYOUT (και τα παιδιά του)
+        batteryContainer.setVisibility(View.VISIBLE);
+        iconBattery.setText("－");
 
-                // Always refresh info when opening
-                txtBatteryContent.setVisibility(View.VISIBLE);
-                txtBatteryContent.setText(buildBatteryInfo());
+        // 🔥 Βεβαιώσου ότι το information block εμφανίζεται
+        txtBatteryContent.setVisibility(View.VISIBLE);
+        txtBatteryContent.setText(buildBatteryInfo());
 
-            } else {
-                batteryContainer.setVisibility(View.GONE);
-                iconBattery.setText("＋");
-            }
-        });
+    } else {
+        batteryContainer.setVisibility(View.GONE);
+        iconBattery.setText("＋");
+    }
+});
 
         // ============================================================
         // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR

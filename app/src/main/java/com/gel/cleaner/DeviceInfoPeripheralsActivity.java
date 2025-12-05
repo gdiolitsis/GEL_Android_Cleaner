@@ -1219,10 +1219,7 @@ private BatteryInfo getBatteryInfo() {
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL HTML
 // ===================================================================
-private String buildBatteryInfo() {
-
-    String GREEN = "#39FF14";
-    String GOLD  = "#FFD700";
+  private String buildBatteryInfo() {
 
     StringBuilder sb = new StringBuilder();
     BatteryInfo bi = getBatteryInfo();
@@ -1256,98 +1253,52 @@ private String buildBatteryInfo() {
             default:                                       plugStr = "Not plugged"; break;
         }
 
-        sb.append("<font color='").append(GOLD).append("'>Level                : </font>")
-                .append("<font color='").append(GREEN).append("'>").append(level).append("%</font><br>");
+        sb.append("Level                : ").append(level).append("%\n");
+        sb.append("Scale                : ").append(scale).append("\n");
+        sb.append("Status               : ").append(statusStr).append("\n");
+        sb.append("Charging Source      : ").append(plugStr).append("\n");
 
-        sb.append("<font color='").append(GOLD).append("'>Scale                : </font>")
-                .append("<font color='").append(GREEN).append("'>").append(scale).append("</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Status               : </font>")
-                .append("<font color='").append(GREEN).append("'>").append(statusStr).append("</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Charging Source      : </font>")
-                .append("<font color='").append(GREEN).append("'>").append(plugStr).append("</font><br>");
-
-        if (temp > 0) {
-            float cels = temp / 10f;
-
-            sb.append("<font color='").append(GOLD).append("'>Battery Temp         : </font>")
-                    .append("<font color='").append(GREEN).append("'>").append(cels).append("°C</font><br>");
-        }
+        if (temp > 0)
+            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
+    
 
-    // ============================================================
-    // OEM SOURCE
-    // ============================================================
     if (bi.oemFullMah > 0) {
 
-        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
-                .append("<font color='").append(GREEN).append("'>")
-                .append(bi.oemFullMah).append(" mAh</font><br>");
+        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
 
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
-
-            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
-                    .append("<font color='").append(GREEN).append("'>")
-                    .append(est).append(" mAh</font><br>");
+            sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
         }
 
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-                .append("<font color='").append(GREEN).append("'>OEM</font><br>");
+        sb.append("Source               : OEM\n");
     }
-
-    // ============================================================
-    // CHARGE COUNTER
-    // ============================================================
     else if (bi.chargeCounterMah > 0) {
 
-        sb.append("<font color='").append(GOLD).append("'>Current charge       : </font>")
-                .append("<font color='").append(GREEN).append("'>")
-                .append(bi.chargeCounterMah).append(" mAh</font><br>");
+        sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
 
-        if (bi.estimatedFullMah > 0) {
-            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
-                    .append("<font color='").append(GREEN).append("'>")
-                    .append(bi.estimatedFullMah).append(" mAh</font><br>");
-        }
+        if (bi.estimatedFullMah > 0)
+            sb.append("Estimated full (100%): ").append(bi.estimatedFullMah).append(" mAh\n");
 
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-                .append("<font color='").append(GREEN).append("'>Charge Counter</font><br>");
+        sb.append("Source               : Charge Counter\n");
     }
-
-    // ============================================================
-    // NO SOURCE
-    // ============================================================
     else {
-        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
-                .append("<font color='").append(GREEN).append("'>N/A</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-                .append("<font color='").append(GREEN).append("'>Unknown</font><br>");
+        sb.append("Real capacity        : N/A\n");
+        sb.append("Source               : Unknown\n");
     }
 
-    // ============================================================
-    // MODEL CAPACITY
-    // ============================================================
     long modelCap = getStoredModelCapacity();
-
-    sb.append("<font color='").append(GOLD).append("'>Model capacity       : </font>")
-            .append("<font color='").append(GREEN).append("'>")
+    sb.append("Model capacity       : ")
             .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
-            .append("</font><br>");
+            .append("\n");
 
-// ============================================================  
-// COMMENT  
-// ============================================================  
-sb.append("<font color='").append(GOLD).append("'>Lifecycle            : </font>")  
-        .append("<font color='").append(GREEN).append("'>Requires root access</font><br>");  
+    sb.append("Lifecycle            : Requires root access\n");
 
-return sb.toString();
-
-}
+    return sb.toString();
+}              .
 
 // ===================================================================
 // SHOW POPUP ONLY ONCE
@@ -1845,114 +1796,74 @@ private String buildUsbInfo() {
 // ===================================================================
 // THERMAL ENGINE / COOLING  —  GEL Human-Readable Edition
 // ===================================================================
-    // ===================================================================
-// THERMAL — 4 HUMAN SECTIONS (Modem/Battery/Charger/PMIC) — HTML COLORS
-// ===================================================================
-private String buildThermalInfo() {
-
-    String GREEN = "#39FF14";
-    String GOLD  = "#FFD700";
+ private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
-    // Read /sys/class/thermal
-    File base = new File("/sys/class/thermal");
-    File[] zones = base.listFiles();
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+        }
+    } catch (Throwable ignore) { }
 
     int zoneCount = zones != null ? zones.length : 0;
-    int coolCount = 0;
 
-    if (zones != null) {
-        for (File f : zones) {
-            if (f.getName().contains("cooling"))
-                coolCount++;
-        }
-    }
+    sb.append("Thermal zones        : ").append(zoneCount).append("\n");
+    sb.append("Cooling devices      :  ").append("N/A").append("\n\n");
 
-    // ============================================================
-    // COUNTS
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>Thermal zones        : </font>")
-            .append("<font color='").append(GREEN).append("'>").append(zoneCount).append("</font><br>");
 
-    sb.append("<font color='").append(GOLD).append("'>Cooling devices      : </font>")
-            .append("<font color='").append(GREEN).append("'>").append(coolCount).append("</font><br><br>");
+    // Title
+    sb.append("Hardware Thermals\n\n");
 
-    // ============================================================
-    // TITLE
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>Hardware Thermals</font><br><br>");
 
-    // ============================================================
-    // SECTION — MODEM / RF
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>Modem / RF</font><br>");
+    // --- MODEM / RF ---
+    sb.append("Modem / RF\n");
 
-    sb.append("<font color='").append(GREEN).append("'>  Main modem          : ")
-            .append(readThermal("modem")).append("°C</font><br>");
+    String mainModem = readZone("mdmss-3");
+    String secModem  = readZone("mdmss-1");
+    String rfTrans   = readZone("modem-cfg");
 
-    sb.append("<font color='").append(GREEN).append("'>  Secondary modem     : ")
-            .append(readThermal("modem2")).append("°C</font><br>");
+    sb.append("  Main modem         : ").append(mainModem).append("\n");
+    sb.append("  Secondary modem    : ").append(secModem).append("\n");
+    sb.append("  RF transceiver     : ").append(rfTrans).append("\n\n");
 
-    sb.append("<font color='").append(GREEN).append("'>  RF transceiver      : ")
-            .append(readThermal("rf")).append("°C</font><br><br>");
 
-    // ============================================================
-    // SECTION — BATTERY
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>Battery</font><br>");
+    // --- BATTERY ---
+    sb.append("Battery\n");
 
-    sb.append("<font color='").append(GREEN).append("'>  Battery pack (main) : ")
-            .append(readThermal("battery")).append("°C</font><br>");
+    String battMain  = readZone("battery");
+    String battShell = readZone("battery_therm");
 
-    sb.append("<font color='").append(GREEN).append("'>  Battery shell       : ")
-            .append(readThermal("batt_shell")).append("°C</font><br><br>");
+    sb.append("  Battery pack (main): ").append(battMain).append("\n");
+    sb.append("  Battery shell      : ").append(battShell).append("\n\n");
 
-    // ============================================================
-    // SECTION — CHARGER
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>Charger</font><br>");
 
-    sb.append("<font color='").append(GREEN).append("'>  Charging IC         : ")
-            .append(readThermal("charger")).append("°C</font><br><br>");
+    // --- CHARGER ---
+    sb.append("Charger\n");
 
-    // ============================================================
-    // SECTION — PMIC
-    // ============================================================
-    sb.append("<font color='").append(GOLD).append("'>PMIC</font><br>");
+    String chargerTherm = readZone("charger_therm");
 
-    sb.append("<font color='").append(GREEN).append("'>  Power management IC : ")
-            .append(readThermal("pmic")).append("°C</font><br>");
+    sb.append("  Charging IC        : ").append(chargerTherm).append("\n\n");
+
+
+    // --- PMIC ---
+    sb.append("PMIC\n");
+
+    String pmicTherm = readZone("pmic-thermal");
+    String pm8010e   = readZone("pm8010e_tz");
+    String vbatt     = readZone("vbat");
+
+    sb.append("  Power IC           : ").append(pmicTherm).append("\n");
+    sb.append("  PM8010e            : ").append(pm8010e).append("\n");
+    sb.append("  VBatt sensor       : ").append(vbatt).append("\n\n");
+
+    appendAccessInstructions(sb, "thermals");
 
     return sb.toString();
-}
-
-    // Read simple thermal numeric values safely
-private String readThermal(String key) {
-    try {
-        File base = new File("/sys/class/thermal");
-        File[] zones = base.listFiles();
-
-        if (zones == null) return "--";
-
-        for (File f : zones) {
-            File type = new File(f, "type");
-            File temp = new File(f, "temp");
-
-            if (!type.exists() || !temp.exists()) continue;
-
-            String t = readSysString(type.getAbsolutePath());
-            if (t != null && t.toLowerCase().contains(key)) {
-                String raw = readSysString(temp.getAbsolutePath());
-                if (raw == null) return "--";
-
-                float v = Float.parseFloat(raw) / 1000f;
-                return String.format(Locale.US, "%.1f", v);
-            }
-        }
-    } catch (Throwable ignore) {}
-    return "--";
-}
+}   
 
 // ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)

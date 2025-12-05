@@ -178,15 +178,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
         }
 
-        // ============================================================
-        // BATTERY — SETUP SECTION (CONTAINER MODE)
-        // ============================================================
-        setupSection(
-                findViewById(R.id.headerBattery),
-                batteryContainer,
-                iconBattery
-        );
-
 // ============================================================
 // BATTERY — FORCE INFO WHEN OPENING
 // ============================================================

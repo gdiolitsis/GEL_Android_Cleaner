@@ -1219,15 +1219,15 @@ private BatteryInfo getBatteryInfo() {
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL
 // ===================================================================
-private CharSequence buildBatteryInfo() {
-    
+private String buildBatteryInfo() {
+
     SpannableStringBuilder sb = new SpannableStringBuilder();
 
-    // Helper for color
+    // Colors
     final int GREEN = Color.parseColor("#39FF14");
     final int GOLD  = Color.parseColor("#FFD700");
 
-    // Quick function for colored append
+    // Quick colored append
     java.util.function.BiConsumer<String, Integer> add = (text, color) -> {
         int start = sb.length();
         sb.append(text);
@@ -1281,10 +1281,9 @@ private CharSequence buildBatteryInfo() {
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
-        add.accept("Real capacity        : ", GOLD);  
+        add.accept("Real capacity        : ", GOLD);
         add.accept(bi.oemFullMah + " mAh\n", GREEN);
 
-        // Estimated 100%
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
@@ -1297,10 +1296,10 @@ private CharSequence buildBatteryInfo() {
         add.accept("OEM\n", GREEN);
     }
 
-    // ---------------------- CHARGE COUNTER SOURCE ----------------------
+    // ---------------------- CHARGE COUNTER ----------------------
     else if (bi.chargeCounterMah > 0) {
 
-        add.accept("Current charge       : ", GOLD);  
+        add.accept("Current charge       : ", GOLD);
         add.accept(bi.chargeCounterMah + " mAh\n", GREEN);
 
         if (bi.estimatedFullMah > 0) {
@@ -1318,17 +1317,17 @@ private CharSequence buildBatteryInfo() {
         add.accept("Source               : ", GOLD);  add.accept("Unknown\n", GREEN);
     }
 
-    // ---------------------- MODEL CAPACITY (user) ----------------------
+    // ---------------------- MODEL CAPACITY ----------------------
     long modelCap = getStoredModelCapacity();
-
     add.accept("Model capacity       : ", GOLD);
     add.accept((modelCap > 0 ? (modelCap + " mAh") : "(tap to set)") + "\n", GREEN);
 
-    // ---------------------- COMMENT (green) ----------------------
+    // ---------------------- COMMENT ----------------------
     add.accept("Lifecycle            : ", GOLD);
     add.accept("Requires root access\n", GREEN);
 
-    return sb;
+    // IMPORTANT → convert CharSequence → String so your set() method works
+    return sb.toString();
 }
       
 // ===================================================================

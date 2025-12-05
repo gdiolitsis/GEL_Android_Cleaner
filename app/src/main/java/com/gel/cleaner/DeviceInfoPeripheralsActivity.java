@@ -273,18 +273,20 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 iconRoot,             // 20
                 iconOther             // 21
         };
+// ============================================================
+// APPLY TEXTS FIRST
+// ============================================================
+populateAllSections();
 
-        // ============================================================
-        // APPLY TEXTS FIRST
-        // ============================================================
-        populateAllSections();
+// Make sure battery info is visible when battery section expands
+txtBatteryContent.setVisibility(View.VISIBLE);
 
-        // ============================================================
-        // SETUP SECTIONS
-        // ============================================================
-        setupSection(findViewById(R.id.headerBattery),
-                     findViewById(R.id.batteryContainer),
-                     iconBattery);
+// ============================================================
+// SETUP SECTIONS
+// ============================================================
+setupSection(findViewById(R.id.headerBattery),
+             findViewById(R.id.batteryContainer),
+             iconBattery);
         setupSection(findViewById(R.id.headerScreen),            txtScreenContent,          iconScreen);  
         setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
         setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);

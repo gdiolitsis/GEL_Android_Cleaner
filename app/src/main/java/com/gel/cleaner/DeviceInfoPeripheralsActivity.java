@@ -193,21 +193,24 @@ setupSection(
 // ============================================================
 findViewById(R.id.headerBattery).setOnClickListener(v -> {
 
-    // 1) Close all other sections
+    // 1) Close all other TEXT sections (ignore the LinearLayout)
     for (int i = 0; i < allContents.length; i++) {
-        if (allContents[i] != batteryContainer) {
-            allContents[i].setVisibility(View.GONE);
+        View section = allContents[i];
+
+        // Μην συγκρίνεις τύπους — απλά κλείσε ό,τι ΔΕΝ είναι το batteryContainer
+        if (section != txtBatteryContent) {
+            section.setVisibility(View.GONE);
             allIcons[i].setText("＋");
         }
     }
 
-    // 2) Toggle battery section
+    // 2) Toggle battery section (FULL BLOCK)
     if (batteryContainer.getVisibility() == View.GONE) {
 
         batteryContainer.setVisibility(View.VISIBLE);
         iconBattery.setText("－");
 
-        // 🔥 SHOW INFO BELOW “Set battery capacity”
+        // 🔥 Always refresh the info when opening
         txtBatteryContent.setVisibility(View.VISIBLE);
         txtBatteryContent.setText(buildBatteryInfo());
 

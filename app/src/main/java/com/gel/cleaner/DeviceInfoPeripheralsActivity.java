@@ -1219,7 +1219,11 @@ private BatteryInfo getBatteryInfo() {
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL HTML
 // ===================================================================
-  private String buildBatteryInfo() {
+
+private String buildBatteryInfo() {
+
+    final String GREEN = "#39FF14";
+    final String GOLD  = "#FFD700";
 
     StringBuilder sb = new StringBuilder();
     BatteryInfo bi = getBatteryInfo();
@@ -1230,7 +1234,7 @@ private BatteryInfo getBatteryInfo() {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
@@ -1253,52 +1257,80 @@ private BatteryInfo getBatteryInfo() {
             default:                                       plugStr = "Not plugged"; break;
         }
 
-        sb.append("Level                : ").append(level).append("%\n");
-        sb.append("Scale                : ").append(scale).append("\n");
-        sb.append("Status               : ").append(statusStr).append("\n");
-        sb.append("Charging Source      : ").append(plugStr).append("\n");
+        // VALUES WITH COLOR
+        sb.append("<font color='").append(GOLD).append("'>Level                : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(level).append("%</font><br>");
 
-        if (temp > 0)
-            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
+        sb.append("<font color='").append(GOLD).append("'>Scale                : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(scale).append("</font><br>");
+
+        sb.append("<font color='").append(GOLD).append("'>Status               : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(statusStr).append("</font><br>");
+
+        sb.append("<font color='").append(GOLD).append("'>Charging Source      : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(plugStr).append("</font><br>");
+
+        if (temp > 0) {
+            sb.append("<font color='").append(GOLD).append("'>Temp                 : </font>")
+              .append("<font color='").append(GREEN).append("'>").append(temp / 10f).append("°C</font><br>");
+        }
 
     } catch (Throwable ignore) {}
-    
 
+    // OEM source
     if (bi.oemFullMah > 0) {
 
-        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
+        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(bi.oemFullMah).append(" mAh</font><br>");
 
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
-            sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
+
+            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
+              .append("<font color='").append(GREEN).append("'>").append(est).append(" mAh</font><br>");
         }
 
-        sb.append("Source               : OEM\n");
+        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
+          .append("<font color='").append(GREEN).append("'>OEM</font><br>");
     }
+
+    // Charge counter
     else if (bi.chargeCounterMah > 0) {
 
-        sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
+        sb.append("<font color='").append(GOLD).append("'>Current charge       : </font>")
+          .append("<font color='").append(GREEN).append("'>").append(bi.chargeCounterMah).append(" mAh</font><br>");
 
         if (bi.estimatedFullMah > 0)
-            sb.append("Estimated full (100%): ").append(bi.estimatedFullMah).append(" mAh\n");
+            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
+              .append("<font color='").append(GREEN).append("'>").append(bi.estimatedFullMah).append(" mAh</font><br>");
 
-        sb.append("Source               : Charge Counter\n");
+        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
+          .append("<font color='").append(GREEN).append("'>Charge Counter</font><br>");
     }
+
+    // No data fallback
     else {
-        sb.append("Real capacity        : N/A\n");
-        sb.append("Source               : Unknown\n");
+        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
+          .append("<font color='").append(GREEN).append("'>N/A</font><br>");
+
+        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
+          .append("<font color='").append(GREEN).append("'>Unknown</font><br>");
     }
 
+    // Model capacity
     long modelCap = getStoredModelCapacity();
-    sb.append("Model capacity       : ")
-            .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
-            .append("\n");
+    sb.append("<font color='").append(GOLD).append("'>Model capacity       : </font>")
+      .append("<font color='").append(GREEN).append("'>")
+      .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
+      .append("</font><br>");
 
-    sb.append("Lifecycle            : Requires root access\n");
+    // COMMENT (single line, green)
+    sb.append("<font color='").append(GOLD).append("'>Lifecycle            : </font>")
+      .append("<font color='").append(GREEN).append("'>Requires root access</font><br>");
 
     return sb.toString();
-} 
+}
 
 // ===================================================================
 // SHOW POPUP ONLY ONCE

@@ -1526,8 +1526,7 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles\n");
-    sb.append("                   require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
 
     return sb.toString();
 }
@@ -1825,64 +1824,152 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-    // 1. Thermal Engine / Cooling Profiles
-    private String buildThermalInfo() {
-        StringBuilder sb = new StringBuilder();
+// ===================================================================
+// THERMAL INFO — PERIPHERALS (Modem + Battery + Charger + PMIC)
+// Keeps EXACT formatting as in your UI.
+// ===================================================================
+private String buildThermalInfo() {
 
-        File thermalDir = new File("/sys/class/thermal");
-        File[] zones = null;
-        File[] cools = null;
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            if (thermalDir.exists() && thermalDir.isDirectory()) {
-                zones = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("thermal_zone");
-                    }
-                });
-                cools = thermalDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().startsWith("cooling_device");
-                    }
-                });
-            }
-        } catch (Throwable ignore) { }
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
 
-        int zoneCount = zones != null ? zones.length : 0;
-        int coolCount = cools != null ? cools.length : 0;
-
-        sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
-        sb.append("Cooling Devices  : ").append(coolCount).append("\n");
-
-        if (zoneCount == 0 && coolCount == 0) {
-            sb.append("Advanced         : Some devices restrict /sys thermal nodes; basic sensors use Android APIs, full trip tables require root.\n");
-            return sb.toString();
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
         }
+    } catch (Throwable ignore) {}
 
-        if (zoneCount > 0) {
-            sb.append("\nSample Zone      :\n");
-            try {
-                File z0 = zones[0];
-                String type = readSysString(z0.getAbsolutePath() + "/type");
-                String temp = readSysString(z0.getAbsolutePath() + "/temp");
+    int zoneCount = zones != null ? zones.length : 0;
 
-                if (type != null && type.trim().length() > 0) {
-                    sb.append("  Type           : ").append(type).append("\n");
-                }
-                if (temp != null && temp.trim().length() > 0) {
-                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
-                }
-            } catch (Throwable ignore) { }
-        }
+    sb.append("Thermal Zones        : ").append(zoneCount).append("\n");
+    sb.append("Cooling Devices      : ").append(getCoolingCount()).append("\n\n");
 
-        sb.append("Advanced         : Full thermal trip tables and throttling profiles require root access and OEM-specific parsing.\n");
-
+    if (zones == null || zones.length == 0) {
+        sb.append("Advanced             : Thermal nodes restricted.\n");
         return sb.toString();
     }
 
-    // ============================================================
+    // Groups
+    List<File> modem   = new java.util.ArrayList<>();
+    List<File> battery = new java.util.ArrayList<>();
+    List<File> charger = new java.util.ArrayList<>();
+    List<File> pmic    = new java.util.ArrayList<>();
+
+    // Sort into groups
+    for (File z : zones) {
+        String type = readSysString(z.getAbsolutePath() + "/type");
+        if (type == null) continue;
+
+        String t = type.toLowerCase(Locale.ROOT);
+
+        if (t.contains("mdm") || t.contains("modem") || t.contains("sub1") || t.contains("rf"))
+            modem.add(z);
+        else if (t.contains("battery"))
+            battery.add(z);
+        else if (t.contains("charger") || t.contains("chg"))
+            charger.add(z);
+        else if (t.contains("pm") || t.contains("bcl") || t.contains("vbat"))
+            pmic.add(z);
+    }
+
+    // Pick sample (modem first)
+    File sample = !modem.isEmpty() ? modem.get(0)
+                 : !battery.isEmpty() ? battery.get(0)
+                 : !charger.isEmpty() ? charger.get(0)
+                 : !pmic.isEmpty() ? pmic.get(0)
+                 : null;
+
+    // ------------------ SAMPLE ZONE ------------------
+    if (sample != null) {
+        String type = readSysString(sample.getAbsolutePath() + "/type");
+        String temp = readSysString(sample.getAbsolutePath() + "/temp");
+
+        sb.append("Sample Zone          :\n");
+        sb.append("    Type             : ").append(type).append("\n");
+        sb.append("    Temp (raw)       : ").append(temp).append("\n\n");
+    }
+
+    // ------------------ GROUP PRINTER ------------------
+    if (!modem.isEmpty()) {
+        sb.append("Modem / RF           :\n");
+        for (File z : modem) {
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            String temp = readSysString(z.getAbsolutePath() + "/temp");
+            sb.append("    ")
+              .append(pad(type, 16))
+              .append(": ")
+              .append(temp)
+              .append("\n");
+        }
+        sb.append("\n");
+    }
+
+    if (!battery.isEmpty()) {
+        sb.append("Battery              :\n");
+        for (File z : battery) {
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            String temp = readSysString(z.getAbsolutePath() + "/temp");
+            sb.append("    ")
+              .append(pad(type, 16))
+              .append(": ")
+              .append(temp)
+              .append("\n");
+        }
+        sb.append("\n");
+    }
+
+    if (!charger.isEmpty()) {
+        sb.append("Charger              :\n");
+        for (File z : charger) {
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            String temp = readSysString(z.getAbsolutePath() + "/temp");
+            sb.append("    ")
+              .append(pad(type, 16))
+              .append(": ")
+              .append(temp)
+              .append("\n");
+        }
+        sb.append("\n");
+    }
+
+    if (!pmic.isEmpty()) {
+        sb.append("PMIC                 :\n");
+        for (File z : pmic) {
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            String temp = readSysString(z.getAbsolutePath() + "/temp");
+            sb.append("    ")
+              .append(pad(type, 16))
+              .append(": ")
+              .append(temp)
+              .append("\n");
+        }
+        sb.append("\n");
+    }
+
+    return sb.toString();
+}
+
+// counts cooling_device nodes
+private int getCoolingCount() {
+    try {
+        File thermal = new File("/sys/class/thermal");
+        File[] cool = thermal.listFiles(f -> f.getName().startsWith("cooling_device"));
+        return cool != null ? cool.length : 0;
+    } catch (Throwable ignore) {
+        return 0;
+    }
+}
+
+// simple padding helper
+private String pad(String s, int n) {
+    if (s == null) s = "";
+    while (s.length() < n) s += " ";
+    return s;
+}
+
+// ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
 // ============================================================
 private String buildScreenInfo() {

@@ -126,7 +126,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-            // ❌ recreate() REMOVED (no more animation freezes)
+        
         }
     }
 

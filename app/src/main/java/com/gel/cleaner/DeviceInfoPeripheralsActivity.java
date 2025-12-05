@@ -1802,148 +1802,162 @@ private String buildUsbInfo() {
     // ============================================================
 
 // ===================================================================
-// THERMAL INFO — PERIPHERALS (Modem + Battery + Charger + PMIC)
-// Keeps EXACT formatting as in your UI.
+// 1. THERMAL ENGINE — HUMAN FRIENDLY + COLORS (GOLD + NEON GREEN)
 // ===================================================================
-private String buildThermalInfo() {
+private CharSequence buildThermalInfo() {
 
-    StringBuilder sb = new StringBuilder();
+    SpannableStringBuilder sb = new SpannableStringBuilder();
 
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
+    final int GREEN = Color.parseColor("#39FF14");
+    final int GOLD  = Color.parseColor("#FFD700");
 
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+    // Helper append with color
+    java.util.function.BiConsumer<String, Integer> add = (text, color) -> {
+        int start = sb.length();
+        sb.append(text);
+        sb.setSpan(new ForegroundColorSpan(color), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    };
+
+    // Helper for label:value
+    java.util.function.BiConsumer<String, String> line = (label, value) -> {
+        add.accept(String.format("%-22s : ", label), GOLD);
+        add.accept(value + "\n", GREEN);
+    };
+
+    // READ THERMAL ZONES
+    File dir = new File("/sys/class/thermal");
+    File[] zones = (dir.exists()) ? dir.listFiles() : null;
+
+    int zoneCount = (zones != null) ? zones.length : 0;
+    int coolCount = 0;
+
+    // Count cooling devices
+    if (zones != null) {
+        for (File z : zones) {
+            if (z.getName().startsWith("cooling_device")) {
+                coolCount++;
+            }
         }
-    } catch (Throwable ignore) {}
-
-    int zoneCount = zones != null ? zones.length : 0;
-
-    sb.append("Thermal Zones        : ").append(zoneCount).append("\n");
-    sb.append("Cooling Devices      : ").append(getCoolingCount()).append("\n\n");
-
-    if (zones == null || zones.length == 0) {
-        sb.append("Advanced             : Thermal nodes restricted.\n");
-        return sb.toString();
     }
 
-    // Groups
-    List<File> modem   = new java.util.ArrayList<>();
-    List<File> battery = new java.util.ArrayList<>();
-    List<File> charger = new java.util.ArrayList<>();
-    List<File> pmic    = new java.util.ArrayList<>();
+    // ---------- Header ----------
+    line.accept("Thermal Zones", "" + zoneCount);
+    line.accept("Cooling Devices", "" + coolCount);
+    add.accept("\n", GREEN);
 
-    // Sort into groups
-    for (File z : zones) {
-        String type = readSysString(z.getAbsolutePath() + "/type");
-        if (type == null) continue;
+    // ============================================================
+    // DETECT SAMPLE ZONE
+    // ============================================================
+    String sampleType = "N/A";
+    String sampleRaw  = "N/A";
 
-        String t = type.toLowerCase(Locale.ROOT);
+    if (zones != null) {
+        for (File z : zones) {
+            if (z.getName().startsWith("thermal_zone")) {
+                try {
+                    sampleType = readSysString(z.getAbsolutePath() + "/type");
+                    sampleRaw  = readSysString(z.getAbsolutePath() + "/temp");
 
-        if (t.contains("mdm") || t.contains("modem") || t.contains("sub1") || t.contains("rf"))
-            modem.add(z);
-        else if (t.contains("battery"))
-            battery.add(z);
-        else if (t.contains("charger") || t.contains("chg"))
-            charger.add(z);
-        else if (t.contains("pm") || t.contains("bcl") || t.contains("vbat"))
-            pmic.add(z);
-    }
-
-    // Pick sample (modem first)
-    File sample = !modem.isEmpty() ? modem.get(0)
-                 : !battery.isEmpty() ? battery.get(0)
-                 : !charger.isEmpty() ? charger.get(0)
-                 : !pmic.isEmpty() ? pmic.get(0)
-                 : null;
-
-    // ------------------ SAMPLE ZONE ------------------
-    if (sample != null) {
-        String type = readSysString(sample.getAbsolutePath() + "/type");
-        String temp = readSysString(sample.getAbsolutePath() + "/temp");
-
-        sb.append("Sample Zone          :\n");
-        sb.append("    Type             : ").append(type).append("\n");
-        sb.append("    Temp (raw)       : ").append(temp).append("\n\n");
-    }
-
-    // ------------------ GROUP PRINTER ------------------
-    if (!modem.isEmpty()) {
-        sb.append("Modem / RF           :\n");
-        for (File z : modem) {
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            String temp = readSysString(z.getAbsolutePath() + "/temp");
-            sb.append("    ")
-              .append(pad(type, 16))
-              .append(": ")
-              .append(temp)
-              .append("\n");
+                    if (sampleType != null && sampleRaw != null && !sampleRaw.startsWith("-")) {
+                        break;
+                    }
+                } catch (Exception ignore) {}
+            }
         }
-        sb.append("\n");
     }
 
-    if (!battery.isEmpty()) {
-        sb.append("Battery              :\n");
-        for (File z : battery) {
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            String temp = readSysString(z.getAbsolutePath() + "/temp");
-            sb.append("    ")
-              .append(pad(type, 16))
-              .append(": ")
-              .append(temp)
-              .append("\n");
+    // SAMPLE ZONE
+    add.accept("Sample Zone\n", GOLD);
+    line.accept("  Type", sampleType != null ? sampleType.trim() : "N/A");
+    line.accept("  Temp (raw)", sampleRaw != null ? sampleRaw.trim() : "N/A");
+
+    add.accept("\n", GREEN);
+
+    // ============================================================
+    // SCAN RELEVANT SENSORS
+    // ============================================================
+    String modemMain = null;
+    String modemSecondary = null;
+    String modemNR = null;
+    String modemMMW = null;
+
+    String battMain = null;
+    String battSecondary = null;
+
+    String charger = null;
+
+    String pmicMain = null;
+    String pmicReg = null;
+    String pmicBcl = null;
+
+    if (zones != null) {
+        for (File z : zones) {
+            try {
+                String type = readSysString(z.getAbsolutePath() + "/type");
+                String raw  = readSysString(z.getAbsolutePath() + "/temp");
+
+                if (type == null || raw == null) continue;
+                type = type.trim();
+                raw  = raw.trim();
+
+                if (raw.equals("") || raw.startsWith("-")) continue;
+
+                float celsius = Float.parseFloat(raw) / 1000f;
+                String temp = String.format(Locale.US, "%.1f°C", celsius);
+
+                // MODEM / RF
+                if (type.contains("mdmss-0")) modemMain = temp;
+                if (type.contains("mdmss-1")) modemSecondary = temp;
+                if (type.contains("mdmss-2")) modemNR = temp;
+                if (type.contains("mdmss-3")) modemMMW = temp;
+
+                // BATTERY
+                if (type.equals("battery_therm")) battMain = temp;
+                if (type.equals("battery")) battSecondary = temp;
+
+                // CHARGER
+                if (type.contains("charger_therm")) charger = temp;
+
+                // PMIC
+                if (type.contains("pmic")) pmicMain = temp;
+                if (type.contains("pm7250b") && type.contains("tz")) pmicReg = temp;
+                if (type.contains("bcl")) pmicBcl = temp;
+
+            } catch (Exception ignore) {}
         }
-        sb.append("\n");
     }
 
-    if (!charger.isEmpty()) {
-        sb.append("Charger              :\n");
-        for (File z : charger) {
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            String temp = readSysString(z.getAbsolutePath() + "/temp");
-            sb.append("    ")
-              .append(pad(type, 16))
-              .append(": ")
-              .append(temp)
-              .append("\n");
-        }
-        sb.append("\n");
-    }
+    // ============================================================
+    // BUILD OUTPUT
+    // ============================================================
 
-    if (!pmic.isEmpty()) {
-        sb.append("PMIC                 :\n");
-        for (File z : pmic) {
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            String temp = readSysString(z.getAbsolutePath() + "/temp");
-            sb.append("    ")
-              .append(pad(type, 16))
-              .append(": ")
-              .append(temp)
-              .append("\n");
-        }
-        sb.append("\n");
-    }
+    // ---------- MODEM ----------
+    add.accept("Modem / RF\n", GOLD);
+    line.accept("  Main modem",      modemMain != null ? modemMain : "N/A");
+    line.accept("  Secondary modem", modemSecondary != null ? modemSecondary : "N/A");
+    line.accept("  5G NR (sub-6)",   modemNR != null ? modemNR : "N/A");
+    line.accept("  mmWave / RF",     modemMMW != null ? modemMMW : "N/A");
+    add.accept("\n", GREEN);
 
-    return sb.toString();
-}
+    // ---------- BATTERY ----------
+    add.accept("Battery\n", GOLD);
+    line.accept("  Battery sensor",   battMain != null ? battMain : "N/A");
+    line.accept("  Secondary sensor", battSecondary != null ? battSecondary : "N/A");
+    add.accept("\n", GREEN);
 
-// counts cooling_device nodes
-private int getCoolingCount() {
-    try {
-        File thermal = new File("/sys/class/thermal");
-        File[] cool = thermal.listFiles(f -> f.getName().startsWith("cooling_device"));
-        return cool != null ? cool.length : 0;
-    } catch (Throwable ignore) {
-        return 0;
-    }
-}
+    // ---------- CHARGER ----------
+    add.accept("Charger\n", GOLD);
+    line.accept("  Charging sensor", charger != null ? charger : "N/A");
+    add.accept("\n", GREEN);
 
-// simple padding helper
-private String pad(String s, int n) {
-    if (s == null) s = "";
-    while (s.length() < n) s += " ";
-    return s;
+    // ---------- PMIC ----------
+    add.accept("PMIC\n", GOLD);
+    line.accept("  Power IC",      pmicMain != null ? pmicMain : "N/A");
+    line.accept("  Voltage Reg",   pmicReg != null ? pmicReg : "N/A");
+    line.accept("  Battery Ctrl",  pmicBcl != null ? pmicBcl : "N/A");
+    add.accept("\n", GREEN);
+
+    return sb;
 }
 
 // ============================================================

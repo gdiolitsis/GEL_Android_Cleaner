@@ -1796,74 +1796,159 @@ private String buildUsbInfo() {
 // ===================================================================
 // THERMAL ENGINE / COOLING  —  GEL Human-Readable Edition
 // ===================================================================
- private String buildThermalInfo() {
+ 
+private String buildThermalInfo() {
+
+    final String GREEN = "#39FF14";
+    final String GOLD  = "#FFD700";
 
     StringBuilder sb = new StringBuilder();
 
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
+    // --------- System Counts ---------
+    int zones = countThermalType("thermal_zone");
+    int cools = countThermalType("cooling_device");
 
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
-        }
-    } catch (Throwable ignore) { }
+    sb.append("Thermal zones        : ").append(zones).append("\n");
+    sb.append("Cooling devices      : ").append(cools).append("\n\n");
 
-    int zoneCount = zones != null ? zones.length : 0;
+    sb.append("Hardware Thermals\n");
 
-    sb.append("Thermal zones        : ").append(zoneCount).append("\n");
-    sb.append("Cooling devices      :  ").append("N/A").append("\n\n");
+    
+    // 1) MODEM / RF
+    
+    String mainModem = readZoneSafely("mdmss-3");
+    String secModem  = readZoneSafely("mdmss-1");
+    String rfTrans   = readZoneSafely("modem-cfg");
 
+    boolean modemHasData =
+            hasValue(mainModem) ||
+            hasValue(secModem)  ||
+            hasValue(rfTrans);
 
-    // Title
-    sb.append("Hardware Thermals\n\n");
+    if (modemHasData) {
+        sb.append("\nModem / RF\n");
+        if (hasValue(mainModem))
+            sb.append("  Main modem           : ").append(color(mainModem, GREEN)).append("\n");
+        if (hasValue(secModem))
+            sb.append("  Secondary modem      : ").append(color(secModem, GREEN)).append("\n");
+        if (hasValue(rfTrans))
+            sb.append("  RF transceiver       : ").append(color(rfTrans, GREEN)).append("\n");
+    }
 
+    // 2) BATTERY
 
-    // --- MODEM / RF ---
-    sb.append("Modem / RF\n");
+    String battMain  = readZoneSafely("battery");
+    String battShell = readZoneSafely("battery_therm");
 
-    String mainModem = readZone("mdmss-3");
-    String secModem  = readZone("mdmss-1");
-    String rfTrans   = readZone("modem-cfg");
+    boolean batteryHasData =
+            hasValue(battMain) ||
+            hasValue(battShell);
 
-    sb.append("  Main modem         : ").append(mainModem).append("\n");
-    sb.append("  Secondary modem    : ").append(secModem).append("\n");
-    sb.append("  RF transceiver     : ").append(rfTrans).append("\n\n");
+    if (batteryHasData) {
+        sb.append("\nBattery\n");
+        if (hasValue(battMain))
+            sb.append("  Battery pack (main)  : ").append(color(battMain, GREEN)).append("\n");
+        if (hasValue(battShell))
+            sb.append("  Battery shell        : ").append(color(battShell, GREEN)).append("\n");
+    }
 
+    // 3) CHARGER
+    
+    String chargerTherm = readZoneSafely("charger_therm");
 
-    // --- BATTERY ---
-    sb.append("Battery\n");
+    if (hasValue(chargerTherm)) {
+        sb.append("\nCharger\n");
+        sb.append("  Charger thermal       : ").append(color(chargerTherm, GREEN)).append("\n");
+    }
 
-    String battMain  = readZone("battery");
-    String battShell = readZone("battery_therm");
+    // 4) PMIC
+    
+    String pmicTherm = readZoneSafely("pmic-thermal");
+    String pm8010e   = readZoneSafely("pm8010e_tz");
+    String vbatt     = readZoneSafely("vbat");
 
-    sb.append("  Battery pack (main): ").append(battMain).append("\n");
-    sb.append("  Battery shell      : ").append(battShell).append("\n\n");
+    boolean pmicHasData =
+            hasValue(pmicTherm) ||
+            hasValue(pm8010e)   ||
+            hasValue(vbatt);
 
-
-    // --- CHARGER ---
-    sb.append("Charger\n");
-
-    String chargerTherm = readZone("charger_therm");
-
-    sb.append("  Charging IC        : ").append(chargerTherm).append("\n\n");
-
-
-    // --- PMIC ---
-    sb.append("PMIC\n");
-
-    String pmicTherm = readZone("pmic-thermal");
-    String pm8010e   = readZone("pm8010e_tz");
-    String vbatt     = readZone("vbat");
-
-    sb.append("  Power IC           : ").append(pmicTherm).append("\n");
-    sb.append("  PM8010e            : ").append(pm8010e).append("\n");
-    sb.append("  VBatt sensor       : ").append(vbatt).append("\n\n");
-
-    appendAccessInstructions(sb, "thermals");
+    if (pmicHasData) {
+        sb.append("\nPMIC\n");
+        if (hasValue(pmicTherm))
+            sb.append("  Power IC (PMIC)      : ").append(color(pmicTherm, GREEN)).append("\n");
+        if (hasValue(pm8010e))
+            sb.append("  PM8010e module       : ").append(color(pm8010e, GREEN)).append("\n");
+        if (hasValue(vbatt))
+            sb.append("  VBAT monitor         : ").append(color(vbatt, GREEN)).append("\n");
+    }
 
     return sb.toString();
-}   
+}
+
+
+// ============================================================
+// HELPERS 
+// ============================================================
+
+// Count system thermal folders
+private int countThermalType(String prefix) {
+    try {
+        File f = new File("/sys/class/thermal");
+        if (!f.exists()) return 0;
+
+        File[] list = f.listFiles((file) -> file.getName().startsWith(prefix));
+        return list != null ? list.length : 0;
+
+    } catch (Throwable ignored) { return 0; }
+}
+
+// Read a thermal node safely
+private String readZoneSafely(String name) {
+    try {
+        File thermalDir = new File("/sys/class/thermal");
+        if (!thermalDir.exists()) return null;
+
+        File[] zones = thermalDir.listFiles();
+        if (zones == null) return null;
+
+        for (File z : zones) {
+            if (z.getName().contains(name)) {
+
+                File t = new File(z, "temp");
+                if (!t.exists()) continue;
+
+                String raw = readFirstLine(t.getAbsolutePath());
+                if (raw == null) return null;
+
+                raw = raw.trim();
+
+                if (raw.length() > 2) {
+                    float c = Float.parseFloat(raw) / 10f;
+                    return String.format(Locale.US, "%.1f°C", c);
+                } else if (raw.length() > 0) {
+                    return raw + "°C";
+                }
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    return null;
+}
+
+private boolean hasValue(String v) {
+    return v != null && v.trim().length() > 0;
+}
+
+private String color(String text, String hexColor) {
+    return "<font color='" + hexColor + "'>" + text + "</font>";
+}
+
+private String readFirstLine(String path) {
+    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+        return br.readLine();
+    } catch (Throwable ignore) { return null; }
+}
+    
 
 // ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)

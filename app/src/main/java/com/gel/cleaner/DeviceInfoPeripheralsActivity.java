@@ -347,7 +347,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
 
     }  // 🔥 ΤΕΛΟΣ onCreate()
-}
 
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  

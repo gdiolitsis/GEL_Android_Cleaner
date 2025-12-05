@@ -1902,214 +1902,109 @@ private String buildUsbInfo() {
         return sb.toString();
     }
 
-    // 2. Display / HDR / Refresh + Accurate Diagonal (inches)
-    private String buildDisplayInfo() {
-        StringBuilder sb = new StringBuilder();
+    // ============================================================
+// 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
+// ============================================================
+private String buildScreenInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-            if (wm != null) {
-                Display display = wm.getDefaultDisplay();
-                DisplayMetrics dm = new DisplayMetrics();
-                display.getRealMetrics(dm);
+    try {
+        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        if (wm != null) {
 
-                // -------------------------------------------
-                // BASIC SCREEN METRICS
-                // -------------------------------------------
-                int w = dm.widthPixels;
-                int h = dm.heightPixels;
-                int dpi = dm.densityDpi;
-                float sx = dm.xdpi;
-                float sy = dm.ydpi;
+            Display display = wm.getDefaultDisplay();  // still valid for your project
+            DisplayMetrics dm = new DisplayMetrics();
+            display.getRealMetrics(dm);
 
-                sb.append("Resolution       : ")
-                        .append(w).append(" x ").append(h).append(" px\n");
-                sb.append("Density (DPI)    : ").append(dpi).append("\n");
-                sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
+            // -------------------------------------------
+            // BASIC SCREEN METRICS
+            // -------------------------------------------
+            int w = dm.widthPixels;
+            int h = dm.heightPixels;
+            int dpi = dm.densityDpi;
 
-                // -------------------------------------------
-                // REFRESH RATE
-                // -------------------------------------------
-                float refresh = display.getRefreshRate();
-                sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
+            sb.append("Resolution       : ")
+                    .append(w).append(" x ").append(h).append(" px\n");
+            sb.append("Density (DPI)    : ").append(dpi).append("\n");
+            sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
 
-                if (Build.VERSION.SDK_INT >= 30) {
+            // -------------------------------------------
+            // REFRESH RATE
+            // -------------------------------------------
+            float refresh = display.getRefreshRate();
+            sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
+
+            if (Build.VERSION.SDK_INT >= 30) {
+                float maxR = 0f;
+                try {
                     Display.Mode[] modes = display.getSupportedModes();
-                    float maxR = 0f;
                     for (Display.Mode m : modes) {
                         if (m.getRefreshRate() > maxR) {
                             maxR = m.getRefreshRate();
                         }
                     }
-                    if (maxR > 0f) {
-                        sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
-                    }
+                } catch (Throwable ignore) {}
+                if (maxR > 0f) {
+                    sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
                 }
+            }
 
-                // -------------------------------------------
-                // WIDE COLOR & HDR
-                // -------------------------------------------
-                if (Build.VERSION.SDK_INT >= 26) {
+            // -------------------------------------------
+            // WIDE COLOR & HDR
+            // -------------------------------------------
+            if (Build.VERSION.SDK_INT >= 26) {
+                try {
                     boolean wide = display.isWideColorGamut();
                     sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
-                }
+                } catch (Throwable ignore) {}
+            }
 
-                if (Build.VERSION.SDK_INT >= 24) {
-                    try {
-                        Display.HdrCapabilities hc = display.getHdrCapabilities();
-                        int[] types = hc.getSupportedHdrTypes();
-                        sb.append("HDR Modes        : ");
-                        if (types == null || types.length == 0) sb.append("None\n");
-                        else sb.append(types.length).append(" modes\n");
-                    } catch (Throwable ignore) {}
-                }
+            if (Build.VERSION.SDK_INT >= 24) {
+                try {
+                    Display.HdrCapabilities hc = display.getHdrCapabilities();
+                    int[] types = hc.getSupportedHdrTypes();
+                    sb.append("HDR Modes        : ");
+                    if (types == null || types.length == 0) sb.append("None\n");
+                    else sb.append(types.length).append(" modes\n");
+                } catch (Throwable ignore) {}
+            }
 
-                // -------------------------------------------
-                // ORIENTATION
-                // -------------------------------------------
+            // -------------------------------------------
+            // ORIENTATION
+            // -------------------------------------------
+            try {
                 Configuration cfg = getResources().getConfiguration();
                 sb.append("Orientation      : ")
                         .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ?
                                 "Landscape" : "Portrait")
                         .append("\n");
+            } catch (Throwable ignore) {}
 
-                // -------------------------------------------
-                // DIAGONAL SIZE (INCHES)
-                // -------------------------------------------
-                double inchW = (double) w / sx;
-                double inchH = (double) h / sy;
+            // -------------------------------------------
+            // DIAGONAL SIZE (INCHES)
+            // -------------------------------------------
+            try {
+                double inchW = (double) w / dm.xdpi;
+                double inchH = (double) h / dm.ydpi;
                 double diag = Math.sqrt(inchW * inchW + inchH * inchH);
 
                 sb.append("Screen Size      : ")
                         .append(String.format(Locale.US, "%.2f", diag))
                         .append("\"\n");
-            }
-
-        } catch (Throwable ignore) { }
-
-        // -------------------------------------------
-        // ADVANCED (green block text)
-        // -------------------------------------------
-        sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access and vendor-specific hooks.\n");
-
-        return sb.toString();
-    }
-
-    // 3. CPU Hardware Block
-    private String buildCpuInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            int cores = Runtime.getRuntime().availableProcessors();
-            sb.append("Cores            : ").append(cores).append("\n");
-
-            String arch = System.getProperty("os.arch", "");
-            sb.append("Arch             : ").append(arch).append("\n");
-
-            String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
-                    ? Build.SUPPORTED_ABIS[0] : "Unknown";
-            sb.append("Primary ABI      : ").append(abi).append("\n");
-
-            long max = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-            long min = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-            String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-
-            if (max > 0) sb.append("CPU0 Max Freq    : ").append(max).append(" kHz\n");
-            if (min > 0) sb.append("CPU0 Min Freq    : ").append(min).append(" kHz\n");
-            if (gov != null && !gov.isEmpty()) sb.append("Governor         : ").append(gov).append("\n");
-
-            try {
-                BufferedReader br = new BufferedReader(new FileReader("/proc/cpuinfo"));
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (line.toLowerCase(Locale.US).startsWith("features")) {
-                        sb.append("Features Line    : ").append(line).append("\n");
-                        break;
-                    }
-                }
-                br.close();
-            } catch (Throwable ignore) { }
-
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("CPU information is not exposed by this device.\n");
+            } catch (Throwable ignore) {}
         }
 
-        sb.append("Advanced         : Big/Little clusters and per-core boost states require root access.\n");
+    } catch (Throwable ignore) { }
 
-        return sb.toString();
-    }
+    // -------------------------------------------
+    // ADVANCED (informational)
+    // -------------------------------------------
+    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access.\n");
 
-    // 4. GPU Hardware Layer
-    private String buildGpuInfo() {
-        StringBuilder sb = new StringBuilder();
+    return sb.toString();
+}
 
-        String renderer = getProp("ro.hardware.egl");
-        String glesVer  = getProp("ro.opengles.version");
-        String vulkan   = getProp("ro.hardware.vulkan");
-
-        if (renderer != null && !renderer.isEmpty()) {
-            sb.append("Renderer         : ").append(renderer).append("\n");
-        } else {
-            sb.append("Renderer         : Not exposed at property level.\n");
-        }
-
-        if (glesVer != null && !glesVer.isEmpty()) {
-            sb.append("OpenGL ES Prop   : ").append(glesVer).append("\n");
-        }
-
-        if (vulkan != null && !vulkan.isEmpty()) {
-            sb.append("Vulkan Prop      : ").append(vulkan).append("\n");
-        }
-
-        sb.append("Advanced         : GPU clock states, queues and temperatures require root access and vendor-specific drivers.\n");
-
-        return sb.toString();
-    }
-
-    // 5. Memory / Storage IO
-    private String buildMemoryInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
-
-                long totalRamMb = mi.totalMem / (1024 * 1024);
-                long availRamMb = mi.availMem / (1024 * 1024);
-
-                sb.append("Total RAM        : ").append(totalRamMb).append(" MB\n");
-                sb.append("Avail RAM        : ").append(availRamMb).append(" MB\n");
-                sb.append("Low Memory       : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
-            }
-        } catch (Throwable ignore) { }
-
-        try {
-            File dataDir = Environment.getDataDirectory();
-            StatFs sf = new StatFs(dataDir.getAbsolutePath());
-
-            long blockSize = sf.getBlockSizeLong();
-            long total = sf.getBlockCountLong() * blockSize;
-            long avail = sf.getAvailableBlocksLong() * blockSize;
-
-            sb.append("Internal Total   : ").append(total / (1024 * 1024)).append(" MB\n");
-            sb.append("Internal Free    : ").append(avail / (1024 * 1024)).append(" MB\n");
-        } catch (Throwable ignore) { }
-
-        long zramSize = readSysLong("/sys/block/zram0/disksize");
-        if (zramSize > 0) {
-            sb.append("ZRAM Size        : ").append(zramSize / (1024 * 1024)).append(" MB\n");
-        }
-
-        sb.append("Advanced         : I/O schedulers, UFS version and health metrics require root access and vendor block-layer hooks.\n");
-
-        return sb.toString();
-    }
-
-    // 6. Modem / Telephony (GEL Safe Edition)
+    // 3. Modem / Telephony (GEL Safe Edition)
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2245,7 +2140,7 @@ private String buildModemInfo() {
         }
     }
 
-// 7. WiFi Advanced (Safe Edition)
+// 4. WiFi Advanced (Safe Edition)
 private String buildWifiAdvancedInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2341,7 +2236,7 @@ private String buildWifiAdvancedInfo() {
    return sb.toString();
 }
 
-    // 8. Sensors EXTENDED
+    // 5. Sensors EXTENDED
     private String buildSensorsExtendedInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -2370,7 +2265,7 @@ private String buildWifiAdvancedInfo() {
         return sb.toString();
     }
 
-    // 9. System Feature Matrix
+    // 6. System Feature Matrix
     private String buildSystemFeaturesInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -2401,7 +2296,7 @@ private String buildWifiAdvancedInfo() {
         return sb.toString();
     }
 
-    // 10. SELinux / Security Flags
+    // 7. SELinux / Security Flags
     private String buildSecurityFlagsInfo() {
         StringBuilder sb = new StringBuilder();
 

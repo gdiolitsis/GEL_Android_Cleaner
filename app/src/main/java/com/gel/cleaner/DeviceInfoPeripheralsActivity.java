@@ -248,9 +248,6 @@ TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsConten
 // ICONS — ORDERED EXACTLY AS SECTIONS
 // ============================================================
 
-// 1. Battery
-TextView iconBattery        = findViewById(R.id.iconBatteryToggle);
-
 // 2. Screen
 TextView iconScreen         = findViewById(R.id.iconScreenToggle);
 

@@ -311,29 +311,28 @@ TextView iconOther          = findViewById(R.id.iconOtherPeripheralsToggle);
 // ============================================================
 // ALL CONTENTS — EXACT ORDER OF SECTIONS
 // ============================================================
-
-allContents = new TextView[]{
-        txtBatteryContent,          // 1
-        txtScreenContent,           // 2
-        txtCameraContent,           // 3
-        txtConnectivityContent,     // 4
-        txtLocationContent,         // 5
-        txtThermalContent,          // 6
-        txtModemContent,            // 7
-        txtWifiAdvancedContent,     // 8
-        txtAudioUnifiedContent,     // 9
-        txtSensorsContent,          // 10
-        txtSensorsExtendedContent,  // 11
-        txtBiometricsContent,       // 12
-        txtNfcContent,              // 13
-        txtGnssContent,             // 14
-        txtUwbContent,              // 15
-        txtUsbContent,              // 16
-        txtHapticsContent,          // 17
-        txtSystemFeaturesContent,   // 18
-        txtSecurityFlagsContent,    // 19
-        txtRootContent,             // 20
-        txtOtherPeripherals         // 21
+allContents = new View[]{
+        batteryContainer,          // 1 (FULL BLOCK)
+        txtScreenContent,          // 2
+        txtCameraContent,          // 3
+        txtConnectivityContent,    // 4
+        txtLocationContent,        // 5
+        txtThermalContent,         // 6
+        txtModemContent,           // 7
+        txtWifiAdvancedContent,    // 8
+        txtAudioUnifiedContent,    // 9
+        txtSensorsContent,         // 10
+        txtSensorsExtendedContent, // 11
+        txtBiometricsContent,      // 12
+        txtNfcContent,             // 13
+        txtGnssContent,            // 14
+        txtUwbContent,             // 15
+        txtUsbContent,             // 16
+        txtHapticsContent,         // 17
+        txtSystemFeaturesContent,  // 18
+        txtSecurityFlagsContent,   // 19
+        txtRootContent,            // 20
+        txtOtherPeripherals        // 21
 };
 
 // ============================================================

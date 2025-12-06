@@ -204,58 +204,58 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     // BATTERY — SPECIAL SECTION BINDINGS
     // ============================================================
-    LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
-    TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
-    TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
+    private LinearLayout batteryContainer;
+    private TextView txtBatteryContent;
+    private TextView iconBattery;
 
     // ============================================================
     // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
     // ============================================================
-    TextView txtScreenContent          = findViewById(R.id.txtScreenContent);
-    TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
-    TextView txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-    TextView txtLocationContent        = findViewById(R.id.txtLocationContent);
-    TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
-    TextView txtModemContent           = findViewById(R.id.txtModemContent);
-    TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-    TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-    TextView txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-    TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-    TextView txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-    TextView txtNfcContent             = findViewById(R.id.txtNfcContent);
-    TextView txtGnssContent            = findViewById(R.id.txtGnssContent);
-    TextView txtUwbContent             = findViewById(R.id.txtUwbContent);
-    TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
-    TextView txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-    TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-    TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-    TextView txtRootContent            = findViewById(R.id.txtRootContent);
-    TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+    private TextView txtScreenContent;
+    private TextView txtCameraContent;
+    private TextView txtConnectivityContent;
+    private TextView txtLocationContent;
+    private TextView txtThermalContent;
+    private TextView txtModemContent;
+    private TextView txtWifiAdvancedContent;
+    private TextView txtAudioUnifiedContent;
+    private TextView txtSensorsContent;
+    private TextView txtSensorsExtendedContent;
+    private TextView txtBiometricsContent;
+    private TextView txtNfcContent;
+    private TextView txtGnssContent;
+    private TextView txtUwbContent;
+    private TextView txtUsbContent;
+    private TextView txtHapticsContent;
+    private TextView txtSystemFeaturesContent;
+    private TextView txtSecurityFlagsContent;
+    private TextView txtRootContent;
+    private TextView txtOtherPeripherals;
 
     // ============================================================
     // ICONS — ORDERED EXACTLY AS SECTIONS
     // ============================================================
-    TextView iconScreen         = findViewById(R.id.iconScreenToggle);
-    TextView iconCamera         = findViewById(R.id.iconCameraToggle);
-    TextView iconConnectivity   = findViewById(R.id.iconConnectivityToggle);
-    TextView iconLocation       = findViewById(R.id.iconLocationToggle);
-    TextView iconThermal        = findViewById(R.id.iconThermalToggle);
-    TextView iconModem          = findViewById(R.id.iconModemToggle);
-    TextView iconWifiAdvanced   = findViewById(R.id.iconWifiAdvancedToggle);
-    TextView iconAudioUnified   = findViewById(R.id.iconAudioUnifiedToggle);
-    TextView iconSensors        = findViewById(R.id.iconSensorsToggle);
-    TextView iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-    TextView iconBiometrics     = findViewById(R.id.iconBiometricsToggle);
-    TextView iconNfc            = findViewById(R.id.iconNfcToggle);
-    TextView iconGnss           = findViewById(R.id.iconGnssToggle);
-    TextView iconUwb            = findViewById(R.id.iconUwbToggle);
-    TextView iconUsb            = findViewById(R.id.iconUsbToggle);
-    TextView iconHaptics        = findViewById(R.id.iconHapticsToggle);
-    TextView iconSystemFeatures = findViewById(R.id.iconSystemFeaturesToggle);
-    TextView iconSecurityFlags  = findViewById(R.id.iconSecurityFlagsToggle);
-    TextView iconRoot           = findViewById(R.id.iconRootToggle);
-    TextView iconOther          = findViewById(R.id.iconOtherPeripheralsToggle);
-
+    private TextView iconScreen;
+    private TextView iconCamera;
+    private TextView iconConnectivity;
+    private TextView iconLocation;
+    private TextView iconThermal;
+    private TextView iconModem;
+    private TextView iconWifiAdvanced;
+    private TextView iconAudioUnified;
+    private TextView iconSensors;
+    private TextView iconSensorsExtended;
+    private TextView iconBiometrics;
+    private TextView iconNfc;
+    private TextView iconGnss;
+    private TextView iconUwb;
+    private TextView iconUsb;
+    private TextView iconHaptics;
+    private TextView iconSystemFeatures;
+    private TextView iconSecurityFlags;
+    private TextView iconRoot;
+    private TextView iconOther;
+    
     // ============================================================
     // MASTER LISTS (ORDER MATTERS!)
     // ============================================================

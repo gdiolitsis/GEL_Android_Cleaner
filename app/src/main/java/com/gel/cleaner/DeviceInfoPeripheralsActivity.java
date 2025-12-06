@@ -1,5 +1,13 @@
 package com.gel.cleaner;
 
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.ClickableSpan;
+import android.text.style.StyleSpan;
+import android.graphics.Typeface;
+import android.text.method.LinkMovementMethod;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;

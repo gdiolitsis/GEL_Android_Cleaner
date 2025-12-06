@@ -1909,7 +1909,7 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-    // 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
+// 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
 
 // ============================================================
 // COUNTING
@@ -1937,27 +1937,23 @@ private int countCoolingDevices() {
 // ============================================================
 // MAIN THERMAL GROUP BUILDER
 // ============================================================
-private void appendThermals(SpannableStringBuilder sb) {
+private void appendThermals(StringBuilder sb) {
 
-    // ---- Modem ----
     appendThermalGroup(sb,
             "Modem",
             new String[]{"modem0", "modem1"},
             new Object[]{3, 3});
 
-    // ---- Battery ----
     appendThermalGroup(sb,
             "Battery",
             new String[]{"battery_main", "battery_shell"},
             new Object[]{2, 2});
 
-    // ---- Charger ----
     appendThermalGroup(sb,
             "Charger",
             new String[]{"charger"},
             new Object[]{4});
 
-    // ---- PMIC ----
     appendThermalGroup(sb,
             "PMIC",
             new String[]{"pmic_tz0", "pmic_tz1"},
@@ -1967,7 +1963,7 @@ private void appendThermals(SpannableStringBuilder sb) {
 // ============================================================
 // COOLING DEVICES
 // ============================================================
-private void appendCooling(SpannableStringBuilder sb) {
+private void appendCooling(StringBuilder sb) {
     sb.append("==============================\n");
     sb.append("Hardware Cooling Devices\n");
     sb.append("==============================\n\n");
@@ -2000,16 +1996,8 @@ private Double getTemperatureValue(String zoneName) {
 }
 
 // ============================================================
-// COLOR SYSTEM
+// COLOR SYSTEM LABELS (string only)
 // ============================================================
-private int getTempColor(double t) {
-    if (t < 30) return Color.parseColor("#2196F3");   // Cool - Blue
-    if (t < 40) return Color.parseColor("#4CAF50");   // Normal - Green
-    if (t < 50) return Color.parseColor("#FF9800");   // Warm - Orange
-    if (t < 60) return Color.parseColor("#F44336");   // Hot - Red
-    return Color.parseColor("#B71C1C");               // Critical - Deep Red
-}
-
 private String getTempLabel(double t) {
     if (t < 30) return "Cool";
     if (t < 40) return "Normal";
@@ -2019,22 +2007,9 @@ private String getTempLabel(double t) {
 }
 
 // ============================================================
-// REFLECTION SAFE
+// FINAL GROUP PRINTER — STRING ENGINE (NO SPANS)
 // ============================================================
-private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
-    try {
-        Field f = cls.getDeclaredField(fieldName);
-        f.setAccessible(true);
-        return f.getInt(null);
-    } catch (Throwable t) {
-        return defValue;
-    }
-}
-
-// ============================================================
-// FINAL GROUP PRINTER WITH UI COLORS
-// ============================================================
-private void appendThermalGroup(SpannableStringBuilder sb,
+private void appendThermalGroup(StringBuilder sb,
                                 String title,
                                 String[] names,
                                 Object[] types) {
@@ -2048,30 +2023,17 @@ private void appendThermalGroup(SpannableStringBuilder sb,
 
         sb.append("• ").append(name).append("  →  ");
 
-        int start = sb.length();
-
         Double temp = getTemperatureValue(name);
 
         if (temp == null) {
-            sb.append("N/A");
-            sb.setSpan(new ForegroundColorSpan(Color.GRAY), start, sb.length(), 0);
-            sb.append("  [Type ").append(typeStr).append("]\n");
+            sb.append("N/A  [Type ").append(typeStr).append("]\n");
             continue;
         }
 
         String txtTemp = String.format(Locale.US, "%.1f°C", temp);
         sb.append(txtTemp);
 
-        int end = sb.length();
-        int color = getTempColor(temp);
-
-        sb.setSpan(new ForegroundColorSpan(color), start, end, 0);
-
-        String label = " (" + getTempLabel(temp) + ")";
-        int labelStart = sb.length();
-        sb.append(label);
-        sb.setSpan(new ForegroundColorSpan(color), labelStart, sb.length(), 0);
-
+        sb.append(" (").append(getTempLabel(temp)).append(")");
         sb.append("  [Type ").append(typeStr).append("]\n");
     }
 
@@ -2079,18 +2041,18 @@ private void appendThermalGroup(SpannableStringBuilder sb,
 }
 
 // ============================================================
-// buildThermalInfo() — FULL SPANNABLE ENGINE v3.0
+// buildThermalInfo() — FINAL STRING EDITION (COMPILER SAFE)
 // ============================================================
-private SpannableStringBuilder buildThermalInfo() {
+private String buildThermalInfo() {
 
-    SpannableStringBuilder sb = new SpannableStringBuilder();
+    StringBuilder sb = new StringBuilder();
 
     sb.append("Thermal Zones    : ")
-            .append(String.valueOf(countThermalZones()))
+            .append(countThermalZones())
             .append("\n");
 
     sb.append("Cooling Devices  : ")
-            .append(String.valueOf(countCoolingDevices()))
+            .append(countCoolingDevices())
             .append("\n\n");
 
     sb.append("==============================\n");
@@ -2100,7 +2062,7 @@ private SpannableStringBuilder buildThermalInfo() {
     appendThermals(sb);
     appendCooling(sb);
 
-    return sb;
+    return sb.toString();
 }
 
 // ============================================================

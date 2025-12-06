@@ -329,7 +329,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                 iconOther
         };
 
- // ============================================================
+// ============================================================
 // APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
 // ============================================================
 populateAllSections();
@@ -2565,59 +2565,117 @@ private String buildWifiAdvancedInfo() {
     }
 
     // ============================================================
-    // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
-    // ============================================================
+// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
+// ============================================================
 private void populateAllSections() {
 
-    // BATTERY (FULL BLOCK: text + button refresh)
-    set(R.id.txtBatteryContent, buildBatteryInfo());
-    refreshBatteryButton();   // 🔥 IMPORTANT — updates the "(tap to set)" or "5000 mAh"
+    // =====================
+    // BATTERY (FULL BLOCK)
+    // =====================
+    String bat = buildBatteryInfo();
+    set(R.id.txtBatteryContent, bat);
+    applyNeonValues(findViewById(R.id.txtBatteryContent), bat);
+    refreshBatteryButton();   // updates button label
 
+    // =====================
     // CORE HARDWARE
-    set(R.id.txtScreenContent,          buildScreenInfo());
-    set(R.id.txtCameraContent,           buildCameraInfo());
-    set(R.id.txtConnectivityContent,     buildConnectivityInfo());
-    set(R.id.txtLocationContent,         buildLocationInfo());
-    set(R.id.txtThermalContent,          buildThermalInfo());
+    ======================
+    String scr = buildScreenInfo();
+    set(R.id.txtScreenContent, scr);
+    applyNeonValues(findViewById(R.id.txtScreenContent), scr);
 
-       // MODEM / TELEPHONY
-    set(R.id.txtModemContent,            buildModemInfo());
+    String cam = buildCameraInfo();
+    set(R.id.txtCameraContent, cam);
+    applyNeonValues(findViewById(R.id.txtCameraContent), cam);
 
-    // ADVANCED NETWORKING
-    set(R.id.txtWifiAdvancedContent,     buildWifiAdvancedInfo());
+    String con = buildConnectivityInfo();
+    set(R.id.txtConnectivityContent, con);
+    applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
-    // 🎵 UNIFIED AUDIO BLOCK (ONE BUTTON – ONE CONTENT)
-    set(R.id.txtAudioUnifiedContent,     buildAudioUnifiedInfo());
+    String loc = buildLocationInfo();
+    set(R.id.txtLocationContent, loc);
+    applyNeonValues(findViewById(R.id.txtLocationContent), loc);
+
+    // =====================
+    // THERMAL (FIXED!!)
+    // =====================
+    String thr = buildThermalInfo();
+    set(R.id.txtThermalContent, thr);
+    applyNeonValues(findViewById(R.id.txtThermalContent), thr);
+
+    // MODEM
+    String mod = buildModemInfo();
+    set(R.id.txtModemContent, mod);
+    applyNeonValues(findViewById(R.id.txtModemContent), mod);
+
+    // ADVANCED WIFI
+    String wadv = buildWifiAdvancedInfo();
+    set(R.id.txtWifiAdvancedContent, wadv);
+    applyNeonValues(findViewById(R.id.txtWifiAdvancedContent), wadv);
+
+    // AUDIO
+    String aud = buildAudioUnifiedInfo();
+    set(R.id.txtAudioUnifiedContent, aud);
+    applyNeonValues(findViewById(R.id.txtAudioUnifiedContent), aud);
 
     // SENSORS
-    set(R.id.txtSensorsContent,          buildSensorsInfo());
-    set(R.id.txtSensorsExtendedContent,  buildSensorsExtendedInfo());
+    String s1 = buildSensorsInfo();
+    set(R.id.txtSensorsContent, s1);
+    applyNeonValues(findViewById(R.id.txtSensorsContent), s1);
+
+    String s2 = buildSensorsExtendedInfo();
+    set(R.id.txtSensorsExtendedContent, s2);
+    applyNeonValues(findViewById(R.id.txtSensorsExtendedContent), s2);
 
     // BIOMETRICS
-    set(R.id.txtBiometricsContent,       buildBiometricsInfo());
+    String bio = buildBiometricsInfo();
+    set(R.id.txtBiometricsContent, bio);
+    applyNeonValues(findViewById(R.id.txtBiometricsContent), bio);
 
-    // WIRELESS PERIPHERALS
-    set(R.id.txtNfcContent,              buildNfcInfo());
-    set(R.id.txtGnssContent,             buildGnssInfo());
-    set(R.id.txtUwbContent,              buildUwbInfo());
+    // NFC
+    String nfc = buildNfcInfo();
+    set(R.id.txtNfcContent, nfc);
+    applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
+
+    // GNSS
+    String gn = buildGnssInfo();
+    set(R.id.txtGnssContent, gn);
+    applyNeonValues(findViewById(R.id.txtGnssContent), gn);
+
+    // UWB
+    String uw = buildUwbInfo();
+    set(R.id.txtUwbContent, uw);
+    applyNeonValues(findViewById(R.id.txtUwbContent), uw);
 
     // USB
-    set(R.id.txtUsbContent,              buildUsbInfo());
+    String usb = buildUsbInfo();
+    set(R.id.txtUsbContent, usb);
+    applyNeonValues(findViewById(R.id.txtUsbContent), usb);
 
     // HAPTICS
-    set(R.id.txtHapticsContent,          buildHapticsInfo());
+    String hap = buildHapticsInfo();
+    set(R.id.txtHapticsContent, hap);
+    applyNeonValues(findViewById(R.id.txtHapticsContent), hap);
 
     // SYSTEM FEATURES
-    set(R.id.txtSystemFeaturesContent,   buildSystemFeaturesInfo());
+    String sysf = buildSystemFeaturesInfo();
+    set(R.id.txtSystemFeaturesContent, sysf);
+    applyNeonValues(findViewById(R.id.txtSystemFeaturesContent), sysf);
 
     // SECURITY FLAGS
-    set(R.id.txtSecurityFlagsContent,    buildSecurityFlagsInfo());
+    String sec = buildSecurityFlagsInfo();
+    set(R.id.txtSecurityFlagsContent, sec);
+    applyNeonValues(findViewById(R.id.txtSecurityFlagsContent), sec);
 
     // ROOT
-    set(R.id.txtRootContent,             buildRootInfo());
+    String r = buildRootInfo();
+    set(R.id.txtRootContent, r);
+    applyNeonValues(findViewById(R.id.txtRootContent), r);
 
     // OTHER PERIPHERALS
-    set(R.id.txtOtherPeripheralsContent, buildOtherPeripheralsInfo());
+    String oth = buildOtherPeripheralsInfo();
+    set(R.id.txtOtherPeripheralsContent, oth);
+    applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);
 }
 private void refreshBatteryButton() {
     TextView btn = findViewById(R.id.txtBatteryModelCapacity);

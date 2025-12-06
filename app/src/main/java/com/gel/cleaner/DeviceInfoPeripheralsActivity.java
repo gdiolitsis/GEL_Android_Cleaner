@@ -1,5 +1,11 @@
-package com.gel.cleaner;
+package com.gel.cleaner
+    
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
+import java.io.FileFilter;
 
+import android.content.pm.FeatureInfo;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
@@ -53,7 +59,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Process;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;

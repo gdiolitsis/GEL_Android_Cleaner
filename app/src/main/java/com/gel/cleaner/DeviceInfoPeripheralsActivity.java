@@ -2,7 +2,9 @@
 // Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
 
 package com.gel.cleaner;
-    
+
+import android.os.Temperature;
+import android.os.HardwarePropertiesManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;

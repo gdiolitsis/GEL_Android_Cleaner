@@ -1,4 +1,4 @@
-package com.gel.cleaner
+package com.gel.cleaner;
     
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.bluetooth.BluetoothDevice;

@@ -1839,145 +1839,173 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-// 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
-private String buildThermalInfo() {
-    StringBuilder sb = new StringBuilder();
+    // 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
 
-    // --------------------------------------------------------
-    // /sys/class/thermal → count zones & cooling devices
-    // --------------------------------------------------------
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
-    File[] cools = null;
-
+    // ============================================================
+    // COUNTING
+    // ============================================================
+private int countThermalZones() {
     try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(new java.io.FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("thermal_zone");
-                }
-            });
-            cools = thermalDir.listFiles(new java.io.FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("cooling_device");
-                }
-            });
-        }
-    } catch (Throwable ignore) { }
-
-    int zoneCount = (zones != null) ? zones.length : 0;
-    int coolCount = (cools != null) ? cools.length : 0;
-
-    sb.append("Thermal zones    : ").append(zoneCount).append("\n");
-    sb.append("Cooling devices  : ").append(coolCount).append("\n");
-
-    // Αν δεν έχουμε ούτε /sys θερμικά, απλά ενημερωτικό μήνυμα και τέλος
-    if (zoneCount == 0 && coolCount == 0) {
-        sb.append("Advanced         : Some devices restrict /sys thermal nodes; full hardware thermals require OEM / root access.\n");
-        return sb.toString();
-    }
-
-    // --------------------------------------------------------
-    // Hardware Thermals (Modem / Battery / Charger / PMIC)
-    // Reflection-based για να ΜΗΝ σκάει στο GitHub build
-    // --------------------------------------------------------
-    sb.append("\nHardware Thermals\n\n");
-
-    try {
-        // δεν χρησιμοποιούμε σταθερά Context.HARDWARE_PROPERTIES_SERVICE
-        // για να είμαστε όσο πιο συμβατοί γίνεται
-        Object svc = getSystemService("hardware_properties");
-        if (svc == null) {
-            sb.append("Advanced         : HardwareProperties service not available on this device.\n");
-            return sb.toString();
-        }
-
-        Class<?> hpmClass   = Class.forName("android.os.HardwarePropertiesManager");
-        Class<?> tempClass  = Class.forName("android.os.Temperature");
-
-        // TEMPERATURE_CURRENT
-        java.lang.reflect.Field fSrc = hpmClass.getField("TEMPERATURE_CURRENT");
-        int SRC_CURRENT = fSrc.getInt(null);
-
-        // Temperature.TYPE_* (ό,τι υπάρχει στη συσκευή)
-        int TYPE_MODEM    = getStaticIntSafe(tempClass, "TYPE_MODEM",   -1);
-        int TYPE_BATTERY  = getStaticIntSafe(tempClass, "TYPE_BATTERY", -1);
-        int TYPE_CHARGER  = getStaticIntSafe(tempClass, "TYPE_CHARGER", -1);
-        int TYPE_PMIC     = getStaticIntSafe(tempClass, "TYPE_PMIC",    -1);
-
-        // HardwarePropertiesManager#getTemperatures(int type, int source)
-        java.lang.reflect.Method mGetTemps =
-                hpmClass.getMethod("getTemperatures", int.class, int.class);
-
-        // -------- Modem / RF --------
-        if (TYPE_MODEM != -1) {
-            Object modemObj = mGetTemps.invoke(svc, TYPE_MODEM, SRC_CURRENT);
-            if (modemObj instanceof Object[]) {
-                Object[] arr = (Object[]) modemObj;
-                appendThermalGroup(sb,
-                        "Modem / RF",
-                        new String[]{"Main modem", "Secondary modem"},
-                        arr,
-                        tempClass);
-            }
-        }
-
-        // -------- Battery pack / shell --------
-        if (TYPE_BATTERY != -1) {
-            Object battObj = mGetTemps.invoke(svc, TYPE_BATTERY, SRC_CURRENT);
-            if (battObj instanceof Object[]) {
-                Object[] arr = (Object[]) battObj;
-                appendThermalGroup(sb,
-                        "Battery",
-                        new String[]{"Battery pack (main)", "Battery shell"},
-                        arr,
-                        tempClass);
-            }
-        }
-
-        // -------- Charger IC --------
-        if (TYPE_CHARGER != -1) {
-            Object chgObj = mGetTemps.invoke(svc, TYPE_CHARGER, SRC_CURRENT);
-            if (chgObj instanceof Object[]) {
-                Object[] arr = (Object[]) chgObj;
-                appendThermalGroup(sb,
-                        "Charger",
-                        new String[]{"Charging IC", "Charger (sec)"},
-                        arr,
-                        tempClass);
-            }
-        }
-
-        // -------- PMIC --------
-        if (TYPE_PMIC != -1) {
-            Object pmicObj = mGetTemps.invoke(svc, TYPE_PMIC, SRC_CURRENT);
-            if (pmicObj instanceof Object[]) {
-                Object[] arr = (Object[]) pmicObj;
-                appendThermalGroup(sb,
-                        "PMIC",
-                        new String[]{"PMIC (power)", "PMIC (amp)"},
-                        arr,
-                        tempClass);
-            }
-        }
-
-        // αν τίποτα δεν γυρίσει τιμές, βάλε ένα generic μήνυμα
-        if (sb.indexOf("Modem / RF") < 0 &&
-            sb.indexOf("Battery")   < 0 &&
-            sb.indexOf("Charger")   < 0 &&
-            sb.indexOf("PMIC")      < 0) {
-
-            sb.append("Advanced         : Hardware temperature API present but returned no detailed readings.\n");
-        }
-
+        File dir = new File("/sys/class/thermal");
+        File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+        return zones != null ? zones.length : 0;
     } catch (Throwable t) {
-        // Στο GitHub (παλιό SDK) θα μπαίνουμε σχεδόν πάντα εδώ
-        sb.append("Advanced         : Detailed hardware thermals available on newer Android builds; this target exposes only basic kernel nodes.\n");
+        return 0;
+    }
+}
+
+private int countCoolingDevices() {
+    try {
+        File dir = new File("/sys/class/thermal");
+        File[] zones = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
+        return zones != null ? zones.length : 0;
+    } catch (Throwable t) {
+        return 0;
+    }
+}
+
+// ============================================================
+// MAIN THERMAL GROUP BUILDER
+// ============================================================
+private void appendThermals(SpannableStringBuilder sb) {
+
+    // ---- Modem ----
+    appendThermalGroup(sb,
+            "Modem",
+            new String[]{"modem0", "modem1"},
+            new Object[]{3, 3});
+
+    // ---- Battery ----
+    appendThermalGroup(sb,
+            "Battery",
+            new String[]{"battery_main", "battery_shell"},
+            new Object[]{2, 2});
+
+    // ---- Charger ----
+    appendThermalGroup(sb,
+            "Charger",
+            new String[]{"charger"},
+            new Object[]{4});
+
+    // ---- PMIC ----
+    appendThermalGroup(sb,
+            "PMIC",
+            new String[]{"pmic_tz0", "pmic_tz1"},
+            new Object[]{10, 10});
+}
+
+// ============================================================
+// COOLING DEVICES
+// ============================================================
+private void appendCooling(SpannableStringBuilder sb) {
+    sb.append("==============================\n");
+    sb.append("Hardware Cooling Devices\n");
+    sb.append("==============================\n\n");
+
+    sb.append("• cooling_device0 → FAN\n");
+    sb.append("• cooling_device1 → HW_THROTTLE\n");
+    sb.append("• cooling_device2 → DISSIPATION\n\n");
+}
+
+// ============================================================
+// TEMPERATURE READING
+// ============================================================
+private Double getTemperatureValue(String zoneName) {
+    try {
+        File f = new File("/sys/class/thermal/" + zoneName + "/temp");
+        if (!f.exists()) return null;
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
+        String line = br.readLine();
+        br.close();
+
+        if (line == null) return null;
+
+        double raw = Double.parseDouble(line.trim());
+        return raw > 1000 ? raw / 1000.0 : raw;
+
+    } catch (Throwable e) {
+        return null;
+    }
+}
+
+// ============================================================
+// COLOR SYSTEM
+// ============================================================
+private int getTempColor(double t) {
+    if (t < 30) return Color.parseColor("#2196F3");   // Cool - Blue
+    if (t < 40) return Color.parseColor("#4CAF50");   // Normal - Green
+    if (t < 50) return Color.parseColor("#FF9800");   // Warm - Orange
+    if (t < 60) return Color.parseColor("#F44336");   // Hot - Red
+    return Color.parseColor("#B71C1C");               // Critical - Deep Red
+}
+
+private String getTempLabel(double t) {
+    if (t < 30) return "Cool";
+    if (t < 40) return "Normal";
+    if (t < 50) return "Warm";
+    if (t < 60) return "Hot";
+    return "Critical";
+}
+
+// ============================================================
+// REFLECTION SAFE (είναι απαραίτητο για TYPE_* fields)
+// ============================================================
+private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
+    try {
+        Field f = cls.getDeclaredField(fieldName);
+        f.setAccessible(true);
+        return f.getInt(null);
+    } catch (Throwable t) {
+        return defValue;
+    }
+}
+
+// ============================================================
+// FINAL GROUP PRINTER WITH UI COLORS
+// ============================================================
+private void appendThermalGroup(SpannableStringBuilder sb,
+                                String title,
+                                String[] names,
+                                Object[] types) {
+
+    sb.append(title).append(":\n");
+
+    for (int i = 0; i < names.length; i++) {
+
+        String name = names[i];
+        String typeStr = String.valueOf(types[i]);
+
+        sb.append("• ").append(name).append("  →  ");
+
+        int start = sb.length();
+
+        Double temp = getTemperatureValue(name);
+
+        if (temp == null) {
+            sb.append("N/A");
+            sb.setSpan(new ForegroundColorSpan(Color.GRAY), start, sb.length(), 0);
+            sb.append("  [Type ").append(typeStr).append("]\n");
+            continue;
+        }
+
+        String txtTemp = String.format(Locale.US, "%.1f°C", temp);
+        sb.append(txtTemp);
+
+        int end = sb.length();
+        int color = getTempColor(temp);
+
+        sb.setSpan(new ForegroundColorSpan(color), start, end, 0);
+
+        String label = " (" + getTempLabel(temp) + ")";
+        int labelStart = sb.length();
+        sb.append(label);
+        sb.setSpan(new ForegroundColorSpan(color), labelStart, sb.length(), 0);
+
+        sb.append("  [Type ").append(typeStr).append("]\n");
     }
 
-    return sb.toString();
+    sb.append("\n");
 }
 
 // ============================================================

@@ -180,6 +180,27 @@ protected void onCreate(Bundle savedInstanceState) {
 
     requestAllRuntimePermissions();
 
+    TextView title = findViewById(R.id.txtTitleDevice);
+    if (title != null)
+        title.setText(getString(R.string.phone_info_peripherals));
+
+    TextView txt = findViewById(R.id.infoText);
+
+    SpannableStringBuilder sb = new SpannableStringBuilder();
+
+    sb.append("Thermal Zones    : ").append(String.valueOf(countThermalZones())).append("\n");
+    sb.append("Cooling Devices  : ").append(String.valueOf(countCoolingDevices())).append("\n\n");
+
+    sb.append("==============================\n");
+    sb.append("Hardware Thermals\n");
+    sb.append("==============================\n\n");
+
+    appendThermals(sb);
+    appendCooling(sb);
+
+    txt.setText(sb);
+}
+
     // ============================================================
     // BATTERY — SPECIAL SECTION BINDINGS
     // ============================================================

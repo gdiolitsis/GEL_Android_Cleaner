@@ -4,48 +4,41 @@
 
 package com.gel.cleaner;
 
-import java.util.Locale;
-import java.util.List;
-
-import com.gel.cleaner.GELAutoActivityHook;
-
-import androidx.appcompat.app.AlertDialog;
-
-import android.content.SharedPreferences;
-import android.text.InputType;
-import android.widget.EditText;
-
-import static android.content.Context.MODE_PRIVATE;
-import android.widget.LinearLayout;
-import android.view.Window;
-import android.graphics.drawable.ColorDrawable;
 import android.Manifest;
-import android.app.ActivityManager;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AppOpsManager;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.FeatureInfo;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
-import android.location.GnssAntennaInfo;
-import android.location.GnssCapabilities;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
@@ -54,35 +47,38 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StatFs;
+import android.os.Handler;
+import android.os.Process;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.provider.Settings;
-import android.telephony.CellSignalStrength;
-import android.telephony.ServiceState;
-import android.telephony.SignalStrength;
-import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
+import android.telecom.TelecomManager;
+import android.telephony.CellInfo;
 import android.telephony.TelephonyManager;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.util.DisplayMetrics;
-import android.view.Display;
+import android.text.Html;
+import android.text.Spanned;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
@@ -124,62 +120,52 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                                            @NonNull int[] grantResults) {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        
-        }
     }
 
-// ============================================================
-// MAIN CLASS FIELDS
-// ============================================================
-private static final String NEON_GREEN = "#39FF14";
-private static final String GOLD_COLOR = "#FFD700";
-private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+    // ============================================================
+    // MAIN CLASS FIELDS
+    // ============================================================
+    private static final String NEON_GREEN = "#39FF14";
+    private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE     = android.graphics.Color.parseColor("#1E90FF");
 
-private boolean isRooted = false;
+    private boolean isRooted = false;
 
-private TextView[] allContents;
-private TextView[] allIcons;
+    private TextView[] allContents;
+    private TextView[] allIcons;
 
-// ============================================================
-// BATTERY DATA CLASS (must be before methods)
-// ============================================================
-private static class BatteryInfo {
-    long oemFullMah = 0;
-    long chargeCounterMah = 0;
-    long estimatedFullMah = 0;
-}
+    // ============================================================
+    // BATTERY DATA CLASS (must be before methods)
+    // ============================================================
+    private static class BatteryInfo {
+        long oemFullMah = 0;
+        long chargeCounterMah = 0;
+        long estimatedFullMah = 0;
+    }
 
-@Override
-protected void attachBaseContext(Context base) {
-    super.attachBaseContext(LocaleHelper.apply(base));
-}
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 
-@Override
-protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
-    super.onCreate(savedInstanceState);                // ✅ FIXED NAME
-    setContentView(R.layout.activity_device_info_peripherals);
-    // (optional) auto-request runtime permissions
-    requestAllRuntimePermissions();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_device_info_peripherals);
 
-// ============================================================
-// 1. BATTERY — FIND VIEWS
-// ============================================================
-final TextView txtBatteryContent = findViewById(R.id.txtBatteryContent);
-final TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
+        requestAllRuntimePermissions();
 
-try {
-    txtBatteryContent.setText(buildBatteryInfo());
-} catch (Exception ignored) {}
+        final TextView txtBatteryContent = findViewById(R.id.txtBatteryContent);
+        final TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
 
-// ============================================================
-// BATTERY — CLICK HANDLER FOR POPUP
-// ============================================================
-TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
-if (btnCapacity != null) {
-    btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-}
+        try {
+            txtBatteryContent.setText(buildBatteryInfo());
+        } catch (Exception ignored) {}
+
+        TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
+        if (btnCapacity != null) {
+            btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
+        }
 
 // ============================================================
 // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR

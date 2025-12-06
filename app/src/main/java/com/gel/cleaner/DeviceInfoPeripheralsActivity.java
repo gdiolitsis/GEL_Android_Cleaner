@@ -613,31 +613,7 @@ private void setupSection(View header, View content, TextView icon) {
         sb.append("Open Settings\n");
         sb.append("Settings → Apps → Permissions\n");
     }
-
-    // ============================================================
-    // THERMAL ENGINE — buildThermalInfo() FOR txtThermalContent
-    // ============================================================
-    private String buildThermalInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Thermal Zones    : ")
-                .append(String.valueOf(countThermalZones()))
-                .append("\n");
-        sb.append("Cooling Devices  : ")
-                .append(String.valueOf(countCoolingDevices()))
-                .append("\n\n");
-        sb.append("==============================\n");
-        sb.append("Hardware Thermals\n");
-        sb.append("==============================\n\n");
-
-        // Χρησιμοποιεί τα ίδια helpers που ήδη έχεις πιο κάτω στο αρχείο
-        appendThermals(sb);
-        appendCooling(sb);
-
-        return sb.toString();
-    }
-
-
+    
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED
     // ============================================================

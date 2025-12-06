@@ -97,109 +97,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     // ============================================================
-    // GEL Permission Request Engine v1.0 — Option B (Auto Request All)
-    // ============================================================
-    private static final String[] PERMISSIONS_ALL = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.NEARBY_WIFI_DEVICES
-    };
-
-    private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
-
-    private void requestAllRuntimePermissions() {
-
-        if (Build.VERSION.SDK_INT < 23) return;
-
-        java.util.List<String> toRequest = new java.util.ArrayList<>();
-
-        for (String p : PERMISSIONS_ALL) {
-            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                toRequest.add(p);
-            }
-        }
-
-        if (!toRequest.isEmpty()) {
-            requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        
-        }
-    }
-
-    // ============================================================
-    // MAIN CLASS FIELDS
-    // ============================================================
-    private static final String NEON_GREEN = "#39FF14";
-    private static final String GOLD_COLOR = "#FFD700";
-    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
-
-    private boolean isRooted = false;
-
-    private TextView[] allContents;
-    private TextView[] allIcons;
-
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
-
-@Override
-protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_device_info_peripherals);
-
-    requestAllRuntimePermissions();
-
-    TextView title = findViewById(R.id.txtTitleDevice);
-    if (title != null)
-        title.setText(getString(R.string.phone_info_peripherals));
-
-    // Small legacy block (infoText)
-    TextView txt = findViewById(R.id.infoText);
-
-    SpannableStringBuilder sb = new SpannableStringBuilder();
-    sb.append("Thermal Zones    : ").append(String.valueOf(countThermalZones())).append("\n");
-    sb.append("Cooling Devices  : ").append(String.valueOf(countCoolingDevices())).append("\n\n");
-    sb.append("==============================\n");
-    sb.append("Hardware Thermals\n");
-    sb.append("==============================\n\n");
-
-    appendThermals(sb);
-    appendCooling(sb);
-
-    txt.setText(sb);
-
-    // ============================================================
     // MAIN CLASS FIELDS
     // ============================================================
     private static final String NEON_GREEN = "#39FF14";
@@ -212,15 +120,12 @@ protected void onCreate(Bundle savedInstanceState) {
     private TextView[] allIcons;
 
     // ============================================================
-    // BATTERY — SPECIAL SECTION BINDINGS
+    // SECTION FIELDS
     // ============================================================
     private LinearLayout batteryContainer;
     private TextView txtBatteryContent;
     private TextView iconBattery;
 
-    // ============================================================
-    // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
-    // ============================================================
     private TextView txtScreenContent;
     private TextView txtCameraContent;
     private TextView txtConnectivityContent;
@@ -242,9 +147,6 @@ protected void onCreate(Bundle savedInstanceState) {
     private TextView txtRootContent;
     private TextView txtOtherPeripherals;
 
-    // ============================================================
-    // ICONS — ORDERED EXACTLY AS SECTIONS
-    // ============================================================
     private TextView iconScreen;
     private TextView iconCamera;
     private TextView iconConnectivity;
@@ -266,11 +168,17 @@ protected void onCreate(Bundle savedInstanceState) {
     private TextView iconRoot;
     private TextView iconOther;
 
+    // ============================================================
+    // attachBaseContext
+    // ============================================================
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
+    // ============================================================
+    // CLEAN — FINAL — CORRECT onCreate()
+    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -283,17 +191,13 @@ protected void onCreate(Bundle savedInstanceState) {
             title.setText(getString(R.string.phone_info_peripherals));
 
         // --------------------------------------------------------
-        // Legacy infoText block (όπως το είχες)
+        // Legacy infoText block (thermal groups)
         // --------------------------------------------------------
         TextView txt = findViewById(R.id.infoText);
 
         SpannableStringBuilder sb = new SpannableStringBuilder();
-        sb.append("Thermal Zones    : ")
-                .append(String.valueOf(countThermalZones()))
-                .append("\n");
-        sb.append("Cooling Devices  : ")
-                .append(String.valueOf(countCoolingDevices()))
-                .append("\n\n");
+        sb.append("Thermal Zones    : ").append(String.valueOf(countThermalZones())).append("\n");
+        sb.append("Cooling Devices  : ").append(String.valueOf(countCoolingDevices())).append("\n\n");
         sb.append("==============================\n");
         sb.append("Hardware Thermals\n");
         sb.append("==============================\n\n");
@@ -301,12 +205,10 @@ protected void onCreate(Bundle savedInstanceState) {
         appendThermals(sb);
         appendCooling(sb);
 
-        if (txt != null) {
-            txt.setText(sb);
-        }
+        if (txt != null) txt.setText(sb);
 
         // ============================================================
-        // BIND VIEWS (Η ΔΙΚΗ ΣΟΥ ΣΕΙΡΑ)
+        // BIND VIEWS — YOUR ORDER
         // ============================================================
         batteryContainer        = findViewById(R.id.batteryContainer);
         txtBatteryContent       = findViewById(R.id.txtBatteryContent);
@@ -355,64 +257,61 @@ protected void onCreate(Bundle savedInstanceState) {
         iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
         // ============================================================
-        // MASTER LISTS (ORDER MATTERS — Η ΔΙΚΗ ΣΟΥ ΣΕΙΡΑ)
+        // MASTER ARRAYS — YOUR ORDER
         // ============================================================
         allContents = new TextView[]{
-                txtBatteryContent,          // 1 — BATTERY
-                txtScreenContent,           // 2
-                txtCameraContent,           // 3
-                txtConnectivityContent,     // 4
-                txtLocationContent,         // 5
-                txtThermalContent,          // 6
-                txtModemContent,            // 7
-                txtWifiAdvancedContent,     // 8
-                txtAudioUnifiedContent,     // 9
-                txtSensorsContent,          // 10
-                txtSensorsExtendedContent,  // 11
-                txtBiometricsContent,       // 12
-                txtNfcContent,              // 13
-                txtGnssContent,             // 14
-                txtUwbContent,              // 15
-                txtUsbContent,              // 16
-                txtHapticsContent,          // 17
-                txtSystemFeaturesContent,   // 18
-                txtSecurityFlagsContent,    // 19
-                txtRootContent,             // 20
-                txtOtherPeripherals         // 21
+                txtBatteryContent,
+                txtScreenContent,
+                txtCameraContent,
+                txtConnectivityContent,
+                txtLocationContent,
+                txtThermalContent,
+                txtModemContent,
+                txtWifiAdvancedContent,
+                txtAudioUnifiedContent,
+                txtSensorsContent,
+                txtSensorsExtendedContent,
+                txtBiometricsContent,
+                txtNfcContent,
+                txtGnssContent,
+                txtUwbContent,
+                txtUsbContent,
+                txtHapticsContent,
+                txtSystemFeaturesContent,
+                txtSecurityFlagsContent,
+                txtRootContent,
+                txtOtherPeripherals
         };
 
         allIcons = new TextView[]{
-                iconBattery,          // 1 — BATTERY
-                iconScreen,           // 2
-                iconCamera,           // 3
-                iconConnectivity,     // 4
-                iconLocation,         // 5
-                iconThermal,          // 6
-                iconModem,            // 7
-                iconWifiAdvanced,     // 8
-                iconAudioUnified,     // 9
-                iconSensors,          // 10
-                iconSensorsExtended,  // 11
-                iconBiometrics,       // 12
-                iconNfc,              // 13
-                iconGnss,             // 14
-                iconUwb,              // 15
-                iconUsb,              // 16
-                iconHaptics,          // 17
-                iconSystemFeatures,   // 18
-                iconSecurityFlags,    // 19
-                iconRoot,             // 20
-                iconOther             // 21
+                iconBattery,
+                iconScreen,
+                iconCamera,
+                iconConnectivity,
+                iconLocation,
+                iconThermal,
+                iconModem,
+                iconWifiAdvanced,
+                iconAudioUnified,
+                iconSensors,
+                iconSensorsExtended,
+                iconBiometrics,
+                iconNfc,
+                iconGnss,
+                iconUwb,
+                iconUsb,
+                iconHaptics,
+                iconSystemFeatures,
+                iconSecurityFlags,
+                iconRoot,
+                iconOther
         };
 
         // ============================================================
-        // APPLY TEXTS FIRST
+        // APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
         // ============================================================
         populateAllSections();
 
-        // ============================================================
-        // SETUP SECTIONS — BATTERY FIRST
-        // ============================================================
         setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
         setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
         setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
@@ -435,6 +334,7 @@ protected void onCreate(Bundle savedInstanceState) {
         setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
         setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
     }
+    
 // 🔥 END onCreate()
 
 // ============================================================  

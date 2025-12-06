@@ -2616,7 +2616,7 @@ private void populateAllSections() {
     // =====================
     // THERMAL (FIXED)
     // =====================
-    String thr = buildThermalInfo();
+    CharSequence thr = buildThermalInfo();
     set(R.id.txtThermalContent, thr);
     applyNeonValues(findViewById(R.id.txtThermalContent), thr);
 
@@ -2693,17 +2693,6 @@ private void populateAllSections() {
     String oth = buildOtherPeripheralsInfo();
     set(R.id.txtOtherPeripheralsContent, oth);
     applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);
-}
-private void refreshBatteryButton() {
-    TextView btn = findViewById(R.id.txtBatteryModelCapacity);
-    if (btn != null) {
-        long cap = getStoredModelCapacity();
-        if (cap > 0) {
-            btn.setText("Set model capacity (" + cap + " mAh)");
-        } else {
-            btn.setText("Set model capacity");
-        }
-    }
 }
 
     // ============================================================

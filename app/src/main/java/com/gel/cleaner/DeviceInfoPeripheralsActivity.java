@@ -229,23 +229,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         if (title != null)
             title.setText(getString(R.string.phone_info_peripherals));
 
-        // --------------------------------------------------------
-        // Legacy infoText block (thermal groups)
-        // --------------------------------------------------------
-        TextView txt = findViewById(R.id.infoText);
-
-        SpannableStringBuilder sb = new SpannableStringBuilder();
-        sb.append("Thermal Zones    : ").append(String.valueOf(countThermalZones())).append("\n");
-        sb.append("Cooling Devices  : ").append(String.valueOf(countCoolingDevices())).append("\n\n");
-        sb.append("==============================\n");
-        sb.append("Hardware Thermals\n");
-        sb.append("==============================\n\n");
-
-        appendThermals(sb);
-        appendCooling(sb);
-
-        if (txt != null) txt.setText(sb);
-
         // ============================================================
         // BIND VIEWS — YOUR ORDER
         // ============================================================
@@ -436,47 +419,47 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     private void animateExpand(final View v) {
-    v.post(() -> {
-        v.measure(
-                View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        );
+        v.post(() -> {
+            v.measure(
+                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            );
 
-        final int target = v.getMeasuredHeight();
+            final int target = v.getMeasuredHeight();
 
-        v.getLayoutParams().height = 0;
-        v.setVisibility(View.VISIBLE);
-        v.setAlpha(0f);
+            v.getLayoutParams().height = 0;
+            v.setVisibility(View.VISIBLE);
+            v.setAlpha(0f);
+
+            v.animate()
+                    .alpha(1f)
+                    .setDuration(160)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        v.getLayoutParams().height = target;
+                        v.requestLayout();
+                    })
+                    .start();
+        });
+    }
+
+    private void animateCollapse(final View v) {
+        if (v.getVisibility() != View.VISIBLE) return;
+
+        final int initial = v.getHeight();
+        v.setAlpha(1f);
 
         v.animate()
-                .alpha(1f)
+                .alpha(0f)
                 .setDuration(160)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
-                    v.getLayoutParams().height = target;
+                    v.getLayoutParams().height = 0;
+                    v.setVisibility(View.GONE);
                     v.requestLayout();
                 })
                 .start();
-    });
-}
-
-private void animateCollapse(final View v) {
-    if (v.getVisibility() != View.VISIBLE) return;
-
-    final int initial = v.getHeight();
-    v.setAlpha(1f);
-
-    v.animate()
-            .alpha(0f)
-            .setDuration(160)
-            .setInterpolator(new AccelerateDecelerateInterpolator())
-            .withEndAction(() -> {
-                v.getLayoutParams().height = 0;
-                v.setVisibility(View.GONE);
-                v.requestLayout();
-            })
-            .start();
-}
+    }
 
     // ============================================================
     // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
@@ -625,6 +608,30 @@ private void animateCollapse(final View v) {
         sb.append("Open Settings\n");
         sb.append("Settings → Apps → Permissions\n");
     }
+
+    // ============================================================
+    // THERMAL ENGINE — buildThermalInfo() FOR txtThermalContent
+    // ============================================================
+    private String buildThermalInfo() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Thermal Zones    : ")
+                .append(String.valueOf(countThermalZones()))
+                .append("\n");
+        sb.append("Cooling Devices  : ")
+                .append(String.valueOf(countCoolingDevices()))
+                .append("\n\n");
+        sb.append("==============================\n");
+        sb.append("Hardware Thermals\n");
+        sb.append("==============================\n\n");
+
+        // Χρησιμοποιεί τα ίδια helpers που ήδη έχεις πιο κάτω στο αρχείο
+        appendThermals(sb);
+        appendCooling(sb);
+
+        return sb.toString();
+    }
+
 
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED

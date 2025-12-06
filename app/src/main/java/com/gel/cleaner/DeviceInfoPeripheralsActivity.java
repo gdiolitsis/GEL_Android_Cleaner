@@ -330,33 +330,38 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         };
 
         // ============================================================
-        // APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
-        // ============================================================
-        populateAllSections();
+// APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
+// ============================================================
+populateAllSections();
 
-        setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
-        setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
-        setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
-        setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
-        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-        setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
-        setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
-        setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
-        setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
-        setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
-        setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
-        setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
-        setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
-        setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
-        setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
-        setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
-        setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
-        setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
-        setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
-        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
-    }
-    
+// 🔥 APPLY THERMAL ENGINE CONTENT
+if (txtThermalContent != null) {
+    txtThermalContent.setText(buildThermalInfo());
+}
+
+setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
+setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
+setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
+setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
+setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
+setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
+setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
+setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
+setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
+setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
+setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
+setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
+setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
+setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
+setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
+setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
+setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+}
+
 // 🔥 END onCreate()
 
 // ============================================================  
@@ -1906,9 +1911,9 @@ private String buildUsbInfo() {
 
     // 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
 
-    // ============================================================
-    // COUNTING
-    // ============================================================
+// ============================================================
+// COUNTING
+// ============================================================
 private int countThermalZones() {
     try {
         File dir = new File("/sys/class/thermal");
@@ -2014,7 +2019,7 @@ private String getTempLabel(double t) {
 }
 
 // ============================================================
-// REFLECTION SAFE (είναι απαραίτητο για TYPE_* fields)
+// REFLECTION SAFE
 // ============================================================
 private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
     try {
@@ -2071,6 +2076,31 @@ private void appendThermalGroup(SpannableStringBuilder sb,
     }
 
     sb.append("\n");
+}
+
+// ============================================================
+// buildThermalInfo() — FULL SPANNABLE ENGINE v3.0
+// ============================================================
+private SpannableStringBuilder buildThermalInfo() {
+
+    SpannableStringBuilder sb = new SpannableStringBuilder();
+
+    sb.append("Thermal Zones    : ")
+            .append(String.valueOf(countThermalZones()))
+            .append("\n");
+
+    sb.append("Cooling Devices  : ")
+            .append(String.valueOf(countCoolingDevices()))
+            .append("\n\n");
+
+    sb.append("==============================\n");
+    sb.append("Hardware Thermals\n");
+    sb.append("==============================\n\n");
+
+    appendThermals(sb);
+    appendCooling(sb);
+
+    return sb;
 }
 
 // ============================================================

@@ -1,7 +1,3 @@
-// DeviceInfoPeripheralsActivity.java — MEGA UPGRADE v30
-// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
-// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
-
 package com.gel.cleaner;
 
 import android.Manifest;
@@ -21,6 +17,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -54,12 +51,19 @@ import android.os.Vibrator;
 import android.provider.Settings;
 import android.telecom.TelecomManager;
 import android.telephony.CellInfo;
+import android.telephony.SignalStrength;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.text.InputType;
 import android.text.Spanned;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -76,9 +80,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
@@ -120,6 +128,10 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
                                            @NonNull int[] grantResults) {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+        
+        }
     }
 
     // ============================================================
@@ -127,21 +139,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     // ============================================================
     private static final String NEON_GREEN = "#39FF14";
     private static final String GOLD_COLOR = "#FFD700";
-    private static final int LINK_BLUE     = android.graphics.Color.parseColor("#1E90FF");
+    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
     private boolean isRooted = false;
 
     private TextView[] allContents;
     private TextView[] allIcons;
-
-    // ============================================================
-    // BATTERY DATA CLASS (must be before methods)
-    // ============================================================
-    private static class BatteryInfo {
-        long oemFullMah = 0;
-        long chargeCounterMah = 0;
-        long estimatedFullMah = 0;
-    }
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -149,152 +152,199 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
+        super.onCreate(savedInstanceState);                // ✅ FIXED NAME
         setContentView(R.layout.activity_device_info_peripherals);
 
+        TextView title = findViewById(R.id.txtTitleDevice);
+        if (title != null)
+            title.setText(getString(R.string.phone_info_peripherals));
+
+        // (optional) auto-request runtime permissions
         requestAllRuntimePermissions();
 
-        final TextView txtBatteryContent = findViewById(R.id.txtBatteryContent);
-        final TextView iconBattery       = findViewById(R.id.iconBatteryToggle);
+        // ============================================================
+        // 1. BATTERY — FIND VIEWS
+        // ============================================================
+        final LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
+        final TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
+        final TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
 
         try {
             txtBatteryContent.setText(buildBatteryInfo());
         } catch (Exception ignored) {}
 
+        // ============================================================
+        // BATTERY — CLICK HANDLER FOR POPUP
+        // ============================================================
         TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
         if (btnCapacity != null) {
             btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
         }
 
 // ============================================================
-// CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
+// BATTERY — FORCE INFO WHEN OPENING
 // ============================================================
-TextView txtScreenContent          = findViewById(R.id.txtScreenContent);
-TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
-TextView txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-TextView txtLocationContent        = findViewById(R.id.txtLocationContent);
-TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
-TextView txtModemContent           = findViewById(R.id.txtModemContent);
-TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-TextView txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-TextView txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-TextView txtNfcContent             = findViewById(R.id.txtNfcContent);
-TextView txtGnssContent            = findViewById(R.id.txtGnssContent);
-TextView txtUwbContent             = findViewById(R.id.txtUwbContent);
-TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
-TextView txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-TextView txtRootContent            = findViewById(R.id.txtRootContent);
-TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+findViewById(R.id.headerBattery).setOnClickListener(v -> {
 
-// ============================================================
-// ICONS — ORDERED EXACTLY AS SECTIONS
-// ============================================================
-TextView iconScreen         = findViewById(R.id.iconScreenToggle);
-TextView iconCamera         = findViewById(R.id.iconCameraToggle);
-TextView iconConnectivity   = findViewById(R.id.iconConnectivityToggle);
-TextView iconLocation       = findViewById(R.id.iconLocationToggle);
-TextView iconThermal        = findViewById(R.id.iconThermalToggle);
-TextView iconModem          = findViewById(R.id.iconModemToggle);
-TextView iconWifiAdvanced   = findViewById(R.id.iconWifiAdvancedToggle);
-TextView iconAudioUnified   = findViewById(R.id.iconAudioUnifiedToggle);
-TextView iconSensors        = findViewById(R.id.iconSensorsToggle);
-TextView iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-TextView iconBiometrics     = findViewById(R.id.iconBiometricsToggle);
-TextView iconNfc            = findViewById(R.id.iconNfcToggle);
-TextView iconGnss           = findViewById(R.id.iconGnssToggle);
-TextView iconUwb            = findViewById(R.id.iconUwbToggle);
-TextView iconUsb            = findViewById(R.id.iconUsbToggle);
-TextView iconHaptics        = findViewById(R.id.iconHapticsToggle);
-TextView iconSystemFeatures = findViewById(R.id.iconSystemFeaturesToggle);
-TextView iconSecurityFlags  = findViewById(R.id.iconSecurityFlagsToggle);
-TextView iconRoot           = findViewById(R.id.iconRootToggle);
-TextView iconOther          = findViewById(R.id.iconOtherPeripheralsToggle);
+    // 1) Close ALL other sections except battery TEXTVIEW
+    for (int i = 0; i < allContents.length; i++) {
+        View section = allContents[i];
 
-allContents = new TextView[]{
-        txtBatteryContent,          // 1
-        txtScreenContent,           // 2
-        txtCameraContent,           // 3
-        txtConnectivityContent,     // 4
-        txtLocationContent,         // 5
-        txtThermalContent,          // 6
-        txtModemContent,            // 7
-        txtWifiAdvancedContent,     // 8
-        txtAudioUnifiedContent,     // 9
-        txtSensorsContent,          // 10
-        txtSensorsExtendedContent,  // 11
-        txtBiometricsContent,       // 12
-        txtNfcContent,              // 13
-        txtGnssContent,             // 14
-        txtUwbContent,              // 15
-        txtUsbContent,              // 16
-        txtHapticsContent,          // 17
-        txtSystemFeaturesContent,   // 18
-        txtSecurityFlagsContent,    // 19
-        txtRootContent,             // 20
-        txtOtherPeripherals         // 21
-};
+        // ✔ ΜΟΝΟ αυτό είναι σωστό
+        if (section != txtBatteryContent) {
+            section.setVisibility(View.GONE);
+            allIcons[i].setText("＋");
+        }
+    }
 
-allIcons = new TextView[]{
-        iconBattery,          // 1
-        iconScreen,           // 2
-        iconCamera,           // 3
-        iconConnectivity,     // 4
-        iconLocation,         // 5
-        iconThermal,          // 6
-        iconModem,            // 7
-        iconWifiAdvanced,     // 8
-        iconAudioUnified,     // 9
-        iconSensors,          // 10
-        iconSensorsExtended,  // 11
-        iconBiometrics,       // 12
-        iconNfc,              // 13
-        iconGnss,             // 14
-        iconUwb,              // 15
-        iconUsb,              // 16
-        iconHaptics,          // 17
-        iconSystemFeatures,   // 18
-        iconSecurityFlags,    // 19
-        iconRoot,             // 20
-        iconOther             // 21
-};
+    // 2) Toggle battery section
+    if (batteryContainer.getVisibility() == View.GONE) {
 
-// ============================================================
-// APPLY TEXTS FIRST
-// ============================================================
-populateAllSections();
+        // Open full block
+        batteryContainer.setVisibility(View.VISIBLE);
+        iconBattery.setText("－");
 
-// ============================================================
-// SETUP SECTIONS (Battery + all others use the same engine)
-// ============================================================
-setupSection(findViewById(R.id.headerBattery),        txtBatteryContent,       iconBattery);
-setupSection(findViewById(R.id.headerScreen),         txtScreenContent,        iconScreen);
-setupSection(findViewById(R.id.headerCamera),         txtCameraContent,        iconCamera);
-setupSection(findViewById(R.id.headerConnectivity),   txtConnectivityContent,  iconConnectivity);
-setupSection(findViewById(R.id.headerLocation),       txtLocationContent,      iconLocation);
-setupSection(findViewById(R.id.headerThermal),        txtThermalContent,       iconThermal);
-setupSection(findViewById(R.id.headerModem),          txtModemContent,         iconModem);
-setupSection(findViewById(R.id.headerWifiAdvanced),   txtWifiAdvancedContent,  iconWifiAdvanced);
-setupSection(findViewById(R.id.headerAudioUnified),   txtAudioUnifiedContent,  iconAudioUnified);
-setupSection(findViewById(R.id.headerSensors),        txtSensorsContent,       iconSensors);
-setupSection(findViewById(R.id.headerSensorsExtended),txtSensorsExtendedContent, iconSensorsExtended);
-setupSection(findViewById(R.id.headerBiometrics),     txtBiometricsContent,    iconBiometrics);
-setupSection(findViewById(R.id.headerNfc),            txtNfcContent,           iconNfc);
-setupSection(findViewById(R.id.headerGnss),           txtGnssContent,          iconGnss);
-setupSection(findViewById(R.id.headerUwb),            txtUwbContent,           iconUwb);
-setupSection(findViewById(R.id.headerUsb),            txtUsbContent,           iconUsb);
-setupSection(findViewById(R.id.headerHaptics),        txtHapticsContent,       iconHaptics);
-setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent,iconSystemFeatures);
-setupSection(findViewById(R.id.headerSecurityFlags),  txtSecurityFlagsContent, iconSecurityFlags);
-setupSection(findViewById(R.id.headerRoot),           txtRootContent,          iconRoot);
-setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals,   iconOther);
-        
-} // END onCreate()    
-    
+        // Show battery info
+        txtBatteryContent.setVisibility(View.VISIBLE);
+        txtBatteryContent.setText(buildBatteryInfo());
+
+    } else {
+        batteryContainer.setVisibility(View.GONE);
+        iconBattery.setText("＋");
+    }
+});
+
+        // ============================================================
+        // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
+        // ============================================================
+        TextView txtScreenContent          = findViewById(R.id.txtScreenContent);
+        TextView txtCameraContent          = findViewById(R.id.txtCameraContent);
+        TextView txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+        TextView txtLocationContent        = findViewById(R.id.txtLocationContent);
+        TextView txtThermalContent         = findViewById(R.id.txtThermalContent);
+        TextView txtModemContent           = findViewById(R.id.txtModemContent);
+        TextView txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+        TextView txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+        TextView txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+        TextView txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+        TextView txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+        TextView txtNfcContent             = findViewById(R.id.txtNfcContent);
+        TextView txtGnssContent            = findViewById(R.id.txtGnssContent);
+        TextView txtUwbContent             = findViewById(R.id.txtUwbContent);
+        TextView txtUsbContent             = findViewById(R.id.txtUsbContent);
+        TextView txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+        TextView txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+        TextView txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+        TextView txtRootContent            = findViewById(R.id.txtRootContent);
+        TextView txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+
+        // ============================================================
+        // ICONS — ORDERED EXACTLY AS SECTIONS
+        // ============================================================
+        TextView iconScreen         = findViewById(R.id.iconScreenToggle);
+        TextView iconCamera         = findViewById(R.id.iconCameraToggle);
+        TextView iconConnectivity   = findViewById(R.id.iconConnectivityToggle);
+        TextView iconLocation       = findViewById(R.id.iconLocationToggle);
+        TextView iconThermal        = findViewById(R.id.iconThermalToggle);
+        TextView iconModem          = findViewById(R.id.iconModemToggle);
+        TextView iconWifiAdvanced   = findViewById(R.id.iconWifiAdvancedToggle);
+        TextView iconAudioUnified   = findViewById(R.id.iconAudioUnifiedToggle);
+        TextView iconSensors        = findViewById(R.id.iconSensorsToggle);
+        TextView iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
+        TextView iconBiometrics     = findViewById(R.id.iconBiometricsToggle);
+        TextView iconNfc            = findViewById(R.id.iconNfcToggle);
+        TextView iconGnss           = findViewById(R.id.iconGnssToggle);
+        TextView iconUwb            = findViewById(R.id.iconUwbToggle);
+        TextView iconUsb            = findViewById(R.id.iconUsbToggle);
+        TextView iconHaptics        = findViewById(R.id.iconHapticsToggle);
+        TextView iconSystemFeatures = findViewById(R.id.iconSystemFeaturesToggle);
+        TextView iconSecurityFlags  = findViewById(R.id.iconSecurityFlagsToggle);
+        TextView iconRoot           = findViewById(R.id.iconRootToggle);
+        TextView iconOther          = findViewById(R.id.iconOtherPeripheralsToggle);
+
+        allContents = new TextView[]{
+                txtBatteryContent,          // 1
+                txtScreenContent,           // 2
+                txtCameraContent,           // 3
+                txtConnectivityContent,     // 4
+                txtLocationContent,         // 5
+                txtThermalContent,          // 6
+                txtModemContent,            // 7
+                txtWifiAdvancedContent,     // 8
+                txtAudioUnifiedContent,     // 9
+                txtSensorsContent,          // 10
+                txtSensorsExtendedContent,  // 11
+                txtBiometricsContent,       // 12
+                txtNfcContent,              // 13
+                txtGnssContent,             // 14
+                txtUwbContent,              // 15
+                txtUsbContent,              // 16
+                txtHapticsContent,          // 17
+                txtSystemFeaturesContent,   // 18
+                txtSecurityFlagsContent,    // 19
+                txtRootContent,             // 20
+                txtOtherPeripherals         // 21
+        };
+
+        allIcons = new TextView[]{
+                iconBattery,          // 1
+                iconScreen,           // 2
+                iconCamera,           // 3
+                iconConnectivity,     // 4
+                iconLocation,         // 5
+                iconThermal,          // 6
+                iconModem,            // 7
+                iconWifiAdvanced,     // 8
+                iconAudioUnified,     // 9
+                iconSensors,          // 10
+                iconSensorsExtended,  // 11
+                iconBiometrics,       // 12
+                iconNfc,              // 13
+                iconGnss,             // 14
+                iconUwb,              // 15
+                iconUsb,              // 16
+                iconHaptics,          // 17
+                iconSystemFeatures,   // 18
+                iconSecurityFlags,    // 19
+                iconRoot,             // 20
+                iconOther             // 21
+        };
+
+        // ============================================================
+        // APPLY TEXTS FIRST
+        // ============================================================
+        populateAllSections();
+
+        // ============================================================
+        // SETUP SECTIONS
+        // ============================================================
+        setupSection(findViewById(R.id.headerBattery),
+                     findViewById(R.id.batteryContainer),
+                     iconBattery);
+        setupSection(findViewById(R.id.headerScreen),            txtScreenContent,          iconScreen);  
+        setupSection(findViewById(R.id.headerCamera),            txtCameraContent,          iconCamera);
+        setupSection(findViewById(R.id.headerConnectivity),      txtConnectivityContent,    iconConnectivity);
+        setupSection(findViewById(R.id.headerLocation),          txtLocationContent,        iconLocation);
+        setupSection(findViewById(R.id.headerThermal),           txtThermalContent,         iconThermal);  
+        setupSection(findViewById(R.id.headerModem),             txtModemContent,           iconModem);  
+        setupSection(findViewById(R.id.headerWifiAdvanced),      txtWifiAdvancedContent,    iconWifiAdvanced);  
+        setupSection(findViewById(R.id.headerAudioUnified),      txtAudioUnifiedContent,    iconAudioUnified);
+        setupSection(findViewById(R.id.headerSensors),           txtSensorsContent,         iconSensors);
+        setupSection(findViewById(R.id.headerSensorsExtended),   txtSensorsExtendedContent, iconSensorsExtended);  
+        setupSection(findViewById(R.id.headerBiometrics),        txtBiometricsContent,      iconBiometrics);
+        setupSection(findViewById(R.id.headerNfc),               txtNfcContent,             iconNfc);
+        setupSection(findViewById(R.id.headerGnss),              txtGnssContent,            iconGnss);
+        setupSection(findViewById(R.id.headerUwb),               txtUwbContent,             iconUwb);
+        setupSection(findViewById(R.id.headerUsb),               txtUsbContent,             iconUsb);
+        setupSection(findViewById(R.id.headerHaptics),           txtHapticsContent,         iconHaptics);
+        setupSection(findViewById(R.id.headerSystemFeatures),    txtSystemFeaturesContent,  iconSystemFeatures);  
+        setupSection(findViewById(R.id.headerSecurityFlags),     txtSecurityFlagsContent,   iconSecurityFlags);  
+        setupSection(findViewById(R.id.headerRoot),              txtRootContent,            iconRoot);
+        setupSection(findViewById(R.id.headerOtherPeripherals),  txtOtherPeripherals,       iconOther);
+
+    }  // 🔥 ΤΕΛΟΣ onCreate()
+
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  
 // ============================================================  
@@ -398,7 +448,7 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     // ============================================================
-    // GEL Settings Click Engine v17 — OPEN SETTINGS ONLY
+    // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
     // ============================================================
     private void handleSettingsClick(Context context, String path) {
         try {
@@ -1174,15 +1224,12 @@ private BatteryInfo getBatteryInfo() {
 
 
 // ===================================================================
-// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL HTML
+// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL
 // ===================================================================
 private String buildBatteryInfo() {
 
-    final String GREEN = "#39FF14";
-    final String GOLD  = "#FFD700";
-
-    StringBuilder sb = new StringBuilder();
     BatteryInfo bi = getBatteryInfo();
+    StringBuilder sb = new StringBuilder();
 
     int level = -1;
 
@@ -1190,7 +1237,7 @@ private String buildBatteryInfo() {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
@@ -1213,81 +1260,64 @@ private String buildBatteryInfo() {
             default:                                       plugStr = "Not plugged"; break;
         }
 
-        // VALUES WITH COLOR
-        sb.append("<font color='").append(GOLD).append("'>Level                : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(level).append("%</font><br>");
+        sb.append("Level                : ").append(level).append("%\n");
+        sb.append("Scale                : ").append(scale).append("\n");
+        sb.append("Status               : ").append(statusStr).append("\n");
+        sb.append("Charging Source      : ").append(plugStr).append("\n");
 
-        sb.append("<font color='").append(GOLD).append("'>Scale                : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(scale).append("</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Status               : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(statusStr).append("</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Charging Source      : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(plugStr).append("</font><br>");
-
-        if (temp > 0) {
-            sb.append("<font color='").append(GOLD).append("'>Temp                 : </font>")
-              .append("<font color='").append(GREEN).append("'>").append(temp / 10f).append("°C</font><br>");
-        }
+        if (temp > 0)
+            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
+    
 
-    // OEM source
+    // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
-        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(bi.oemFullMah).append(" mAh</font><br>");
+        sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
 
+        // ⭐ New logic: estimated 100% from OEM if level>0
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
 
-            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
-              .append("<font color='").append(GREEN).append("'>").append(est).append(" mAh</font><br>");
+            sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
         }
 
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-          .append("<font color='").append(GREEN).append("'>OEM</font><br>");
+        sb.append("Source               : OEM\n");
     }
 
-    // Charge counter source
+    // ---------------------- CHARGE COUNTER SOURCE ----------------------
     else if (bi.chargeCounterMah > 0) {
 
-        sb.append("<font color='").append(GOLD).append("'>Current charge       : </font>")
-          .append("<font color='").append(GREEN).append("'>").append(bi.chargeCounterMah).append(" mAh</font><br>");
+        sb.append("Current charge       : ").append(bi.chargeCounterMah).append(" mAh\n");
 
         if (bi.estimatedFullMah > 0)
-            sb.append("<font color='").append(GOLD).append("'>Estimated full (100%): </font>")
-              .append("<font color='").append(GREEN).append("'>").append(bi.estimatedFullMah).append(" mAh</font><br>");
+            sb.append("Estimated full (100%): ").append(bi.estimatedFullMah).append(" mAh\n");
 
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-          .append("<font color='").append(GREEN).append("'>Charge Counter</font><br>");
+        sb.append("Source               : Charge Counter\n");
     }
 
-    // No data
+    // ---------------------- NO DATA ----------------------
     else {
-        sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
-          .append("<font color='").append(GREEN).append("'>N/A</font><br>");
-
-        sb.append("<font color='").append(GOLD).append("'>Source               : </font>")
-          .append("<font color='").append(GREEN).append("'>Unknown</font><br>");
+        sb.append("Real capacity        : N/A\n");
+        sb.append("Source               : Unknown\n");
     }
 
-    // Model capacity
-    long modelCap = getStoredModelCapacity();
-    sb.append("<font color='").append(GOLD).append("'>Model capacity       : </font>")
-      .append("<font color='").append(GREEN).append("'>")
-      .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
-      .append("</font><br>");
 
-    // COMMENT — SINGLE LINE
-    sb.append("<font color='").append(GOLD).append("'>Lifecycle            : </font>")
-      .append("<font color='").append(GREEN).append("'>Requires root access</font><br>");
+    // Model capacity (user input)
+    long modelCap = getStoredModelCapacity();
+    if (modelCap > 0)
+        sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
+    else
+        sb.append("Model capacity       : (tap to set)\n");
+
+
+    sb.append("Lifecycle            : Requires root access\n");
 
     return sb.toString();
 }
-
+      
 // ===================================================================
 // SHOW POPUP ONLY ONCE
 // ===================================================================
@@ -1483,7 +1513,8 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles\n");
+    sb.append("                   require root access.\n");
 
     return sb.toString();
 }
@@ -1781,195 +1812,64 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-// ===================================================================
-// THERMAL ENGINE / COOLING  —  GEL Human-Readable Edition
-// ===================================================================
-// ===================================================================
-// HELPER – FORMAT THERMAL SENSOR VALUE TO °C (SAFE)
-// ===================================================================
-private String formatThermalC(String raw) {
-    if (raw == null) return null;
+    // 1. Thermal Engine / Cooling Profiles
+    private String buildThermalInfo() {
+        StringBuilder sb = new StringBuilder();
 
-    raw = raw.trim();
-    if (raw.isEmpty()) return null;
+        File thermalDir = new File("/sys/class/thermal");
+        File[] zones = null;
+        File[] cools = null;
 
-    try {
-        int val = Integer.parseInt(raw);
+        try {
+            if (thermalDir.exists() && thermalDir.isDirectory()) {
+                zones = thermalDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return f.getName().startsWith("thermal_zone");
+                    }
+                });
+                cools = thermalDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return f.getName().startsWith("cooling_device");
+                    }
+                });
+            }
+        } catch (Throwable ignore) { }
 
-        // Άκυρες / "κρύες" τιμές σένσορα
-        if (val <= -200000 || val == 0) return null;
+        int zoneCount = zones != null ? zones.length : 0;
+        int coolCount = cools != null ? cools.length : 0;
 
-        float c;
-        // Συνήθως οι θερμοκρασίες είναι σε milli-degrees (π.χ. 39300 = 39.3°C)
-        if (Math.abs(val) > 1000) {
-            c = val / 1000f;
-        } else {
-            // fallback για αισθητήρες που δίνουν δεκάδες (π.χ. 334 = 33.4°C)
-            c = val / 10f;
+        sb.append("Thermal Zones    : ").append(zoneCount).append("\n");
+        sb.append("Cooling Devices  : ").append(coolCount).append("\n");
+
+        if (zoneCount == 0 && coolCount == 0) {
+            sb.append("Advanced         : Some devices restrict /sys thermal nodes; basic sensors use Android APIs, full trip tables require root.\n");
+            return sb.toString();
         }
 
-        return String.format(Locale.US, "%.1f°C", c);
-    } catch (Throwable ignore) {
-        // Αν δεν παρσάρεται, γύρνα raw string
-        return raw;
-    }
-}
+        if (zoneCount > 0) {
+            sb.append("\nSample Zone      :\n");
+            try {
+                File z0 = zones[0];
+                String type = readSysString(z0.getAbsolutePath() + "/type");
+                String temp = readSysString(z0.getAbsolutePath() + "/temp");
 
-// ===================================================================
-// THERMAL ENGINE / COOLING INFO — SAFE AUTO-DETECT VERSION
-// ===================================================================
-private String buildThermalInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
-    File[] cools = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("thermal_zone");
+                if (type != null && type.trim().length() > 0) {
+                    sb.append("  Type           : ").append(type).append("\n");
                 }
-            });
-            cools = thermalDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File f) {
-                    return f.getName().startsWith("cooling_device");
+                if (temp != null && temp.trim().length() > 0) {
+                    sb.append("  Temp (raw)     : ").append(temp).append("\n");
                 }
-            });
+            } catch (Throwable ignore) { }
         }
-    } catch (Throwable ignore) { }
 
-    int zoneCount = (zones != null) ? zones.length : 0;
-    int coolCount = (cools != null) ? cools.length : 0;
+        sb.append("Advanced         : Full thermal trip tables and throttling profiles require root access and OEM-specific parsing.\n");
 
-    sb.append("Thermal zones        : ").append(zoneCount).append("\n");
-    sb.append("Cooling devices      : ").append(coolCount).append("\n");
-
-    // Αν δεν έχουμε καθόλου nodes, τελείωσε εδώ
-    if (zoneCount == 0 && coolCount == 0) {
-        sb.append("Hardware Thermals    : N/A (device hides thermal nodes)\n");
         return sb.toString();
     }
 
-    // -------------------------------------------------------------------
-    //  Σάρωση όλων των thermal_zoneX και map σε γνωστούς τύπους
-    // -------------------------------------------------------------------
-    String mainModem     = null;
-    String secondaryModem= null;
-    String batteryPack   = null;
-    String batteryShell  = null;
-    String chargerIc     = null;
-    String pmicTherm     = null;
-
-    if (zones != null) {
-        for (File z : zones) {
-            try {
-                String base = z.getAbsolutePath();
-                String type = readSysString(base + "/type");
-                String temp = readSysString(base + "/temp");
-
-                if (type == null || temp == null) continue;
-
-                type = type.trim();
-                temp = temp.trim();
-                if (type.isEmpty() || temp.isEmpty()) continue;
-
-                // Modem / RF (Qualcomm style: mdmss-X)
-                if (type.startsWith("mdmss")) {
-                    if (mainModem == null) {
-                        mainModem = temp;
-                    } else if (secondaryModem == null) {
-                        secondaryModem = temp;
-                    }
-                }
-                // Battery core
-                else if ("battery".equals(type)) {
-                    batteryPack = temp;
-                }
-                // Battery shell / case
-                else if ("battery_therm".equals(type) || "battery-therm".equals(type)) {
-                    batteryShell = temp;
-                }
-                // Charger IC
-                else if ("charger_therm".equals(type) || "charger-therm".equals(type)) {
-                    chargerIc = temp;
-                }
-                // PMIC / power management
-                else if (type.startsWith("pmic")) {
-                    pmicTherm = temp;
-                }
-
-            } catch (Throwable ignore) { }
-        }
-    }
-
-    // -------------------------------------------------------------------
-    //  Ανθρώπινο report
-    // -------------------------------------------------------------------
-    sb.append("\nHardware Thermals\n\n");
-
-    boolean anySection = false;
-
-    // 1) Modem / RF
-    String vMainModem = formatThermalC(mainModem);
-    String vSecModem  = formatThermalC(secondaryModem);
-
-    if (vMainModem != null || vSecModem != null) {
-        anySection = true;
-        sb.append("Modem / RF\n");
-        if (vMainModem != null) {
-            sb.append("  Main modem         : ").append(vMainModem).append("\n");
-        }
-        if (vSecModem != null) {
-            sb.append("  Secondary modem    : ").append(vSecModem).append("\n");
-        }
-        sb.append("\n");
-    }
-
-    // 2) Battery
-    String vBattPack  = formatThermalC(batteryPack);
-    String vBattShell = formatThermalC(batteryShell);
-
-    if (vBattPack != null || vBattShell != null) {
-        anySection = true;
-        sb.append("Battery\n");
-        if (vBattPack != null) {
-            sb.append("  Battery pack (main): ").append(vBattPack).append("\n");
-        }
-        if (vBattShell != null) {
-            sb.append("  Battery shell      : ").append(vBattShell).append("\n");
-        }
-        sb.append("\n");
-    }
-
-    // 3) Charger
-    String vCharger = formatThermalC(chargerIc);
-    if (vCharger != null) {
-        anySection = true;
-        sb.append("Charger\n");
-        sb.append("  Charging IC        : ").append(vCharger).append("\n\n");
-    }
-
-    // 4) PMIC
-    String vPmic = formatThermalC(pmicTherm);
-    if (vPmic != null) {
-        anySection = true;
-        sb.append("PMIC\n");
-        sb.append("  Power management IC: ").append(vPmic).append("\n\n");
-    }
-
-    if (!anySection) {
-        sb.append("  (No detailed thermal sensors reported by this device.)\n");
-    }
-
-    return sb.toString();
-}
-
-// ============================================================
+    // ============================================================
 // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
 // ============================================================
 private String buildScreenInfo() {

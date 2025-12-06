@@ -2573,9 +2573,15 @@ private void populateAllSections() {
     // BATTERY (FULL BLOCK)
     // =====================
     String bat = buildBatteryInfo();
+
+    // 1) Βάζουμε το text
     set(R.id.txtBatteryContent, bat);
+
+    // 2) Χρωματίζουμε όπως ΟΛΑ τα άλλα κουμπιά
     applyNeonValues(findViewById(R.id.txtBatteryContent), bat);
-    refreshBatteryButton();   // updates button label
+
+    // 3) Ανανεώνουμε το κουμπί "Set Model Capacity"
+    refreshBatteryButton();
 
     // =====================
     // CORE HARDWARE
@@ -2597,7 +2603,7 @@ private void populateAllSections() {
     applyNeonValues(findViewById(R.id.txtLocationContent), loc);
 
     // =====================
-    // THERMAL (FIXED!!)
+    // THERMAL (FIXED)
     // =====================
     String thr = buildThermalInfo();
     set(R.id.txtThermalContent, thr);

@@ -398,48 +398,47 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     private void animateExpand(final View v) {
-        v.post(() -> {
-            v.measure(
-                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
+    v.post(() -> {
+        v.measure(
+                View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
 
-            final int target = v.getMeasuredHeight();
+        final int target = v.getMeasuredHeight();
 
-            v.getLayoutParams().height = 0;
-            v.setVisibility(View.VISIBLE);
-            v.setAlpha(0f);
-
-            v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        v.getLayoutParams().height = target;
-                        v.requestLayout();
-                    })
-                    .start();
-        });
-    }
-
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
-
-        final int initial = v.getHeight();
-        v.setAlpha(1f);
+        v.getLayoutParams().height = 0;
+        v.setVisibility(View.VISIBLE);
+        v.setAlpha(0f);
 
         v.animate()
-                .alpha(0f)
-                .setDuration(120)
+                .alpha(1f)
+                .setDuration(160)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = initial;
-                    v.setAlpha(1f);
+                    v.getLayoutParams().height = target;
                     v.requestLayout();
                 })
                 .start();
-    }
+    });
+}
+
+private void animateCollapse(final View v) {
+    if (v.getVisibility() != View.VISIBLE) return;
+
+    final int initial = v.getHeight();
+    v.setAlpha(1f);
+
+    v.animate()
+            .alpha(0f)
+            .setDuration(160)
+            .setInterpolator(new AccelerateDecelerateInterpolator())
+            .withEndAction(() -> {
+                v.getLayoutParams().height = 0;
+                v.setVisibility(View.GONE);
+                v.requestLayout();
+            })
+            .start();
+}
 
     // ============================================================
     // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY

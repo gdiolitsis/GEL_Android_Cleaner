@@ -219,142 +219,145 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     // CLEAN — FINAL — CORRECT onCreate()
     // ============================================================
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_peripherals);
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_device_info_peripherals);
 
-        requestAllRuntimePermissions();
+    requestAllRuntimePermissions();
 
-        TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null)
-            title.setText(getString(R.string.phone_info_peripherals));
+    TextView title = findViewById(R.id.txtTitleDevice);
+    if (title != null)
+        title.setText(getString(R.string.phone_info_peripherals));
 
-        // ============================================================
-        // BIND VIEWS — YOUR ORDER
-        // ============================================================
-        batteryContainer        = findViewById(R.id.batteryContainer);
-        txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-        iconBattery             = findViewById(R.id.iconBatteryToggle);
+    // ============================================================
+    // BIND VIEWS — YOUR ORDER
+    // ============================================================
+    batteryContainer        = findViewById(R.id.batteryContainer);
+    txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+    iconBattery             = findViewById(R.id.iconBatteryToggle);
 
-        txtScreenContent          = findViewById(R.id.txtScreenContent);
-        txtCameraContent          = findViewById(R.id.txtCameraContent);
-        txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-        txtLocationContent        = findViewById(R.id.txtLocationContent);
-        txtThermalContent         = findViewById(R.id.txtThermalContent);
-        txtModemContent           = findViewById(R.id.txtModemContent);
-        txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-        txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-        txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-        txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-        txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-        txtNfcContent             = findViewById(R.id.txtNfcContent);
-        txtGnssContent            = findViewById(R.id.txtGnssContent);
-        txtUwbContent             = findViewById(R.id.txtUwbContent);
-        txtUsbContent             = findViewById(R.id.txtUsbContent);
-        txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-        txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-        txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-        txtRootContent            = findViewById(R.id.txtRootContent);
-        txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+    txtScreenContent          = findViewById(R.id.txtScreenContent);
+    txtCameraContent          = findViewById(R.id.txtCameraContent);
+    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+    txtLocationContent        = findViewById(R.id.txtLocationContent);
+    txtThermalContent         = findViewById(R.id.txtThermalContent);
+    txtModemContent           = findViewById(R.id.txtModemContent);
+    txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+    txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+    txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+    txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+    txtNfcContent             = findViewById(R.id.txtNfcContent);
+    txtGnssContent            = findViewById(R.id.txtGnssContent);
+    txtUwbContent             = findViewById(R.id.txtUwbContent);
+    txtUsbContent             = findViewById(R.id.txtUsbContent);
+    txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+    txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+    txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+    txtRootContent            = findViewById(R.id.txtRootContent);
+    txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
 
-        iconScreen          = findViewById(R.id.iconScreenToggle);
-        iconCamera          = findViewById(R.id.iconCameraToggle);
-        iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
-        iconLocation        = findViewById(R.id.iconLocationToggle);
-        iconThermal         = findViewById(R.id.iconThermalToggle);
-        iconModem           = findViewById(R.id.iconModemToggle);
-        iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-        iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
-        iconSensors         = findViewById(R.id.iconSensorsToggle);
-        iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-        iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
-        iconNfc             = findViewById(R.id.iconNfcToggle);
-        iconGnss            = findViewById(R.id.iconGnssToggle);
-        iconUwb             = findViewById(R.id.iconUwbToggle);
-        iconUsb             = findViewById(R.id.iconUsbToggle);
-        iconHaptics         = findViewById(R.id.iconHapticsToggle);
-        iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
-        iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
-        iconRoot            = findViewById(R.id.iconRootToggle);
-        iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
+    iconScreen          = findViewById(R.id.iconScreenToggle);
+    iconCamera          = findViewById(R.id.iconCameraToggle);
+    iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
+    iconLocation        = findViewById(R.id.iconLocationToggle);
+    iconThermal         = findViewById(R.id.iconThermalToggle);
+    iconModem           = findViewById(R.id.iconModemToggle);
+    iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
+    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
+    iconSensors         = findViewById(R.id.iconSensorsToggle);
+    iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
+    iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
+    iconNfc             = findViewById(R.id.iconNfcToggle);
+    iconGnss            = findViewById(R.id.iconGnssToggle);
+    iconUwb             = findViewById(R.id.iconUwbToggle);
+    iconUsb             = findViewById(R.id.iconUsbToggle);
+    iconHaptics         = findViewById(R.id.iconHapticsToggle);
+    iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
+    iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
+    iconRoot            = findViewById(R.id.iconRootToggle);
+    iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
-        // ============================================================
-        // MASTER ARRAYS — YOUR ORDER
-        // ============================================================
-        allContents = new TextView[]{
-                txtBatteryContent,
-                txtScreenContent,
-                txtCameraContent,
-                txtConnectivityContent,
-                txtLocationContent,
-                txtThermalContent,
-                txtModemContent,
-                txtWifiAdvancedContent,
-                txtAudioUnifiedContent,
-                txtSensorsContent,
-                txtSensorsExtendedContent,
-                txtBiometricsContent,
-                txtNfcContent,
-                txtGnssContent,
-                txtUwbContent,
-                txtUsbContent,
-                txtHapticsContent,
-                txtSystemFeaturesContent,
-                txtSecurityFlagsContent,
-                txtRootContent,
-                txtOtherPeripherals
-        };
+    // ============================================================
+    // MASTER ARRAYS — YOUR ORDER
+    // ============================================================
+    allContents = new TextView[]{
+            txtBatteryContent,
+            txtScreenContent,
+            txtCameraContent,
+            txtConnectivityContent,
+            txtLocationContent,
+            txtThermalContent,
+            txtModemContent,
+            txtWifiAdvancedContent,
+            txtAudioUnifiedContent,
+            txtSensorsContent,
+            txtSensorsExtendedContent,
+            txtBiometricsContent,
+            txtNfcContent,
+            txtGnssContent,
+            txtUwbContent,
+            txtUsbContent,
+            txtHapticsContent,
+            txtSystemFeaturesContent,
+            txtSecurityFlagsContent,
+            txtRootContent,
+            txtOtherPeripherals
+    };
 
-        allIcons = new TextView[]{
-                iconBattery,
-                iconScreen,
-                iconCamera,
-                iconConnectivity,
-                iconLocation,
-                iconThermal,
-                iconModem,
-                iconWifiAdvanced,
-                iconAudioUnified,
-                iconSensors,
-                iconSensorsExtended,
-                iconBiometrics,
-                iconNfc,
-                iconGnss,
-                iconUwb,
-                iconUsb,
-                iconHaptics,
-                iconSystemFeatures,
-                iconSecurityFlags,
-                iconRoot,
-                iconOther
-        };
+    allIcons = new TextView[]{
+            iconBattery,
+            iconScreen,
+            iconCamera,
+            iconConnectivity,
+            iconLocation,
+            iconThermal,
+            iconModem,
+            iconWifiAdvanced,
+            iconAudioUnified,
+            iconSensors,
+            iconSensorsExtended,
+            iconBiometrics,
+            iconNfc,
+            iconGnss,
+            iconUwb,
+            iconUsb,
+            iconHaptics,
+            iconSystemFeatures,
+            iconSecurityFlags,
+            iconRoot,
+            iconOther
+    };
 
-// ============================================================
-// APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
-// ============================================================
-populateAllSections();
+    // ============================================================
+    // APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
+    // ============================================================
+    populateAllSections();
 
-setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
-setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
-setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
-setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
-setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
-setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
-setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
-setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
-setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
-setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
-setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
-setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
-setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
-setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
-setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
-setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
-setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
-setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
-setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+    // 🔥 NECESSARY — Battery works ONLY if initialized
+    initBatterySection();
+
+    setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
+    setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
+    setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
+    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+    setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
+    setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+    setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
+    setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
+    setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
+    setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+    setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
+    setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
+    setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
+    setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
+    setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
+    setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
+    setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
+    setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
+    setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
+    setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+    setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
 }
 
 // 🔥 END onCreate()
@@ -1112,7 +1115,7 @@ return sb.toString();
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
-private static final String KEY_BATTERY_DIALOG_SHOWN = "battery_dialog_shown";
+private static final String KEY_BATTERY_DIALOG_SHOWN   = "battery_dialog_shown";
 
 private long getStoredModelCapacity() {
     try {
@@ -1130,16 +1133,14 @@ private void saveModelCapacity(long value) {
     } catch (Throwable ignore) {}
 }
 
-
 // ===================================================================
 // BATTERY DATA STRUCT (GEL ENGINE v1.0)
 // ===================================================================
 private static class BatteryInfo {
-    long oemFullMah = -1;
+    long oemFullMah       = -1;
     long chargeCounterMah = -1;
     long estimatedFullMah = -1;
 }
-
 
 // ===================================================================
 // REAL BATTERY CAPACITY SCANNER — OEM Paths (GEL Edition)
@@ -1149,30 +1150,32 @@ private long detectBatteryMah() {
     long cap;
 
     String[] paths = new String[]{
-        "/sys/class/power_supply/battery/charge_full_design",
-        "/sys/class/power_supply/battery/charge_full",
-        "/sys/class/power_supply/battery/charge_full_raw",
-        "/sys/class/power_supply/battery/fg_fullcapnom",
-        "/sys/class/power_supply/battery/fg_fullcaprep",
-        "/sys/class/power_supply/maxfg/capacity",
-        "/sys/class/power_supply/maxfg/fullcap",
-        "/sys/class/power_supply/maxfg/fullcapnom",
-        "/sys/class/power_supply/maxfg/designcap",
-        "/sys/class/power_supply/bms/charge_full",
-        "/sys/class/power_supply/bms/charge_full_design",
-        "/sys/class/power_supply/bms/fullcapnom",
-        "/sys/class/power_supply/bms/fullcap",
-        "/sys/class/power_supply/bms/fcc_data"
+            "/sys/class/power_supply/battery/charge_full_design",
+            "/sys/class/power_supply/battery/charge_full",
+            "/sys/class/power_supply/battery/charge_full_raw",
+            "/sys/class/power_supply/battery/fg_fullcapnom",
+            "/sys/class/power_supply/battery/fg_fullcaprep",
+            "/sys/class/power_supply/maxfg/capacity",
+            "/sys/class/power_supply/maxfg/fullcap",
+            "/sys/class/power_supply/maxfg/fullcapnom",
+            "/sys/class/power_supply/maxfg/designcap",
+            "/sys/class/power_supply/bms/charge_full",
+            "/sys/class/power_supply/bms/charge_full_design",
+            "/sys/class/power_supply/bms/fullcapnom",
+            "/sys/class/power_supply/bms/fullcap",
+            "/sys/class/power_supply/bms/fcc_data"
     };
 
+    // OEM sysfs paths
     for (String p : paths) {
-        cap = readSysLong(p);  // ✔ uses your existing helper
+        cap = readSysLong(p);  // 🔁 uses existing helper
         if (cap > 2000) {
-            if (cap > 200000) return cap / 1000;
+            if (cap > 200000) return cap / 1000;   // μAh → mAh
             return cap;
         }
     }
 
+    // BatteryManager CHARGE_COUNTER
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
@@ -1184,6 +1187,7 @@ private long detectBatteryMah() {
         }
     } catch (Throwable ignore) {}
 
+    // System property fallback
     try {
         String prop = getProp("persist.battery.capacity");
         if (prop != null && !prop.isEmpty()) {
@@ -1195,7 +1199,6 @@ private long detectBatteryMah() {
     return -1;
 }
 
-
 // ===================================================================
 // GEL BATTERY ENGINE v1.0 (OEM + Charge Counter + Estimation)
 // ===================================================================
@@ -1203,9 +1206,11 @@ private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
+    // OEM
     long oem = detectBatteryMah();
     if (oem > 2000) bi.oemFullMah = oem;
 
+    // Charge Counter
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
@@ -1217,9 +1222,9 @@ private BatteryInfo getBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
+    // Estimation from charge counter + level
     try {
         if (bi.chargeCounterMah > 0) {
-
             IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent i = registerReceiver(null, f);
 
@@ -1227,7 +1232,7 @@ private BatteryInfo getBatteryInfo() {
                 int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 if (level > 0 && level <= 100) {
                     float pct = level / 100f;
-                    bi.estimatedFullMah = (long)(bi.chargeCounterMah / pct);
+                    bi.estimatedFullMah = (long) (bi.chargeCounterMah / pct);
                 }
             }
         }
@@ -1236,64 +1241,8 @@ private BatteryInfo getBatteryInfo() {
     return bi;
 }
 
-// ============================================================
-// BATTERY — FULL SECTION (Identical behavior to other sections)
-// ============================================================
-private void initBatterySection() {
-
-    // VIEWS
-    final LinearLayout batteryContainer = findViewById(R.id.batteryContainer);
-    final TextView txtBatteryContent    = findViewById(R.id.txtBatteryContent);
-    final TextView btnCapacity          = findViewById(R.id.txtBatteryModelCapacity);
-    final TextView iconBattery          = findViewById(R.id.iconBatteryToggle);
-    final LinearLayout headerBattery    = findViewById(R.id.headerBattery);
-
-    // 1) Load content once
-    try {
-        txtBatteryContent.setText(buildBatteryInfo());
-    } catch (Exception ignore) {}
-
-    // 2) Popup button
-    if (btnCapacity != null) {
-        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-    }
-
-    // 3) Header click toggles section (same logic as other sections)
-    headerBattery.setOnClickListener(v -> {
-
-        // CLOSE all sections except this one
-        for (int i = 0; i < allContents.length; i++) {
-            View content = allContents[i];
-            if (content != txtBatteryContent) {
-                content.setVisibility(View.GONE);
-                allIcons[i].setText("＋");     // reset icons
-            }
-        }
-
-        // Battery toggle ON/OFF
-        if (batteryContainer.getVisibility() == View.GONE) {
-
-            // OPEN
-            batteryContainer.setVisibility(View.VISIBLE);
-            txtBatteryContent.setVisibility(View.VISIBLE);
-            iconBattery.setText("－");         // show MINUS
-
-            // refresh data when opening
-            try {
-                txtBatteryContent.setText(buildBatteryInfo());
-            } catch (Exception ignore) {}
-
-        } else {
-
-            // CLOSE
-            batteryContainer.setVisibility(View.GONE);
-            iconBattery.setText("＋");
-        }
-    });
-}
-
 // ===================================================================
-// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FIXED STRING MODE
+// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — STRING MODE
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1306,39 +1255,41 @@ private String buildBatteryInfo() {
         IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent i = registerReceiver(null, f);
 
-        level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        if (i != null) {
+            level   = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale   = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status  = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            int temp    = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
-        String statusStr;
-        switch (status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:      statusStr = "Charging"; break;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:   statusStr = "Discharging"; break;
-            case BatteryManager.BATTERY_STATUS_FULL:          statusStr = "Full"; break;
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  statusStr = "Not charging"; break;
-            default:                                          statusStr = "Unknown"; break;
+            String statusStr;
+            switch (status) {
+                case BatteryManager.BATTERY_STATUS_CHARGING:      statusStr = "Charging"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:   statusStr = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:          statusStr = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  statusStr = "Not charging"; break;
+                default:                                          statusStr = "Unknown"; break;
+            }
+
+            String plugStr;
+            switch (plugged) {
+                case BatteryManager.BATTERY_PLUGGED_AC:        plugStr = "AC"; break;
+                case BatteryManager.BATTERY_PLUGGED_USB:       plugStr = "USB"; break;
+                case BatteryManager.BATTERY_PLUGGED_WIRELESS:  plugStr = "Wireless"; break;
+                default:                                       plugStr = "Not plugged"; break;
+            }
+
+            sb.append("Level                : ").append(level).append("%\n");
+            sb.append("Scale                : ").append(scale).append("\n");
+            sb.append("Status               : ").append(statusStr).append("\n");
+            sb.append("Charging Source      : ").append(plugStr).append("\n");
+
+            if (temp > 0) {
+                sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
+            }
         }
-
-        String plugStr;
-        switch (plugged) {
-            case BatteryManager.BATTERY_PLUGGED_AC:        plugStr = "AC"; break;
-            case BatteryManager.BATTERY_PLUGGED_USB:       plugStr = "USB"; break;
-            case BatteryManager.BATTERY_PLUGGED_WIRELESS:  plugStr = "Wireless"; break;
-            default:                                       plugStr = "Not plugged"; break;
-        }
-
-        sb.append("Level                : ").append(level).append("%\n");
-        sb.append("Scale                : ").append(scale).append("\n");
-        sb.append("Status               : ").append(statusStr).append("\n");
-        sb.append("Charging Source      : ").append(plugStr).append("\n");
-
-        if (temp > 0)
-            sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
-
 
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
@@ -1347,7 +1298,7 @@ private String buildBatteryInfo() {
 
         if (level > 0 && level < 100) {
             float pct = level / 100f;
-            long est = (long)(bi.oemFullMah / pct);
+            long est = (long) (bi.oemFullMah / pct);
             sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
         }
 
@@ -1371,26 +1322,67 @@ private String buildBatteryInfo() {
         sb.append("Source               : Unknown\n");
     }
 
-
     long modelCap = getStoredModelCapacity();
-    if (modelCap > 0)
+    if (modelCap > 0) {
         sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
-    else
+    } else {
         sb.append("Model capacity       : (tap to set)\n");
+    }
 
     sb.append("Lifecycle            : Requires root access\n");
 
     return sb.toString();
 }
-      
+
 // ===================================================================
-// SHOW POPUP ONLY ONCE
+// REFRESH BUTTON LABEL (Set model capacity ...)
+// ===================================================================
+private void refreshBatteryButton() {
+    TextView btn = findViewById(R.id.txtBatteryModelCapacity);
+    if (btn != null) {
+        long cap = getStoredModelCapacity();
+        if (cap > 0) {
+            btn.setText("Set model capacity (" + cap + " mAh)");
+        } else {
+            btn.setText("Set model capacity");
+        }
+    }
+}
+
+// ===================================================================
+// BATTERY — INIT SECTION (content + popup hook)
+// ===================================================================
+private void initBatterySection() {
+
+    final TextView txtBatteryContent  = findViewById(R.id.txtBatteryContent);
+    final TextView btnCapacity        = findViewById(R.id.txtBatteryModelCapacity);
+
+    // 1) Fill περιεχόμενο με Neon styling, ίδιο με τα άλλα sections
+    if (txtBatteryContent != null) {
+        String info = buildBatteryInfo();
+        applyNeonValues(txtBatteryContent, info);
+    }
+
+    // 2) Refresh label του κουμπιού
+    refreshBatteryButton();
+
+    // 3) Κλικ στο "Set model capacity" → popup
+    if (btnCapacity != null) {
+        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
+    }
+
+    // 4) Optional: δείξε popup μία φορά στην αρχή αν δεν έχει τιμή
+    maybeShowBatteryCapacityDialogOnce();
+}
+
+// ===================================================================
+// SHOW POPUP ONLY ONCE (auto-on-first-open)
 // ===================================================================
 private void maybeShowBatteryCapacityDialogOnce() {
     try {
         SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        boolean shown = sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
-        long existing = sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
+        boolean shown   = sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
+        long existing   = sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
 
         if (!shown && existing <= 0) {
             sp.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
@@ -1398,7 +1390,6 @@ private void maybeShowBatteryCapacityDialogOnce() {
         }
     } catch (Throwable ignore) {}
 }
-
 
 // ===================================================================
 // POPUP — GEL BLACK+GOLD FINAL
@@ -1430,15 +1421,15 @@ private void showBatteryCapacityDialog() {
                         if (val > 0) {
                             saveModelCapacity(val);
 
+                            // refresh info + colors
                             TextView content = findViewById(R.id.txtBatteryContent);
-                            if (content != null)
-                                content.setText(buildBatteryInfo());
-
-                            TextView btn = findViewById(R.id.txtBatteryModelCapacity);
-                            if (btn != null) {
-                                btn.setText(getString(R.string.battery_set_model_capacity)
-                                        + " (" + val + " mAh)");
+                            if (content != null) {
+                                String info = buildBatteryInfo();
+                                applyNeonValues(content, info);
                             }
+
+                            // refresh button label
+                            refreshBatteryButton();
                         }
                     } catch (Throwable ignore) {}
                 }
@@ -1448,7 +1439,7 @@ private void showBatteryCapacityDialog() {
 
             AlertDialog dialog = b.create();
             dialog.getWindow().setBackgroundDrawableResource(
-                R.drawable.gel_dialog_battery_full_black
+                    R.drawable.gel_dialog_battery_full_black
             );
 
             dialog.show();
@@ -1876,80 +1867,44 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-// 1. Thermal Engine / Cooling Profiles — Hardware-Only (Modem / Battery / Charger / PMIC)
+// ============================================================================
+// 1.  THERMAL ENGINE v5.0 — Universal Hardware Thermals + Cooling Systems
+//  Battery / PMIC / Charger / Modem — Full Color Coding + Danger System
+// ============================================================================
 
-// ============================================================
+private static final int COLOR_COOL      = Color.parseColor("#2196F3"); // blue
+private static final int COLOR_NORMAL    = Color.parseColor("#4CAF50"); // green
+private static final int COLOR_WARM      = Color.parseColor("#FF9800"); // orange
+private static final int COLOR_HOT       = Color.parseColor("#F44336"); // red
+private static final int COLOR_CRITICAL  = Color.parseColor("#FFEB3B"); // yellow danger
+
+
+// ============================================================================
 // COUNTING
-// ============================================================
+// ============================================================================
 private int countThermalZones() {
     try {
         File dir = new File("/sys/class/thermal");
         File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
         return zones != null ? zones.length : 0;
-    } catch (Throwable t) {
-        return 0;
-    }
+    } catch (Throwable t) { return 0; }
 }
 
 private int countCoolingDevices() {
     try {
         File dir = new File("/sys/class/thermal");
-        File[] zones = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        return zones != null ? zones.length : 0;
-    } catch (Throwable t) {
-        return 0;
-    }
+        File[] cds = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
+        return cds != null ? cds.length : 0;
+    } catch (Throwable t) { return 0; }
 }
 
-// ============================================================
-// MAIN THERMAL GROUP BUILDER
-// ============================================================
-private void appendThermals(StringBuilder sb) {
 
-    // ---- Modem ----
-    appendThermalGroup(sb,
-            "Modem",
-            new String[]{"modem0", "modem1"},
-            new Object[]{3, 3});
-
-    // ---- Battery ----
-    appendThermalGroup(sb,
-            "Battery",
-            new String[]{"battery_main", "battery_shell"},
-            new Object[]{2, 2});
-
-    // ---- Charger ----
-    appendThermalGroup(sb,
-            "Charger",
-            new String[]{"charger"},
-            new Object[]{4});
-
-    // ---- PMIC ----
-    appendThermalGroup(sb,
-            "PMIC",
-            new String[]{"pmic_tz0", "pmic_tz1"},
-            new Object[]{10, 10});
-}
-
-// ============================================================
-// COOLING DEVICES
-// ============================================================
-private void appendCooling(StringBuilder sb) {
-    sb.append("==============================\n");
-    sb.append("Hardware Cooling Devices\n");
-    sb.append("==============================\n\n");
-
-    sb.append("• cooling_device0 → FAN\n");
-    sb.append("• cooling_device1 → HW_THROTTLE\n");
-    sb.append("• cooling_device2 → DISSIPATION\n\n");
-}
-
-// ============================================================
-// TEMPERATURE READING
-// ============================================================
-private Double getTemperatureValue(String zoneName) {
+// ============================================================================
+// TEMPERATURE READ
+// ============================================================================
+private Double readTemp(String path) {
     try {
-        File f = new File("/sys/class/thermal/" + zoneName + "/temp");
+        File f = new File(path);
         if (!f.exists()) return null;
 
         BufferedReader br = new BufferedReader(new FileReader(f));
@@ -1959,103 +1914,164 @@ private Double getTemperatureValue(String zoneName) {
         if (line == null) return null;
 
         double raw = Double.parseDouble(line.trim());
-        return raw > 1000 ? raw / 1000.0 : raw;
-
-    } catch (Throwable e) {
-        return null;
+        return raw > 1000 ? raw / 1000.0 : raw;   // convert to °C
     }
+    catch (Throwable ignore) { return null; }
 }
 
-// ============================================================
-// COLOR SYSTEM (κρατάμε το label logic, όχι spans)
-// ============================================================
-private int getTempColor(double t) {
-    if (t < 30) return Color.parseColor("#2196F3");   // Cool - Blue
-    if (t < 40) return Color.parseColor("#4CAF50");   // Normal - Green
-    if (t < 50) return Color.parseColor("#FF9800");   // Warm - Orange
-    if (t < 60) return Color.parseColor("#F44336");   // Hot - Red
-    return Color.parseColor("#B71C1C");               // Critical - Deep Red
+
+// ============================================================================
+// COLOR + LABEL SYSTEM
+// ============================================================================
+private int getThermalColor(double t) {
+    if (t < 30) return COLOR_COOL;
+    if (t < 40) return COLOR_NORMAL;
+    if (t < 50) return COLOR_WARM;
+    if (t < 60) return COLOR_HOT;
+    return COLOR_CRITICAL; // danger
 }
 
-private String getTempLabel(double t) {
+private String getThermalLabel(double t) {
     if (t < 30) return "Cool";
     if (t < 40) return "Normal";
     if (t < 50) return "Warm";
     if (t < 60) return "Hot";
-    return "Critical";
+    return "⚠️ Critical"; // danger label
 }
 
-// ============================================================
-// REFLECTION SAFE
-// ============================================================
-private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
-    try {
-        Field f = cls.getDeclaredField(fieldName);
-        f.setAccessible(true);
-        return f.getInt(null);
-    } catch (Throwable t) {
-        return defValue;
+
+// ============================================================================
+// UNIVERSAL PATHS (APPLIED TO ALL PHONES)
+// ============================================================================
+private static final String[][] THERMAL_GROUPS = new String[][]{
+
+        // title, path1, path2...
+        { "Battery Thermal",
+            "/sys/class/power_supply/battery/temp",
+            "/sys/class/thermal/thermal_zone1/temp",
+            "/sys/class/thermal/battery/temp"
+        },
+
+        { "PMIC Thermal",
+            "/sys/class/thermal/thermal_zone0/temp",
+            "/sys/class/thermal/thermal_zone2/temp",
+            "/sys/class/thermal/pmic/temp"
+        },
+
+        { "Charger Thermal",
+            "/sys/class/power_supply/usb/temp",
+            "/sys/class/thermal/thermal_zone3/temp",
+            "/sys/class/thermal/charger/temp"
+        },
+
+        { "Modem Thermal",
+            "/sys/class/thermal/thermal_zone4/temp",
+            "/sys/class/thermal/modem/temp",
+            "/sys/class/thermal/thermal_zone5/temp"
+        }
+};
+
+
+// ============================================================================
+// FORMAT + COLOR SPAN
+// ============================================================================
+private void appendThermalLine(SpannableStringBuilder sb, String title, double t) {
+
+    String prefix = title + "  : ";
+    sb.append(prefix);
+
+    int valueStart = sb.length();
+
+    String tempText = String.format(Locale.US, "%.1f°C", t);
+    String labelText = " (" + getThermalLabel(t).replace("⚠️ ", "") + ")";
+
+    boolean danger = t >= 60;
+
+    if (danger) {
+        tempText = "⚠️ " + tempText;
     }
+
+    sb.append(tempText);
+    int valueEnd = sb.length();
+
+    int color = getThermalColor(t);
+    sb.setSpan(new ForegroundColorSpan(color), valueStart, valueEnd, 0);
+
+    // label span
+    int labelStart = sb.length();
+    sb.append(labelText);
+    sb.setSpan(new ForegroundColorSpan(color), labelStart, sb.length(), 0);
+
+    sb.append("\n");
 }
 
-// ============================================================
-// FINAL GROUP PRINTER (σκέτο text, για να βαφτεί από applyNeonValues)
-// ============================================================
-private void appendThermalGroup(StringBuilder sb,
-                                String title,
-                                String[] names,
-                                Object[] types) {
 
-    sb.append(title).append(":\n");
+// ============================================================================
+// BUILD GROUPS
+// ============================================================================
+private void appendThermalGroups(SpannableStringBuilder sb) {
 
-    for (int i = 0; i < names.length; i++) {
+    for (String[] group : THERMAL_GROUPS) {
 
-        String name    = names[i];
-        String typeStr = String.valueOf(types[i]);
+        String title = group[0];
 
-        sb.append("• ").append(name).append("  →  ");
-
-        Double temp = getTemperatureValue(name);
-
-        if (temp == null) {
-            sb.append("N/A");
-        } else {
-            String txtTemp = String.format(Locale.US, "%.1f°C", temp);
-            sb.append(txtTemp)
-              .append(" (")
-              .append(getTempLabel(temp))
-              .append(")");
+        Double value = null;
+        for (int i = 1; i < group.length; i++) {
+            value = readTemp(group[i]);
+            if (value != null) break;
         }
 
-        sb.append("  [Type ").append(typeStr).append("]\n");
+        if (value == null) {
+            sb.append(title).append("  : N/A\n");
+        } else {
+            appendThermalLine(sb, title, value);
+        }
     }
 
     sb.append("\n");
 }
 
-// ============================================================
-// buildThermalInfo() — PLAIN STRING FOR applyNeonValues
-// ============================================================
-private String buildThermalInfo() {
 
-    StringBuilder sb = new StringBuilder();
+// ============================================================================
+// COOLING DEVICES LIST
+// ============================================================================
+private void appendCoolingDevicesInfo(SpannableStringBuilder sb) {
 
-    sb.append("Thermal Zones    : ")
-            .append(String.valueOf(countThermalZones()))
-            .append("\n");
+    sb.append("Hardware Cooling Systems\n");
+    sb.append("=========================\n");
 
-    sb.append("Cooling Devices  : ")
-            .append(String.valueOf(countCoolingDevices()))
-            .append("\n\n");
+    File dir = new File("/sys/class/thermal");
+    File[] cds = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
 
-    sb.append("==============================\n");
-    sb.append("Hardware Thermals\n");
-    sb.append("==============================\n\n");
+    if (cds == null || cds.length == 0) {
+        sb.append("No cooling devices detected.\n\n");
+        return;
+    }
 
-    appendThermals(sb);
-    appendCooling(sb);
+    for (File cd : cds) {
+        sb.append("• ").append(cd.getName()).append("\n");
+    }
 
-    return sb.toString();
+    sb.append("\n");
+}
+
+
+// ============================================================================
+// FINAL BUILDER
+// ============================================================================
+private SpannableStringBuilder buildThermalInfo() {
+
+    SpannableStringBuilder sb = new SpannableStringBuilder();
+
+    sb.append("Hardware Thermal Systems\n");
+    sb.append("=========================\n\n");
+
+    // groups: battery, pmic, charger, modem
+    appendThermalGroups(sb);
+
+    appendCoolingDevicesInfo(sb);
+
+    return sb;
 }
 
 // ============================================================

@@ -200,137 +200,241 @@ protected void onCreate(Bundle savedInstanceState) {
     txt.setText(sb);
 
     // ============================================================
-    // BIND ALL UI FIELDS (YOUR ORDER, EXACTLY AS SENT)
+    // MAIN CLASS FIELDS
     // ============================================================
-    batteryContainer        = findViewById(R.id.batteryContainer);
-    txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-    iconBattery             = findViewById(R.id.iconBatteryToggle);
+    private static final String NEON_GREEN = "#39FF14";
+    private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
-    txtScreenContent          = findViewById(R.id.txtScreenContent);
-    txtCameraContent          = findViewById(R.id.txtCameraContent);
-    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-    txtLocationContent        = findViewById(R.id.txtLocationContent);
-    txtThermalContent         = findViewById(R.id.txtThermalContent);
-    txtModemContent           = findViewById(R.id.txtModemContent);
-    txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-    txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-    txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-    txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-    txtNfcContent             = findViewById(R.id.txtNfcContent);
-    txtGnssContent            = findViewById(R.id.txtGnssContent);
-    txtUwbContent             = findViewById(R.id.txtUwbContent);
-    txtUsbContent             = findViewById(R.id.txtUsbContent);
-    txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-    txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-    txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-    txtRootContent            = findViewById(R.id.txtRootContent);
-    txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+    private boolean isRooted = false;
 
-    iconScreen          = findViewById(R.id.iconScreenToggle);
-    iconCamera          = findViewById(R.id.iconCameraToggle);
-    iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
-    iconLocation        = findViewById(R.id.iconLocationToggle);
-    iconThermal         = findViewById(R.id.iconThermalToggle);
-    iconModem           = findViewById(R.id.iconModemToggle);
-    iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
-    iconSensors         = findViewById(R.id.iconSensorsToggle);
-    iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-    iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
-    iconNfc             = findViewById(R.id.iconNfcToggle);
-    iconGnss            = findViewById(R.id.iconGnssToggle);
-    iconUwb             = findViewById(R.id.iconUwbToggle);
-    iconUsb             = findViewById(R.id.iconUsbToggle);
-    iconHaptics         = findViewById(R.id.iconHapticsToggle);
-    iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
-    iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
-    iconRoot            = findViewById(R.id.iconRootToggle);
-    iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
-
+    private TextView[] allContents;
+    private TextView[] allIcons;
 
     // ============================================================
-    // MASTER LISTS — EXACT ORDER YOU SENT
+    // BATTERY — SPECIAL SECTION BINDINGS
     // ============================================================
-    allContents = new TextView[]{
-            txtBatteryContent,
-            txtScreenContent,
-            txtCameraContent,
-            txtConnectivityContent,
-            txtLocationContent,
-            txtThermalContent,
-            txtModemContent,
-            txtWifiAdvancedContent,
-            txtAudioUnifiedContent,
-            txtSensorsContent,
-            txtSensorsExtendedContent,
-            txtBiometricsContent,
-            txtNfcContent,
-            txtGnssContent,
-            txtUwbContent,
-            txtUsbContent,
-            txtHapticsContent,
-            txtSystemFeaturesContent,
-            txtSecurityFlagsContent,
-            txtRootContent,
-            txtOtherPeripherals
-    };
-
-    allIcons = new TextView[]{
-            iconBattery,
-            iconScreen,
-            iconCamera,
-            iconConnectivity,
-            iconLocation,
-            iconThermal,
-            iconModem,
-            iconWifiAdvanced,
-            iconAudioUnified,
-            iconSensors,
-            iconSensorsExtended,
-            iconBiometrics,
-            iconNfc,
-            iconGnss,
-            iconUwb,
-            iconUsb,
-            iconHaptics,
-            iconSystemFeatures,
-            iconSecurityFlags,
-            iconRoot,
-            iconOther
-    };
+    private LinearLayout batteryContainer;
+    private TextView txtBatteryContent;
+    private TextView iconBattery;
 
     // ============================================================
-    // APPLY TEXTS (YOUR ORDER)
+    // CONTENT TEXT VIEWS — ORDERED EXACTLY AS SECTIONS APPEAR
     // ============================================================
-    populateAllSections();
+    private TextView txtScreenContent;
+    private TextView txtCameraContent;
+    private TextView txtConnectivityContent;
+    private TextView txtLocationContent;
+    private TextView txtThermalContent;
+    private TextView txtModemContent;
+    private TextView txtWifiAdvancedContent;
+    private TextView txtAudioUnifiedContent;
+    private TextView txtSensorsContent;
+    private TextView txtSensorsExtendedContent;
+    private TextView txtBiometricsContent;
+    private TextView txtNfcContent;
+    private TextView txtGnssContent;
+    private TextView txtUwbContent;
+    private TextView txtUsbContent;
+    private TextView txtHapticsContent;
+    private TextView txtSystemFeaturesContent;
+    private TextView txtSecurityFlagsContent;
+    private TextView txtRootContent;
+    private TextView txtOtherPeripherals;
 
     // ============================================================
-    // SETUP (YOUR ORDER, EXACT)
+    // ICONS — ORDERED EXACTLY AS SECTIONS
     // ============================================================
-    setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
-    setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
-    setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
-    setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
-    setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-    setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
-    setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
-    setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
-    setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
-    setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
-    setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
-    setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
-    setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
-    setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
-    setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
-    setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
-    setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
-    setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
-    setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
-    setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
-} 
-    
+    private TextView iconScreen;
+    private TextView iconCamera;
+    private TextView iconConnectivity;
+    private TextView iconLocation;
+    private TextView iconThermal;
+    private TextView iconModem;
+    private TextView iconWifiAdvanced;
+    private TextView iconAudioUnified;
+    private TextView iconSensors;
+    private TextView iconSensorsExtended;
+    private TextView iconBiometrics;
+    private TextView iconNfc;
+    private TextView iconGnss;
+    private TextView iconUwb;
+    private TextView iconUsb;
+    private TextView iconHaptics;
+    private TextView iconSystemFeatures;
+    private TextView iconSecurityFlags;
+    private TextView iconRoot;
+    private TextView iconOther;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_device_info_peripherals);
+
+        requestAllRuntimePermissions();
+
+        TextView title = findViewById(R.id.txtTitleDevice);
+        if (title != null)
+            title.setText(getString(R.string.phone_info_peripherals));
+
+        // --------------------------------------------------------
+        // Legacy infoText block (όπως το είχες)
+        // --------------------------------------------------------
+        TextView txt = findViewById(R.id.infoText);
+
+        SpannableStringBuilder sb = new SpannableStringBuilder();
+        sb.append("Thermal Zones    : ")
+                .append(String.valueOf(countThermalZones()))
+                .append("\n");
+        sb.append("Cooling Devices  : ")
+                .append(String.valueOf(countCoolingDevices()))
+                .append("\n\n");
+        sb.append("==============================\n");
+        sb.append("Hardware Thermals\n");
+        sb.append("==============================\n\n");
+
+        appendThermals(sb);
+        appendCooling(sb);
+
+        if (txt != null) {
+            txt.setText(sb);
+        }
+
+        // ============================================================
+        // BIND VIEWS (Η ΔΙΚΗ ΣΟΥ ΣΕΙΡΑ)
+        // ============================================================
+        batteryContainer        = findViewById(R.id.batteryContainer);
+        txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+        iconBattery             = findViewById(R.id.iconBatteryToggle);
+
+        txtScreenContent          = findViewById(R.id.txtScreenContent);
+        txtCameraContent          = findViewById(R.id.txtCameraContent);
+        txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+        txtLocationContent        = findViewById(R.id.txtLocationContent);
+        txtThermalContent         = findViewById(R.id.txtThermalContent);
+        txtModemContent           = findViewById(R.id.txtModemContent);
+        txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+        txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+        txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+        txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+        txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+        txtNfcContent             = findViewById(R.id.txtNfcContent);
+        txtGnssContent            = findViewById(R.id.txtGnssContent);
+        txtUwbContent             = findViewById(R.id.txtUwbContent);
+        txtUsbContent             = findViewById(R.id.txtUsbContent);
+        txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+        txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+        txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+        txtRootContent            = findViewById(R.id.txtRootContent);
+        txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+
+        iconScreen          = findViewById(R.id.iconScreenToggle);
+        iconCamera          = findViewById(R.id.iconCameraToggle);
+        iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
+        iconLocation        = findViewById(R.id.iconLocationToggle);
+        iconThermal         = findViewById(R.id.iconThermalToggle);
+        iconModem           = findViewById(R.id.iconModemToggle);
+        iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
+        iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
+        iconSensors         = findViewById(R.id.iconSensorsToggle);
+        iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
+        iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
+        iconNfc             = findViewById(R.id.iconNfcToggle);
+        iconGnss            = findViewById(R.id.iconGnssToggle);
+        iconUwb             = findViewById(R.id.iconUwbToggle);
+        iconUsb             = findViewById(R.id.iconUsbToggle);
+        iconHaptics         = findViewById(R.id.iconHapticsToggle);
+        iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
+        iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
+        iconRoot            = findViewById(R.id.iconRootToggle);
+        iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
+
+        // ============================================================
+        // MASTER LISTS (ORDER MATTERS — Η ΔΙΚΗ ΣΟΥ ΣΕΙΡΑ)
+        // ============================================================
+        allContents = new TextView[]{
+                txtBatteryContent,          // 1 — BATTERY
+                txtScreenContent,           // 2
+                txtCameraContent,           // 3
+                txtConnectivityContent,     // 4
+                txtLocationContent,         // 5
+                txtThermalContent,          // 6
+                txtModemContent,            // 7
+                txtWifiAdvancedContent,     // 8
+                txtAudioUnifiedContent,     // 9
+                txtSensorsContent,          // 10
+                txtSensorsExtendedContent,  // 11
+                txtBiometricsContent,       // 12
+                txtNfcContent,              // 13
+                txtGnssContent,             // 14
+                txtUwbContent,              // 15
+                txtUsbContent,              // 16
+                txtHapticsContent,          // 17
+                txtSystemFeaturesContent,   // 18
+                txtSecurityFlagsContent,    // 19
+                txtRootContent,             // 20
+                txtOtherPeripherals         // 21
+        };
+
+        allIcons = new TextView[]{
+                iconBattery,          // 1 — BATTERY
+                iconScreen,           // 2
+                iconCamera,           // 3
+                iconConnectivity,     // 4
+                iconLocation,         // 5
+                iconThermal,          // 6
+                iconModem,            // 7
+                iconWifiAdvanced,     // 8
+                iconAudioUnified,     // 9
+                iconSensors,          // 10
+                iconSensorsExtended,  // 11
+                iconBiometrics,       // 12
+                iconNfc,              // 13
+                iconGnss,             // 14
+                iconUwb,              // 15
+                iconUsb,              // 16
+                iconHaptics,          // 17
+                iconSystemFeatures,   // 18
+                iconSecurityFlags,    // 19
+                iconRoot,             // 20
+                iconOther             // 21
+        };
+
+        // ============================================================
+        // APPLY TEXTS FIRST
+        // ============================================================
+        populateAllSections();
+
+        // ============================================================
+        // SETUP SECTIONS — BATTERY FIRST
+        // ============================================================
+        setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
+        setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
+        setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
+        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+        setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
+        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+        setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
+        setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
+        setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
+        setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
+        setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
+        setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
+        setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
+        setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
+        setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);
+        setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);
+        setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);
+        setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);
+        setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
+        setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
+        setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+    }
 // 🔥 END onCreate()
 
 // ============================================================  

@@ -3,8 +3,6 @@
 
 package com.gel.cleaner;
 
-import android.os.Temperature;
-import android.os.HardwarePropertiesManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;

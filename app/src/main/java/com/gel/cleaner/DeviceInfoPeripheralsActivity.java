@@ -2564,7 +2564,7 @@ private String buildWifiAdvancedInfo() {
         }
     }
 
-    // ============================================================
+// ============================================================
 // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
 // ============================================================
 private void populateAllSections() {
@@ -2579,7 +2579,7 @@ private void populateAllSections() {
 
     // =====================
     // CORE HARDWARE
-    ======================
+    //======================
     String scr = buildScreenInfo();
     set(R.id.txtScreenContent, scr);
     applyNeonValues(findViewById(R.id.txtScreenContent), scr);

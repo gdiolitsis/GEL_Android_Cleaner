@@ -334,11 +334,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 // ============================================================
 populateAllSections();
 
-// 🔥 APPLY THERMAL ENGINE CONTENT
-if (txtThermalContent != null) {
-    txtThermalContent.setText(buildThermalInfo());
-}
-
 setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
 setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
 setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);

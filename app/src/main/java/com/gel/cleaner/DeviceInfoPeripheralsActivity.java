@@ -1298,7 +1298,7 @@ private void initBatterySection() {
 }
 
 // ===================================================================
-// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL
+// BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FIXED STRING MODE
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1343,18 +1343,16 @@ private String buildBatteryInfo() {
             sb.append("Temp                 : ").append((temp / 10f)).append("°C\n");
 
     } catch (Throwable ignore) {}
-    
+
 
     // ---------------------- OEM SOURCE ----------------------
     if (bi.oemFullMah > 0) {
 
         sb.append("Real capacity        : ").append(bi.oemFullMah).append(" mAh\n");
 
-        // ⭐ New logic: estimated 100% from OEM if level>0
         if (level > 0 && level < 100) {
             float pct = level / 100f;
             long est = (long)(bi.oemFullMah / pct);
-
             sb.append("Estimated full (100%): ").append(est).append(" mAh\n");
         }
 
@@ -1379,13 +1377,11 @@ private String buildBatteryInfo() {
     }
 
 
-    // Model capacity (user input)
     long modelCap = getStoredModelCapacity();
     if (modelCap > 0)
         sb.append("Model capacity       : ").append(modelCap).append(" mAh\n");
     else
         sb.append("Model capacity       : (tap to set)\n");
-
 
     sb.append("Lifecycle            : Requires root access\n");
 
@@ -1911,6 +1907,49 @@ private int countCoolingDevices() {
 }
 
 // ============================================================
+// MAIN THERMAL GROUP BUILDER
+// ============================================================
+private void appendThermals(StringBuilder sb) {
+
+    // ---- Modem ----
+    appendThermalGroup(sb,
+            "Modem",
+            new String[]{"modem0", "modem1"},
+            new Object[]{3, 3});
+
+    // ---- Battery ----
+    appendThermalGroup(sb,
+            "Battery",
+            new String[]{"battery_main", "battery_shell"},
+            new Object[]{2, 2});
+
+    // ---- Charger ----
+    appendThermalGroup(sb,
+            "Charger",
+            new String[]{"charger"},
+            new Object[]{4});
+
+    // ---- PMIC ----
+    appendThermalGroup(sb,
+            "PMIC",
+            new String[]{"pmic_tz0", "pmic_tz1"},
+            new Object[]{10, 10});
+}
+
+// ============================================================
+// COOLING DEVICES
+// ============================================================
+private void appendCooling(StringBuilder sb) {
+    sb.append("==============================\n");
+    sb.append("Hardware Cooling Devices\n");
+    sb.append("==============================\n\n");
+
+    sb.append("• cooling_device0 → FAN\n");
+    sb.append("• cooling_device1 → HW_THROTTLE\n");
+    sb.append("• cooling_device2 → DISSIPATION\n\n");
+}
+
+// ============================================================
 // TEMPERATURE READING
 // ============================================================
 private Double getTemperatureValue(String zoneName) {
@@ -1933,8 +1972,16 @@ private Double getTemperatureValue(String zoneName) {
 }
 
 // ============================================================
-// COLOR LABEL (TEXT ONLY, ΟΧΙ UI ΧΡΩΜΑΤΑ)
+// COLOR SYSTEM (κρατάμε το label logic, όχι spans)
 // ============================================================
+private int getTempColor(double t) {
+    if (t < 30) return Color.parseColor("#2196F3");   // Cool - Blue
+    if (t < 40) return Color.parseColor("#4CAF50");   // Normal - Green
+    if (t < 50) return Color.parseColor("#FF9800");   // Warm - Orange
+    if (t < 60) return Color.parseColor("#F44336");   // Hot - Red
+    return Color.parseColor("#B71C1C");               // Critical - Deep Red
+}
+
 private String getTempLabel(double t) {
     if (t < 30) return "Cool";
     if (t < 40) return "Normal";
@@ -1944,108 +1991,67 @@ private String getTempLabel(double t) {
 }
 
 // ============================================================
-// FINAL GROUP PRINTER — PLAIN STRING (για NEON ENGINE)
+// REFLECTION SAFE
+// ============================================================
+private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
+    try {
+        Field f = cls.getDeclaredField(fieldName);
+        f.setAccessible(true);
+        return f.getInt(null);
+    } catch (Throwable t) {
+        return defValue;
+    }
+}
+
+// ============================================================
+// FINAL GROUP PRINTER (σκέτο text, για να βαφτεί από applyNeonValues)
 // ============================================================
 private void appendThermalGroup(StringBuilder sb,
                                 String title,
                                 String[] names,
-                                int[] types) {
+                                Object[] types) {
 
     sb.append(title).append(":\n");
 
     for (int i = 0; i < names.length; i++) {
 
-        String name   = names[i];
-        int typeValue = (types != null && i < types.length) ? types[i] : -1;
+        String name    = names[i];
+        String typeStr = String.valueOf(types[i]);
 
-        sb.append("• ").append(name).append("  :  ");
+        sb.append("• ").append(name).append("  →  ");
 
         Double temp = getTemperatureValue(name);
 
         if (temp == null) {
-            // NEON engine θα κάνει το N/A γκρι
             sb.append("N/A");
         } else {
             String txtTemp = String.format(Locale.US, "%.1f°C", temp);
             sb.append(txtTemp)
-              .append(" (").append(getTempLabel(temp)).append(")");
+              .append(" (")
+              .append(getTempLabel(temp))
+              .append(")");
         }
 
-        if (typeValue >= 0) {
-            sb.append("  [Type ").append(typeValue).append("]");
-        }
-
-        sb.append("\n");
+        sb.append("  [Type ").append(typeStr).append("]\n");
     }
 
     sb.append("\n");
 }
 
 // ============================================================
-// MAIN THERMAL GROUP BUILDER
-// ============================================================
-private void appendThermals(StringBuilder sb) {
-
-    // ---- Modem ----
-    appendThermalGroup(
-            sb,
-            "Modem",
-            new String[]{"modem0", "modem1"},
-            new int[]{3, 3}
-    );
-
-    // ---- Battery ----
-    appendThermalGroup(
-            sb,
-            "Battery",
-            new String[]{"battery_main", "battery_shell"},
-            new int[]{2, 2}
-    );
-
-    // ---- Charger ----
-    appendThermalGroup(
-            sb,
-            "Charger",
-            new String[]{"charger"},
-            new int[]{4}
-    );
-
-    // ---- PMIC ----
-    appendThermalGroup(
-            sb,
-            "PMIC",
-            new String[]{"pmic_tz0", "pmic_tz1"},
-            new int[]{10, 10}
-    );
-}
-
-// ============================================================
-// COOLING DEVICES
-// ============================================================
-private void appendCooling(StringBuilder sb) {
-    sb.append("==============================\n");
-    sb.append("Hardware Cooling Devices\n");
-    sb.append("==============================\n\n");
-
-    sb.append("• cooling_device0 → FAN\n");
-    sb.append("• cooling_device1 → HW_THROTTLE\n");
-    sb.append("• cooling_device2 → DISSIPATION\n\n");
-}
-
-// ============================================================
-// buildThermalInfo() — PLAIN STRING (για set() + applyNeonValues)
+// buildThermalInfo() — PLAIN STRING FOR applyNeonValues
 // ============================================================
 private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
     sb.append("Thermal Zones    : ")
-      .append(String.valueOf(countThermalZones()))
-      .append("\n");
+            .append(String.valueOf(countThermalZones()))
+            .append("\n");
 
     sb.append("Cooling Devices  : ")
-      .append(String.valueOf(countCoolingDevices()))
-      .append("\n\n");
+            .append(String.valueOf(countCoolingDevices()))
+            .append("\n\n");
 
     sb.append("==============================\n");
     sb.append("Hardware Thermals\n");

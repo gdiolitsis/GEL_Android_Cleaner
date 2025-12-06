@@ -130,32 +130,36 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
     }
 
-    // ============================================================
-    // MAIN CLASS FIELDS
-    // ============================================================
-    private static final String NEON_GREEN = "#39FF14";
-    private static final String GOLD_COLOR = "#FFD700";
-    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+// ============================================================
+// MAIN CLASS FIELDS
+// ============================================================
+private static final String NEON_GREEN = "#39FF14";
+private static final String GOLD_COLOR = "#FFD700";
+private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
-    private boolean isRooted = false;
+private boolean isRooted = false;
 
-    private TextView[] allContents;
-    private TextView[] allIcons;
+private TextView[] allContents;
+private TextView[] allIcons;
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
+// ============================================================
+// BATTERY DATA CLASS (must be before methods)
+// ============================================================
+private static class BatteryInfo {
+    long oemFullMah = 0;
+    long chargeCounterMah = 0;
+    long estimatedFullMah = 0;
+}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
+@Override
+protected void attachBaseContext(Context base) {
+    super.attachBaseContext(LocaleHelper.apply(base));
+}
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {   // ✅ FIXED NAME
     super.onCreate(savedInstanceState);                // ✅ FIXED NAME
     setContentView(R.layout.activity_device_info_peripherals);
-
-    TextView title = findViewById(R.id.txtTitleDevice);
-    if (title != null)
-        title.setText(getString(R.string.phone_info_peripherals));
-
     // (optional) auto-request runtime permissions
     requestAllRuntimePermissions();
 

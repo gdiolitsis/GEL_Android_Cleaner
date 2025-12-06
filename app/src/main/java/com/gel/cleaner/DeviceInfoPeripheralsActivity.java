@@ -1190,7 +1190,6 @@ private BatteryInfo getBatteryInfo() {
 // ===================================================================
 // BATTERY INFO (GEL Hybrid OEM + ChargeCounter Edition) — FINAL HTML
 // ===================================================================
-
 private String buildBatteryInfo() {
 
     final String GREEN = "#39FF14";
@@ -1266,7 +1265,7 @@ private String buildBatteryInfo() {
           .append("<font color='").append(GREEN).append("'>OEM</font><br>");
     }
 
-    // Charge counter
+    // Charge counter source
     else if (bi.chargeCounterMah > 0) {
 
         sb.append("<font color='").append(GOLD).append("'>Current charge       : </font>")
@@ -1280,7 +1279,7 @@ private String buildBatteryInfo() {
           .append("<font color='").append(GREEN).append("'>Charge Counter</font><br>");
     }
 
-    // No data fallback
+    // No data
     else {
         sb.append("<font color='").append(GOLD).append("'>Real capacity        : </font>")
           .append("<font color='").append(GREEN).append("'>N/A</font><br>");
@@ -1296,7 +1295,7 @@ private String buildBatteryInfo() {
       .append(modelCap > 0 ? (modelCap + " mAh") : "(tap to set)")
       .append("</font><br>");
 
-    // COMMENT (single line, green)
+    // COMMENT — SINGLE LINE
     sb.append("<font color='").append(GOLD).append("'>Lifecycle            : </font>")
       .append("<font color='").append(GREEN).append("'>Requires root access</font><br>");
 

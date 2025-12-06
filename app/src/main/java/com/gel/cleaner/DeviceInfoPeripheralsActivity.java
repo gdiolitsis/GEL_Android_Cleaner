@@ -108,6 +108,45 @@ import static android.content.Context.MODE_PRIVATE;
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     // ============================================================
+    // GEL Permission Request Engine v1.0 — Option B (Auto Request All)
+    // ============================================================
+    private static final String[] PERMISSIONS_ALL = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.NEARBY_WIFI_DEVICES
+    };
+
+    private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
+
+    private void requestAllRuntimePermissions() {
+
+        if (Build.VERSION.SDK_INT < 23) return;
+
+        java.util.List<String> toRequest = new java.util.ArrayList<>();
+
+        for (String p : PERMISSIONS_ALL) {
+            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                toRequest.add(p);
+            }
+        }
+
+        if (!toRequest.isEmpty()) {
+            requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    // ============================================================
     // MAIN CLASS FIELDS
     // ============================================================
     private static final String NEON_GREEN = "#39FF14";
@@ -369,6 +408,7 @@ private void setupSection(View header, View content, TextView icon) {
         }
     });
 }
+
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================

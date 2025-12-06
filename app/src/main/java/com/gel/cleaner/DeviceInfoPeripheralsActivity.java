@@ -2126,7 +2126,7 @@ private void appendCoolingDevicesInfo(SpannableStringBuilder sb) {
         sb.append("No cooling devices detected.\n\n");
         return;
     }
-θα
+
     for (File cd : cds) {
         sb.append("• ").append(cd.getName()).append("\n");
     }

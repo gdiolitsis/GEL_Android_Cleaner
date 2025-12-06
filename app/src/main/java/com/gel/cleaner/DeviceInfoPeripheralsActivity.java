@@ -1,3 +1,7 @@
+// DeviceInfoPeripheralsActivity.java — MEGA UPGRADE v30
+// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
+// NOTE (GEL rule): Always send full updated file ready for copy-paste — no manual edits by user.
+
 package com.gel.cleaner;
     
 import android.view.animation.AccelerateDecelerateInterpolator;

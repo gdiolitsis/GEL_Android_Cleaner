@@ -3440,6 +3440,4 @@ private void collapseAllExceptBattery() {
     // 3) Reset battery icon
     if (iconBattery != null) iconBattery.setText("＋");
 }
-}  
-
-}  
+}

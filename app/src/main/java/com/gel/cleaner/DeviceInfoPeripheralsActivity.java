@@ -3226,3 +3226,4 @@ private void collapseAllExceptBattery() {
         iconBattery.setText("＋");
     }
 }
+}

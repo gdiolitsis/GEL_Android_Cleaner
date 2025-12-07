@@ -1952,6 +1952,43 @@ private String buildUsbInfo() {
     // ============================================================
 
 // ============================================================
+// THERMAL & COOLING SYSTEM — FULL FINAL MODULE (GEL Edition)
+// ============================================================
+
+// ============================================================
+// MAIN ENTRY POINT  → CALLED FROM populateAllSections()
+// ============================================================
+private CharSequence buildThermalInfo() {
+
+    SpannableStringBuilder sb = new SpannableStringBuilder();
+
+    // ===========================
+    // SUMMARY HEADER
+    // ===========================
+    int tz = countThermalZones();
+    int cd = countCoolingDevices();
+
+    sb.append("Hardware Thermal Systems\n");
+    sb.append("========================\n");
+    sb.append("Thermal zones      : ").append(String.valueOf(tz)).append("\n");
+    sb.append("Cooling devices    : ").append(String.valueOf(cd)).append("\n\n");
+
+    // ===========================
+    // DETAILED THERMAL GROUPS
+    // ===========================
+    appendThermals(sb);
+
+    // ===========================
+    // COOLING HARDWARE
+    // ===========================
+    appendCooling(sb);
+
+    return sb;
+}
+
+
+
+// ============================================================
 // COUNTING
 // ============================================================
 private int countThermalZones() {
@@ -1973,6 +2010,7 @@ private int countCoolingDevices() {
         return 0;
     }
 }
+
 
 
 // ============================================================
@@ -2006,18 +2044,20 @@ private void appendThermals(SpannableStringBuilder sb) {
 }
 
 
+
 // ============================================================
-// COOLING DEVICES
+// COOLING DEVICES — HARDWARE ONLY
 // ============================================================
 private void appendCooling(SpannableStringBuilder sb) {
-    sb.append("==============================\n");
-    sb.append("Hardware Cooling Devices\n");
-    sb.append("==============================\n\n");
+
+    sb.append("Hardware Cooling Systems\n");
+    sb.append("========================\n\n");
 
     sb.append("• cooling_device0 → FAN\n");
     sb.append("• cooling_device1 → HW_THROTTLE\n");
     sb.append("• cooling_device2 → DISSIPATION\n\n");
 }
+
 
 
 // ============================================================
@@ -2043,6 +2083,7 @@ private Double getTemperatureValue(String zoneName) {
 }
 
 
+
 // ============================================================
 // COLOR SYSTEM
 // ============================================================
@@ -2063,8 +2104,9 @@ private String getTempLabel(double t) {
 }
 
 
+
 // ============================================================
-// REFLECTION SAFE (είναι απαραίτητο για TYPE_* fields)
+// SAFE REFLECTION (για TYPE_* fields)
 // ============================================================
 private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
     try {
@@ -2077,8 +2119,9 @@ private int getStaticIntSafe(Class<?> cls, String fieldName, int defValue) {
 }
 
 
+
 // ============================================================
-// FINAL GROUP PRINTER WITH UI COLORS
+// GROUP PRINTER WITH TEMP COLORS
 // ============================================================
 private void appendThermalGroup(SpannableStringBuilder sb,
                                 String title,

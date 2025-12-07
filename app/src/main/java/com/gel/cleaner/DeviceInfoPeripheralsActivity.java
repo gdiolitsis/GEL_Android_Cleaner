@@ -395,6 +395,7 @@ protected void onCreate(Bundle savedInstanceState) {
 }
 // 🔥 END onCreate()
 
+
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  
 // ============================================================  
@@ -3288,5 +3289,25 @@ private void populateAllSections() {
 
         tv.setText(ssb);
     }
+    
+// ============================================================
+// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY
+// ============================================================
+private void collapseAllExceptBattery() {
+
+    if (allContents == null || allIcons == null) return;
+
+    // Battery = index 0 → κλείνουμε από 1 και κάτω
+    for (int i = 1; i < allContents.length; i++) {
+
+        TextView content = allContents[i];
+        TextView icon    = allIcons[i];
+
+        if (content != null && content.getVisibility() == View.VISIBLE) {
+            animateCollapse(content);
+            if (icon != null) icon.setText("＋");
+        }
+    }
 }
 
+}

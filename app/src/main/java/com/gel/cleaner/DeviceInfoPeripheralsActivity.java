@@ -164,6 +164,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private LinearLayout batteryContainer;
     private TextView txtBatteryContent;
     private TextView iconBattery;
+    private TextView txtBatteryModelCapacity;
 
     private TextView txtScreenContent;
     private TextView txtCameraContent;

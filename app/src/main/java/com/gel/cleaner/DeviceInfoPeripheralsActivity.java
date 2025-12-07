@@ -2161,34 +2161,38 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
 // -----------------------------------------------------
 // Helpers για ανάγνωση αρχείων (LOCAL, δεν συγκρούονται με άλλα)
 // -----------------------------------------------------
-private String readFirstLineSafe(File file) {
-    if (file == null || !file.exists()) return "";
-    BufferedReader br = null;
+
+private int countThermalZones() {
     try {
-        br = new BufferedReader(new FileReader(file));
-        String line = br.readLine();
-        return (line != null) ? line.trim() : "";
+        File dir = new File("/sys/class/thermal");
+        if (!dir.exists() || !dir.isDirectory()) return 0;
+
+        File[] zones = dir.listFiles(f -> {
+            String n = f.getName().toLowerCase(Locale.US);
+            return n.startsWith("thermal_zone");
+        });
+
+        return (zones != null) ? zones.length : 0;
+
     } catch (Throwable ignore) {
-        return "";
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+        return 0;
     }
 }
 
-private long readLongSafe(File file) {
-    if (file == null || !file.exists()) return Long.MIN_VALUE;
-    BufferedReader br = null;
+private int countCoolingDevices() {
     try {
-        br = new BufferedReader(new FileReader(file));
-        String line = br.readLine();
-        if (line == null) return Long.MIN_VALUE;
-        line = line.trim();
-        if (line.isEmpty()) return Long.MIN_VALUE;
-        return Long.parseLong(line);
+        File dir = new File("/sys/class/thermal");
+        if (!dir.exists() || !dir.isDirectory()) return 0;
+
+        File[] cool = dir.listFiles(f -> {
+            String n = f.getName().toLowerCase(Locale.US);
+            return n.startsWith("cooling_device");
+        });
+
+        return (cool != null) ? cool.length : 0;
+
     } catch (Throwable ignore) {
-        return Long.MIN_VALUE;
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+        return 0;
     }
 }
 

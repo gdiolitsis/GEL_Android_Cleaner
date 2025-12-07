@@ -1429,28 +1429,31 @@ private void refreshBatteryButton() {
 }
 
 // ===================================================================
-// BATTERY — INIT SECTION (content + popup hook)
+// BATTERY — INIT SECTION (content + popup hook) — FINAL FIXED VERSION
 // ===================================================================
 private void initBatterySection() {
 
-    final TextView txtBatteryContent  = findViewById(R.id.txtBatteryContent);
-    final TextView btnCapacity        = findViewById(R.id.txtBatteryModelCapacity);
+    txtBatteryContent = findViewById(R.id.txtBatteryContent);
+    TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
-    // 1) Περιεχόμενο + Neon styling, ίδιο με τα άλλα sections
+    // 1) Build battery info
+    String info = buildBatteryInfo();
+
+    // 2) Set text BEFORE applying neon colors
     if (txtBatteryContent != null) {
-        String info = buildBatteryInfo();
+        txtBatteryContent.setText(info);
         applyNeonValues(txtBatteryContent, info);
     }
 
-    // 2) Refresh label του κουμπιού
+    // 3) Update button label
     refreshBatteryButton();
 
-    // 3) Κλικ στο "Set model capacity" → popup
+    // 4) Popup handler
     if (btnCapacity != null) {
         btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
     }
 
-    // 4) Optional: δείξε popup μία φορά στην αρχή αν δεν έχει τιμή
+    // 5) Optional auto-popup (only once)
     maybeShowBatteryCapacityDialogOnce();
 }
 
@@ -1942,14 +1945,16 @@ private String buildUsbInfo() {
         return sb.toString();
     }
 
-    // ============================================================
+    // ==================================
+
+    //==========================
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-// ============================================================================
-// 1.  THERMAL ENGINE v5.0 — Universal Hardware Thermals + Cooling Systems
-//  Battery / PMIC / Charger / Modem — Full Color Coding + Danger System
-// ============================================================================
+    // ============================================================================
+    // 1.  THERMAL ENGINE v5.0 — Universal Hardware Thermals + Cooling Systems
+    //  Battery / PMIC / Charger / Modem — Full Color Coding + Danger System
+    // ============================================================================
 
 private static final int COLOR_COOL      = Color.parseColor("#2196F3"); // blue
 private static final int COLOR_NORMAL    = Color.parseColor("#4CAF50"); // green
@@ -2153,9 +2158,12 @@ private SpannableStringBuilder buildThermalInfo() {
     return sb;
 }
 
-// ============================================================
-// 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
-// ============================================================
+// ======
+
+
+   //======================================================
+    // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
+    // ============================================================
 private String buildScreenInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -2658,20 +2666,6 @@ private String buildWifiAdvancedInfo() {
 // SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
 // ============================================================
 private void populateAllSections() {
-
-    // =====================
-    // BATTERY (FULL BLOCK)
-    // =====================
-    String bat = buildBatteryInfo();
-
-    // 1) Βάζουμε το text
-    set(R.id.txtBatteryContent, bat);
-
-    // 2) Χρωματίζουμε όπως ΟΛΑ τα άλλα κουμπιά
-    applyNeonValues(findViewById(R.id.txtBatteryContent), bat);
-
-    // 3) Ανανεώνουμε το κουμπί "Set Model Capacity"
-    refreshBatteryButton();
 
     // =====================
     // CORE HARDWARE

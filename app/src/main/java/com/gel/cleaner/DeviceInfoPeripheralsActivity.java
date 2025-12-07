@@ -1951,215 +1951,296 @@ private String buildUsbInfo() {
     // NEW MEGA-UPGRADE SECTIONS (1–12)
     // ============================================================
 
-    // ============================================================================
-    // 1.  THERMAL ENGINE v5.0 — Universal Hardware Thermals + Cooling Systems
-    //  Battery / PMIC / Charger / Modem — Full Color Coding + Danger System
-    // ============================================================================
+// ===================================================================
+// 1. THERMAL ENGINE / COOLING — UNIVERSAL HARDWARE EDITION (STRING MODE)
+// ===================================================================
 
-private static final int COLOR_COOL      = Color.parseColor("#2196F3"); // blue
-private static final int COLOR_NORMAL    = Color.parseColor("#4CAF50"); // green
-private static final int COLOR_WARM      = Color.parseColor("#FF9800"); // orange
-private static final int COLOR_HOT       = Color.parseColor("#F44336"); // red
-private static final int COLOR_CRITICAL  = Color.parseColor("#FFEB3B"); // yellow danger
+// Helper struct για να κρατάμε μια "καλύτερη" θερμοκρασία ανά ομάδα
+private static class ThermalGroupReading {
+    String rawName;   // π.χ. "battery_therm"
+    float  tempC;     // σε βαθμούς C
+    boolean valid;
 
-
-// ============================================================================
-// COUNTING
-// ============================================================================
-private int countThermalZones() {
-    try {
-        File dir = new File("/sys/class/thermal");
-        File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
-        return zones != null ? zones.length : 0;
-    } catch (Throwable t) { return 0; }
-}
-
-private int countCoolingDevices() {
-    try {
-        File dir = new File("/sys/class/thermal");
-        File[] cds = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        return cds != null ? cds.length : 0;
-    } catch (Throwable t) { return 0; }
-}
-
-
-// ============================================================================
-// TEMPERATURE READ
-// ============================================================================
-private Double readTemp(String path) {
-    try {
-        File f = new File(path);
-        if (!f.exists()) return null;
-
-        BufferedReader br = new BufferedReader(new FileReader(f));
-        String line = br.readLine();
-        br.close();
-
-        if (line == null) return null;
-
-        double raw = Double.parseDouble(line.trim());
-        return raw > 1000 ? raw / 1000.0 : raw;   // convert to °C
+    ThermalGroupReading() {
+        this.valid = false;
     }
-    catch (Throwable ignore) { return null; }
-}
 
-
-// ============================================================================
-// COLOR + LABEL SYSTEM
-// ============================================================================
-private int getThermalColor(double t) {
-    if (t < 30) return COLOR_COOL;
-    if (t < 40) return COLOR_NORMAL;
-    if (t < 50) return COLOR_WARM;
-    if (t < 60) return COLOR_HOT;
-    return COLOR_CRITICAL; // danger
-}
-
-private String getThermalLabel(double t) {
-    if (t < 30) return "Cool";
-    if (t < 40) return "Normal";
-    if (t < 50) return "Warm";
-    if (t < 60) return "Hot";
-    return "⚠️ Critical"; // danger label
-}
-
-
-// ============================================================================
-// UNIVERSAL PATHS (APPLIED TO ALL PHONES)
-// ============================================================================
-private static final String[][] THERMAL_GROUPS = new String[][]{
-
-        // title, path1, path2...
-        { "Battery Thermal",
-            "/sys/class/power_supply/battery/temp",
-            "/sys/class/thermal/thermal_zone1/temp",
-            "/sys/class/thermal/battery/temp"
-        },
-
-        { "PMIC Thermal",
-            "/sys/class/thermal/thermal_zone0/temp",
-            "/sys/class/thermal/thermal_zone2/temp",
-            "/sys/class/thermal/pmic/temp"
-        },
-
-        { "Charger Thermal",
-            "/sys/class/power_supply/usb/temp",
-            "/sys/class/thermal/thermal_zone3/temp",
-            "/sys/class/thermal/charger/temp"
-        },
-
-        { "Modem Thermal",
-            "/sys/class/thermal/thermal_zone4/temp",
-            "/sys/class/thermal/modem/temp",
-            "/sys/class/thermal/thermal_zone5/temp"
+    void updateIfBetter(String name, float valueC) {
+        if (!isValidTemp(valueC)) return;
+        if (!valid || valueC > tempC) {  // κρατάμε την πιο "ζεστή" τίμια τιμή
+            valid   = true;
+            tempC   = valueC;
+            rawName = name;
         }
+    }
+}
+
+// Γενικό safety check για θερμοκρασίες (να μην δείχνουμε -273 κτλ)
+private static boolean isValidTemp(float c) {
+    return (c > -50f && c < 200f);
+}
+
+// ---------------------------------------------------------------
+// MAPPING: thermal zone "type" → λογική ομάδα (Battery / PMIC / ...)
+// ---------------------------------------------------------------
+private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
+        // Label           , patterns που αν τα βρούμε στο type => ανήκει εδώ
+        {"Battery", "battery", "batt_therm", "battery_therm", "battery-main", "batt-therm"},
+        {"PMIC",    "pmic", "pmic-therm", "pmic_tz", "pm8010", "pm8998", "pmx-therm"},
+        {"Charger", "charger", "chg", "bq", "usb-therm", "charger_therm"},
+        {"Modem",   "modem", "mdm", "mdmss", "xbl_modem", "modempa", "rf-therm"}
 };
 
-
-// ============================================================================
-// FORMAT + COLOR SPAN
-// ============================================================================
-private void appendThermalLine(SpannableStringBuilder sb, String title, double t) {
-
-    String prefix = title + "  : ";
-    sb.append(prefix);
-
-    int valueStart = sb.length();
-
-    String tempText = String.format(Locale.US, "%.1f°C", t);
-    String labelText = " (" + getThermalLabel(t).replace("⚠️ ", "") + ")";
-
-    boolean danger = t >= 60;
-
-    if (danger) {
-        tempText = "⚠️ " + tempText;
-    }
-
-    sb.append(tempText);
-    int valueEnd = sb.length();
-
-    int color = getThermalColor(t);
-    sb.setSpan(new ForegroundColorSpan(color), valueStart, valueEnd, 0);
-
-    // label span
-    int labelStart = sb.length();
-    sb.append(labelText);
-    sb.setSpan(new ForegroundColorSpan(color), labelStart, sb.length(), 0);
-
-    sb.append("\n");
+// ---------------------------
+// Summary counters
+// ---------------------------
+private static class ThermalSummary {
+    int zoneCount;
+    int coolingDeviceCount;
 }
 
+// Διαβάζει *όλα* τα thermal_zoneX και γεμίζει τα group-readings
+private ThermalSummary scanThermalHardware(
+        ThermalGroupReading battery,
+        ThermalGroupReading pmic,
+        ThermalGroupReading charger,
+        ThermalGroupReading modem
+) {
+    ThermalSummary summary = new ThermalSummary();
 
-// ============================================================================
-// BUILD GROUPS
-// ============================================================================
-private void appendThermalGroups(SpannableStringBuilder sb) {
+    File thermalDir = new File("/sys/class/thermal");
+    File[] zones = null;
+    File[] cools = null;
 
-    for (String[] group : THERMAL_GROUPS) {
-
-        String title = group[0];
-
-        Double value = null;
-        for (int i = 1; i < group.length; i++) {
-            value = readTemp(group[i]);
-            if (value != null) break;
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            zones = thermalDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().startsWith("thermal_zone");
+                }
+            });
+            cools = thermalDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().startsWith("cooling_device");
+                }
+            });
         }
+    } catch (Throwable ignore) { }
 
-        if (value == null) {
-            sb.append(title).append("  : N/A\n");
-        } else {
-            appendThermalLine(sb, title, value);
+    summary.zoneCount   = (zones  != null) ? zones.length  : 0;
+    summary.coolingDeviceCount = (cools != null) ? cools.length : 0;
+
+    // ---------- Thermal Zones → groups ----------
+    if (zones != null) {
+        for (File z : zones) {
+            try {
+                String name  = z.getName();  // π.χ. "thermal_zone12"
+                String base  = z.getAbsolutePath(); // .../thermal_zone12
+                String type  = readFirstLineSafe(new File(base, "type"));
+                long   milli = readLongSafe(new File(base, "temp"));   // συνήθως m°C
+                float  c     = Float.NaN;
+
+                if (milli == Long.MIN_VALUE) {
+                    // μπορεί να είναι ήδη σε C
+                    String t = readFirstLineSafe(new File(base, "temp"));
+                    try {
+                        c = Float.parseFloat(t);
+                    } catch (Throwable ignore) { }
+                } else {
+                    c = milli / 1000f;
+                }
+
+                if (!isValidTemp(c)) continue;
+
+                // Βρίσκουμε σε ποια ομάδα ανήκει
+                String group = mapTypeToGroup(type);
+                if (group == null) continue;
+
+                if ("Battery".equals(group)) {
+                    battery.updateIfBetter(type, c);
+                } else if ("PMIC".equals(group)) {
+                    pmic.updateIfBetter(type, c);
+                } else if ("Charger".equals(group)) {
+                    charger.updateIfBetter(type, c);
+                } else if ("Modem".equals(group)) {
+                    modem.updateIfBetter(type, c);
+                }
+
+            } catch (Throwable ignore) { }
         }
     }
 
-    sb.append("\n");
+    return summary;
 }
 
+// Mapping από raw type → ομάδα (Battery / PMIC / Charger / Modem)
+private String mapTypeToGroup(String rawType) {
+    if (rawType == null) return null;
+    String t = rawType.toLowerCase(Locale.US);
 
-// ============================================================================
-// COOLING DEVICES LIST
-// ============================================================================
-private void appendCoolingDevicesInfo(SpannableStringBuilder sb) {
+    for (String[] entry : THERMAL_GROUP_PATTERNS) {
+        String label = entry[0];
+        for (int i = 1; i < entry.length; i++) {
+            if (t.contains(entry[i].toLowerCase(Locale.US))) {
+                return label;
+            }
+        }
+    }
+    return null;
+}
 
-    sb.append("Hardware Cooling Systems\n");
-    sb.append("=========================\n");
+// -----------------------------------------------------
+// Cooling devices: κρατάμε ΜΟΝΟ πραγματικό hardware
+// -----------------------------------------------------
+private boolean isHardwareCoolingDevice(String rawType) {
+    if (rawType == null) return false;
+    String t = rawType.toLowerCase(Locale.US);
 
-    File dir = new File("/sys/class/thermal");
-    File[] cds = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
+    // Fans / blowers / pumps / heatsinks κλπ
+    if (t.contains("fan"))        return true;
+    if (t.contains("blower"))     return true;
+    if (t.contains("pump"))       return true;
+    if (t.contains("cooling_fan"))return true;
+    if (t.contains("heatsink"))   return true;
+    if (t.contains("radiator"))   return true;
 
-    if (cds == null || cds.length == 0) {
-        sb.append("No cooling devices detected.\n\n");
+    // Απορρίπτουμε skin / hotspot / virtual / cpu-thermal / gpu-thermal, κτλ.
+    if (t.contains("skin"))       return false;
+    if (t.contains("hotspot"))    return false;
+    if (t.contains("virtual"))    return false;
+
+    // Προεπιλογή: false (δεν εμφανίζουμε τα abstract / software paths)
+    return false;
+}
+
+// Διαβάζει ΟΛΑ τα cooling_deviceX και επιστρέφει bullet-list μόνο για hardware
+private void appendHardwareCoolingDevices(StringBuilder sb) {
+    File thermalDir = new File("/sys/class/thermal");
+    File[] cools = null;
+
+    try {
+        if (thermalDir.exists() && thermalDir.isDirectory()) {
+            cools = thermalDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.getName().startsWith("cooling_device");
+                }
+            });
+        }
+    } catch (Throwable ignore) { }
+
+    if (cools == null || cools.length == 0) {
+        sb.append("• (no hardware cooling devices found)\n");
         return;
     }
 
-    for (File cd : cds) {
-        sb.append("• ").append(cd.getName()).append("\n");
+    for (File c : cools) {
+        try {
+            String base = c.getAbsolutePath();
+            String type = readFirstLineSafe(new File(base, "type"));
+            if (!isHardwareCoolingDevice(type)) continue;
+
+            sb.append("• ")
+              .append(c.getName())      // π.χ. cooling_device12
+              .append(" → ")
+              .append(type)
+              .append("\n");
+
+        } catch (Throwable ignore) { }
     }
-
-    sb.append("\n");
 }
 
+// -----------------------------------------------------
+// Helpers για ανάγνωση αρχείων (LOCAL, δεν συγκρούονται με άλλα)
+// -----------------------------------------------------
+private String readFirstLineSafe(File file) {
+    if (file == null || !file.exists()) return "";
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        String line = br.readLine();
+        return (line != null) ? line.trim() : "";
+    } catch (Throwable ignore) {
+        return "";
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
 
-// ============================================================================
-// FINAL BUILDER
-// ============================================================================
-private SpannableStringBuilder buildThermalInfo() {
+private long readLongSafe(File file) {
+    if (file == null || !file.exists()) return Long.MIN_VALUE;
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        String line = br.readLine();
+        if (line == null) return Long.MIN_VALUE;
+        line = line.trim();
+        if (line.isEmpty()) return Long.MIN_VALUE;
+        return Long.parseLong(line);
+    } catch (Throwable ignore) {
+        return Long.MIN_VALUE;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
 
-    SpannableStringBuilder sb = new SpannableStringBuilder();
+// -----------------------------------------------------
+// Classification: Cool / Normal / Warm / Critical (+ ⚠)
+// -----------------------------------------------------
+private String classifyTempLabel(float c) {
+    if (!isValidTemp(c)) return "(Unknown)";
+    if (c < 30f)  return "(Cool)";
+    if (c < 40f)  return "(Normal)";
+    if (c < 50f)  return "(Warm)";
+    return "(⚠ Critical)";
+}
 
+private String formatThermalLine(String label, ThermalGroupReading r) {
+    if (r == null || !r.valid) {
+        return String.format(Locale.US, "%-17s: N/A\n", label);
+    }
+    String status = classifyTempLabel(r.tempC);
+    return String.format(Locale.US, "%-17s: %.1f°C %s\n", label, r.tempC, status);
+}
+
+// ===================================================================
+// MAIN BUILDER — ΤΕΛΙΚΟ ΚΕΙΜΕΝΟ ΓΙΑ ΤΟ THERMAL SECTION
+// ===================================================================
+private String buildThermalInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    // 1. Σκανάρουμε hardware & παίρνουμε groups
+    ThermalGroupReading battery = new ThermalGroupReading();
+    ThermalGroupReading pmic    = new ThermalGroupReading();
+    ThermalGroupReading charger = new ThermalGroupReading();
+    ThermalGroupReading modem   = new ThermalGroupReading();
+
+    ThermalSummary summary = scanThermalHardware(battery, pmic, charger, modem);
+
+    // 2. Summary (Thermal Zones / Cooling Devices)
+    sb.append("Thermal Zones        : ").append(summary.zoneCount).append("\n");
+    sb.append("Cooling Devices      : ").append(summary.coolingDeviceCount).append("\n\n");
+
+    // 3. Hardware Thermal Systems
     sb.append("Hardware Thermal Systems\n");
-    sb.append("=========================\n\n");
+    sb.append("================================\n\n");
 
-    // groups: battery, pmic, charger, modem
-    appendThermalGroups(sb);
+    sb.append(formatThermalLine("Battery Thermal",  battery));
+    sb.append(formatThermalLine("PMIC Thermal",     pmic));
+    sb.append(formatThermalLine("Charger Thermal",  charger));
+    sb.append(formatThermalLine("Modem Thermal",    modem));
+    sb.append("\n");
 
-    appendCoolingDevicesInfo(sb);
+    // 4. Hardware Cooling Systems
+    sb.append("Hardware Cooling Systems\n");
+    sb.append("================================\n");
+    appendHardwareCoolingDevices(sb);
 
-    return sb;
+    return sb.toString();
 }
-
-// ======
-
 
    //======================================================
     // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)

@@ -1441,6 +1441,12 @@ private void initBatterySection() {
 
     // 2) Set text BEFORE applying neon colors
     if (txtBatteryContent != null) {
+
+        // 🔥 FIX: χωρίς αυτό, το Battery Info δεν εμφανίζεται
+        if (batteryContainer != null) {
+            batteryContainer.setVisibility(View.VISIBLE);
+        }
+
         txtBatteryContent.setText(info);
         applyNeonValues(txtBatteryContent, info);
     }
@@ -2205,39 +2211,84 @@ private String formatThermalLine(String label, ThermalGroupReading r) {
     return String.format(Locale.US, "%-17s: %.1f°C %s\n", label, r.tempC, status);
 }
 
-// ===================================================================
-// MAIN BUILDER — ΤΕΛΙΚΟ ΚΕΙΜΕΝΟ ΓΙΑ ΤΟ THERMAL SECTION
-// ===================================================================
+
+// ============================================================
+// THERMAL INFO — CLEAN HARDWARE REPORT (Final GEL Edition)
+// ============================================================
 private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
-    // 1. Σκανάρουμε hardware & παίρνουμε groups
-    ThermalGroupReading battery = new ThermalGroupReading();
-    ThermalGroupReading pmic    = new ThermalGroupReading();
-    ThermalGroupReading charger = new ThermalGroupReading();
-    ThermalGroupReading modem   = new ThermalGroupReading();
+    // -------- COUNTS --------
+    int zoneCount = countThermalZones();
+    int coolCount = countCoolingDevices();
 
-    ThermalSummary summary = scanThermalHardware(battery, pmic, charger, modem);
+    sb.append("Thermal Zones     : ").append(zoneCount).append("\n");
+    sb.append("Cooling Devices   : ").append(coolCount).append("\n\n");
 
-    // 2. Summary (Thermal Zones / Cooling Devices)
-    sb.append("Thermal Zones        : ").append(summary.zoneCount).append("\n");
-    sb.append("Cooling Devices      : ").append(summary.coolingDeviceCount).append("\n\n");
-
-    // 3. Hardware Thermal Systems
     sb.append("Hardware Thermal Systems\n");
-    sb.append("================================\n\n");
+    sb.append("====================================\n");
 
-    sb.append(formatThermalLine("Battery Thermal",  battery));
-    sb.append(formatThermalLine("PMIC Thermal",     pmic));
-    sb.append(formatThermalLine("Charger Thermal",  charger));
-    sb.append(formatThermalLine("Modem Thermal",    modem));
-    sb.append("\n");
+    // -------- HELPER READER --------
+    class TH {
+        float read(String name) {
+            try {
+                File f = new File("/sys/class/thermal/" + name + "/temp");
+                if (!f.exists()) return -999f;
+                BufferedReader br = new BufferedReader(new FileReader(f));
+                String s = br.readLine();
+                br.close();
+                if (s == null) return -999f;
+                float v = Float.parseFloat(s.trim());
+                if (v > 1000) v /= 1000f;
+                return v;
+            } catch (Throwable t) { return -999f; }
+        }
+        String fmt(float v) {
+            return (v < -100 ? "N/A" : (String.format(Locale.US, "%.1f°C", v)));
+        }
+    }
+    TH T = new TH();
 
-    // 4. Hardware Cooling Systems
+    // -------- MAIN THERMAL GROUPS --------
+    float tModemMain  = T.read("modem0");
+    float tModemSec   = T.read("modem1");
+    float tBattery    = T.read("battery_main");
+    float tShell      = T.read("battery_shell");
+    float tCharger    = T.read("charger");
+    float tPmic       = T.read("pmic");
+
+    sb.append("Main Modem        : ").append(T.fmt(tModemMain)).append("\n");
+    sb.append("Secondary Modem   : ").append(T.fmt(tModemSec)).append("\n");
+    sb.append("Main Battery      : ").append(T.fmt(tBattery)).append("\n");
+    sb.append("Battery Shell     : ").append(T.fmt(tShell)).append("\n");
+    sb.append("Charger Thermal   : ").append(T.fmt(tCharger)).append("\n");
+    sb.append("PMIC Thermal      : ").append(T.fmt(tPmic)).append("\n\n");
+
     sb.append("Hardware Cooling Systems\n");
-    sb.append("================================\n");
-    appendHardwareCoolingDevices(sb);
+    sb.append("====================================\n");
+
+    // -------- FAN + OTHER COOLING DEVICES --------
+    try {
+        File dir = new File("/sys/class/thermal");
+        File[] cools = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
+        if (cools != null && cools.length > 0) {
+
+            for (File c : cools) {
+                String name = c.getName();
+
+                String type = "Cooling Device";
+                if (name.toLowerCase().contains("fan")) type = "Fan";
+
+                sb.append(type).append(" (").append(name).append(")\n");
+            }
+        } else {
+            sb.append("No hardware cooling devices detected.\n");
+        }
+
+    } catch (Throwable t) {
+        sb.append("Cooling info unavailable.\n");
+    }
 
     return sb.toString();
 }

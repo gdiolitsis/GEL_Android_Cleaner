@@ -164,6 +164,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private LinearLayout batteryContainer;
     private TextView txtBatteryContent;
     private TextView iconBattery;
+    private TextView txtBatteryModelCapacity;
 
     private TextView txtScreenContent;
     private TextView txtCameraContent;
@@ -230,53 +231,56 @@ protected void onCreate(Bundle savedInstanceState) {
         title.setText(getString(R.string.phone_info_peripherals));
 
     // ============================================================
-    // BIND VIEWS — YOUR ORDER
-    // ============================================================
-    batteryContainer        = findViewById(R.id.batteryContainer);
-    txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-    iconBattery             = findViewById(R.id.iconBatteryToggle);
+// BIND VIEWS — YOUR ORDER
+// ============================================================
+batteryContainer        = findViewById(R.id.batteryContainer);
+txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+iconBattery             = findViewById(R.id.iconBatteryToggle);
 
-    txtScreenContent          = findViewById(R.id.txtScreenContent);
-    txtCameraContent          = findViewById(R.id.txtCameraContent);
-    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-    txtLocationContent        = findViewById(R.id.txtLocationContent);
-    txtThermalContent         = findViewById(R.id.txtThermalContent);
-    txtModemContent           = findViewById(R.id.txtModemContent);
-    txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-    txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-    txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-    txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-    txtNfcContent             = findViewById(R.id.txtNfcContent);
-    txtGnssContent            = findViewById(R.id.txtGnssContent);
-    txtUwbContent             = findViewById(R.id.txtUwbContent);
-    txtUsbContent             = findViewById(R.id.txtUsbContent);
-    txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-    txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-    txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-    txtRootContent            = findViewById(R.id.txtRootContent);
-    txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+// ⭐ REQUIRED for collapse/expand + popup
+txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
-    iconScreen          = findViewById(R.id.iconScreenToggle);
-    iconCamera          = findViewById(R.id.iconCameraToggle);
-    iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
-    iconLocation        = findViewById(R.id.iconLocationToggle);
-    iconThermal         = findViewById(R.id.iconThermalToggle);
-    iconModem           = findViewById(R.id.iconModemToggle);
-    iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
-    iconSensors         = findViewById(R.id.iconSensorsToggle);
-    iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-    iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
-    iconNfc             = findViewById(R.id.iconNfcToggle);
-    iconGnss            = findViewById(R.id.iconGnssToggle);
-    iconUwb             = findViewById(R.id.iconUwbToggle);
-    iconUsb             = findViewById(R.id.iconUsbToggle);
-    iconHaptics         = findViewById(R.id.iconHapticsToggle);
-    iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
-    iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
-    iconRoot            = findViewById(R.id.iconRootToggle);
-    iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
+txtScreenContent          = findViewById(R.id.txtScreenContent);
+txtCameraContent          = findViewById(R.id.txtCameraContent);
+txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+txtLocationContent        = findViewById(R.id.txtLocationContent);
+txtThermalContent         = findViewById(R.id.txtThermalContent);
+txtModemContent           = findViewById(R.id.txtModemContent);
+txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+txtNfcContent             = findViewById(R.id.txtNfcContent);
+txtGnssContent            = findViewById(R.id.txtGnssContent);
+txtUwbContent             = findViewById(R.id.txtUwbContent);
+txtUsbContent             = findViewById(R.id.txtUsbContent);
+txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+txtRootContent            = findViewById(R.id.txtRootContent);
+txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
+
+iconScreen          = findViewById(R.id.iconScreenToggle);
+iconCamera          = findViewById(R.id.iconCameraToggle);
+iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
+iconLocation        = findViewById(R.id.iconLocationToggle);
+iconThermal         = findViewById(R.id.iconThermalToggle);
+iconModem           = findViewById(R.id.iconModemToggle);
+iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
+iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
+iconSensors         = findViewById(R.id.iconSensorsToggle);
+iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
+iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
+iconNfc             = findViewById(R.id.iconNfcToggle);
+iconGnss            = findViewById(R.id.iconGnssToggle);
+iconUwb             = findViewById(R.id.iconUwbToggle);
+iconUsb             = findViewById(R.id.iconUsbToggle);
+iconHaptics         = findViewById(R.id.iconHapticsToggle);
+iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
+iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
+iconRoot            = findViewById(R.id.iconRootToggle);
+iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
     // ============================================================
     // MASTER ARRAYS — YOUR ORDER

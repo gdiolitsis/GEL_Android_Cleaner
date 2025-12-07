@@ -164,7 +164,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private LinearLayout batteryContainer;
     private TextView txtBatteryContent;
     private TextView iconBattery;
-    private TextView txtBatteryModelCapacity;
 
     private TextView txtScreenContent;
     private TextView txtCameraContent;
@@ -231,56 +230,53 @@ protected void onCreate(Bundle savedInstanceState) {
         title.setText(getString(R.string.phone_info_peripherals));
 
     // ============================================================
-// BIND VIEWS — YOUR ORDER
-// ============================================================
-batteryContainer        = findViewById(R.id.batteryContainer);
-txtBatteryContent       = findViewById(R.id.txtBatteryContent);
-iconBattery             = findViewById(R.id.iconBatteryToggle);
+    // BIND VIEWS — YOUR ORDER
+    // ============================================================
+    batteryContainer        = findViewById(R.id.batteryContainer);
+    txtBatteryContent       = findViewById(R.id.txtBatteryContent);
+    iconBattery             = findViewById(R.id.iconBatteryToggle);
 
-// ⭐ REQUIRED for collapse/expand + popup
-txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
+    txtScreenContent          = findViewById(R.id.txtScreenContent);
+    txtCameraContent          = findViewById(R.id.txtCameraContent);
+    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+    txtLocationContent        = findViewById(R.id.txtLocationContent);
+    txtThermalContent         = findViewById(R.id.txtThermalContent);
+    txtModemContent           = findViewById(R.id.txtModemContent);
+    txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
+    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+    txtSensorsContent         = findViewById(R.id.txtSensorsContent);
+    txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
+    txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
+    txtNfcContent             = findViewById(R.id.txtNfcContent);
+    txtGnssContent            = findViewById(R.id.txtGnssContent);
+    txtUwbContent             = findViewById(R.id.txtUwbContent);
+    txtUsbContent             = findViewById(R.id.txtUsbContent);
+    txtHapticsContent         = findViewById(R.id.txtHapticsContent);
+    txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
+    txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
+    txtRootContent            = findViewById(R.id.txtRootContent);
+    txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
 
-txtScreenContent          = findViewById(R.id.txtScreenContent);
-txtCameraContent          = findViewById(R.id.txtCameraContent);
-txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
-txtLocationContent        = findViewById(R.id.txtLocationContent);
-txtThermalContent         = findViewById(R.id.txtThermalContent);
-txtModemContent           = findViewById(R.id.txtModemContent);
-txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
-txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
-txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
-txtNfcContent             = findViewById(R.id.txtNfcContent);
-txtGnssContent            = findViewById(R.id.txtGnssContent);
-txtUwbContent             = findViewById(R.id.txtUwbContent);
-txtUsbContent             = findViewById(R.id.txtUsbContent);
-txtHapticsContent         = findViewById(R.id.txtHapticsContent);
-txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);
-txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);
-txtRootContent            = findViewById(R.id.txtRootContent);
-txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);
-
-iconScreen          = findViewById(R.id.iconScreenToggle);
-iconCamera          = findViewById(R.id.iconCameraToggle);
-iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
-iconLocation        = findViewById(R.id.iconLocationToggle);
-iconThermal         = findViewById(R.id.iconThermalToggle);
-iconModem           = findViewById(R.id.iconModemToggle);
-iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
-iconSensors         = findViewById(R.id.iconSensorsToggle);
-iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
-iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
-iconNfc             = findViewById(R.id.iconNfcToggle);
-iconGnss            = findViewById(R.id.iconGnssToggle);
-iconUwb             = findViewById(R.id.iconUwbToggle);
-iconUsb             = findViewById(R.id.iconUsbToggle);
-iconHaptics         = findViewById(R.id.iconHapticsToggle);
-iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
-iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
-iconRoot            = findViewById(R.id.iconRootToggle);
-iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
+    iconScreen          = findViewById(R.id.iconScreenToggle);
+    iconCamera          = findViewById(R.id.iconCameraToggle);
+    iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
+    iconLocation        = findViewById(R.id.iconLocationToggle);
+    iconThermal         = findViewById(R.id.iconThermalToggle);
+    iconModem           = findViewById(R.id.iconModemToggle);
+    iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
+    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
+    iconSensors         = findViewById(R.id.iconSensorsToggle);
+    iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
+    iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
+    iconNfc             = findViewById(R.id.iconNfcToggle);
+    iconGnss            = findViewById(R.id.iconGnssToggle);
+    iconUwb             = findViewById(R.id.iconUwbToggle);
+    iconUsb             = findViewById(R.id.iconUsbToggle);
+    iconHaptics         = findViewById(R.id.iconHapticsToggle);
+    iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);
+    iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
+    iconRoot            = findViewById(R.id.iconRootToggle);
+    iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
     // ============================================================
     // MASTER ARRAYS — YOUR ORDER
@@ -343,7 +339,7 @@ iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
     // ============================================================
     initBatterySection();
 
-    // ============================================================
+// ============================================================
 // ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL FIXED VERSION
 // ============================================================
 LinearLayout headerBattery = findViewById(R.id.headerBattery);
@@ -386,6 +382,8 @@ headerBattery.setOnClickListener(v -> {
         }
     }
 });
+
+
 
     // ============================================================
     // NORMAL SECTIONS
@@ -2319,8 +2317,20 @@ private String formatThermalLine(String label, ThermalGroupReading r) {
 }
 
 // ===================================================================
-// OEM / EXTRA FALLBACK HELPERS (ΔΕΝ πειράζουν το universal engine)
+// OEM / EXTRA FALLBACK HELPERS (UNIVERSAL + XIAOMI / REDMI / POCO)
 // ===================================================================
+
+// Xiaomi / Redmi / POCO / HyperOS ανίχνευση
+private boolean isXiaomiFamilyDevice() {
+    String manu   = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.US);
+    String brand  = Build.BRAND == null ? "" : Build.BRAND.toLowerCase(Locale.US);
+    String finger = Build.FINGERPRINT == null ? "" : Build.FINGERPRINT.toLowerCase(Locale.US);
+
+    return manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")
+            || brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
+            || finger.contains("xiaomi") || finger.contains("redmi") || finger.contains("poco")
+            || finger.contains("hyperos");
+}
 
 // Generic helper: ψάχνει ξανά thermal_zone* με έξτρα keywords
 private float findTempByTypeKeywords(String... keywords) {
@@ -2406,7 +2416,11 @@ private void applyThermalFallbacks(
         ThermalGroupReading modemMain,
         ThermalGroupReading modemAux
 ) {
+    boolean isXiaomiFamily = isXiaomiFamilyDevice();
+
+    // =========================
     // BatteryMain
+    // =========================
     if (batteryMain != null && !batteryMain.valid) {
         float c = findTempByTypeKeywords(
                 "battery", "batt_therm", "battery_therm", "bms"
@@ -2419,7 +2433,21 @@ private void applyThermalFallbacks(
         }
     }
 
+    if (isXiaomiFamily && batteryMain != null && !batteryMain.valid) {
+        float c = findTempByTypeKeywords(
+                "batt_temp", "bat_therm", "battery-main", "battery_board", "batman"
+        );
+        if (!isValidTemp(c)) {
+            c = readBatteryTempFallback();
+        }
+        if (isValidTemp(c)) {
+            batteryMain.updateIfBetter("xiaomi:battery", c);
+        }
+    }
+
+    // =========================
     // BatteryShell
+    // =========================
     if (batteryShell != null && !batteryShell.valid) {
         float c = findTempByTypeKeywords(
                 "batt_shell", "battery_shell", "shell_therm", "case-therm", "case_therm", "skin"
@@ -2429,7 +2457,18 @@ private void applyThermalFallbacks(
         }
     }
 
+    if (isXiaomiFamily && batteryShell != null && !batteryShell.valid) {
+        float c = findTempByTypeKeywords(
+                "batt_skin", "batt_surface", "back_cover", "rear_case", "rear_skin"
+        );
+        if (isValidTemp(c)) {
+            batteryShell.updateIfBetter("xiaomi:battery_shell", c);
+        }
+    }
+
+    // =========================
     // PMIC
+    // =========================
     if (pmic != null && !pmic.valid) {
         float c = findTempByTypeKeywords(
                 "pmic", "pmic_therm", "pmic-tz", "xo_therm_pmic", "pm8998", "pm660", "pm8005"
@@ -2439,14 +2478,23 @@ private void applyThermalFallbacks(
         }
     }
 
+    if (isXiaomiFamily && pmic != null && !pmic.valid) {
+        float c = findTempByTypeKeywords(
+                "pm6150l_tz", "pm7250b_tz", "pm8350", "pm8350_tz", "pm6125"
+        );
+        if (isValidTemp(c)) {
+            pmic.updateIfBetter("xiaomi:pmic", c);
+        }
+    }
+
+    // =========================
     // Charger
+    // =========================
     if (charger != null && !charger.valid) {
         float c = findTempByTypeKeywords(
                 "charger", "charger-therm", "chg", "battery_charger", "charge-temp", "usb-therm", "charger_temp"
         );
-        if (isValidTemp(c)) {
-            charger.updateIfBetter("fallback:charger", c);
-        } else {
+        if (!isValidTemp(c)) {
             // Δοκιμή και από power_supply
             String[] paths = new String[]{
                     "/sys/class/power_supply/usb/temp",
@@ -2459,14 +2507,46 @@ private void applyThermalFallbacks(
                     float cc = v;
                     if (cc > 1000f) cc /= 1000f;
                     if (!isValidTemp(cc)) continue;
-                    charger.updateIfBetter("fallback:charger_ps", cc);
+                    c = cc;
                     break;
                 } catch (Throwable ignore) {}
             }
         }
+        if (isValidTemp(c)) {
+            charger.updateIfBetter("fallback:charger", c);
+        }
     }
 
+    if (isXiaomiFamily && charger != null && !charger.valid) {
+        float c = findTempByTypeKeywords(
+                "xh_therm_chg", "chg_temp", "charge_pump", "cp_therm", "bp_chg"
+        );
+        if (!isValidTemp(c)) {
+            String[] xPaths = new String[]{
+                    "/sys/class/power_supply/main/temp",
+                    "/sys/class/power_supply/wireless/temp",
+                    "/sys/class/power_supply/charge_pump/temp"
+            };
+            for (String p : xPaths) {
+                try {
+                    long v = readLongSafe(new File(p));
+                    if (v == Long.MIN_VALUE) continue;
+                    float cc = v;
+                    if (cc > 1000f) cc /= 1000f;
+                    if (!isValidTemp(cc)) continue;
+                    c = cc;
+                    break;
+                } catch (Throwable ignore) {}
+            }
+        }
+        if (isValidTemp(c)) {
+            charger.updateIfBetter("xiaomi:charger", c);
+        }
+    }
+
+    // =========================
     // ModemMain
+    // =========================
     if (modemMain != null && !modemMain.valid) {
         float c = findTempByTypeKeywords(
                 "modem", "modem0", "mdm", "mdmss", "modempa", "rf-therm", "rf", "cp_therm", "radio_temp"
@@ -2476,13 +2556,33 @@ private void applyThermalFallbacks(
         }
     }
 
+    if (isXiaomiFamily && modemMain != null && !modemMain.valid) {
+        float c = findTempByTypeKeywords(
+                "xo_therm_modem", "modem_pa", "modem-pa-therm", "modem_pa_0", "mdm0"
+        );
+        if (isValidTemp(c)) {
+            modemMain.updateIfBetter("xiaomi:modem_main", c);
+        }
+    }
+
+    // =========================
     // ModemAux
+    // =========================
     if (modemAux != null && !modemAux.valid) {
         float c = findTempByTypeKeywords(
                 "modem1", "mdm2", "modem_tz1", "mdmss1", "xbl_modem1", "rf1", "cp_sub_therm"
         );
         if (isValidTemp(c)) {
             modemAux.updateIfBetter("fallback:modem_aux", c);
+        }
+    }
+
+    if (isXiaomiFamily && modemAux != null && !modemAux.valid) {
+        float c = findTempByTypeKeywords(
+                "modem_sub", "modem1_pa", "mdm1", "rf_sub", "rf2"
+        );
+        if (isValidTemp(c)) {
+            modemAux.updateIfBetter("xiaomi:modem_aux", c);
         }
     }
 }
@@ -3315,7 +3415,7 @@ private void collapseAllExceptBattery() {
 
     if (allContents == null || allIcons == null) return;
 
-    // 1) Κλείσε όλα τα κανονικά sections (όλα εκτός του Battery)
+    // 1) Κλείσε όλα τα κανονικά sections
     for (int i = 1; i < allContents.length; i++) {
 
         TextView content = allContents[i];
@@ -3327,19 +3427,19 @@ private void collapseAllExceptBattery() {
         }
     }
 
-    // 2) Κλείσε και ΤΑ ΔΥΟ κομμάτια του Battery
-    if (batteryContainer != null) {
+    // 2) Κλείσε ΚΑΙ τα δύο battery blocks
+    if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
         animateCollapse(batteryContainer);
     }
 
-    if (txtBatteryModelCapacity != null) {
+    if (txtBatteryModelCapacity != null &&
+        txtBatteryModelCapacity.getVisibility() == View.VISIBLE) {
         txtBatteryModelCapacity.setVisibility(View.GONE);
     }
 
-    // 3) Και άλλαξε το icon σε +
-    if (iconBattery != null) {
-        iconBattery.setText("＋");
-    }
+    // 3) Reset battery icon
+    if (iconBattery != null) iconBattery.setText("＋");
+}
 }  
 
 }  

@@ -215,7 +215,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    // ============================================================
+ // ============================================================
 // CLEAN — FINAL — CORRECT onCreate()
 // ============================================================
 @Override
@@ -341,31 +341,52 @@ protected void onCreate(Bundle savedInstanceState) {
 
 
     // ============================================================
-    // ⭐ SPECIAL BATTERY EXPAND/COLLAPSE (Overrides setupSection)
-    // ============================================================
-    LinearLayout headerBattery = findViewById(R.id.headerBattery);
+// ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL VERSION
+// ============================================================
+LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
-    headerBattery.setOnClickListener(v -> {
+headerBattery.setOnClickListener(v -> {
 
-        if (batteryContainer.getVisibility() == View.GONE) {
+    boolean willOpen = (batteryContainer.getVisibility() == View.GONE);
 
-            // -------- OPEN --------
-            batteryContainer.setVisibility(View.VISIBLE);
-            iconBattery.setText("－");
+    // 1️⃣ Κλείσε όλα τα άλλα sections
+    collapseAllExceptBattery();
 
-            if (txtBatteryContent != null) {
-                String info = buildBatteryInfo();
-                txtBatteryContent.setText(info);
-                applyNeonValues(txtBatteryContent, info);
-            }
+    // 2️⃣ Toggle Battery
+    if (willOpen) {
 
-        } else {
+        animateExpand(batteryContainer);
+        iconBattery.setText("－");
 
-            // -------- CLOSE --------
-            batteryContainer.setVisibility(View.GONE);
-            iconBattery.setText("＋");
+        if (txtBatteryContent != null) {
+            String info = buildBatteryInfo();
+            txtBatteryContent.setText(info);
+            applyNeonValues(txtBatteryContent, info);
         }
-    });
+
+    } else {
+        animateCollapse(batteryContainer);
+        iconBattery.setText("＋");
+    }
+});
+
+// ============================================================
+// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY
+// ============================================================
+private void collapseAllExceptBattery() {
+
+    // 🔥 Battery = index 0 στο allContents[]
+    for (int i = 1; i < allContents.length; i++) {
+
+        TextView content = allContents[i];
+        TextView icon    = allIcons[i];
+
+        if (content != null && content.getVisibility() == View.VISIBLE) {
+            animateCollapse(content);
+            if (icon != null) icon.setText("＋");
+        }
+    }
+}
 
 
     // ============================================================
@@ -2300,6 +2321,175 @@ private String formatThermalLine(String label, ThermalGroupReading r) {
 }
 
 // ===================================================================
+// OEM / EXTRA FALLBACK HELPERS (ΔΕΝ πειράζουν το universal engine)
+// ===================================================================
+
+// Generic helper: ψάχνει ξανά thermal_zone* με έξτρα keywords
+private float findTempByTypeKeywords(String... keywords) {
+    if (keywords == null || keywords.length == 0) return Float.NaN;
+
+    File dir = new File("/sys/class/thermal");
+    File[] zones = null;
+    try {
+        if (dir.exists() && dir.isDirectory()) {
+            zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+        }
+    } catch (Throwable ignore) {}
+
+    if (zones == null || zones.length == 0) return Float.NaN;
+
+    float best = Float.NaN;
+
+    for (File z : zones) {
+        try {
+            String base = z.getAbsolutePath();
+            String type = readFirstLineSafe(new File(base, "type"));
+            if (type == null || type.isEmpty()) continue;
+
+            String lower = type.toLowerCase(Locale.US);
+            boolean match = false;
+            for (String k : keywords) {
+                if (k == null || k.isEmpty()) continue;
+                if (lower.contains(k.toLowerCase(Locale.US))) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) continue;
+
+            long milli = readLongSafe(new File(base, "temp"));
+            float c;
+            if (milli == Long.MIN_VALUE) {
+                String t = readFirstLineSafe(new File(base, "temp"));
+                if (t == null || t.isEmpty()) continue;
+                c = Float.parseFloat(t.trim());
+            } else {
+                c = milli / 1000f;
+            }
+
+            if (!isValidTemp(c)) continue;
+            if (Float.isNaN(best) || c > best) {
+                best = c;
+            }
+
+        } catch (Throwable ignore) { }
+    }
+
+    return best;
+}
+
+// Fallback για battery temp από power_supply (OEM paths)
+private float readBatteryTempFallback() {
+    String[] paths = new String[]{
+            "/sys/class/power_supply/battery/temp",
+            "/sys/class/power_supply/bms/temp",
+            "/sys/class/power_supply/maxfg/temp"
+    };
+
+    for (String p : paths) {
+        try {
+            long v = readLongSafe(new File(p));
+            if (v == Long.MIN_VALUE) continue;
+            float c = v;
+            if (c > 1000f) c = c / 1000f;   // m°C → °C (συνήθης μορφή)
+            if (!isValidTemp(c)) continue;
+            return c;
+        } catch (Throwable ignore) { }
+    }
+    return Float.NaN;
+}
+
+// Fallback εφαρμογή: συμπληρώνει ΜΟΝΟ ό,τι έμεινε invalid από το universal scan
+private void applyThermalFallbacks(
+        ThermalGroupReading batteryMain,
+        ThermalGroupReading batteryShell,
+        ThermalGroupReading pmic,
+        ThermalGroupReading charger,
+        ThermalGroupReading modemMain,
+        ThermalGroupReading modemAux
+) {
+    // BatteryMain
+    if (batteryMain != null && !batteryMain.valid) {
+        float c = findTempByTypeKeywords(
+                "battery", "batt_therm", "battery_therm", "bms"
+        );
+        if (!isValidTemp(c)) {
+            c = readBatteryTempFallback();
+        }
+        if (isValidTemp(c)) {
+            batteryMain.updateIfBetter("fallback:battery", c);
+        }
+    }
+
+    // BatteryShell
+    if (batteryShell != null && !batteryShell.valid) {
+        float c = findTempByTypeKeywords(
+                "batt_shell", "battery_shell", "shell_therm", "case-therm", "case_therm", "skin"
+        );
+        if (isValidTemp(c)) {
+            batteryShell.updateIfBetter("fallback:battery_shell", c);
+        }
+    }
+
+    // PMIC
+    if (pmic != null && !pmic.valid) {
+        float c = findTempByTypeKeywords(
+                "pmic", "pmic_therm", "pmic-tz", "xo_therm_pmic", "pm8998", "pm660", "pm8005"
+        );
+        if (isValidTemp(c)) {
+            pmic.updateIfBetter("fallback:pmic", c);
+        }
+    }
+
+    // Charger
+    if (charger != null && !charger.valid) {
+        float c = findTempByTypeKeywords(
+                "charger", "charger-therm", "chg", "battery_charger", "charge-temp", "usb-therm", "charger_temp"
+        );
+        if (isValidTemp(c)) {
+            charger.updateIfBetter("fallback:charger", c);
+        } else {
+            // Δοκιμή και από power_supply
+            String[] paths = new String[]{
+                    "/sys/class/power_supply/usb/temp",
+                    "/sys/class/power_supply/charger/temp"
+            };
+            for (String p : paths) {
+                try {
+                    long v = readLongSafe(new File(p));
+                    if (v == Long.MIN_VALUE) continue;
+                    float cc = v;
+                    if (cc > 1000f) cc /= 1000f;
+                    if (!isValidTemp(cc)) continue;
+                    charger.updateIfBetter("fallback:charger_ps", cc);
+                    break;
+                } catch (Throwable ignore) {}
+            }
+        }
+    }
+
+    // ModemMain
+    if (modemMain != null && !modemMain.valid) {
+        float c = findTempByTypeKeywords(
+                "modem", "modem0", "mdm", "mdmss", "modempa", "rf-therm", "rf", "cp_therm", "radio_temp"
+        );
+        if (isValidTemp(c)) {
+            modemMain.updateIfBetter("fallback:modem_main", c);
+        }
+    }
+
+    // ModemAux
+    if (modemAux != null && !modemAux.valid) {
+        float c = findTempByTypeKeywords(
+                "modem1", "mdm2", "modem_tz1", "mdmss1", "xbl_modem1", "rf1", "cp_sub_therm"
+        );
+        if (isValidTemp(c)) {
+            modemAux.updateIfBetter("fallback:modem_aux", c);
+        }
+    }
+}
+
+// ===================================================================
 // MAIN BUILDER — ΤΕΛΙΚΟ ΚΕΙΜΕΝΟ ΓΙΑ ΤΟ THERMAL SECTION
 // ===================================================================
 private String buildThermalInfo() {
@@ -2315,6 +2505,11 @@ private String buildThermalInfo() {
     ThermalGroupReading modemAux     = new ThermalGroupReading();
 
     ThermalSummary summary = scanThermalHardware(
+            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
+    );
+
+    // 🔁 OEM / EXTRA FALLBACKS — ΜΟΝΟ αν έμεινε κάτι N/A
+    applyThermalFallbacks(
             batteryMain, batteryShell, pmic, charger, modemMain, modemAux
     );
 
@@ -3115,3 +3310,4 @@ private void populateAllSections() {
         tv.setText(ssb);
     }
 }
+

@@ -330,64 +330,44 @@ protected void onCreate(Bundle savedInstanceState) {
     };
 
     // ============================================================
-    // APPLY TEXTS + SETUP SECTIONS (Accordion Mode)
+    // APPLY TEXTS + SETUP SECTIONS
     // ============================================================
     populateAllSections();
 
     // ============================================================
-    // BATTERY — MUST INIT BEFORE EXPAND LOGIC
+    // BATTERY — INIT BEFORE EXPAND LOGIC
     // ============================================================
     initBatterySection();
 
-
     // ============================================================
-// ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL VERSION
-// ============================================================
-LinearLayout headerBattery = findViewById(R.id.headerBattery);
+    // ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL VERSION
+    // ============================================================
+    LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
-headerBattery.setOnClickListener(v -> {
+    headerBattery.setOnClickListener(v -> {
 
-    boolean willOpen = (batteryContainer.getVisibility() == View.GONE);
+        boolean willOpen = (batteryContainer.getVisibility() == View.GONE);
 
-    // 1️⃣ Κλείσε όλα τα άλλα sections
-    collapseAllExceptBattery();
+        // 1️⃣ Close all other sections
+        collapseAllExceptBattery();
 
-    // 2️⃣ Toggle Battery
-    if (willOpen) {
+        // 2️⃣ Toggle Battery
+        if (willOpen) {
 
-        animateExpand(batteryContainer);
-        iconBattery.setText("－");
+            animateExpand(batteryContainer);
+            iconBattery.setText("－");
 
-        if (txtBatteryContent != null) {
-            String info = buildBatteryInfo();
-            txtBatteryContent.setText(info);
-            applyNeonValues(txtBatteryContent, info);
+            if (txtBatteryContent != null) {
+                String info = buildBatteryInfo();
+                txtBatteryContent.setText(info);
+                applyNeonValues(txtBatteryContent, info);
+            }
+
+        } else {
+            animateCollapse(batteryContainer);
+            iconBattery.setText("＋");
         }
-
-    } else {
-        animateCollapse(batteryContainer);
-        iconBattery.setText("＋");
-    }
-});
-
-// ============================================================
-// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY
-// ============================================================
-private void collapseAllExceptBattery() {
-
-    // 🔥 Battery = index 0 στο allContents[]
-    for (int i = 1; i < allContents.length; i++) {
-
-        TextView content = allContents[i];
-        TextView icon    = allIcons[i];
-
-        if (content != null && content.getVisibility() == View.VISIBLE) {
-            animateCollapse(content);
-            if (icon != null) icon.setText("＋");
-        }
-    }
-}
-
+    });
 
     // ============================================================
     // NORMAL SECTIONS
@@ -413,7 +393,6 @@ private void collapseAllExceptBattery() {
     setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
     setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
 }
-
 // 🔥 END onCreate()
 
 // ============================================================  

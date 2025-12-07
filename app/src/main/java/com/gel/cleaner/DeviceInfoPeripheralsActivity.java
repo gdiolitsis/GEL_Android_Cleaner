@@ -340,34 +340,48 @@ protected void onCreate(Bundle savedInstanceState) {
     initBatterySection();
 
     // ============================================================
-    // ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL VERSION
-    // ============================================================
-    LinearLayout headerBattery = findViewById(R.id.headerBattery);
+// ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FINAL FIXED VERSION
+// ============================================================
+LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
-    headerBattery.setOnClickListener(v -> {
+headerBattery.setOnClickListener(v -> {
 
-        boolean willOpen = (batteryContainer.getVisibility() == View.GONE);
+    boolean willOpen = (batteryContainer.getVisibility() == View.GONE);
 
-        // 1️⃣ Close all other sections
-        collapseAllExceptBattery();
+    // 1️⃣ Close all other sections (and also hide battery extras)
+    collapseAllExceptBattery();
 
-        // 2️⃣ Toggle Battery
-        if (willOpen) {
+    // 2️⃣ Toggle Battery block
+    if (willOpen) {
 
-            animateExpand(batteryContainer);
-            iconBattery.setText("－");
+        // Open Battery
+        animateExpand(batteryContainer);
+        iconBattery.setText("－");
 
-            if (txtBatteryContent != null) {
-                String info = buildBatteryInfo();
-                txtBatteryContent.setText(info);
-                applyNeonValues(txtBatteryContent, info);
-            }
-
-        } else {
-            animateCollapse(batteryContainer);
-            iconBattery.setText("＋");
+        // Show model capacity button
+        if (txtBatteryModelCapacity != null) {
+            txtBatteryModelCapacity.setVisibility(View.VISIBLE);
         }
-    });
+
+        // Refresh info
+        if (txtBatteryContent != null) {
+            String info = buildBatteryInfo();
+            txtBatteryContent.setText(info);
+            applyNeonValues(txtBatteryContent, info);
+        }
+
+    } else {
+
+        // Close Battery
+        animateCollapse(batteryContainer);
+        iconBattery.setText("＋");
+
+        // Hide model capacity button
+        if (txtBatteryModelCapacity != null) {
+            txtBatteryModelCapacity.setVisibility(View.GONE);
+        }
+    }
+});
 
     // ============================================================
     // NORMAL SECTIONS
@@ -3297,7 +3311,7 @@ private void collapseAllExceptBattery() {
 
     if (allContents == null || allIcons == null) return;
 
-    // Battery = index 0 → κλείνουμε από 1 και κάτω
+    // 1) Κλείσε όλα τα κανονικά sections (όλα εκτός του Battery)
     for (int i = 1; i < allContents.length; i++) {
 
         TextView content = allContents[i];
@@ -3308,6 +3322,21 @@ private void collapseAllExceptBattery() {
             if (icon != null) icon.setText("＋");
         }
     }
+
+    // 2) Κλείσε και ΤΑ ΔΥΟ κομμάτια του Battery
+    if (batteryContainer != null) {
+        animateCollapse(batteryContainer);
+    }
+
+    if (txtBatteryModelCapacity != null) {
+        txtBatteryModelCapacity.setVisibility(View.GONE);
+    }
+
+    // 3) Και άλλαξε το icon σε +
+    if (iconBattery != null) {
+        iconBattery.setText("＋");
+    }
+}
 }
 
 }

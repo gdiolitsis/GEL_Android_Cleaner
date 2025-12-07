@@ -216,9 +216,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // CLEAN — FINAL — CORRECT onCreate()
-    // ============================================================
-    @Override
+// CLEAN — FINAL — CORRECT onCreate()
+// ============================================================
+@Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_peripherals);
@@ -334,10 +334,43 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     populateAllSections();
 
-    // 🔥 NECESSARY — Battery works ONLY if initialized
+    // ============================================================
+    // BATTERY — MUST INIT BEFORE EXPAND LOGIC
+    // ============================================================
     initBatterySection();
 
-    setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
+
+    // ============================================================
+    // ⭐ SPECIAL BATTERY EXPAND/COLLAPSE (Overrides setupSection)
+    // ============================================================
+    LinearLayout headerBattery = findViewById(R.id.headerBattery);
+
+    headerBattery.setOnClickListener(v -> {
+
+        if (batteryContainer.getVisibility() == View.GONE) {
+
+            // -------- OPEN --------
+            batteryContainer.setVisibility(View.VISIBLE);
+            iconBattery.setText("－");
+
+            if (txtBatteryContent != null) {
+                String info = buildBatteryInfo();
+                txtBatteryContent.setText(info);
+                applyNeonValues(txtBatteryContent, info);
+            }
+
+        } else {
+
+            // -------- CLOSE --------
+            batteryContainer.setVisibility(View.GONE);
+            iconBattery.setText("＋");
+        }
+    });
+
+
+    // ============================================================
+    // NORMAL SECTIONS
+    // ============================================================
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
     setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
@@ -1973,7 +2006,8 @@ private static class ThermalGroupReading {
 
     void updateIfBetter(String name, float valueC) {
         if (!isValidTemp(valueC)) return;
-        if (!valid || valueC > tempC) {  // κρατάμε την πιο "ζεστή" τίμια τιμή
+        // κρατάμε την πιο "ζεστή" τίμια τιμή
+        if (!valid || valueC > tempC) {
             valid   = true;
             tempC   = valueC;
             rawName = name;
@@ -1987,14 +2021,17 @@ private static boolean isValidTemp(float c) {
 }
 
 // ---------------------------------------------------------------
-// MAPPING: thermal zone "type" → λογική ομάδα (Battery / PMIC / ...)
+// MAPPING: thermal zone "type" → λογική ομάδα (μόνο REAL hardware)
+//  - Χρησιμοποιεί patterns ώστε να δουλεύει σε ΟΛΕΣ τις συσκευές
 // ---------------------------------------------------------------
 private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
-        // Label           , patterns που αν τα βρούμε στο type => ανήκει εδώ
-        {"Battery", "battery", "batt_therm", "battery_therm", "battery-main", "batt-therm"},
-        {"PMIC",    "pmic", "pmic-therm", "pmic_tz", "pm8010", "pm8998", "pmx-therm"},
-        {"Charger", "charger", "chg", "bq", "usb-therm", "charger_therm"},
-        {"Modem",   "modem", "mdm", "mdmss", "xbl_modem", "modempa", "rf-therm"}
+        // Label          , patterns που αν τα βρούμε στο type => ανήκει εδώ
+        {"BatteryMain",   "battery", "batt", "batt_therm", "battery_therm", "fuelgauge", "bms", "bms_therm"},
+        {"BatteryShell",  "skin", "case", "batt_skin", "battery_skin", "rear_case", "shell"},
+        {"PMIC",          "pmic", "pm8998", "pm8150", "pmx", "pmic-therm", "pmic_therm"},
+        {"Charger",       "charger", "chg", "usb", "usb-therm", "bq", "charge-therm"},
+        {"ModemMain",     "modem", "mdm", "mdmss", "xbl_modem", "modempa", "rf-therm", "rf"},
+        {"ModemAux",      "modem1", "rf1", "xbl_modem1", "mdm1", "modem_b"}
 };
 
 // ---------------------------
@@ -2007,10 +2044,12 @@ private static class ThermalSummary {
 
 // Διαβάζει *όλα* τα thermal_zoneX και γεμίζει τα group-readings
 private ThermalSummary scanThermalHardware(
-        ThermalGroupReading battery,
+        ThermalGroupReading batteryMain,
+        ThermalGroupReading batteryShell,
         ThermalGroupReading pmic,
         ThermalGroupReading charger,
-        ThermalGroupReading modem
+        ThermalGroupReading modemMain,
+        ThermalGroupReading modemAux
 ) {
     ThermalSummary summary = new ThermalSummary();
 
@@ -2035,14 +2074,13 @@ private ThermalSummary scanThermalHardware(
         }
     } catch (Throwable ignore) { }
 
-    summary.zoneCount   = (zones  != null) ? zones.length  : 0;
+    summary.zoneCount          = (zones  != null) ? zones.length  : 0;
     summary.coolingDeviceCount = (cools != null) ? cools.length : 0;
 
     // ---------- Thermal Zones → groups ----------
     if (zones != null) {
         for (File z : zones) {
             try {
-                String name  = z.getName();  // π.χ. "thermal_zone12"
                 String base  = z.getAbsolutePath(); // .../thermal_zone12
                 String type  = readFirstLineSafe(new File(base, "type"));
                 long   milli = readLongSafe(new File(base, "temp"));   // συνήθως m°C
@@ -2064,14 +2102,18 @@ private ThermalSummary scanThermalHardware(
                 String group = mapTypeToGroup(type);
                 if (group == null) continue;
 
-                if ("Battery".equals(group)) {
-                    battery.updateIfBetter(type, c);
+                if ("BatteryMain".equals(group)) {
+                    batteryMain.updateIfBetter(type, c);
+                } else if ("BatteryShell".equals(group)) {
+                    batteryShell.updateIfBetter(type, c);
                 } else if ("PMIC".equals(group)) {
                     pmic.updateIfBetter(type, c);
                 } else if ("Charger".equals(group)) {
                     charger.updateIfBetter(type, c);
-                } else if ("Modem".equals(group)) {
-                    modem.updateIfBetter(type, c);
+                } else if ("ModemMain".equals(group)) {
+                    modemMain.updateIfBetter(type, c);
+                } else if ("ModemAux".equals(group)) {
+                    modemAux.updateIfBetter(type, c);
                 }
 
             } catch (Throwable ignore) { }
@@ -2081,7 +2123,7 @@ private ThermalSummary scanThermalHardware(
     return summary;
 }
 
-// Mapping από raw type → ομάδα (Battery / PMIC / Charger / Modem)
+// Mapping από raw type → ομάδα (BatteryMain / BatteryShell / PMIC / Charger / ModemMain / ModemAux)
 private String mapTypeToGroup(String rawType) {
     if (rawType == null) return null;
     String t = rawType.toLowerCase(Locale.US);
@@ -2105,17 +2147,18 @@ private boolean isHardwareCoolingDevice(String rawType) {
     String t = rawType.toLowerCase(Locale.US);
 
     // Fans / blowers / pumps / heatsinks κλπ
-    if (t.contains("fan"))        return true;
-    if (t.contains("blower"))     return true;
-    if (t.contains("pump"))       return true;
-    if (t.contains("cooling_fan"))return true;
-    if (t.contains("heatsink"))   return true;
-    if (t.contains("radiator"))   return true;
+    if (t.contains("fan"))            return true;
+    if (t.contains("cooling_fan"))    return true;
+    if (t.contains("blower"))         return true;
+    if (t.contains("pump"))           return true;
+    if (t.contains("heatsink"))       return true;
+    if (t.contains("radiator"))       return true;
+    if (t.contains("cooling_module")) return true;
 
     // Απορρίπτουμε skin / hotspot / virtual / cpu-thermal / gpu-thermal, κτλ.
-    if (t.contains("skin"))       return false;
-    if (t.contains("hotspot"))    return false;
-    if (t.contains("virtual"))    return false;
+    if (t.contains("skin"))        return false;
+    if (t.contains("hotspot"))     return false;
+    if (t.contains("virtual"))     return false;
 
     // Προεπιλογή: false (δεν εμφανίζουμε τα abstract / software paths)
     return false;
@@ -2142,7 +2185,9 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         return;
     }
 
+    int shown = 0;
     for (File c : cools) {
+        if (shown >= 5) break; // δεν γεμίζουμε την οθόνη, max 5 entries
         try {
             String base = c.getAbsolutePath();
             String type = readFirstLineSafe(new File(base, "type"));
@@ -2154,14 +2199,19 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
               .append(type)
               .append("\n");
 
+            shown++;
+
         } catch (Throwable ignore) { }
+    }
+
+    if (shown == 0) {
+        sb.append("• (no hardware cooling devices found)\n");
     }
 }
 
 // -----------------------------------------------------
 // Helpers για ανάγνωση αρχείων (LOCAL, δεν συγκρούονται με άλλα)
 // -----------------------------------------------------
-
 private String readFirstLineSafe(File file) {
     if (file == null || !file.exists()) return "";
     BufferedReader br = null;
@@ -2196,7 +2246,6 @@ private long readLongSafe(File file) {
 // -----------------------------------------------------
 // Thermal Counters (LOCAL - GEL Safe, δεν συγκρούονται με τίποτα)
 // -----------------------------------------------------
-
 private int countThermalZones() {
     try {
         File dir = new File("/sys/class/thermal");
@@ -2250,84 +2299,49 @@ private String formatThermalLine(String label, ThermalGroupReading r) {
     return String.format(Locale.US, "%-17s: %.1f°C %s\n", label, r.tempC, status);
 }
 
-
-// ============================================================
-// THERMAL INFO — CLEAN HARDWARE REPORT (Final GEL Edition)
-// ============================================================
+// ===================================================================
+// MAIN BUILDER — ΤΕΛΙΚΟ ΚΕΙΜΕΝΟ ΓΙΑ ΤΟ THERMAL SECTION
+// ===================================================================
 private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
-    // -------- COUNTS --------
-    int zoneCount = countThermalZones();
-    int coolCount = countCoolingDevices();
+    // 1. Σκανάρουμε hardware & παίρνουμε ΤΙΣ 6 ΟΜΑΔΕΣ
+    ThermalGroupReading batteryMain  = new ThermalGroupReading();
+    ThermalGroupReading batteryShell = new ThermalGroupReading();
+    ThermalGroupReading pmic         = new ThermalGroupReading();
+    ThermalGroupReading charger      = new ThermalGroupReading();
+    ThermalGroupReading modemMain    = new ThermalGroupReading();
+    ThermalGroupReading modemAux     = new ThermalGroupReading();
 
-    sb.append("Thermal Zones     : ").append(zoneCount).append("\n");
-    sb.append("Cooling Devices   : ").append(coolCount).append("\n\n");
+    ThermalSummary summary = scanThermalHardware(
+            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
+    );
 
+    // Αν για κάποιο λόγο το summary είναι 0, κάνουμε fallback στους counters
+    int zoneCount = summary.zoneCount > 0 ? summary.zoneCount : countThermalZones();
+    int coolCount = summary.coolingDeviceCount > 0 ? summary.coolingDeviceCount : countCoolingDevices();
+
+    // 2. Summary (Thermal Zones / Cooling Devices)
+    sb.append("Thermal Zones        : ").append(zoneCount).append("\n");
+    sb.append("Cooling Devices      : ").append(coolCount).append("\n\n");
+
+    // 3. Hardware Thermal Systems
     sb.append("Hardware Thermal Systems\n");
-    sb.append("====================================\n");
+    sb.append("================================\n\n");
 
-    // -------- HELPER READER --------
-    class TH {
-        float read(String name) {
-            try {
-                File f = new File("/sys/class/thermal/" + name + "/temp");
-                if (!f.exists()) return -999f;
-                BufferedReader br = new BufferedReader(new FileReader(f));
-                String s = br.readLine();
-                br.close();
-                if (s == null) return -999f;
-                float v = Float.parseFloat(s.trim());
-                if (v > 1000) v /= 1000f;
-                return v;
-            } catch (Throwable t) { return -999f; }
-        }
-        String fmt(float v) {
-            return (v < -100 ? "N/A" : (String.format(Locale.US, "%.1f°C", v)));
-        }
-    }
-    TH T = new TH();
+    sb.append(formatThermalLine("Main Modem",       modemMain));
+    sb.append(formatThermalLine("Secondary Modem",  modemAux));
+    sb.append(formatThermalLine("Main Battery",     batteryMain));
+    sb.append(formatThermalLine("Battery Shell",    batteryShell));
+    sb.append(formatThermalLine("Charger Thermal",  charger));
+    sb.append(formatThermalLine("PMIC Thermal",     pmic));
+    sb.append("\n");
 
-    // -------- MAIN THERMAL GROUPS --------
-    float tModemMain  = T.read("modem0");
-    float tModemSec   = T.read("modem1");
-    float tBattery    = T.read("battery_main");
-    float tShell      = T.read("battery_shell");
-    float tCharger    = T.read("charger");
-    float tPmic       = T.read("pmic");
-
-    sb.append("Main Modem        : ").append(T.fmt(tModemMain)).append("\n");
-    sb.append("Secondary Modem   : ").append(T.fmt(tModemSec)).append("\n");
-    sb.append("Main Battery      : ").append(T.fmt(tBattery)).append("\n");
-    sb.append("Battery Shell     : ").append(T.fmt(tShell)).append("\n");
-    sb.append("Charger Thermal   : ").append(T.fmt(tCharger)).append("\n");
-    sb.append("PMIC Thermal      : ").append(T.fmt(tPmic)).append("\n\n");
-
+    // 4. Hardware Cooling Systems
     sb.append("Hardware Cooling Systems\n");
-    sb.append("====================================\n");
-
-    // -------- FAN + OTHER COOLING DEVICES --------
-    try {
-        File dir = new File("/sys/class/thermal");
-        File[] cools = dir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        if (cools != null && cools.length > 0) {
-
-            for (File c : cools) {
-                String name = c.getName();
-
-                String type = "Cooling Device";
-                if (name.toLowerCase().contains("fan")) type = "Fan";
-
-                sb.append(type).append(" (").append(name).append(")\n");
-            }
-        } else {
-            sb.append("No hardware cooling devices detected.\n");
-        }
-
-    } catch (Throwable t) {
-        sb.append("Cooling info unavailable.\n");
-    }
+    sb.append("================================\n");
+    appendHardwareCoolingDevices(sb);
 
     return sb.toString();
 }

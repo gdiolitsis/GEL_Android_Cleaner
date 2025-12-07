@@ -2162,6 +2162,41 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
 // Helpers για ανάγνωση αρχείων (LOCAL, δεν συγκρούονται με άλλα)
 // -----------------------------------------------------
 
+private String readFirstLineSafe(File file) {
+    if (file == null || !file.exists()) return "";
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        String line = br.readLine();
+        return (line != null) ? line.trim() : "";
+    } catch (Throwable ignore) {
+        return "";
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+private long readLongSafe(File file) {
+    if (file == null || !file.exists()) return Long.MIN_VALUE;
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        String line = br.readLine();
+        if (line == null) return Long.MIN_VALUE;
+        line = line.trim();
+        if (line.isEmpty()) return Long.MIN_VALUE;
+        return Long.parseLong(line);
+    } catch (Throwable ignore) {
+        return Long.MIN_VALUE;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+// -----------------------------------------------------
+// Thermal Counters (LOCAL - GEL Safe, δεν συγκρούονται με τίποτα)
+// -----------------------------------------------------
+
 private int countThermalZones() {
     try {
         File dir = new File("/sys/class/thermal");

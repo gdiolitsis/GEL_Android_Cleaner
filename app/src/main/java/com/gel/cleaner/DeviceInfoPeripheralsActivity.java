@@ -3336,7 +3336,6 @@ private void collapseAllExceptBattery() {
     if (iconBattery != null) {
         iconBattery.setText("＋");
     }
-}
-}
+}  
 
-}
+}  

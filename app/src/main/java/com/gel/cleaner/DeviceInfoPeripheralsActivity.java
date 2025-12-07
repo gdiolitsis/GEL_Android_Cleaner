@@ -2093,7 +2093,7 @@ private ThermalSummary scanThermalHardware(
     } catch (Throwable ignore) { }
 
     summary.zoneCount          = (zones  != null) ? zones.length  : 0;
-    summary.coolingDeviceCount = (cools != null) ? cools.length : 0;
+    summary.coolingDeviceCount = (cools != null) ? cools.length   : 0;
 
     // ---------- Thermal Zones → groups ----------
     if (zones != null) {
@@ -2164,7 +2164,7 @@ private boolean isHardwareCoolingDevice(String rawType) {
     if (rawType == null) return false;
     String t = rawType.toLowerCase(Locale.US);
 
-    // Fans / blowers / pumps / heatsinks κλπ
+    // Fans / blowers / pumps / heatsinks κλπ (REAL hardware)
     if (t.contains("fan"))            return true;
     if (t.contains("cooling_fan"))    return true;
     if (t.contains("blower"))         return true;
@@ -2611,14 +2611,6 @@ private String buildThermalInfo() {
     applyThermalFallbacks(
             batteryMain, batteryShell, pmic, charger, modemMain, modemAux
     );
-
-    // Αν για κάποιο λόγο το summary είναι 0, κάνουμε fallback στους counters
-    int zoneCount = summary.zoneCount > 0 ? summary.zoneCount : countThermalZones();
-    int coolCount = summary.coolingDeviceCount > 0 ? summary.coolingDeviceCount : countCoolingDevices();
-
-    // 2. Summary (Thermal Zones / Cooling Devices)
-    sb.append("Thermal Zones        : ").append(zoneCount).append("\n");
-    sb.append("Cooling Devices      : ").append(coolCount).append("\n\n");
 
     // 3. Hardware Thermal Systems
     sb.append("Hardware Thermal Systems\n");

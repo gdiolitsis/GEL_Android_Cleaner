@@ -407,8 +407,8 @@ protected void onCreate(Bundle savedInstanceState) {
 
 
 // ============================================================
-// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (FINAL)
+// GEL Section Setup Engine — UNIVERSAL FINAL EDITION
+// Battery-Safe + Perfect Toggle
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -421,10 +421,12 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        // 🔥 ALWAYS close Battery module before opening a normal section
+        boolean willOpen = (content.getVisibility() == View.GONE);
+
+        // 🔥 Always close Battery module first
         closeBatteryModule();
 
-        // 1️⃣ Collapse all other NORMAL sections
+        // 🔥 Close ALL other normal sections
         for (int i = 0; i < allContents.length; i++) {
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
@@ -432,13 +434,16 @@ private void setupSection(View header, View content, TextView icon) {
             }
         }
 
-        // ⭐ SAFETY FIX — reset state before toggle (prevents camera lock)
-        content.setVisibility(View.GONE);
-        icon.setText("＋");
-
-        // 2️⃣ Toggle THIS section only
-        content.setVisibility(View.VISIBLE);
-        icon.setText("－");
+        // ----------------------------------------------
+        // ⭐ FIX: PERFECT TOGGLE
+        // ----------------------------------------------
+        if (willOpen) {
+            content.setVisibility(View.VISIBLE);
+            icon.setText("－");
+        } else {
+            content.setVisibility(View.GONE);
+            icon.setText("＋");
+        }
     });
 }
 
@@ -3423,4 +3428,5 @@ private String indent(String text, int spaces) {
 
 // 🔥 END OF CLASS
 }
+
 

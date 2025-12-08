@@ -1368,87 +1368,124 @@ private BatteryInfo getBatteryInfo() {
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — FINAL GEL EDITION (SYNCED WITH BatteryInfo)
+// BATTERY INFO BUILDER — FULL RESTORE (GEL FINAL EDITION)
+// Matches the ORIGINAL correct screenshot (right photo)
 // ===================================================================
 private String buildBatteryInfo() {
 
-    BatteryInfo bi = getBatteryInfo();   // ✅ Χρησιμοποιούμε το scanBatteryInfoUniversal()
+    BatteryInfo bi = getBatteryInfo();   // uses scanBatteryInfoUniversal()
+    if (bi == null) bi = new BatteryInfo();
+
     StringBuilder sb = new StringBuilder();
+    long modelCap = getStoredModelCapacity();
 
-    if (bi == null) {
-        bi = new BatteryInfo();
-    }
-
-    long modelCap   = getStoredModelCapacity();
-    boolean hasCC   = (bi.currentChargeMah > 0);
+    boolean hasCC = (bi.currentChargeMah > 0);
 
     // ---------------------------------------------------------------
-    // 1. CURRENT CAPACITY
+    // LEVEL
     // ---------------------------------------------------------------
-    String keyCurrent = padKey("Current capacity");
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s\n",
+            padKey("Level"),
+            (bi.level >= 0 ? bi.level + "%" : "N/A")
+    ));
 
+    // ---------------------------------------------------------------
+    // SCALE
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s\n",
+            padKey("Scale"),
+            (bi.scale > 0 ? String.valueOf(bi.scale) : "N/A")
+    ));
+
+    // ---------------------------------------------------------------
+    // STATUS
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s\n",
+            padKey("Status"),
+            (bi.status != null ? bi.status : "N/A")
+    ));
+
+    // ---------------------------------------------------------------
+    // CHARGING SOURCE
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s\n",
+            padKey("Charging source"),
+            (bi.chargingSource != null ? bi.chargingSource : "Unknown")
+    ));
+
+    // ---------------------------------------------------------------
+    // TEMPERATURE
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %.1f°C\n",
+            padKey("Temp"),
+            bi.temperature
+    ));
+
+    // ---------------------------------------------------------------
+    // REAL CAPACITY (mAh)
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s mAh\n",
+            padKey("Real capacity"),
+            (bi.realCapacityMah > 0 ? bi.realCapacityMah : 0)
+    ));
+
+    // ---------------------------------------------------------------
+    // ESTIMATED FULL
+    // ---------------------------------------------------------------
+    long estimatedFull = bi.estimatedFullMah;
+
+    if (estimatedFull <= 0 && modelCap > 0)
+        estimatedFull = modelCap;
+
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s mAh\n",
+            padKey("Estimated full (100%)"),
+            (estimatedFull > 0 ? estimatedFull : 0)
+    ));
+
+    // ---------------------------------------------------------------
+    // CURRENT CHARGE (Charge Counter)
+//    ---------------------------------------------------------------
     if (hasCC) {
-        // Έχουμε Charge Counter → δείχνουμε real current mAh
-        sb.append(String.format(
-                Locale.US,
-                "%s : %d mAh\n\n",
-                keyCurrent,
-                bi.currentChargeMah
-        ));
-    } else {
-        // Δεν υπάρχει Charge Counter → εξήγηση ΜΟΝΟ στη "δεξιά" στήλη
-        sb.append(String.format(
-                Locale.US,
-                "%s : %s\n",
-                keyCurrent,
-                "Not available on this device"
-        ));
-        // Extra γραμμή, στοιχισμένη στη στήλη των τιμών
-        sb.append(indent("(Requires Charge Counter sensor)", 24))
-          .append("\n\n");
-    }
-
-    // ---------------------------------------------------------------
-    // 2. ESTIMATED FULL (100%)
-    // ---------------------------------------------------------------
-    long estimated = -1;
-
-    if (bi.estimatedFullMah > 0) {
-        // Από OEM ή estimation μέσω CC
-        estimated = bi.estimatedFullMah;
-    } else if (modelCap > 0) {
-        // Fallback: model capacity του χρήστη
-        estimated = modelCap;
-    }
-
-    if (estimated > 0) {
         sb.append(String.format(
                 Locale.US,
                 "%s : %d mAh\n",
-                padKey("Estimated full (100%)"),
-                estimated
+                padKey("Current charge"),
+                bi.currentChargeMah
         ));
     } else {
         sb.append(String.format(
                 Locale.US,
                 "%s : %s\n",
-                padKey("Estimated full (100%)"),
-                "N/A"
+                padKey("Current charge"),
+                "Not available"
         ));
+        sb.append(indent("(Requires Charge Counter sensor)", 26))
+          .append("\n");
     }
 
     // ---------------------------------------------------------------
-    // 3. SOURCE  (Πάντα ΚΑΤΩ από Estimated full)
+    // SOURCE (Charge Counter / OEM / Model capacity)
 //    ---------------------------------------------------------------
     String src;
     if (hasCC) {
-        // Όταν υπάρχει current από Charge Counter
         src = "Charge Counter";
-    } else if (bi.estimatedFullMah > 0 && !"Unknown".equalsIgnoreCase(bi.source)) {
-        // OEM / PMIC / Vendor paths → απλά "OEM"
+    } else if (bi.source != null && !"Unknown".equalsIgnoreCase(bi.source)) {
         src = "OEM";
     } else if (modelCap > 0) {
-        // Δεν υπάρχει OEM, δεν υπάρχει CC, αλλά υπάρχει model capacity
         src = "Model capacity";
     } else {
         src = "Unknown";
@@ -1462,23 +1499,24 @@ private String buildBatteryInfo() {
     ));
 
     // ---------------------------------------------------------------
-    // 4. MODEL CAPACITY (user-defined)
-//    ---------------------------------------------------------------
-    if (modelCap > 0) {
-        sb.append(String.format(
-                Locale.US,
-                "%s : %d mAh\n",
-                padKey("Model capacity"),
-                modelCap
-        ));
-    } else {
-        sb.append(String.format(
-                Locale.US,
-                "%s : %s\n",
-                padKey("Model capacity"),
-                "N/A"
-        ));
-    }
+    // MODEL CAPACITY
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s\n",
+            padKey("Model capacity"),
+            (modelCap > 0 ? modelCap + " mAh" : "N/A")
+    ));
+
+    // ---------------------------------------------------------------
+    // LIFECYCLE
+    // ---------------------------------------------------------------
+    sb.append(String.format(
+            Locale.US,
+            "%s : %s",
+            padKey("Lifecycle"),
+            "Requires root access"
+    ));
 
     return sb.toString();
 }
@@ -1562,7 +1600,7 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ===================================================================
-// POPUP — GEL BLACK+GOLD FINAL (FULLY FIXED)
+// POPUP — ORIGINAL FULL BATTERY MODE (RESTORED)
 // ===================================================================
 private void showBatteryCapacityDialog() {
 
@@ -1585,9 +1623,6 @@ private void showBatteryCapacityDialog() {
 
             b.setView(input);
 
-            // -----------------------------------------------------------
-            // POSITIVE BUTTON
-            // -----------------------------------------------------------
             b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
                 String txt = input.getText().toString().trim();
                 if (!txt.isEmpty()) {
@@ -1597,29 +1632,16 @@ private void showBatteryCapacityDialog() {
 
                             saveModelCapacity(val);
 
-                            // refresh info + colors
-                            TextView content = findViewById(R.id.txtBatteryContent);
-                            if (content != null) {
-                                String info = buildBatteryInfo();
-                                content.setText(info);
-                                applyNeonValues(content, info);
-                            }
-
-                            // refresh button label
+                            // 🔥 Επαναφορά πλήρους battery info
+                            refreshBatteryContent();
                             refreshBatteryButton();
                         }
                     } catch (Throwable ignore) {}
                 }
             });
 
-            // -----------------------------------------------------------
-            // NEGATIVE BUTTON
-            // -----------------------------------------------------------
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 
-            // -----------------------------------------------------------
-            // SHOW DIALOG
-            // -----------------------------------------------------------
             AlertDialog dialog = b.create();
             dialog.getWindow().setBackgroundDrawableResource(
                     R.drawable.gel_dialog_battery_full_black
@@ -1629,7 +1651,30 @@ private void showBatteryCapacityDialog() {
         } catch (Throwable ignore) {}
     });
 }
-      
+  
+private void refreshBatterySection() {
+    try {
+        TextView t1 = findViewById(R.id.txtCurrentCapacity);
+        TextView t2 = findViewById(R.id.txtEstimatedFull);
+        TextView t3 = findViewById(R.id.txtBatterySource);
+        TextView t4 = findViewById(R.id.txtModelCapacity);
+
+        long current = BatteryUtils.getCurrentCapacity(this);
+        long estFull = BatteryUtils.getEstimatedFullCapacity(this);
+        String source = BatteryUtils.getCapacitySource(this);
+        long modelCap = getStoredModelCapacity();
+
+        if (t1 != null) t1.setText(current + " mAh");
+        if (t2 != null) t2.setText(estFull + " mAh");
+        if (t3 != null) t3.setText(source);
+        if (t4 != null) t4.setText(modelCap + " mAh");
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
+    
  // ============================================================
  // UwB Info
  // ====================================================== 
@@ -2559,145 +2604,413 @@ private String buildScreenInfo() {
     return sb.toString();
 }
 
-    // ============================================================================
-// 3. Modem / Telephony (GEL Compact Edition — Fully Merged)
+// ============================================================================
+// 3. TELEPHONY / MODEM — UI REFRESH (ONE BLOCK, ONE TEXTVIEW)
+// ============================================================================
+private void refreshModemInfo() {
+    try {
+        TextView modemView = findViewById(R.id.txtModemContent);
+        if (modemView != null) {
+            String info = buildModemInfo();
+            modemView.setText(info);
+            modemView.setVisibility(View.VISIBLE);
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================================
+// TELEPHONY / MODEM — MEGA REPORT (GEL ALIGNMENT EDITION)
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
+    Locale locale = Locale.US;
+
+    TelephonyManager tm = null;
+    SubscriptionManager sm = null;
 
     try {
-        TelephonyManager tm =
-                (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+    } catch (Throwable ignore) {}
 
+    try {
+        sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // PHONE TYPE
+    // ------------------------------------------------------------
+    String phoneTypeStr = "Unknown";
+    try {
         if (tm != null) {
-
-            // ---------------------------------------------------------
-            // PHONE TYPE
-            // ---------------------------------------------------------
-            String typeStr;
             switch (tm.getPhoneType()) {
-                case TelephonyManager.PHONE_TYPE_GSM:  typeStr = "GSM";  break;
-                case TelephonyManager.PHONE_TYPE_CDMA: typeStr = "CDMA"; break;
-                case TelephonyManager.PHONE_TYPE_SIP:  typeStr = "SIP";  break;
-                default:                                typeStr = "None";
+                case TelephonyManager.PHONE_TYPE_GSM:  phoneTypeStr = "GSM";  break;
+                case TelephonyManager.PHONE_TYPE_CDMA: phoneTypeStr = "CDMA"; break;
+                case TelephonyManager.PHONE_TYPE_SIP:  phoneTypeStr = "SIP";  break;
+                case TelephonyManager.PHONE_TYPE_NONE: phoneTypeStr = "None"; break;
             }
-            sb.append("Phone Type       : ").append(typeStr).append("\n");
+        }
+    } catch (Throwable ignore) {}
 
-            // ---------------------------------------------------------
-            // DATA NETWORK + 5G FLAG
-            // ---------------------------------------------------------
-            int net = tm.getDataNetworkType();
-            sb.append("Data Network     : ").append(networkName(net)).append("\n");
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("Phone Type"),
+            phoneTypeStr
+    ));
 
-            boolean is5G = (net == TelephonyManager.NETWORK_TYPE_NR);
-            sb.append("5G (NR) Active   : ").append(is5G ? "Yes" : "No").append("\n");
+    // ------------------------------------------------------------
+    // DATA NETWORK + 5G FLAG
+    // ------------------------------------------------------------
+    try {
+        int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
+        String netName = networkName(net);
 
-            // ---------------------------------------------------------
-            // CARRIER NAME
-            // ---------------------------------------------------------
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("Data Network"),
+                netName
+        ));
+
+        boolean is5G = (net == TelephonyManager.NETWORK_TYPE_NR);
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("5G (NR) Active"),
+                is5G ? "Yes" : "No"
+        ));
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // CARRIER / COUNTRY / OPERATOR CODE
+    // ------------------------------------------------------------
+    try {
+        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
+        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
+        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
+
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("Carrier"),
+                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"
+        ));
+
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("Country ISO"),
+                (iso != null && !iso.isEmpty()) ? iso.toUpperCase(locale) : "Unknown"
+        ));
+
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("Operator Code"),
+                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"
+        ));
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // SIGNAL STRENGTH (LEVEL ONLY — safe API)
+//  ------------------------------------------------------------
+    try {
+        if (tm != null) {
+            SignalStrength ss = tm.getSignalStrength();
+            if (ss != null) {
+                int level = ss.getLevel(); // 0–4
+                sb.append(String.format(
+                        locale,
+                        "%s : %d/4\n",
+                        padKeyModem("Signal Strength"),
+                        level
+                ));
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // ROAMING
+    // ------------------------------------------------------------
+    try {
+        boolean roaming = tm != null && tm.isNetworkRoaming();
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("Roaming"),
+                roaming ? "Yes" : "No"
+        ));
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // IMS / VoLTE / VoWiFi / VoNR (SDK-safe via reflection)
+//  ------------------------------------------------------------
+    // IMS Registered (δεν υπάρχει stable public API → informative only)
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("IMS Registered"),
+            "Unknown"
+    ));
+
+    // VoLTE
+    try {
+        boolean volte =
+                tm != null &&
+                (boolean) TelephonyManager.class
+                        .getMethod("isVolteAvailable")
+                        .invoke(tm);
+
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("VoLTE Support"),
+                volte ? "Yes" : "No"
+        ));
+    } catch (Throwable ignore) {
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("VoLTE Support"),
+                "Unknown"
+        ));
+    }
+
+    // VoWiFi
+    try {
+        boolean vowifi =
+                tm != null &&
+                (boolean) TelephonyManager.class
+                        .getMethod("isWifiCallingAvailable")
+                        .invoke(tm);
+
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("VoWiFi Support"),
+                vowifi ? "Yes" : "No"
+        ));
+    } catch (Throwable ignore) {
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("VoWiFi Support"),
+                "Unknown"
+        ));
+    }
+
+    // VoNR
+    if (Build.VERSION.SDK_INT >= 33) {
+        try {
+            boolean vonr =
+                    tm != null &&
+                    (boolean) TelephonyManager.class
+                            .getMethod("isVoNrEnabled")
+                            .invoke(tm);
+
+            sb.append(String.format(
+                    locale,
+                    "%s : %s\n",
+                    padKeyModem("VoNR Support"),
+                    vonr ? "Yes" : "No"
+            ));
+        } catch (Throwable ignore) {
+            sb.append(String.format(
+                    locale,
+                    "%s : %s\n",
+                    padKeyModem("VoNR Support"),
+                    "Unknown"
+            ));
+        }
+    } else {
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("VoNR Support"),
+                "Unknown (Android < 13)"
+        ));
+    }
+
+    // ------------------------------------------------------------
+    // ACTIVE SIMS / ESIM / BASIC SIM MAPPING
+    // ------------------------------------------------------------
+    try {
+        List<SubscriptionInfo> subs = null;
+        if (sm != null) {
             try {
-                String carrier = tm.getNetworkOperatorName();
-                sb.append("Carrier          : ")
-                        .append(carrier != null && !carrier.isEmpty() ? carrier : "Unknown")
-                        .append("\n");
-            } catch (Throwable ignore) { }
+                subs = sm.getActiveSubscriptionInfoList();
+            } catch (Throwable ignore) {}
+        }
 
-            // ---------------------------------------------------------
-            // ACTIVE SIM COUNT
-            // ---------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 22) {
+        int simCount = (subs != null ? subs.size() : 0);
+        sb.append(String.format(
+                locale,
+                "%s : %d\n",
+                padKeyModem("Active SIMs"),
+                simCount
+        ));
+
+        if (subs != null) {
+            for (SubscriptionInfo si : subs) {
+                int slot = si.getSimSlotIndex();
+                CharSequence carrName = si.getCarrierName();
+                String displayName = (carrName != null ? carrName.toString() : "Unknown");
+
+                sb.append(String.format(
+                        locale,
+                        "%s : %s\n",
+                        padKeyModem("SIM Slot " + slot),
+                        displayName
+                ));
+
+                // eSIM flag (Android 10+)
+                if (Build.VERSION.SDK_INT >= 29) {
+                    try {
+                        boolean esim = si.isEmbedded();
+                        sb.append(String.format(
+                                locale,
+                                "%s : %s\n",
+                                padKeyModem(" • eSIM"),
+                                esim ? "Yes" : "No"
+                        ));
+                    } catch (Throwable ignore) {}
+                }
+
+                // ICCID masked
                 try {
-                    SubscriptionManager sm = (SubscriptionManager)
-                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-
-                    int simCount = 0;
-                    if (sm != null) {
-                        List<SubscriptionInfo> subs = sm.getActiveSubscriptionInfoList();
-                        if (subs != null) simCount = subs.size();
+                    String iccid = si.getIccId();
+                    if (iccid != null && !iccid.isEmpty()) {
+                        sb.append(String.format(
+                                locale,
+                                "%s : %s\n",
+                                padKeyModem(" • ICCID"),
+                                maskSensitive(iccid)
+                        ));
                     }
-                    sb.append("Active SIM Slots : ").append(simCount).append("\n");
-                } catch (Throwable ignore) { }
-            }
+                } catch (Throwable ignore) {}
 
-            // ---------------------------------------------------------
-            // SIGNAL STRENGTH (LEVEL ONLY — getDbm() removed for SDK safety)
-            // ---------------------------------------------------------
-            try {
-                SignalStrength ss = tm.getSignalStrength();
-                if (ss != null) {
-                    int level = ss.getLevel();
-                    sb.append("Signal Strength  : ").append(level).append("/4\n");
-                }
-            } catch (Throwable ignore) { }
-
-            // ---------------------------------------------------------
-            // ROAMING
-            // ---------------------------------------------------------
-            try {
-                boolean roam = tm.isNetworkRoaming();
-                sb.append("Roaming          : ").append(roam ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) { }
-
-            // ---------------------------------------------------------
-            // IMS / VoLTE / VoWiFi / VoNR (SDK-safe)
-            // ---------------------------------------------------------
-            sb.append("IMS Registered   : Unknown\n");
-
-            // ---- VOLTE ----
-            try {
-                boolean volte =
-                        (boolean) TelephonyManager.class
-                                .getMethod("isVolteAvailable")
-                                .invoke(tm);
-                sb.append("VoLTE Support    : ").append(volte ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("VoLTE Support    : Unknown\n");
-            }
-
-            // ---- VOWIFI ----
-            try {
-                boolean vowifi =
-                        (boolean) TelephonyManager.class
-                                .getMethod("isWifiCallingAvailable")
-                                .invoke(tm);
-                sb.append("VoWiFi Support   : ").append(vowifi ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("VoWiFi Support   : Unknown\n");
-            }
-
-            // ---- VONR ----
-            if (Build.VERSION.SDK_INT >= 33) {
+                // MCC / MNC
                 try {
-                    boolean vonr =
-                            (boolean) TelephonyManager.class
-                                    .getMethod("isVoNrEnabled")
-                                    .invoke(tm);
-                    sb.append("VoNR Support     : ").append(vonr ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("VoNR Support     : Unknown\n");
-                }
-            } else {
-                sb.append("VoNR Support     : Unknown (Android < 13)\n");
+                    int mcc = si.getMcc();
+                    int mnc = si.getMnc();
+                    if (mcc > 0 && mnc >= 0) {
+                        sb.append(String.format(
+                                locale,
+                                "%s : %d / %d\n",
+                                padKeyModem(" • MCC / MNC"),
+                                mcc, mnc
+                        ));
+                    }
+                } catch (Throwable ignore) {}
             }
-
-            // ---------------------------------------------------------
-            // CARRIER AGGREGATION (no SDK API)
-            // ---------------------------------------------------------
-            sb.append("4G+ CA           : Unknown (SDK level)\n");
-        } else {
-            sb.append("Phone Type       : Unknown\n");
         }
 
     } catch (Throwable ignore) {
-        sb.append("Phone Type       : Unknown\n");
+        sb.append(String.format(
+                locale,
+                "%s : %s\n",
+                padKeyModem("SIM Info"),
+                "Unknown"
+        ));
     }
 
-    sb.append(
-        "Advanced         : Full RAT tables, NR bands, CA combos,\n" +
-        "                   require root access and OEM modem tools.\n"
-    );
+    // ------------------------------------------------------------
+    // SUBSCRIBER / PHONE NUMBER (MASKED IF AVAILABLE)
+//  ------------------------------------------------------------
+    try {
+        if (tm != null) {
+            String imsi  = null;
+            String msisdn = null;
+
+            try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
+            try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
+
+            sb.append(String.format(
+                    locale,
+                    "%s : %s\n",
+                    padKeyModem("IMSI"),
+                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"
+            ));
+
+            sb.append(String.format(
+                    locale,
+                    "%s : %s\n",
+                    padKeyModem("MSISDN"),
+                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"
+            ));
+        }
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // CARRIER AGGREGATION / BANDS — INFO ONLY (NO PUBLIC FULL API)
+//  ------------------------------------------------------------
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("4G+ CA"),
+            "Unknown (SDK restricted)"
+    ));
+
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("NR-CA"),
+            "Unknown"
+    ));
+
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("Bands"),
+            "Vendor / modem restricted"
+    ));
+
+    // ------------------------------------------------------------
+    // ADVANCED FOOTER
+    // ------------------------------------------------------------
+    sb.append(String.format(
+            locale,
+            "%s : %s\n",
+            padKeyModem("Advanced"),
+            "Full RAT tables, NR bands, CA combos"
+    ));
+    sb.append(String.format(
+            locale,
+            "%s   %s",
+            padKeyModem(""),
+            "require root access and OEM modem tools."
+    ));
 
     return sb.toString();
+}
+
+// ============================================================================
+// HELPERS — ALIGNMENT + MASKING (MODEM-ONLY, ΔΕΝ ΠΕΦΤΟΥΝ ΠΑΝΩ ΣΕ ΑΛΛΑ)
+// ============================================================================
+private String padKeyModem(String key) {
+    final int width = 20;  // ίδιο στυλ με Battery
+    if (key == null) return "";
+    if (key.length() >= width) return key;
+    StringBuilder sb = new StringBuilder(key);
+    while (sb.length() < width) {
+        sb.append(' ');
+    }
+    return sb.toString();
+}
+
+private String maskSensitive(String value) {
+    if (value == null) return "N/A";
+    String v = value.trim();
+    if (v.length() <= 4) return "****";
+    int keepStart = 4;
+    int keepEnd   = 2;
+    String start = v.substring(0, Math.min(keepStart, v.length()));
+    String end   = v.substring(Math.max(v.length() - keepEnd, keepStart));
+    StringBuilder mid = new StringBuilder();
+    for (int i = 0; i < v.length() - start.length() - end.length(); i++) {
+        mid.append('*');
+    }
+    return start + mid + end;
 }
 
 // ============================================================================

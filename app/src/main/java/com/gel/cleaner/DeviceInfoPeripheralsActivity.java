@@ -347,10 +347,8 @@ protected void onCreate(Bundle savedInstanceState) {
     initBatterySection();
 
     batteryContainer.setVisibility(View.GONE);
+    txtBatteryModelCapacity.setVisibility(View.GONE);
     iconBattery.setText("＋");
-    if (txtBatteryModelCapacity != null) {
-        txtBatteryModelCapacity.setVisibility(View.GONE);
-    }
 
     // ============================================================
     // ⭐ BATTERY SECTION — FINAL EXPAND/COLLAPSE ENGINE (GEL v5.0)
@@ -359,28 +357,25 @@ protected void onCreate(Bundle savedInstanceState) {
 
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-        collapseAllExceptBattery();
+        collapseAllExceptBattery();   // FIXED VERSION
 
         if (!isOpen) {
 
-            if (txtBatteryContent != null)
-                txtBatteryContent.setVisibility(View.VISIBLE);
+            txtBatteryContent.setVisibility(View.VISIBLE);
 
             animateExpand(batteryContainer);
             iconBattery.setText("－");
 
-            if (txtBatteryModelCapacity != null)
-                txtBatteryModelCapacity.setVisibility(View.VISIBLE);
+            txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
-            refreshBatteryInfoView();
+            refreshBatteryInfoView();   // FULL refresh on open
 
         } else {
 
             animateCollapse(batteryContainer);
             iconBattery.setText("＋");
 
-            if (txtBatteryModelCapacity != null)
-                txtBatteryModelCapacity.setVisibility(View.GONE);
+            txtBatteryModelCapacity.setVisibility(View.GONE);
         }
     });
 
@@ -413,7 +408,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
 // ============================================================
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// (Battery-Safe Edition — Battery handled separately)
+// Battery-Safe Edition (Battery handled separately)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -426,16 +421,18 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        // 1️⃣ Close all other NORMAL sections
-        for (int i = 0; i < allContents.length; i++) {
+        // 🔥 ALWAYS close Battery module before opening a normal section
+        closeBatteryModule();
 
+        // 1️⃣ Collapse all other NORMAL sections
+        for (int i = 0; i < allContents.length; i++) {
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // 2️⃣ Toggle this section
+        // 2️⃣ Toggle this section only
         if (content.getVisibility() == View.GONE) {
             content.setVisibility(View.VISIBLE);
             icon.setText("－");
@@ -1169,7 +1166,7 @@ private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity
 private static final String KEY_BATTERY_DIALOG_SHOWN   = "battery_dialog_shown";
 
 // ===================================================================
-// BATTERY DATA STRUCT — ORIGINAL FULL INFO (Level / Status / Temp etc.)
+// BATTERY DATA STRUCT
 // ===================================================================
 private static class BatteryInfo {
     int level = -1;
@@ -1190,15 +1187,15 @@ private long getStoredModelCapacity() {
     try {
         SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
         return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
-    } catch (Throwable ignore) {
-        return -1L;
-    }
+    } catch (Throwable ignore) { return -1L; }
 }
 
 private void saveModelCapacity(long value) {
     try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        sp.edit().putLong(KEY_BATTERY_MODEL_CAPACITY, value).apply();
+        getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE)
+                .edit()
+                .putLong(KEY_BATTERY_MODEL_CAPACITY, value)
+                .apply();
     } catch (Throwable ignore) {}
 }
 
@@ -1212,28 +1209,26 @@ private long normalizeMah(long raw) {
 }
 
 // ===================================================================
-// UNIVERSAL BATTERY SCANNER — ORIGINAL + CHARGE COUNTER SUPPORT
+// UNIVERSAL BATTERY SCANNER — GEL v7.1
 // ===================================================================
 private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
-    // ---------- 1) BASIC INFO VIA BATTERY_CHANGED ----------
+    // ---------- 1) BASIC BATTERY_CHANGED ----------
     try {
-        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent i = registerReceiver(null, f);
-
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (i != null) {
+
             bi.level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             bi.scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-            int st = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            switch (st) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:      bi.status = "Charging";      break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:   bi.status = "Discharging";   break;
-                case BatteryManager.BATTERY_STATUS_FULL:          bi.status = "Full";          break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  bi.status = "Not charging";  break;
-                default:                                          bi.status = "Unknown";
+            switch (i.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
+                case BatteryManager.BATTERY_STATUS_CHARGING:     bi.status = "Charging"; break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:  bi.status = "Discharging"; break;
+                case BatteryManager.BATTERY_STATUS_FULL:         bi.status = "Full"; break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: bi.status = "Not charging"; break;
+                default:                                         bi.status = "Unknown";
             }
 
             int plug = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -1247,10 +1242,8 @@ private BatteryInfo getBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // ---------- 2) OEM / DESIGN CAPACITY ----------
+    // ---------- 2) OEM CAPACITY ----------
     long bestMah = -1;
-    String bestSrc = null;
-
     String[] oemPaths = new String[]{
             "/sys/class/power_supply/battery/charge_full_design",
             "/sys/class/power_supply/battery/charge_full",
@@ -1266,54 +1259,45 @@ private BatteryInfo getBatteryInfo() {
             long v = normalizeMah(readSysLong(p));
             if (v > 500 && v > bestMah) {
                 bestMah = v;
-                bestSrc = "OEM/PMIC";
+                bi.source = "OEM";
             }
         } catch (Throwable ignore) {}
     }
 
     if (bestMah > 0) {
-        // Αν η OEM τιμή είναι "στρωτή" (π.χ. 5000, 5200, 4500) την θεωρούμε full.
-        // Αν είναι "περίεργη" (π.χ. 4138, 3246) κάνουμε conversion με βάση το level.
+        // Smooth OEM (e.g. 5000) vs odd OEM (e.g. 4138)
         if (bi.level > 0 && (bestMah % 50 != 0)) {
             float pct = bi.level / 100f;
             long est = (long) (bestMah / pct);
-            if (est > 0) {
-                bi.estimatedFullMah = est;
-            } else {
-                bi.estimatedFullMah = bestMah;
-            }
+            bi.estimatedFullMah = (est > 0 ? est : bestMah);
         } else {
             bi.estimatedFullMah = bestMah;
         }
-        bi.source = bestSrc;
     }
 
     // ---------- 3) CHARGE COUNTER ----------
-    long ccMah = -1;
     try {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         if (bm != null) {
-            long rawCc = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-            ccMah = normalizeMah(rawCc);
-            if (ccMah > 0) bi.currentChargeMah = ccMah;
+            long cc = normalizeMah(bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
+            if (cc > 0) {
+                bi.currentChargeMah = cc;
+                bi.source = "Charge Counter";
+
+                if (bi.level > 0) {
+                    float pct = bi.level / 100f;
+                    long est = (long) (cc / pct);
+                    if (est > 0) bi.estimatedFullMah = est;
+                }
+            }
         }
     } catch (Throwable ignore) {}
-
-    // Estimate 100% από Charge Counter
-    if (ccMah > 0 && bi.level > 0) {
-        float pct = bi.level / 100f;
-        long est = (long) (ccMah / pct);
-        if (est > 0) {
-            bi.estimatedFullMah = est;
-            bi.source = "Charge Counter";
-        }
-    }
 
     return bi;
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — FULL RESTORE (GEL FINAL EDITION)
+// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1324,91 +1308,73 @@ private String buildBatteryInfo() {
     boolean hasCC  = (bi.currentChargeMah > 0);
     boolean hasEst = (bi.estimatedFullMah > 0);
 
-    StringBuilder sb = new StringBuilder();
-
-    // ---------- BASIC LINES (LABELS 1:1 ΜΕ ΤΗ ΦΩΤΟ) ----------
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"),  (bi.level >= 0 ? bi.level + "%" : "N/A")));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"),  (bi.scale > 0 ? bi.scale : "N/A")));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
-    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
-
-    // ---------- CALCULATION FOR CURRENT CHARGE / ESTIMATED FULL ----------
-    float lvlFrac = (bi.level > 0 ? (bi.level / 100f) : -1f);
+    float lvlFrac = (bi.level > 0 ? bi.level / 100f : -1f);
 
     long displayCurrent   = -1;
     long displayEstimated = -1;
 
-    // 1) Αν έχουμε Charge Counter → αυτός είναι ο βασικός current
+    // ---------- DETERMINE CURRENT ----------
     if (hasCC) {
         displayCurrent = bi.currentChargeMah;
+    } else if (hasEst && lvlFrac > 0) {
+        displayCurrent = (long) (bi.estimatedFullMah * lvlFrac);
+    } else if (modelCap > 0 && lvlFrac > 0) {
+        displayCurrent = (long) (modelCap * lvlFrac);
     }
 
-    // 2) Αν έχουμε hardware estimated full (OEM ή Counter)
+    // ---------- DETERMINE ESTIMATED FULL ----------
     if (hasEst) {
         displayEstimated = bi.estimatedFullMah;
-
-        // Αν δεν έχουμε Counter αλλά έχουμε hardware full, βγάζουμε current από το level
-        if (!hasCC && lvlFrac > 0 && displayCurrent <= 0) {
-            displayCurrent = (long) (displayEstimated * lvlFrac);
-        }
+    } else if (hasCC && lvlFrac > 0) {
+        displayEstimated = (long) (displayCurrent / lvlFrac);
     }
 
-    // 3) DERIVED MODE — χωρίς Counter & χωρίς OEM, αλλά με model capacity
-    if (!hasCC && !hasEst && modelCap > 0 && lvlFrac > 0) {
-        displayCurrent = (long) (modelCap * lvlFrac);
-        // Estimated full εδώ θα βγει σαν N/A + multiline μήνυμα
-    }
+    StringBuilder sb = new StringBuilder();
 
-    // ---------- CURRENT CHARGE ----------
-    if (displayCurrent > 0) {
+    // ----- BASIC LINES -----
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), bi.level >= 0 ? bi.level + "%" : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), bi.scale > 0 ? bi.scale : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
+    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
+
+    // ----- CURRENT -----
+    if (displayCurrent > 0)
         sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
-    } else {
+    else
         sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
-    }
 
-    // ---------- SOURCE ----------
+    // ----- SOURCE -----
     String src;
-    if (hasCC) {
-        src = "Charge Counter";
-    } else if (hasEst && !"Unknown".equalsIgnoreCase(bi.source)) {
-        src = "OEM";
-    } else if (modelCap > 0) {
-        src = "Model capacity";
-    } else {
-        src = "Unknown";
-    }
+    if (hasCC) src = "Charge Counter";
+    else if (hasEst) src = "OEM";
+    else if (modelCap > 0) src = "Model capacity";
+    else src = "Unknown";
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
 
-    // ---------- ESTIMATED FULL (100%) ----------
-    if (hasCC || (hasEst && !"Unknown".equalsIgnoreCase(bi.source))) {
-        long val = (displayEstimated > 0 ? displayEstimated : bi.estimatedFullMah);
-        if (val < 0) val = 0;
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), val));
+    // ----- ESTIMATED FULL -----
+    if (displayEstimated > 0) {
+        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), displayEstimated));
     } else {
-        // Καμία hardware πληροφορία → premium multiline μήνυμα μόνο δεξιά από τα ':'
         sb.append(String.format(Locale.US, "%s : %s\n",
-                padKey("Estimated full (100%)"),
-                "N/A in this device"));
+                padKey("Estimated full (100%)"), "N/A in this device"));
         sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
         sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
     }
 
-    // ---------- MODEL CAPACITY ----------
+    // ----- MODEL CAPACITY -----
     sb.append(String.format(Locale.US, "%s : %s\n",
-            padKey("Model capacity"),
-            (modelCap > 0 ? modelCap + " mAh" : "N/A")));
+            padKey("Model capacity"), modelCap > 0 ? modelCap + " mAh" : "N/A"));
 
-    // ---------- LIFECYCLE ----------
+    // ----- LIFECYCLE -----
     sb.append(String.format(Locale.US, "%s : %s",
-            padKey("Lifecycle"),
-            "Requires root access"));
+            padKey("Lifecycle"), "Requires root access"));
 
     return sb.toString();
 }
 
 // ===================================================================
-// BATTERY — HARD REFRESH VIEW (GEL EDITION)
+// REFRESH VIEW
 // ===================================================================
 private void refreshBatteryInfoView() {
     try {
@@ -1423,61 +1389,52 @@ private void refreshBatteryInfoView() {
 }
 
 // ===================================================================
-// HELPERS — alignment + indent
-// ===================================================================
-private String padKey(String key) {
-    return String.format(Locale.US, "%-22s", key);
-}
-
-private String indent(String text, int spaces) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < spaces; i++) sb.append(' ');
-    sb.append(text);
-    return sb.toString();
-}
-
-// ===================================================================
 // REFRESH BUTTON LABEL
 // ===================================================================
 private void refreshBatteryButton() {
     TextView btn = findViewById(R.id.txtBatteryModelCapacity);
     if (btn != null) {
         long cap = getStoredModelCapacity();
-        if (cap > 0) btn.setText("Set model capacity (" + cap + " mAh)");
-        else btn.setText("Set model capacity");
+        btn.setText(cap > 0 ? "Set model capacity (" + cap + " mAh)" : "Set model capacity");
     }
 }
 
 // ===================================================================
-// BATTERY — INIT SECTION (GEL REFRESH-SAFE VERSION)
+// CLOSE BATTERY COMPLETELY
+// ===================================================================
+private void closeBatteryModule() {
+    try {
+        if (batteryContainer != null) batteryContainer.setVisibility(View.GONE);
+        if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.GONE);
+        if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
+        if (iconBattery != null) iconBattery.setText("＋");
+    } catch (Throwable ignore) {}
+}
+
+// ===================================================================
+// INIT BATTERY SECTION
 // ===================================================================
 private void initBatterySection() {
-
     txtBatteryContent = findViewById(R.id.txtBatteryContent);
     TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
-    // Always build fresh info
-    refreshBatteryInfoView();
+    refreshBatteryInfoView();  // Always fresh
 
-    // Bind popup
-    if (btnCapacity != null) {
+    if (btnCapacity != null)
         btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-    }
 
-    // Show popup only once
     maybeShowBatteryCapacityDialogOnce();
 }
 
 // ===================================================================
-// SHOW POPUP ONLY ONCE
+// POPUP ONLY ONCE
 // ===================================================================
 private void maybeShowBatteryCapacityDialogOnce() {
     try {
         SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        boolean shown   = sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false);
-        long existing   = sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
+        if (!sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false) &&
+            sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L) <= 0) {
 
-        if (!shown && existing <= 0) {
             sp.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
             runOnUiThread(this::showBatteryCapacityDialog);
         }
@@ -1508,21 +1465,19 @@ private void showBatteryCapacityDialog() {
 
             b.setView(input);
 
-            b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
-                String txt = input.getText().toString().trim();
-                if (!txt.isEmpty()) {
-                    try {
-                        long val = Long.parseLong(txt);
-                        if (val > 0) {
-
-                            saveModelCapacity(val);
-
-                            // HARD UI REFRESH (χωρίς re-init του section)
-                            refreshBatteryInfoView();
+            b.setPositiveButton(getString(R.string.battery_popup_ok),
+                    (dialog, which) -> {
+                        String txt = input.getText().toString().trim();
+                        if (!txt.isEmpty()) {
+                            try {
+                                long val = Long.parseLong(txt);
+                                if (val > 0) {
+                                    saveModelCapacity(val);
+                                    refreshBatteryInfoView();
+                                }
+                            } catch (Throwable ignore) {}
                         }
-                    } catch (Throwable ignore) {}
-                }
-            });
+                    });
 
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 
@@ -3429,36 +3384,29 @@ private void collapseAllExceptBattery() {
 
     if (allContents == null || allIcons == null) return;
 
-    // 1) Κλείσε όλα τα κανονικά sections (εκτός Battery = index 0)
+    // 1) Κλείσε όλα τα κανονικά sections (Battery = index 0 → μην το ακουμπήσεις)
     for (int i = 1; i < allContents.length; i++) {
 
         TextView content = allContents[i];
         TextView icon    = allIcons[i];
 
-        if (content != null && content.getVisibility() == View.VISIBLE) {
+        if (content != null && content.getVisibility() == View.VISIBLE)
             animateCollapse(content);
-        }
 
         if (icon != null)
             icon.setText("＋");
     }
 
-    // ⭐⭐⭐ ΤΕΡΑΣΤΙΟ FIX 1 ⭐⭐⭐
-    // ΔΕΝ πειράζουμε το batteryContainer εδώ.
-    // Το Battery section ελέγχεται ΠΑΝΤΑ από το headerBattery click ONLY.
-    // Αν το κλείσεις εδώ → όταν πατάς Battery μετά, δεν εμφανίζεται το κείμενο.
-    // ---------------------------------------------------------
-    // ❌ Παλιά (σβήστο): batteryContainer.setVisibility(View.GONE);
+    // ⭐ FIX: Μην κλείνεις το batteryContainer εδώ.
+    // Το Battery section ελέγχεται αποκλειστικά από το headerBattery.
 
-    // ⭐⭐⭐ ΤΕΡΑΣΤΙΟ FIX 2 ⭐⭐⭐
-    // ΜΟΝΟ το button κρύβουμε — και αυτό όταν το Battery είναι ΚΛΕΙΣΤΟ.
-    if (txtBatteryModelCapacity != null) {
+    // ⭐ FIX: Κρύψε μόνο το capacity button (όταν Battery είναι κλειστό)
+    if (txtBatteryModelCapacity != null)
         txtBatteryModelCapacity.setVisibility(View.GONE);
-    }
 
-    // Reset battery icon (πάντα safe)
-    if (iconBattery != null) {
+    // ⭐ Reset battery icon (always safe)
+    if (iconBattery != null)
         iconBattery.setText("＋");
-    }
+}
 }
 }

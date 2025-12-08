@@ -35,72 +35,76 @@
             android:layout_marginBottom="14dp"/>
 
 <!-- ========================================================= -->
-<!-- BATTERY -->
+     BATTERY SECTION — FIXED SPACING + PROPER GROUPING
 <!-- ========================================================= -->
 <LinearLayout
     android:id="@+id/headerBattery"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/gel_btn_outline_selector"
+    android:orientation="horizontal"
     android:padding="12dp"
-    android:gravity="center_vertical"
-    android:layout_marginTop="6dp"
-    android:clickable="true"
-    android:focusable="true">
+    android:background="@drawable/bg_section_header"
+    android:gravity="center_vertical">
 
     <TextView
+        android:id="@+id/txtBatteryTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Battery"
-        android:textColor="#00FFBF"
-        android:textStyle="bold"
-        android:textSize="16sp" />
+        android:textColor="@color/cyanText"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/iconBatteryToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="＋"
-        android:textColor="#00FFBF"
-        android:textSize="18sp" />
+        android:textColor="@color/cyanText"
+        android:textSize="22sp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp" />
 </LinearLayout>
 
-<!-- Battery Content Container -->
+<!-- ========================================================= -->
+     BATTERY CONTENT — CAPACITY BUTTON NOW INSIDE CONTAINER
+<!-- ========================================================= -->
 <LinearLayout
     android:id="@+id/batteryContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:visibility="gone"
-    android:padding="8dp">
+    android:background="@drawable/bg_section_body"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp">
 
-    <!-- Model Capacity Button -->
+    <!-- Capacity Button (only visible when battery is expanded) -->
     <TextView
         android:id="@+id/txtBatteryModelCapacity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Set model capacity"
-        android:textColor="#00E7FF"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        android:padding="8dp"
-        android:background="@drawable/gel_btn_outline_selector"
+        android:text="Set model capacity (5000 mAh)"
+        android:textColor="@color/linkBlue"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:padding="10dp"
         android:gravity="center"
-        android:clickable="true"
-        android:focusable="true"
-        android:layout_marginBottom="6dp" />
+        android:background="@drawable/bg_link_button"
+        android:layout_marginBottom="10dp"/>
 
-    <!-- Battery Info Text -->
+    <!-- Battery Info -->
     <TextView
         android:id="@+id/txtBatteryContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:typeface="monospace"
-        android:textSize="14sp"
-        android:padding="12dp"
-        android:visibility="visible" />
+        android:text=""
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:padding="4dp"/>
 </LinearLayout>
        
         <!-- ========================================================= -->

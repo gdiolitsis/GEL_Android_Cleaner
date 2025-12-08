@@ -1608,15 +1608,15 @@ b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 
             AlertDialog dialog = b.create();
-            dialog.getWindow().setBackgroundDrawableResource(
-                    R.drawable.gel_dialog_battery_full_black
-            );
+dialog.getWindow().setBackgroundDrawableResource(
+        R.drawable.gel_dialog_battery_full_black
+);
 
-            dialog.show();
+dialog.show();
 
         } catch (Throwable ignore) {}
     });
-}
+}   // ← ΑΥΤΗ Η ΑΓΚΥΛΗ ΕΙΝΑΙ ΤΟ ΜΟΝΟ ΠΟΥ ΕΛΕΙΠΕ
       
  // ============================================================
  // UwB Info

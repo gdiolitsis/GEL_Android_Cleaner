@@ -412,6 +412,7 @@ headerBattery.setOnClickListener(v -> {
 
 // ============================================================  
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  
+// (Fully Battery-Safe Edition)
 // ============================================================  
 private void setupSection(View header, View content, TextView icon) {
 
@@ -424,15 +425,30 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        // 1️⃣ Κλείσε όλα τα άλλα sections (accordion behavior)
+        // 1️⃣ Κλείσιμο όλων των άλλων sections
         for (int i = 0; i < allContents.length; i++) {
+
+            // EXTRA FIX 🔥: Αν ανοίγουμε ένα κανονικό section → ΚΛΕΙΣΕ 100% το Battery
+            if (allContents[i] == txtBatteryContent) {
+
+                if (batteryContainer != null)
+                    batteryContainer.setVisibility(View.GONE);
+
+                if (txtBatteryModelCapacity != null)
+                    txtBatteryModelCapacity.setVisibility(View.GONE);
+
+                if (iconBattery != null)
+                    iconBattery.setText("＋");
+            }
+
+            // Default collapse behavior
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // 2️⃣ Toggle μόνο το δικό του
+        // 2️⃣ Τoggle μόνο του δικού του περιεχομένου
         if (content.getVisibility() == View.GONE) {
             content.setVisibility(View.VISIBLE);
             icon.setText("－");

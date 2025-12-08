@@ -3397,10 +3397,9 @@ private void collapseAllExceptBattery() {
             icon.setText("＋");
     }
 
-    // ⭐ FIX: Μην κλείνεις το batteryContainer εδώ.
-    // Το Battery section ελέγχεται αποκλειστικά από το headerBattery.
+    // ⭐ FIX: Μην αγγίζεις το batteryContainer εδώ.
 
-    // ⭐ FIX: Κρύψε μόνο το capacity button (όταν Battery είναι κλειστό)
+    // ⭐ FIX: Κρύψε μόνο το capacity button όταν το Battery είναι κλειστό
     if (txtBatteryModelCapacity != null)
         txtBatteryModelCapacity.setVisibility(View.GONE);
 
@@ -3408,6 +3407,20 @@ private void collapseAllExceptBattery() {
     if (iconBattery != null)
         iconBattery.setText("＋");
 }
+
+// ===================================================================
+// HELPERS — alignment + indent  (REQUIRED for Battery Builder)
+// ===================================================================
+private String padKey(String key) {
+    return String.format(Locale.US, "%-22s", key);
 }
 
+private String indent(String text, int spaces) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < spaces; i++) sb.append(' ');
+    sb.append(text);
+    return sb.toString();
+}
 
+// 🔥 END OF CLASS
+}

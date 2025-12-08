@@ -1562,11 +1562,13 @@ private void maybeShowBatteryCapacityDialogOnce() {
 }
 
 // ===================================================================
-// POPUP — GEL BLACK+GOLD FINAL
+// POPUP — GEL BLACK+GOLD FINAL (FULLY FIXED)
 // ===================================================================
 private void showBatteryCapacityDialog() {
+
     runOnUiThread(() -> {
         try {
+
             AlertDialog.Builder b = new AlertDialog.Builder(this);
             b.setTitle(getString(R.string.battery_popup_title));
             b.setMessage(getString(R.string.battery_popup_msg));
@@ -1583,40 +1585,50 @@ private void showBatteryCapacityDialog() {
 
             b.setView(input);
 
+            // -----------------------------------------------------------
+            // POSITIVE BUTTON
+            // -----------------------------------------------------------
             b.setPositiveButton(getString(R.string.battery_popup_ok), (dialog, which) -> {
                 String txt = input.getText().toString().trim();
                 if (!txt.isEmpty()) {
                     try {
                         long val = Long.parseLong(txt);
                         if (val > 0) {
+
                             saveModelCapacity(val);
 
                             // refresh info + colors
-TextView content = findViewById(R.id.txtBatteryContent);
-if (content != null) {
-    String info = buildBatteryInfo();
-    content.setText(info);                 
-    applyNeonValues(content, info);      
-}
+                            TextView content = findViewById(R.id.txtBatteryContent);
+                            if (content != null) {
+                                String info = buildBatteryInfo();
+                                content.setText(info);
+                                applyNeonValues(content, info);
+                            }
 
-// refresh button label
-refreshBatteryButton();
-}  
+                            // refresh button label
+                            refreshBatteryButton();
+                        }
+                    } catch (Throwable ignore) {}
+                }
+            });
 
-b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
-
+            // -----------------------------------------------------------
+            // NEGATIVE BUTTON
+            // -----------------------------------------------------------
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 
+            // -----------------------------------------------------------
+            // SHOW DIALOG
+            // -----------------------------------------------------------
             AlertDialog dialog = b.create();
-dialog.getWindow().setBackgroundDrawableResource(
-        R.drawable.gel_dialog_battery_full_black
-);
-
-dialog.show();
+            dialog.getWindow().setBackgroundDrawableResource(
+                    R.drawable.gel_dialog_battery_full_black
+            );
+            dialog.show();
 
         } catch (Throwable ignore) {}
     });
-}   // ← ΑΥΤΗ Η ΑΓΚΥΛΗ ΕΙΝΑΙ ΤΟ ΜΟΝΟ ΠΟΥ ΕΛΕΙΠΕ
+}
       
  // ============================================================
  // UwB Info

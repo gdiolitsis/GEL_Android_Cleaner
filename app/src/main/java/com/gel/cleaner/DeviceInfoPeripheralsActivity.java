@@ -1595,12 +1595,15 @@ private void showBatteryCapacityDialog() {
 TextView content = findViewById(R.id.txtBatteryContent);
 if (content != null) {
     String info = buildBatteryInfo();
-    content.setText(info);                 // ✅ ΕΛΕΙΠΕ! Πρώτα βάζουμε το κείμενο
-    applyNeonValues(content, info);       // ✅ Μετά τα neon
+    content.setText(info);                 
+    applyNeonValues(content, info);      
 }
 
 // refresh button label
 refreshBatteryButton();
+}  
+
+b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 
             b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
 

@@ -358,34 +358,30 @@ headerBattery.setOnClickListener(v -> {
 
     boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-    // 1️⃣ Πάντα κλείσε ΟΛΑ τα υπόλοιπα sections
+    // 1️⃣ Κλείσε όλα τα άλλα sections
     collapseAllExceptBattery();
 
     if (!isOpen) {
 
-        // 2️⃣ Άνοιγμα Battery (με animation)
+        // 2️⃣ Άνοιγμα Battery
         animateExpand(batteryContainer);
         iconBattery.setText("－");
 
-        // 3️⃣ Πάντα δείξε το capacity button όταν ανοίγει
+        // 3️⃣ Πάντα δείξε το capacity button
         if (txtBatteryModelCapacity != null) {
             txtBatteryModelCapacity.setVisibility(View.VISIBLE);
         }
 
-        // 4️⃣ 🔥 ALWAYS REFRESH — FIXES THE “EMPTY AFTER AUTO-CLOSE” BUG
-        if (txtBatteryContent != null) {
-            String info = buildBatteryInfo();
-            txtBatteryContent.setText(info);
-            applyNeonValues(txtBatteryContent, info);
-        }
+        // ⭐⭐⭐ 4️⃣ ΠΑΝΤΑ REFRESH όταν ανοίγει το Battery (Η ΛΥΣΗ ΣΟΥ)
+        refreshBatteryInfoView();
 
     } else {
 
-        // 2️⃣ Κλείσιμο Battery
+        // Κλείσιμο Battery
         animateCollapse(batteryContainer);
         iconBattery.setText("＋");
 
-        // 3️⃣ Κρύψε capacity button
+        // Κρύψε capacity button
         if (txtBatteryModelCapacity != null) {
             txtBatteryModelCapacity.setVisibility(View.GONE);
         }

@@ -349,7 +349,7 @@ if (txtBatteryModelCapacity != null) {
 }
 
 // ============================================================
-// ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FULLY SYNCED VERSION
+// ⭐ SPECIAL BATTERY EXPAND/COLLAPSE — FIXED FOR ORIGINAL XML
 // ============================================================
 LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
@@ -357,22 +357,16 @@ headerBattery.setOnClickListener(v -> {
 
     boolean isCurrentlyOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-    // 1️⃣ Πάντα κλείσε τα πάντα (και το battery)
+    // 1️⃣ Κλείσε όλα τα άλλα sections
     collapseAllExceptBattery();
 
     if (!isCurrentlyOpen) {
 
-        // 2️⃣ Άνοιγμα Battery (safe)
-        batteryContainer.setVisibility(View.VISIBLE);
+        // 2️⃣ Άνοιγμα Battery
         animateExpand(batteryContainer);
         iconBattery.setText("－");
 
-        // 3️⃣ Show model capacity button
-        if (txtBatteryModelCapacity != null) {
-            txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-        }
-
-        // 4️⃣ Refresh info
+        // 3️⃣ Refresh info
         if (txtBatteryContent != null) {
             String info = buildBatteryInfo();
             txtBatteryContent.setText(info);
@@ -381,13 +375,9 @@ headerBattery.setOnClickListener(v -> {
 
     } else {
 
-        // 2️⃣ Κλείσιμο Battery (explicit)
+        // 2️⃣ Κλείσιμο Battery
         batteryContainer.setVisibility(View.GONE);
         iconBattery.setText("＋");
-
-        if (txtBatteryModelCapacity != null) {
-            txtBatteryModelCapacity.setVisibility(View.GONE);
-        }
     }
 });
 

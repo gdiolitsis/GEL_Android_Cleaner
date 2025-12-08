@@ -217,7 +217,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
  // ============================================================
-// CLEAN — FINAL — CORRECT onCreate()
+//  ON CREATE 
 // ============================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
@@ -236,7 +236,7 @@ protected void onCreate(Bundle savedInstanceState) {
     batteryContainer        = findViewById(R.id.batteryContainer);
     txtBatteryContent       = findViewById(R.id.txtBatteryContent);
     iconBattery             = findViewById(R.id.iconBatteryToggle);
-    txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity); 
+    txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
     txtScreenContent          = findViewById(R.id.txtScreenContent);
     txtCameraContent          = findViewById(R.id.txtCameraContent);
@@ -279,6 +279,11 @@ protected void onCreate(Bundle savedInstanceState) {
     iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);
     iconRoot            = findViewById(R.id.iconRootToggle);
     iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
+
+    // ============================================================
+    // BIND BATTERY HEADER (FIX)
+    // ============================================================
+    LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
     // ============================================================
     // MASTER ARRAYS — YOUR ORDER
@@ -337,58 +342,47 @@ protected void onCreate(Bundle savedInstanceState) {
     populateAllSections();
 
     // ============================================================
-// BATTERY — INIT BEFORE EXPAND LOGIC
-// ============================================================
-initBatterySection();
+    // BATTERY — INIT BEFORE EXPAND LOGIC
+    // ============================================================
+    initBatterySection();
 
-// 🔥 Force battery section to start CLOSED
-batteryContainer.setVisibility(View.GONE);
-iconBattery.setText("＋");
-
-if (txtBatteryModelCapacity != null) {
-    txtBatteryModelCapacity.setVisibility(View.GONE);
-}
-
-// ============================================================
-// ⭐ BATTERY SECTION — FINAL EXPAND/COLLAPSE ENGINE (GEL v5.0)
-// ============================================================
-
-headerBattery.setOnClickListener(v -> {
-
-    boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
-
-    // Κλείσε όλα τα άλλα sections (χωρίς να κρύβεις txtBatteryContent)
-    collapseAllExceptBattery();
-
-    if (!isOpen) {
-
-        // ⭐ FIX 1: Το battery content ΠΡΕΠΕΙ ΝΑ ΓΙΝΕΙ VISIBLE όταν ανοίγει
-        if (txtBatteryContent != null)
-            txtBatteryContent.setVisibility(View.VISIBLE);
-
-        // expand container
-        animateExpand(batteryContainer);
-        iconBattery.setText("－");
-
-        // δείξε το capacity button
-        if (txtBatteryModelCapacity != null)
-            txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-
-        // ⭐ FIX 2: REFRESH ΚΑΘΕ ΦΟΡΑ ΠΟΥ ΑΝΟΙΓΕΙ
-        refreshBatteryInfoView();
-
-    } else {
-
-        // collapse container
-        animateCollapse(batteryContainer);
-        iconBattery.setText("＋");
-
-        // κρύψε μόνο το capacity button
-        if (txtBatteryModelCapacity != null)
-            txtBatteryModelCapacity.setVisibility(View.GONE);
+    batteryContainer.setVisibility(View.GONE);
+    iconBattery.setText("＋");
+    if (txtBatteryModelCapacity != null) {
+        txtBatteryModelCapacity.setVisibility(View.GONE);
     }
-});
 
+    // ============================================================
+    // ⭐ BATTERY SECTION — FINAL EXPAND/COLLAPSE ENGINE (GEL v5.0)
+    // ============================================================
+    headerBattery.setOnClickListener(v -> {
+
+        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
+
+        collapseAllExceptBattery();
+
+        if (!isOpen) {
+
+            if (txtBatteryContent != null)
+                txtBatteryContent.setVisibility(View.VISIBLE);
+
+            animateExpand(batteryContainer);
+            iconBattery.setText("－");
+
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.VISIBLE);
+
+            refreshBatteryInfoView();
+
+        } else {
+
+            animateCollapse(batteryContainer);
+            iconBattery.setText("＋");
+
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.GONE);
+        }
+    });
 
     // ============================================================
     // NORMAL SECTIONS
@@ -417,10 +411,10 @@ headerBattery.setOnClickListener(v -> {
 // 🔥 END onCreate()
 
 
-// ============================================================  
-// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)  
-// (Fully Battery-Safe Edition)
-// ============================================================  
+// ============================================================
+// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
+// (Battery-Safe Edition — Battery handled separately)
+// ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
     if (header == null || content == null || icon == null)
@@ -432,30 +426,16 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        // 1️⃣ Κλείσιμο όλων των άλλων sections
+        // 1️⃣ Close all other NORMAL sections
         for (int i = 0; i < allContents.length; i++) {
 
-            // EXTRA FIX 🔥: Αν ανοίγουμε ένα κανονικό section → ΚΛΕΙΣΕ 100% το Battery
-            if (allContents[i] == txtBatteryContent) {
-
-                if (batteryContainer != null)
-                    batteryContainer.setVisibility(View.GONE);
-
-                if (txtBatteryModelCapacity != null)
-                    txtBatteryModelCapacity.setVisibility(View.GONE);
-
-                if (iconBattery != null)
-                    iconBattery.setText("＋");
-            }
-
-            // Default collapse behavior
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // 2️⃣ Τoggle μόνο του δικού του περιεχομένου
+        // 2️⃣ Toggle this section
         if (content.getVisibility() == View.GONE) {
             content.setVisibility(View.VISIBLE);
             icon.setText("－");

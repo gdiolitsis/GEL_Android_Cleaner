@@ -1360,7 +1360,7 @@ private String buildBatteryInfo() {
     // ---------- CALCULATION FOR CURRENT CHARGE / ESTIMATED FULL ----------
     float lvlFrac = (bi.level > 0 ? (bi.level / 100f) : -1f);
 
-    long displayCurrent  = -1;
+    long displayCurrent   = -1;
     long displayEstimated = -1;
 
     // 1) Αν έχουμε Charge Counter → αυτός είναι ο βασικός current
@@ -1381,7 +1381,7 @@ private String buildBatteryInfo() {
     // 3) DERIVED MODE — χωρίς Counter & χωρίς OEM, αλλά με model capacity
     if (!hasCC && !hasEst && modelCap > 0 && lvlFrac > 0) {
         displayCurrent = (long) (modelCap * lvlFrac);
-        // Estimated full σε αυτή την περίπτωση θα παρουσιαστεί σαν N/A (βλέπε παρακάτω)
+        // Estimated full εδώ θα βγει σαν N/A + multiline μήνυμα
     }
 
     // ---------- CURRENT CHARGE ----------
@@ -1406,7 +1406,6 @@ private String buildBatteryInfo() {
 
     // ---------- ESTIMATED FULL (100%) ----------
     if (hasCC || (hasEst && !"Unknown".equalsIgnoreCase(bi.source))) {
-        // Έχουμε hardware data (Counter ή OEM) → δείχνουμε αριθμό
         long val = (displayEstimated > 0 ? displayEstimated : bi.estimatedFullMah);
         if (val < 0) val = 0;
         sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), val));
@@ -1430,6 +1429,21 @@ private String buildBatteryInfo() {
             "Requires root access"));
 
     return sb.toString();
+}
+
+// ===================================================================
+// BATTERY — HARD REFRESH VIEW (GEL EDITION)
+// ===================================================================
+private void refreshBatteryInfoView() {
+    try {
+        TextView content = findViewById(R.id.txtBatteryContent);
+        if (content != null) {
+            String info = buildBatteryInfo();
+            content.setText(info);
+            applyNeonValues(content, info);
+        }
+        refreshBatteryButton();
+    } catch (Throwable ignore) {}
 }
 
 // ===================================================================
@@ -1459,26 +1473,22 @@ private void refreshBatteryButton() {
 }
 
 // ===================================================================
-// BATTERY — INIT SECTION
+// BATTERY — INIT SECTION (GEL REFRESH-SAFE VERSION)
 // ===================================================================
 private void initBatterySection() {
 
     txtBatteryContent = findViewById(R.id.txtBatteryContent);
     TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
-    String info = buildBatteryInfo();
+    // Always build fresh info
+    refreshBatteryInfoView();
 
-    if (txtBatteryContent != null) {
-        txtBatteryContent.setText(info);
-        applyNeonValues(txtBatteryContent, info);
-    }
-
-    refreshBatteryButton();
-
+    // Bind popup
     if (btnCapacity != null) {
         btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
     }
 
+    // Show popup only once
     maybeShowBatteryCapacityDialogOnce();
 }
 
@@ -1531,8 +1541,8 @@ private void showBatteryCapacityDialog() {
 
                             saveModelCapacity(val);
 
-                            // FULL REFRESH
-                            initBatterySection();
+                            // HARD UI REFRESH (χωρίς re-init του section)
+                            refreshBatteryInfoView();
                         }
                     } catch (Throwable ignore) {}
                 }
@@ -1549,9 +1559,6 @@ private void showBatteryCapacityDialog() {
         } catch (Throwable ignore) {}
     });
 }
-
-// NOTE(GEL): Ολόκληρο block, έτοιμο για copy-paste στο activity.
-
     
  // ============================================================
  // UwB Info

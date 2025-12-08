@@ -1202,8 +1202,7 @@ private static class BatteryInfo {
     String chargingSource = "Unknown";
     float temperature = 0f;
 
-    long realCapacityMah   = -1;   // OEM / fallback
-    long currentChargeMah  = -1;   // Charge Counter (optional)
+    long currentChargeMah  = -1;   // Charge Counter / OEM / Derived
     long estimatedFullMah  = -1;   // Estimated full (100%)
     String source          = "Unknown";
 }
@@ -1254,18 +1253,18 @@ private BatteryInfo getBatteryInfo() {
 
             int st = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             switch (st) {
-                case BatteryManager.BATTERY_STATUS_CHARGING: bi.status = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING: bi.status = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL: bi.status = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: bi.status = "Not charging"; break;
-                default: bi.status = "Unknown";
+                case BatteryManager.BATTERY_STATUS_CHARGING:      bi.status = "Charging";      break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:   bi.status = "Discharging";   break;
+                case BatteryManager.BATTERY_STATUS_FULL:          bi.status = "Full";          break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:  bi.status = "Not charging";  break;
+                default:                                          bi.status = "Unknown";
             }
 
             int plug = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            if (plug == BatteryManager.BATTERY_PLUGGED_USB) bi.chargingSource = "USB";
-            else if (plug == BatteryManager.BATTERY_PLUGGED_AC) bi.chargingSource = "AC";
-            else if (plug == BatteryManager.BATTERY_PLUGGED_WIRELESS) bi.chargingSource = "Wireless";
-            else bi.chargingSource = "Battery";
+            if (plug == BatteryManager.BATTERY_PLUGGED_USB)          bi.chargingSource = "USB";
+            else if (plug == BatteryManager.BATTERY_PLUGGED_AC)      bi.chargingSource = "AC";
+            else if (plug == BatteryManager.BATTERY_PLUGGED_WIRELESS)bi.chargingSource = "Wireless";
+            else                                                     bi.chargingSource = "Battery";
 
             int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
             if (temp > 0) bi.temperature = temp / 10f;
@@ -1297,9 +1296,20 @@ private BatteryInfo getBatteryInfo() {
     }
 
     if (bestMah > 0) {
-        bi.realCapacityMah   = bestMah;
-        bi.estimatedFullMah  = bestMah;
-        bi.source            = bestSrc;
+        // Αν η OEM τιμή είναι "στρωτή" (π.χ. 5000, 5200, 4500) την θεωρούμε full.
+        // Αν είναι "περίεργη" (π.χ. 4138, 3246) κάνουμε conversion με βάση το level.
+        if (bi.level > 0 && (bestMah % 50 != 0)) {
+            float pct = bi.level / 100f;
+            long est = (long) (bestMah / pct);
+            if (est > 0) {
+                bi.estimatedFullMah = est;
+            } else {
+                bi.estimatedFullMah = bestMah;
+            }
+        } else {
+            bi.estimatedFullMah = bestMah;
+        }
+        bi.source = bestSrc;
     }
 
     // ---------- 3) CHARGE COUNTER ----------
@@ -1313,13 +1323,12 @@ private BatteryInfo getBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // Estimate 100%
+    // Estimate 100% από Charge Counter
     if (ccMah > 0 && bi.level > 0) {
         float pct = bi.level / 100f;
         long est = (long) (ccMah / pct);
         if (est > 0) {
             bi.estimatedFullMah = est;
-            if (bi.realCapacityMah <= 0) bi.realCapacityMah = est;
             bi.source = "Charge Counter";
         }
     }
@@ -1336,36 +1345,89 @@ private String buildBatteryInfo() {
     if (bi == null) bi = new BatteryInfo();
 
     long modelCap = getStoredModelCapacity();
-    boolean hasCC = (bi.currentChargeMah > 0);
+    boolean hasCC  = (bi.currentChargeMah > 0);
+    boolean hasEst = (bi.estimatedFullMah > 0);
 
     StringBuilder sb = new StringBuilder();
 
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), (bi.level >= 0 ? bi.level + "%" : "N/A")));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), (bi.scale > 0 ? bi.scale : "N/A")));
+    // ---------- BASIC LINES (LABELS 1:1 ΜΕ ΤΗ ΦΩΤΟ) ----------
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"),  (bi.level >= 0 ? bi.level + "%" : "N/A")));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"),  (bi.scale > 0 ? bi.scale : "N/A")));
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
-    sb.append(String.format(Locale.US, "%s : %.1f°C\n", padKey("Temp"), bi.temperature));
-    sb.append(String.format(Locale.US, "%s : %s mAh\n", padKey("Real capacity"), (bi.realCapacityMah > 0 ? bi.realCapacityMah : 0)));
+    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
 
-    long estimatedFull = bi.estimatedFullMah > 0 ? bi.estimatedFullMah : modelCap;
-    sb.append(String.format(Locale.US, "%s : %s mAh\n", padKey("Estimated full (100%)"), (estimatedFull > 0 ? estimatedFull : 0)));
+    // ---------- CALCULATION FOR CURRENT CHARGE / ESTIMATED FULL ----------
+    float lvlFrac = (bi.level > 0 ? (bi.level / 100f) : -1f);
 
+    long displayCurrent  = -1;
+    long displayEstimated = -1;
+
+    // 1) Αν έχουμε Charge Counter → αυτός είναι ο βασικός current
     if (hasCC) {
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), bi.currentChargeMah));
-    } else {
-        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "Not available"));
-        sb.append(indent("(Requires Charge Counter sensor)", 26)).append("\n");
+        displayCurrent = bi.currentChargeMah;
     }
 
-    String src;
-    if (hasCC) src = "Charge Counter";
-    else if (!"Unknown".equalsIgnoreCase(bi.source)) src = "OEM";
-    else if (modelCap > 0) src = "Model capacity";
-    else src = "Unknown";
+    // 2) Αν έχουμε hardware estimated full (OEM ή Counter)
+    if (hasEst) {
+        displayEstimated = bi.estimatedFullMah;
 
+        // Αν δεν έχουμε Counter αλλά έχουμε hardware full, βγάζουμε current από το level
+        if (!hasCC && lvlFrac > 0 && displayCurrent <= 0) {
+            displayCurrent = (long) (displayEstimated * lvlFrac);
+        }
+    }
+
+    // 3) DERIVED MODE — χωρίς Counter & χωρίς OEM, αλλά με model capacity
+    if (!hasCC && !hasEst && modelCap > 0 && lvlFrac > 0) {
+        displayCurrent = (long) (modelCap * lvlFrac);
+        // Estimated full σε αυτή την περίπτωση θα παρουσιαστεί σαν N/A (βλέπε παρακάτω)
+    }
+
+    // ---------- CURRENT CHARGE ----------
+    if (displayCurrent > 0) {
+        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
+    } else {
+        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
+    }
+
+    // ---------- SOURCE ----------
+    String src;
+    if (hasCC) {
+        src = "Charge Counter";
+    } else if (hasEst && !"Unknown".equalsIgnoreCase(bi.source)) {
+        src = "OEM";
+    } else if (modelCap > 0) {
+        src = "Model capacity";
+    } else {
+        src = "Unknown";
+    }
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Model capacity"), (modelCap > 0 ? modelCap + " mAh" : "N/A")));
-    sb.append(String.format(Locale.US, "%s : %s", padKey("Lifecycle"), "Requires root access"));
+
+    // ---------- ESTIMATED FULL (100%) ----------
+    if (hasCC || (hasEst && !"Unknown".equalsIgnoreCase(bi.source))) {
+        // Έχουμε hardware data (Counter ή OEM) → δείχνουμε αριθμό
+        long val = (displayEstimated > 0 ? displayEstimated : bi.estimatedFullMah);
+        if (val < 0) val = 0;
+        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), val));
+    } else {
+        // Καμία hardware πληροφορία → premium multiline μήνυμα μόνο δεξιά από τα ':'
+        sb.append(String.format(Locale.US, "%s : %s\n",
+                padKey("Estimated full (100%)"),
+                "N/A in this device"));
+        sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
+        sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
+    }
+
+    // ---------- MODEL CAPACITY ----------
+    sb.append(String.format(Locale.US, "%s : %s\n",
+            padKey("Model capacity"),
+            (modelCap > 0 ? modelCap + " mAh" : "N/A")));
+
+    // ---------- LIFECYCLE ----------
+    sb.append(String.format(Locale.US, "%s : %s",
+            padKey("Lifecycle"),
+            "Requires root access"));
 
     return sb.toString();
 }
@@ -1487,6 +1549,8 @@ private void showBatteryCapacityDialog() {
         } catch (Throwable ignore) {}
     });
 }
+
+// NOTE(GEL): Ολόκληρο block, έτοιμο για copy-paste στο activity.
 
     
  // ============================================================

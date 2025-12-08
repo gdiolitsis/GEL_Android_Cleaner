@@ -1500,11 +1500,6 @@ private void initBatterySection() {
     // 2) Set text BEFORE applying neon colors
     if (txtBatteryContent != null) {
 
-        // 🔥 FIX: χωρίς αυτό, το Battery Info δεν εμφανίζεται
-        if (batteryContainer != null) {
-            batteryContainer.setVisibility(View.VISIBLE);
-        }
-
         txtBatteryContent.setText(info);
         applyNeonValues(txtBatteryContent, info);
     }

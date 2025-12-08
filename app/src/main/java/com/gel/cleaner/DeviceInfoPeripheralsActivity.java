@@ -408,7 +408,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
 // ============================================================
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (Battery handled separately)
+// Battery-Safe Edition (FINAL)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -432,14 +432,13 @@ private void setupSection(View header, View content, TextView icon) {
             }
         }
 
-        // 2️⃣ Toggle this section only
-        if (content.getVisibility() == View.GONE) {
-            content.setVisibility(View.VISIBLE);
-            icon.setText("－");
-        } else {
-            content.setVisibility(View.GONE);
-            icon.setText("＋");
-        }
+        // ⭐ SAFETY FIX — reset state before toggle (prevents camera lock)
+        content.setVisibility(View.GONE);
+        icon.setText("＋");
+
+        // 2️⃣ Toggle THIS section only
+        content.setVisibility(View.VISIBLE);
+        icon.setText("－");
     });
 }
 
@@ -3424,3 +3423,4 @@ private String indent(String text, int spaces) {
 
 // 🔥 END OF CLASS
 }
+

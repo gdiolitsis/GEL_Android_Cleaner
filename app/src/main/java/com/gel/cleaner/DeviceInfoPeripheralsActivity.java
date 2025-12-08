@@ -353,42 +353,41 @@ if (txtBatteryModelCapacity != null) {
 // ⭐ BATTERY SECTION — FINAL EXPAND/COLLAPSE ENGINE (GEL v5.0)
 // ============================================================
 
-LinearLayout headerBattery = findViewById(R.id.headerBattery);
-
 headerBattery.setOnClickListener(v -> {
 
     boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-    // 1️⃣ Κλείσε όλα τα άλλα sections
+    // Κλείσε όλα τα άλλα sections (χωρίς να κρύβεις txtBatteryContent)
     collapseAllExceptBattery();
 
     if (!isOpen) {
 
-        // 2️⃣ Άνοιγμα Battery
+        // ⭐ FIX 1: Το battery content ΠΡΕΠΕΙ ΝΑ ΓΙΝΕΙ VISIBLE όταν ανοίγει
+        if (txtBatteryContent != null)
+            txtBatteryContent.setVisibility(View.VISIBLE);
+
+        // expand container
         animateExpand(batteryContainer);
         iconBattery.setText("－");
 
-        // 3️⃣ Πάντα δείξε το capacity button
-        if (txtBatteryModelCapacity != null) {
+        // δείξε το capacity button
+        if (txtBatteryModelCapacity != null)
             txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-        }
 
-        // ⭐⭐⭐ 4️⃣ ΠΑΝΤΑ REFRESH όταν ανοίγει το Battery (Η ΛΥΣΗ ΣΟΥ)
+        // ⭐ FIX 2: REFRESH ΚΑΘΕ ΦΟΡΑ ΠΟΥ ΑΝΟΙΓΕΙ
         refreshBatteryInfoView();
 
     } else {
 
-        // Κλείσιμο Battery
+        // collapse container
         animateCollapse(batteryContainer);
         iconBattery.setText("＋");
 
-        // Κρύψε capacity button
-        if (txtBatteryModelCapacity != null) {
+        // κρύψε μόνο το capacity button
+        if (txtBatteryModelCapacity != null)
             txtBatteryModelCapacity.setVisibility(View.GONE);
-        }
     }
 });
-
 
 
     // ============================================================
@@ -3444,7 +3443,7 @@ private void populateAllSections() {
     }
     
 // ============================================================
-// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY
+// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY  (FIXED)
 // ============================================================
 private void collapseAllExceptBattery() {
 
@@ -3464,17 +3463,20 @@ private void collapseAllExceptBattery() {
             icon.setText("＋");
     }
 
-    // 2) Κλείσε ΠΑΝΤΑ το batteryContainer
-    if (batteryContainer != null) {
-        batteryContainer.setVisibility(View.GONE);  // πιο safe από animateCollapse
-    }
+    // ⭐⭐⭐ ΤΕΡΑΣΤΙΟ FIX 1 ⭐⭐⭐
+    // ΔΕΝ πειράζουμε το batteryContainer εδώ.
+    // Το Battery section ελέγχεται ΠΑΝΤΑ από το headerBattery click ONLY.
+    // Αν το κλείσεις εδώ → όταν πατάς Battery μετά, δεν εμφανίζεται το κείμενο.
+    // ---------------------------------------------------------
+    // ❌ Παλιά (σβήστο): batteryContainer.setVisibility(View.GONE);
 
-    // 3) Κλείσε ΠΑΝΤΑ το Set Model Capacity
+    // ⭐⭐⭐ ΤΕΡΑΣΤΙΟ FIX 2 ⭐⭐⭐
+    // ΜΟΝΟ το button κρύβουμε — και αυτό όταν το Battery είναι ΚΛΕΙΣΤΟ.
     if (txtBatteryModelCapacity != null) {
         txtBatteryModelCapacity.setVisibility(View.GONE);
     }
 
-    // 4) Reset battery icon
+    // Reset battery icon (πάντα safe)
     if (iconBattery != null) {
         iconBattery.setText("＋");
     }

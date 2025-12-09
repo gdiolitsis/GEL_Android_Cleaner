@@ -284,7 +284,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Thermal Engine / Cooling"
+                android:text="Thermal / Cooling Hardware Systems"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>

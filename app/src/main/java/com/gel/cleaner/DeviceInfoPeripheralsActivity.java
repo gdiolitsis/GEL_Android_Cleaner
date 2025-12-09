@@ -407,8 +407,8 @@ protected void onCreate(Bundle savedInstanceState) {
 
 
 // ============================================================
-// GEL Section Setup Engine — UNIVERSAL FINAL EDITION
-// Battery-Safe + Perfect Toggle
+// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
+// Battery-Safe Edition (FINAL)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -421,12 +421,10 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        boolean willOpen = (content.getVisibility() == View.GONE);
-
-        // 🔥 Always close Battery module first
+        // 🔥 ALWAYS close Battery module before opening a normal section
         closeBatteryModule();
 
-        // 🔥 Close ALL other normal sections
+        // 1️⃣ Collapse all other NORMAL sections
         for (int i = 0; i < allContents.length; i++) {
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
@@ -434,16 +432,13 @@ private void setupSection(View header, View content, TextView icon) {
             }
         }
 
-        // ----------------------------------------------
-        // ⭐ FIX: PERFECT TOGGLE
-        // ----------------------------------------------
-        if (willOpen) {
-            content.setVisibility(View.VISIBLE);
-            icon.setText("－");
-        } else {
-            content.setVisibility(View.GONE);
-            icon.setText("＋");
-        }
+        // ⭐ SAFETY FIX — reset state before toggle (prevents camera lock)
+        content.setVisibility(View.GONE);
+        icon.setText("＋");
+
+        // 2️⃣ Toggle THIS section only
+        content.setVisibility(View.VISIBLE);
+        icon.setText("－");
     });
 }
 
@@ -968,199 +963,197 @@ private void setupSection(View header, View content, TextView icon) {
         return sb.toString();
     }
 
-    private String buildConnectivityInfo() {
-        StringBuilder sb = new StringBuilder();
+// ============================================================
+//  CONNECTIVITY 
+// ============================================================
+private String buildConnectivityInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        // ============================================================
-        // NETWORK TRANSPORTS (Wi-Fi / Cellular / Ethernet)
-        // ============================================================
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    // ============================================================
+    // NETWORK TRANSPORTS (Wi-Fi / Cellular / Ethernet)
+    // ============================================================
+    try {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-            if (cm != null) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                if (caps != null) {
+        if (cm != null) {
+            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
+            if (caps != null) {
 
-                    sb.append("Connection Type  : ");
+                sb.append("Connection Type  : ");
 
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-                        sb.append("Wi-Fi\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-                        sb.append("Cellular\n");
-                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-                        sb.append("Ethernet\n");
-                    else
-                        sb.append("Other\n");
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+                    sb.append("Wi-Fi\n");
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+                    sb.append("Cellular\n");
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+                    sb.append("Ethernet\n");
+                else
+                    sb.append("Other\n");
 
-                    boolean validated  = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-                    boolean notMetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+                boolean validated  = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                boolean notMetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
 
-                    sb.append("Downlink         : ").append(caps.getLinkDownstreamBandwidthKbps()).append(" kbps\n");
-                    sb.append("Uplink           : ").append(caps.getLinkUpstreamBandwidthKbps()).append(" kbps\n");
-                    sb.append("Validated        : ").append(validated ? "Yes" : "No").append("\n");
-                    sb.append("Metered          : ").append(notMetered ? "No" : "Yes").append("\n");
-                }
+                sb.append("Downlink         : ")
+                  .append(caps.getLinkDownstreamBandwidthKbps())
+                  .append(" kbps\n");
+                sb.append("Uplink           : ")
+                  .append(caps.getLinkUpstreamBandwidthKbps())
+                  .append(" kbps\n");
+                sb.append("Validated        : ")
+                  .append(validated ? "Yes" : "No")
+                  .append("\n");
+                sb.append("Metered          : ")
+                  .append(notMetered ? "No" : "Yes")
+                  .append("\n");
             }
-
-            // ============================================================
-            // WI-FI DETAILS
-            // ============================================================
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                if (wi != null && wi.getNetworkId() != -1) {
-
-                    sb.append("\nWi-Fi Details:\n");
-                    sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
-                    sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
-                    sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
-                    sb.append("  MAC            : ").append(wi.getMacAddress()).append("\n");
-                }
-            }
-
-        } catch (Throwable ignore) {}
-
-
-        // ============================================================
-        // BLUETOOTH — FULL DETAIL (INTEGRATED)
-        // ============================================================
-        sb.append("\nBluetooth:\n");
-
-        try {
-            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
-
-            if (ba == null) {
-                sb.append("  Supported      : No\n");
-            } else {
-                sb.append("  Supported      : Yes\n");
-                sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-
-                // State
-                int state = ba.getState();
-                String stateStr;
-                switch (state) {
-                    case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-                    case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-                    case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-                    default:                                 stateStr = "Off";         break;
-                }
-                sb.append("  State          : ").append(stateStr).append("\n");
-
-                // Identity
-                sb.append("  Name           : ").append(ba.getName()).append("\n");
-                sb.append("  Address        : ").append(ba.getAddress()).append("\n");
-
-                // Version detection (API-safe)
-                try {
-                    int btVer = Build.VERSION.SDK_INT >= 31 ?
-                            (BluetoothAdapter.getDefaultAdapter() != null &&
-                                    BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner() != null ? 5 : 4)
-                            :
-                            (Build.VERSION.SDK_INT >= 21 ? 4 : 3);
-                    sb.append("  Version        : Bluetooth ").append(btVer).append("\n");
-                } catch (Throwable e) {
-                    sb.append("  Version        : Unknown\n");
-                }
-
-                // Classic Features
-                sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-                sb.append("  Discoverable   : ").append(
-                        ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No"
-                ).append("\n");
-
-                // BLE Support
-                boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-                sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
-
-                // Hardware Capabilities
-                sb.append("  Multiple Adv   : ");
-                try {
-                    boolean multi = ba.isMultipleAdvertisementSupported();
-                    sb.append(multi ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("Unknown\n");
-                }
-
-                sb.append("  LE Scanner     : ");
-                try {
-                    boolean leScan = ba.getBluetoothLeScanner() != null;
-                    sb.append(leScan ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("Unknown\n");
-                }
-
-                sb.append("  Offloaded Filt.: ");
-                try {
-                    boolean off = ba.isOffloadedFilteringSupported();
-                    sb.append(off ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("Unknown\n");
-                }
-
-                // Connected Devices
-                try {
-                    List<BluetoothDevice> con =
-                            bm.getConnectedDevices(BluetoothProfile.GATT);
-                    sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
-                } catch (Throwable ignore) {
-                    sb.append("  GATT Devices   : Unknown\n");
-                }
-            }
-
-        } catch (Throwable ignore) {}
-       
-       // ADVANCED INFO (green comments single line)
-       
-sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, Bluetooth controller logs and HCI traces, require root access.\n");
-
-return sb.toString();
-}
-    private String buildLocationInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (lm != null) {
-                boolean gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                boolean net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-                sb.append("GPS              : ").append(gps ? "Enabled" : "Disabled").append("\n");
-                sb.append("Network          : ").append(net ? "Enabled" : "Disabled").append("\n");
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("Location providers are not exposed at this moment.\n");
         }
 
-        sb.append("Advanced         : High-precision GNSS raw logs require root access.\n");
+        // ============================================================
+        // WI-FI DETAILS
+        // ============================================================
+        if (wm != null) {
+            WifiInfo wi = wm.getConnectionInfo();
+            if (wi != null && wi.getNetworkId() != -1) {
 
-        appendAccessInstructions(sb, "location");
-        return sb.toString();
-    }
+                sb.append("\nWi-Fi Details:\n");
+                sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
+                sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
+                sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
+                sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
 
-    private String buildNfcInfo() {
-        StringBuilder sb = new StringBuilder();
+                // SAFE MAC (masked vs real, root-aware)
+                String rawMac = wi.getMacAddress();
+                String macLine;
+                if (rawMac != null
+                        && rawMac.length() > 0
+                        && !"02:00:00:00:00:00".equals(rawMac)) {
+                    macLine = rawMac;   // real MAC (root / older Android)
+                } else {
+                    if (!isRooted) {
+                        macLine = "Masked by Android security (requires root access)";
+                    } else {
+                        macLine = "Unavailable";
+                    }
+                }
+                sb.append("  MAC            : ").append(macLine).append("\n");
+            }
+        }
 
-        try {
-            NfcManager nfc = (NfcManager) getSystemService(Context.NFC_SERVICE);
-            NfcAdapter a   = nfc != null ? nfc.getDefaultAdapter() : null;
+    } catch (Throwable ignore) {}
 
-            sb.append("Supported        : ").append(a != null ? "Yes" : "No").append("\n");
+    // ============================================================
+    // BLUETOOTH — FULL DETAIL (INTEGRATED)
+    // ============================================================
+    sb.append("\nBluetooth:\n");
 
-            if (a != null) {
-                sb.append("Enabled          : ").append(a.isEnabled() ? "Yes" : "No").append("\n");
+    try {
+        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+
+        if (ba == null) {
+            sb.append("  Supported      : No\n");
+        } else {
+            sb.append("  Supported      : Yes\n");
+            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+
+            // State
+            int state = ba.getState();
+            String stateStr;
+            switch (state) {
+                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+                default:                                 stateStr = "Off";         break;
+            }
+            sb.append("  State          : ").append(stateStr).append("\n");
+
+            // Identity — SAFE NAME + ADDRESS
+            String btName = ba.getName();
+            if (btName == null || btName.trim().isEmpty()) {
+                btName = !isRooted
+                        ? "Unavailable (requires root access)"
+                        : "Unavailable";
             }
 
-        } catch (Throwable ignore) { }
+            String btAddr = ba.getAddress();
+            if (btAddr == null
+                    || btAddr.trim().isEmpty()
+                    || "02:00:00:00:00:00".equals(btAddr)) {
+                btAddr = !isRooted
+                        ? "Masked by Android security (requires root access)"
+                        : "Unavailable";
+            }
 
-        sb.append("Advanced         : Secure element and low-level NFC routing tables require root access.\n");
+            sb.append("  Name           : ").append(btName).append("\n");
+            sb.append("  Address        : ").append(btAddr).append("\n");
 
-        appendAccessInstructions(sb, "nfc");
-        return sb.toString();
-    }
+            // Version detection (όσο γίνεται API-safe)
+            try {
+                int btVer = Build.VERSION.SDK_INT >= 31
+                        ? ((BluetoothAdapter.getDefaultAdapter() != null &&
+                            BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner() != null) ? 5 : 4)
+                        : (Build.VERSION.SDK_INT >= 21 ? 4 : 3);
+                sb.append("  Version        : Bluetooth ").append(btVer).append("\n");
+            } catch (Throwable e) {
+                sb.append("  Version        : Unknown\n");
+            }
+
+            // Classic Features
+            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
+            sb.append("  Discoverable   : ")
+              .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
+              .append("\n");
+
+            // BLE Support
+            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+
+            // Hardware Capabilities
+            sb.append("  Multiple Adv   : ");
+            try {
+                boolean multi = ba.isMultipleAdvertisementSupported();
+                sb.append(multi ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            sb.append("  LE Scanner     : ");
+            try {
+                boolean leScan = (ba.getBluetoothLeScanner() != null);
+                sb.append(leScan ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            sb.append("  Offloaded Filt.: ");
+            try {
+                boolean off = ba.isOffloadedFilteringSupported();
+                sb.append(off ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) {
+                sb.append("Unknown\n");
+            }
+
+            // Connected Devices
+            try {
+                List<BluetoothDevice> con =
+                        bm.getConnectedDevices(BluetoothProfile.GATT);
+                sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
+            } catch (Throwable ignore) {
+                sb.append("  GATT Devices   : Unknown\n");
+            }
+        }
+
+    } catch (Throwable ignore) {}
+
+    // ============================================================
+    // ADVANCED INFO (green comment style)
+    // ============================================================
+    sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
+              "Bluetooth controller logs and HCI traces, require root access.\n");
+
+    return sb.toString();
+}
       
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION
@@ -2439,7 +2432,7 @@ private void refreshModemInfo() {
 }
 
 // ============================================================================
-// TELEPHONY / MODEM — MEGA REPORT (GEL ALIGNMENT EDITION)
+// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final)
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2448,13 +2441,8 @@ private String buildModemInfo() {
     TelephonyManager tm = null;
     SubscriptionManager sm = null;
 
-    try {
-        tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-    } catch (Throwable ignore) {}
-
-    try {
-        sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-    } catch (Throwable ignore) {}
+    try { tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE); } catch (Throwable ignore) {}
+    try { sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE); } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // PHONE TYPE
@@ -2466,39 +2454,25 @@ private String buildModemInfo() {
                 case TelephonyManager.PHONE_TYPE_GSM:  phoneTypeStr = "GSM";  break;
                 case TelephonyManager.PHONE_TYPE_CDMA: phoneTypeStr = "CDMA"; break;
                 case TelephonyManager.PHONE_TYPE_SIP:  phoneTypeStr = "SIP";  break;
-                case TelephonyManager.PHONE_TYPE_NONE: phoneTypeStr = "None"; break;
+                default: phoneTypeStr = "None"; break;
             }
         }
     } catch (Throwable ignore) {}
 
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("Phone Type"),
-            phoneTypeStr
-    ));
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
 
     // ------------------------------------------------------------
-    // DATA NETWORK + 5G FLAG
+    // DATA NETWORK — LTE / NR only
     // ------------------------------------------------------------
     try {
         int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName = networkName(net);
+        String netName = (net == TelephonyManager.NETWORK_TYPE_NR) ? "5G NR"
+                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
+                       : "Unknown";
 
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("Data Network"),
-                netName
-        ));
-
-        boolean is5G = (net == TelephonyManager.NETWORK_TYPE_NR);
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("5G (NR) Active"),
-                is5G ? "Yes" : "No"
-        ));
+        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
+        sb.append(String.format(locale, "%s : %s\n", padKeyModem("5G (NR) Active"),
+                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
@@ -2509,42 +2483,32 @@ private String buildModemInfo() {
         String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
         String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
 
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
+        // If ISO is invalid → fallback to device locale
+        if (iso == null || iso.trim().isEmpty())
+            iso = Locale.getDefault().getCountry();
+
+        sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Carrier"),
-                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"
-        ));
+                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
 
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
+        sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Country ISO"),
-                (iso != null && !iso.isEmpty()) ? iso.toUpperCase(locale) : "Unknown"
-        ));
+                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
 
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
+        sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Operator Code"),
-                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"
-        ));
+                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SIGNAL STRENGTH (LEVEL ONLY — safe API)
-//  ------------------------------------------------------------
+    // SIGNAL STRENGTH — 0–4 (safe public API)
+    // ------------------------------------------------------------
     try {
         if (tm != null) {
             SignalStrength ss = tm.getSignalStrength();
             if (ss != null) {
-                int level = ss.getLevel(); // 0–4
-                sb.append(String.format(
-                        locale,
-                        "%s : %d/4\n",
-                        padKeyModem("Signal Strength"),
-                        level
-                ));
+                sb.append(String.format(locale, "%s : %d/4\n",
+                        padKeyModem("Signal Strength"), ss.getLevel()));
             }
         }
     } catch (Throwable ignore) {}
@@ -2554,145 +2518,93 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     try {
         boolean roaming = tm != null && tm.isNetworkRoaming();
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("Roaming"),
-                roaming ? "Yes" : "No"
-        ));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // IMS / VoLTE / VoWiFi / VoNR (SDK-safe via reflection)
-//  ------------------------------------------------------------
-    // IMS Registered (δεν υπάρχει stable public API → informative only)
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("IMS Registered"),
-            "Unknown"
-    ));
+    // IMS / VoLTE / VoWiFi / VoNR (reflection safe)
+    // ------------------------------------------------------------
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("IMS Registered"), "Unknown"));
 
     // VoLTE
     try {
-        boolean volte =
-                tm != null &&
-                (boolean) TelephonyManager.class
-                        .getMethod("isVolteAvailable")
-                        .invoke(tm);
-
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("VoLTE Support"),
-                volte ? "Yes" : "No"
-        ));
+        boolean volte = tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("VoLTE Support"),
-                "Unknown"
-        ));
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
     }
 
     // VoWiFi
     try {
-        boolean vowifi =
-                tm != null &&
-                (boolean) TelephonyManager.class
-                        .getMethod("isWifiCallingAvailable")
-                        .invoke(tm);
-
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("VoWiFi Support"),
-                vowifi ? "Yes" : "No"
-        ));
+        boolean vowifi = tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("VoWiFi Support"),
-                "Unknown"
-        ));
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
     }
 
     // VoNR
-    if (Build.VERSION.SDK_INT >= 33) {
-        try {
-            boolean vonr =
-                    tm != null &&
-                    (boolean) TelephonyManager.class
-                            .getMethod("isVoNrEnabled")
-                            .invoke(tm);
-
-            sb.append(String.format(
-                    locale,
-                    "%s : %s\n",
-                    padKeyModem("VoNR Support"),
-                    vonr ? "Yes" : "No"
-            ));
-        } catch (Throwable ignore) {
-            sb.append(String.format(
-                    locale,
-                    "%s : %s\n",
-                    padKeyModem("VoNR Support"),
-                    "Unknown"
-            ));
-        }
-    } else {
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("VoNR Support"),
-                "Unknown (Android < 13)"
-        ));
+    try {
+        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
+                tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
+    } catch (Throwable ignore) {
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
     }
 
     // ------------------------------------------------------------
-    // ACTIVE SIMS / ESIM / BASIC SIM MAPPING
+    // ACTIVE SIMS — MAX 2 (ULTRA STABLE, NO GHOST SLOTS)
     // ------------------------------------------------------------
     try {
         List<SubscriptionInfo> subs = null;
-        if (sm != null) {
-            try {
-                subs = sm.getActiveSubscriptionInfoList();
-            } catch (Throwable ignore) {}
+
+        try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
+        if ((subs == null || subs.isEmpty()) && sm != null) {
+            try { subs = sm.getAvailableSubscriptionInfoList(); } catch (Throwable ignore) {}
         }
 
-        int simCount = (subs != null ? subs.size() : 0);
-        sb.append(String.format(
-                locale,
-                "%s : %d\n",
-                padKeyModem("Active SIMs"),
-                simCount
-        ));
+        int count = 0;
+        boolean[] seen = new boolean[2];
 
         if (subs != null) {
             for (SubscriptionInfo si : subs) {
                 int slot = si.getSimSlotIndex();
-                CharSequence carrName = si.getCarrierName();
-                String displayName = (carrName != null ? carrName.toString() : "Unknown");
+                if (slot >= 0 && slot <= 1 && !seen[slot]) {
+                    seen[slot] = true;
+                    count++;
+                }
+            }
+        }
 
-                sb.append(String.format(
-                        locale,
-                        "%s : %s\n",
-                        padKeyModem("SIM Slot " + slot),
-                        displayName
-                ));
+        sb.append(String.format(locale, "%s : %d\n", padKeyModem("Active SIMs"), count));
 
-                // eSIM flag (Android 10+)
+        if (subs != null) {
+            boolean[] printed = new boolean[2];
+            for (SubscriptionInfo si : subs) {
+                int slot = si.getSimSlotIndex();
+                if (slot < 0 || slot > 1 || printed[slot]) continue;
+
+                printed[slot] = true;
+
+                String displayName =
+                        si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
+
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("SIM Slot " + (slot + 1)), displayName));
+
+                // eSIM
                 if (Build.VERSION.SDK_INT >= 29) {
                     try {
-                        boolean esim = si.isEmbedded();
-                        sb.append(String.format(
-                                locale,
-                                "%s : %s\n",
+                        sb.append(String.format(locale, "%s : %s\n",
                                 padKeyModem(" • eSIM"),
-                                esim ? "Yes" : "No"
-                        ));
+                                si.isEmbedded() ? "Yes" : "No"));
                     } catch (Throwable ignore) {}
                 }
 
@@ -2700,105 +2612,59 @@ private String buildModemInfo() {
                 try {
                     String iccid = si.getIccId();
                     if (iccid != null && !iccid.isEmpty()) {
-                        sb.append(String.format(
-                                locale,
-                                "%s : %s\n",
-                                padKeyModem(" • ICCID"),
-                                maskSensitive(iccid)
-                        ));
+                        sb.append(String.format(locale, "%s : %s\n",
+                                padKeyModem(" • ICCID"), maskSensitive(iccid)));
                     }
                 } catch (Throwable ignore) {}
 
                 // MCC / MNC
                 try {
-                    int mcc = si.getMcc();
-                    int mnc = si.getMnc();
-                    if (mcc > 0 && mnc >= 0) {
-                        sb.append(String.format(
-                                locale,
-                                "%s : %d / %d\n",
-                                padKeyModem(" • MCC / MNC"),
-                                mcc, mnc
-                        ));
-                    }
+                    sb.append(String.format(locale, "%s : %d / %d\n",
+                            padKeyModem(" • MCC / MNC"), si.getMcc(), si.getMnc()));
                 } catch (Throwable ignore) {}
             }
         }
-
-    } catch (Throwable ignore) {
-        sb.append(String.format(
-                locale,
-                "%s : %s\n",
-                padKeyModem("SIM Info"),
-                "Unknown"
-        ));
-    }
+    } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SUBSCRIBER / PHONE NUMBER (MASKED IF AVAILABLE)
-//  ------------------------------------------------------------
+    // SUBSCRIBER INFO — masked
+    // ------------------------------------------------------------
     try {
         if (tm != null) {
-            String imsi  = null;
+            String imsi = null;
             String msisdn = null;
 
             try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
             try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
 
-            sb.append(String.format(
-                    locale,
-                    "%s : %s\n",
+            sb.append(String.format(locale, "%s : %s\n",
                     padKeyModem("IMSI"),
-                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"
-            ));
+                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
 
-            sb.append(String.format(
-                    locale,
-                    "%s : %s\n",
+            sb.append(String.format(locale, "%s : %s\n",
                     padKeyModem("MSISDN"),
-                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"
-            ));
+                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
         }
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // CARRIER AGGREGATION / BANDS — INFO ONLY (NO PUBLIC FULL API)
-//  ------------------------------------------------------------
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("4G+ CA"),
-            "Unknown (SDK restricted)"
-    ));
+    // CARRIER AGGREGATION / BANDS — NOT PUBLIC API
+    // ------------------------------------------------------------
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("4G+ CA"), "Unknown (requires root access)"));
 
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("NR-CA"),
-            "Unknown"
-    ));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("NR-CA"), "Unknown (requires root access)"));
 
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("Bands"),
-            "Vendor / modem restricted"
-    ));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("Bands"), "Vendor restricted (requires root access)"));
 
     // ------------------------------------------------------------
-    // ADVANCED FOOTER
+    // ADVANCED FOOTER — SINGLE LINE
     // ------------------------------------------------------------
-    sb.append(String.format(
-            locale,
-            "%s : %s\n",
-            padKeyModem("Advanced"),
-            "Full RAT tables, NR bands, CA combos"
-    ));
-    sb.append(String.format(
-            locale,
-            "%s   %s",
-            padKeyModem(""),
-            "require root access and OEM modem tools."
+    sb.append(String.format(locale,
+            "%s : Full RAT tables, NR bands, CA combos — requires root access and OEM modem tools.",
+            padKeyModem("Advanced")
     ));
 
     return sb.toString();
@@ -2850,104 +2716,159 @@ private String networkName(int type) {
     }
 }
 
-// 4. WiFi Advanced (Safe Edition)
+// ============================================================================
+// 4. WiFi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
+// ============================================================================
+
 private String buildWifiAdvancedInfo() {
     StringBuilder sb = new StringBuilder();
+    Locale locale = Locale.US;
 
     try {
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         PackageManager pm = getPackageManager();
+        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
         if (wm != null) {
 
-            // ---- BASIC HW SUPPORT ----
-            boolean wifiHw = pm.hasSystemFeature("android.hardware.wifi");
+            // ------------------------------------------------------------
+            // HARDWARE SUPPORT
+            // ------------------------------------------------------------
+            boolean wifiHw = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
             sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
 
-            // ---- FREQUENCY BANDS ----
-            if (Build.VERSION.SDK_INT >= 21) {
-                boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
-                sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
-            }
+            // ------------------------------------------------------------
+            // FREQUENCY BANDS
+            // ------------------------------------------------------------
+            boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
+            sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
 
-            if (Build.VERSION.SDK_INT >= 21) {
-                boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-                sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
-            }
+            boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
+            sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
 
             if (Build.VERSION.SDK_INT >= 30) {
                 try {
-                    boolean six = wm.is6GHzBandSupported();
-                    sb.append("6 GHz Support    : ").append(six ? "Yes" : "No").append("\n");
+                    sb.append("6 GHz Support    : ")
+                            .append(wm.is6GHzBandSupported() ? "Yes" : "No").append("\n");
                 } catch (Throwable ignore) {}
             }
 
-            // ---- SECURITY MODES ----
+            // ------------------------------------------------------------
+            // SECURITY CAPABILITIES
+            // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 29) {
                 try {
-                    boolean wpa3 = wm.isWpa3SaeSupported();
-                    sb.append("WPA3 SAE         : ").append(wpa3 ? "Yes" : "No").append("\n");
+                    sb.append("WPA3 SAE         : ")
+                            .append(wm.isWpa3SaeSupported() ? "Yes" : "No").append("\n");
                 } catch (Throwable ignore) {}
 
                 try {
-                    boolean wpa3Trans = wm.isWpa3SuiteBSupported();
-                    sb.append("WPA3 Suite-B     : ").append(wpa3Trans ? "Yes" : "No").append("\n");
+                    sb.append("WPA3 Suite-B     : ")
+                            .append(wm.isWpa3SuiteBSupported() ? "Yes" : "No").append("\n");
                 } catch (Throwable ignore) {}
             }
 
-            // ---- WIFI RTT (distance measurement) ----
+            // ------------------------------------------------------------
+            // RTT (distance)
+            // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 28) {
                 boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
                 sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
                         .append("  (Indoor distance)\n");
             }
 
-            // ---- WI-FI AWARE / NAN ----
+            // ------------------------------------------------------------
+            // Wi-Fi Aware / NAN
+            // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 26) {
                 boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
                 sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
                         .append("  (Device proximity)\n");
             }
 
-            // ---- EASY CONNECT (DPP QR CODE) — use string instead of constant
+            // ------------------------------------------------------------
+            // Easy Connect (DPP)
+            // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 29) {
                 boolean dpp = pm.hasSystemFeature("android.hardware.wifi.dpp");
                 sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
             }
 
-            // ---- PASSPOINT / HOTSPOT 2.0 ----
+            // ------------------------------------------------------------
+            // Passpoint (Hotspot 2.0)
+            // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 26) {
                 boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
                 sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
             }
 
-            // ---- WI-FI DIRECT / P2P ----
+            // ------------------------------------------------------------
+            // P2P / Direct
+            // ------------------------------------------------------------
             boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
             sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
 
-            // ---- MAC RANDOMIZATION (fake check, keep text) ----
+            // ------------------------------------------------------------
+            // MAC RANDOMIZATION (informational)
+            // ------------------------------------------------------------
             sb.append("MAC Randomization: Unknown (SDK level)\n");
 
-            // ---- LINK LAYER STATS ----
+            // ------------------------------------------------------------
+            // LINK LAYER STATS (not public)
+            // ------------------------------------------------------------
             sb.append("Link Layer Stats : Unknown (hidden API)\n");
 
-            // ---- POWER SAVE MODE ----
+            // ------------------------------------------------------------
+            // POWER SAVE MODE
+            // ------------------------------------------------------------
             try {
-                boolean psm = wm.isScanAlwaysAvailable();
-                sb.append("Scan Always On   : ").append(psm ? "Yes" : "No").append("\n");
+                sb.append("Scan Always On   : ")
+                        .append(wm.isScanAlwaysAvailable() ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) {}
 
-            // ---- REGULATORY DOMAIN ----
-            sb.append("Country Code     : Not exposed\n");
+            // ------------------------------------------------------------
+            // REAL COUNTRY CODE (triple fallback)
+            // ------------------------------------------------------------
+            String cc = null;
+
+            // 1) From modem (most reliable)
+            try {
+                if (tm != null)
+                    cc = tm.getNetworkCountryIso();
+            } catch (Throwable ignore) {}
+
+            // 2) WiFi regulatory domain
+            if (cc == null || cc.isEmpty()) {
+                try {
+                    cc = wm.getCountryCode();
+                } catch (Throwable ignore) {}
+            }
+
+            // 3) Device locale
+            if (cc == null || cc.isEmpty()) {
+                cc = Locale.getDefault().getCountry();
+            }
+
+            sb.append("Country Code     : ")
+                    .append((cc != null && !cc.isEmpty()) ? cc.toUpperCase(locale) : "Unknown")
+                    .append("\n");
         }
     } catch (Throwable ignore) {}
 
-    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power and per-band limits, require root access.\n");
-   return sb.toString();
+    // ------------------------------------------------------------
+    // ADVANCED FOOTER (single line)
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits — requires root access.\n");
+
+    return sb.toString();
 }
 
+
+    // ============================
     // 5. Sensors EXTENDED
-    private String buildSensorsExtendedInfo() {
+    // ============================
+
+   private String buildSensorsExtendedInfo() {
         StringBuilder sb = new StringBuilder();
 
         try {
@@ -2975,8 +2896,12 @@ private String buildWifiAdvancedInfo() {
         return sb.toString();
     }
 
+
+    // ============================
     // 6. System Feature Matrix
-    private String buildSystemFeaturesInfo() {
+    // ============================
+
+  private String buildSystemFeaturesInfo() {
         StringBuilder sb = new StringBuilder();
 
         try {
@@ -3005,9 +2930,12 @@ private String buildWifiAdvancedInfo() {
 
         return sb.toString();
     }
-
+ 
+    // ============================
     // 7. SELinux / Security Flags
-    private String buildSecurityFlagsInfo() {
+    // ============================
+
+   private String buildSecurityFlagsInfo() {
         StringBuilder sb = new StringBuilder();
 
         String kernel = readSysString("/proc/version");
@@ -3428,6 +3356,3 @@ private String indent(String text, int spaces) {
 
 // 🔥 END OF CLASS
 }
-
-
-

@@ -438,7 +438,9 @@ private void setupSection(View header, View content, TextView icon) {
         // 🔥 ALWAYS close Battery module before opening a normal section
         closeBatteryModule();
 
-        // 1️⃣ Collapse all other NORMAL sections
+        boolean isOpen = (content.getVisibility() == View.VISIBLE);
+
+        // 1️⃣ Collapse ALL other sections EXCEPT the one pressed
         for (int i = 0; i < allContents.length; i++) {
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
@@ -446,13 +448,16 @@ private void setupSection(View header, View content, TextView icon) {
             }
         }
 
-        // ⭐ SAFETY FIX — reset state before toggle (prevents camera lock)
-        content.setVisibility(View.GONE);
-        icon.setText("＋");
-
-        // 2️⃣ Toggle THIS section only
-        content.setVisibility(View.VISIBLE);
-        icon.setText("－");
+        // 2️⃣ Toggle the pressed section
+        if (isOpen) {
+            // Close it
+            content.setVisibility(View.GONE);
+            icon.setText("＋");
+        } else {
+            // Open it
+            content.setVisibility(View.VISIBLE);
+            icon.setText("－");
+        }
     });
 }
 

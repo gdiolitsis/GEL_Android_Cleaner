@@ -3308,5 +3308,79 @@ private String indent(String text, int spaces) {
     return sb.toString();
 }
 
+// ============================================================================
+// MODEM HELPERS — REQUIRED FOR buildModemInfo()
+// ============================================================================
+private String padKeyModem(String key) {
+    final int width = 20;
+    if (key == null) return "";
+    if (key.length() >= width) return key;
+    StringBuilder sb = new StringBuilder(key);
+    while (sb.length() < width) sb.append(' ');
+    return sb.toString();
+}
+
+private String maskSensitive(String value) {
+    if (value == null) return "N/A";
+    String v = value.trim();
+    if (v.length() <= 4) return "****";
+    int keepStart = 4;
+    int keepEnd = 2;
+    String start = v.substring(0, Math.min(keepStart, v.length()));
+    String end   = v.substring(Math.max(v.length() - keepEnd, keepStart));
+    StringBuilder mid = new StringBuilder();
+    for (int i = 0; i < v.length() - start.length() - end.length(); i++) {
+        mid.append('*');
+    }
+    return start + mid + end;
+}
+
+// ============================================================================
+// NFC BASIC INFO — REQUIRED FOR populateAllSections()
+// ============================================================================
+private String getNfcBasicInfo() {
+    try {
+        NfcManager nfcManager = (NfcManager) getSystemService(Context.NFC_SERVICE);
+        if (nfcManager != null) {
+            NfcAdapter adapter = nfcManager.getDefaultAdapter();
+            if (adapter != null) {
+                return "NFC Supported : Yes\nNFC Enabled   : " + (adapter.isEnabled() ? "Yes" : "No");
+            }
+        }
+        return "NFC Supported : No";
+    } catch (Throwable ignore) {
+        return "NFC Supported : Unknown";
+    }
+}
+
+// ============================================================================
+// LOCATION CAPABILITIES — REQUIRED FOR populateAllSections()
+// ============================================================================
+private String getLocationCapabilities() {
+    StringBuilder sb = new StringBuilder();
+    PackageManager pm = getPackageManager();
+
+    try {
+        sb.append("GPS HW             : ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "Yes" : "No")
+                .append("\n");
+
+        sb.append("Network Location   : ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "Yes" : "No")
+                .append("\n");
+
+        sb.append("Passive Provider   : ")
+                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION) ? "Yes" : "No")
+                .append("\n");
+
+        sb.append("\nAdvanced           : AGNSS, LPP, SUPL, carrier-assisted fixes (requires root access).");
+
+    } catch (Throwable ignore) {
+        return "Location Capabilities : Unknown";
+    }
+
+    return sb.toString();
+}
+
 // 🔥 END OF CLASS
 }

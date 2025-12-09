@@ -144,11 +144,21 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+public void onRequestPermissionsResult(int requestCode,
+                                       @NonNull String[] permissions,
+                                       @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    // 🔹 GEL universal permissions
+    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+        // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν
     }
+
+    // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
+    if (requestCode == 101) {
+        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
+    }
+}
 
     // ============================================================
     // MAIN CLASS FIELDS
@@ -408,14 +418,6 @@ protected void onCreate(Bundle savedInstanceState) {
 }
 // 🔥 END onCreate()
 
-@Override
-public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    if (requestCode == 101) {
-        refreshModemInfo(); // Ξαναφορτώνει SIM + modem blocks
-    }
-}
 
 // ============================================================
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)

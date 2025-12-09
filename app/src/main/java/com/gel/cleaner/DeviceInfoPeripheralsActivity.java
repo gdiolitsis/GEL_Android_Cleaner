@@ -158,7 +158,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private TextView[] allContents;
     private TextView[] allIcons;
 
-// ============================================================
+    // ============================================================
 // SECTION FIELDS
 // ============================================================
 private LinearLayout batteryContainer;
@@ -206,7 +206,7 @@ private TextView iconHaptics;
 private TextView iconSystemFeatures;
 private TextView iconSecurityFlags;
 private TextView iconRoot;
-private TextView iconOther;
+private TextView iconOthe
 
     // ============================================================
     // attachBaseContext
@@ -877,35 +877,88 @@ private void setupSection(View header, View content, TextView icon) {
         return sb.toString();
     }
 
-    private String buildBiometricsInfo() {
-        StringBuilder sb = new StringBuilder();
+// ============================================================
+//   BIOMETRICS — GEL TURBO EDITION v1.1
+// ============================================================
 
-        boolean hasFp   = getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-        boolean hasFace = getPackageManager().hasSystemFeature("android.hardware.biometrics.face");
-        boolean hasIris = getPackageManager().hasSystemFeature("android.hardware.biometrics.iris");
+private String buildBiometricsInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        sb.append("Fingerprint      : ").append(hasFp   ? "Yes" : "No").append("\n");
-        sb.append("Face Unlock      : ").append(hasFace ? "Yes" : "No").append("\n");
-        sb.append("Iris Scan        : ").append(hasIris ? "Yes" : "No").append("\n");
+    PackageManager pm = getPackageManager();
 
-        int modes = 0;
-        if (hasFp)   modes++;
-        if (hasFace) modes++;
-        if (hasIris) modes++;
+    boolean hasFp   = pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+    boolean hasFace = pm.hasSystemFeature("android.hardware.biometrics.face");
+    boolean hasIris = pm.hasSystemFeature("android.hardware.biometrics.iris");
 
-        sb.append("Profile          : ");
-        if (modes == 0) {
-            sb.append("No biometric hardware reported.\n");
-        } else if (modes == 1) {
-            sb.append("Single biometric modality.\n");
-        } else {
-            sb.append("Multi-biometric device (").append(modes).append(" modalities).\n");
-        }
+    sb.append("Fingerprint      : ").append(hasFp   ? "Yes" : "No").append("\n");
+    sb.append("Face Unlock      : ").append(hasFace ? "Yes" : "No").append("\n");
+    sb.append("Iris Scan        : ").append(hasIris ? "Yes" : "No").append("\n");
 
-        sb.append("Advanced         : Enrolled templates and secure keys stay inside TEE; telemetry, requires root access.\n");
+    // ------------------------------------------------------------
+    // DETECT UNDER-DISPLAY SENSOR (UD FPS)
+    // ------------------------------------------------------------
+    boolean udFps = false;
+    try {
+        // Most OEMs expose it as a system feature
+        udFps = pm.hasSystemFeature("com.motorola.hardware.fingerprint.udfps")
+              || pm.hasSystemFeature("com.samsung.hardware.fingerprint.udfps")
+              || pm.hasSystemFeature("com.google.hardware.biometrics.udfps")
+              || pm.hasSystemFeature("vendor.samsung.hardware.biometrics.fingerprint.udfps")
+              || pm.hasSystemFeature("vendor.xiaomi.hardware.fingerprint.udfps");
+    } catch (Throwable ignore) {}
 
-        return sb.toString();
+    if (udFps) {
+        sb.append("Under-Display FP : Yes (UDFPS)\n");
+    } else if (hasFp) {
+        sb.append("Under-Display FP : No (standard sensor)\n");
     }
+
+    // ------------------------------------------------------------
+    // BIOMETRIC MODALITY COUNT
+    // ------------------------------------------------------------
+    int modes = (hasFp ? 1 : 0) + (hasFace ? 1 : 0) + (hasIris ? 1 : 0);
+
+    sb.append("Profile          : ");
+    switch (modes) {
+        case 0:
+            sb.append("No biometric hardware detected.\n");
+            break;
+        case 1:
+            sb.append("Single biometric modality.\n");
+            break;
+        default:
+            sb.append("Multi-biometric device (").append(modes).append(" modalities).\n");
+            break;
+    }
+
+    // ------------------------------------------------------------
+    // STRONG VS WEAK AUTHENTICATION (API-Level safe)
+    // ------------------------------------------------------------
+    try {
+        BiometricManager bm = BiometricManager.from(this);
+        int level = bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+
+        sb.append("Strength         : ");
+        if (level == BiometricManager.BIOMETRIC_SUCCESS) {
+            sb.append("Strong biometrics supported\n");
+        } else {
+            sb.append("Weak/Class-2 biometrics only\n");
+        }
+    } catch (Throwable ignore) {
+        sb.append("Strength         : Unknown\n");
+    }
+
+    // ------------------------------------------------------------
+    // ADVANCED INFO (TEE + ENCRYPTION)
+    // ------------------------------------------------------------
+    sb.append("Advanced         : Trusted Execution Environment stores biometric keys; detailed telemetry requires root access.\n");
+
+    return sb.toString();
+}
+
+    // ------------------------------------------------------------
+    // SENSORS
+    // ------------------------------------------------------------
 
     private String buildSensorsInfo() {
         StringBuilder sb = new StringBuilder();
@@ -1033,7 +1086,7 @@ private String buildConnectivityInfo() {
 
     } catch (Throwable ignore) {}
 
-    // ============================================================
+// ============================================================
 // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
 // ============================================================
 sb.append("\nBluetooth:\n");
@@ -1519,15 +1572,80 @@ private void showBatteryCapacityDialog() {
         return sb.toString();
     }
 
-    private String buildHapticsInfo() {
-        boolean vib = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-        StringBuilder sb = new StringBuilder();
+ // ============================================================
+// HAPTICS — ADVANCED MOTOR & EFFECT PROFILER (GEL v3.9)
+// ============================================================
+private String buildHapticsInfo() {
 
-        sb.append("Supported        : ").append(vib ? "Yes" : "No").append("\n");
-        sb.append("Advanced         : Detailed haptic waveform tables, requires root access.\n");
+    StringBuilder sb = new StringBuilder();
+    Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
+    if (vib == null) {
+        sb.append("Haptic Engine    : Not available\n");
         return sb.toString();
     }
+
+    // ------------------------------------------------------------
+    // BASIC SUPPORT
+    // ------------------------------------------------------------
+    sb.append("Haptic Support   : ").append(vib.hasVibrator() ? "Yes" : "No").append("\n");
+
+    if (Build.VERSION.SDK_INT >= 26) {
+        sb.append("Amplitude Ctrl   : ")
+                .append(vib.hasAmplitudeControl() ? "Yes" : "No").append("\n");
+    }
+
+    // ------------------------------------------------------------
+    // VIBRATION EFFECTS (API-based)
+    // ------------------------------------------------------------
+    if (Build.VERSION.SDK_INT >= 29) {
+        sb.append("\nAvailable Effects:\n");
+
+        sb.append("  • Click\n");
+        sb.append("  • Double Click\n");
+        sb.append("  • Tick\n");
+        sb.append("  • Pop\n");
+        sb.append("  • Heavy Click\n");
+        sb.append("  • Texture / Rumble (OEM-dependent)\n");
+    }
+
+    // ------------------------------------------------------------
+    // PRIMITIVES (API 31+)
+    // ------------------------------------------------------------
+    if (Build.VERSION.SDK_INT >= 31) {
+        try {
+            sb.append("\nHaptic Primitives:\n");
+
+            int[] primitives = VibrationEffect.getPrimitives();
+            if (primitives != null && primitives.length > 0) {
+                for (int p : primitives) {
+                    sb.append("  • ").append(primitiveName(p)).append("\n");
+                }
+            } else {
+                sb.append("  • None exposed\n");
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    // ------------------------------------------------------------
+    // ROOT-ONLY MOTOR TELEMETRY
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced         : Vibration motor waveform tables, OEM amplitude curves, frequency maps and actuator telemetry require root access.\n");
+
+    return sb.toString();
+}
+
+// Primitive names (API 31+)
+private String primitiveName(int id) {
+    switch (id) {
+        case VibrationEffect.Composition.PRIMITIVE_CLICK: return "CLICK";
+        case VibrationEffect.Composition.PRIMITIVE_TICK: return "TICK";
+        case VibrationEffect.Composition.PRIMITIVE_THUD: return "THUD";
+        case VibrationEffect.Composition.PRIMITIVE_POP: return "POP";
+        case VibrationEffect.Composition.PRIMITIVE_HEAVY_CLICK: return "HEAVY CLICK";
+        default: return "UNKNOWN(" + id + ")";
+    }
+}
 
 // ============================================================
 // GNSS / LOCATION — SAFE SDK VERSION
@@ -1618,16 +1736,143 @@ return sb.toString();
 }
       
 // ============================================================
-// USB
+// USB / OTG / POWER / ROLE ENGINE — GEL TURBO EDITION
 // ============================================================
 private String buildUsbInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    // ------------------------------------------------------------
+    // BASIC SUPPORT FLAGS
+    // ------------------------------------------------------------
     boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
     boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
-    StringBuilder sb = new StringBuilder();
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles, requires root access.\n");
+
+    // ------------------------------------------------------------
+    // USB MANAGER
+    // ------------------------------------------------------------
+    UsbManager um = (UsbManager) getSystemService(Context.USB_SERVICE);
+    if (um == null) {
+        sb.append("Status           : USB Manager unavailable\n");
+        return sb.toString();
+    }
+
+    // ------------------------------------------------------------
+    // CURRENTLY CONNECTED DEVICE (host mode)
+    // ------------------------------------------------------------
+    try {
+        HashMap<String, UsbDevice> devs = um.getDeviceList();
+        if (devs != null && !devs.isEmpty()) {
+            sb.append("\nConnected USB Devices:\n");
+            for (UsbDevice d : devs.values()) {
+
+                sb.append("  • ").append(d.getDeviceName()).append("\n");
+                sb.append("    Vendor ID     : ").append(d.getVendorId()).append("\n");
+                sb.append("    Product ID    : ").append(d.getProductId()).append("\n");
+                sb.append("    Class/Subcls  : ")
+                        .append(d.getDeviceClass()).append("/")
+                        .append(d.getDeviceSubclass()).append("\n");
+                sb.append("    Interfaces    : ").append(d.getInterfaceCount()).append("\n");
+
+                // Possible USB speed detection
+                sb.append("    Speed Info    : ");
+
+                if (Build.VERSION.SDK_INT >= 31) {
+                    try {
+                        int sp = d.getDeviceSpeed();
+                        String spLabel;
+                        switch (sp) {
+                            case UsbConstants.USB_SPEED_LOW:  spLabel = "USB 1.1 Low (1.5Mbps)"; break;
+                            case UsbConstants.USB_SPEED_FULL: spLabel = "USB 1.1 Full (12Mbps)"; break;
+                            case UsbConstants.USB_SPEED_HIGH: spLabel = "USB 2.0 High (480Mbps)"; break;
+                            case UsbConstants.USB_SPEED_SUPER: spLabel = "USB 3.x SuperSpeed"; break;
+                            case UsbConstants.USB_SPEED_SUPER_PLUS: spLabel = "USB 3.x SuperSpeed+"; break;
+                            default: spLabel = "Unknown";
+                        }
+                        sb.append(spLabel).append("\n");
+                    } catch (Throwable ignore) {
+                        sb.append("Unknown\n");
+                    }
+                } else {
+                    sb.append("Android <12 does not expose speed\n");
+                }
+            }
+        } else {
+            sb.append("Connected Dev.   : None\n");
+        }
+
+    } catch (Throwable ignore) {
+        sb.append("Connected Dev.   : Error reading USB map\n");
+    }
+
+    // ------------------------------------------------------------
+    // USB ROLE (Device ↔ Host)
+    // ------------------------------------------------------------
+    sb.append("\nMode/Role:\n");
+    try {
+        if (Build.VERSION.SDK_INT >= 26) {
+            UsbPort[] ports = um.getPorts();
+            if (ports != null && ports.length > 0) {
+                UsbPort p = ports[0];
+                UsbPortStatus st = p.getStatus();
+                if (st != null) {
+
+                    String roleDevice =
+                            st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_DEVICE
+                                    ? "Device" : "None";
+
+                    String roleHost =
+                            st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_HOST
+                                    ? "Host" : "None";
+
+                    sb.append("  Device Role    : ").append(roleDevice).append("\n");
+                    sb.append("  Host Role      : ").append(roleHost).append("\n");
+                }
+            } else {
+                sb.append("  Port Info      : No USB ports exposed\n");
+            }
+        } else {
+            sb.append("  Role Info      : Requires Android 8.0+\n");
+        }
+
+    } catch (Throwable ignore) {
+        sb.append("  Role Info      : Error reading role state\n");
+    }
+
+    // ------------------------------------------------------------
+    // POWER + CHARGER PROFILE (Informational)
+    // ------------------------------------------------------------
+    sb.append("\nPower Profiles:\n");
+    try {
+        IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batt = registerReceiver(null, ifil);
+        if (batt != null) {
+            int source = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+
+            String srcLabel =
+                    (source == BatteryManager.BATTERY_PLUGGED_USB) ? "USB"
+                    : (source == BatteryManager.BATTERY_PLUGGED_AC) ? "AC"
+                    : (source == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless"
+                    : "Unplugged";
+
+            sb.append("  Charge Source  : ").append(srcLabel).append("\n");
+            sb.append("  Current (mA)   : ")
+                    .append(batt.getIntExtra(BatteryManager.EXTRA_CURRENT_NOW, 0))
+                    .append("\n");
+            sb.append("  Voltage (mV)   : ")
+                    .append(batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0))
+                    .append("\n");
+        }
+    } catch (Throwable ignore) {
+        sb.append("  Power Info     : Error\n");
+    }
+
+    // ------------------------------------------------------------
+    // ROOT-EXCLUSIVE EXTRA DATA (SAFE)
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced         : USB descriptors, negotiated currents, and port driver tables require root access.\n");
 
     return sb.toString();
 }
@@ -2732,7 +2977,7 @@ private String buildModemInfo() {
 }
 
 // ============================================================================
-// 4. WiFi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
+// 4. Wi-Fi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
 // ============================================================================
 private String buildWifiAdvancedInfo() {
     StringBuilder sb = new StringBuilder();
@@ -3443,5 +3688,3 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
-
-

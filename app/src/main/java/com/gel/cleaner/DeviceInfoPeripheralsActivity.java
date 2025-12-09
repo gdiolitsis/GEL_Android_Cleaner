@@ -1785,11 +1785,11 @@ private String buildUsbInfo() {
                 if (st != null) {
 
                     String roleDevice =
-                            st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_DEVICE
+                            (st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_DEVICE)
                                     ? "Device" : "None";
 
                     String roleHost =
-                            st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_HOST
+                            (st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_HOST)
                                     ? "Host" : "None";
 
                     sb.append("  Device Role    : ").append(roleDevice).append("\n");
@@ -1811,6 +1811,33 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     sb.append("\nPower Profiles:\n");
     try {
+        IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batt = registerReceiver(null, ifil);
+
+        if (batt != null) {
+            int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            String label =
+                    (plugged == BatteryManager.BATTERY_PLUGGED_USB) ? "USB" :
+                    (plugged == BatteryManager.BATTERY_PLUGGED_AC) ? "AC" :
+                    (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless" :
+                    "Unplugged";
+
+            sb.append("  Charge Source  : ").append(label).append("\n");
+
+            int volt = batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+            sb.append("  Voltage (mV)   : ").append(volt).append("\n");
+        }
+    } catch (Throwable ignore) {
+        sb.append("  Power Info     : Error\n");
+    }
+
+    // ------------------------------------------------------------
+    // ADVANCED (root-only)
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced         : USB descriptors & negotiated power require root access.\n");
+
+    return sb.toString();
+}
       
     // ============================================================
     // GEL Other Peripherals Info v26 — Full Hardware Edition

@@ -882,7 +882,7 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
 // ============================================================
-//   BIOMETRICS — GEL TURBO EDITION v1.1
+//   BIOMETRICS — GEL TURBO EDITION v1.1 (API29-SAFE)
 // ============================================================
 
 private String buildBiometricsInfo() {
@@ -898,12 +898,9 @@ private String buildBiometricsInfo() {
     sb.append("Face Unlock      : ").append(hasFace ? "Yes" : "No").append("\n");
     sb.append("Iris Scan        : ").append(hasIris ? "Yes" : "No").append("\n");
 
-    // ------------------------------------------------------------
-    // DETECT UNDER-DISPLAY SENSOR (UD FPS)
-    // ------------------------------------------------------------
+    // Under-Display Fingerprint
     boolean udFps = false;
     try {
-        // Most OEMs expose it as a system feature
         udFps = pm.hasSystemFeature("com.motorola.hardware.fingerprint.udfps")
               || pm.hasSystemFeature("com.samsung.hardware.fingerprint.udfps")
               || pm.hasSystemFeature("com.google.hardware.biometrics.udfps")
@@ -917,9 +914,6 @@ private String buildBiometricsInfo() {
         sb.append("Under-Display FP : No (standard sensor)\n");
     }
 
-    // ------------------------------------------------------------
-    // BIOMETRIC MODALITY COUNT
-    // ------------------------------------------------------------
     int modes = (hasFp ? 1 : 0) + (hasFace ? 1 : 0) + (hasIris ? 1 : 0);
 
     sb.append("Profile          : ");
@@ -935,27 +929,10 @@ private String buildBiometricsInfo() {
             break;
     }
 
-    // ------------------------------------------------------------
-    // STRONG VS WEAK AUTHENTICATION (API-Level safe)
-    // ------------------------------------------------------------
-    try {
-        BiometricManager bm = BiometricManager.from(this);
-        int level = bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+    // REMOVE BIOMETRICMANAGER → not supported on build target
+    sb.append("Strength         : Unknown (API29-safe mode)\n");
 
-        sb.append("Strength         : ");
-        if (level == BiometricManager.BIOMETRIC_SUCCESS) {
-            sb.append("Strong biometrics supported\n");
-        } else {
-            sb.append("Weak/Class-2 biometrics only\n");
-        }
-    } catch (Throwable ignore) {
-        sb.append("Strength         : Unknown\n");
-    }
-
-    // ------------------------------------------------------------
-    // ADVANCED INFO (TEE + ENCRYPTION)
-    // ------------------------------------------------------------
-    sb.append("Advanced         : Trusted Execution Environment stores biometric keys; detailed telemetry requires root access.\n");
+    sb.append("Advanced         : TEE stores biometric keys; detailed telemetry requires root access.\n");
 
     return sb.toString();
 }
@@ -1801,7 +1778,7 @@ private String buildUsbInfo() {
 }
 
 // ============================================================
-// GEL Other Peripherals Info v26 — Full Hardware Edition
+//  — Full Hardware Edition
 // ============================================================
 private String buildOtherPeripheralsInfo() {
     StringBuilder sb = new StringBuilder();

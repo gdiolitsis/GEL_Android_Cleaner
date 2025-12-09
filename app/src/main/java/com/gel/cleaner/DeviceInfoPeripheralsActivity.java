@@ -228,11 +228,20 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_peripherals);
 
+    // 🔹 GEL — Universal permissions
     requestAllRuntimePermissions();
+
+    // 🔹 TELEPHONY — EXTRA permissions για Active SIMs, Carrier, IMSI, MSISDN
+    requestPermissions(new String[]{
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.READ_PHONE_NUMBERS
+    }, 101);
 
     TextView title = findViewById(R.id.txtTitleDevice);
     if (title != null)
         title.setText(getString(R.string.phone_info_peripherals));
+}
 
     // ============================================================
     // BIND VIEWS — FIXED BLOCK 1
@@ -400,6 +409,14 @@ protected void onCreate(Bundle savedInstanceState) {
 }
 // 🔥 END onCreate()
 
+@Override
+public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode == 101) {
+        refreshModemInfo(); // Ξαναφορτώνει SIM + modem blocks
+    }
+}
 
 // ============================================================
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
@@ -1709,8 +1726,7 @@ private String buildUsbInfo() {
                         .append(d.getDeviceSubclass()).append("\n");
                 sb.append("    Interfaces    : ").append(d.getInterfaceCount()).append("\n");
 
-                // No speed info on API <31
-                sb.append("    Speed Info    : Not available on this Android version\n");
+                sb.append("    USB Speed     : System API does not expose link speed on this device. Requires root access\n");
             }
 
         } else {
@@ -1725,8 +1741,7 @@ private String buildUsbInfo() {
     // USB ROLE (Device <-> Host)
     // ------------------------------------------------------------
     sb.append("\nMode/Role:\n");
-    sb.append("  Role Info      : USB role switching requires Android 8+ vendor extensions\n");
-    sb.append("                    (Not available on this build target)\n");
+    sb.append("  USB Role Support  : Vendor HAL not available on this Android version. Requires root access\n");
 
     // ------------------------------------------------------------
     // POWER + CHARGER PROFILE
@@ -1758,13 +1773,13 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     // ADVANCED (ROOT)
     // ------------------------------------------------------------
-    sb.append("\nAdvanced         : USB descriptors & power negotiation require root access.\n");
+    sb.append("\nAdvanced         : USB descriptors & power negotiation requires root access.\n");
 
     return sb.toString();
 }
 
 // ============================================================
-//  — Full Hardware Edition
+//  Other Peripherals 
 // ============================================================
 private String buildOtherPeripheralsInfo() {
     StringBuilder sb = new StringBuilder();

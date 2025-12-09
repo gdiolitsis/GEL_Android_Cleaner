@@ -168,7 +168,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private TextView txtScreenContent;
     private TextView txtCameraContent;
-    private TextView ;
     private TextView txtLocationContent;
     private TextView txtThermalContent;
     private TextView txtModemContent;
@@ -3443,3 +3442,4 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
+

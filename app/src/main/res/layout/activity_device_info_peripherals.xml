@@ -309,8 +309,8 @@
             android:padding="12dp"/>
        
         <!-- ========================================================= -->
-<!-- TELEPHONY / MODEM — FINAL GEL EDITION (ONE BLOCK) -->
-<!-- ========================================================= -->
+        <!-- TELEPHONY / MODEM — FINAL GEL EDITION (ONE BLOCK) -->
+        <!-- ========================================================= -->
 <LinearLayout
     android:id="@+id/headerModem"
     android:layout_width="match_parent"
@@ -737,7 +737,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="HAPTICS — ADVANCED MOTOR & EFFECT PROFILER"
+                android:text="HAPTICS — ADVANCED MOTOR &amp; EFFECT PROFILER"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>

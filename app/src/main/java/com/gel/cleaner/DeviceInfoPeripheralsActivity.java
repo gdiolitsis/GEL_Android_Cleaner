@@ -48,6 +48,11 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.usb.UsbManager;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbPort;
+import android.hardware.usb.UsbPortStatus;
 import android.location.LocationManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -102,6 +107,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -3688,4 +3694,5 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
+
 

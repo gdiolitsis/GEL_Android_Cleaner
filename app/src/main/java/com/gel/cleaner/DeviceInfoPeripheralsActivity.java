@@ -158,54 +158,55 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private TextView[] allContents;
     private TextView[] allIcons;
 
-    // ============================================================
-    // SECTION FIELDS
-    // ============================================================
-    private LinearLayout batteryContainer;
-    private TextView txtBatteryContent;
-    private TextView iconBattery;
-    private TextView txtBatteryModelCapacity;
+// ============================================================
+// SECTION FIELDS
+// ============================================================
+private LinearLayout batteryContainer;
+private TextView txtBatteryContent;
+private TextView iconBattery;
+private TextView txtBatteryModelCapacity;
 
-    private TextView txtScreenContent;
-    private TextView txtCameraContent;
-    private TextView txtLocationContent;
-    private TextView txtThermalContent;
-    private TextView txtModemContent;
-    private TextView txtWifiAdvancedContent;
-    private TextView txtAudioUnifiedContent;
-    private TextView txtSensorsContent;
-    private TextView txtSensorsExtendedContent;
-    private TextView txtBiometricsContent;
-    private TextView txtNfcContent;
-    private TextView txtGnssContent;
-    private TextView txtUwbContent;
-    private TextView txtUsbContent;
-    private TextView txtHapticsContent;
-    private TextView txtSystemFeaturesContent;
-    private TextView txtSecurityFlagsContent;
-    private TextView txtRootContent;
-    private TextView txtOtherPeripherals;
+private TextView txtScreenContent;
+private TextView txtCameraContent;
+private TextView txtConnectivityContent;   // ⭐ FIXED — Η ΜΟΝΗ ΠΟΥ ΕΛΕΙΠΕ
+private TextView txtLocationContent;
+private TextView txtThermalContent;
+private TextView txtModemContent;
+private TextView txtWifiAdvancedContent;
+private TextView txtAudioUnifiedContent;
+private TextView txtSensorsContent;
+private TextView txtSensorsExtendedContent;
+private TextView txtBiometricsContent;
+private TextView txtNfcContent;
+private TextView txtGnssContent;
+private TextView txtUwbContent;
+private TextView txtUsbContent;
+private TextView txtHapticsContent;
+private TextView txtSystemFeaturesContent;
+private TextView txtSecurityFlagsContent;
+private TextView txtRootContent;
+private TextView txtOtherPeripherals;
 
-    private TextView iconScreen;
-    private TextView iconCamera;
-    private TextView iconConnectivity;
-    private TextView iconLocation;
-    private TextView iconThermal;
-    private TextView iconModem;
-    private TextView iconWifiAdvanced;
-    private TextView iconAudioUnified;
-    private TextView iconSensors;
-    private TextView iconSensorsExtended;
-    private TextView iconBiometrics;
-    private TextView iconNfc;
-    private TextView iconGnss;
-    private TextView iconUwb;
-    private TextView iconUsb;
-    private TextView iconHaptics;
-    private TextView iconSystemFeatures;
-    private TextView iconSecurityFlags;
-    private TextView iconRoot;
-    private TextView iconOther;
+private TextView iconScreen;
+private TextView iconCamera;
+private TextView iconConnectivity;
+private TextView iconLocation;
+private TextView iconThermal;
+private TextView iconModem;
+private TextView iconWifiAdvanced;
+private TextView iconAudioUnified;
+private TextView iconSensors;
+private TextView iconSensorsExtended;
+private TextView iconBiometrics;
+private TextView iconNfc;
+private TextView iconGnss;
+private TextView iconUwb;
+private TextView iconUsb;
+private TextView iconHaptics;
+private TextView iconSystemFeatures;
+private TextView iconSecurityFlags;
+private TextView iconRoot;
+private TextView iconOther;
 
     // ============================================================
     // attachBaseContext
@@ -3442,4 +3443,5 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
+
 

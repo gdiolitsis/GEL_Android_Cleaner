@@ -216,7 +216,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
- // ============================================================
+// ============================================================
 //  ON CREATE 
 // ============================================================
 @Override
@@ -231,7 +231,7 @@ protected void onCreate(Bundle savedInstanceState) {
         title.setText(getString(R.string.phone_info_peripherals));
 
     // ============================================================
-    // BIND VIEWS — YOUR ORDER
+    // BIND VIEWS — FIXED BLOCK 1
     // ============================================================
     batteryContainer        = findViewById(R.id.batteryContainer);
     txtBatteryContent       = findViewById(R.id.txtBatteryContent);
@@ -240,7 +240,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
     txtScreenContent          = findViewById(R.id.txtScreenContent);
     txtCameraContent          = findViewById(R.id.txtCameraContent);
-        = findViewById(R.id.);
+    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);   // ⭐ FIXED
     txtLocationContent        = findViewById(R.id.txtLocationContent);
     txtThermalContent         = findViewById(R.id.txtThermalContent);
     txtModemContent           = findViewById(R.id.txtModemContent);
@@ -281,18 +281,18 @@ protected void onCreate(Bundle savedInstanceState) {
     iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
     // ============================================================
-    // BIND BATTERY HEADER (FIX)
+    // BIND BATTERY HEADER
     // ============================================================
     LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
     // ============================================================
-    // MASTER ARRAYS — YOUR ORDER
+    // MASTER ARRAYS — FIXED BLOCK 2
     // ============================================================
     allContents = new TextView[]{
             txtBatteryContent,
             txtScreenContent,
             txtCameraContent,
-            ,
+            txtConnectivityContent,    // ⭐ FIXED
             txtLocationContent,
             txtThermalContent,
             txtModemContent,
@@ -337,54 +337,45 @@ protected void onCreate(Bundle savedInstanceState) {
     };
 
     // ============================================================
-    // APPLY TEXTS + SETUP SECTIONS
+    // APPLY TEXTS
     // ============================================================
     populateAllSections();
 
     // ============================================================
-    // BATTERY — INIT BEFORE EXPAND LOGIC
+    // BATTERY SECTION INIT
     // ============================================================
     initBatterySection();
-
     batteryContainer.setVisibility(View.GONE);
     txtBatteryModelCapacity.setVisibility(View.GONE);
     iconBattery.setText("＋");
 
     // ============================================================
-    // ⭐ BATTERY SECTION — FINAL EXPAND/COLLAPSE ENGINE (GEL v5.0)
+    // BATTERY EXPAND/COLLAPSE
     // ============================================================
     headerBattery.setOnClickListener(v -> {
-
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-        collapseAllExceptBattery();   // FIXED VERSION
+        collapseAllExceptBattery();
 
         if (!isOpen) {
-
             txtBatteryContent.setVisibility(View.VISIBLE);
-
             animateExpand(batteryContainer);
             iconBattery.setText("－");
-
             txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-
-            refreshBatteryInfoView();   // FULL refresh on open
-
+            refreshBatteryInfoView();
         } else {
-
             animateCollapse(batteryContainer);
             iconBattery.setText("＋");
-
             txtBatteryModelCapacity.setVisibility(View.GONE);
         }
     });
 
     // ============================================================
-    // NORMAL SECTIONS
+    // NORMAL SECTIONS — FIXED BLOCK 3
     // ============================================================
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-    setupSection(findViewById(R.id.headerConnectivity), , iconConnectivity);
+    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  // ⭐ FIXED
     setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
     setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);

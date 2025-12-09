@@ -1574,20 +1574,6 @@ private String buildHapticsInfo() {
         sb.append("Legacy Engine\n");
     }
 
-    // ------------------------------------------------------------
-    // Primitives — ONLY Android 12+ (API 31+)
-    // ------------------------------------------------------------
-    if (Build.VERSION.SDK_INT >= 31) {
-        try {
-            int[] primitives = VibrationEffect.getPrimitives();
-            sb.append("Primitives       : ").append(primitives.length).append(" supported\n");
-        } catch (Throwable ignore) {
-            sb.append("Primitives       : Not exposed\n");
-        }
-    } else {
-        sb.append("Primitives       : API 31+ only\n");
-    }
-
     sb.append("Advanced         : Low-level haptic patterns require root/kernel access.\n");
 
     return sb.toString();

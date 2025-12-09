@@ -48,11 +48,6 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
-import android.hardware.usb.UsbManager;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbPort;
-import android.hardware.usb.UsbPortStatus;
 import android.location.LocationManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -107,7 +102,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -164,7 +158,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private TextView[] allContents;
     private TextView[] allIcons;
 
-    // ============================================================
+ // ============================================================
 // SECTION FIELDS
 // ============================================================
 private LinearLayout batteryContainer;
@@ -1579,78 +1573,43 @@ private void showBatteryCapacityDialog() {
     }
 
  // ============================================================
-// HAPTICS — ADVANCED MOTOR & EFFECT PROFILER (GEL v3.9)
+// HAPTICS — SAFE EDITION (API 29–34)
 // ============================================================
 private String buildHapticsInfo() {
-
     StringBuilder sb = new StringBuilder();
-    Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-    if (vib == null) {
-        sb.append("Haptic Engine    : Not available\n");
+    Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    if (v == null) {
+        sb.append("Vibration Engine : Not available\n");
         return sb.toString();
     }
 
-    // ------------------------------------------------------------
-    // BASIC SUPPORT
-    // ------------------------------------------------------------
-    sb.append("Haptic Support   : ").append(vib.hasVibrator() ? "Yes" : "No").append("\n");
+    sb.append("Vibration Engine : ");
 
-    if (Build.VERSION.SDK_INT >= 26) {
-        sb.append("Amplitude Ctrl   : ")
-                .append(vib.hasAmplitudeControl() ? "Yes" : "No").append("\n");
-    }
-
-    // ------------------------------------------------------------
-    // VIBRATION EFFECTS (API-based)
-    // ------------------------------------------------------------
     if (Build.VERSION.SDK_INT >= 29) {
-        sb.append("\nAvailable Effects:\n");
-
-        sb.append("  • Click\n");
-        sb.append("  • Double Click\n");
-        sb.append("  • Tick\n");
-        sb.append("  • Pop\n");
-        sb.append("  • Heavy Click\n");
-        sb.append("  • Texture / Rumble (OEM-dependent)\n");
+        if (v.hasAmplitudeControl()) sb.append("Amplitude Control\n");
+        else sb.append("Basic Engine\n");
+    } else {
+        sb.append("Legacy Engine\n");
     }
 
     // ------------------------------------------------------------
-    // PRIMITIVES (API 31+)
+    // Primitives — ONLY Android 12+ (API 31+)
     // ------------------------------------------------------------
     if (Build.VERSION.SDK_INT >= 31) {
         try {
-            sb.append("\nHaptic Primitives:\n");
-
             int[] primitives = VibrationEffect.getPrimitives();
-            if (primitives != null && primitives.length > 0) {
-                for (int p : primitives) {
-                    sb.append("  • ").append(primitiveName(p)).append("\n");
-                }
-            } else {
-                sb.append("  • None exposed\n");
-            }
-        } catch (Throwable ignore) {}
+            sb.append("Primitives       : ").append(primitives.length).append(" supported\n");
+        } catch (Throwable ignore) {
+            sb.append("Primitives       : Not exposed\n");
+        }
+    } else {
+        sb.append("Primitives       : API 31+ only\n");
     }
 
-    // ------------------------------------------------------------
-    // ROOT-ONLY MOTOR TELEMETRY
-    // ------------------------------------------------------------
-    sb.append("\nAdvanced         : Vibration motor waveform tables, OEM amplitude curves, frequency maps and actuator telemetry require root access.\n");
+    sb.append("Advanced         : Low-level haptic patterns require root/kernel access.\n");
 
     return sb.toString();
-}
-
-// Primitive names (API 31+)
-private String primitiveName(int id) {
-    switch (id) {
-        case VibrationEffect.Composition.PRIMITIVE_CLICK: return "CLICK";
-        case VibrationEffect.Composition.PRIMITIVE_TICK: return "TICK";
-        case VibrationEffect.Composition.PRIMITIVE_THUD: return "THUD";
-        case VibrationEffect.Composition.PRIMITIVE_POP: return "POP";
-        case VibrationEffect.Composition.PRIMITIVE_HEAVY_CLICK: return "HEAVY CLICK";
-        default: return "UNKNOWN(" + id + ")";
-    }
 }
 
 // ============================================================
@@ -1852,36 +1811,6 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     sb.append("\nPower Profiles:\n");
     try {
-        IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batt = registerReceiver(null, ifil);
-        if (batt != null) {
-            int source = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-
-            String srcLabel =
-                    (source == BatteryManager.BATTERY_PLUGGED_USB) ? "USB"
-                    : (source == BatteryManager.BATTERY_PLUGGED_AC) ? "AC"
-                    : (source == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless"
-                    : "Unplugged";
-
-            sb.append("  Charge Source  : ").append(srcLabel).append("\n");
-            sb.append("  Current (mA)   : ")
-                    .append(batt.getIntExtra(BatteryManager.EXTRA_CURRENT_NOW, 0))
-                    .append("\n");
-            sb.append("  Voltage (mV)   : ")
-                    .append(batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0))
-                    .append("\n");
-        }
-    } catch (Throwable ignore) {
-        sb.append("  Power Info     : Error\n");
-    }
-
-    // ------------------------------------------------------------
-    // ROOT-EXCLUSIVE EXTRA DATA (SAFE)
-    // ------------------------------------------------------------
-    sb.append("\nAdvanced         : USB descriptors, negotiated currents, and port driver tables require root access.\n");
-
-    return sb.toString();
-}
       
     // ============================================================
     // GEL Other Peripherals Info v26 — Full Hardware Edition
@@ -3694,5 +3623,3 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
-
-

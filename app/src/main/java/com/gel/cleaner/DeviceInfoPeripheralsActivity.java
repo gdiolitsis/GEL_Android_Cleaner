@@ -2432,7 +2432,7 @@ private void refreshModemInfo() {
 }
 
 // ============================================================================
-// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final)
+// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final, χωρίς getAvailable...)
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2466,12 +2466,13 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     try {
         int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName = (net == TelephonyManager.NETWORK_TYPE_NR) ? "5G NR"
+        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
                        : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
                        : "Unknown";
 
         sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
-        sb.append(String.format(locale, "%s : %s\n", padKeyModem("5G (NR) Active"),
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("5G (NR) Active"),
                 (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
@@ -2483,7 +2484,6 @@ private String buildModemInfo() {
         String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
         String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
 
-        // If ISO is invalid → fallback to device locale
         if (iso == null || iso.trim().isEmpty())
             iso = Locale.getDefault().getCountry();
 
@@ -2501,7 +2501,7 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SIGNAL STRENGTH — 0–4 (safe public API)
+    // SIGNAL STRENGTH — 0–4
     // ------------------------------------------------------------
     try {
         if (tm != null) {
@@ -2523,7 +2523,7 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // IMS / VoLTE / VoWiFi / VoNR (reflection safe)
+    // IMS / VoLTE / VoWiFi / VoNR
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("IMS Registered"), "Unknown"));
@@ -2560,14 +2560,15 @@ private String buildModemInfo() {
     }
 
     // ------------------------------------------------------------
-    // ACTIVE SIMS — MAX 2 (ULTRA STABLE, NO GHOST SLOTS)
-    // ------------------------------------------------------------
+    // ACTIVE SIMS — MAX 2, χωρίς getAvailableSubscriptionInfoList()
+// ------------------------------------------------------------
     try {
         List<SubscriptionInfo> subs = null;
 
-        try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
-        if ((subs == null || subs.isEmpty()) && sm != null) {
-            try { subs = sm.getAvailableSubscriptionInfoList(); } catch (Throwable ignore) {}
+        if (sm != null) {
+            try {
+                subs = sm.getActiveSubscriptionInfoList();
+            } catch (Throwable ignore) {}
         }
 
         int count = 0;
@@ -2583,7 +2584,8 @@ private String buildModemInfo() {
             }
         }
 
-        sb.append(String.format(locale, "%s : %d\n", padKeyModem("Active SIMs"), count));
+        sb.append(String.format(locale, "%s : %d\n",
+                padKeyModem("Active SIMs"), count));
 
         if (subs != null) {
             boolean[] printed = new boolean[2];
@@ -2648,7 +2650,7 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // CARRIER AGGREGATION / BANDS — NOT PUBLIC API
+    // CARRIER AGGREGATION / BANDS
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("4G+ CA"), "Unknown (requires root access)"));
@@ -2671,55 +2673,8 @@ private String buildModemInfo() {
 }
 
 // ============================================================================
-// HELPERS — ALIGNMENT + MASKING (MODEM-ONLY, ΔΕΝ ΠΕΦΤΟΥΝ ΠΑΝΩ ΣΕ ΑΛΛΑ)
-// ============================================================================
-private String padKeyModem(String key) {
-    final int width = 20;  // ίδιο στυλ με Battery
-    if (key == null) return "";
-    if (key.length() >= width) return key;
-    StringBuilder sb = new StringBuilder(key);
-    while (sb.length() < width) {
-        sb.append(' ');
-    }
-    return sb.toString();
-}
-
-private String maskSensitive(String value) {
-    if (value == null) return "N/A";
-    String v = value.trim();
-    if (v.length() <= 4) return "****";
-    int keepStart = 4;
-    int keepEnd   = 2;
-    String start = v.substring(0, Math.min(keepStart, v.length()));
-    String end   = v.substring(Math.max(v.length() - keepEnd, keepStart));
-    StringBuilder mid = new StringBuilder();
-    for (int i = 0; i < v.length() - start.length() - end.length(); i++) {
-        mid.append('*');
-    }
-    return start + mid + end;
-}
-
-// ============================================================================
-// Helper → Network type to readable name
-// ============================================================================
-private String networkName(int type) {
-    switch (type) {
-        case TelephonyManager.NETWORK_TYPE_NR:    return "5G NR";
-        case TelephonyManager.NETWORK_TYPE_LTE:   return "4G LTE";
-        case TelephonyManager.NETWORK_TYPE_HSPAP:
-        case TelephonyManager.NETWORK_TYPE_HSPA:  return "3.5G HSPA";
-        case TelephonyManager.NETWORK_TYPE_UMTS:  return "3G UMTS";
-        case TelephonyManager.NETWORK_TYPE_EDGE:  return "2.75G EDGE";
-        case TelephonyManager.NETWORK_TYPE_GPRS:  return "2.5G GPRS";
-        case TelephonyManager.NETWORK_TYPE_CDMA:  return "2G CDMA";
-        default:                                  return "Unknown";
-    }
-}
-
-// ============================================================================
 // 4. WiFi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
 // ============================================================================
-
 private String buildWifiAdvancedInfo() {
     StringBuilder sb = new StringBuilder();
     Locale locale = Locale.US;
@@ -2757,15 +2712,11 @@ private String buildWifiAdvancedInfo() {
             // SECURITY CAPABILITIES
             // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 29) {
-                try {
-                    sb.append("WPA3 SAE         : ")
-                            .append(wm.isWpa3SaeSupported() ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
+                try { sb.append("WPA3 SAE         : ").append(wm.isWpa3SaeSupported() ? "Yes" : "No").append("\n"); }
+                catch (Throwable ignore) {}
 
-                try {
-                    sb.append("WPA3 Suite-B     : ")
-                            .append(wm.isWpa3SuiteBSupported() ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
+                try { sb.append("WPA3 Suite-B     : ").append(wm.isWpa3SuiteBSupported() ? "Yes" : "No").append("\n"); }
+                catch (Throwable ignore) {}
             }
 
             // ------------------------------------------------------------
@@ -2773,8 +2724,7 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 28) {
                 boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
-                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No")
-                        .append("  (Indoor distance)\n");
+                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No").append("  (Indoor distance)\n");
             }
 
             // ------------------------------------------------------------
@@ -2782,8 +2732,7 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 26) {
                 boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
-                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No")
-                        .append("  (Device proximity)\n");
+                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No").append("  (Device proximity)\n");
             }
 
             // ------------------------------------------------------------
@@ -2805,58 +2754,54 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             // P2P / Direct
             // ------------------------------------------------------------
-            boolean p2p = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-            sb.append("Wi-Fi Direct     : ").append(p2p ? "Yes" : "No").append("\n");
+            sb.append("Wi-Fi Direct     : ")
+                    .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "Yes" : "No").append("\n");
 
             // ------------------------------------------------------------
-            // MAC RANDOMIZATION (informational)
+            // MAC RANDOMIZATION / LINK LAYER (informational)
             // ------------------------------------------------------------
             sb.append("MAC Randomization: Unknown (SDK level)\n");
-
-            // ------------------------------------------------------------
-            // LINK LAYER STATS (not public)
-            // ------------------------------------------------------------
             sb.append("Link Layer Stats : Unknown (hidden API)\n");
 
             // ------------------------------------------------------------
             // POWER SAVE MODE
             // ------------------------------------------------------------
             try {
-                sb.append("Scan Always On   : ")
-                        .append(wm.isScanAlwaysAvailable() ? "Yes" : "No").append("\n");
+                sb.append("Scan Always On   : ").append(wm.isScanAlwaysAvailable() ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) {}
 
             // ------------------------------------------------------------
-            // REAL COUNTRY CODE (triple fallback)
+            // REAL COUNTRY CODE (triple fallback, COMPILE-SAFE)
             // ------------------------------------------------------------
             String cc = null;
 
-            // 1) From modem (most reliable)
-            try {
-                if (tm != null)
-                    cc = tm.getNetworkCountryIso();
-            } catch (Throwable ignore) {}
+            // 1) Modem ISO (best)
+            try { if (tm != null) cc = tm.getNetworkCountryIso(); }
+            catch (Throwable ignore) {}
 
-            // 2) WiFi regulatory domain
-            if (cc == null || cc.isEmpty()) {
+            // 2) Wi-Fi regulatory domain (some devices support it — COMPILER SAFE)
+            if ((cc == null || cc.isEmpty()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 try {
-                    cc = wm.getCountryCode();
+                    // Reflection → avoids "cannot find symbol" on devices without method
+                    java.lang.reflect.Method m = WifiManager.class.getMethod("getCountryCode");
+                    Object val = m.invoke(wm);
+                    if (val instanceof String) cc = (String) val;
                 } catch (Throwable ignore) {}
             }
 
-            // 3) Device locale
-            if (cc == null || cc.isEmpty()) {
+            // 3) Locale fallback
+            if (cc == null || cc.isEmpty())
                 cc = Locale.getDefault().getCountry();
-            }
 
             sb.append("Country Code     : ")
                     .append((cc != null && !cc.isEmpty()) ? cc.toUpperCase(locale) : "Unknown")
                     .append("\n");
         }
+
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ADVANCED FOOTER (single line)
+    // ADVANCED FOOTER — SINGLE LINE
     // ------------------------------------------------------------
     sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits — requires root access.\n");
 
@@ -3061,9 +3006,14 @@ private void populateAllSections() {
     set(R.id.txtConnectivityContent, con);
     applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
-    String loc = buildLocationInfo();
-    set(R.id.txtLocationContent, loc);
-    applyNeonValues(findViewById(R.id.txtLocationContent), loc);
+    // ============================================================================
+    // LOCATION (Universal, No-Permission Crash-Free)
+    // ============================================================================
+    try {
+        String loc = getLocationCapabilities();
+        set(R.id.txtLocationContent, loc);
+        applyNeonValues(findViewById(R.id.txtLocationContent), loc);
+    } catch (Throwable ignore) {}
 
     // =====================
     // THERMAL (FIXED)
@@ -3101,10 +3051,14 @@ private void populateAllSections() {
     set(R.id.txtBiometricsContent, bio);
     applyNeonValues(findViewById(R.id.txtBiometricsContent), bio);
 
-    // NFC
-    String nfc = buildNfcInfo();
-    set(R.id.txtNfcContent, nfc);
-    applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
+    // ============================================================================
+    // NFC (Compiler-Safe, Universal)
+    // ============================================================================
+    try {
+        String nfc = getNfcBasicInfo();
+        set(R.id.txtNfcContent, nfc);
+        applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
+    } catch (Throwable ignore) {}
 
     // GNSS
     String gn = buildGnssInfo();

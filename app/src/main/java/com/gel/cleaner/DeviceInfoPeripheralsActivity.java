@@ -143,22 +143,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         }
     }
 
-    @Override
-public void onRequestPermissionsResult(int requestCode,
-                                       @NonNull String[] permissions,
-                                       @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    // 🔹 GEL universal permissions
-    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν
-    }
-
-    // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
-    if (requestCode == 101) {
-        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
-    }
-}
 
     // ============================================================
     // MAIN CLASS FIELDS
@@ -231,30 +215,23 @@ protected void attachBaseContext(Context base) {
 }
 
 // ============================================================
-//  ON CREATE 
+//  ON CREATE  —  FINAL GOLD EDITION (CORRECT ORDER)
 // ============================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_peripherals);
 
-    // 🔹 GEL — Universal permissions
-    requestAllRuntimePermissions();
-
-    // 🔹 TELEPHONY — EXTRA permissions για Active SIMs, Carrier, IMSI, MSISDN
-    requestPermissions(new String[]{
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.READ_PHONE_NUMBERS
-    }, 101);
-
+    // ------------------------------------------------------------
+    // 1️⃣  TITLE
+    // ------------------------------------------------------------
     TextView title = findViewById(R.id.txtTitleDevice);
     if (title != null)
         title.setText(getString(R.string.phone_info_peripherals));
 
-    // ============================================================
-    // BIND VIEWS — FIXED BLOCK 1
-    // ============================================================
+    // ------------------------------------------------------------
+    // 2️⃣  BIND VIEWS (FULL UI READY)
+    // ------------------------------------------------------------
     batteryContainer        = findViewById(R.id.batteryContainer);
     txtBatteryContent       = findViewById(R.id.txtBatteryContent);
     iconBattery             = findViewById(R.id.iconBatteryToggle);
@@ -262,7 +239,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
     txtScreenContent          = findViewById(R.id.txtScreenContent);
     txtCameraContent          = findViewById(R.id.txtCameraContent);
-    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);   // ⭐ FIXED
+    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
     txtLocationContent        = findViewById(R.id.txtLocationContent);
     txtThermalContent         = findViewById(R.id.txtThermalContent);
     txtModemContent           = findViewById(R.id.txtModemContent);
@@ -302,19 +279,14 @@ protected void onCreate(Bundle savedInstanceState) {
     iconRoot            = findViewById(R.id.iconRootToggle);
     iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
-    // ============================================================
-    // BIND BATTERY HEADER
-    // ============================================================
-    LinearLayout headerBattery = findViewById(R.id.headerBattery);
-
-    // ============================================================
-    // MASTER ARRAYS — FIXED BLOCK 2
-    // ============================================================
+    // ------------------------------------------------------------
+    // 3️⃣  MASTER ARRAYS
+    // ------------------------------------------------------------
     allContents = new TextView[]{
             txtBatteryContent,
             txtScreenContent,
             txtCameraContent,
-            txtConnectivityContent,    // ⭐ FIXED
+            txtConnectivityContent,
             txtLocationContent,
             txtThermalContent,
             txtModemContent,
@@ -358,22 +330,30 @@ protected void onCreate(Bundle savedInstanceState) {
             iconOther
     };
 
-    // ============================================================
-    // APPLY TEXTS
-    // ============================================================
+    // ------------------------------------------------------------
+    // 4️⃣  LOAD ALL SECTION TEXTS
+    // ------------------------------------------------------------
     populateAllSections();
 
-    // ============================================================
-    // BATTERY SECTION INIT
-    // ============================================================
+    // ------------------------------------------------------------
+    // 5️⃣  AFTER UI IS READY → NOW ask permissions (FIX)
+    // ------------------------------------------------------------
+    requestAllRuntimePermissions();  // GEL Universal
+    requestPermissions(new String[]{
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.READ_PHONE_NUMBERS
+    }, 101);  // Telephony extras
+
+    // ------------------------------------------------------------
+    // 6️⃣ INIT BATTERY MODULE
+    // ------------------------------------------------------------
     initBatterySection();
     batteryContainer.setVisibility(View.GONE);
     txtBatteryModelCapacity.setVisibility(View.GONE);
     iconBattery.setText("＋");
 
-    // ============================================================
-    // BATTERY EXPAND/COLLAPSE
-    // ============================================================
+    LinearLayout headerBattery = findViewById(R.id.headerBattery);
     headerBattery.setOnClickListener(v -> {
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
@@ -392,12 +372,12 @@ protected void onCreate(Bundle savedInstanceState) {
         }
     });
 
-    // ============================================================
-    // NORMAL SECTIONS — FIXED BLOCK 3
-    // ============================================================
+    // ------------------------------------------------------------
+    // 7️⃣ NORMAL SECTIONS
+    // ------------------------------------------------------------
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  // ⭐ FIXED
+    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
     setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
     setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
@@ -416,7 +396,28 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
     setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
 }
+
 // 🔥 END onCreate()
+
+// ============================================================
+//  PERMISSION CALLBACK — FINAL CLEAN VERSION
+// ============================================================
+@Override
+public void onRequestPermissionsResult(int requestCode,
+                                       @NonNull String[] permissions,
+                                       @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    // 🔹 GEL universal permissions
+    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+        // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν
+    }
+
+    // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
+    if (requestCode == 101) {
+        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
+    }
+}
 
 
 // ============================================================

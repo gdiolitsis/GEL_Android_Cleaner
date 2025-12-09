@@ -206,7 +206,7 @@ private TextView iconHaptics;
 private TextView iconSystemFeatures;
 private TextView iconSecurityFlags;
 private TextView iconRoot;
-private TextView iconOthe
+private TextView iconOther;
 
     // ============================================================
     // attachBaseContext
@@ -3688,3 +3688,4 @@ private String getLocationCapabilities() {
 
 // 🔥 END OF CLASS
 }
+

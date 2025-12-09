@@ -1762,7 +1762,7 @@ private String buildUsbInfo() {
 
     // ------------------------------------------------------------
     // USB ROLE (Device <-> Host)
-    // ============================================================
+    // ------------------------------------------------------------
     sb.append("\nMode/Role:\n");
     sb.append("  Role Info      : USB role switching requires Android 8+ vendor extensions\n");
     sb.append("                    (Not available on this build target)\n");
@@ -1799,6 +1799,119 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     sb.append("\nAdvanced         : USB descriptors & power negotiation require root access.\n");
 
+    return sb.toString();
+}
+
+// ============================================================
+// GEL Other Peripherals Info v26 — Full Hardware Edition
+// ============================================================
+private String buildOtherPeripheralsInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("=== General Peripherals ===\n");
+
+    boolean vib          = getPackageManager().hasSystemFeature("android.hardware.vibrator");
+    boolean flash        = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+    boolean ir           = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
+    boolean fm           = getPackageManager().hasSystemFeature("android.hardware.fm");
+    boolean hall         = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
+    boolean therm        = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
+    boolean hwkbd        = getPackageManager().hasSystemFeature("android.hardware.keyboard");
+    boolean wireless     = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
+    boolean step         = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
+    boolean vulkan       = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
+    boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
+    boolean barcode      = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
+    boolean tv           = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
+    boolean als          = getPackageManager().hasSystemFeature("android.hardware.light");
+
+    sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
+    sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
+    sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
+    sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
+    sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
+    sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
+    sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
+    sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
+    sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
+    sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
+    sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
+    sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
+    sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
+    sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
+
+    sb.append("\nAdvanced         : Extended peripheral diagnostics requires root access.\n");
+
+    return sb.toString();
+}
+
+// ============================================================================
+// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
+// ============================================================================
+
+// 1) MICROPHONES (v27)
+private String buildMicsInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    int wiredCount = 0, btCount = 0, usbCount = 0;
+    boolean hasBuiltin = false, hasTele = false, hasWired = false, hasBT = false, hasUSB = false;
+
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
+
+            for (AudioDeviceInfo d : devs) {
+                String name = d.getProductName() != null ? d.getProductName().toString().trim() : "";
+                int type = d.getType();
+
+                boolean fakeName =
+                        name.isEmpty() ||
+                        name.equalsIgnoreCase(Build.MODEL) ||
+                        name.matches("^[A-Z0-9_-]{8,}$");
+
+                String label;
+
+                switch (type) {
+                    case AudioDeviceInfo.TYPE_BUILTIN_MIC:
+                        label = "Built-in Mic"; hasBuiltin = true; break;
+                    case AudioDeviceInfo.TYPE_TELEPHONY:
+                        label = "Telephony Mic"; hasTele = true; break;
+                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                        label = "Wired Headset Mic"; wiredCount++; hasWired = true; break;
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                        label = "Bluetooth Mic"; btCount++; hasBT = true; break;
+                    case AudioDeviceInfo.TYPE_USB_DEVICE:
+                    case AudioDeviceInfo.TYPE_USB_HEADSET:
+                        label = "USB Mic"; usbCount++; hasUSB = true; break;
+                    default:
+                        label = "Input Type " + type; break;
+                }
+
+                sb.append("• ").append(label).append("\n");
+                sb.append("   Present       : Yes\n");
+                if (!name.isEmpty()) sb.append("   Name          : ").append(name).append("\n");
+                sb.append("   Fake-ID       : ").append(fakeName ? "Yes" : "No").append("\n");
+                sb.append("   Device ID     : ").append(d.getId()).append("\n\n");
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    if (sb.length() == 0)
+        sb.append("No microphones are reported by the current audio service.\n");
+
+    sb.append("=== Summary ===\n");
+    sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
+    sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
+    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No").append(" (").append(wiredCount).append(")\n");
+    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
+    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
+
+    sb.append("\nAdvanced         : Raw audio routing matrices requires root access.\n");
+
+    appendAccessInstructions(sb, "mic");
     return sb.toString();
 }
       

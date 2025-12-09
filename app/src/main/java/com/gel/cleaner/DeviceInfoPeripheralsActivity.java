@@ -168,7 +168,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
     private TextView txtScreenContent;
     private TextView txtCameraContent;
-    private TextView txtConnectivityContent;
+    private TextView ;
     private TextView txtLocationContent;
     private TextView txtThermalContent;
     private TextView txtModemContent;
@@ -240,7 +240,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
     txtScreenContent          = findViewById(R.id.txtScreenContent);
     txtCameraContent          = findViewById(R.id.txtCameraContent);
-    txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
+        = findViewById(R.id.);
     txtLocationContent        = findViewById(R.id.txtLocationContent);
     txtThermalContent         = findViewById(R.id.txtThermalContent);
     txtModemContent           = findViewById(R.id.txtModemContent);
@@ -292,7 +292,7 @@ protected void onCreate(Bundle savedInstanceState) {
             txtBatteryContent,
             txtScreenContent,
             txtCameraContent,
-            txtConnectivityContent,
+            ,
             txtLocationContent,
             txtThermalContent,
             txtModemContent,
@@ -384,7 +384,7 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
-    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+    setupSection(findViewById(R.id.headerConnectivity), , iconConnectivity);
     setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
     setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
@@ -873,7 +873,7 @@ private void setupSection(View header, View content, TextView icon) {
                         sb.append("• OIS Metric     : This metric may not be exposed on this device.\n");
                     }
 
-                    sb.append("• Video Profil.  : Extra stabilization telemetry requires root access.\n\n");
+                    sb.append("• Video Profil.  : Extra stabilization telemetry, requires root access.\n\n");
                 }
             }
         } catch (Throwable ignore) { }
@@ -911,7 +911,7 @@ private void setupSection(View header, View content, TextView icon) {
             sb.append("Multi-biometric device (").append(modes).append(" modalities).\n");
         }
 
-        sb.append("Advanced         : Enrolled templates and secure keys stay inside TEE; telemetry requires root access.\n");
+        sb.append("Advanced         : Enrolled templates and secure keys stay inside TEE; telemetry, requires root access.\n");
 
         return sb.toString();
     }
@@ -1031,7 +1031,7 @@ private String buildConnectivityInfo() {
                     macLine = rawMac;   // real MAC (root / older Android)
                 } else {
                     if (!isRooted) {
-                        macLine = "Masked by Android security (requires root access)";
+                        macLine = "Masked by Android security. Requires root access";
                     } else {
                         macLine = "Unavailable";
                     }
@@ -1043,114 +1043,141 @@ private String buildConnectivityInfo() {
     } catch (Throwable ignore) {}
 
     // ============================================================
-    // BLUETOOTH — FULL DETAIL (INTEGRATED)
-    // ============================================================
-    sb.append("\nBluetooth:\n");
+// BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
+// ============================================================
+sb.append("\nBluetooth:\n");
 
-    try {
-        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+try {
+    BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+    BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
 
-        if (ba == null) {
-            sb.append("  Supported      : No\n");
-        } else {
-            sb.append("  Supported      : Yes\n");
-            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+    if (ba == null) {
+        sb.append("  Supported      : No\n");
+    } else {
+        sb.append("  Supported      : Yes\n");
+        sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
 
-            // State
-            int state = ba.getState();
-            String stateStr;
-            switch (state) {
-                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-                default:                                 stateStr = "Off";         break;
-            }
-            sb.append("  State          : ").append(stateStr).append("\n");
+        // ------------------------------------------------------------
+        // STATE
+        // ------------------------------------------------------------
+        int state = ba.getState();
+        String stateStr;
+        switch (state) {
+            case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+            case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+            case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+            default:                                 stateStr = "Off";         break;
+        }
+        sb.append("  State          : ").append(stateStr).append("\n");
 
-            // Identity — SAFE NAME + ADDRESS
-            String btName = ba.getName();
-            if (btName == null || btName.trim().isEmpty()) {
-                btName = !isRooted
-                        ? "Unavailable (requires root access)"
-                        : "Unavailable";
-            }
-
-            String btAddr = ba.getAddress();
-            if (btAddr == null
-                    || btAddr.trim().isEmpty()
-                    || "02:00:00:00:00:00".equals(btAddr)) {
-                btAddr = !isRooted
-                        ? "Masked by Android security (requires root access)"
-                        : "Unavailable";
-            }
-
-            sb.append("  Name           : ").append(btName).append("\n");
-            sb.append("  Address        : ").append(btAddr).append("\n");
-
-            // Version detection (όσο γίνεται API-safe)
-            try {
-                int btVer = Build.VERSION.SDK_INT >= 31
-                        ? ((BluetoothAdapter.getDefaultAdapter() != null &&
-                            BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner() != null) ? 5 : 4)
-                        : (Build.VERSION.SDK_INT >= 21 ? 4 : 3);
-                sb.append("  Version        : Bluetooth ").append(btVer).append("\n");
-            } catch (Throwable e) {
-                sb.append("  Version        : Unknown\n");
-            }
-
-            // Classic Features
-            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-            sb.append("  Discoverable   : ")
-              .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
-              .append("\n");
-
-            // BLE Support
-            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-            sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
-
-            // Hardware Capabilities
-            sb.append("  Multiple Adv   : ");
-            try {
-                boolean multi = ba.isMultipleAdvertisementSupported();
-                sb.append(multi ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("Unknown\n");
-            }
-
-            sb.append("  LE Scanner     : ");
-            try {
-                boolean leScan = (ba.getBluetoothLeScanner() != null);
-                sb.append(leScan ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("Unknown\n");
-            }
-
-            sb.append("  Offloaded Filt.: ");
-            try {
-                boolean off = ba.isOffloadedFilteringSupported();
-                sb.append(off ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {
-                sb.append("Unknown\n");
-            }
-
-            // Connected Devices
-            try {
-                List<BluetoothDevice> con =
-                        bm.getConnectedDevices(BluetoothProfile.GATT);
-                sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
-            } catch (Throwable ignore) {
-                sb.append("  GATT Devices   : Unknown\n");
-            }
+        // ------------------------------------------------------------
+        // NAME / ADDRESS (MASKED IF UNROOTED)
+        // ------------------------------------------------------------
+        String btName = ba.getName();
+        if (btName == null || btName.trim().isEmpty()) {
+            btName = isRooted ? "Unavailable" : "Unavailable (requires root access)";
         }
 
-    } catch (Throwable ignore) {}
+        String btAddr = ba.getAddress();
+        if (btAddr == null
+                || btAddr.trim().isEmpty()
+                || "02:00:00:00:00:00".equals(btAddr)) {
+            btAddr = isRooted
+                    ? "Unavailable"
+                    : "Masked by Android security (requires root access)";
+        }
+
+        sb.append("  Name           : ").append(btName).append("\n");
+        sb.append("  Address        : ").append(btAddr).append("\n");
+
+        // ------------------------------------------------------------
+        // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
+        // ------------------------------------------------------------
+        if (isRooted) {
+            sb.append("  Version        : ");
+
+            String v = readSysString("/proc/bluetooth/version");
+            if (v == null || v.isEmpty())
+                v = readSysString("/sys/module/bluetooth/version");
+
+            sb.append(v != null && !v.isEmpty()
+                    ? v
+                    : "Not exposed by vendor firmware").append("\n");
+
+        } else {
+            sb.append("  Version        : Not exposed by Android (requires root access)\n");
+        }
+
+        // ------------------------------------------------------------
+        // CLASSIC CAPABILITIES
+        // ------------------------------------------------------------
+        sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
+        sb.append("  Discoverable   : ")
+                .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
+                .append("\n");
+
+        // BLE Support
+        boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+
+        // ------------------------------------------------------------
+        // HARDWARE CAPABILITIES
+        // ------------------------------------------------------------
+        sb.append("  Multiple Adv   : ");
+        try {
+            sb.append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No").append("\n");
+        } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+        sb.append("  LE Scanner     : ");
+        try {
+            sb.append(ba.getBluetoothLeScanner() != null ? "Yes" : "No").append("\n");
+        } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+        sb.append("  Offloaded Filt.: ");
+        try {
+            sb.append(ba.isOffloadedFilteringSupported() ? "Yes" : "No").append("\n");
+        } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+        // ------------------------------------------------------------
+        // CONNECTED DEVICES (GATT)
+        // ------------------------------------------------------------
+        try {
+            List<BluetoothDevice> con =
+                    bm.getConnectedDevices(BluetoothProfile.GATT);
+            sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
+        } catch (Throwable ignore) {
+            sb.append("  GATT Devices   : Unknown\n");
+        }
+
+        // ------------------------------------------------------------
+        // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
+        // ------------------------------------------------------------
+        sb.append("\n  Firmware Info  : ");
+        if (isRooted) {
+            String fw = null;
+
+            // Common vendor BLUETOOTH firmware paths
+            if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
+            if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
+            if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");
+            if (fw == null) fw = readSysString("/proc/bluetooth/soc");
+
+            sb.append(fw != null && !fw.isEmpty()
+                    ? fw
+                    : "Not exposed by vendor").append("\n");
+
+        } else {
+            sb.append("Requires root access\n");
+        }
+    }
+
+} catch (Throwable ignore) {}
 
     // ============================================================
     // ADVANCED INFO (green comment style)
     // ============================================================
     sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
-              "Bluetooth controller logs and HCI traces, require root access.\n");
+              "Bluetooth controller logs and HCI traces, requires root access.\n");
 
     return sb.toString();
 }
@@ -1496,7 +1523,7 @@ private void showBatteryCapacityDialog() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Supported        : ").append(supported ? "Yes" : "No").append("\n");
-        sb.append("Advanced         : Fine-grain ranging diagnostics require root access.\n");
+        sb.append("Advanced         : Fine-grain ranging diagnostics, requires root access.\n");
 
         return sb.toString();
     }
@@ -1506,7 +1533,7 @@ private void showBatteryCapacityDialog() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Supported        : ").append(vib ? "Yes" : "No").append("\n");
-        sb.append("Advanced         : Detailed haptic waveform tables require root access.\n");
+        sb.append("Advanced         : Detailed haptic waveform tables, requires root access.\n");
 
         return sb.toString();
     }
@@ -1591,7 +1618,7 @@ private String buildGnssInfo() {
                 .append("\n");
 
 // FINAL NOTE — GNSS (GREEN SINGLE LINE)
-sb.append("\nAdvanced         : GNSS constellation breakdown, carrier phases, logging and raw measurements require root access.\n");
+sb.append("\nAdvanced         : GNSS constellation breakdown, carrier phases, logging and raw measurement,s requires root access.\n");
 } catch (Throwable ignore) {
     sb.append("GNSS information is not exposed on this device.\n");
 }
@@ -1609,7 +1636,7 @@ private String buildUsbInfo() {
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-    sb.append("Advanced         : Low-level USB descriptors and power profiles, require root access.\n");
+    sb.append("Advanced         : Low-level USB descriptors and power profiles, requires root access.\n");
 
     return sb.toString();
 }
@@ -1652,7 +1679,7 @@ private String buildUsbInfo() {
         sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
         sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
 
-        sb.append("\nAdvanced         : Extended peripheral diagnostics require root access.\n");
+        sb.append("\nAdvanced         : Extended peripheral diagnostics requires root access.\n");
 
         return sb.toString();
     }
@@ -1721,7 +1748,7 @@ private String buildUsbInfo() {
         sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
         sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
 
-        sb.append("\nAdvanced         : Raw audio routing matrices require root access.\n");
+        sb.append("\nAdvanced         : Raw audio routing matrices requires root access.\n");
 
         appendAccessInstructions(sb, "mic");
         return sb.toString();
@@ -1786,7 +1813,7 @@ private String buildUsbInfo() {
         sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
         sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-        sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles require root.\n");
+        sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles, require root access.\n");
 
         return sb.toString();
     }
@@ -1812,7 +1839,7 @@ private String buildUsbInfo() {
             }
         } catch (Throwable ignore) {}
 
-        sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths require root access.\n");
+        sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths, requires root access.\n");
 
         return sb.toString();
     }
@@ -1833,75 +1860,116 @@ private String buildUsbInfo() {
         return sb.toString();
     }
 
-    // ============================================================
-    // Root Info
-    // ============================================================
-    private String buildRootInfo() {
-        StringBuilder sb = new StringBuilder();
+ // ============================================================
+// Root Info (with Vendor Diag Paths for rooted devices)
+// ============================================================
+private String buildRootInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        sb.append("Root Access Mode : ")
-          .append(isRooted ? "Rooted device (superuser access detected)"
-                           : "Non-rooted device (standard access)")
-          .append("\n");
+    sb.append("Root Access Mode : ")
+      .append(isRooted ? "Rooted device (superuser access detected)"
+                       : "Non-rooted device (standard access)")
+      .append("\n");
 
-        sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
+    sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
 
-        String secure = getProp("ro.secure");
-        if (secure != null && !secure.isEmpty()) {
-            sb.append("ro.secure        : ").append(secure).append("\n");
+    String secure = getProp("ro.secure");
+    if (secure != null && !secure.isEmpty()) {
+        sb.append("ro.secure        : ").append(secure).append("\n");
+    }
+
+    String dbg = getProp("ro.debuggable");
+    if (dbg != null && !dbg.isEmpty()) {
+        sb.append("ro.debuggable    : ").append(dbg).append("\n");
+    }
+
+    String verity = getProp("ro.boot.veritymode");
+    if (verity != null && !verity.isEmpty()) {
+        sb.append("Verity Mode      : ").append(verity).append("\n");
+    }
+
+    String selinux = getProp("ro.build.selinux");
+    if (selinux != null && !selinux.isEmpty()) {
+        sb.append("SELinux          : ").append(selinux).append("\n");
+    }
+
+    sb.append("\nFusion Layer     : ");
+    if (isRooted) {
+        sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
+    } else {
+        sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
+    }
+
+    if (isRooted) {
+        sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
+        sb.append("Extended hardware diagnostics are active.\n");
+
+        sb.append("\nRoot indicators:\n");
+
+        String[] paths = {
+                "/system/bin/su", "/system/xbin/su", "/sbin/su",
+                "/system/su", "/system/bin/.ext/.su",
+                "/system/usr/we-need-root/su-backup",
+                "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
+        };
+
+        for (String p : paths) {
+            if (new File(p).exists()) {
+                sb.append("  ").append(p).append("\n");
+            }
         }
 
-        String dbg = getProp("ro.debuggable");
-        if (dbg != null && !dbg.isEmpty()) {
-            sb.append("ro.debuggable    : ").append(dbg).append("\n");
-        }
+        sb.append("\nPeripherals telemetry is running with root access.\n");
 
-        String verity = getProp("ro.boot.veritymode");
-        if (verity != null && !verity.isEmpty()) {
-            sb.append("Verity Mode      : ").append(verity).append("\n");
-        }
+        // --------------------------------------------------------
+        // Vendor diag / engineering paths (Samsung / Qualcomm / MTK)
+        // --------------------------------------------------------
+        String[] vendorDiag = {
+                // Qualcomm generic diag
+                "/dev/diag",
+                "/dev/diag_qti",
 
-        String selinux = getProp("ro.build.selinux");
-        if (selinux != null && !selinux.isEmpty()) {
-            sb.append("SELinux          : ").append(selinux).append("\n");
-        }
+                // Samsung EFS / modem related
+                "/efs/imei/.msl",
+                "/efs/imei/key_str",
+                "/efs/FactoryApp",
 
-        sb.append("\nFusion Layer     : ");
-        if (isRooted) {
-            sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
-        } else {
-            sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
-        }
+                // Qualcomm / vendor diag logging
+                "/vendor/etc/diag_mdlog",
+                "/system/vendor/bin/diag_mdlog",
 
-        if (isRooted) {
-            sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
-            sb.append("Extended hardware diagnostics are active.\n");
+                // MTK engineering / gps / modem helpers
+                "/system/bin/mtk_agpsd",
+                "/system/bin/mtk_engineering",
+                "/system/bin/emdlogger",
+        };
 
-            sb.append("\nRoot indicators:\n");
-
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-            };
-
-            for (String p : paths) {
+        boolean foundVendor = false;
+        for (String p : vendorDiag) {
+            try {
                 if (new File(p).exists()) {
+                    if (!foundVendor) {
+                        sb.append("\nVendor diag paths (root-only):\n");
+                        foundVendor = true;
+                    }
                     sb.append("  ").append(p).append("\n");
                 }
-            }
-
-            sb.append("\nPeripherals telemetry is running with root access.\n");
-
-        } else {
-            sb.append("\nThis device is not rooted.\n");
-            sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
-            sb.append("Extended hardware diagnostics require root access.\n");
+            } catch (Throwable ignore) {}
         }
 
-        return sb.toString();
+        if (!foundVendor) {
+            sb.append("\nVendor diag paths (Samsung / Qualcomm / MTK) are present at OS level but not exposed to this app without a full root shell and vendor tools.\n");
+        }
+
+    } else {
+        sb.append("\nThis device is not rooted.\n");
+        sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
+        sb.append("Extended hardware diagnostics require root access.\n");
+        sb.append("Vendor diag paths (Samsung / Qualcomm / MTK) cannot be inspected from a non-root app.\n");
     }
+
+    return sb.toString();
+}
 
     // ==================================
 
@@ -2412,7 +2480,7 @@ private String buildScreenInfo() {
     // -------------------------------------------
     // ADVANCED (informational)
     // -------------------------------------------
-    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping require root access.\n");
+    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping, requires root access.\n");
 
     return sb.toString();
 }
@@ -2653,19 +2721,19 @@ private String buildModemInfo() {
     // CARRIER AGGREGATION / BANDS
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown (requires root access)"));
+            padKeyModem("4G+ CA"), "Unknown. Requires root access"));
 
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown (requires root access)"));
+            padKeyModem("NR-CA"), "Unknown. Requires root access"));
 
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted (requires root access)"));
+            padKeyModem("Bands"), "Vendor restricted. Requires root access"));
 
     // ------------------------------------------------------------
     // ADVANCED FOOTER — SINGLE LINE
     // ------------------------------------------------------------
     sb.append(String.format(locale,
-            "%s : Full RAT tables, NR bands, CA combos — requires root access and OEM modem tools.",
+            "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
             padKeyModem("Advanced")
     ));
 
@@ -2803,7 +2871,7 @@ private String buildWifiAdvancedInfo() {
     // ------------------------------------------------------------
     // ADVANCED FOOTER — SINGLE LINE
     // ------------------------------------------------------------
-    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits — requires root access.\n");
+    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits, requires root access.\n");
 
     return sb.toString();
 }
@@ -2836,7 +2904,7 @@ private String buildWifiAdvancedInfo() {
             sb.append("Sensor extended metadata is not exposed by this device.\n");
         }
 
-        sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines require root access and vendor sensor HAL.\n");
+        sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines, requires root access and vendor sensor HAL.\n");
 
         return sb.toString();
     }
@@ -2904,7 +2972,7 @@ private String buildWifiAdvancedInfo() {
         boolean hce = getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
         sb.append("HCE / Secure NFC: ").append(hce ? "Yes" : "No").append("\n");
 
-        sb.append("Advanced         : Full SELinux policy dump and keymaster internals require root access and are not exposed to apps.\n");
+        sb.append("Advanced         : Full SELinux policy dump and keymaster internals, requires root access and are not exposed to apps.\n");
 
         return sb.toString();
     }
@@ -3003,8 +3071,8 @@ private void populateAllSections() {
     applyNeonValues(findViewById(R.id.txtCameraContent), cam);
 
     String con = buildConnectivityInfo();
-    set(R.id.txtConnectivityContent, con);
-    applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
+set(R.id.txtConnectivityContent, con);
+applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
     // ============================================================================
     // LOCATION (Universal, No-Permission Crash-Free)
@@ -3373,7 +3441,7 @@ private String getLocationCapabilities() {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION) ? "Yes" : "No")
                 .append("\n");
 
-        sb.append("\nAdvanced           : AGNSS, LPP, SUPL, carrier-assisted fixes (requires root access).");
+        sb.append("\nAdvanced           : AGNSS, LPP, SUPL, carrier-assisted fixes, requires root access.");
 
     } catch (Throwable ignore) {
         return "Location Capabilities : Unknown";

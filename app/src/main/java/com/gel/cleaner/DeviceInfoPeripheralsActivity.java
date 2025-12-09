@@ -44,8 +44,6 @@ import android.graphics.Color;
 import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbPort;
-import android.hardware.usb.UsbPortStatus;
 import java.util.HashMap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -1914,49 +1912,6 @@ private String buildMicsInfo() {
     appendAccessInstructions(sb, "mic");
     return sb.toString();
 }
-      
-    // ============================================================
-    // GEL Other Peripherals Info v26 — Full Hardware Edition
-    // ============================================================
-    private String buildOtherPeripheralsInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("=== General Peripherals ===\n");
-
-        boolean vib          = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-        boolean flash        = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-        boolean ir           = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
-        boolean fm           = getPackageManager().hasSystemFeature("android.hardware.fm");
-        boolean hall         = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
-        boolean therm        = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
-        boolean hwkbd        = getPackageManager().hasSystemFeature("android.hardware.keyboard");
-        boolean wireless     = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
-        boolean step         = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
-        boolean vulkan       = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
-        boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
-        boolean barcode      = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
-        boolean tv           = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
-        boolean als          = getPackageManager().hasSystemFeature("android.hardware.light");
-
-        sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
-        sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
-        sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
-        sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
-        sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
-        sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
-        sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
-        sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
-        sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
-        sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
-        sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
-        sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
-        sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
-        sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
-
-        sb.append("\nAdvanced         : Extended peripheral diagnostics requires root access.\n");
-
-        return sb.toString();
-    }
 
     // ============================================================================
     // AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
@@ -3446,7 +3401,7 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
 // ============================================================
 // GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)
-// ============================================================
+// ======================================================= =====
     private void showPermissionDebugInfo() {
 
         StringBuilder dbg = new StringBuilder();

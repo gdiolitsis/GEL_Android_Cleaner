@@ -213,12 +213,12 @@ private TextView iconRoot;
 private TextView iconOther;
 
     // ============================================================
-    // attachBaseContext
-    // ============================================================
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
+// attachBaseContext
+// ============================================================
+@Override
+protected void attachBaseContext(Context base) {
+    super.attachBaseContext(LocaleHelper.apply(base));
+}
 
 // ============================================================
 //  ON CREATE 
@@ -241,7 +241,6 @@ protected void onCreate(Bundle savedInstanceState) {
     TextView title = findViewById(R.id.txtTitleDevice);
     if (title != null)
         title.setText(getString(R.string.phone_info_peripherals));
-}
 
     // ============================================================
     // BIND VIEWS — FIXED BLOCK 1

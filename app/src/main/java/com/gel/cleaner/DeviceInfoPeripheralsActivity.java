@@ -1707,7 +1707,7 @@ return sb.toString();
 }
       
 // ============================================================
-// USB / OTG / POWER / ROLE ENGINE — GEL TURBO EDITION
+// USB / OTG / POWER / ROLE ENGINE — GEL API29-SAFE EDITION
 // ============================================================
 private String buildUsbInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1731,14 +1731,15 @@ private String buildUsbInfo() {
     }
 
     // ------------------------------------------------------------
-    // CURRENTLY CONNECTED DEVICE (host mode)
+    // CURRENTLY CONNECTED DEVICES (Host Mode)
     // ------------------------------------------------------------
     try {
         HashMap<String, UsbDevice> devs = um.getDeviceList();
+
         if (devs != null && !devs.isEmpty()) {
             sb.append("\nConnected USB Devices:\n");
-            for (UsbDevice d : devs.values()) {
 
+            for (UsbDevice d : devs.values()) {
                 sb.append("  • ").append(d.getDeviceName()).append("\n");
                 sb.append("    Vendor ID     : ").append(d.getVendorId()).append("\n");
                 sb.append("    Product ID    : ").append(d.getProductId()).append("\n");
@@ -1747,29 +1748,10 @@ private String buildUsbInfo() {
                         .append(d.getDeviceSubclass()).append("\n");
                 sb.append("    Interfaces    : ").append(d.getInterfaceCount()).append("\n");
 
-                // Possible USB speed detection
-                sb.append("    Speed Info    : ");
-
-                if (Build.VERSION.SDK_INT >= 31) {
-                    try {
-                        int sp = d.getDeviceSpeed();
-                        String spLabel;
-                        switch (sp) {
-                            case UsbConstants.USB_SPEED_LOW:  spLabel = "USB 1.1 Low (1.5Mbps)"; break;
-                            case UsbConstants.USB_SPEED_FULL: spLabel = "USB 1.1 Full (12Mbps)"; break;
-                            case UsbConstants.USB_SPEED_HIGH: spLabel = "USB 2.0 High (480Mbps)"; break;
-                            case UsbConstants.USB_SPEED_SUPER: spLabel = "USB 3.x SuperSpeed"; break;
-                            case UsbConstants.USB_SPEED_SUPER_PLUS: spLabel = "USB 3.x SuperSpeed+"; break;
-                            default: spLabel = "Unknown";
-                        }
-                        sb.append(spLabel).append("\n");
-                    } catch (Throwable ignore) {
-                        sb.append("Unknown\n");
-                    }
-                } else {
-                    sb.append("Android <12 does not expose speed\n");
-                }
+                // No speed info on API <31
+                sb.append("    Speed Info    : Not available on this Android version\n");
             }
+
         } else {
             sb.append("Connected Dev.   : None\n");
         }
@@ -1779,41 +1761,14 @@ private String buildUsbInfo() {
     }
 
     // ------------------------------------------------------------
-    // USB ROLE (Device ↔ Host)
-    // ------------------------------------------------------------
+    // USB ROLE (Device <-> Host)
+    // ============================================================
     sb.append("\nMode/Role:\n");
-    try {
-        if (Build.VERSION.SDK_INT >= 26) {
-            UsbPort[] ports = um.getPorts();
-            if (ports != null && ports.length > 0) {
-                UsbPort p = ports[0];
-                UsbPortStatus st = p.getStatus();
-                if (st != null) {
-
-                    String roleDevice =
-                            (st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_DEVICE)
-                                    ? "Device" : "None";
-
-                    String roleHost =
-                            (st.getCurrentDeviceRole() == UsbPortStatus.DEVICE_ROLE_HOST)
-                                    ? "Host" : "None";
-
-                    sb.append("  Device Role    : ").append(roleDevice).append("\n");
-                    sb.append("  Host Role      : ").append(roleHost).append("\n");
-                }
-            } else {
-                sb.append("  Port Info      : No USB ports exposed\n");
-            }
-        } else {
-            sb.append("  Role Info      : Requires Android 8.0+\n");
-        }
-
-    } catch (Throwable ignore) {
-        sb.append("  Role Info      : Error reading role state\n");
-    }
+    sb.append("  Role Info      : USB role switching requires Android 8+ vendor extensions\n");
+    sb.append("                    (Not available on this build target)\n");
 
     // ------------------------------------------------------------
-    // POWER + CHARGER PROFILE (Informational)
+    // POWER + CHARGER PROFILE
     // ------------------------------------------------------------
     sb.append("\nPower Profiles:\n");
     try {
@@ -1821,26 +1776,28 @@ private String buildUsbInfo() {
         Intent batt = registerReceiver(null, ifil);
 
         if (batt != null) {
-            int plugged = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            String label =
-                    (plugged == BatteryManager.BATTERY_PLUGGED_USB) ? "USB" :
-                    (plugged == BatteryManager.BATTERY_PLUGGED_AC) ? "AC" :
-                    (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless" :
-                    "Unplugged";
+            int source = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
-            sb.append("  Charge Source  : ").append(label).append("\n");
+            String srcLabel =
+                    (source == BatteryManager.BATTERY_PLUGGED_USB) ? "USB"
+                    : (source == BatteryManager.BATTERY_PLUGGED_AC) ? "AC"
+                    : (source == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless"
+                    : "Unplugged";
+
+            sb.append("  Charge Source  : ").append(srcLabel).append("\n");
 
             int volt = batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
             sb.append("  Voltage (mV)   : ").append(volt).append("\n");
         }
+
     } catch (Throwable ignore) {
         sb.append("  Power Info     : Error\n");
     }
 
     // ------------------------------------------------------------
-    // ADVANCED (root-only)
+    // ADVANCED (ROOT)
     // ------------------------------------------------------------
-    sb.append("\nAdvanced         : USB descriptors & negotiated power require root access.\n");
+    sb.append("\nAdvanced         : USB descriptors & power negotiation require root access.\n");
 
     return sb.toString();
 }

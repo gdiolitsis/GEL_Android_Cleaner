@@ -3748,31 +3748,24 @@ private String getLocationCapabilities() {
     return gelPostProcess(sb.toString());
 }
 
-// 🔥 END OF CLASS
-
 // ============================================================================
-// GEL POST PROCESSOR — SIMPLE & SAFE EDITION (supports all return types)
+// GEL POST PROCESSOR v3 — SAFE + SIMPLE + COMPILER-PROOF
 // ============================================================================
 private String gelPostProcess(String input) {
     if (input == null) return "";
+
+    String out = input;
+
     try {
-        String out = input.replace("
-", "");
-        out = out.replaceAll("[ 	]+
-", "
-");
-        out = out.replaceAll("
-{3,}", "
+        out = out.replace("\r", "");
+        out = out.replace("\n\n", "\n");
+        out = out.replace("\t", " ");
+        out = out.replaceAll(" {3,}", " ");
+        out = out.replaceAll("\\n +", "\n  ");
+    } catch (Throwable ignore) {}
 
-");
-        return out;
-    } catch (Throwable ignore) {
-        return input;
-    }
+    return out;
 }
-private String gelPostProcess(long value) { return gelPostProcess(String.valueOf(value)); }
-private String gelPostProcess(float value) { return gelPostProcess(String.format(Locale.US, "%s", value)); }
-private String gelPostProcess(boolean value) { return gelPostProcess(value ? "true" : "false"); }
-private String gelPostProcess(int value) { return gelPostProcess(String.valueOf(value)); }
 
+// 🔥 END OF CLASS
 }

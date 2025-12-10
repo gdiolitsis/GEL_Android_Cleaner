@@ -421,8 +421,7 @@ public void onRequestPermissionsResult(int requestCode,
 
 
 // ============================================================
-// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (FINAL)
+// GEL Section Setup Engine — FINAL FIX (Works With Battery)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -435,27 +434,25 @@ private void setupSection(View header, View content, TextView icon) {
 
     header.setOnClickListener(v -> {
 
-        // 🔥 ALWAYS close Battery module before opening a normal section
-        closeBatteryModule();
-
         boolean isOpen = (content.getVisibility() == View.VISIBLE);
 
-        // 1️⃣ Collapse ALL other sections EXCEPT the one pressed
-        for (int i = 0; i < allContents.length; i++) {
+        // 1️⃣ Κλείσε ΜΟΝΟ τα άλλα normal sections (όχι το Battery)
+        for (int i = 1; i < allContents.length; i++) {  // index 0 = BATTERY
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // 2️⃣ Toggle the pressed section
+        // 2️⃣ Μην αγγίζεις το Battery πια — ΔΙΟΡΘΩΣΗ
+        // Κανένα closeBatteryModule() εδώ.
+
+        // 3️⃣ Toggle του πατημένου section
         if (isOpen) {
-            // Close it
-            content.setVisibility(View.GONE);
+            animateCollapse(content);
             icon.setText("＋");
         } else {
-            // Open it
-            content.setVisibility(View.VISIBLE);
+            animateExpand(content);
             icon.setText("－");
         }
     });

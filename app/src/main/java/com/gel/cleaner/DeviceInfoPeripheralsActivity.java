@@ -2325,25 +2325,32 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         }
     } catch (Throwable ignore) {}
 
-    if (cools == null) {
-        sb.append("• (no hardware cooling devices found)\n");
-        return;
-    }
-
     int shown = 0;
-    for (File c : cools) {
-        if (shown >= 5) break;
-        try {
-            String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
-            if (!isHardwareCoolingDevice(type)) continue;
 
-            sb.append("• ").append(c.getName()).append(" → ").append(type).append("\n");
-            shown++;
+    if (cools != null) {
+        for (File c : cools) {
+            if (shown >= 5) break;
 
-        } catch (Throwable ignore) { }
+            try {
+                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
+                if (!isHardwareCoolingDevice(type)) continue;
+
+                sb.append("• ")
+                  .append(c.getName())
+                  .append(" → ")
+                  .append(type)
+                  .append("\n");
+
+                shown++;
+
+            } catch (Throwable ignore) {}
+        }
     }
 
-    if (shown == 0) sb.append("• (no hardware cooling devices found)\n");
+    // --- Αν δεν βρέθηκαν πραγματικά hardware cooling devices ---
+    if (shown == 0) {
+        sb.append("no hardware cooling devices found.  This device uses passive cooling only  ")
+    }
 }
 
 // ---------------------------------------------------------------

@@ -3749,4 +3749,30 @@ private String getLocationCapabilities() {
 }
 
 // 🔥 END OF CLASS
+
+// ============================================================================
+// GEL POST PROCESSOR — SIMPLE & SAFE EDITION (supports all return types)
+// ============================================================================
+private String gelPostProcess(String input) {
+    if (input == null) return "";
+    try {
+        String out = input.replace("
+", "");
+        out = out.replaceAll("[ 	]+
+", "
+");
+        out = out.replaceAll("
+{3,}", "
+
+");
+        return out;
+    } catch (Throwable ignore) {
+        return input;
+    }
+}
+private String gelPostProcess(long value) { return gelPostProcess(String.valueOf(value)); }
+private String gelPostProcess(float value) { return gelPostProcess(String.format(Locale.US, "%s", value)); }
+private String gelPostProcess(boolean value) { return gelPostProcess(value ? "true" : "false"); }
+private String gelPostProcess(int value) { return gelPostProcess(String.valueOf(value)); }
+
 }

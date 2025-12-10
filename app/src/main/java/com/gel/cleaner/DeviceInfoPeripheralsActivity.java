@@ -2806,6 +2806,56 @@ if (subs == null || subs.isEmpty()) {
             } catch (Throwable ignore) {}
         }
 
+// 4️⃣ Xiaomi fallback #3 — TelephonyManager per-slot detection
+if (subs == null || subs.isEmpty()) {
+    try {
+        List<SubscriptionInfo> temp = new ArrayList<>();
+
+        for (int slot = 0; slot < 2; slot++) {
+            int simState = tm.getSimState(slot);
+            if (simState == TelephonyManager.SIM_STATE_READY ||
+                simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
+                simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
+                simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
+
+                // Carrier name fallback (Xiaomi)
+                String name = tm.getSimOperatorName();
+                if (name == null || name.trim().isEmpty())
+                    name = "Unknown";
+
+                // Make a synthetic SubscriptionInfo-like entry
+                // (We only need slot + carrier)
+                SubscriptionInfo fake = null;
+                try {
+                    Constructor<?> c = SubscriptionInfo.class.getDeclaredConstructor();
+                    c.setAccessible(true);
+                    fake = (SubscriptionInfo) c.newInstance();
+                } catch (Throwable ignore) {}
+
+                if (fake != null) {
+                    try { 
+                        Field f = SubscriptionInfo.class.getDeclaredField("mSimSlotIndex");
+                        f.setAccessible(true);
+                        f.set(fake, slot);
+                    } catch (Throwable ignore) {}
+
+                    try {
+                        Field f = SubscriptionInfo.class.getDeclaredField("mCarrierName");
+                        f.setAccessible(true);
+                        f.set(fake, name);
+                    } catch (Throwable ignore) {}
+
+                    temp.add(fake);
+                }
+            }
+        }
+
+        if (!temp.isEmpty())
+            subs = temp;
+
+    } catch (Throwable ignore) {}
+}
+
         // 4️⃣ Safety
         if (subs == null) subs = new ArrayList<>();
 

@@ -2785,10 +2785,16 @@ private String buildModemInfo() {
             try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
         }
 
-        // 2️⃣ Xiaomi / HyperOS fallback #1
-        if ((subs == null || subs.isEmpty()) && sm != null) {
-            try { subs = sm.getAvailableSubscriptionInfoList(); } catch (Throwable ignore) {}
+        // 2️⃣ Xiaomi / HyperOS fallback #1 — reflection (compile-safe)
+if (subs == null || subs.isEmpty()) {
+    try {
+        Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
+        Object result = m.invoke(sm);
+        if (result instanceof List) {
+            subs = (List<SubscriptionInfo>) result;
         }
+    } catch (Throwable ignore) {}
+}
 
         // 3️⃣ Xiaomi / HyperOS fallback #2
         if (subs == null || subs.isEmpty()) {

@@ -414,9 +414,9 @@ public void onRequestPermissionsResult(int requestCode,
     }
 
     // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
-    if (requestCode == 101) {
-        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
-    }
+if (requestCode == 101) {
+    // Ξαναγεμίζει ΟΛΑ τα sections με το ίδιο styling engine
+    populateAllSections();
 }
 
 
@@ -2796,8 +2796,15 @@ private String buildModemInfo() {
             }
         }
 
-        sb.append(String.format(locale, "%s : %d\n",
-                padKeyModem("Active SIMs"), count));
+        String activeSimsText;
+if (subs == null || subs.isEmpty()) {
+    activeSimsText = "N/A";
+} else {
+    activeSimsText = String.valueOf(count);
+}
+
+sb.append(String.format(locale, "%s : %s\n",
+        padKeyModem("Active SIMs"), activeSimsText));
 
         if (subs != null) {
             boolean[] printed = new boolean[2];

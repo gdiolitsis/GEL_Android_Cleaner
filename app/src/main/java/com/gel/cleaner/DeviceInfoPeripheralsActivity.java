@@ -2164,8 +2164,8 @@ private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
 
 // Summary struct
 private static class ThermalSummary {
-    int zoneCount;
-    int coolingDeviceCount;
+    int zoneCount;          // μόνο REAL hardware zones
+    int coolingDeviceCount; // μόνο REAL hardware cooling devices
 }
 
 // ---------------------------------------------------------------
@@ -2192,9 +2192,10 @@ private ThermalSummary scanThermalHardware(
         }
     } catch (Throwable ignore) { }
 
-    summary.zoneCount          = (zones != null) ? zones.length  : 0;
-    summary.coolingDeviceCount = (cools != null) ? cools.length : 0;
+    summary.zoneCount          = 0;
+    summary.coolingDeviceCount = 0;
 
+    // REAL hardware thermal zones
     if (zones != null) {
         for (File z : zones) {
             try {
@@ -2215,6 +2216,9 @@ private ThermalSummary scanThermalHardware(
                 String group = mapTypeToGroup(type);
                 if (group == null) continue;
 
+                // μετράμε μόνο ζώνες που τελικά ανήκουν σε hardware group
+                summary.zoneCount++;
+
                 switch (group) {
                     case "BatteryMain":  batteryMain.updateIfBetter(type, c); break;
                     case "BatteryShell": batteryShell.updateIfBetter(type, c); break;
@@ -2225,6 +2229,18 @@ private ThermalSummary scanThermalHardware(
                 }
 
             } catch (Throwable ignore) { }
+        }
+    }
+
+    // REAL hardware cooling devices (fan / blower / pump / heatsink)
+    if (cools != null) {
+        for (File c : cools) {
+            try {
+                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
+                if (isHardwareCoolingDevice(type)) {
+                    summary.coolingDeviceCount++;
+                }
+            } catch (Throwable ignore) {}
         }
     }
 
@@ -2491,7 +2507,7 @@ private void applyThermalFallbacks(
 }
 
 // ===================================================================
-// FINAL BUILDER — CLEAN OUTPUT (NO ZONE/DEVICE SUMMARY)
+// FINAL BUILDER — CLEAN OUTPUT (REAL HARDWARE SUMMARY + TABLE)
 // ===================================================================
 private String buildThermalInfo() {
 
@@ -2505,9 +2521,18 @@ private String buildThermalInfo() {
     ThermalGroupReading modemMain    = new ThermalGroupReading();
     ThermalGroupReading modemAux     = new ThermalGroupReading();
 
-    scanThermalHardware(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
+    ThermalSummary summary = scanThermalHardware(
+            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
+    );
 
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
+
+    // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
+    if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
+        sb.append(String.format(Locale.US, "%-17s: %d\n", "Thermal Zones", summary.zoneCount));
+        sb.append(String.format(Locale.US, "%-17s: %d\n", "Cooling Devices", summary.coolingDeviceCount));
+        sb.append("\n");
+    }
 
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n\n");

@@ -3749,75 +3749,103 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR v4 — ALIGN CONTINUATION LINES AFTER VALUE COLUMN
+// GEL POST PROCESSOR v5 — WRAP + ALIGN AFTER VALUE COLUMN
 // ============================================================================
+private static final int VALUE_WRAP_WIDTH = 40;  // περίπου πόσα γράμματα ανά γραμμή τιμής
+
 private String gelPostProcess(String input) {
     if (input == null) return "";
 
-    // Normalize line endings
+    // Basic καθάρισμα CR
     String cleaned = input.replace("\r", "");
-
     String[] lines = cleaned.split("\n", -1);
+
     if (lines.length <= 1) {
         return cleaned;
     }
 
-    String[] outLines = new String[lines.length];
-    int lastValueCol = -1;
+    StringBuilder result = new StringBuilder();
 
     for (int i = 0; i < lines.length; i++) {
         String line = lines[i];
-        String trimmed = line.trim();
+        if (line == null) line = "";
 
-        // Detect label line with colon
+        // Βρίσκουμε αν η γραμμή είναι "Label  :  Value"
         int colonIdx = line.indexOf(':');
-        if (colonIdx >= 0) {
-            // Compute value column = first non-space after colon
-            int valueCol = colonIdx + 1;
-            while (valueCol < line.length() && line.charAt(valueCol) == ' ') {
-                valueCol++;
+        if (colonIdx > 0) {
+            // Έλεγξε ότι υπάρχει πραγματικό label πριν τα ':'
+            boolean onlySpaces = true;
+            for (int k = 0; k < colonIdx; k++) {
+                if (line.charAt(k) != ' ') {
+                    onlySpaces = false;
+                    break;
+                }
             }
-            lastValueCol = valueCol;
-            outLines[i] = line;
-            continue;
+
+            if (!onlySpaces) {
+                // Στήλη όπου ξεκινά η ΤΙΜΗ
+                int valueStart = colonIdx + 1;
+                while (valueStart < line.length() && line.charAt(valueStart) == ' ') {
+                    valueStart++;
+                }
+
+                String prefix      = line.substring(0, valueStart);   // "Advanced           : "
+                String value       = line.substring(valueStart).trim();
+                int   maxWidth     = VALUE_WRAP_WIDTH;
+
+                if (value.isEmpty()) {
+                    // Αν δεν έχει value, άστην όπως είναι
+                    appendLine(result, line, i < lines.length - 1);
+                    continue;
+                }
+
+                // Κόψε την τιμή σε κομμάτια με word-wrap
+                boolean firstChunk = true;
+                while (value.length() > maxWidth) {
+                    int breakPos = value.lastIndexOf(' ', maxWidth);
+                    if (breakPos <= 0) {
+                        break; // δεν βρέθηκε ασφαλές space, μην σπάσεις περίεργα
+                    }
+                    String chunk = value.substring(0, breakPos).trim();
+
+                    if (firstChunk) {
+                        appendLine(result, prefix + chunk, true);
+                        firstChunk = false;
+                    } else {
+                        appendLine(result, makeSpaces(valueStart) + chunk, true);
+                    }
+
+                    value = value.substring(breakPos).trim();
+                }
+
+                // Τελευταίο κομμάτι
+                if (firstChunk) {
+                    appendLine(result, prefix + value, i < lines.length - 1);
+                } else {
+                    appendLine(result, makeSpaces(valueStart) + value, i < lines.length - 1);
+                }
+
+                continue; // πήγαμε ήδη στο result, πάμε στην επόμενη γραμμή
+            }
         }
 
-        // Continuation line logic: indent using lastValueCol
-        if (lastValueCol > 0 && !trimmed.isEmpty()) {
-            // Skip bullets / list markers
-            char c0 = trimmed.charAt(0);
-            if (c0 == '•' || c0 == '-' || c0 == '*') {
-                outLines[i] = line;
-                continue;
-            }
-
-            // If this line itself has a colon before the value column,
-            // treat it as new label, not continuation
-            int ownColon = line.indexOf(':');
-            if (ownColon >= 0 && ownColon < lastValueCol) {
-                outLines[i] = line;
-                continue;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            for (int s = 0; s < lastValueCol; s++) {
-                sb.append(' ');
-            }
-            sb.append(trimmed);
-            outLines[i] = sb.toString();
-        } else {
-            outLines[i] = line;
-        }
+        // Γραμμές χωρίς "Label : Value" (bullets, headers κλπ) → όπως είναι
+        appendLine(result, line, i < lines.length - 1);
     }
 
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < outLines.length; i++) {
-        result.append(outLines[i]);
-        if (i < outLines.length - 1) {
-            result.append('\n');
-        }
-    }
     return result.toString();
+}
+
+private void appendLine(StringBuilder sb, String line, boolean addNewline) {
+    sb.append(line);
+    if (addNewline) sb.append('\n');
+}
+
+private String makeSpaces(int count) {
+    if (count <= 0) return "";
+    char[] arr = new char[count];
+    for (int i = 0; i < count; i++) arr[i] = ' ';
+    return new String(arr);
 }
 
 // 🔥 END OF CLASS

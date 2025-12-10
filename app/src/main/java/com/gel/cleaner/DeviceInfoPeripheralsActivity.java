@@ -2640,14 +2640,14 @@ private void refreshModemInfo() {
             modemView.setText(info);
             modemView.setVisibility(View.VISIBLE);
 
-            // ⭐ FIX: Εφαρμογή NEON χρωματισμού τιμών (όπως όλα τα άλλα sections)
+            // ⭐ Neon χρωματισμός τιμών
             applyNeonValues(modemView, info);
         }
     } catch (Throwable ignore) {}
 }
 
 // ============================================================================
-// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final)
+// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2740,10 +2740,8 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     // IMS / VoLTE / VoWiFi / VoNR
     // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("IMS Registered"), "Unknown"));
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
 
-    // VoLTE
     try {
         boolean volte = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
@@ -2753,7 +2751,6 @@ private String buildModemInfo() {
         sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
     }
 
-    // VoWiFi
     try {
         boolean vowifi = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
@@ -2763,7 +2760,6 @@ private String buildModemInfo() {
         sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
     }
 
-    // VoNR
     try {
         boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
                 tm != null &&
@@ -2774,102 +2770,77 @@ private String buildModemInfo() {
         sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
     }
 
-    // ------------------------------------------------------------
-    // ACTIVE SIMS — WITH XIAOMI FALLBACK PACK v3.0
-    // ------------------------------------------------------------
+    // ========================================================================
+    // ACTIVE SIMS SECTION — FULL FALLBACK PACK
+    // ========================================================================
     try {
         List<SubscriptionInfo> subs = null;
 
-        // 1️⃣ AOSP standard path
+        // 1️⃣ Standard
         if (sm != null) {
             try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
         }
 
-        // 2️⃣ Xiaomi / HyperOS fallback #1 — reflection (compile-safe)
-if (subs == null || subs.isEmpty()) {
-    try {
-        Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
-        Object result = m.invoke(sm);
-        if (result instanceof List) {
-            subs = (List<SubscriptionInfo>) result;
+        // 2️⃣ Xiaomi reflection path (safe)
+        if ((subs == null || subs.isEmpty()) && sm != null) {
+            try {
+                Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
+                Object result = m.invoke(sm);
+                if (result instanceof List) {
+                    subs = (List<SubscriptionInfo>) result;
+                }
+            } catch (Throwable ignore) {}
         }
-    } catch (Throwable ignore) {}
-}
 
-        // 3️⃣ Xiaomi / HyperOS fallback #2
+        // 3️⃣ SubscriptionManager.from(context)
         if (subs == null || subs.isEmpty()) {
             try {
                 SubscriptionManager alt = SubscriptionManager.from(this);
-                if (alt != null) {
-                    subs = alt.getActiveSubscriptionInfoList();
-                }
+                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
             } catch (Throwable ignore) {}
         }
 
-// 4️⃣ Xiaomi fallback #3 — TelephonyManager per-slot detection
-if (subs == null || subs.isEmpty()) {
-    try {
-        List<SubscriptionInfo> temp = new ArrayList<>();
+        // 4️⃣ Xiaomi SimpleSimEntry fallback — NO SubscriptionInfo constructors
+        List<SimpleSimEntry> simpleList = new ArrayList<>();
 
-        for (int slot = 0; slot < 2; slot++) {
-            int simState = tm.getSimState(slot);
-            if (simState == TelephonyManager.SIM_STATE_READY ||
-                simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
-                simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
-                simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
-
-                // Carrier name fallback (Xiaomi)
-                String name = tm.getSimOperatorName();
-                if (name == null || name.trim().isEmpty())
-                    name = "Unknown";
-
-                // Make a synthetic SubscriptionInfo-like entry
-                // (We only need slot + carrier)
-                SubscriptionInfo fake = null;
-                try {
-                    Constructor<?> c = SubscriptionInfo.class.getDeclaredConstructor();
-                    c.setAccessible(true);
-                    fake = (SubscriptionInfo) c.newInstance();
-                } catch (Throwable ignore) {}
-
-                if (fake != null) {
-                    try { 
-                        Field f = SubscriptionInfo.class.getDeclaredField("mSimSlotIndex");
-                        f.setAccessible(true);
-                        f.set(fake, slot);
-                    } catch (Throwable ignore) {}
-
-                    try {
-                        Field f = SubscriptionInfo.class.getDeclaredField("mCarrierName");
-                        f.setAccessible(true);
-                        f.set(fake, name);
-                    } catch (Throwable ignore) {}
-
-                    temp.add(fake);
-                }
-            }
-        }
-
-        if (!temp.isEmpty())
-            subs = temp;
-
-    } catch (Throwable ignore) {}
-}
-
-        // 4️⃣ Safety
-        if (subs == null) subs = new ArrayList<>();
-
-        int count = 0;
-        boolean[] seen = new boolean[2];
-
-        for (SubscriptionInfo si : subs) {
+        if (subs == null || subs.isEmpty()) {
             try {
-                int slot = si.getSimSlotIndex();
-                if (slot >= 0 && slot <= 1 && !seen[slot]) {
-                    seen[slot] = true;
-                    count++;
+                for (int slot = 0; slot < 2; slot++) {
+                    int simState = tm.getSimState(slot);
+
+                    if (simState == TelephonyManager.SIM_STATE_READY ||
+                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
+                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
+                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
+
+                        String name = null;
+                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
+
+                        if (name == null || name.trim().isEmpty())
+                            name = "Unknown";
+
+                        simpleList.add(new SimpleSimEntry(slot, name));
+                    }
                 }
             } catch (Throwable ignore) {}
+        }
+
+        // Count SIMs
+        int count = 0;
+
+        if (subs != null && !subs.isEmpty()) {
+            boolean[] seen = new boolean[2];
+            for (SubscriptionInfo si : subs) {
+                try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
+                        seen[slot] = true;
+                        count++;
+                    }
+                } catch (Throwable ignore) {}
+            }
+        } else if (!simpleList.isEmpty()) {
+            count = simpleList.size();
         }
 
         String countStr = (count == 0 ? "N/A" : String.valueOf(count));
@@ -2877,43 +2848,32 @@ if (subs == null || subs.isEmpty()) {
         sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Active SIMs"), countStr));
 
-        boolean[] printed = new boolean[2];
+        // Print SLOT details
+        if (subs != null && !subs.isEmpty()) {
 
-        for (SubscriptionInfo si : subs) {
-            int slot = si.getSimSlotIndex();
-            if (slot < 0 || slot > 1 || printed[slot]) continue;
+            boolean[] printed = new boolean[2];
 
-            printed[slot] = true;
-
-            String displayName =
-                    si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("SIM Slot " + (slot + 1)), displayName));
-
-            // eSIM
-            if (Build.VERSION.SDK_INT >= 29) {
+            for (SubscriptionInfo si : subs) {
                 try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot < 0 || slot > 1 || printed[slot]) continue;
+
+                    printed[slot] = true;
+
+                    String displayName =
+                            si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
+
                     sb.append(String.format(locale, "%s : %s\n",
-                            padKeyModem(" • eSIM"),
-                            si.isEmbedded() ? "Yes" : "No"));
+                            padKeyModem("SIM Slot " + (slot + 1)), displayName));
+
                 } catch (Throwable ignore) {}
             }
 
-            // ICCID masked
-            try {
-                String iccid = si.getIccId();
-                if (iccid != null && !iccid.isEmpty()) {
-                    sb.append(String.format(locale, "%s : %s\n",
-                            padKeyModem(" • ICCID"), maskSensitive(iccid)));
-                }
-            } catch (Throwable ignore) {}
-
-            // MCC/MNC
-            try {
-                sb.append(String.format(locale, "%s : %d / %d\n",
-                        padKeyModem(" • MCC / MNC"), si.getMcc(), si.getMnc()));
-            } catch (Throwable ignore) {}
+        } else if (!simpleList.isEmpty()) {
+            for (SimpleSimEntry e : simpleList) {
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
+            }
         }
 
     } catch (Throwable ignore) {}
@@ -2940,26 +2900,32 @@ if (subs == null || subs.isEmpty()) {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // CARRIER AGGREGATION / BANDS
+    // ADVANCED
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("4G+ CA"), "Unknown. Requires root access"));
-
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("NR-CA"), "Unknown. Requires root access"));
-
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("Bands"), "Vendor restricted. Requires root access"));
 
-    // ------------------------------------------------------------
-    // ADVANCED FOOTER — SINGLE LINE
-    // ------------------------------------------------------------
     sb.append(String.format(locale,
             "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
             padKeyModem("Advanced")
     ));
 
     return sb.toString();
+}
+
+// Local class for Xiaomi fallback
+private static class SimpleSimEntry {
+    int slot;
+    String carrier;
+
+    SimpleSimEntry(int s, String c) {
+        slot = s;
+        carrier = c;
+    }
 }
 
 // ============================================================================

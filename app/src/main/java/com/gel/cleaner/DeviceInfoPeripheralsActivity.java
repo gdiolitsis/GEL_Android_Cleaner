@@ -2647,7 +2647,7 @@ private void refreshModemInfo() {
 }
 
 // ============================================================================
-// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final, χωρίς getAvailable...)
+// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION (Final)
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2775,75 +2775,91 @@ private String buildModemInfo() {
     }
 
     // ------------------------------------------------------------
-    // ACTIVE SIMS — FIXED VERSION
+    // ACTIVE SIMS — WITH XIAOMI FALLBACK PACK v3.0
     // ------------------------------------------------------------
     try {
         List<SubscriptionInfo> subs = null;
 
+        // 1️⃣ AOSP standard path
         if (sm != null) {
+            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
+        }
+
+        // 2️⃣ Xiaomi / HyperOS fallback #1
+        if ((subs == null || subs.isEmpty()) && sm != null) {
+            try { subs = sm.getAvailableSubscriptionInfoList(); } catch (Throwable ignore) {}
+        }
+
+        // 3️⃣ Xiaomi / HyperOS fallback #2
+        if (subs == null || subs.isEmpty()) {
             try {
-                subs = sm.getActiveSubscriptionInfoList();
+                SubscriptionManager alt = SubscriptionManager.from(this);
+                if (alt != null) {
+                    subs = alt.getActiveSubscriptionInfoList();
+                }
             } catch (Throwable ignore) {}
         }
+
+        // 4️⃣ Safety
+        if (subs == null) subs = new ArrayList<>();
 
         int count = 0;
         boolean[] seen = new boolean[2];
 
-        if (subs != null) {
-            for (SubscriptionInfo si : subs) {
+        for (SubscriptionInfo si : subs) {
+            try {
                 int slot = si.getSimSlotIndex();
                 if (slot >= 0 && slot <= 1 && !seen[slot]) {
                     seen[slot] = true;
                     count++;
                 }
-            }
+            } catch (Throwable ignore) {}
         }
 
-        // ⭐ FIX: Αν δεν υπάρχει SIM → N/A
         String countStr = (count == 0 ? "N/A" : String.valueOf(count));
 
         sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Active SIMs"), countStr));
 
-        if (subs != null) {
-            boolean[] printed = new boolean[2];
-            for (SubscriptionInfo si : subs) {
-                int slot = si.getSimSlotIndex();
-                if (slot < 0 || slot > 1 || printed[slot]) continue;
+        boolean[] printed = new boolean[2];
 
-                printed[slot] = true;
+        for (SubscriptionInfo si : subs) {
+            int slot = si.getSimSlotIndex();
+            if (slot < 0 || slot > 1 || printed[slot]) continue;
 
-                String displayName =
-                        si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
+            printed[slot] = true;
 
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("SIM Slot " + (slot + 1)), displayName));
+            String displayName =
+                    si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
 
-                // eSIM
-                if (Build.VERSION.SDK_INT >= 29) {
-                    try {
-                        sb.append(String.format(locale, "%s : %s\n",
-                                padKeyModem(" • eSIM"),
-                                si.isEmbedded() ? "Yes" : "No"));
-                    } catch (Throwable ignore) {}
-                }
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("SIM Slot " + (slot + 1)), displayName));
 
-                // ICCID masked
+            // eSIM
+            if (Build.VERSION.SDK_INT >= 29) {
                 try {
-                    String iccid = si.getIccId();
-                    if (iccid != null && !iccid.isEmpty()) {
-                        sb.append(String.format(locale, "%s : %s\n",
-                                padKeyModem(" • ICCID"), maskSensitive(iccid)));
-                    }
-                } catch (Throwable ignore) {}
-
-                // MCC / MNC
-                try {
-                    sb.append(String.format(locale, "%s : %d / %d\n",
-                            padKeyModem(" • MCC / MNC"), si.getMcc(), si.getMnc()));
+                    sb.append(String.format(locale, "%s : %s\n",
+                            padKeyModem(" • eSIM"),
+                            si.isEmbedded() ? "Yes" : "No"));
                 } catch (Throwable ignore) {}
             }
+
+            // ICCID masked
+            try {
+                String iccid = si.getIccId();
+                if (iccid != null && !iccid.isEmpty()) {
+                    sb.append(String.format(locale, "%s : %s\n",
+                            padKeyModem(" • ICCID"), maskSensitive(iccid)));
+                }
+            } catch (Throwable ignore) {}
+
+            // MCC/MNC
+            try {
+                sb.append(String.format(locale, "%s : %d / %d\n",
+                        padKeyModem(" • MCC / MNC"), si.getMcc(), si.getMnc()));
+            } catch (Throwable ignore) {}
         }
+
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------

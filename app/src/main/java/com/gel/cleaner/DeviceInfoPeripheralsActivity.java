@@ -414,9 +414,9 @@ public void onRequestPermissionsResult(int requestCode,
     }
 
     // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
-if (requestCode == 101) {
-    // Ξαναγεμίζει ΟΛΑ τα sections με το ίδιο styling engine
-    populateAllSections();
+    if (requestCode == 101) {
+        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
+    }
 }
 
 
@@ -2639,6 +2639,9 @@ private void refreshModemInfo() {
             String info = buildModemInfo();
             modemView.setText(info);
             modemView.setVisibility(View.VISIBLE);
+
+            // ⭐ FIX: Εφαρμογή NEON χρωματισμού τιμών (όπως όλα τα άλλα sections)
+            applyNeonValues(modemView, info);
         }
     } catch (Throwable ignore) {}
 }
@@ -2772,8 +2775,8 @@ private String buildModemInfo() {
     }
 
     // ------------------------------------------------------------
-    // ACTIVE SIMS — MAX 2, χωρίς getAvailableSubscriptionInfoList()
-// ------------------------------------------------------------
+    // ACTIVE SIMS — FIXED VERSION
+    // ------------------------------------------------------------
     try {
         List<SubscriptionInfo> subs = null;
 
@@ -2796,15 +2799,11 @@ private String buildModemInfo() {
             }
         }
 
-        String activeSimsText;
-if (subs == null || subs.isEmpty()) {
-    activeSimsText = "N/A";
-} else {
-    activeSimsText = String.valueOf(count);
-}
+        // ⭐ FIX: Αν δεν υπάρχει SIM → N/A
+        String countStr = (count == 0 ? "N/A" : String.valueOf(count));
 
-sb.append(String.format(locale, "%s : %s\n",
-        padKeyModem("Active SIMs"), activeSimsText));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Active SIMs"), countStr));
 
         if (subs != null) {
             boolean[] printed = new boolean[2];

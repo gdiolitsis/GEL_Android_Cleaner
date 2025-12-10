@@ -428,7 +428,6 @@ private void setupSection(View header, View content, TextView icon) {
     if (header == null || content == null || icon == null)
         return;
 
-    // Start collapsed
     content.setVisibility(View.GONE);
     icon.setText("＋");
 
@@ -436,7 +435,18 @@ private void setupSection(View header, View content, TextView icon) {
 
         boolean isOpen = (content.getVisibility() == View.VISIBLE);
 
-        // 1️⃣ Κλείσε ΜΟΝΟ τα άλλα normal sections (όχι το Battery)
+        // ------------------------------------------------------------
+        // 1️⃣ SAFELY close Battery module if it is open
+        // ------------------------------------------------------------
+        if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
+            animateCollapse(batteryContainer);
+            if (iconBattery != null) iconBattery.setText("＋");
+            if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
+        }
+
+        // ------------------------------------------------------------
+        // 2️⃣ Close all OTHER normal sections
+        // ------------------------------------------------------------
         for (int i = 1; i < allContents.length; i++) {  // index 0 = BATTERY
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
@@ -444,10 +454,9 @@ private void setupSection(View header, View content, TextView icon) {
             }
         }
 
-        // 2️⃣ Μην αγγίζεις το Battery πια — ΔΙΟΡΘΩΣΗ
-        // Κανένα closeBatteryModule() εδώ.
-
-        // 3️⃣ Toggle του πατημένου section
+        // ------------------------------------------------------------
+        // 3️⃣ Toggle pressed section
+        // ------------------------------------------------------------
         if (isOpen) {
             animateCollapse(content);
             icon.setText("＋");

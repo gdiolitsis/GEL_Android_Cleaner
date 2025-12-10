@@ -2154,12 +2154,45 @@ private static boolean isValidTemp(float c) {
 // MAPPING: thermal zone "type" → λογική ομάδα (REAL hardware only)
 // ---------------------------------------------------------------
 private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
-        {"BatteryMain",   "battery", "batt", "batt_therm", "battery_therm", "fuelgauge", "bms", "bms_therm"},
-        {"BatteryShell",  "skin", "case", "batt_skin", "battery_skin", "rear_case", "shell"},
-        {"PMIC",          "pmic", "pm8998", "pm8150", "pmx", "pmic-therm", "pmic_therm"},
-        {"Charger",       "charger", "chg", "usb", "usb-therm", "bq", "charge-therm"},
-        {"ModemMain",     "modem", "mdm", "mdmss", "xbl_modem", "modempa", "rf-therm", "rf"},
-        {"ModemAux",      "modem1", "rf1", "xbl_modem1", "mdm1", "modem_b"}
+        {
+            "BatteryMain",
+            "battery", "batt", "batt_therm", "battery_therm",
+            "fuelgauge", "bms", "bms_therm"
+        },
+        {
+            "BatteryShell",
+            "skin", "skin-therm", "case", "case-therm",
+            "batt_skin", "battery_skin", "rear_case", "shell",
+            "backlight_therm", "backlight", "camera"
+        },
+        {
+            "PMIC",
+            "pmic", "pm8998", "pm8150", "pmx",
+            "pmic-therm", "pmic_therm",
+            "pm7250", "pm7250b", "pm6450",
+            "bcl", "ibat"
+        },
+        {
+            "Charger",
+            "charger", "chg", "usb", "usb-therm",
+            "usb_conn_therm", "bq", "charge-therm", "charge_pump"
+        },
+        {
+            "ModemMain",
+            "modem", "mdm", "mdmss", "xbl_modem",
+            "modempa", "rf-therm", "rf",
+            "modem-cfg", "sub1-modem-cfg",
+            "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
+            "pa0", "pa1", "pa2"
+        },
+        {
+            "ModemAux",
+            "modem1", "mdm1", "mdm2",
+            "xbl_modem1", "rf1",
+            "mdmss-1", "mdmss-2",
+            "sub1-modem-cfg", "modem_sub",
+            "modem1_pa", "rf_sub"
+        }
 };
 
 // Summary struct
@@ -2448,60 +2481,93 @@ private void applyThermalFallbacks(
     }
 
     if (isXiaomi && !batteryMain.valid) {
-        float c = findTempByTypeKeywords("batt_temp", "bat_therm", "battery-main", "battery_board", "batman");
+        float c = findTempByTypeKeywords(
+                "batt_temp", "bat_therm", "battery-main",
+                "battery_board", "batman"
+        );
         if (!isValidTemp(c)) c = readBatteryTempFallback();
         if (isValidTemp(c)) batteryMain.updateIfBetter("xiaomi:battery", c);
     }
 
     // Battery Shell
     if (!batteryShell.valid) {
-        float c = findTempByTypeKeywords("batt_shell", "battery_shell", "shell_therm", "case-therm", "skin");
+        float c = findTempByTypeKeywords(
+                "batt_shell", "battery_shell", "shell_therm",
+                "case-therm", "skin", "backlight_therm", "backlight"
+        );
+        if (!isValidTemp(c)) c = findTempByTypeKeywords(
+                "rear_case", "back_cover", "batt_surface", "camera"
+        );
         if (isValidTemp(c)) batteryShell.updateIfBetter("fallback:battery_shell", c);
     }
 
     if (isXiaomi && !batteryShell.valid) {
-        float c = findTempByTypeKeywords("batt_skin", "batt_surface", "back_cover", "rear_case");
+        float c = findTempByTypeKeywords(
+                "batt_skin", "batt_surface",
+                "back_cover", "rear_case",
+                "backlight_therm", "camera"
+        );
         if (isValidTemp(c)) batteryShell.updateIfBetter("xiaomi:battery_shell", c);
     }
 
     // PMIC
     if (!pmic.valid) {
-        float c = findTempByTypeKeywords("pmic", "pmic_therm", "pmic-tz", "pm8998", "pm660");
+        float c = findTempByTypeKeywords(
+                "pmic", "pmic_therm", "pmic-tz",
+                "pm8998", "pm660", "pm7250", "pm7250b", "pm6450"
+        );
+        if (!isValidTemp(c)) c = findTempByTypeKeywords("bcl", "ibat");
         if (isValidTemp(c)) pmic.updateIfBetter("fallback:pmic", c);
     }
 
     if (isXiaomi && !pmic.valid) {
-        float c = findTempByTypeKeywords("pm6150l_tz", "pm8350", "pm7250b");
+        float c = findTempByTypeKeywords(
+                "pm6150l_tz", "pm8350", "pm7250b_tz",
+                "pm7250b-ibat", "pm7250b-bcl"
+        );
         if (isValidTemp(c)) pmic.updateIfBetter("xiaomi:pmic", c);
     }
 
     // Charger
     if (!charger.valid) {
         float c = findTempByTypeKeywords("charger", "chg", "usb-therm", "charge-temp");
-        if (!isValidTemp(c)) c = findTempByTypeKeywords("charge_pump", "cp_therm");
+        if (!isValidTemp(c)) c = findTempByTypeKeywords("charge_pump", "cp_therm", "usb_conn_therm");
         if (!isValidTemp(c)) c = readBatteryTempFallback();
         if (isValidTemp(c)) charger.updateIfBetter("fallback:charger", c);
     }
 
     // Modem main
     if (!modemMain.valid) {
-        float c = findTempByTypeKeywords("modem", "mdm", "mdmss", "rf-therm", "modempa");
+        float c = findTempByTypeKeywords(
+                "modem", "mdm", "mdmss", "mdmss-3", "mdmss-2",
+                "rf-therm", "modempa", "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
+                "modem-cfg"
+        );
         if (isValidTemp(c)) modemMain.updateIfBetter("fallback:modem_main", c);
     }
 
     if (isXiaomi && !modemMain.valid) {
-        float c = findTempByTypeKeywords("xo_therm_modem", "modem_pa", "modem_pa_0");
+        float c = findTempByTypeKeywords(
+                "xo_therm_modem", "modem_pa", "modem_pa_0",
+                "mdmss-3", "mdmss-2", "mdmss-1", "pa0", "pa1", "pa2"
+        );
         if (isValidTemp(c)) modemMain.updateIfBetter("xiaomi:modem_main", c);
     }
 
     // Modem aux
     if (!modemAux.valid) {
-        float c = findTempByTypeKeywords("modem1", "mdm2", "xbl_modem1", "rf1");
+        float c = findTempByTypeKeywords(
+                "modem1", "mdm2", "xbl_modem1", "rf1",
+                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
+        );
         if (isValidTemp(c)) modemAux.updateIfBetter("fallback:modem_aux", c);
     }
 
     if (isXiaomi && !modemAux.valid) {
-        float c = findTempByTypeKeywords("modem_sub", "modem1_pa", "rf_sub");
+        float c = findTempByTypeKeywords(
+                "modem_sub", "modem1_pa", "rf_sub",
+                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
+        );
         if (isValidTemp(c)) modemAux.updateIfBetter("xiaomi:modem_aux", c);
     }
 }

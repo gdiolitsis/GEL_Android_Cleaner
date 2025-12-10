@@ -3775,8 +3775,6 @@ private String gelPostProcess(String input) {
         String trimmed = line.trim();
         if (!trimmed.isEmpty()) {
 
-            // Φτιάχνουμε offset για να πάνε ΟΛΑ τα continuation
-            // κάτω από την αρχή της πράσινης τιμής.
             StringBuilder pad = new StringBuilder();
             for (int i = 0; i < VALUE_COLUMN; i++) pad.append(' ');
 
@@ -3787,72 +3785,6 @@ private String gelPostProcess(String input) {
     }
 
     return out.toString().trim();
-}
-
-    // 2) Χτίσε output με τέλεια στοίχιση
-    StringBuilder out = new StringBuilder();
-    int lastValueCol = valueColumn;
-
-    for (int i = 0; i < lines.length; i++) {
-        String line = lines[i];
-
-        int colonIdx = line.indexOf(':');
-
-        if (colonIdx >= 0) {
-            // Label line
-            int v = colonIdx + 1;
-            while (v < line.length() && line.charAt(v) == ' ')
-                v++;
-
-            lastValueCol = v;
-
-            // Αν το value δεν ξεκινά στη σωστή στήλη → ευθυγράμμιση
-            if (v != valueColumn) {
-                String label = line.substring(0, colonIdx + 1); // "Battery :"
-                String value = line.substring(v).trim();        // "4200 mAh"
-
-                // Υπολόγισε spacing
-                int diff = valueColumn - (colonIdx + 1);
-                if (diff < 1) diff = 1;
-
-                String fixed = label
-                        + String.format("%" + diff + "s", "")
-                        + value;
-
-                out.append(fixed);
-            } else {
-                out.append(line);
-            }
-
-        } else {
-            // Continuation line → στοιχίζεται κάτω από τη στήλη των τιμών
-            String trimmed = line.trim();
-
-            if (trimmed.isEmpty()) {
-                out.append(line); // Τίποτα να κάνουμε
-            } else {
-                // Αν δεν υπάρχει bullet, το στοιχίζουμε δεξιά
-                char c0 = trimmed.charAt(0);
-                if (c0 == '•' || c0 == '-' || c0 == '*') {
-                    // bullets μένουν αριστερά – δεν τα πειράζουμε
-                    out.append(line);
-                } else {
-                    // continuation alignment
-                    StringBuilder sb = new StringBuilder();
-                    for (int s = 0; s < valueColumn; s++)
-                        sb.append(' ');
-
-                    sb.append(trimmed);
-                    out.append(sb.toString());
-                }
-            }
-        }
-
-        if (i < lines.length - 1)
-            out.append('\n');
-    }
-
-    return out.toString();
 }
 
 // 🔥 END OF CLASS

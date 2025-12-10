@@ -3749,32 +3749,45 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR v5 — PREMIUM LABEL/CONTENT ALIGNMENT
+// GEL POST PROCESSOR v5 — FINAL PREMIUM OEM WRAP SYSTEM
 // ============================================================================
 private String gelPostProcess(String input) {
     if (input == null) return "";
 
-    // Normalize newlines
-    String cleaned = input.replace("\r", "");
+    // Normalize
+    input = input.replace("\r", "");
 
-    String[] lines = cleaned.split("\n", -1);
-    if (lines.length <= 1) return cleaned;
+    String[] lines = input.split("\n");
+    StringBuilder out = new StringBuilder();
 
-    // 1) Βρες το μεγαλύτερο σημείο μετά τις ":" (την αρχή των τιμών)
-    int valueColumn = 0;
+    final int VALUE_COLUMN = 24; // <-- η κάθετη στήλη που ξεκινά η τιμή
 
     for (String line : lines) {
+
+        // Αν η γραμμή έχει label + ":" → τη βάζουμε όπως είναι
         int idx = line.indexOf(':');
         if (idx >= 0) {
-            // Βρες την πρώτη μη–space θέση μετά την ":"
-            int v = idx + 1;
-            while (v < line.length() && line.charAt(v) == ' ')
-                v++;
+            out.append(line).append("\n");
+            continue;
+        }
 
-            if (v > valueColumn)
-                valueColumn = v;
+        // Αν είναι continuation line → την στοιχίζουμε στη VALUE_COLUMN
+        String trimmed = line.trim();
+        if (!trimmed.isEmpty()) {
+
+            // Φτιάχνουμε offset για να πάνε ΟΛΑ τα continuation
+            // κάτω από την αρχή της πράσινης τιμής.
+            StringBuilder pad = new StringBuilder();
+            for (int i = 0; i < VALUE_COLUMN; i++) pad.append(' ');
+
+            out.append(pad).append(trimmed).append("\n");
+        } else {
+            out.append("\n");
         }
     }
+
+    return out.toString().trim();
+}
 
     // 2) Χτίσε output με τέλεια στοίχιση
     StringBuilder out = new StringBuilder();

@@ -2349,7 +2349,7 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
 
     // --- Αν δεν βρέθηκαν πραγματικά hardware cooling devices ---
     if (shown == 0) {
-        sb.append("no hardware cooling devices found.  This device uses passive cooling only  ")
+        sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
     }
 }
 

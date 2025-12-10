@@ -3749,103 +3749,97 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR v5 — WRAP + ALIGN AFTER VALUE COLUMN
+// GEL POST PROCESSOR v5 — PREMIUM LABEL/CONTENT ALIGNMENT
 // ============================================================================
-private static final int VALUE_WRAP_WIDTH = 40;  // περίπου πόσα γράμματα ανά γραμμή τιμής
-
 private String gelPostProcess(String input) {
     if (input == null) return "";
 
-    // Basic καθάρισμα CR
+    // Normalize newlines
     String cleaned = input.replace("\r", "");
-    String[] lines = cleaned.split("\n", -1);
 
-    if (lines.length <= 1) {
-        return cleaned;
+    String[] lines = cleaned.split("\n", -1);
+    if (lines.length <= 1) return cleaned;
+
+    // 1) Βρες το μεγαλύτερο σημείο μετά τις ":" (την αρχή των τιμών)
+    int valueColumn = 0;
+
+    for (String line : lines) {
+        int idx = line.indexOf(':');
+        if (idx >= 0) {
+            // Βρες την πρώτη μη–space θέση μετά την ":"
+            int v = idx + 1;
+            while (v < line.length() && line.charAt(v) == ' ')
+                v++;
+
+            if (v > valueColumn)
+                valueColumn = v;
+        }
     }
 
-    StringBuilder result = new StringBuilder();
+    // 2) Χτίσε output με τέλεια στοίχιση
+    StringBuilder out = new StringBuilder();
+    int lastValueCol = valueColumn;
 
     for (int i = 0; i < lines.length; i++) {
         String line = lines[i];
-        if (line == null) line = "";
 
-        // Βρίσκουμε αν η γραμμή είναι "Label  :  Value"
         int colonIdx = line.indexOf(':');
-        if (colonIdx > 0) {
-            // Έλεγξε ότι υπάρχει πραγματικό label πριν τα ':'
-            boolean onlySpaces = true;
-            for (int k = 0; k < colonIdx; k++) {
-                if (line.charAt(k) != ' ') {
-                    onlySpaces = false;
-                    break;
-                }
+
+        if (colonIdx >= 0) {
+            // Label line
+            int v = colonIdx + 1;
+            while (v < line.length() && line.charAt(v) == ' ')
+                v++;
+
+            lastValueCol = v;
+
+            // Αν το value δεν ξεκινά στη σωστή στήλη → ευθυγράμμιση
+            if (v != valueColumn) {
+                String label = line.substring(0, colonIdx + 1); // "Battery :"
+                String value = line.substring(v).trim();        // "4200 mAh"
+
+                // Υπολόγισε spacing
+                int diff = valueColumn - (colonIdx + 1);
+                if (diff < 1) diff = 1;
+
+                String fixed = label
+                        + String.format("%" + diff + "s", "")
+                        + value;
+
+                out.append(fixed);
+            } else {
+                out.append(line);
             }
 
-            if (!onlySpaces) {
-                // Στήλη όπου ξεκινά η ΤΙΜΗ
-                int valueStart = colonIdx + 1;
-                while (valueStart < line.length() && line.charAt(valueStart) == ' ') {
-                    valueStart++;
-                }
+        } else {
+            // Continuation line → στοιχίζεται κάτω από τη στήλη των τιμών
+            String trimmed = line.trim();
 
-                String prefix      = line.substring(0, valueStart);   // "Advanced           : "
-                String value       = line.substring(valueStart).trim();
-                int   maxWidth     = VALUE_WRAP_WIDTH;
-
-                if (value.isEmpty()) {
-                    // Αν δεν έχει value, άστην όπως είναι
-                    appendLine(result, line, i < lines.length - 1);
-                    continue;
-                }
-
-                // Κόψε την τιμή σε κομμάτια με word-wrap
-                boolean firstChunk = true;
-                while (value.length() > maxWidth) {
-                    int breakPos = value.lastIndexOf(' ', maxWidth);
-                    if (breakPos <= 0) {
-                        break; // δεν βρέθηκε ασφαλές space, μην σπάσεις περίεργα
-                    }
-                    String chunk = value.substring(0, breakPos).trim();
-
-                    if (firstChunk) {
-                        appendLine(result, prefix + chunk, true);
-                        firstChunk = false;
-                    } else {
-                        appendLine(result, makeSpaces(valueStart) + chunk, true);
-                    }
-
-                    value = value.substring(breakPos).trim();
-                }
-
-                // Τελευταίο κομμάτι
-                if (firstChunk) {
-                    appendLine(result, prefix + value, i < lines.length - 1);
+            if (trimmed.isEmpty()) {
+                out.append(line); // Τίποτα να κάνουμε
+            } else {
+                // Αν δεν υπάρχει bullet, το στοιχίζουμε δεξιά
+                char c0 = trimmed.charAt(0);
+                if (c0 == '•' || c0 == '-' || c0 == '*') {
+                    // bullets μένουν αριστερά – δεν τα πειράζουμε
+                    out.append(line);
                 } else {
-                    appendLine(result, makeSpaces(valueStart) + value, i < lines.length - 1);
-                }
+                    // continuation alignment
+                    StringBuilder sb = new StringBuilder();
+                    for (int s = 0; s < valueColumn; s++)
+                        sb.append(' ');
 
-                continue; // πήγαμε ήδη στο result, πάμε στην επόμενη γραμμή
+                    sb.append(trimmed);
+                    out.append(sb.toString());
+                }
             }
         }
 
-        // Γραμμές χωρίς "Label : Value" (bullets, headers κλπ) → όπως είναι
-        appendLine(result, line, i < lines.length - 1);
+        if (i < lines.length - 1)
+            out.append('\n');
     }
 
-    return result.toString();
-}
-
-private void appendLine(StringBuilder sb, String line, boolean addNewline) {
-    sb.append(line);
-    if (addNewline) sb.append('\n');
-}
-
-private String makeSpaces(int count) {
-    if (count <= 0) return "";
-    char[] arr = new char[count];
-    for (int i = 0; i < count; i++) arr[i] = ' ';
-    return new String(arr);
+    return out.toString();
 }
 
 // 🔥 END OF CLASS

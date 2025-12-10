@@ -2594,11 +2594,23 @@ private String buildThermalInfo() {
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
 
     // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
-    if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
-        sb.append(String.format(Locale.US, "%-17s: %d\n", "Thermal Zones", summary.zoneCount));
-        sb.append(String.format(Locale.US, "%-17s: %d\n", "Cooling Devices", summary.coolingDeviceCount));
-        sb.append("\n");
+if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
+
+    sb.append(String.format(Locale.US, "%-17s: %d\n",
+            "Thermal Zones", summary.zoneCount));
+
+    if (summary.coolingDeviceCount == 0) {
+        sb.append(String.format(Locale.US,
+                "%-17s: 0 (This device uses passive cooling only)\n",
+                "Cooling Devices"));
+    } else {
+        sb.append(String.format(Locale.US,
+                "%-17s: %d\n",
+                "Cooling Devices", summary.coolingDeviceCount));
     }
+
+    sb.append("\n");
+}
 
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n\n");

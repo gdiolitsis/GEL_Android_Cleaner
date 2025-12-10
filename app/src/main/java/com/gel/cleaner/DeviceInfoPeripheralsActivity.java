@@ -3749,22 +3749,75 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR v3 — SAFE + SIMPLE + COMPILER-PROOF
+// GEL POST PROCESSOR v4 — ALIGN CONTINUATION LINES AFTER VALUE COLUMN
 // ============================================================================
 private String gelPostProcess(String input) {
     if (input == null) return "";
 
-    String out = input;
+    // Normalize line endings
+    String cleaned = input.replace("\r", "");
 
-    try {
-        out = out.replace("\r", "");
-        out = out.replace("\n\n", "\n");
-        out = out.replace("\t", " ");
-        out = out.replaceAll(" {3,}", " ");
-        out = out.replaceAll("\\n +", "\n  ");
-    } catch (Throwable ignore) {}
+    String[] lines = cleaned.split("\n", -1);
+    if (lines.length <= 1) {
+        return cleaned;
+    }
 
-    return out;
+    String[] outLines = new String[lines.length];
+    int lastValueCol = -1;
+
+    for (int i = 0; i < lines.length; i++) {
+        String line = lines[i];
+        String trimmed = line.trim();
+
+        // Detect label line with colon
+        int colonIdx = line.indexOf(':');
+        if (colonIdx >= 0) {
+            // Compute value column = first non-space after colon
+            int valueCol = colonIdx + 1;
+            while (valueCol < line.length() && line.charAt(valueCol) == ' ') {
+                valueCol++;
+            }
+            lastValueCol = valueCol;
+            outLines[i] = line;
+            continue;
+        }
+
+        // Continuation line logic: indent using lastValueCol
+        if (lastValueCol > 0 && !trimmed.isEmpty()) {
+            // Skip bullets / list markers
+            char c0 = trimmed.charAt(0);
+            if (c0 == '•' || c0 == '-' || c0 == '*') {
+                outLines[i] = line;
+                continue;
+            }
+
+            // If this line itself has a colon before the value column,
+            // treat it as new label, not continuation
+            int ownColon = line.indexOf(':');
+            if (ownColon >= 0 && ownColon < lastValueCol) {
+                outLines[i] = line;
+                continue;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int s = 0; s < lastValueCol; s++) {
+                sb.append(' ');
+            }
+            sb.append(trimmed);
+            outLines[i] = sb.toString();
+        } else {
+            outLines[i] = line;
+        }
+    }
+
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < outLines.length; i++) {
+        result.append(outLines[i]);
+        if (i < outLines.length - 1) {
+            result.append('\n');
+        }
+    }
+    return result.toString();
 }
 
 // 🔥 END OF CLASS

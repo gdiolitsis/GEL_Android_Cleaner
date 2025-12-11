@@ -19,7 +19,6 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.StyleSpan;
-import android.text.style.LeadingMarginSpan;
 import android.graphics.Typeface;
 import android.text.method.LinkMovementMethod;
 
@@ -84,6 +83,7 @@ import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.InputType;
 import android.text.Spanned;
+import android.text.style.LeadingMarginSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -243,7 +243,14 @@ protected void onCreate(Bundle savedInstanceState) {
     txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);
     txtLocationContent        = findViewById(R.id.txtLocationContent);
     txtThermalContent         = findViewById(R.id.txtThermalContent);
-    txtModemContent           = findViewById(R.id.txtModemContent);
+
+    // MODEM (NEW 2-COLUMN LAYOUT)
+    modemContainer     = findViewById(R.id.modemContainer);
+    modemPhoneType     = findViewById(R.id.modemPhoneType);
+    modemDataNetwork   = findViewById(R.id.modemDataNetwork);
+    modemAdvanced      = findViewById(R.id.modemAdvanced);
+    iconModem          = findViewById(R.id.iconModemToggle);
+
     txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
     txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
     txtSensorsContent         = findViewById(R.id.txtSensorsContent);
@@ -264,7 +271,6 @@ protected void onCreate(Bundle savedInstanceState) {
     iconConnectivity    = findViewById(R.id.iconConnectivityToggle);
     iconLocation        = findViewById(R.id.iconLocationToggle);
     iconThermal         = findViewById(R.id.iconThermalToggle);
-    iconModem           = findViewById(R.id.iconModemToggle);
     iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
     iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
     iconSensors         = findViewById(R.id.iconSensorsToggle);
@@ -290,7 +296,10 @@ protected void onCreate(Bundle savedInstanceState) {
             txtConnectivityContent,
             txtLocationContent,
             txtThermalContent,
-            txtModemContent,
+
+            // MODEM SINGLE BLOCK REMOVED
+            // txtModemContent,
+
             txtWifiAdvancedContent,
             txtAudioUnifiedContent,
             txtSensorsContent,
@@ -314,7 +323,9 @@ protected void onCreate(Bundle savedInstanceState) {
             iconConnectivity,
             iconLocation,
             iconThermal,
-            iconModem,
+
+            // iconModem REMOVED FROM NORMAL LIST
+
             iconWifiAdvanced,
             iconAudioUnified,
             iconSensors,
@@ -337,17 +348,17 @@ protected void onCreate(Bundle savedInstanceState) {
     populateAllSections();
 
     // ------------------------------------------------------------
-    // 5️⃣  AFTER UI IS READY → NOW ask permissions (FIX)
+    // 5️⃣  PERMISSIONS
     // ------------------------------------------------------------
-    requestAllRuntimePermissions();  // GEL Universal
+    requestAllRuntimePermissions();
     requestPermissions(new String[]{
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_SMS,
             Manifest.permission.READ_PHONE_NUMBERS
-    }, 101);  // Telephony extras
+    }, 101);
 
     // ------------------------------------------------------------
-    // 6️⃣ INIT BATTERY MODULE
+    // 6️⃣ BATTERY MODULE
     // ------------------------------------------------------------
     initBatterySection();
     batteryContainer.setVisibility(View.GONE);
@@ -381,7 +392,30 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
     setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-    setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
+
+    // ------------------------------------------------------------
+    // ⭐ 8️⃣ MODEM — CUSTOM TOGGLE (NEW 2-COLUMN SYSTEM)
+    // ------------------------------------------------------------
+    LinearLayout headerModem = findViewById(R.id.headerModem);
+    headerModem.setOnClickListener(v -> {
+
+        boolean isOpen = (modemContainer.getVisibility() == View.VISIBLE);
+
+        collapseAllExcept(headerModem);
+
+        if (!isOpen) {
+            refreshModemInfoUI();      // ← ← ← ΜΟΝΟ ΑΥΤΟ ΕΛΕΙΠΕ
+            animateExpand(modemContainer);
+            iconModem.setText("－");
+        } else {
+            animateCollapse(modemContainer);
+            iconModem.setText("＋");
+        }
+    });
+
+    // ------------------------------------------------------------
+    // 9️⃣ CONTINUE NORMAL SECTIONS
+    // ------------------------------------------------------------
     setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
     setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
     setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
@@ -398,7 +432,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
 }
 
-// 🔥 END onCreate()
+// 🔥 END ON CREATE
 
 // ============================================================
 //  PERMISSION CALLBACK — FINAL CLEAN VERSION
@@ -3033,7 +3067,83 @@ private String buildModemInfo() {
 
 return sb.toString();
 }
-    
+
+// ===================================================================
+// MODEM — PARSER για το υπάρχον buildModemInfo()
+// ===================================================================
+private String[] getModemInfoArray() {
+
+    String full = buildModemInfo();
+
+    String phoneType   = "N/A";
+    String dataNetwork = "N/A";
+    String advanced    = "N/A";
+
+    if (full == null || full.isEmpty())
+        return new String[]{ phoneType, dataNetwork, advanced };
+
+    String[] lines = full.split("\n");
+
+    StringBuilder advBuilder = new StringBuilder();
+    boolean advMode = false;
+
+    for (String line : lines) {
+
+        String clean = line.trim();
+
+        if (clean.startsWith("Phone Type")) {
+            int idx = clean.indexOf(':');
+            if (idx != -1)
+                phoneType = clean.substring(idx + 1).trim();
+        }
+
+        else if (clean.startsWith("Data Network")) {
+            int idx = clean.indexOf(':');
+            if (idx != -1)
+                dataNetwork = clean.substring(idx + 1).trim();
+        }
+
+        else if (clean.startsWith("Advanced")) {
+            advMode = true;
+            int idx = clean.indexOf(':');
+            if (idx != -1)
+                advBuilder.append(clean.substring(idx + 1).trim());
+        }
+
+        else if (advMode) {
+            if (!clean.isEmpty())
+                advBuilder.append("\n").append(clean);
+        }
+    }
+
+    if (advBuilder.length() > 0)
+        advanced = advBuilder.toString();
+
+    return new String[]{ phoneType, dataNetwork, advanced };
+}
+
+// ===================================================================
+// MODEM — UI REFRESH FOR 2-COLUMN LAYOUT
+// ===================================================================
+private void refreshModemInfoUI() {
+    try {
+        String[] info = getModemInfoArray();  
+        // info[0] = Phone Type
+        // info[1] = Data Network
+        // info[2] = Advanced multiline block
+
+        if (modemPhoneType != null)
+            modemPhoneType.setText(info[0]);
+
+        if (modemDataNetwork != null)
+            modemDataNetwork.setText(info[1]);
+
+        if (modemAdvanced != null)
+            modemAdvanced.setText(info[2]);
+
+    } catch (Throwable ignore) {}
+}
+
 // ============================================================================
 // 4. Wi-Fi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
 // ============================================================================
@@ -3462,7 +3572,19 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
     set(R.id.txtOtherPeripheralsContent, oth);
     applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);
 }
+// ===================================================================
+// MODEM — UI SYNC (NEW LAYOUT)
+// ===================================================================
+private void refreshModemInfoUI() {
+    try {
+        String[] info = getModemInfoArray();
 
+        modemPhoneType.setText(info[0]);
+        modemDataNetwork.setText(info[1]);
+        modemAdvanced.setText(info[2]);
+
+    } catch (Throwable ignore) {}
+}
 
 // ============================================================
 // GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)
@@ -3774,6 +3896,3 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
-
-
-

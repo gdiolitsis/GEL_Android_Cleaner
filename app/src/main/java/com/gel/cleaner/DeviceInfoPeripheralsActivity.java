@@ -2136,13 +2136,11 @@ private String buildRootInfo() {
 
 // Helper struct για να κρατάμε μια "καλύτερη" θερμοκρασία ανά ομάδα
 private static class ThermalGroupReading {
-    String rawName;   // π.χ. "battery_therm"
-    float  tempC;     // σε βαθμούς C
+    String rawName;
+    float  tempC;
     boolean valid;
 
-    ThermalGroupReading() {
-        this.valid = false;
-    }
+    ThermalGroupReading() { this.valid = false; }
 
     void updateIfBetter(String name, float valueC) {
         if (!isValidTemp(valueC)) return;
@@ -2154,60 +2152,25 @@ private static class ThermalGroupReading {
     }
 }
 
-// Safety check για θερμοκρασίες
 private static boolean isValidTemp(float c) {
     return (c > -50f && c < 200f);
 }
 
 // ---------------------------------------------------------------
-// MAPPING: thermal zone "type" → λογική ομάδα (REAL hardware only)
+// MAPPING: thermal zone → λογική hardware ομάδα
 // ---------------------------------------------------------------
 private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
-        {
-            "BatteryMain",
-            "battery", "batt", "batt_therm", "battery_therm",
-            "fuelgauge", "bms", "bms_therm"
-        },
-        {
-            "BatteryShell",
-            "skin", "skin-therm", "case", "case-therm",
-            "batt_skin", "battery_skin", "rear_case", "shell",
-            "backlight_therm", "backlight", "camera"
-        },
-        {
-            "PMIC",
-            "pmic", "pm8998", "pm8150", "pmx",
-            "pmic-therm", "pmic_therm",
-            "pm7250", "pm7250b", "pm6450",
-            "bcl", "ibat"
-        },
-        {
-            "Charger",
-            "charger", "chg", "usb", "usb-therm",
-            "usb_conn_therm", "bq", "charge-therm", "charge_pump"
-        },
-        {
-            "ModemMain",
-            "modem", "mdm", "mdmss", "xbl_modem",
-            "modempa", "rf-therm", "rf",
-            "modem-cfg", "sub1-modem-cfg",
-            "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
-            "pa0", "pa1", "pa2"
-        },
-        {
-            "ModemAux",
-            "modem1", "mdm1", "mdm2",
-            "xbl_modem1", "rf1",
-            "mdmss-1", "mdmss-2",
-            "sub1-modem-cfg", "modem_sub",
-            "modem1_pa", "rf_sub"
-        }
+        { "BatteryMain",  "battery", "batt", "batt_therm", "battery_therm", "fuelgauge", "bms", "bms_therm" },
+        { "BatteryShell", "skin", "skin-therm", "case", "case-therm", "batt_skin", "battery_skin", "rear_case", "shell", "backlight_therm", "backlight", "camera" },
+        { "PMIC",         "pmic", "pm8998", "pm8150", "pmx", "pmic-therm", "pmic_therm", "pm7250", "pm7250b", "pm6450", "bcl", "ibat" },
+        { "Charger",      "charger", "chg", "usb", "usb-therm", "usb_conn_therm", "bq", "charge-therm", "charge_pump" },
+        { "ModemMain",    "modem", "mdm", "mdmss", "xbl_modem", "modempa", "rf-therm", "rf", "modem-cfg", "sub1-modem-cfg", "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm", "pa0", "pa1", "pa2" },
+        { "ModemAux",     "modem1", "mdm1", "mdm2", "xbl_modem1", "rf1", "mdmss-1", "mdmss-2", "sub1-modem-cfg", "modem_sub", "modem1_pa", "rf_sub" }
 };
 
-// Summary struct
 private static class ThermalSummary {
-    int zoneCount;          // μόνο REAL hardware zones
-    int coolingDeviceCount; // μόνο REAL hardware cooling devices
+    int zoneCount;
+    int coolingDeviceCount;
 }
 
 // ---------------------------------------------------------------
@@ -2228,37 +2191,27 @@ private ThermalSummary scanThermalHardware(
     File[] cools = null;
 
     try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
+        if (thermalDir.exists()) {
             zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
             cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
         }
-    } catch (Throwable ignore) { }
+    } catch (Throwable ignore) {}
 
-    summary.zoneCount          = 0;
+    summary.zoneCount = 0;
     summary.coolingDeviceCount = 0;
 
-    // REAL hardware thermal zones
     if (zones != null) {
         for (File z : zones) {
             try {
-                String base  = z.getAbsolutePath();
-                String type  = readFirstLineSafe(new File(base, "type"));
-                long   milli = readLongSafe(new File(base, "temp"));
-                float  c     = Float.NaN;
-
-                if (milli == Long.MIN_VALUE) {
-                    try {
-                        c = Float.parseFloat(readFirstLineSafe(new File(base, "temp")));
-                    } catch (Throwable ignore) {}
-                } else {
-                    c = milli / 1000f;
-                }
+                String type = readFirstLineSafe(new File(z, "type"));
+                long   m    = readLongSafe(new File(z, "temp"));
+                float  c    = (m == Long.MIN_VALUE ? parseTempFile(new File(z, "temp")) : m / 1000f);
 
                 if (!isValidTemp(c)) continue;
+
                 String group = mapTypeToGroup(type);
                 if (group == null) continue;
 
-                // μετράμε μόνο ζώνες που τελικά ανήκουν σε hardware group
                 summary.zoneCount++;
 
                 switch (group) {
@@ -2270,18 +2223,15 @@ private ThermalSummary scanThermalHardware(
                     case "ModemAux":     modemAux.updateIfBetter(type, c); break;
                 }
 
-            } catch (Throwable ignore) { }
+            } catch (Throwable ignore) {}
         }
     }
 
-    // REAL hardware cooling devices (fan / blower / pump / heatsink)
     if (cools != null) {
         for (File c : cools) {
             try {
-                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
-                if (isHardwareCoolingDevice(type)) {
-                    summary.coolingDeviceCount++;
-                }
+                String type = readFirstLineSafe(new File(c, "type"));
+                if (isHardwareCoolingDevice(type)) summary.coolingDeviceCount++;
             } catch (Throwable ignore) {}
         }
     }
@@ -2289,65 +2239,58 @@ private ThermalSummary scanThermalHardware(
     return summary;
 }
 
-private String mapTypeToGroup(String rawType) {
-    if (rawType == null) return null;
-    String t = rawType.toLowerCase(Locale.US);
+private float parseTempFile(File f) {
+    try {
+        return Float.parseFloat(readFirstLineSafe(f));
+    } catch (Throwable ignore) {
+        return Float.NaN;
+    }
+}
 
-    for (String[] entry : THERMAL_GROUP_PATTERNS) {
-        String label = entry[0];
-        for (int i = 1; i < entry.length; i++) {
-            if (t.contains(entry[i])) return label;
+private String mapTypeToGroup(String raw) {
+    if (raw == null) return null;
+    String t = raw.toLowerCase(Locale.US);
+
+    for (String[] g : THERMAL_GROUP_PATTERNS) {
+        for (int i = 1; i < g.length; i++) {
+            if (t.contains(g[i])) return g[0];
         }
     }
     return null;
 }
 
-// ---------------------------------------------------------------
-// Cooling device filter (REAL hardware only)
-// ---------------------------------------------------------------
-private boolean isHardwareCoolingDevice(String rawType) {
-    if (rawType == null) return false;
-    String t = rawType.toLowerCase(Locale.US);
+private boolean isHardwareCoolingDevice(String t) {
+    if (t == null) return false;
+    t = t.toLowerCase(Locale.US);
 
-    if (t.contains("fan"))            return true;
-    if (t.contains("cooling_fan"))    return true;
-    if (t.contains("blower"))         return true;
-    if (t.contains("pump"))           return true;
-    if (t.contains("heatsink"))       return true;
-    if (t.contains("radiator"))       return true;
-    if (t.contains("cooling_module")) return true;
+    if (t.contains("fan")) return true;
+    if (t.contains("blower")) return true;
+    if (t.contains("pump")) return true;
+    if (t.contains("heatsink")) return true;
+    if (t.contains("radiator")) return true;
 
-    if (t.contains("skin"))    return false;
-    if (t.contains("hotspot")) return false;
+    // NO virtuals
+    if (t.contains("skin")) return false;
     if (t.contains("virtual")) return false;
 
     return false;
 }
 
 private void appendHardwareCoolingDevices(StringBuilder sb) {
-    File thermalDir = new File("/sys/class/thermal");
-    File[] cools = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        }
-    } catch (Throwable ignore) {}
+    File[] cools = new File("/sys/class/thermal")
+            .listFiles(f -> f.getName().startsWith("cooling_device"));
 
     int shown = 0;
 
     if (cools != null) {
         for (File c : cools) {
             if (shown >= 5) break;
-
             try {
-                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
+                String type = readFirstLineSafe(new File(c, "type"));
                 if (!isHardwareCoolingDevice(type)) continue;
 
-                sb.append("• ")
-                  .append(c.getName())
-                  .append(" → ")
-                  .append(type)
+                sb.append("• ").append(c.getName())
+                  .append(" → ").append(type)
                   .append("\n");
 
                 shown++;
@@ -2356,240 +2299,59 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         }
     }
 
-    // --- Αν δεν βρέθηκαν πραγματικά hardware cooling devices ---
-    if (shown == 0) {
+    if (shown == 0)
         sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
-    }
 }
 
-// ---------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------
-private String readFirstLineSafe(File file) {
-    if (file == null || !file.exists()) return gelPostProcess("");
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        String line = br.readLine();
-        return (line != null) ? line.trim() : "";
+private String readFirstLineSafe(File f) {
+    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        String s = br.readLine();
+        return (s != null ? s.trim() : "");
     } catch (Throwable ignore) {
-        return gelPostProcess("");
+        return "";
     }
 }
 
-private long readLongSafe(File file) {
-    if (file == null || !file.exists()) return Long.MIN_VALUE;
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        String line = br.readLine();
-        if (line == null || line.trim().isEmpty()) return Long.MIN_VALUE;
-        return Long.parseLong(line.trim());
+private long readLongSafe(File f) {
+    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        String s = br.readLine();
+        if (s == null || s.trim().isEmpty()) return Long.MIN_VALUE;
+        return Long.parseLong(s.trim());
     } catch (Throwable ignore) {
         return Long.MIN_VALUE;
     }
 }
 
 // ---------------------------------------------------------------
-// Labels & formatting
+// Clean status — SINGLE LINE, NO NEWLINE, NO GEL WRAP
 // ---------------------------------------------------------------
 private String classifyTempLabel(float c) {
-    if (!isValidTemp(c)) return gelPostProcess("(Unknown)");
-    if (c < 30f)  return gelPostProcess("(Cool)");
-    if (c < 40f)  return gelPostProcess("(Normal)");
-    if (c < 50f)  return gelPostProcess("(Warm)");
-    return gelPostProcess("(⚠ Critical)");
+    if (!isValidTemp(c)) return "(Unknown)";
+    if (c < 30f)  return "(Cool)";
+    if (c < 40f)  return "(Normal)";
+    if (c < 50f)  return "(Warm)";
+    return "(⚠ Critical)";
 }
 
+// ---------------------------------------------------------------
+// PERFECTLY ALIGNED SINGLE-LINE THERMAL ENTRY
+// ---------------------------------------------------------------
 private String formatThermalLine(String label, ThermalGroupReading r) {
     if (r == null || !r.valid)
-        return gelPostProcess(String.format(Locale.US, "%-17s: N/A\n", label));
+        return String.format(Locale.US, "%-20s: N/A\n", label);
 
-    return gelPostProcess(String.format(Locale.US, "%-17s: %.1f°C %s\n",
-            label, r.tempC, classifyTempLabel(r.tempC)));
-}
+    String status = classifyTempLabel(r.tempC);
 
-// ---------------------------------------------------------------
-// Xiaomi / POCO / Redmi Detection + Fallbacks
-// ---------------------------------------------------------------
-private boolean isXiaomiFamilyDevice() {
-    String manu   = (Build.MANUFACTURER == null ? "" : Build.MANUFACTURER).toLowerCase();
-    String brand  = (Build.BRAND == null ? "" : Build.BRAND).toLowerCase();
-    String finger = (Build.FINGERPRINT == null ? "" : Build.FINGERPRINT).toLowerCase();
-
-    return manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")
-            || brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
-            || finger.contains("xiaomi") || finger.contains("redmi") || finger.contains("poco")
-            || finger.contains("hyperos");
-}
-
-private float findTempByTypeKeywords(String... keywords) {
-    if (keywords == null || keywords.length == 0) return Float.NaN;
-
-    File[] zones = new File("/sys/class/thermal")
-            .listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-    if (zones == null) return Float.NaN;
-
-    float best = Float.NaN;
-
-    for (File z : zones) {
-        try {
-            String type = readFirstLineSafe(new File(z, "type")).toLowerCase(Locale.US);
-            boolean match = false;
-            for (String k : keywords) {
-                if (type.contains(k.toLowerCase(Locale.US))) { match = true; break; }
-            }
-            if (!match) continue;
-
-            long milli = readLongSafe(new File(z, "temp"));
-            float c;
-
-            if (milli == Long.MIN_VALUE)
-                c = Float.parseFloat(readFirstLineSafe(new File(z, "temp")));
-            else
-                c = milli / 1000f;
-
-            if (!isValidTemp(c)) continue;
-
-            if (Float.isNaN(best) || c > best) best = c;
-
-        } catch (Throwable ignore) {}
-    }
-
-    return best;
-}
-
-private float readBatteryTempFallback() {
-    String[] paths = {
-            "/sys/class/power_supply/battery/temp",
-            "/sys/class/power_supply/bms/temp",
-            "/sys/class/power_supply/maxfg/temp"
-    };
-
-    for (String p : paths) {
-        try {
-            long v = readLongSafe(new File(p));
-            if (v == Long.MIN_VALUE) continue;
-
-            float c = (v > 1000f ? v / 1000f : v);
-            if (isValidTemp(c)) return c;
-
-        } catch (Throwable ignore) {}
-    }
-    return Float.NaN;
-}
-
-// ---------------------------------------------------------------
-// OEM fallback completion
-// ---------------------------------------------------------------
-private void applyThermalFallbacks(
-        ThermalGroupReading batteryMain,
-        ThermalGroupReading batteryShell,
-        ThermalGroupReading pmic,
-        ThermalGroupReading charger,
-        ThermalGroupReading modemMain,
-        ThermalGroupReading modemAux
-) {
-    boolean isXiaomi = isXiaomiFamilyDevice();
-
-    // Battery Main
-    if (!batteryMain.valid) {
-        float c = findTempByTypeKeywords("battery", "batt_therm", "battery_therm", "bms");
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) batteryMain.updateIfBetter("fallback:battery", c);
-    }
-
-    if (isXiaomi && !batteryMain.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_temp", "bat_therm", "battery-main",
-                "battery_board", "batman"
-        );
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) batteryMain.updateIfBetter("xiaomi:battery", c);
-    }
-
-    // Battery Shell
-    if (!batteryShell.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_shell", "battery_shell", "shell_therm",
-                "case-therm", "skin", "backlight_therm", "backlight"
-        );
-        if (!isValidTemp(c)) c = findTempByTypeKeywords(
-                "rear_case", "back_cover", "batt_surface", "camera"
-        );
-        if (isValidTemp(c)) batteryShell.updateIfBetter("fallback:battery_shell", c);
-    }
-
-    if (isXiaomi && !batteryShell.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_skin", "batt_surface",
-                "back_cover", "rear_case",
-                "backlight_therm", "camera"
-        );
-        if (isValidTemp(c)) batteryShell.updateIfBetter("xiaomi:battery_shell", c);
-    }
-
-    // PMIC
-    if (!pmic.valid) {
-        float c = findTempByTypeKeywords(
-                "pmic", "pmic_therm", "pmic-tz",
-                "pm8998", "pm660", "pm7250", "pm7250b", "pm6450"
-        );
-        if (!isValidTemp(c)) c = findTempByTypeKeywords("bcl", "ibat");
-        if (isValidTemp(c)) pmic.updateIfBetter("fallback:pmic", c);
-    }
-
-    if (isXiaomi && !pmic.valid) {
-        float c = findTempByTypeKeywords(
-                "pm6150l_tz", "pm8350", "pm7250b_tz",
-                "pm7250b-ibat", "pm7250b-bcl"
-        );
-        if (isValidTemp(c)) pmic.updateIfBetter("xiaomi:pmic", c);
-    }
-
-    // Charger
-    if (!charger.valid) {
-        float c = findTempByTypeKeywords("charger", "chg", "usb-therm", "charge-temp");
-        if (!isValidTemp(c)) c = findTempByTypeKeywords("charge_pump", "cp_therm", "usb_conn_therm");
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) charger.updateIfBetter("fallback:charger", c);
-    }
-
-    // Modem main
-    if (!modemMain.valid) {
-        float c = findTempByTypeKeywords(
-                "modem", "mdm", "mdmss", "mdmss-3", "mdmss-2",
-                "rf-therm", "modempa", "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
-                "modem-cfg"
-        );
-        if (isValidTemp(c)) modemMain.updateIfBetter("fallback:modem_main", c);
-    }
-
-    if (isXiaomi && !modemMain.valid) {
-        float c = findTempByTypeKeywords(
-                "xo_therm_modem", "modem_pa", "modem_pa_0",
-                "mdmss-3", "mdmss-2", "mdmss-1", "pa0", "pa1", "pa2"
-        );
-        if (isValidTemp(c)) modemMain.updateIfBetter("xiaomi:modem_main", c);
-    }
-
-    // Modem aux
-    if (!modemAux.valid) {
-        float c = findTempByTypeKeywords(
-                "modem1", "mdm2", "xbl_modem1", "rf1",
-                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
-        );
-        if (isValidTemp(c)) modemAux.updateIfBetter("fallback:modem_aux", c);
-    }
-
-    if (isXiaomi && !modemAux.valid) {
-        float c = findTempByTypeKeywords(
-                "modem_sub", "modem1_pa", "rf_sub",
-                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
-        );
-        if (isValidTemp(c)) modemAux.updateIfBetter("xiaomi:modem_aux", c);
-    }
+    return String.format(Locale.US,
+            "%-20s: %.1f°C %s\n",
+            label,
+            r.tempC,
+            status
+    );
 }
 
 // ===================================================================
-// FINAL PREMIUM THERMAL BUILDER — PERFECT ALIGNMENT EDITION
+// FINAL THERMAL BUILDER — READY FOR GEL POST PROCESSOR
 // ===================================================================
 private String buildThermalInfo() {
 
@@ -2608,21 +2370,14 @@ private String buildThermalInfo() {
 
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
 
-    // ===============================
-    // HEADER SUMMARY
-    // ===============================
+    // Summary
     if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
+        sb.append(String.format(Locale.US, "%-20s: %d\n", "Thermal Zones", summary.zoneCount));
 
-        sb.append(String.format(Locale.US, "%-20s: %d\n",
-                "Thermal Zones", summary.zoneCount));
-
-        if (summary.coolingDeviceCount == 0) {
-            sb.append(String.format(Locale.US, "%-20s: %s\n",
-                    "Cooling Devices", "0 (passive cooling only)"));
-        } else {
-            sb.append(String.format(Locale.US, "%-20s: %d\n",
-                    "Cooling Devices", summary.coolingDeviceCount));
-        }
+        if (summary.coolingDeviceCount == 0)
+            sb.append(String.format(Locale.US, "%-20s: 0 (passive cooling only)\n", "Cooling Devices"));
+        else
+            sb.append(String.format(Locale.US, "%-20s: %d\n", "Cooling Devices", summary.coolingDeviceCount));
 
         sb.append("\n");
     }
@@ -2630,9 +2385,6 @@ private String buildThermalInfo() {
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n\n");
 
-    // ===============================
-    // SENSOR TABLE (aligned rows)
-    // ===============================
     sb.append(formatThermalLine("Main Modem",      modemMain));
     sb.append(formatThermalLine("Secondary Modem", modemAux));
     sb.append(formatThermalLine("Main Battery",    batteryMain));
@@ -2646,7 +2398,6 @@ private String buildThermalInfo() {
 
     appendHardwareCoolingDevices(sb);
 
-    // 🔥 Τελικό alignment
     return gelPostProcess(sb.toString());
 }
 
@@ -3676,7 +3427,8 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR — FINAL PREMIUM VALUE ALIGN SYSTEM
+// GEL POST PROCESSOR — WRAP-AWARE EDITION (FINAL)
+// Aligns continuation lines EXACTLY under the value column
 // ============================================================================
 private String gelPostProcess(String input) {
     if (input == null) return "";
@@ -3686,39 +3438,42 @@ private String gelPostProcess(String input) {
     String[] lines = input.split("\n");
     StringBuilder out = new StringBuilder();
 
-    // Η στήλη όπου ξεκινούν οι ΠΡΑΣΙΝΕΣ ΤΙΜΕΣ
     final int VALUE_COLUMN = 24;
+    boolean previousHadColon = false;
 
     for (int i = 0; i < lines.length; i++) {
 
         String line = lines[i];
+        String trimmed = line.trim();
         int colonIdx = line.indexOf(':');
 
         // ------------------------------------------------------------
-        // 1️⃣ LABEL LINE (έχει ':') → αφήνουμε την γραμμή όπως είναι
+        // 1️⃣ LABEL LINE (έχει ':') → αφήνεται ΑΘΙΚΤΗ
         // ------------------------------------------------------------
         if (colonIdx >= 0) {
             out.append(line);
+            previousHadColon = true;
             if (i < lines.length - 1) out.append("\n");
             continue;
         }
 
         // ------------------------------------------------------------
-        // 2️⃣ CONTINUATION LINE → ΕΥΘΙΑ κάτω από την αρχή της ΤΙΜΗΣ
+        // 2️⃣ CONTINUATION LINE: wrapped line από την προηγούμενη
         // ------------------------------------------------------------
-        String trimmed = line.trim();
+        if (previousHadColon && !trimmed.isEmpty()) {
 
-        if (!trimmed.isEmpty()) {
-
-            // φτιάχνουμε indent ώστε η νέα γραμμή να ξεκινά ΑΚΡΙΒΩΣ από VALUE_COLUMN
             StringBuilder indent = new StringBuilder();
             for (int s = 0; s < VALUE_COLUMN; s++)
                 indent.append(' ');
 
             out.append(indent).append(trimmed);
 
-        } else {
-            out.append("");
+            previousHadColon = false; // reset
+        }
+        else {
+            // Empty or unrelated line
+            out.append(line);
+            previousHadColon = false;
         }
 
         if (i < lines.length - 1) out.append("\n");

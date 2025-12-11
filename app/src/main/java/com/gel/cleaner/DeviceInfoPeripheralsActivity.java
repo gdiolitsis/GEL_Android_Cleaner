@@ -2747,23 +2747,6 @@ private String buildScreenInfo() {
 }
 
 // ============================================================================
-// 3. TELEPHONY / MODEM — UI REFRESH (ONE BLOCK, ONE TEXTVIEW)
-// ============================================================================
-private void refreshModemInfo() {
-    try {
-        TextView modemView = findViewById(R.id.txtModemContent);
-        if (modemView != null) {
-            String info = buildModemInfo();
-            modemView.setText(info);
-            modemView.setVisibility(View.VISIBLE);
-
-            // ⭐ Neon χρωματισμός τιμών
-            applyNeonValues(modemView, info);
-        }
-    } catch (Throwable ignore) {}
-}
-
-// ============================================================================
 // TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
 // ============================================================================
 private String buildModemInfo() {
@@ -3017,7 +3000,7 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ADVANCED
+    // ADVANCED  —  MANUAL MULTILINE, ΤΙΜΕΣ ΜΟΝΟ ΔΕΞΙΑ
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("4G+ CA"), "Unknown. Requires root access"));
@@ -3026,23 +3009,14 @@ private String buildModemInfo() {
     sb.append(String.format(locale, "%s : %s\n",
             padKeyModem("Bands"), "Vendor restricted. Requires root access"));
 
-    sb.append(String.format(locale,
-            "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
-            padKeyModem("Advanced")
-    ));
+    // Advanced → σπάμε χειροκίνητα σε 4 γραμμές, όλες στη δεξιά στήλη
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("Advanced"), "Full RAT tables, NR"));
+    sb.append(indent("bands, CA combos,", 26)).append("\n");
+    sb.append(indent("requires root access", 26)).append("\n");
+    sb.append(indent("and OEM modem tools.", 26)).append("\n");
 
     return sb.toString();
-}
-
-// Local class for Xiaomi fallback
-private static class SimpleSimEntry {
-    int slot;
-    String carrier;
-
-    SimpleSimEntry(int s, String c) {
-        slot = s;
-        carrier = c;
-    }
 }
 
 // ============================================================================

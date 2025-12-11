@@ -421,47 +421,41 @@ public void onRequestPermissionsResult(int requestCode,
 
 
 // ============================================================
-// GEL Section Setup Engine — FINAL FIX (Works With Battery)
+// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
+// Battery-Safe Edition (FINAL)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
     if (header == null || content == null || icon == null)
         return;
 
+    // Start collapsed
     content.setVisibility(View.GONE);
     icon.setText("＋");
 
     header.setOnClickListener(v -> {
 
+        // 🔥 ALWAYS close Battery module before opening a normal section
+        closeBatteryModule();
+
         boolean isOpen = (content.getVisibility() == View.VISIBLE);
 
-        // ------------------------------------------------------------
-        // 1️⃣ SAFELY close Battery module if it is open
-        // ------------------------------------------------------------
-        if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
-            animateCollapse(batteryContainer);
-            if (iconBattery != null) iconBattery.setText("＋");
-            if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
-        }
-
-        // ------------------------------------------------------------
-        // 2️⃣ Close all OTHER normal sections
-        // ------------------------------------------------------------
-        for (int i = 1; i < allContents.length; i++) {  // index 0 = BATTERY
+        // 1️⃣ Collapse ALL other sections EXCEPT the one pressed
+        for (int i = 0; i < allContents.length; i++) {
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // ------------------------------------------------------------
-        // 3️⃣ Toggle pressed section
-        // ------------------------------------------------------------
+        // 2️⃣ Toggle the pressed section
         if (isOpen) {
-            animateCollapse(content);
+            // Close it
+            content.setVisibility(View.GONE);
             icon.setText("＋");
         } else {
-            animateExpand(content);
+            // Open it
+            content.setVisibility(View.VISIBLE);
             icon.setText("－");
         }
     });
@@ -749,45 +743,45 @@ private void setupSection(View header, View content, TextView icon) {
         boolean isNothing = manu.contains("nothing");
 
         if (isSamsung) {
-            return gelPostProcess("Settings → Battery and device care → Battery");
+            return "Settings → Battery and device care → Battery";
         }
 
         if (isXiaomi) {
-            if (isHyperOS) return gelPostProcess("Settings → Battery → Battery usage");
-            if (isMIUI)    return gelPostProcess("Settings → Battery & performance → Battery usage");
-            return gelPostProcess("Settings → Battery");
+            if (isHyperOS) return "Settings → Battery → Battery usage";
+            if (isMIUI)    return "Settings → Battery & performance → Battery usage";
+            return "Settings → Battery";
         }
 
         if (isPixel) {
-            return gelPostProcess("Settings → Battery → Battery usage");
+            return "Settings → Battery → Battery usage";
         }
 
         if (isOppo || isRealme) {
-            return gelPostProcess("Settings → Battery → More settings");
+            return "Settings → Battery → More settings";
         }
 
         if (isOnePlus) {
-            return gelPostProcess("Settings → Battery → Advanced settings");
+            return "Settings → Battery → Advanced settings";
         }
 
         if (isVivo) {
-            return gelPostProcess("Settings → Battery");
+            return "Settings → Battery";
         }
 
         if (isHuawei) {
-            return gelPostProcess("Settings → Battery → App launch");
+            return "Settings → Battery → App launch";
         }
 
         if (isMoto) {
-            return gelPostProcess("Settings → Battery");
+            return "Settings → Battery";
         }
 
         if (isSony || isAsus || isNokia || isLenovo || isLG || isZTE
                 || isTecno || isInfinix || isMeizu || isNothing) {
-            return gelPostProcess("Settings → Battery");
+            return "Settings → Battery";
         }
 
-        return gelPostProcess("Settings → Battery");
+        return "Settings → Battery";
     }
 
     // ============================================================
@@ -908,7 +902,7 @@ private void setupSection(View header, View content, TextView icon) {
         }
 
         appendAccessInstructions(sb, "camera");
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
 // ============================================================
@@ -964,7 +958,7 @@ private String buildBiometricsInfo() {
 
     sb.append("Advanced         : TEE stores biometric keys; detailed telemetry requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
     // ------------------------------------------------------------
@@ -1015,7 +1009,7 @@ private String buildBiometricsInfo() {
         sb.append("Advanced         : Extended sensor subsystem tables and raw calibration data are visible only on rooted systems.\n");
 
         appendAccessInstructions(sb, "sensors");
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
 // ============================================================
@@ -1234,7 +1228,7 @@ try {
     sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
               "Bluetooth controller logs and HCI traces, requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
       
 // ===================================================================
@@ -1376,7 +1370,7 @@ private BatteryInfo getBatteryInfo() {
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT (Aligned Edition)
+// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1408,25 +1402,20 @@ private String buildBatteryInfo() {
         displayEstimated = (long) (displayCurrent / lvlFrac);
     }
 
-    // Perfect alignment helper
-    final int KEY = 20;
-    java.util.function.BiFunction<String,String,String> kv =
-            (k,v) -> String.format(Locale.US, "%-" + KEY + "s: %s\n", k, v);
-
     StringBuilder sb = new StringBuilder();
 
     // ----- BASIC LINES -----
-    sb.append(kv.apply("Level", bi.level >= 0 ? bi.level + "%" : "N/A"));
-    sb.append(kv.apply("Scale", bi.scale > 0 ? String.valueOf(bi.scale) : "N/A"));
-    sb.append(kv.apply("Status", bi.status));
-    sb.append(kv.apply("Charging source", bi.chargingSource));
-    sb.append(String.format(Locale.US, "%-" + KEY + "s: %.1f°C\n\n", "Temp", bi.temperature));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), bi.level >= 0 ? bi.level + "%" : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), bi.scale > 0 ? bi.scale : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
+    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
 
     // ----- CURRENT -----
     if (displayCurrent > 0)
-        sb.append(kv.apply("Current charge", displayCurrent + " mAh"));
+        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
     else
-        sb.append(kv.apply("Current charge", "N/A"));
+        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
 
     // ----- SOURCE -----
     String src;
@@ -1434,25 +1423,27 @@ private String buildBatteryInfo() {
     else if (hasEst) src = "OEM";
     else if (modelCap > 0) src = "Model capacity";
     else src = "Unknown";
-
-    sb.append(kv.apply("Source", src));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
 
     // ----- ESTIMATED FULL -----
     if (displayEstimated > 0) {
-        sb.append(kv.apply("Estimated full (100%)", displayEstimated + " mAh"));
+        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), displayEstimated));
     } else {
-        sb.append(kv.apply("Estimated full (100%)", "N/A in this device"));
-        sb.append(indent("Requires charge counter chip for accurate data.", KEY + 4)).append("\n");
-        sb.append(indent("Using GEL Smart Model instead.", KEY + 4)).append("\n");
+        sb.append(String.format(Locale.US, "%s : %s\n",
+                padKey("Estimated full (100%)"), "N/A in this device"));
+        sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
+        sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
     }
 
     // ----- MODEL CAPACITY -----
-    sb.append(kv.apply("Model capacity", modelCap > 0 ? modelCap + " mAh" : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n",
+            padKey("Model capacity"), modelCap > 0 ? modelCap + " mAh" : "N/A"));
 
     // ----- LIFECYCLE -----
-    sb.append(kv.apply("Lifecycle", "Requires root access"));
+    sb.append(String.format(Locale.US, "%s : %s",
+            padKey("Lifecycle"), "Requires root access"));
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ===================================================================
@@ -1583,7 +1574,7 @@ private void showBatteryCapacityDialog() {
         sb.append("Supported        : ").append(supported ? "Yes" : "No").append("\n");
         sb.append("Advanced         : Fine-grain ranging diagnostics, requires root access.\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
  // ============================================================
@@ -1595,7 +1586,7 @@ private String buildHapticsInfo() {
     Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     if (v == null) {
         sb.append("Vibration Engine : Not available\n");
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
     sb.append("Vibration Engine : ");
@@ -1609,7 +1600,7 @@ private String buildHapticsInfo() {
 
     sb.append("Advanced         : Low-level haptic patterns require root/kernel access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ============================================================
@@ -1697,7 +1688,7 @@ sb.append("\nAdvanced         : GNSS constellation breakdown, carrier phases, lo
     sb.append("GNSS information is not exposed on this device.\n");
 }
 
-return gelPostProcess(sb.toString());
+return sb.toString();
 }
       
 // ============================================================
@@ -1721,7 +1712,7 @@ private String buildUsbInfo() {
     UsbManager um = (UsbManager) getSystemService(Context.USB_SERVICE);
     if (um == null) {
         sb.append("Status           : USB Manager unavailable\n");
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
     // ------------------------------------------------------------
@@ -1791,7 +1782,7 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     sb.append("\nAdvanced         : USB descriptors & power negotiation requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ============================================================
@@ -1834,7 +1825,7 @@ private String buildOtherPeripheralsInfo() {
 
     sb.append("\nAdvanced         : Extended peripheral diagnostics requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ============================================================================
@@ -1904,7 +1895,7 @@ private String buildMicsInfo() {
     sb.append("\nAdvanced         : Raw audio routing matrices requires root access.\n");
 
     appendAccessInstructions(sb, "mic");
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
     // ============================================================================
@@ -1968,7 +1959,7 @@ private String buildMicsInfo() {
 
         sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles, require root access.\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
     // 3) AUDIO EXTENDED
@@ -1994,7 +1985,7 @@ private String buildMicsInfo() {
 
         sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths, requires root access.\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
     // 4) UNIFIED AUDIO BLOCK (for headerAudioUnified)
@@ -2010,7 +2001,7 @@ private String buildMicsInfo() {
         sb.append("=== Extended Audio Paths ===\n");
         sb.append(buildAudioExtendedInfo()).append("\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
  // ============================================================
@@ -2121,7 +2112,7 @@ private String buildRootInfo() {
         sb.append("Vendor diag paths (Samsung / Qualcomm / MTK) cannot be inspected from a non-root app.\n");
     }
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
     // ==================================
@@ -2610,23 +2601,23 @@ private String buildThermalInfo() {
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
 
     // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
-    if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
+if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
 
-        sb.append(String.format(Locale.US, "%-17s: %d\n",
-                "Thermal Zones", summary.zoneCount));
+    sb.append(String.format(Locale.US, "%-17s: %d\n",
+            "Thermal Zones", summary.zoneCount));
 
-        if (summary.coolingDeviceCount == 0) {
-            sb.append(String.format(Locale.US,
-                    "%-17s: 0 (This device uses passive cooling only)\n",
-                    "Cooling Devices"));
-        } else {
-            sb.append(String.format(Locale.US,
-                    "%-17s: %d\n",
-                    "Cooling Devices", summary.coolingDeviceCount));
-        }
-
-        sb.append("\n");
+    if (summary.coolingDeviceCount == 0) {
+        sb.append(String.format(Locale.US,
+                "%-17s: 0 (This device uses passive cooling only)\n",
+                "Cooling Devices"));
+    } else {
+        sb.append(String.format(Locale.US,
+                "%-17s: %d\n",
+                "Cooling Devices", summary.coolingDeviceCount));
     }
+
+    sb.append("\n");
+}
 
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n\n");
@@ -2643,8 +2634,7 @@ private String buildThermalInfo() {
     sb.append("================================\n");
     appendHardwareCoolingDevices(sb);
 
-    // ✅ Περνάει από το global GEL alignment/filter
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
    //======================================================
@@ -2746,7 +2736,7 @@ private String buildScreenInfo() {
     // -------------------------------------------
     sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping, requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ============================================================================
@@ -2770,7 +2760,6 @@ private void refreshModemInfo() {
 // TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
 // ============================================================================
 private String buildModemInfo() {
-
     StringBuilder sb = new StringBuilder();
     Locale locale = Locale.US;
 
@@ -2779,11 +2768,6 @@ private String buildModemInfo() {
 
     try { tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE); } catch (Throwable ignore) {}
     try { sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE); } catch (Throwable ignore) {}
-
-    // Helper για τέλεια στοίχιση
-    final int KEY = 20;
-    java.util.function.BiFunction<String,String,String> kv =
-            (k,v) -> String.format(Locale.US, "%-" + KEY + "s: %s\n", k, v);
 
     // ------------------------------------------------------------
     // PHONE TYPE
@@ -2800,46 +2784,56 @@ private String buildModemInfo() {
         }
     } catch (Throwable ignore) {}
 
-    sb.append(kv.apply("Phone Type", phoneTypeStr));
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
 
     // ------------------------------------------------------------
-    // DATA NETWORK
+    // DATA NETWORK — LTE / NR only
     // ------------------------------------------------------------
     try {
         int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName =
-                (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"  :
-                (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE" :
-                                                              "Unknown";
+        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
+                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
+                       : "Unknown";
 
-        sb.append(kv.apply("Data Network", netName));
-        sb.append(kv.apply("5G (NR) Active", (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
+        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("5G (NR) Active"),
+                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // CARRIER / COUNTRY / OPERATOR CODE
     // ------------------------------------------------------------
     try {
-        String carrier = (tm != null) ? tm.getNetworkOperatorName() : "Unknown";
-        String iso     = (tm != null) ? tm.getNetworkCountryIso() : "";
-        String opCode  = (tm != null) ? tm.getNetworkOperator()    : "Unknown";
+        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
+        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
+        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
 
         if (iso == null || iso.trim().isEmpty())
             iso = Locale.getDefault().getCountry();
 
-        sb.append(kv.apply("Carrier", carrier));
-        sb.append(kv.apply("Country ISO", iso.toUpperCase(locale)));
-        sb.append(kv.apply("Operator Code", opCode));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Carrier"),
+                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
+
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Country ISO"),
+                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
+
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Operator Code"),
+                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SIGNAL STRENGTH
+    // SIGNAL STRENGTH — 0–4
     // ------------------------------------------------------------
     try {
         if (tm != null) {
             SignalStrength ss = tm.getSignalStrength();
             if (ss != null) {
-                sb.append(kv.apply("Signal Strength", ss.getLevel() + "/4"));
+                sb.append(String.format(locale, "%s : %d/4\n",
+                        padKeyModem("Signal Strength"), ss.getLevel()));
             }
         }
     } catch (Throwable ignore) {}
@@ -2849,102 +2843,168 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     try {
         boolean roaming = tm != null && tm.isNetworkRoaming();
-        sb.append(kv.apply("Roaming", roaming ? "Yes" : "No"));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // IMS / VoLTE / VoWiFi / VoNR
     // ------------------------------------------------------------
-    sb.append(kv.apply("IMS Registered", "Unknown"));
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
 
     try {
         boolean volte = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-        sb.append(kv.apply("VoLTE Support", volte ? "Yes" : "No"));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(kv.apply("VoLTE Support", "Unknown"));
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
     }
 
     try {
         boolean vowifi = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-        sb.append(kv.apply("VoWiFi Support", vowifi ? "Yes" : "No"));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(kv.apply("VoWiFi Support", "Unknown"));
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
     }
 
     try {
-        boolean vonr =
-                Build.VERSION.SDK_INT >= 33 &&
+        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
                 tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-        sb.append(kv.apply("VoNR Support", vonr ? "Yes" : "No"));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(kv.apply("VoNR Support", "Unknown"));
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
     }
 
     // ========================================================================
-    // ACTIVE SIMS — FULL FALLBACK PACK
+    // ACTIVE SIMS SECTION — FULL FALLBACK PACK
     // ========================================================================
     try {
         List<SubscriptionInfo> subs = null;
 
-        if (sm != null) try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
+        // 1️⃣ Standard
+        if (sm != null) {
+            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
+        }
 
-        List<SimpleSimEntry> simple = new ArrayList<>();
-
-        // Xiaomi fallback
+        // 2️⃣ Xiaomi reflection path (safe)
         if ((subs == null || subs.isEmpty()) && sm != null) {
             try {
                 Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
-                Object res = m.invoke(sm);
-                if (res instanceof List) subs = (List<SubscriptionInfo>) res;
+                Object result = m.invoke(sm);
+                if (result instanceof List) {
+                    subs = (List<SubscriptionInfo>) result;
+                }
+            } catch (Throwable ignore) {}
+        }
+
+        // 3️⃣ SubscriptionManager.from(context)
+        if (subs == null || subs.isEmpty()) {
+            try {
+                SubscriptionManager alt = SubscriptionManager.from(this);
+                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
+            } catch (Throwable ignore) {}
+        }
+
+        // 4️⃣ Xiaomi SimpleSimEntry fallback — NO SubscriptionInfo constructors
+        List<SimpleSimEntry> simpleList = new ArrayList<>();
+
+        if (subs == null || subs.isEmpty()) {
+            try {
+                for (int slot = 0; slot < 2; slot++) {
+                    int simState = tm.getSimState(slot);
+
+                    if (simState == TelephonyManager.SIM_STATE_READY ||
+                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
+                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
+                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
+
+                        String name = null;
+                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
+
+                        if (name == null || name.trim().isEmpty())
+                            name = "Unknown";
+
+                        simpleList.add(new SimpleSimEntry(slot, name));
+                    }
+                }
             } catch (Throwable ignore) {}
         }
 
         // Count SIMs
         int count = 0;
+
         if (subs != null && !subs.isEmpty()) {
             boolean[] seen = new boolean[2];
             for (SubscriptionInfo si : subs) {
-                int slot = si.getSimSlotIndex();
-                if (slot >= 0 && slot <= 1 && !seen[slot]) {
-                    seen[slot] = true;
-                    count++;
-                }
+                try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
+                        seen[slot] = true;
+                        count++;
+                    }
+                } catch (Throwable ignore) {}
             }
+        } else if (!simpleList.isEmpty()) {
+            count = simpleList.size();
         }
 
-        sb.append(kv.apply("Active SIMs", (count == 0 ? "N/A" : String.valueOf(count))));
+        String countStr = (count == 0 ? "N/A" : String.valueOf(count));
 
-        // Slot details
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Active SIMs"), countStr));
+
+        // Print SLOT details
         if (subs != null && !subs.isEmpty()) {
-            boolean[] printed = new boolean[2];
-            for (SubscriptionInfo si : subs) {
-                int s = si.getSimSlotIndex();
-                if (s < 0 || s > 1 || printed[s]) continue;
-                printed[s] = true;
 
-                String name = si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
-                sb.append(kv.apply("SIM Slot " + (s + 1), name));
+            boolean[] printed = new boolean[2];
+
+            for (SubscriptionInfo si : subs) {
+                try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot < 0 || slot > 1 || printed[slot]) continue;
+
+                    printed[slot] = true;
+
+                    String displayName =
+                            si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
+
+                    sb.append(String.format(locale, "%s : %s\n",
+                            padKeyModem("SIM Slot " + (slot + 1)), displayName));
+
+                } catch (Throwable ignore) {}
+            }
+
+        } else if (!simpleList.isEmpty()) {
+            for (SimpleSimEntry e : simpleList) {
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
             }
         }
 
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SUBSCRIBER INFO (masked)
+    // SUBSCRIBER INFO — masked
     // ------------------------------------------------------------
     try {
         if (tm != null) {
-            String imsi = null, msisdn = null;
+            String imsi = null;
+            String msisdn = null;
+
             try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
             try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
 
-            sb.append(kv.apply("IMSI",
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("IMSI"),
                     (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
 
-            sb.append(kv.apply("MSISDN",
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("MSISDN"),
                     (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
         }
     } catch (Throwable ignore) {}
@@ -2952,14 +3012,30 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     // ADVANCED
     // ------------------------------------------------------------
-    sb.append(kv.apply("4G+ CA", "Unknown. Requires root access"));
-    sb.append(kv.apply("NR-CA", "Unknown. Requires root access"));
-    sb.append(kv.apply("Bands", "Vendor restricted. Requires root access"));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("4G+ CA"), "Unknown. Requires root access"));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("NR-CA"), "Unknown. Requires root access"));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("Bands"), "Vendor restricted. Requires root access"));
 
-    sb.append(kv.apply("Advanced",
-            "Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools."));
+    sb.append(String.format(locale,
+            "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
+            padKeyModem("Advanced")
+    ));
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
+}
+
+// Local class for Xiaomi fallback
+private static class SimpleSimEntry {
+    int slot;
+    String carrier;
+
+    SimpleSimEntry(int s, String c) {
+        slot = s;
+        carrier = c;
+    }
 }
 
 // ============================================================================
@@ -3095,7 +3171,7 @@ private String buildWifiAdvancedInfo() {
     // ------------------------------------------------------------
     sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits, requires root access.\n");
 
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 
@@ -3128,7 +3204,7 @@ private String buildWifiAdvancedInfo() {
 
         sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines, requires root access and vendor sensor HAL.\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
 
@@ -3163,7 +3239,7 @@ private String buildWifiAdvancedInfo() {
             sb.append("No feature matrix exposed by PackageManager on this device.\n");
         }
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
  
     // ============================
@@ -3196,7 +3272,7 @@ private String buildWifiAdvancedInfo() {
 
         sb.append("Advanced         : Full SELinux policy dump and keymaster internals, requires root access and are not exposed to apps.\n");
 
-        return gelPostProcess(sb.toString());
+        return sb.toString();
     }
 
     // ============================================================
@@ -3218,7 +3294,7 @@ private String buildWifiAdvancedInfo() {
                 sb.append(buf, 0, read);
             }
 
-            return gelPostProcess(sb.toString());
+            return sb.toString();
 
         } catch (Throwable ignore) {
             return null;
@@ -3272,7 +3348,7 @@ private String buildWifiAdvancedInfo() {
             return line != null ? line.trim() : "";
 
         } catch (Throwable ignore) {
-            return gelPostProcess("");
+            return "";
         }
     }
 
@@ -3455,150 +3531,103 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
         applyNeonValues(t, txt);
     }
 
-// ============================================================
-// APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
-// GEL WRAP-ALIGN ENGINE v2.0 — FINAL
-// ============================================================
-private void applyNeonValues(TextView tv, String text) {
-    if (text == null) {
-        tv.setText("");
-        return;
-    }
-
-    final int VALUE_COLUMN = 24;   // ίδια στήλη με gelPostProcess
-    int neon = Color.parseColor(NEON_GREEN);
-    int gold = Color.parseColor(GOLD_COLOR);
-
     // ============================================================
-    // 1) WRAP FIX — force indent for continuation lines
+    // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
     // ============================================================
-    String[] rawLines = text.replace("\r", "").split("\n");
-    StringBuilder rebuilt = new StringBuilder();
-
-    for (String L : rawLines) {
-
-        int colon = L.indexOf(':');
-
-        // LABEL LINE → αφήνεται αυτούσιο
-        if (colon >= 0) {
-            rebuilt.append(L).append("\n");
-            continue;
+    private void applyNeonValues(TextView tv, String text) {
+        if (text == null) {
+            tv.setText("");
+            return;
         }
 
-        // CONTINUATION LINE → indent κάτω από πράσινη τιμή
-        String trimmed = L.trim();
+        int neon = Color.parseColor(NEON_GREEN);
+        int gold = Color.parseColor(GOLD_COLOR);
+        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
 
-        if (trimmed.isEmpty()) {
-            rebuilt.append("\n");
-        } else {
-            StringBuilder pad = new StringBuilder();
-            for (int s = 0; s < VALUE_COLUMN; s++)
-                pad.append(' ');
+        int start = 0;
+        int len   = text.length();
 
-            rebuilt.append(pad).append(trimmed).append("\n");
+        while (start < len) {
+            int colon = text.indexOf(':', start);
+            if (colon == -1) break;
+
+            int lineEnd = text.indexOf('\n', colon);
+            if (lineEnd == -1) lineEnd = len;
+
+            int valueStart = colon + 1;
+            while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {
+                valueStart++;
+            }
+
+            if (valueStart < lineEnd) {
+                ssb.setSpan(
+                        new ForegroundColorSpan(neon),
+                        valueStart,
+                        lineEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            start = lineEnd + 1;
         }
-    }
 
-    // Το text πλέον είναι τέλεια στοίχισμένο
-    text = rebuilt.toString();
-
-    // Ξαναφτιάχνουμε το spannable
-    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-    // ============================================================
-    // 2) Apply NEON coloring to values
-    // ============================================================
-    int start = 0;
-    int len   = text.length();
-
-    while (start < len) {
-        int colon = text.indexOf(':', start);
-        if (colon == -1) break;
-
-        int lineEnd = text.indexOf('\n', colon);
-        if (lineEnd == -1) lineEnd = len;
-
-        int valueStart = colon + 1;
-        while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart)))
-            valueStart++;
-
-        if (valueStart < lineEnd) {
+        int idxX = text.indexOf("Xiaomi");
+        while (idxX != -1) {
+            int end = idxX + "Xiaomi".length();
             ssb.setSpan(
-                    new ForegroundColorSpan(neon),
-                    valueStart,
-                    lineEnd,
+                    new ForegroundColorSpan(gold),
+                    idxX,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            idxX = text.indexOf("Xiaomi", end);
+        }
+
+        String os = "Open Settings";
+        int idxOS = text.indexOf(os);
+        if (idxOS != -1) {
+            ssb.setSpan(
+                    new StyleSpan(Typeface.BOLD),
+                    idxOS,
+                    idxOS + os.length(),
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
         }
 
-        start = lineEnd + 1;
+        boolean hasPath = false;
+        int idx = text.indexOf("Settings →");
+
+        while (idx != -1) {
+            int end = text.indexOf('\n', idx);
+            if (end == -1) end = len;
+
+            final String pathText = text.substring(idx, end);
+
+            ssb.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    handleSettingsClick(widget.getContext(), pathText);
+                }
+            }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            ssb.setSpan(
+                    new ForegroundColorSpan(LINK_BLUE),
+                    idx,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+
+            hasPath = true;
+            idx = text.indexOf("Settings →", end);
+        }
+
+        if (hasPath) {
+            tv.setMovementMethod(LinkMovementMethod.getInstance());
+            tv.setHighlightColor(Color.TRANSPARENT);
+        }
+
+        tv.setText(ssb);
     }
-
-    // ============================================================
-    // 3) Gold highlight for vendor text
-    // ============================================================
-    int idxX = text.indexOf("Xiaomi");
-    while (idxX != -1) {
-        int end = idxX + "Xiaomi".length();
-        ssb.setSpan(
-                new ForegroundColorSpan(gold),
-                idxX,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-        idxX = text.indexOf("Xiaomi", end);
-    }
-
-    // ============================================================
-    // 4) Bold "Open Settings"
-    // ============================================================
-    String os = "Open Settings";
-    int idxOS = text.indexOf(os);
-    if (idxOS != -1) {
-        ssb.setSpan(
-                new StyleSpan(Typeface.BOLD),
-                idxOS,
-                idxOS + os.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-    }
-
-    // ============================================================
-    // 5) Clickable Settings paths
-    // ============================================================
-    boolean hasPath = false;
-    int idx = text.indexOf("Settings →");
-
-    while (idx != -1) {
-        int end = text.indexOf('\n', idx);
-        if (end == -1) end = len;
-
-        final String pathText = text.substring(idx, end);
-
-        ssb.setSpan(new ClickableSpan() {
-            @Override
-            public void onClick(@NonNull View widget) {
-                handleSettingsClick(widget.getContext(), pathText);
-            }
-        }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idx, end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        hasPath = true;
-        idx = text.indexOf("Settings →", end);
-    }
-
-    if (hasPath) {
-        tv.setMovementMethod(LinkMovementMethod.getInstance());
-        tv.setHighlightColor(Color.TRANSPARENT);
-    }
-
-    // ============================================================
-    // 6) APPLY
-    // ============================================================
-    tv.setText(ssb);
-}
     
 // ============================================================
 // COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY  (FIXED)
@@ -3635,14 +3664,14 @@ private void collapseAllExceptBattery() {
 // HELPERS — alignment + indent  (REQUIRED for Battery Builder)
 // ===================================================================
 private String padKey(String key) {
-    return gelPostProcess(String.format(Locale.US, "%-22s", key));
+    return String.format(Locale.US, "%-22s", key);
 }
 
 private String indent(String text, int spaces) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < spaces; i++) sb.append(' ');
     sb.append(text);
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 // ============================================================================
@@ -3650,17 +3679,17 @@ private String indent(String text, int spaces) {
 // ============================================================================
 private String padKeyModem(String key) {
     final int width = 20;
-    if (key == null) return gelPostProcess("");
+    if (key == null) return "";
     if (key.length() >= width) return key;
     StringBuilder sb = new StringBuilder(key);
     while (sb.length() < width) sb.append(' ');
-    return gelPostProcess(sb.toString());
+    return sb.toString();
 }
 
 private String maskSensitive(String value) {
-    if (value == null) return gelPostProcess("N/A");
+    if (value == null) return "N/A";
     String v = value.trim();
-    if (v.length() <= 4) return gelPostProcess("****");
+    if (v.length() <= 4) return "****";
     int keepStart = 4;
     int keepEnd = 2;
     String start = v.substring(0, Math.min(keepStart, v.length()));
@@ -3681,12 +3710,12 @@ private String getNfcBasicInfo() {
         if (nfcManager != null) {
             NfcAdapter adapter = nfcManager.getDefaultAdapter();
             if (adapter != null) {
-                return gelPostProcess("NFC Supported : Yes\nNFC Enabled   : " + (adapter.isEnabled() ? "Yes" : "No"));
+                return "NFC Supported : Yes\nNFC Enabled   : " + (adapter.isEnabled() ? "Yes" : "No");
             }
         }
-        return gelPostProcess("NFC Supported : No");
+        return "NFC Supported : No";
     } catch (Throwable ignore) {
-        return gelPostProcess("NFC Supported : Unknown");
+        return "NFC Supported : Unknown";
     }
 }
 
@@ -3713,79 +3742,10 @@ private String getLocationCapabilities() {
         sb.append("\nAdvanced           : AGNSS, LPP, SUPL, carrier-assisted fixes, requires root access.");
 
     } catch (Throwable ignore) {
-        return gelPostProcess("Location Capabilities : Unknown");
+        return "Location Capabilities : Unknown";
     }
 
-    return gelPostProcess(sb.toString());
-}
-
-// ============================================================================
-// GEL POST PROCESSOR — WRAP-AWARE EDITION (FINAL)
-// Aligns continuation lines EXACTLY under the value column
-// ============================================================================
-private String gelPostProcess(String input) {
-    if (input == null) return "";
-
-    input = input.replace("\r", "");
-
-    String[] lines = input.split("\n");
-    StringBuilder out = new StringBuilder();
-
-    final int VALUE_COLUMN = 24;
-    boolean previousHadColon = false;
-
-    for (int i = 0; i < lines.length; i++) {
-
-        String line = lines[i];
-        String trimmed = line.trim();
-        int colonIdx = line.indexOf(':');
-
-        // ------------------------------------------------------------
-        // 1️⃣ LABEL LINE (έχει ':') → αφήνεται ΑΘΙΚΤΗ
-        // ------------------------------------------------------------
-        if (colonIdx >= 0) {
-            out.append(line);
-            previousHadColon = true;
-            if (i < lines.length - 1) out.append("\n");
-            continue;
-        }
-
-        // ------------------------------------------------------------
-        // 2️⃣ CONTINUATION LINE: wrapped line από την προηγούμενη
-        // ------------------------------------------------------------
-        if (previousHadColon && !trimmed.isEmpty()) {
-
-            StringBuilder indent = new StringBuilder();
-            for (int s = 0; s < VALUE_COLUMN; s++)
-                indent.append(' ');
-
-            out.append(indent).append(trimmed);
-
-            previousHadColon = false; // reset
-        }
-        else {
-            // Empty or unrelated line
-            out.append(line);
-            previousHadColon = false;
-        }
-
-        if (i < lines.length - 1) out.append("\n");
-    }
-
-    return out.toString();
-}
-
-// ============================================================================
-// LOCAL CLASS — Xiaomi SimpleSimEntry fallback
-// ============================================================================
-private static class SimpleSimEntry {
-    int slot;
-    String carrier;
-
-    SimpleSimEntry(int s, String c) {
-        slot = s;
-        carrier = c;
-    }
+    return sb.toString();
 }
 
 // 🔥 END OF CLASS

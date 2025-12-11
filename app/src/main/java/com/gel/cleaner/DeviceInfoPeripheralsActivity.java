@@ -2962,7 +2962,7 @@ private String buildModemInfo() {
     sb.append(kv.apply("Advanced",
             "Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools."));
 
-    return u(sb.toString());
+    return gelPostProcess(sb.toString());
 }
 
 // ============================================================================
@@ -3725,6 +3725,19 @@ private String gelPostProcess(String input) {
     }
 
     return out.toString();
+}
+
+// ============================================================================
+// LOCAL CLASS — Xiaomi SimpleSimEntry fallback
+// ============================================================================
+private static class SimpleSimEntry {
+    int slot;
+    String carrier;
+
+    SimpleSimEntry(int s, String c) {
+        slot = s;
+        carrier = c;
+    }
 }
 
 // 🔥 END OF CLASS

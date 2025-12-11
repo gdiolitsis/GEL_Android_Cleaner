@@ -28,7 +28,7 @@
             android:id="@+id/txtSectionHeaderPeripherals"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📂 PERIPHERALS REPORT — Full Device Capability Map"
+            android:text="ðŸ“‚ PERIPHERALS REPORT â€” Full Device Capability Map"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/gel_gold"
@@ -61,7 +61,7 @@
         android:id="@+id/iconBatteryToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="＋"
+        android:text="ï¼‹"
         android:textColor="#00FFBF"
         android:textSize="18sp" />
 </LinearLayout>
@@ -129,7 +129,7 @@
                 android:id="@+id/iconScreenToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -170,7 +170,7 @@
                 android:id="@+id/iconCameraToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -211,7 +211,7 @@
                 android:id="@+id/iconConnectivityToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -252,7 +252,7 @@
                 android:id="@+id/iconLocationToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -284,7 +284,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Thermal / Cooling Hardware Systems"
+                android:text="Thermal Engine / Cooling"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -293,7 +293,7 @@
                 android:id="@+id/iconThermalToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -309,10 +309,8 @@
             android:padding="12dp"/>
        
 <!-- ========================================================= -->
-<!-- TELEPHONY / MODEM — FINAL GEL TWO-COLUMN EDITION -->
+<!-- TELEPHONY / MODEM — FINAL GEL EDITION (BUTTON) -->
 <!-- ========================================================= -->
-
-<!-- HEADER BUTTON -->
 <LinearLayout
     android:id="@+id/headerModem"
     android:layout_width="match_parent"
@@ -337,15 +335,14 @@
         android:id="@+id/iconModemToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="＋"
+        android:text=""
         android:textColor="#00FFBF"
         android:textSize="18sp" />
 </LinearLayout>
 
 <!-- ========================================================= -->
-<!-- CONTENT BLOCK — TWO COLUMN MULTILINE GEL STYLE -->
+<!-- 2-COLUMN MODEM CONTENT (GEL FINAL LAYOUT) -->
 <!-- ========================================================= -->
-
 <LinearLayout
     android:id="@+id/modemContainer"
     android:layout_width="match_parent"
@@ -363,7 +360,7 @@
         android:paddingBottom="4dp">
 
         <TextView
-            android:layout_width="100dp"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:text="Phone Type"
             android:textColor="#FFFFFF"
@@ -387,7 +384,7 @@
         android:paddingBottom="4dp">
 
         <TextView
-            android:layout_width="100dp"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:text="Data Network"
             android:textColor="#FFFFFF"
@@ -411,7 +408,7 @@
         android:paddingBottom="4dp">
 
         <TextView
-            android:layout_width="100dp"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:text="Advanced"
             android:textColor="#FFFFFF"
@@ -446,7 +443,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Wi-Fi Advanced"
+                android:text="Radio Systems / Wi-Fi Advanced"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -455,7 +452,7 @@
                 android:id="@+id/iconWifiAdvancedToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -496,7 +493,7 @@
                 android:id="@+id/iconAudioUnifiedToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -537,7 +534,7 @@
                 android:id="@+id/iconSensorsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -569,7 +566,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sensors — Extended"
+                android:text="Sensors â€” Extended"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -578,7 +575,7 @@
                 android:id="@+id/iconSensorsExtendedToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -619,7 +616,7 @@
                 android:id="@+id/iconBiometricsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -660,7 +657,7 @@
                 android:id="@+id/iconNfcToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -701,7 +698,7 @@
                 android:id="@+id/iconGnssToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -717,7 +714,7 @@
             android:padding="12dp"/>
 
         <!-- ========================================================= -->
-        <!-- UWB (Ultra-Wideband) -->
+        <!-- UWB -->
         <!-- ========================================================= -->
         <LinearLayout
             android:id="@+id/headerUwb"
@@ -733,7 +730,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="UWB (Ultra-Wideband) Support"
+                android:text="UWB Support"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -742,7 +739,7 @@
                 android:id="@+id/iconUwbToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -783,7 +780,7 @@
                 android:id="@+id/iconUsbToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -815,7 +812,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="HAPTICS — ADVANCED MOTOR &amp; EFFECT PROFILER"
+                android:text="Haptics"
                 android:textColor="#00FFBF"
                 android:textStyle="bold"
                 android:textSize="16sp"/>
@@ -824,7 +821,7 @@
                 android:id="@+id/iconHapticsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -865,7 +862,7 @@
                 android:id="@+id/iconSystemFeaturesToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -906,7 +903,7 @@
                 android:id="@+id/iconSecurityFlagsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -947,7 +944,7 @@
                 android:id="@+id/iconRootToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -989,7 +986,7 @@
                 android:id="@+id/iconOtherPeripheralsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋"
+                android:text="ï¼‹"
                 android:textSize="18sp"
                 android:textColor="@color/gel_gold"/>
         </LinearLayout>

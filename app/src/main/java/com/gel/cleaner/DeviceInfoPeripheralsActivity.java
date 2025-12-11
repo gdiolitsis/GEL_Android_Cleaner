@@ -3729,5 +3729,33 @@ private String getLocationCapabilities() {
     return sb.toString();
 }
 
+// ============================================================================
+// 3. TELEPHONY / MODEM — UI REFRESH (ONE BLOCK, ONE TEXTVIEW)
+// ============================================================================
+private void refreshModemInfo() {
+    try {
+        TextView modemView = findViewById(R.id.txtModemContent);
+        if (modemView != null) {
+            String info = buildModemInfo();
+            modemView.setText(info);
+            modemView.setVisibility(View.VISIBLE);
+            applyNeonValues(modemView, info);
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================================
+// LOCAL CLASS — Xiaomi SimpleSimEntry fallback
+// ============================================================================
+private static class SimpleSimEntry {
+    int slot;
+    String carrier;
+
+    SimpleSimEntry(int s, String c) {
+        slot = s;
+        carrier = c;
+    }
+}
+
 // 🔥 END OF CLASS
 }

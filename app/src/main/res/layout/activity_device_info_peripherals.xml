@@ -308,9 +308,11 @@
             android:textSize="14sp"
             android:padding="12dp"/>
        
-        <!-- ========================================================= -->
-        <!-- TELEPHONY / MODEM — FINAL GEL EDITION (ONE BLOCK) -->
-        <!-- ========================================================= -->
+<!-- ========================================================= -->
+<!-- TELEPHONY / MODEM — FINAL GEL TWO-COLUMN EDITION -->
+<!-- ========================================================= -->
+
+<!-- HEADER BUTTON -->
 <LinearLayout
     android:id="@+id/headerModem"
     android:layout_width="match_parent"
@@ -340,16 +342,92 @@
         android:textSize="18sp" />
 </LinearLayout>
 
-<!-- SINGLE OUTPUT BLOCK → FULL MODEM REPORT -->
-<TextView
-    android:id="@+id/txtModemContent"
-    android:visibility="gone"
+<!-- ========================================================= -->
+<!-- CONTENT BLOCK — TWO COLUMN MULTILINE GEL STYLE -->
+<!-- ========================================================= -->
+
+<LinearLayout
+    android:id="@+id/modemContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textColor="#FFFFFF"
-    android:typeface="monospace"
-    android:textSize="14sp"
-    android:padding="12dp" />
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:visibility="gone">
+
+    <!-- PHONE TYPE -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="Phone Type"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/modemPhoneType"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#39FF14"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- DATA NETWORK -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="Data Network"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/modemDataNetwork"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#39FF14"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- ADVANCED MULTILINE -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="Advanced"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/modemAdvanced"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#39FF14"
+            android:textSize="14sp"
+            android:lineSpacingExtra="2dp"/>
+    </LinearLayout>
+
+</LinearLayout>
         
         <!-- ========================================================= -->
         <!-- WIFI ADVANCED -->

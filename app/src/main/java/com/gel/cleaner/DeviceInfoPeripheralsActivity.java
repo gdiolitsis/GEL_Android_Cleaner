@@ -429,33 +429,40 @@ private void setupSection(View header, View content, TextView icon) {
     if (header == null || content == null || icon == null)
         return;
 
-    // Start collapsed
     content.setVisibility(View.GONE);
     icon.setText("＋");
 
     header.setOnClickListener(v -> {
 
-        // 🔥 ALWAYS close Battery module before opening a normal section
-        closeBatteryModule();
-
         boolean isOpen = (content.getVisibility() == View.VISIBLE);
 
-        // 1️⃣ Collapse ALL other sections EXCEPT the one pressed
-        for (int i = 0; i < allContents.length; i++) {
+        // ------------------------------------------------------------
+        // 1️⃣ SAFELY close Battery module if it is open
+        // ------------------------------------------------------------
+        if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
+            animateCollapse(batteryContainer);
+            if (iconBattery != null) iconBattery.setText("＋");
+            if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
+        }
+
+        // ------------------------------------------------------------
+        // 2️⃣ Close all OTHER normal sections
+        // ------------------------------------------------------------
+        for (int i = 1; i < allContents.length; i++) {  // index 0 = BATTERY
             if (allContents[i] != content) {
                 allContents[i].setVisibility(View.GONE);
                 allIcons[i].setText("＋");
             }
         }
 
-        // 2️⃣ Toggle the pressed section
+        // ------------------------------------------------------------
+        // 3️⃣ Toggle pressed section
+        // ------------------------------------------------------------
         if (isOpen) {
-            // Close it
-            content.setVisibility(View.GONE);
+            animateCollapse(content);
             icon.setText("＋");
         } else {
-            // Open it
-            content.setVisibility(View.VISIBLE);
+            animateExpand(content);
             icon.setText("－");
         }
     });

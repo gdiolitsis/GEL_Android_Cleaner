@@ -2990,20 +2990,17 @@ private String buildModemInfo() {
     // ADVANCED SECTION — FIXED MULTILINE, PERFECT ALIGNMENT
     // ------------------------------------------------------------
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown. Requires root access"));
+            padKeyModem("4G+ CA"), "Unknown. Requires                       root access"));
 
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown. Requires root access"));
+            padKeyModem("NR-CA"), "Unknown. Requires                       root access"));
 
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted. Requires root access"));
+            padKeyModem("Bands"), "Vendor restricted.                       Requires root access"));
 
     // FULL FIXED MULTILINE — NO MORE BROKEN LINES
     sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Advanced"), "Full RAT tables, bands, CA combos,"));
-
-    sb.append(indent("requires root access", 26)).append("\n");
-    sb.append(indent("and OEM modem tools.", 26)).append("\n");
+            padKeyModem("Advanced"), "Full RAT tables,                       bands, CA combos, requires root access                       and OEM modem tools "));
 
     return sb.toString();
 }

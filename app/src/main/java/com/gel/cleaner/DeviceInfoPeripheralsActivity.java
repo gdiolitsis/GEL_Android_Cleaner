@@ -1376,7 +1376,7 @@ private BatteryInfo getBatteryInfo() {
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT
+// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT (Aligned Edition)
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1408,20 +1408,25 @@ private String buildBatteryInfo() {
         displayEstimated = (long) (displayCurrent / lvlFrac);
     }
 
+    // Perfect alignment helper
+    final int KEY = 20;
+    java.util.function.BiFunction<String,String,String> kv =
+            (k,v) -> String.format(Locale.US, "%-" + KEY + "s: %s\n", k, v);
+
     StringBuilder sb = new StringBuilder();
 
     // ----- BASIC LINES -----
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), bi.level >= 0 ? bi.level + "%" : "N/A"));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), bi.scale > 0 ? bi.scale : "N/A"));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
-    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
+    sb.append(kv.apply("Level", bi.level >= 0 ? bi.level + "%" : "N/A"));
+    sb.append(kv.apply("Scale", bi.scale > 0 ? String.valueOf(bi.scale) : "N/A"));
+    sb.append(kv.apply("Status", bi.status));
+    sb.append(kv.apply("Charging source", bi.chargingSource));
+    sb.append(String.format(Locale.US, "%-" + KEY + "s: %.1f°C\n\n", "Temp", bi.temperature));
 
     // ----- CURRENT -----
     if (displayCurrent > 0)
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
+        sb.append(kv.apply("Current charge", displayCurrent + " mAh"));
     else
-        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
+        sb.append(kv.apply("Current charge", "N/A"));
 
     // ----- SOURCE -----
     String src;
@@ -1429,25 +1434,23 @@ private String buildBatteryInfo() {
     else if (hasEst) src = "OEM";
     else if (modelCap > 0) src = "Model capacity";
     else src = "Unknown";
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
+
+    sb.append(kv.apply("Source", src));
 
     // ----- ESTIMATED FULL -----
     if (displayEstimated > 0) {
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), displayEstimated));
+        sb.append(kv.apply("Estimated full (100%)", displayEstimated + " mAh"));
     } else {
-        sb.append(String.format(Locale.US, "%s : %s\n",
-                padKey("Estimated full (100%)"), "N/A in this device"));
-        sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
-        sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
+        sb.append(kv.apply("Estimated full (100%)", "N/A in this device"));
+        sb.append(indent("Requires charge counter chip for accurate data.", KEY + 4)).append("\n");
+        sb.append(indent("Using GEL Smart Model instead.", KEY + 4)).append("\n");
     }
 
     // ----- MODEL CAPACITY -----
-    sb.append(String.format(Locale.US, "%s : %s\n",
-            padKey("Model capacity"), modelCap > 0 ? modelCap + " mAh" : "N/A"));
+    sb.append(kv.apply("Model capacity", modelCap > 0 ? modelCap + " mAh" : "N/A"));
 
     // ----- LIFECYCLE -----
-    sb.append(String.format(Locale.US, "%s : %s",
-            padKey("Lifecycle"), "Requires root access"));
+    sb.append(kv.apply("Lifecycle", "Requires root access"));
 
     return gelPostProcess(sb.toString());
 }
@@ -2586,13 +2589,12 @@ private void applyThermalFallbacks(
 }
 
 // ===================================================================
-// FINAL BUILDER — CLEAN OUTPUT (REAL HARDWARE SUMMARY + TABLE)
+// FINAL PREMIUM THERMAL BUILDER — PERFECT ALIGNMENT EDITION
 // ===================================================================
 private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
-    // Hardware thermals
     ThermalGroupReading batteryMain  = new ThermalGroupReading();
     ThermalGroupReading batteryShell = new ThermalGroupReading();
     ThermalGroupReading pmic         = new ThermalGroupReading();
@@ -2606,28 +2608,31 @@ private String buildThermalInfo() {
 
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
 
-    // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
-if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
+    // ===============================
+    // HEADER SUMMARY
+    // ===============================
+    if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
 
-    sb.append(String.format(Locale.US, "%-17s: %d\n",
-            "Thermal Zones", summary.zoneCount));
+        sb.append(String.format(Locale.US, "%-20s: %d\n",
+                "Thermal Zones", summary.zoneCount));
 
-    if (summary.coolingDeviceCount == 0) {
-        sb.append(String.format(Locale.US,
-                "%-17s: 0 (This device uses passive cooling only)\n",
-                "Cooling Devices"));
-    } else {
-        sb.append(String.format(Locale.US,
-                "%-17s: %d\n",
-                "Cooling Devices", summary.coolingDeviceCount));
+        if (summary.coolingDeviceCount == 0) {
+            sb.append(String.format(Locale.US, "%-20s: %s\n",
+                    "Cooling Devices", "0 (passive cooling only)"));
+        } else {
+            sb.append(String.format(Locale.US, "%-20s: %d\n",
+                    "Cooling Devices", summary.coolingDeviceCount));
+        }
+
+        sb.append("\n");
     }
-
-    sb.append("\n");
-}
 
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n\n");
 
+    // ===============================
+    // SENSOR TABLE (aligned rows)
+    // ===============================
     sb.append(formatThermalLine("Main Modem",      modemMain));
     sb.append(formatThermalLine("Secondary Modem", modemAux));
     sb.append(formatThermalLine("Main Battery",    batteryMain));
@@ -2638,8 +2643,10 @@ if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)
 
     sb.append("Hardware Cooling Systems\n");
     sb.append("================================\n");
+
     appendHardwareCoolingDevices(sb);
 
+    // 🔥 Τελικό alignment
     return gelPostProcess(sb.toString());
 }
 
@@ -2766,6 +2773,7 @@ private void refreshModemInfo() {
 // TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
 // ============================================================================
 private String buildModemInfo() {
+
     StringBuilder sb = new StringBuilder();
     Locale locale = Locale.US;
 
@@ -2774,6 +2782,11 @@ private String buildModemInfo() {
 
     try { tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE); } catch (Throwable ignore) {}
     try { sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE); } catch (Throwable ignore) {}
+
+    // Helper για τέλεια στοίχιση
+    final int KEY = 20;
+    java.util.function.BiFunction<String,String,String> kv =
+            (k,v) -> String.format(Locale.US, "%-" + KEY + "s: %s\n", k, v);
 
     // ------------------------------------------------------------
     // PHONE TYPE
@@ -2790,56 +2803,46 @@ private String buildModemInfo() {
         }
     } catch (Throwable ignore) {}
 
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
+    sb.append(kv.apply("Phone Type", phoneTypeStr));
 
     // ------------------------------------------------------------
-    // DATA NETWORK — LTE / NR only
+    // DATA NETWORK
     // ------------------------------------------------------------
     try {
         int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
-                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
-                       : "Unknown";
+        String netName =
+                (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"  :
+                (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE" :
+                                                              "Unknown";
 
-        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("5G (NR) Active"),
-                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
+        sb.append(kv.apply("Data Network", netName));
+        sb.append(kv.apply("5G (NR) Active", (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // CARRIER / COUNTRY / OPERATOR CODE
     // ------------------------------------------------------------
     try {
-        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
-        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
-        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
+        String carrier = (tm != null) ? tm.getNetworkOperatorName() : "Unknown";
+        String iso     = (tm != null) ? tm.getNetworkCountryIso() : "";
+        String opCode  = (tm != null) ? tm.getNetworkOperator()    : "Unknown";
 
         if (iso == null || iso.trim().isEmpty())
             iso = Locale.getDefault().getCountry();
 
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Carrier"),
-                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Country ISO"),
-                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Operator Code"),
-                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
+        sb.append(kv.apply("Carrier", carrier));
+        sb.append(kv.apply("Country ISO", iso.toUpperCase(locale)));
+        sb.append(kv.apply("Operator Code", opCode));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SIGNAL STRENGTH — 0–4
+    // SIGNAL STRENGTH
     // ------------------------------------------------------------
     try {
         if (tm != null) {
             SignalStrength ss = tm.getSignalStrength();
             if (ss != null) {
-                sb.append(String.format(locale, "%s : %d/4\n",
-                        padKeyModem("Signal Strength"), ss.getLevel()));
+                sb.append(kv.apply("Signal Strength", ss.getLevel() + "/4"));
             }
         }
     } catch (Throwable ignore) {}
@@ -2849,168 +2852,102 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     try {
         boolean roaming = tm != null && tm.isNetworkRoaming();
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
+        sb.append(kv.apply("Roaming", roaming ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // IMS / VoLTE / VoWiFi / VoNR
     // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
+    sb.append(kv.apply("IMS Registered", "Unknown"));
 
     try {
         boolean volte = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
+        sb.append(kv.apply("VoLTE Support", volte ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
+        sb.append(kv.apply("VoLTE Support", "Unknown"));
     }
 
     try {
         boolean vowifi = tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
+        sb.append(kv.apply("VoWiFi Support", vowifi ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
+        sb.append(kv.apply("VoWiFi Support", "Unknown"));
     }
 
     try {
-        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
+        boolean vonr =
+                Build.VERSION.SDK_INT >= 33 &&
                 tm != null &&
                 (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
+        sb.append(kv.apply("VoNR Support", vonr ? "Yes" : "No"));
     } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
+        sb.append(kv.apply("VoNR Support", "Unknown"));
     }
 
     // ========================================================================
-    // ACTIVE SIMS SECTION — FULL FALLBACK PACK
+    // ACTIVE SIMS — FULL FALLBACK PACK
     // ========================================================================
     try {
         List<SubscriptionInfo> subs = null;
 
-        // 1️⃣ Standard
-        if (sm != null) {
-            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
-        }
+        if (sm != null) try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
 
-        // 2️⃣ Xiaomi reflection path (safe)
+        List<SimpleSimEntry> simple = new ArrayList<>();
+
+        // Xiaomi fallback
         if ((subs == null || subs.isEmpty()) && sm != null) {
             try {
                 Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
-                Object result = m.invoke(sm);
-                if (result instanceof List) {
-                    subs = (List<SubscriptionInfo>) result;
-                }
-            } catch (Throwable ignore) {}
-        }
-
-        // 3️⃣ SubscriptionManager.from(context)
-        if (subs == null || subs.isEmpty()) {
-            try {
-                SubscriptionManager alt = SubscriptionManager.from(this);
-                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
-            } catch (Throwable ignore) {}
-        }
-
-        // 4️⃣ Xiaomi SimpleSimEntry fallback — NO SubscriptionInfo constructors
-        List<SimpleSimEntry> simpleList = new ArrayList<>();
-
-        if (subs == null || subs.isEmpty()) {
-            try {
-                for (int slot = 0; slot < 2; slot++) {
-                    int simState = tm.getSimState(slot);
-
-                    if (simState == TelephonyManager.SIM_STATE_READY ||
-                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
-                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
-                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
-
-                        String name = null;
-                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
-
-                        if (name == null || name.trim().isEmpty())
-                            name = "Unknown";
-
-                        simpleList.add(new SimpleSimEntry(slot, name));
-                    }
-                }
+                Object res = m.invoke(sm);
+                if (res instanceof List) subs = (List<SubscriptionInfo>) res;
             } catch (Throwable ignore) {}
         }
 
         // Count SIMs
         int count = 0;
-
         if (subs != null && !subs.isEmpty()) {
             boolean[] seen = new boolean[2];
             for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
-                        seen[slot] = true;
-                        count++;
-                    }
-                } catch (Throwable ignore) {}
+                int slot = si.getSimSlotIndex();
+                if (slot >= 0 && slot <= 1 && !seen[slot]) {
+                    seen[slot] = true;
+                    count++;
+                }
             }
-        } else if (!simpleList.isEmpty()) {
-            count = simpleList.size();
         }
 
-        String countStr = (count == 0 ? "N/A" : String.valueOf(count));
+        sb.append(kv.apply("Active SIMs", (count == 0 ? "N/A" : String.valueOf(count))));
 
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Active SIMs"), countStr));
-
-        // Print SLOT details
+        // Slot details
         if (subs != null && !subs.isEmpty()) {
-
             boolean[] printed = new boolean[2];
-
             for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot < 0 || slot > 1 || printed[slot]) continue;
+                int s = si.getSimSlotIndex();
+                if (s < 0 || s > 1 || printed[s]) continue;
+                printed[s] = true;
 
-                    printed[slot] = true;
-
-                    String displayName =
-                            si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
-
-                    sb.append(String.format(locale, "%s : %s\n",
-                            padKeyModem("SIM Slot " + (slot + 1)), displayName));
-
-                } catch (Throwable ignore) {}
-            }
-
-        } else if (!simpleList.isEmpty()) {
-            for (SimpleSimEntry e : simpleList) {
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
+                String name = si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
+                sb.append(kv.apply("SIM Slot " + (s + 1), name));
             }
         }
 
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SUBSCRIBER INFO — masked
+    // SUBSCRIBER INFO (masked)
     // ------------------------------------------------------------
     try {
         if (tm != null) {
-            String imsi = null;
-            String msisdn = null;
-
+            String imsi = null, msisdn = null;
             try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
             try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
 
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("IMSI"),
+            sb.append(kv.apply("IMSI",
                     (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
 
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("MSISDN"),
+            sb.append(kv.apply("MSISDN",
                     (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
         }
     } catch (Throwable ignore) {}
@@ -3018,30 +2955,14 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     // ADVANCED
     // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown. Requires root access"));
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown. Requires root access"));
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted. Requires root access"));
+    sb.append(kv.apply("4G+ CA", "Unknown. Requires root access"));
+    sb.append(kv.apply("NR-CA", "Unknown. Requires root access"));
+    sb.append(kv.apply("Bands", "Vendor restricted. Requires root access"));
 
-    sb.append(String.format(locale,
-            "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
-            padKeyModem("Advanced")
-    ));
+    sb.append(kv.apply("Advanced",
+            "Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools."));
 
-    return gelPostProcess(sb.toString());
-}
-
-// Local class for Xiaomi fallback
-private static class SimpleSimEntry {
-    int slot;
-    String carrier;
-
-    SimpleSimEntry(int s, String c) {
-        slot = s;
-        carrier = c;
-    }
+    return u(sb.toString());
 }
 
 // ============================================================================
@@ -3755,42 +3676,55 @@ private String getLocationCapabilities() {
 }
 
 // ============================================================================
-// GEL POST PROCESSOR v5 — FINAL PREMIUM OEM WRAP SYSTEM
+// GEL POST PROCESSOR — FINAL PREMIUM VALUE ALIGN SYSTEM
 // ============================================================================
 private String gelPostProcess(String input) {
     if (input == null) return "";
 
-    // Normalize
     input = input.replace("\r", "");
 
     String[] lines = input.split("\n");
     StringBuilder out = new StringBuilder();
 
-    final int VALUE_COLUMN = 24; // <-- η κάθετη στήλη που ξεκινά η τιμή
+    // Η στήλη όπου ξεκινούν οι ΠΡΑΣΙΝΕΣ ΤΙΜΕΣ
+    final int VALUE_COLUMN = 24;
 
-    for (String line : lines) {
+    for (int i = 0; i < lines.length; i++) {
 
-        // Αν η γραμμή έχει label + ":" → τη βάζουμε όπως είναι
-        int idx = line.indexOf(':');
-        if (idx >= 0) {
-            out.append(line).append("\n");
+        String line = lines[i];
+        int colonIdx = line.indexOf(':');
+
+        // ------------------------------------------------------------
+        // 1️⃣ LABEL LINE (έχει ':') → αφήνουμε την γραμμή όπως είναι
+        // ------------------------------------------------------------
+        if (colonIdx >= 0) {
+            out.append(line);
+            if (i < lines.length - 1) out.append("\n");
             continue;
         }
 
-        // Αν είναι continuation line → την στοιχίζουμε στη VALUE_COLUMN
+        // ------------------------------------------------------------
+        // 2️⃣ CONTINUATION LINE → ΕΥΘΙΑ κάτω από την αρχή της ΤΙΜΗΣ
+        // ------------------------------------------------------------
         String trimmed = line.trim();
+
         if (!trimmed.isEmpty()) {
 
-            StringBuilder pad = new StringBuilder();
-            for (int i = 0; i < VALUE_COLUMN; i++) pad.append(' ');
+            // φτιάχνουμε indent ώστε η νέα γραμμή να ξεκινά ΑΚΡΙΒΩΣ από VALUE_COLUMN
+            StringBuilder indent = new StringBuilder();
+            for (int s = 0; s < VALUE_COLUMN; s++)
+                indent.append(' ');
 
-            out.append(pad).append(trimmed).append("\n");
+            out.append(indent).append(trimmed);
+
         } else {
-            out.append("\n");
+            out.append("");
         }
+
+        if (i < lines.length - 1) out.append("\n");
     }
 
-    return out.toString().trim();
+    return out.toString();
 }
 
 // 🔥 END OF CLASS

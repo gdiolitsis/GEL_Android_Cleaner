@@ -3456,8 +3456,7 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
     }
 
 // ============================================================
-// APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
-// GEL WRAP-ALIGN ENGINE v2.0 — FINAL
+// APPLY NEON VALUES — GEL ALIGNMENT v12 (FIXED COLUMN VALUES)
 // ============================================================
 private void applyNeonValues(TextView tv, String text) {
     if (text == null) {
@@ -3465,62 +3464,70 @@ private void applyNeonValues(TextView tv, String text) {
         return;
     }
 
-    final int VALUE_COLUMN = 24;   // ίδια στήλη με gelPostProcess
+    final int VALUE_COL = 26; // ⭐ ΣΤΑΘΕΡΗ στήλη για όλες τις τιμές
     int neon = Color.parseColor(NEON_GREEN);
     int gold = Color.parseColor(GOLD_COLOR);
 
-    // ============================================================
-    // 1) WRAP FIX — force indent for continuation lines
-    // ============================================================
-    String[] rawLines = text.replace("\r", "").split("\n");
+    String[] lines = text.split("\n");
     StringBuilder rebuilt = new StringBuilder();
 
-    for (String L : rawLines) {
+    // ------------------------------------------------------------
+    // 1) ξαναχτίζουμε το text με fixed-column alignment
+    // ------------------------------------------------------------
+    for (String line : lines) {
 
-        int colon = L.indexOf(':');
+        int colon = line.indexOf(':');
 
-        // LABEL LINE → αφήνεται αυτούσιο
-        if (colon >= 0) {
-            rebuilt.append(L).append("\n");
-            continue;
-        }
+        if (colon > 0) {
+            // label = αριστερό μέρος
+            String label = line.substring(0, colon + 1);
 
-        // CONTINUATION LINE → indent κάτω από πράσινη τιμή
-        String trimmed = L.trim();
+            // value = δεξί μέρος
+            String value = "";
+            if (colon + 1 < line.length())
+                value = line.substring(colon + 1).trim();
 
-        if (trimmed.isEmpty()) {
-            rebuilt.append("\n");
+            // φτιάχνουμε padding μέχρι τη VALUE_COL
+            int pad = Math.max(1, VALUE_COL - label.length());
+            StringBuilder padder = new StringBuilder();
+            for (int i = 0; i < pad; i++) padder.append(' ');
+
+            rebuilt.append(label).append(padder).append(value).append("\n");
         } else {
-            StringBuilder pad = new StringBuilder();
-            for (int s = 0; s < VALUE_COLUMN; s++)
-                pad.append(' ');
-
-            rebuilt.append(pad).append(trimmed).append("\n");
+            // continuation lines → ξεκινούν από την VALUE_COL
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                StringBuilder contPad = new StringBuilder();
+                for (int i = 0; i < VALUE_COL; i++) contPad.append(' ');
+                rebuilt.append(contPad).append(trimmed).append("\n");
+            } else {
+                rebuilt.append("\n");
+            }
         }
     }
 
-    // Το text πλέον είναι τέλεια στοίχισμένο
-    text = rebuilt.toString();
+    String aligned = rebuilt.toString();
+    SpannableStringBuilder ssb = new SpannableStringBuilder(aligned);
 
-    // Ξαναφτιάχνουμε το spannable
-    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+    // ------------------------------------------------------------
+    // 2) neon-color για το value μέρος ΜΟΝΟ
+    // ------------------------------------------------------------
+    int idx = 0;
+    while (idx < aligned.length()) {
 
-    // ============================================================
-    // 2) Apply NEON coloring to values
-    // ============================================================
-    int start = 0;
-    int len   = text.length();
-
-    while (start < len) {
-        int colon = text.indexOf(':', start);
+        int colon = aligned.indexOf(':', idx);
         if (colon == -1) break;
 
-        int lineEnd = text.indexOf('\n', colon);
-        if (lineEnd == -1) lineEnd = len;
-
         int valueStart = colon + 1;
-        while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart)))
+
+        // πήδαμε τα spaces του padding
+        while (valueStart < aligned.length() &&
+                (aligned.charAt(valueStart) == ' ' ||
+                 aligned.charAt(valueStart) == '\t'))
             valueStart++;
+
+        int lineEnd = aligned.indexOf('\n', valueStart);
+        if (lineEnd == -1) lineEnd = aligned.length();
 
         if (valueStart < lineEnd) {
             ssb.setSpan(
@@ -3531,72 +3538,24 @@ private void applyNeonValues(TextView tv, String text) {
             );
         }
 
-        start = lineEnd + 1;
+        idx = lineEnd + 1;
     }
 
-    // ============================================================
-    // 3) Gold highlight for vendor text
-    // ============================================================
-    int idxX = text.indexOf("Xiaomi");
-    while (idxX != -1) {
-        int end = idxX + "Xiaomi".length();
+    // ------------------------------------------------------------
+    // 3) Gold για Xiaomi keywords
+    // ------------------------------------------------------------
+    String key = "Xiaomi";
+    int k = aligned.indexOf(key);
+    while (k != -1) {
         ssb.setSpan(
                 new ForegroundColorSpan(gold),
-                idxX,
-                end,
+                k,
+                k + key.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         );
-        idxX = text.indexOf("Xiaomi", end);
+        k = aligned.indexOf(key, k + 1);
     }
 
-    // ============================================================
-    // 4) Bold "Open Settings"
-    // ============================================================
-    String os = "Open Settings";
-    int idxOS = text.indexOf(os);
-    if (idxOS != -1) {
-        ssb.setSpan(
-                new StyleSpan(Typeface.BOLD),
-                idxOS,
-                idxOS + os.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-    }
-
-    // ============================================================
-    // 5) Clickable Settings paths
-    // ============================================================
-    boolean hasPath = false;
-    int idx = text.indexOf("Settings →");
-
-    while (idx != -1) {
-        int end = text.indexOf('\n', idx);
-        if (end == -1) end = len;
-
-        final String pathText = text.substring(idx, end);
-
-        ssb.setSpan(new ClickableSpan() {
-            @Override
-            public void onClick(@NonNull View widget) {
-                handleSettingsClick(widget.getContext(), pathText);
-            }
-        }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        ssb.setSpan(new ForegroundColorSpan(LINK_BLUE), idx, end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        hasPath = true;
-        idx = text.indexOf("Settings →", end);
-    }
-
-    if (hasPath) {
-        tv.setMovementMethod(LinkMovementMethod.getInstance());
-        tv.setHighlightColor(Color.TRANSPARENT);
-    }
-
-    // ============================================================
-    // 6) APPLY
-    // ============================================================
     tv.setText(ssb);
 }
     

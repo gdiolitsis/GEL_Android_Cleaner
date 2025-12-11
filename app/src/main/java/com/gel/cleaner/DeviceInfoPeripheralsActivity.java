@@ -3031,6 +3031,7 @@ private String buildModemInfo() {
 }
 
 return sb.toString();
+    }
 
 // ============================================================================
 // 4. Wi-Fi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
@@ -3772,3 +3773,4 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
+

@@ -2136,7 +2136,7 @@ private String buildRootInfo() {
 
 // Helper struct για να κρατάμε μια "καλύτερη" θερμοκρασία ανά ομάδα
 private static class ThermalGroupReading {
-    String rawName;   // p.x. "battery_therm"
+    String rawName;   // π.χ. "battery_therm"
     float  tempC;     // σε βαθμούς C
     boolean valid;
 
@@ -2206,8 +2206,8 @@ private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
 
 // Summary struct
 private static class ThermalSummary {
-    int zoneCount;          
-    int coolingDeviceCount; 
+    int zoneCount;          // μόνο REAL hardware zones
+    int coolingDeviceCount; // μόνο REAL hardware cooling devices
 }
 
 // ---------------------------------------------------------------
@@ -2258,6 +2258,7 @@ private ThermalSummary scanThermalHardware(
                 String group = mapTypeToGroup(type);
                 if (group == null) continue;
 
+                // μετράμε μόνο ζώνες που τελικά ανήκουν σε hardware group
                 summary.zoneCount++;
 
                 switch (group) {
@@ -2273,7 +2274,7 @@ private ThermalSummary scanThermalHardware(
         }
     }
 
-    // Hardware cooling devices
+    // REAL hardware cooling devices (fan / blower / pump / heatsink)
     if (cools != null) {
         for (File c : cools) {
             try {
@@ -2302,7 +2303,7 @@ private String mapTypeToGroup(String rawType) {
 }
 
 // ---------------------------------------------------------------
-// Cooling device filter
+// Cooling device filter (REAL hardware only)
 // ---------------------------------------------------------------
 private boolean isHardwareCoolingDevice(String rawType) {
     if (rawType == null) return false;
@@ -2315,6 +2316,10 @@ private boolean isHardwareCoolingDevice(String rawType) {
     if (t.contains("heatsink"))       return true;
     if (t.contains("radiator"))       return true;
     if (t.contains("cooling_module")) return true;
+
+    if (t.contains("skin"))    return false;
+    if (t.contains("hotspot")) return false;
+    if (t.contains("virtual")) return false;
 
     return false;
 }
@@ -2351,8 +2356,9 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         }
     }
 
+    // --- Αν δεν βρέθηκαν πραγματικά hardware cooling devices ---
     if (shown == 0) {
-        sb.append("• (no hardware cooling devices found) (passive cooling only)\n");
+        sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
     }
 }
 
@@ -2381,7 +2387,97 @@ private long readLongSafe(File file) {
 }
 
 // ---------------------------------------------------------------
-// OEM fallback completion — ⭐ THIS WAS MISSING IN YOUR FILE ⭐
+// Labels & formatting
+// ---------------------------------------------------------------
+private String classifyTempLabel(float c) {
+    if (!isValidTemp(c)) return "(Unknown)";
+    if (c < 30f)  return "(Cool)";
+    if (c < 40f)  return "(Normal)";
+    if (c < 50f)  return "(Warm)";
+    return "(⚠ Critical)";
+}
+
+private String formatThermalLine(String label, ThermalGroupReading r) {
+    if (r == null || !r.valid)
+        return String.format(Locale.US, "%-17s: N/A\n", label);
+
+    return String.format(Locale.US, "%-17s: %.1f°C %s\n",
+            label, r.tempC, classifyTempLabel(r.tempC));
+}
+
+// ---------------------------------------------------------------
+// Xiaomi / POCO / Redmi Detection + Fallbacks
+// ---------------------------------------------------------------
+private boolean isXiaomiFamilyDevice() {
+    String manu   = (Build.MANUFACTURER == null ? "" : Build.MANUFACTURER).toLowerCase();
+    String brand  = (Build.BRAND == null ? "" : Build.BRAND).toLowerCase();
+    String finger = (Build.FINGERPRINT == null ? "" : Build.FINGERPRINT).toLowerCase();
+
+    return manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")
+            || brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
+            || finger.contains("xiaomi") || finger.contains("redmi") || finger.contains("poco")
+            || finger.contains("hyperos");
+}
+
+private float findTempByTypeKeywords(String... keywords) {
+    if (keywords == null || keywords.length == 0) return Float.NaN;
+
+    File[] zones = new File("/sys/class/thermal")
+            .listFiles(f -> f.getName().startsWith("thermal_zone"));
+
+    if (zones == null) return Float.NaN;
+
+    float best = Float.NaN;
+
+    for (File z : zones) {
+        try {
+            String type = readFirstLineSafe(new File(z, "type")).toLowerCase(Locale.US);
+            boolean match = false;
+            for (String k : keywords) {
+                if (type.contains(k.toLowerCase(Locale.US))) { match = true; break; }
+            }
+            if (!match) continue;
+
+            long milli = readLongSafe(new File(z, "temp"));
+            float c;
+
+            if (milli == Long.MIN_VALUE)
+                c = Float.parseFloat(readFirstLineSafe(new File(z, "temp")));
+            else
+                c = milli / 1000f;
+
+            if (!isValidTemp(c)) continue;
+
+            if (Float.isNaN(best) || c > best) best = c;
+
+        } catch (Throwable ignore) {}
+    }
+
+    return best;
+}
+
+private float readBatteryTempFallback() {
+    String[] paths = {
+            "/sys/class/power_supply/battery/temp",
+            "/sys/class/power_supply/bms/temp",
+            "/sys/class/power_supply/maxfg/temp"
+    };
+
+    for (String p : paths) {
+        try {
+            long v = readLongSafe(new File(p));
+            if (v == Long.MIN_VALUE) continue;
+
+            float c = (v > 1000f ? v / 1000f : v);
+            if (isValidTemp(c)) return c;
+
+        } catch (Throwable ignore) {}
+    }
+    return Float.NaN;
+}
+
+// ---------------------------------------------------------------
+// OEM fallback completion
 // ---------------------------------------------------------------
 private void applyThermalFallbacks(
         ThermalGroupReading batteryMain,
@@ -2493,12 +2589,13 @@ private void applyThermalFallbacks(
 }
 
 // ===================================================================
-// FINAL PREMIUM THERMAL BUILDER — PERFECT ALIGNMENT EDITION
+// FINAL BUILDER — CLEAN OUTPUT (REAL HARDWARE SUMMARY + TABLE)
 // ===================================================================
 private String buildThermalInfo() {
 
     StringBuilder sb = new StringBuilder();
 
+    // Hardware thermals
     ThermalGroupReading batteryMain  = new ThermalGroupReading();
     ThermalGroupReading batteryShell = new ThermalGroupReading();
     ThermalGroupReading pmic         = new ThermalGroupReading();
@@ -2512,16 +2609,19 @@ private String buildThermalInfo() {
 
     applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
 
+    // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
     if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
 
-        sb.append(String.format(Locale.US, "%-20s: %d\n",
+        sb.append(String.format(Locale.US, "%-17s: %d\n",
                 "Thermal Zones", summary.zoneCount));
 
         if (summary.coolingDeviceCount == 0) {
-            sb.append(String.format(Locale.US, "%-20s: %s\n",
-                    "Cooling Devices", "0 (passive cooling only)"));
+            sb.append(String.format(Locale.US,
+                    "%-17s: 0 (This device uses passive cooling only)\n",
+                    "Cooling Devices"));
         } else {
-            sb.append(String.format(Locale.US, "%-20s: %d\n",
+            sb.append(String.format(Locale.US,
+                    "%-17s: %d\n",
                     "Cooling Devices", summary.coolingDeviceCount));
         }
 
@@ -2541,9 +2641,9 @@ private String buildThermalInfo() {
 
     sb.append("Hardware Cooling Systems\n");
     sb.append("================================\n");
-
     appendHardwareCoolingDevices(sb);
 
+    // ✅ Περνάει από το global GEL alignment/filter
     return gelPostProcess(sb.toString());
 }
 

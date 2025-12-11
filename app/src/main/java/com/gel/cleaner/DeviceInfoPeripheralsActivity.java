@@ -2987,23 +2987,50 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ADVANCED SECTION — FIXED MULTILINE, PERFECT ALIGNMENT
-    // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown. Requires                       root access"));
+// ADVANCED SECTION — INVISIBLE BOX MULTILINE FIX
+// ------------------------------------------------------------
+{
+    String label = padKeyModem("4G+ CA") + " : ";
+    String value = "Unknown. Requires root access";
 
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown. Requires                       root access"));
+    SpannableStringBuilder box = new SpannableStringBuilder(value);
+    box.setSpan(new LeadingMarginSpan.Standard(260, 0), 0, box.length(), 0);
 
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted.                       Requires root access"));
-
-    // FULL FIXED MULTILINE — NO MORE BROKEN LINES
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Advanced"), "Full RAT tables,                       bands, CA combos, requires root access                       and OEM modem tools "));
-
-    return sb.toString();
+    sb.append(label).append(box).append("\n");
 }
+
+{
+    String label = padKeyModem("NR-CA") + " : ";
+    String value = "Unknown. Requires root access";
+
+    SpannableStringBuilder box = new SpannableStringBuilder(value);
+    box.setSpan(new LeadingMarginSpan.Standard(260, 0), 0, box.length(), 0);
+
+    sb.append(label).append(box).append("\n");
+}
+
+{
+    String label = padKeyModem("Bands") + " : ";
+    String value = "Vendor restricted. Requires root access";
+
+    SpannableStringBuilder box = new SpannableStringBuilder(value);
+    box.setSpan(new LeadingMarginSpan.Standard(260, 0), 0, box.length(), 0);
+
+    sb.append(label).append(box).append("\n");
+}
+
+{
+    String label = padKeyModem("Advanced") + " : ";
+    String value =
+            "Full RAT tables, bands, CA combos, requires root access and OEM modem tools";
+
+    SpannableStringBuilder box = new SpannableStringBuilder(value);
+    box.setSpan(new LeadingMarginSpan.Standard(260, 0), 0, box.length(), 0);
+
+    sb.append(label).append(box).append("\n");
+}
+
+return sb.toString();
 
 // ============================================================================
 // 4. Wi-Fi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)

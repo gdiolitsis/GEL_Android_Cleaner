@@ -335,7 +335,7 @@
         android:id="@+id/iconModemToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="＋"
         android:textColor="#00FFBF"
         android:textSize="18sp" />
 </LinearLayout>

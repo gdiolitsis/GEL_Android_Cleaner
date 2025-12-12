@@ -2041,19 +2041,20 @@ private String buildOtherPeripheralsInfo() {
 }
 
 // ============================================================================
-// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Extended + MicBench
-// + Live Mic Indicator + Active Mic Detect + Human Grade + UI Hooks)
-// GEL Turbo Human Edition — Play Store Safe
+// AUDIO SYSTEM — CLEAN PERIPHERALS BLOCK (NO TESTS, NO HEAVY OPS)
+// Speakers / Microphones / HAL / Extended
+// GEL — Play Store Safe, Zero Lag
 // ============================================================================
 
 // ============================================================================
-// 1) MICROPHONES — HUMAN CLASSIFIED + RUNTIME READY
+// 1) MICROPHONES — DETECTION ONLY (NO RECORDING)
 // ============================================================================
 private String buildMicsInfo() {
+
     StringBuilder sb = new StringBuilder();
 
-    int wiredCount = 0, btCount = 0, usbCount = 0;
     boolean hasBuiltin = false, hasTele = false, hasWired = false, hasBT = false, hasUSB = false;
+    int wired = 0, bt = 0, usb = 0;
 
     try {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -2063,90 +2064,59 @@ private String buildMicsInfo() {
 
             for (AudioDeviceInfo d : devs) {
 
-                int type = d.getType();
-
-                String label;
-                String role;
-
-                switch (type) {
+                switch (d.getType()) {
 
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                        label = "Built-in Microphone";
-                        role  = hasBuiltin
-                                ? "Secondary / noise-cancel microphone"
-                                : "Primary device microphone";
+                        sb.append("• Built-in Microphone\n")
+                          .append("   Role            : ")
+                          .append(hasBuiltin ? "Secondary / noise-cancel microphone" : "Primary device microphone")
+                          .append("\n   Present         : Yes\n\n");
                         hasBuiltin = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_TELEPHONY:
-                        label = "Telephony Microphone";
-                        role  = "Dedicated voice call audio path";
+                        sb.append("• Telephony Microphone\n")
+                          .append("   Role            : Dedicated voice call audio path\n")
+                          .append("   Present         : Yes\n\n");
                         hasTele = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        label = "Wired Headset Microphone";
-                        role  = "External analog microphone";
-                        wiredCount++; hasWired = true;
+                        wired++; hasWired = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                        label = "Bluetooth Call Microphone";
-                        role  = "Hands-free voice call microphone";
-                        btCount++; hasBT = true;
-                        break;
-
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        label = "Bluetooth Media Microphone";
-                        role  = "Wireless media audio input";
-                        btCount++; hasBT = true;
+                        bt++; hasBT = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
                     case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Microphone";
-                        role  = "External digital microphone";
-                        usbCount++; hasUSB = true;
-                        break;
-
-                    default:
-                        label = "Auxiliary System Microphone";
-                        role  = "Secondary OEM-managed microphone used internally by the device";
+                        usb++; hasUSB = true;
                         break;
                 }
-
-                sb.append("• ").append(label).append("\n");
-                sb.append("   Role           : ").append(role).append("\n");
-                sb.append("   Present        : Yes\n\n");
             }
         }
-
     } catch (Throwable ignore) {}
-
-    if (sb.length() == 0)
-        sb.append("No microphones reported by the Android audio framework.\n\n");
 
     sb.append("=== Summary ===\n");
     sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
     sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
-    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No")
-      .append(" (").append(wiredCount).append(")\n");
-    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No")
-      .append(" (").append(btCount).append(")\n");
-    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No")
-      .append(" (").append(usbCount).append(")\n");
+    sb.append("Wired Mics       : ").append(hasWired   ? "Yes ("+wired+")" : "No").append("\n");
+    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes ("+bt+")"    : "No").append("\n");
+    sb.append("USB Mics         : ").append(hasUSB     ? "Yes ("+usb+")"   : "No").append("\n");
 
-    sb.append("\nAdvanced         : Live mic indicator + active mic detection require microphone permission.\n");
+    sb.append("\nAdvanced         : Detailed mic activity & tests are available in GEL Phone Diagnosis.\n");
 
     return sb.toString();
 }
 
-
 // ============================================================================
-// 2) AUDIO OUTPUTS & HAL — CLEAN HUMAN VIEW
+// 2) AUDIO OUTPUTS / HAL — DETECTION ONLY
 // ============================================================================
 private String buildAudioHalInfo() {
+
     StringBuilder sb = new StringBuilder();
 
     String hal = getProp("ro.audio.hal.version");
@@ -2154,7 +2124,7 @@ private String buildAudioHalInfo() {
       .append((hal != null && !hal.isEmpty()) ? hal : "Not exposed")
       .append("\n\n");
 
-    boolean speaker = false, wired = false, bt = false, usb = false, hdmi = false;
+    boolean speaker=false, wired=false, bt=false, usb=false, hdmi=false;
 
     try {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -2163,58 +2133,18 @@ private String buildAudioHalInfo() {
             AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
 
             for (AudioDeviceInfo o : outs) {
-
-                int type = o.getType();
-                String label;
-                String role;
-
-                switch (type) {
-
-                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                        label = "Built-in Speaker";
-                        role  = "Primary device audio output";
-                        speaker = true;
-                        break;
-
+                switch (o.getType()) {
+                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER: speaker=true; break;
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                        label = "Wired Audio Output";
-                        role  = "Analog audio path";
-                        wired = true;
-                        break;
-
+                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:   wired=true;   break;
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                        label = "Bluetooth Audio Output";
-                        role  = "Wireless audio stream";
-                        bt = true;
-                        break;
-
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:   bt=true;      break;
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Audio Output";
-                        role  = "External digital DAC";
-                        usb = true;
-                        break;
-
-                    case AudioDeviceInfo.TYPE_HDMI:
-                        label = "HDMI Audio Output";
-                        role  = "External display audio";
-                        hdmi = true;
-                        break;
-
-                    default:
-                        label = "Auxiliary Audio Output";
-                        role  = "OEM-defined output path";
-                        break;
+                    case AudioDeviceInfo.TYPE_USB_HEADSET:     usb=true;     break;
+                    case AudioDeviceInfo.TYPE_HDMI:            hdmi=true;    break;
                 }
-
-                sb.append("• ").append(label).append("\n");
-                sb.append("   Role           : ").append(role).append("\n");
-                sb.append("   Present        : Yes\n\n");
             }
         }
-
     } catch (Throwable ignore) {}
 
     sb.append("=== Summary ===\n");
@@ -2224,355 +2154,29 @@ private String buildAudioHalInfo() {
     sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
     sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : HAL routing graphs and DSP offload models require elevated access.\n");
+    sb.append("\nAdvanced         : DSP routing & offload diagnostics are available in GEL Phone Diagnosis.\n");
 
     return sb.toString();
 }
 
-
 // ============================================================================
-// 3) AUDIO EXTENDED — SAFE SNAPSHOT
+// 3) AUDIO EXTENDED — SAFE FLAGS
 // ============================================================================
 private String buildAudioExtendedInfo() {
+
     StringBuilder sb = new StringBuilder();
 
     try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            boolean hw = getPackageManager()
-                    .hasSystemFeature("android.hardware.audio.output");
-            sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
-        }
+        boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
+        sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
     } catch (Throwable ignore) {}
 
-    sb.append("Advanced         : Spatial audio flags and DSP paths require elevated access.\n");
-
+    sb.append("Advanced         : Spatial audio & OEM DSP paths require elevated access.\n");
     return sb.toString();
 }
 
 // ============================================================================
-// MIC BENCH — ACTIVE MIC / NOISE FLOOR / QUALITY SCORE
-// GEL Turbo Edition — Play Store Safe
-// ============================================================================
-private static class MicBenchResult {
-    boolean micPermission;
-    boolean micActive;
-    float noiseRms;
-    float peakRms;
-    float dynamicRange;
-    int qualityScore;
-}
-
-private MicBenchResult runMicBench() {
-
-    MicBenchResult r = new MicBenchResult();
-    r.micPermission = hasMicPermission();
-
-    if (!r.micPermission) return r;
-
-    AudioRecord rec = null;
-
-    try {
-        int sampleRate = 44100;
-        int bufSize = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-        );
-
-        if (bufSize <= 0) return r;
-
-        rec = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufSize
-        );
-
-        short[] buffer = new short[Math.min(bufSize, 4096)];
-        rec.startRecording();
-
-        long start = SystemClock.elapsedRealtime();
-        float rmsSum = 0;
-        float peak = 0;
-        int samples = 0;
-
-        while (SystemClock.elapsedRealtime() - start < 650) { // ~0.65 sec
-            int read = rec.read(buffer, 0, buffer.length);
-            if (read <= 0) continue;
-
-            for (int i = 0; i < read; i++) {
-                float v = buffer[i];
-                rmsSum += v * v;
-                peak = Math.max(peak, Math.abs(v));
-                samples++;
-            }
-        }
-
-        if (samples > 0) {
-            float rms = (float) Math.sqrt(rmsSum / samples);
-
-            r.noiseRms = rms;
-            r.peakRms = peak;
-            r.dynamicRange = Math.max(0f, peak - rms);
-            r.micActive = rms > 35f; // safe empirical threshold for "alive mic"
-
-            r.qualityScore = scoreMic(r.noiseRms, r.dynamicRange);
-        }
-
-    } catch (Throwable ignore) {
-    } finally {
-        try {
-            if (rec != null) {
-                rec.stop();
-                rec.release();
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    return r;
-}
-
-// MIC QUALITY SCORING (0–100)
-private int scoreMic(float noise, float dynamic) {
-
-    int score = 100;
-
-    // Noise penalty (higher RMS at idle = worse)
-    if (noise > 1400) score -= 65;
-    else if (noise > 900) score -= 45;
-    else if (noise > 450) score -= 25;
-    else if (noise > 250) score -= 10;
-
-    // Dynamic range (peak - noise)
-    if (dynamic < 250) score -= 35;
-    else if (dynamic < 600) score -= 20;
-    else if (dynamic < 1000) score -= 10;
-    else if (dynamic > 3000) score += 8;
-
-    if (score < 0) score = 0;
-    if (score > 100) score = 100;
-
-    return score;
-}
-
-
-// ============================================================================
-// LIVE MIC INDICATOR — REALTIME STATUS (short snapshot, no service)
-// ============================================================================
-private static class LiveMicStatus {
-    boolean micPermission;
-    float rms;
-    float peak;
-    String state;   // Silent / Speaking / Loud / Error
-}
-
-private LiveMicStatus readLiveMicSnapshot(int durationMs) {
-
-    LiveMicStatus s = new LiveMicStatus();
-    s.micPermission = hasMicPermission();
-    s.state = "Unknown";
-
-    if (!s.micPermission) {
-        s.state = "Permission Required (RECORD_AUDIO)";
-        return s;
-    }
-
-    AudioRecord rec = null;
-
-    try {
-        int sampleRate = 44100;
-        int bufSize = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-        );
-
-        if (bufSize <= 0) { s.state = "Error"; return s; }
-
-        rec = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufSize
-        );
-
-        short[] buffer = new short[Math.min(bufSize, 4096)];
-        rec.startRecording();
-
-        long start = SystemClock.elapsedRealtime();
-        float sumSq = 0;
-        float peak = 0;
-        int samples = 0;
-
-        while (SystemClock.elapsedRealtime() - start < Math.max(250, durationMs)) {
-            int read = rec.read(buffer, 0, buffer.length);
-            if (read <= 0) continue;
-
-            for (int i = 0; i < read; i++) {
-                float v = buffer[i];
-                sumSq += v * v;
-                peak = Math.max(peak, Math.abs(v));
-                samples++;
-            }
-        }
-
-        if (samples > 0) {
-            float rms = (float) Math.sqrt(sumSq / samples);
-            s.rms = rms;
-            s.peak = peak;
-
-            if (rms < 35f) s.state = "Silent";
-            else if (rms < 220f) s.state = "Speaking";
-            else s.state = "Loud";
-        } else {
-            s.state = "Error";
-        }
-
-    } catch (Throwable ignore) {
-        s.state = "Error";
-    } finally {
-        try {
-            if (rec != null) {
-                rec.stop();
-                rec.release();
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    return s;
-}
-
-
-// ============================================================================
-// ACTIVE MIC DETECT — heuristic (which audio source gives best signal now)
-// Play Store Safe: we cannot truly “see” OEM mic routing; we infer best path.
-// ============================================================================
-private static class ActiveMicDetectResult {
-    boolean micPermission;
-    String bestPathLabel;
-    float bestRms;
-    int confidence; // 0..100
-}
-
-private ActiveMicDetectResult detectActiveMicHeuristic() {
-
-    ActiveMicDetectResult out = new ActiveMicDetectResult();
-    out.micPermission = hasMicPermission();
-
-    if (!out.micPermission) {
-        out.bestPathLabel = "Permission Required (RECORD_AUDIO)";
-        out.confidence = 0;
-        return out;
-    }
-
-    // Try a small set of safe sources. (No VOICE_CALL; avoid weird OEM behavior.)
-    int[] sources = new int[]{
-            MediaRecorder.AudioSource.DEFAULT,
-            MediaRecorder.AudioSource.MIC,
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
-            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-            MediaRecorder.AudioSource.CAMCORDER
-    };
-
-    String[] labels = new String[]{
-            "Default Path",
-            "Main Mic Path",
-            "Voice Recognition Path",
-            "Voice Communication Path",
-            "Camera/Video Path"
-    };
-
-    float bestRms = -1f;
-    int bestIdx = 0;
-
-    for (int i = 0; i < sources.length; i++) {
-        float rms = probeMicRms(sources[i], 350);
-        if (rms > bestRms) {
-            bestRms = rms;
-            bestIdx = i;
-        }
-    }
-
-    out.bestRms = Math.max(0f, bestRms);
-    out.bestPathLabel = labels[bestIdx];
-
-    // Confidence: based on separation vs baseline DEFAULT
-    float base = probeMicRms(MediaRecorder.AudioSource.DEFAULT, 250);
-    float diff = out.bestRms - Math.max(0f, base);
-
-    int conf;
-    if (out.bestRms < 35f) conf = 15;             // basically silent
-    else if (diff > 250f) conf = 85;
-    else if (diff > 120f) conf = 70;
-    else if (diff > 60f)  conf = 55;
-    else conf = 40;
-
-    out.confidence = clampInt(conf, 0, 100);
-    return out;
-}
-
-private float probeMicRms(int audioSource, int durationMs) {
-
-    AudioRecord rec = null;
-
-    try {
-        int sampleRate = 44100;
-        int bufSize = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-        );
-
-        if (bufSize <= 0) return 0f;
-
-        rec = new AudioRecord(
-                audioSource,
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufSize
-        );
-
-        short[] buffer = new short[Math.min(bufSize, 2048)];
-        rec.startRecording();
-
-        long start = SystemClock.elapsedRealtime();
-        float sumSq = 0;
-        int samples = 0;
-
-        while (SystemClock.elapsedRealtime() - start < Math.max(220, durationMs)) {
-            int read = rec.read(buffer, 0, buffer.length);
-            if (read <= 0) continue;
-
-            for (int i = 0; i < read; i++) {
-                float v = buffer[i];
-                sumSq += v * v;
-                samples++;
-            }
-        }
-
-        if (samples <= 0) return 0f;
-        return (float) Math.sqrt(sumSq / samples);
-
-    } catch (Throwable ignore) {
-        return 0f;
-    } finally {
-        try {
-            if (rec != null) {
-                rec.stop();
-                rec.release();
-            }
-        } catch (Throwable ignore) {}
-    }
-}
-
-// ============================================================================
-// 4) UNIFIED AUDIO BLOCK — LIGHT PART ONLY
-// (NO heavy audio here — ANTI-ANR)
+// 4) UNIFIED AUDIO BLOCK — PERIPHERALS VIEW (LIGHT ONLY)
 // ============================================================================
 private String buildAudioUnifiedInfo() {
 
@@ -2587,30 +2191,7 @@ private String buildAudioUnifiedInfo() {
     sb.append("=== Extended Audio Paths ===\n");
     sb.append(buildAudioExtendedInfo()).append("\n");
 
-    // ------------------------------------------------------------
-    // LIVE MIC INDICATOR
-    // ------------------------------------------------------------
-    LiveMicStatus live = readLiveMicSnapshot(420);
-
-    sb.append("=== Live Mic Indicator ===\n");
-    sb.append("State            : ").append(live.state).append("\n");
-    sb.append("UI Label         : ").append(getLiveMicUiLabel()).append("\n\n");
-
-    // ------------------------------------------------------------
-    // ACTIVE MIC DETECT
-    // ------------------------------------------------------------
-    ActiveMicDetectResult a = detectActiveMicHeuristic();
-
-    sb.append("=== Active Mic Detect (Heuristic) ===\n");
-    sb.append("Human Summary    : ").append(activeMicHumanSummary(a)).append("\n");
-
-    if (a.micPermission) {
-        sb.append("Best Path        : ").append(a.bestPathLabel).append("\n");
-        sb.append("Signal RMS       : ").append(fmt1(a.bestRms)).append("\n");
-        sb.append("Confidence       : ").append(a.confidence).append("/100\n");
-    }
-
-    sb.append("\n(Advanced audio diagnostics load on demand)\n");
+    sb.append("(Advanced diagnostics & tests are available in GEL Phone Diagnosis)\n");
 
     return sb.toString();
 }

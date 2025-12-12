@@ -593,6 +593,7 @@ headerAudio.setOnClickListener(v -> {
 }
 
  // 🔥 END onCreate()
+
 // ============================================================
 //  PERMISSION CALLBACK — FINAL CLEAN VERSION
 // ============================================================
@@ -4228,6 +4229,13 @@ private void collapseAllExceptBattery() {
     // ⭐ Reset battery icon (always safe)
     if (iconBattery != null)
         iconBattery.setText("＋");
+} 
+
+// ============================================================
+// COLLAPSE ENGINE — PUBLIC WRAPPER
+// ============================================================
+private void collapseAll() {
+    collapseAllExceptBattery();
 }
 
 // ===================================================================
@@ -4348,4 +4356,3 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
-

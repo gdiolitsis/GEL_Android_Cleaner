@@ -1913,14 +1913,14 @@ private String buildMicsInfo() {
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
                         sb.append("• Built-in Microphone\n")
                           .append("   Role            : ")
-                          .append(hasBuiltin ? "Secondary / noise-cancel microphone" : "Primary device microphone")
+                          .append(hasBuiltin ? "noise-cancel microphone" : "Primary microphone")
                           .append("\n   Present         : Yes\n\n");
                         hasBuiltin = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_TELEPHONY:
                         sb.append("• Telephony Microphone\n")
-                          .append("   Role            : Dedicated voice call audio path\n")
+                          .append("   Role            : Dedicated voice calln")
                           .append("   Present         : Yes\n\n");
                         hasTele = true;
                         break;
@@ -1950,8 +1950,6 @@ private String buildMicsInfo() {
     sb.append("Wired Mics       : ").append(hasWired   ? "Yes ("+wired+")" : "No").append("\n");
     sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes ("+bt+")"    : "No").append("\n");
     sb.append("USB Mics         : ").append(hasUSB     ? "Yes ("+usb+")"   : "No").append("\n");
-
-    sb.append("\nAdvanced         : Detailed mic activity & tests are available in GEL Phone Diagnosis.\n");
 
     return sb.toString();
 }
@@ -1998,8 +1996,6 @@ private String buildAudioHalInfo() {
     sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
     sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : DSP routing & offload diagnostics are available in GEL Phone Diagnosis.\n");
-
     return sb.toString();
 }
 
@@ -2015,7 +2011,6 @@ private String buildAudioExtendedInfo() {
         sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
     } catch (Throwable ignore) {}
 
-    sb.append("Advanced         : Spatial audio & OEM DSP paths require elevated access.\n");
     return sb.toString();
 }
 
@@ -2034,8 +2029,6 @@ private String buildAudioUnifiedInfo() {
 
     sb.append("=== Extended Audio Paths ===\n");
     sb.append(buildAudioExtendedInfo()).append("\n");
-
-    sb.append("(Advanced diagnostics & tests are available in GEL Phone Diagnosis)\n");
 
     return sb.toString();
 }

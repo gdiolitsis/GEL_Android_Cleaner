@@ -283,7 +283,9 @@ protected void onCreate(Bundle savedInstanceState) {
     txtThermalContent         = findViewById(R.id.txtThermalContent);
     txtModemContent           = findViewById(R.id.txtModemContent);
     txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
+
+    // ❌ AUDIO REMOVED (no txtAudioUnifiedContent bind)
+
     txtSensorsContent         = findViewById(R.id.txtSensorsContent);
     txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
     txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
@@ -304,7 +306,9 @@ protected void onCreate(Bundle savedInstanceState) {
     iconThermal         = findViewById(R.id.iconThermalToggle);
     iconModem           = findViewById(R.id.iconModemToggle);
     iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
+
+    // ❌ AUDIO REMOVED (no iconAudioUnified bind)
+
     iconSensors         = findViewById(R.id.iconSensorsToggle);
     iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
     iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
@@ -319,7 +323,7 @@ protected void onCreate(Bundle savedInstanceState) {
     iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
     // ------------------------------------------------------------
-    // 3️⃣  MASTER ARRAYS
+    // 3️⃣  MASTER ARRAYS (NO AUDIO)
     // ------------------------------------------------------------
     allContents = new TextView[]{
             txtBatteryContent,
@@ -330,7 +334,7 @@ protected void onCreate(Bundle savedInstanceState) {
             txtThermalContent,
             txtModemContent,
             txtWifiAdvancedContent,
-            txtAudioUnifiedContent,
+            // ❌ txtAudioUnifiedContent removed
             txtSensorsContent,
             txtSensorsExtendedContent,
             txtBiometricsContent,
@@ -354,7 +358,7 @@ protected void onCreate(Bundle savedInstanceState) {
             iconThermal,
             iconModem,
             iconWifiAdvanced,
-            iconAudioUnified,
+            // ❌ iconAudioUnified removed
             iconSensors,
             iconSensorsExtended,
             iconBiometrics,
@@ -375,14 +379,7 @@ protected void onCreate(Bundle savedInstanceState) {
     populateAllSections();
 
     // ------------------------------------------------------------
-    // 5️⃣  AUDIO — PERIPHERALS SUMMARY (STATIC, LIGHT)
-    // ------------------------------------------------------------
-    if (txtAudioUnifiedContent != null) {
-        txtAudioUnifiedContent.setText(buildAudioUnifiedInfo());
-    }
-
-    // ------------------------------------------------------------
-    // 6️⃣  PERMISSIONS
+    // 5️⃣  PERMISSIONS
     // ------------------------------------------------------------
     requestAllRuntimePermissions();
     requestPermissions(new String[]{
@@ -392,33 +389,36 @@ protected void onCreate(Bundle savedInstanceState) {
     }, 101);
 
     // ------------------------------------------------------------
-    // 7️⃣  BATTERY MODULE
+    // 6️⃣  INIT BATTERY MODULE
     // ------------------------------------------------------------
     initBatterySection();
     batteryContainer.setVisibility(View.GONE);
     txtBatteryModelCapacity.setVisibility(View.GONE);
-    iconBattery.setText("＋");
+    if (iconBattery != null) iconBattery.setText("＋");
 
     LinearLayout headerBattery = findViewById(R.id.headerBattery);
-    headerBattery.setOnClickListener(v -> {
-        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
-        collapseAllExceptBattery();
+    if (headerBattery != null) {
+        headerBattery.setOnClickListener(v -> {
+            boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-        if (!isOpen) {
-            txtBatteryContent.setVisibility(View.VISIBLE);
-            animateExpand(batteryContainer);
-            iconBattery.setText("－");
-            txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-            refreshBatteryInfoView();
-        } else {
-            animateCollapse(batteryContainer);
-            iconBattery.setText("＋");
-            txtBatteryModelCapacity.setVisibility(View.GONE);
-        }
-    });
+            collapseAllExceptBattery(); // ΜΗΝ αλλάξεις αυτό
+
+            if (!isOpen) {
+                if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.VISIBLE);
+                animateExpand(batteryContainer);
+                if (iconBattery != null) iconBattery.setText("－");
+                if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.VISIBLE);
+                refreshBatteryInfoView();
+            } else {
+                animateCollapse(batteryContainer);
+                if (iconBattery != null) iconBattery.setText("＋");
+                if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
+            }
+        });
+    }
 
     // ------------------------------------------------------------
-    // 8️⃣  NORMAL SECTIONS
+    // 7️⃣  NORMAL SECTIONS (NO AUDIO)
     // ------------------------------------------------------------
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
@@ -427,6 +427,9 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
     setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
     setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
+
+    // ❌ setupSection(headerAudio...) REMOVED
+
     setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
     setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
     setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);

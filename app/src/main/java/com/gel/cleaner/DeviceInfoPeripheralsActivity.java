@@ -1898,9 +1898,6 @@ private String buildMicsInfo() {
             for (AudioDeviceInfo d : devs) {
 
                 int type = d.getType();
-                String product = d.getProductName() != null
-                        ? d.getProductName().toString().trim()
-                        : "";
 
                 String label;
                 String role;
@@ -1930,13 +1927,13 @@ private String buildMicsInfo() {
 
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
                         label = "Bluetooth Call Microphone";
-                        role  = "Hands-free / voice call mic";
+                        role  = "Hands-free voice call microphone";
                         btCount++; hasBT = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
                         label = "Bluetooth Media Microphone";
-                        role  = "Vendor-specific media path";
+                        role  = "Wireless media audio input";
                         btCount++; hasBT = true;
                         break;
 
@@ -1948,20 +1945,14 @@ private String buildMicsInfo() {
                         break;
 
                     default:
-                        label = "Vendor / Secondary Microphone";
-                        role  = "OEM-defined input (type " + type + ")";
+                        label = "Auxiliary System Microphone";
+                        role  = "Secondary OEM-managed microphone used internally by the device";
                         break;
                 }
 
                 sb.append("• ").append(label).append("\n");
                 sb.append("   Role           : ").append(role).append("\n");
-                sb.append("   Present        : Yes\n");
-
-                if (!product.isEmpty())
-                    sb.append("   Hardware Name  : ").append(product).append("\n");
-
-                sb.append("   Device ID      : ").append(d.getId())
-                  .append(" (runtime handle)\n\n");
+                sb.append("   Present        : Yes\n\n");
             }
         }
 
@@ -1980,7 +1971,7 @@ private String buildMicsInfo() {
     sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No")
       .append(" (").append(usbCount).append(")\n");
 
-    sb.append("\nAdvanced         : Live mic indicator + active mic detect need mic permission.\n");
+    sb.append("\nAdvanced         : Live mic indicator + active mic detection require microphone permission.\n");
 
     return sb.toString();
 }
@@ -2008,10 +1999,6 @@ private String buildAudioHalInfo() {
             for (AudioDeviceInfo o : outs) {
 
                 int type = o.getType();
-                String product = o.getProductName() != null
-                        ? o.getProductName().toString()
-                        : "";
-
                 String label;
                 String role;
 
@@ -2019,7 +2006,7 @@ private String buildAudioHalInfo() {
 
                     case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
                         label = "Built-in Speaker";
-                        role  = "Primary device output";
+                        role  = "Primary device audio output";
                         speaker = true;
                         break;
 
@@ -2051,17 +2038,14 @@ private String buildAudioHalInfo() {
                         break;
 
                     default:
-                        label = "Vendor Audio Output";
-                        role  = "OEM-defined output (type " + type + ")";
+                        label = "Auxiliary Audio Output";
+                        role  = "OEM-defined output path";
                         break;
                 }
 
                 sb.append("• ").append(label).append("\n");
                 sb.append("   Role           : ").append(role).append("\n");
-                sb.append("   Present        : Yes\n");
-                if (!product.isEmpty())
-                    sb.append("   Hardware Name  : ").append(product).append("\n");
-                sb.append("   Device ID      : ").append(o.getId()).append("\n\n");
+                sb.append("   Present        : Yes\n\n");
             }
         }
 
@@ -2074,7 +2058,7 @@ private String buildAudioHalInfo() {
     sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
     sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : HAL routing graphs + DSP offload models need elevated access.\n");
+    sb.append("\nAdvanced         : HAL routing graphs and DSP offload models require elevated access.\n");
 
     return sb.toString();
 }
@@ -2090,10 +2074,6 @@ private String buildAudioExtendedInfo() {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
 
-            String legacy = am.getParameters("routing");
-            if (legacy != null && !legacy.isEmpty())
-                sb.append("Legacy Routing   : ").append(legacy).append("\n");
-
             boolean hw = getPackageManager()
                     .hasSystemFeature("android.hardware.audio.output");
             sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
@@ -2104,7 +2084,6 @@ private String buildAudioExtendedInfo() {
 
     return sb.toString();
 }
-
 
 // ============================================================================
 // MIC BENCH — ACTIVE MIC / NOISE FLOOR / QUALITY SCORE

@@ -590,8 +590,9 @@ headerAudio.setOnClickListener(v -> {
     }
 });
 
-// 🔥 END onCreate()
+}
 
+ // 🔥 END onCreate()
 // ============================================================
 //  PERMISSION CALLBACK — FINAL CLEAN VERSION
 // ============================================================
@@ -4347,3 +4348,4 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
+

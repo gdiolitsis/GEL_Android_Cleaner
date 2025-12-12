@@ -254,7 +254,7 @@ protected void attachBaseContext(Context base) {
 }
 
 // ============================================================
-//  ON CREATE — FINAL CLEAN (NO AUDIO SECTION, NO TESTS)
+//  ON CREATE — FINAL CLEAN (AUDIO INCLUDED, NO LABS)
 // ============================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
@@ -283,8 +283,7 @@ protected void onCreate(Bundle savedInstanceState) {
     txtThermalContent         = findViewById(R.id.txtThermalContent);
     txtModemContent           = findViewById(R.id.txtModemContent);
     txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);
-
-    // ❌ AUDIO REMOVED (no txtAudioUnifiedContent bind)
+    txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
 
     txtSensorsContent         = findViewById(R.id.txtSensorsContent);
     txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
@@ -306,8 +305,7 @@ protected void onCreate(Bundle savedInstanceState) {
     iconThermal         = findViewById(R.id.iconThermalToggle);
     iconModem           = findViewById(R.id.iconModemToggle);
     iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);
-
-    // ❌ AUDIO REMOVED (no iconAudioUnified bind)
+    iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
 
     iconSensors         = findViewById(R.id.iconSensorsToggle);
     iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
@@ -323,7 +321,7 @@ protected void onCreate(Bundle savedInstanceState) {
     iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 
     // ------------------------------------------------------------
-    // 3️⃣  MASTER ARRAYS (NO AUDIO)
+    // 3️⃣  MASTER ARRAYS (WITH AUDIO)
     // ------------------------------------------------------------
     allContents = new TextView[]{
             txtBatteryContent,
@@ -334,7 +332,7 @@ protected void onCreate(Bundle savedInstanceState) {
             txtThermalContent,
             txtModemContent,
             txtWifiAdvancedContent,
-            // ❌ txtAudioUnifiedContent removed
+            txtAudioUnifiedContent,
             txtSensorsContent,
             txtSensorsExtendedContent,
             txtBiometricsContent,
@@ -358,7 +356,7 @@ protected void onCreate(Bundle savedInstanceState) {
             iconThermal,
             iconModem,
             iconWifiAdvanced,
-            // ❌ iconAudioUnified removed
+            iconAudioUnified,
             iconSensors,
             iconSensorsExtended,
             iconBiometrics,
@@ -407,18 +405,20 @@ protected void onCreate(Bundle savedInstanceState) {
                 if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.VISIBLE);
                 animateExpand(batteryContainer);
                 if (iconBattery != null) iconBattery.setText("－");
-                if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.VISIBLE);
+                if (txtBatteryModelCapacity != null)
+                    txtBatteryModelCapacity.setVisibility(View.VISIBLE);
                 refreshBatteryInfoView();
             } else {
                 animateCollapse(batteryContainer);
                 if (iconBattery != null) iconBattery.setText("＋");
-                if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
+                if (txtBatteryModelCapacity != null)
+                    txtBatteryModelCapacity.setVisibility(View.GONE);
             }
         });
     }
 
     // ------------------------------------------------------------
-    // 7️⃣  NORMAL SECTIONS (NO AUDIO)
+    // 7️⃣  NORMAL SECTIONS (WITH AUDIO)
     // ------------------------------------------------------------
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
@@ -427,9 +427,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
     setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);
     setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
-
-    // ❌ setupSection(headerAudio...) REMOVED
-
+    setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
     setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
     setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
     setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);

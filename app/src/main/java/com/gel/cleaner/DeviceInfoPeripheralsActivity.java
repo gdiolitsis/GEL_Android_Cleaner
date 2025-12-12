@@ -254,144 +254,7 @@ protected void attachBaseContext(Context base) {
 }
 
 // ============================================================
-// AUDIO — SAFE LAZY LOADER (ANTI-ANR, SINGLE RUN)
-// ============================================================
-
-private volatile boolean audioHeavyLoaded = false;
-private volatile boolean audioHeavyRunning = false;
-
-private void openAudioSectionSafely() {
-
-    if (audioHeavyLoaded || audioHeavyRunning) return;
-
-    audioHeavyRunning = true;
-
-    new Thread(() -> {
-        try {
-            final String heavy = buildAudioUnifiedHeavyPart();
-
-            runOnUiThread(() -> {
-                try {
-                    if (txtAudioUnifiedContent != null) {
-                        txtAudioUnifiedContent.append("\n\n");
-                        txtAudioUnifiedContent.append(heavy);
-                    }
-                    audioHeavyLoaded = true;
-                } finally {
-                    audioHeavyRunning = false;
-                }
-            });
-
-        } catch (Throwable t) {
-            audioHeavyRunning = false;
-        }
-    }).start();
-}
-
-// ============================================================
-// AUDIO — HELPERS (LOCAL, SINGLE COPY)
-// ============================================================
-
-private boolean hasMicPermission() {
-    try {
-        return ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED;
-    } catch (Throwable ignore) {
-        return false;
-    }
-}
-
-private String fmt1(float v) {
-    try {
-        return String.format(Locale.US, "%.1f", v);
-    } catch (Throwable ignore) {
-        return String.valueOf(v);
-    }
-}
-
-private int clampInt(int v, int min, int max) {
-    if (v < min) return min;
-    if (v > max) return max;
-    return v;
-}
-
-private String micQualityGrade(int score) {
-    if (score >= 85) return "Excellent";
-    if (score >= 70) return "Good";
-    if (score >= 50) return "Average";
-    if (score >= 30) return "Weak";
-    return "Poor";
-}
-
-private String getLiveMicUiLabel() {
-
-    LiveMicStatus s = readLiveMicSnapshot(300);
-
-    if (!s.micPermission) return "🎙 Mic: Permission Required";
-    if ("Silent".equals(s.state))   return "🎙 Mic: Silent";
-    if ("Speaking".equals(s.state)) return "🎙 Mic: Active";
-    if ("Loud".equals(s.state))     return "🎙 Mic: Loud Input";
-    return "🎙 Mic: Unknown";
-}
-
-private String activeMicHumanSummary(ActiveMicDetectResult r) {
-
-    if (r == null) return "Unclear active mic path";
-    if (!r.micPermission) return "Mic access required";
-
-    if (r.confidence >= 80) return r.bestPathLabel + " (Very Likely)";
-    if (r.confidence >= 60) return r.bestPathLabel + " (Likely)";
-    if (r.confidence >= 40) return r.bestPathLabel + " (Possible)";
-    return "Unclear active mic path";
-}
-
-// ============================================================
-// AUDIO — HEAVY PART ONLY
-// ============================================================
-
-private String buildAudioUnifiedHeavyPart() {
-
-    StringBuilder sb = new StringBuilder();
-
-    MicBenchResult b = runMicBench();
-
-    sb.append("=== Mic Bench (Quick) ===\n");
-    if (!b.micPermission) {
-        sb.append("Mic Permission   : Missing (RECORD_AUDIO)\n");
-        sb.append("Bench Status     : Locked\n\n");
-    } else {
-        sb.append("Mic Permission   : Granted\n");
-        sb.append("Mic Active       : ").append(b.micActive ? "Yes" : "No").append("\n");
-        sb.append("Noise RMS        : ").append(fmt1(b.noiseRms)).append("\n");
-        sb.append("Peak RMS         : ").append(fmt1(b.peakRms)).append("\n");
-        sb.append("Dynamic Range    : ").append(fmt1(b.dynamicRange)).append("\n");
-        sb.append("Quality Score    : ").append(b.qualityScore).append("/100\n");
-        sb.append("Human Grade      : ").append(micQualityGrade(b.qualityScore)).append("\n\n");
-    }
-
-    LiveMicStatus live = readLiveMicSnapshot(420);
-
-    sb.append("=== Live Mic Indicator ===\n");
-    sb.append("State            : ").append(live.state).append("\n");
-    sb.append("UI Label         : ").append(getLiveMicUiLabel()).append("\n\n");
-
-    ActiveMicDetectResult a = detectActiveMicHeuristic();
-
-    sb.append("=== Active Mic Detect (Heuristic) ===\n");
-    sb.append("Human Summary    : ").append(activeMicHumanSummary(a)).append("\n");
-    if (a.micPermission) {
-        sb.append("Best Path        : ").append(a.bestPathLabel).append("\n");
-        sb.append("Signal RMS       : ").append(fmt1(a.bestRms)).append("\n");
-        sb.append("Confidence       : ").append(a.confidence).append("/100\n");
-    }
-
-    return sb.toString();
-}
-
-// ============================================================
-//  ON CREATE  —  FINAL GOLD EDITION (ANTI-ANR + AUDIO SAFE)
+//  ON CREATE — FINAL CLEAN (NO AUDIO SECTION, NO TESTS)
 // ============================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
@@ -512,7 +375,14 @@ protected void onCreate(Bundle savedInstanceState) {
     populateAllSections();
 
     // ------------------------------------------------------------
-    // 5️⃣  AFTER UI IS READY → REQUEST PERMISSIONS
+    // 5️⃣  AUDIO — PERIPHERALS SUMMARY (STATIC, LIGHT)
+    // ------------------------------------------------------------
+    if (txtAudioUnifiedContent != null) {
+        txtAudioUnifiedContent.setText(buildAudioUnifiedInfo());
+    }
+
+    // ------------------------------------------------------------
+    // 6️⃣  PERMISSIONS
     // ------------------------------------------------------------
     requestAllRuntimePermissions();
     requestPermissions(new String[]{
@@ -522,7 +392,7 @@ protected void onCreate(Bundle savedInstanceState) {
     }, 101);
 
     // ------------------------------------------------------------
-    // 6️⃣  INIT BATTERY MODULE
+    // 7️⃣  BATTERY MODULE
     // ------------------------------------------------------------
     initBatterySection();
     batteryContainer.setVisibility(View.GONE);
@@ -548,7 +418,7 @@ protected void onCreate(Bundle savedInstanceState) {
     });
 
     // ------------------------------------------------------------
-    // 7️⃣  NORMAL SECTIONS (LIGHT)
+    // 8️⃣  NORMAL SECTIONS
     // ------------------------------------------------------------
     setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
     setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);
@@ -569,30 +439,9 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);
     setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
     setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
-
-    // ------------------------------------------------------------
-    // 8️⃣  AUDIO SECTION — SAFE LAZY LOAD (ANTI-ANR FIX)
-    // ------------------------------------------------------------
-    View headerAudio = findViewById(R.id.headerAudioUnified);
-headerAudio.setOnClickListener(v -> {
-
-    boolean isOpen = (txtAudioUnifiedContent.getVisibility() == View.VISIBLE);
-
-    collapseAll(); // ΜΗΝ αλλάξεις αυτό
-
-    if (!isOpen) {
-        txtAudioUnifiedContent.setVisibility(View.VISIBLE);
-        iconAudioUnified.setText("－");
-        openAudioSectionSafely();
-    } else {
-        txtAudioUnifiedContent.setVisibility(View.GONE);
-        iconAudioUnified.setText("＋");
-    }
-});
-
 }
 
- // 🔥 END onCreate()
+// 🔥 END onCreate()
 
 // ============================================================
 //  PERMISSION CALLBACK — FINAL CLEAN VERSION

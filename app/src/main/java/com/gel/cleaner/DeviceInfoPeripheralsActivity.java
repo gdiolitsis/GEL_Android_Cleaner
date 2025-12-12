@@ -3,31 +3,29 @@
 
 package com.gel.cleaner;
 
+// ============================================================
+// JAVA / UTIL
+// ============================================================
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.lang.reflect.Field;
-import java.util.Locale;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothProfile;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
-import android.content.pm.FeatureInfo;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.ClickableSpan;
-import android.text.style.StyleSpan;
-import android.graphics.Typeface;
-import android.text.method.LinkMovementMethod;
-
+// ============================================================
+// ANDROID CORE
+// ============================================================
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -37,58 +35,42 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.FeatureInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
-import android.hardware.usb.UsbManager;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbConstants;
-import java.util.HashMap;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.location.LocationManager;
-import android.media.AudioDeviceInfo;
-import android.media.AudioManager;
-import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.net.Uri;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
-import android.nfc.NfcManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
-import android.telecom.TelecomManager;
-import android.telephony.CellInfo;
-import android.telephony.SignalStrength;
-import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
-import android.telephony.TelephonyManager;
+
+// ============================================================
+// ANDROID UI / VIEW
+// ============================================================
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.text.Html;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -97,16 +79,73 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+// ============================================================
+// ANDROID MEDIA / AUDIO (MIC BENCH + LIVE MIC)
+// ============================================================
+import android.media.AudioDeviceInfo;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+
+// ============================================================
+// ANDROID CONNECTIVITY
+// ============================================================
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+
+// ============================================================
+// ANDROID BLUETOOTH
+// ============================================================
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
+
+// ============================================================
+// ANDROID HARDWARE
+// ============================================================
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
+
+// ============================================================
+// ANDROID LOCATION / NFC / TELEPHONY
+// ============================================================
+import android.location.LocationManager;
+import android.nfc.NfcAdapter;
+import android.nfc.NfcManager;
+import android.telecom.TelecomManager;
+import android.telephony.CellInfo;
+import android.telephony.SignalStrength;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
+
+// ============================================================
+// ANDROIDX
+// ============================================================
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
+// ============================================================
+// STATIC
+// ============================================================
 import static android.content.Context.MODE_PRIVATE;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
@@ -1836,10 +1875,14 @@ private String buildOtherPeripheralsInfo() {
 }
 
 // ============================================================================
-// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Audio Extended)
+// AUDIO SYSTEM — FULL MERGED BLOCK (Microphones + Audio HAL + Extended + MicBench
+// + Live Mic Indicator + Active Mic Detect + Human Grade + UI Hooks)
+// GEL Turbo Human Edition — Play Store Safe
 // ============================================================================
 
-// 1) MICROPHONES (v27)
+// ============================================================================
+// 1) MICROPHONES — HUMAN CLASSIFIED + RUNTIME READY
+// ============================================================================
 private String buildMicsInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -1849,167 +1892,678 @@ private String buildMicsInfo() {
     try {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
+
             AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
 
             for (AudioDeviceInfo d : devs) {
-                String name = d.getProductName() != null ? d.getProductName().toString().trim() : "";
-                int type = d.getType();
 
-                boolean fakeName =
-                        name.isEmpty() ||
-                        name.equalsIgnoreCase(Build.MODEL) ||
-                        name.matches("^[A-Z0-9_-]{8,}$");
+                int type = d.getType();
+                String product = d.getProductName() != null
+                        ? d.getProductName().toString().trim()
+                        : "";
 
                 String label;
+                String role;
 
                 switch (type) {
+
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                        label = "Built-in Mic"; hasBuiltin = true; break;
+                        label = "Built-in Microphone";
+                        role  = hasBuiltin
+                                ? "Secondary / noise-cancel microphone"
+                                : "Primary device microphone";
+                        hasBuiltin = true;
+                        break;
+
                     case AudioDeviceInfo.TYPE_TELEPHONY:
-                        label = "Telephony Mic"; hasTele = true; break;
+                        label = "Telephony Microphone";
+                        role  = "Dedicated voice call audio path";
+                        hasTele = true;
+                        break;
+
                     case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        label = "Wired Headset Mic"; wiredCount++; hasWired = true; break;
+                        label = "Wired Headset Microphone";
+                        role  = "External analog microphone";
+                        wiredCount++; hasWired = true;
+                        break;
+
                     case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                        label = "Bluetooth Call Microphone";
+                        role  = "Hands-free / voice call mic";
+                        btCount++; hasBT = true;
+                        break;
+
                     case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        label = "Bluetooth Mic"; btCount++; hasBT = true; break;
+                        label = "Bluetooth Media Microphone";
+                        role  = "Vendor-specific media path";
+                        btCount++; hasBT = true;
+                        break;
+
                     case AudioDeviceInfo.TYPE_USB_DEVICE:
                     case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        label = "USB Mic"; usbCount++; hasUSB = true; break;
+                        label = "USB Microphone";
+                        role  = "External digital microphone";
+                        usbCount++; hasUSB = true;
+                        break;
+
                     default:
-                        label = "Input Type " + type; break;
+                        label = "Vendor / Secondary Microphone";
+                        role  = "OEM-defined input (type " + type + ")";
+                        break;
                 }
 
                 sb.append("• ").append(label).append("\n");
-                sb.append("   Present       : Yes\n");
-                if (!name.isEmpty()) sb.append("   Name          : ").append(name).append("\n");
-                sb.append("   Fake-ID       : ").append(fakeName ? "Yes" : "No").append("\n");
-                sb.append("   Device ID     : ").append(d.getId()).append("\n\n");
+                sb.append("   Role           : ").append(role).append("\n");
+                sb.append("   Present        : Yes\n");
+
+                if (!product.isEmpty())
+                    sb.append("   Hardware Name  : ").append(product).append("\n");
+
+                sb.append("   Device ID      : ").append(d.getId())
+                  .append(" (runtime handle)\n\n");
             }
         }
+
     } catch (Throwable ignore) {}
 
     if (sb.length() == 0)
-        sb.append("No microphones are reported by the current audio service.\n");
+        sb.append("No microphones reported by the Android audio framework.\n\n");
 
     sb.append("=== Summary ===\n");
     sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
     sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
-    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No").append(" (").append(wiredCount).append(")\n");
-    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No").append(" (").append(btCount).append(")\n");
-    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No").append(" (").append(usbCount).append(")\n");
+    sb.append("Wired Mics       : ").append(hasWired   ? "Yes" : "No")
+      .append(" (").append(wiredCount).append(")\n");
+    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes" : "No")
+      .append(" (").append(btCount).append(")\n");
+    sb.append("USB Mics         : ").append(hasUSB     ? "Yes" : "No")
+      .append(" (").append(usbCount).append(")\n");
 
-    sb.append("\nAdvanced         : Raw audio routing matrices requires root access.\n");
+    sb.append("\nAdvanced         : Live mic indicator + active mic detect need mic permission.\n");
 
-    appendAccessInstructions(sb, "mic");
     return sb.toString();
 }
 
-    // ============================================================================
-    // 2) AUDIO HAL — FIXED & CLEAN
-    // ============================================================================
-    private String buildAudioHalInfo() {
-        StringBuilder sb = new StringBuilder();
 
-        String hal = getProp("ro.audio.hal.version");
-        sb.append("Audio HAL        : ")
-          .append(hal != null && !hal.isEmpty() ? hal : "Not exposed")
-          .append("\n\n");
+// ============================================================================
+// 2) AUDIO OUTPUTS & HAL — CLEAN HUMAN VIEW
+// ============================================================================
+private String buildAudioHalInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        boolean speaker = false, wired = false, bt = false, usb = false, hdmi = false;
+    String hal = getProp("ro.audio.hal.version");
+    sb.append("Audio HAL        : ")
+      .append((hal != null && !hal.isEmpty()) ? hal : "Not exposed")
+      .append("\n\n");
 
-        try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
+    boolean speaker = false, wired = false, bt = false, usb = false, hdmi = false;
 
-                AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
 
-                for (AudioDeviceInfo fi : outs) {
+            AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
 
-                    String name = fi.getProductName() != null ? fi.getProductName().toString() : "";
-                    int type = fi.getType();
+            for (AudioDeviceInfo o : outs) {
 
-                    String label;
-                    switch (type) {
-                        case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                            label = "Built-in Speaker"; speaker = true; break;
-                        case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                            label = "Wired Output"; wired = true; break;
-                        case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                            label = "Bluetooth Output"; bt = true; break;
-                        case AudioDeviceInfo.TYPE_USB_DEVICE:
-                        case AudioDeviceInfo.TYPE_USB_HEADSET:
-                            label = "USB Output"; usb = true; break;
-                        case AudioDeviceInfo.TYPE_HDMI:
-                            label = "HDMI Output"; hdmi = true; break;
-                        default:
-                            label = "Output Type " + type; break;
-                    }
+                int type = o.getType();
+                String product = o.getProductName() != null
+                        ? o.getProductName().toString()
+                        : "";
 
-                    sb.append("• ").append(label).append("\n");
-                    sb.append("   Present       : Yes\n");
-                    sb.append("   Name          : ").append(name.isEmpty() ? "N/A" : name).append("\n");
-                    sb.append("   Device ID     : ").append(fi.getId()).append("\n\n");
+                String label;
+                String role;
+
+                switch (type) {
+
+                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
+                        label = "Built-in Speaker";
+                        role  = "Primary device output";
+                        speaker = true;
+                        break;
+
+                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                        label = "Wired Audio Output";
+                        role  = "Analog audio path";
+                        wired = true;
+                        break;
+
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                        label = "Bluetooth Audio Output";
+                        role  = "Wireless audio stream";
+                        bt = true;
+                        break;
+
+                    case AudioDeviceInfo.TYPE_USB_DEVICE:
+                    case AudioDeviceInfo.TYPE_USB_HEADSET:
+                        label = "USB Audio Output";
+                        role  = "External digital DAC";
+                        usb = true;
+                        break;
+
+                    case AudioDeviceInfo.TYPE_HDMI:
+                        label = "HDMI Audio Output";
+                        role  = "External display audio";
+                        hdmi = true;
+                        break;
+
+                    default:
+                        label = "Vendor Audio Output";
+                        role  = "OEM-defined output (type " + type + ")";
+                        break;
                 }
+
+                sb.append("• ").append(label).append("\n");
+                sb.append("   Role           : ").append(role).append("\n");
+                sb.append("   Present        : Yes\n");
+                if (!product.isEmpty())
+                    sb.append("   Hardware Name  : ").append(product).append("\n");
+                sb.append("   Device ID      : ").append(o.getId()).append("\n\n");
             }
+        }
 
-        } catch (Throwable ignore) {}
+    } catch (Throwable ignore) {}
 
-        sb.append("=== Summary ===\n");
-        sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
-        sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
-        sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
-        sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
-        sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
+    sb.append("=== Summary ===\n");
+    sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
+    sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
+    sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
+    sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
+    sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
 
-        sb.append("\nAdvanced         : HAL routing tables, offload models, DSP profiles, require root access.\n");
+    sb.append("\nAdvanced         : HAL routing graphs + DSP offload models need elevated access.\n");
 
-        return sb.toString();
-    }
+    return sb.toString();
+}
 
-    // 3) AUDIO EXTENDED
-    private String buildAudioExtendedInfo() {
-        StringBuilder sb = new StringBuilder();
 
+// ============================================================================
+// 3) AUDIO EXTENDED — SAFE SNAPSHOT
+// ============================================================================
+private String buildAudioExtendedInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    try {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+
+            String legacy = am.getParameters("routing");
+            if (legacy != null && !legacy.isEmpty())
+                sb.append("Legacy Routing   : ").append(legacy).append("\n");
+
+            boolean hw = getPackageManager()
+                    .hasSystemFeature("android.hardware.audio.output");
+            sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
+        }
+    } catch (Throwable ignore) {}
+
+    sb.append("Advanced         : Spatial audio flags and DSP paths require elevated access.\n");
+
+    return sb.toString();
+}
+
+
+// ============================================================================
+// MIC BENCH — ACTIVE MIC / NOISE FLOOR / QUALITY SCORE
+// GEL Turbo Edition — Play Store Safe
+// ============================================================================
+private static class MicBenchResult {
+    boolean micPermission;
+    boolean micActive;
+    float noiseRms;
+    float peakRms;
+    float dynamicRange;
+    int qualityScore;
+}
+
+private MicBenchResult runMicBench() {
+
+    MicBenchResult r = new MicBenchResult();
+    r.micPermission = hasMicPermission();
+
+    if (!r.micPermission) return r;
+
+    AudioRecord rec = null;
+
+    try {
+        int sampleRate = 44100;
+        int bufSize = AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+        );
+
+        if (bufSize <= 0) return r;
+
+        rec = new AudioRecord(
+                MediaRecorder.AudioSource.DEFAULT,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufSize
+        );
+
+        short[] buffer = new short[Math.min(bufSize, 4096)];
+        rec.startRecording();
+
+        long start = SystemClock.elapsedRealtime();
+        float rmsSum = 0;
+        float peak = 0;
+        int samples = 0;
+
+        while (SystemClock.elapsedRealtime() - start < 650) { // ~0.65 sec
+            int read = rec.read(buffer, 0, buffer.length);
+            if (read <= 0) continue;
+
+            for (int i = 0; i < read; i++) {
+                float v = buffer[i];
+                rmsSum += v * v;
+                peak = Math.max(peak, Math.abs(v));
+                samples++;
+            }
+        }
+
+        if (samples > 0) {
+            float rms = (float) Math.sqrt(rmsSum / samples);
+
+            r.noiseRms = rms;
+            r.peakRms = peak;
+            r.dynamicRange = Math.max(0f, peak - rms);
+            r.micActive = rms > 35f; // safe empirical threshold for "alive mic"
+
+            r.qualityScore = scoreMic(r.noiseRms, r.dynamicRange);
+        }
+
+    } catch (Throwable ignore) {
+    } finally {
         try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-
-                // Legacy routing snapshot
-                String r = am.getParameters("routing");
-                if (r != null && !r.isEmpty())
-                    sb.append("Legacy Routing   : ").append(r).append("\n");
-
-                // Hardware flag
-                if (Build.VERSION.SDK_INT >= 23) {
-                    boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
-                    sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
-                }
+            if (rec != null) {
+                rec.stop();
+                rec.release();
             }
         } catch (Throwable ignore) {}
-
-        sb.append("Advanced         : Spatial audio flags, noise models, per-stream audio paths, requires root access.\n");
-
-        return sb.toString();
     }
 
-    // 4) UNIFIED AUDIO BLOCK (for headerAudioUnified)
-    private String buildAudioUnifiedInfo() {
-        StringBuilder sb = new StringBuilder();
+    return r;
+}
 
-        sb.append("=== Microphones ===\n");
-        sb.append(buildMicsInfo()).append("\n\n");
+// MIC QUALITY SCORING (0–100)
+private int scoreMic(float noise, float dynamic) {
 
-        sb.append("=== Audio Outputs / HAL ===\n");
-        sb.append(buildAudioHalInfo()).append("\n\n");
+    int score = 100;
 
-        sb.append("=== Extended Audio Paths ===\n");
-        sb.append(buildAudioExtendedInfo()).append("\n");
+    // Noise penalty (higher RMS at idle = worse)
+    if (noise > 1400) score -= 65;
+    else if (noise > 900) score -= 45;
+    else if (noise > 450) score -= 25;
+    else if (noise > 250) score -= 10;
 
-        return sb.toString();
+    // Dynamic range (peak - noise)
+    if (dynamic < 250) score -= 35;
+    else if (dynamic < 600) score -= 20;
+    else if (dynamic < 1000) score -= 10;
+    else if (dynamic > 3000) score += 8;
+
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
+
+    return score;
+}
+
+
+// ============================================================================
+// LIVE MIC INDICATOR — REALTIME STATUS (short snapshot, no service)
+// ============================================================================
+private static class LiveMicStatus {
+    boolean micPermission;
+    float rms;
+    float peak;
+    String state;   // Silent / Speaking / Loud / Error
+}
+
+private LiveMicStatus readLiveMicSnapshot(int durationMs) {
+
+    LiveMicStatus s = new LiveMicStatus();
+    s.micPermission = hasMicPermission();
+    s.state = "Unknown";
+
+    if (!s.micPermission) {
+        s.state = "Permission Required (RECORD_AUDIO)";
+        return s;
     }
+
+    AudioRecord rec = null;
+
+    try {
+        int sampleRate = 44100;
+        int bufSize = AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+        );
+
+        if (bufSize <= 0) { s.state = "Error"; return s; }
+
+        rec = new AudioRecord(
+                MediaRecorder.AudioSource.DEFAULT,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufSize
+        );
+
+        short[] buffer = new short[Math.min(bufSize, 4096)];
+        rec.startRecording();
+
+        long start = SystemClock.elapsedRealtime();
+        float sumSq = 0;
+        float peak = 0;
+        int samples = 0;
+
+        while (SystemClock.elapsedRealtime() - start < Math.max(250, durationMs)) {
+            int read = rec.read(buffer, 0, buffer.length);
+            if (read <= 0) continue;
+
+            for (int i = 0; i < read; i++) {
+                float v = buffer[i];
+                sumSq += v * v;
+                peak = Math.max(peak, Math.abs(v));
+                samples++;
+            }
+        }
+
+        if (samples > 0) {
+            float rms = (float) Math.sqrt(sumSq / samples);
+            s.rms = rms;
+            s.peak = peak;
+
+            if (rms < 35f) s.state = "Silent";
+            else if (rms < 220f) s.state = "Speaking";
+            else s.state = "Loud";
+        } else {
+            s.state = "Error";
+        }
+
+    } catch (Throwable ignore) {
+        s.state = "Error";
+    } finally {
+        try {
+            if (rec != null) {
+                rec.stop();
+                rec.release();
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    return s;
+}
+
+
+// ============================================================================
+// ACTIVE MIC DETECT — heuristic (which audio source gives best signal now)
+// Play Store Safe: we cannot truly “see” OEM mic routing; we infer best path.
+// ============================================================================
+private static class ActiveMicDetectResult {
+    boolean micPermission;
+    String bestPathLabel;
+    float bestRms;
+    int confidence; // 0..100
+}
+
+private ActiveMicDetectResult detectActiveMicHeuristic() {
+
+    ActiveMicDetectResult out = new ActiveMicDetectResult();
+    out.micPermission = hasMicPermission();
+
+    if (!out.micPermission) {
+        out.bestPathLabel = "Permission Required (RECORD_AUDIO)";
+        out.confidence = 0;
+        return out;
+    }
+
+    // Try a small set of safe sources. (No VOICE_CALL; avoid weird OEM behavior.)
+    int[] sources = new int[]{
+            MediaRecorder.AudioSource.DEFAULT,
+            MediaRecorder.AudioSource.MIC,
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            MediaRecorder.AudioSource.CAMCORDER
+    };
+
+    String[] labels = new String[]{
+            "Default Path",
+            "Main Mic Path",
+            "Voice Recognition Path",
+            "Voice Communication Path",
+            "Camera/Video Path"
+    };
+
+    float bestRms = -1f;
+    int bestIdx = 0;
+
+    for (int i = 0; i < sources.length; i++) {
+        float rms = probeMicRms(sources[i], 350);
+        if (rms > bestRms) {
+            bestRms = rms;
+            bestIdx = i;
+        }
+    }
+
+    out.bestRms = Math.max(0f, bestRms);
+    out.bestPathLabel = labels[bestIdx];
+
+    // Confidence: based on separation vs baseline DEFAULT
+    float base = probeMicRms(MediaRecorder.AudioSource.DEFAULT, 250);
+    float diff = out.bestRms - Math.max(0f, base);
+
+    int conf;
+    if (out.bestRms < 35f) conf = 15;             // basically silent
+    else if (diff > 250f) conf = 85;
+    else if (diff > 120f) conf = 70;
+    else if (diff > 60f)  conf = 55;
+    else conf = 40;
+
+    out.confidence = clampInt(conf, 0, 100);
+    return out;
+}
+
+private float probeMicRms(int audioSource, int durationMs) {
+
+    AudioRecord rec = null;
+
+    try {
+        int sampleRate = 44100;
+        int bufSize = AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+        );
+
+        if (bufSize <= 0) return 0f;
+
+        rec = new AudioRecord(
+                audioSource,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufSize
+        );
+
+        short[] buffer = new short[Math.min(bufSize, 2048)];
+        rec.startRecording();
+
+        long start = SystemClock.elapsedRealtime();
+        float sumSq = 0;
+        int samples = 0;
+
+        while (SystemClock.elapsedRealtime() - start < Math.max(220, durationMs)) {
+            int read = rec.read(buffer, 0, buffer.length);
+            if (read <= 0) continue;
+
+            for (int i = 0; i < read; i++) {
+                float v = buffer[i];
+                sumSq += v * v;
+                samples++;
+            }
+        }
+
+        if (samples <= 0) return 0f;
+        return (float) Math.sqrt(sumSq / samples);
+
+    } catch (Throwable ignore) {
+        return 0f;
+    } finally {
+        try {
+            if (rec != null) {
+                rec.stop();
+                rec.release();
+            }
+        } catch (Throwable ignore) {}
+    }
+}
+
+
+// ============================================================================
+// UI HOOKS + HUMAN TEXT (added)
+// ============================================================================
+
+// 🎛 Live mic indicator UI label (for any TextView)
+private String getLiveMicUiLabel() {
+
+    LiveMicStatus s = readLiveMicSnapshot(300);
+
+    if (!s.micPermission)
+        return "🎙 Mic: Permission Required";
+
+    if ("Silent".equals(s.state))   return "🎙 Mic: Silent";
+    if ("Speaking".equals(s.state)) return "🎙 Mic: Active";
+    if ("Loud".equals(s.state))     return "🎙 Mic: Loud Input";
+    return "🎙 Mic: Unknown";
+}
+
+// 📊 Human grade from score (0–100)
+private String micQualityGrade(int score) {
+
+    if (score >= 85) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Average";
+    if (score >= 30) return "Weak";
+    return "Poor";
+}
+
+// 🧠 Human summary for heuristic active mic detect
+private String activeMicHumanSummary(ActiveMicDetectResult r) {
+
+    if (r == null) return "Unclear active mic path";
+    if (!r.micPermission) return "Mic access required";
+
+    if (r.confidence >= 80) return r.bestPathLabel + " (Very Likely)";
+    if (r.confidence >= 60) return r.bestPathLabel + " (Likely)";
+    if (r.confidence >= 40) return r.bestPathLabel + " (Possible)";
+    return "Unclear active mic path";
+}
+
+
+// ============================================================================
+// 4) UNIFIED AUDIO BLOCK — includes MicBench + Live Indicator + Active Mic Detect
+// + Human Grade + UI helper strings
+// ============================================================================
+private String buildAudioUnifiedInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("=== Microphones ===\n");
+    sb.append(buildMicsInfo()).append("\n");
+
+    sb.append("=== Audio Outputs / HAL ===\n");
+    sb.append(buildAudioHalInfo()).append("\n");
+
+    sb.append("=== Extended Audio Paths ===\n");
+    sb.append(buildAudioExtendedInfo()).append("\n");
+
+    // ------------------------------------------------------------------------
+    // MIC BENCH
+    // ------------------------------------------------------------------------
+    MicBenchResult b = runMicBench();
+
+    sb.append("=== Mic Bench (Quick) ===\n");
+    if (!b.micPermission) {
+        sb.append("Mic Permission   : Missing (RECORD_AUDIO)\n");
+        sb.append("Bench Status     : Locked\n\n");
+    } else {
+        sb.append("Mic Permission   : Granted\n");
+        sb.append("Mic Active       : ").append(b.micActive ? "Yes" : "No").append("\n");
+        sb.append("Noise RMS        : ").append(fmt1(b.noiseRms)).append("\n");
+        sb.append("Peak RMS         : ").append(fmt1(b.peakRms)).append("\n");
+        sb.append("Dynamic Range    : ").append(fmt1(b.dynamicRange)).append("\n");
+        sb.append("Quality Score    : ").append(b.qualityScore).append("/100\n");
+        sb.append("Human Grade      : ").append(micQualityGrade(b.qualityScore)).append("\n\n");
+    }
+
+    // ------------------------------------------------------------------------
+    // LIVE MIC INDICATOR (snapshot)
+    // ------------------------------------------------------------------------
+    LiveMicStatus live = readLiveMicSnapshot(420);
+
+    sb.append("=== Live Mic Indicator ===\n");
+    if (!live.micPermission) {
+        sb.append("Status           : ").append(live.state).append("\n");
+        sb.append("UI Label         : ").append(getLiveMicUiLabel()).append("\n\n");
+    } else {
+        sb.append("State            : ").append(live.state).append("\n");
+        sb.append("RMS              : ").append(fmt1(live.rms)).append("\n");
+        sb.append("Peak             : ").append(fmt1(live.peak)).append("\n");
+        sb.append("UI Label         : ").append(getLiveMicUiLabel()).append("\n\n");
+    }
+
+    // ------------------------------------------------------------------------
+    // ACTIVE MIC DETECT (heuristic)
+    // ------------------------------------------------------------------------
+    ActiveMicDetectResult a = detectActiveMicHeuristic();
+
+    sb.append("=== Active Mic Detect (Heuristic) ===\n");
+    if (!a.micPermission) {
+        sb.append("Status           : ").append(a.bestPathLabel).append("\n");
+        sb.append("Human Summary    : ").append(activeMicHumanSummary(a)).append("\n");
+    } else {
+        sb.append("Best Path        : ").append(a.bestPathLabel).append("\n");
+        sb.append("Signal RMS       : ").append(fmt1(a.bestRms)).append("\n");
+        sb.append("Confidence       : ").append(a.confidence).append("/100\n");
+        sb.append("Human Summary    : ").append(activeMicHumanSummary(a)).append("\n");
+        sb.append("Note             : OEM mic routing is not exposed; this infers best active path.\n");
+    }
+
+    return sb.toString();
+}
+
+
+// ============================================================================
+// Helpers (local to Audio block)
+// ============================================================================
+private boolean hasMicPermission() {
+    try {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    } catch (Throwable ignore) {
+        return false;
+    }
+}
+
+private String fmt1(float v) {
+    try {
+        return String.format(Locale.US, "%.1f", v);
+    } catch (Throwable ignore) {
+        return String.valueOf(v);
+    }
+}
+
+private int clampInt(int v, int min, int max) {
+    if (v < min) return min;
+    if (v > max) return max;
+    return v;
+}
 
  // ============================================================
 // Root Info (with Vendor Diag Paths for rooted devices)

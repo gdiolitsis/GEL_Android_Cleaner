@@ -466,10 +466,9 @@ public void onRequestPermissionsResult(int requestCode,
     }
 }
 
-
 // ============================================================
 // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (FINAL, FIXED)
+// Battery-Safe Edition (FINAL, FIXED — NO AUDIO)
 // ============================================================
 private void setupSection(View header, View content, TextView icon) {
 
@@ -516,11 +515,6 @@ private void setupSection(View header, View content, TextView icon) {
             content.setVisibility(View.VISIBLE);
             animateExpand(content);
             icon.setText("－");
-
-            // 🔥 AUDIO — LAZY LOAD (ONE TIME, ANTI-ANR)
-            if (header.getId() == R.id.headerAudioUnified) {
-                openAudioSectionSafely();
-            }
         }
     });
 }

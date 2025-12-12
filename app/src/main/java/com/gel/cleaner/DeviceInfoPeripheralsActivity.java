@@ -2585,11 +2585,6 @@ private String buildAudioUnifiedInfo() {
     sb.append("=== Extended Audio Paths ===\n");
     sb.append(buildAudioExtendedInfo()).append("\n");
 
-    sb.append("\n(Advanced audio diagnostics load on demand)\n");
-
-    return sb.toString();
-}
-
     // ------------------------------------------------------------
     // LIVE MIC INDICATOR
     // ------------------------------------------------------------
@@ -2612,6 +2607,8 @@ private String buildAudioUnifiedInfo() {
         sb.append("Signal RMS       : ").append(fmt1(a.bestRms)).append("\n");
         sb.append("Confidence       : ").append(a.confidence).append("/100\n");
     }
+
+    sb.append("\n(Advanced audio diagnostics load on demand)\n");
 
     return sb.toString();
 }

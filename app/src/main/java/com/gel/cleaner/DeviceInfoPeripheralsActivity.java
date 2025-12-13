@@ -843,128 +843,114 @@ private void setupSection(View header, View content, TextView icon) {
     // ============================================================
     // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
     // ============================================================
-    private String buildCameraInfo() {
-        StringBuilder sb = new StringBuilder();
+   
+    // ============================================================
+    // CAMERA / 
+    // ============================================================
 
-        try {
-            CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            if (cm != null) {
-                for (String id : cm.getCameraIdList()) {
+ private String buildCameraInfo() {
+    StringBuilder sb = new StringBuilder();
 
-                    CameraCharacteristics cc = cm.getCameraCharacteristics(id);
+    try {
+        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        if (cm != null) {
+            for (String id : cm.getCameraIdList()) {
 
-                    Integer facing      = cc.get(CameraCharacteristics.LENS_FACING);
-                    float[] focals      = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-                    float[] apertures   = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                    Integer hwLevel     = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-                    Integer orientation = cc.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                    Boolean flashAvail  = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                    int[]   reqCaps     = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+                CameraCharacteristics cc = cm.getCameraCharacteristics(id);
 
-                    sb.append("Camera ID        : ").append(id).append("\n");
+                Integer facing      = cc.get(CameraCharacteristics.LENS_FACING);
+                float[] focals      = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                float[] apertures   = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+                Integer hwLevel     = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+                Integer orientation = cc.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                Boolean flashAvail  = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                int[]   reqCaps     = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
 
-                    String facingStr = "Unknown";
-                    if (facing != null) {
-                        if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                            facingStr = "Front";
-                        } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
-                            facingStr = "Back";
-                        } else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
-                            facingStr = "External";
-                        }
+                sb.append("Camera ID        : ").append(id).append("\n");
+
+                String facingStr = "Unknown";
+                if (facing != null) {
+                    if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                        facingStr = "Front";
+                    } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
+                        facingStr = "Back";
+                    } else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
+                        facingStr = "External";
                     }
-                    sb.append("• Facing         : ").append(facingStr).append("\n");
-
-                    if (orientation != null) {
-                        sb.append("• Orientation    : ").append(orientation).append("°\n");
-                    }
-
-                    if (focals != null && focals.length > 0) {
-                        sb.append("• Focal          : ").append(focals[0]).append(" mm\n");
-                    }
-
-                    if (apertures != null && apertures.length > 0) {
-                        sb.append("• Aperture       : f/").append(apertures[0]).append("\n");
-                    }
-
-                    if (flashAvail != null) {
-                        sb.append("• Flash          : ").append(flashAvail ? "Yes" : "No").append("\n");
-                    }
-
-                    try {
-                        android.hardware.camera2.params.StreamConfigurationMap map =
-                                cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                        if (map != null) {
-                            android.util.Size[] jpegSizes =
-                                    map.getOutputSizes(android.graphics.ImageFormat.JPEG);
-                            if (jpegSizes != null && jpegSizes.length > 0) {
-                                sb.append("• JPEG Modes     : ")
-                                        .append(jpegSizes.length)
-                                        .append(" available output sizes\n");
-                            }
-                        }
-                    } catch (Throwable ignore) { }
-
-                    if (reqCaps != null) {
-                        sb.append("• Capabilities   : ").append(reqCaps.length).append(" flags\n");
-                    }
-
-                    if (hwLevel != null) {
-                        String level;
-                        switch (hwLevel) {
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                                level = "FULL";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                                level = "LIMITED";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                                level = "LEGACY";
-                                break;
-                            case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                                level = "LEVEL_3";
-                                break;
-                            default:
-                                level = "UNKNOWN";
-                        }
-                        sb.append("• HW Level       : ").append(level).append("\n");
-                    }
-
-                    Boolean ois = null;
-                    try {
-                        Field f = CameraCharacteristics.class.getField("LENS_INFO_OIS_AVAILABLE");
-                        Object keyObj = f.get(null);
-                        if (keyObj instanceof CameraCharacteristics.Key) {
-                            @SuppressWarnings("unchecked")
-                            CameraCharacteristics.Key<Boolean> key =
-                                    (CameraCharacteristics.Key<Boolean>) keyObj;
-                            ois = cc.get(key);
-                        }
-                    } catch (Throwable ignore) { }
-
-                    if (ois != null) {
-                        sb.append("• OIS            : ").append(ois ? "Yes" : "No").append("\n");
-                    } else {
-                        sb.append("• OIS Metric     : This metric may not be exposed on this device.\n");
-                    }
-
-                    sb.append("• Video Profil.  : Extra stabilization telemetry, requires root access.\n\n");
                 }
+                sb.append("• Facing         : ").append(facingStr).append("\n");
+
+                if (orientation != null) {
+                    sb.append("• Orientation    : ").append(orientation).append("°\n");
+                }
+
+                if (focals != null && focals.length > 0) {
+                    sb.append("• Focal          : ").append(focals[0]).append(" mm\n");
+                }
+
+                if (apertures != null && apertures.length > 0) {
+                    sb.append("• Aperture       : f/").append(apertures[0]).append("\n");
+                }
+
+                if (flashAvail != null) {
+                    sb.append("• Flash          : ").append(flashAvail ? "Yes" : "No").append("\n");
+                }
+
+                try {
+                    android.hardware.camera2.params.StreamConfigurationMap map =
+                            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                    if (map != null) {
+                        android.util.Size[] jpegSizes =
+                                map.getOutputSizes(android.graphics.ImageFormat.JPEG);
+                        if (jpegSizes != null && jpegSizes.length > 0) {
+                            sb.append("• JPEG Modes     : ")
+                                    .append(jpegSizes.length)
+                                    .append(" available output sizes\n");
+                        }
+                    }
+                } catch (Throwable ignore) { }
+
+                if (reqCaps != null) {
+                    sb.append("• Capabilities   : ").append(reqCaps.length).append(" flags\n");
+                }
+
+                if (hwLevel != null) {
+                    String level;
+                    switch (hwLevel) {
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
+                            level = "FULL";
+                            break;
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
+                            level = "LIMITED";
+                            break;
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
+                            level = "LEGACY";
+                            break;
+                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
+                            level = "LEVEL_3";
+                            break;
+                        default:
+                            level = "UNKNOWN";
+                    }
+                    sb.append("• HW Level       : ").append(level).append("\n");
+                }
+
+                sb.append("\n");
             }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No camera data exposed by this device.\n");
         }
+    } catch (Throwable ignore) { }
 
-        appendAccessInstructions(sb, "camera");
-        return sb.toString();
+    if (sb.length() == 0) {
+        sb.append("No camera data exposed by this device.\n");
     }
 
-// ============================================================
-//   BIOMETRICS — GEL TURBO EDITION v1.1 (API29-SAFE)
-// ============================================================
+    appendAccessInstructions(sb, "camera");
+    return sb.toString();
+}
 
+// ============================================================
+//   BIOMETRICS — GEL CLEAN EDITION (API29-SAFE)
+// ============================================================
 private String buildBiometricsInfo() {
     StringBuilder sb = new StringBuilder();
 
@@ -974,11 +960,13 @@ private String buildBiometricsInfo() {
     boolean hasFace = pm.hasSystemFeature("android.hardware.biometrics.face");
     boolean hasIris = pm.hasSystemFeature("android.hardware.biometrics.iris");
 
-    sb.append("Fingerprint      : ").append(hasFp   ? "Yes" : "No").append("\n");
-    sb.append("Face Unlock      : ").append(hasFace ? "Yes" : "No").append("\n");
-    sb.append("Iris Scan        : ").append(hasIris ? "Yes" : "No").append("\n");
+    sb.append("Fingerprint        : ").append(hasFp   ? "Yes" : "No").append("\n");
+    sb.append("Face Unlock        : ").append(hasFace ? "Yes" : "No").append("\n");
+    sb.append("Iris Scan          : ").append(hasIris ? "Yes" : "No").append("\n");
 
-    // Under-Display Fingerprint
+    // ------------------------------------------------------------
+    // Under-Display Fingerprint (UDFPS detection)
+    // ------------------------------------------------------------
     boolean udFps = false;
     try {
         udFps = pm.hasSystemFeature("com.motorola.hardware.fingerprint.udfps")
@@ -988,85 +976,87 @@ private String buildBiometricsInfo() {
               || pm.hasSystemFeature("vendor.xiaomi.hardware.fingerprint.udfps");
     } catch (Throwable ignore) {}
 
-    if (udFps) {
-        sb.append("Under-Display FP : Yes (UDFPS)\n");
-    } else if (hasFp) {
-        sb.append("Under-Display FP : No (standard sensor)\n");
+    if (hasFp) {
+        sb.append("Under-Display FP   : ")
+          .append(udFps ? "Yes" : "No")
+          .append("\n");
     }
 
+    // ------------------------------------------------------------
+    // Biometric Profile
+    // ------------------------------------------------------------
     int modes = (hasFp ? 1 : 0) + (hasFace ? 1 : 0) + (hasIris ? 1 : 0);
 
-    sb.append("Profile          : ");
-    switch (modes) {
-        case 0:
-            sb.append("No biometric hardware detected.\n");
-            break;
-        case 1:
-            sb.append("Single biometric modality.\n");
-            break;
-        default:
-            sb.append("Multi-biometric device (").append(modes).append(" modalities).\n");
-            break;
+    sb.append("Profile            : ");
+    if (modes == 0) {
+        sb.append("No biometric hardware\n");
+    } else if (modes == 1) {
+        sb.append("Single biometric\n");
+    } else {
+        sb.append("Multi-biometric (").append(modes).append(")\n");
     }
-
-    // REMOVE BIOMETRICMANAGER → not supported on build target
-    sb.append("Strength         : Unknown (API29-safe mode)\n");
-
-    sb.append("Advanced         : TEE stores biometric keys; detailed telemetry requires root access.\n");
 
     return sb.toString();
 }
 
-    // ------------------------------------------------------------
-    // SENSORS
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
+// SENSORS — CLEAN GEL DIAGNOSTIC SUMMARY
+// ------------------------------------------------------------
+private String buildSensorsInfo() {
+    StringBuilder sb = new StringBuilder();
 
-    private String buildSensorsInfo() {
-        StringBuilder sb = new StringBuilder();
-        int total = 0;
+    try {
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sm != null) {
 
-        try {
-            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            if (sm != null) {
-                java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-                for (Sensor s : all) {
-                    total++;
-                    sb.append("• ")
-                            .append(s.getName())
-                            .append(" (")
-                            .append(s.getVendor())
-                            .append(")\n");
-                }
+            Sensor accelerometer   = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            Sensor gyroscope       = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            Sensor magnetometer    = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            Sensor barometer       = sm.getDefaultSensor(Sensor.TYPE_PRESSURE);
+            Sensor proximity       = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            Sensor light           = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-                Sensor acc   = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                Sensor gyro  = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-                Sensor mag   = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-                Sensor baro  = sm.getDefaultSensor(Sensor.TYPE_PRESSURE);
-                Sensor step  = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-                Sensor prox  = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-                Sensor light = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+            Sensor stepCounter     = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            Sensor stepDetector    = sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
-                sb.append("\nSummary:\n");
-                sb.append("Accelerometer    : ").append(acc   != null ? "Yes" : "No").append("\n");
-                sb.append("Gyroscope        : ").append(gyro  != null ? "Yes" : "No").append("\n");
-                sb.append("Magnetometer     : ").append(mag   != null ? "Yes" : "No").append("\n");
-                sb.append("Barometer        : ").append(baro  != null ? "Yes" : "No").append("\n");
-                sb.append("Proximity        : ").append(prox  != null ? "Yes" : "No").append("\n");
-                sb.append("Light            : ").append(light != null ? "Yes" : "No").append("\n");
-                sb.append("Step Counter     : ").append(step  != null ? "Yes" : "No").append("\n");
-                sb.append("Total Sensors    : ").append(total).append("\n");
-            }
-        } catch (Throwable ignore) { }
+            Sensor rotationVector  = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            Sensor gameRotation    = sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+            Sensor gravity         = sm.getDefaultSensor(Sensor.TYPE_GRAVITY);
+            Sensor linearAccel     = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-        if (sb.length() == 0) {
-            sb.append("No sensors are exposed by this device at API level.\n");
+            Sensor significantMot  = sm.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+            Sensor stationaryDet   = sm.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
+            Sensor motionDet       = sm.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
+
+            sb.append("Summary:\n");
+            sb.append("Accelerometer        : ").append(accelerometer  != null ? "Yes" : "No").append("\n");
+            sb.append("Gyroscope            : ").append(gyroscope      != null ? "Yes" : "No").append("\n");
+            sb.append("Magnetometer         : ").append(magnetometer   != null ? "Yes" : "No").append("\n");
+            sb.append("Barometer            : ").append(barometer      != null ? "Yes" : "No").append("\n");
+            sb.append("Proximity             : ").append(proximity      != null ? "Yes" : "No").append("\n");
+            sb.append("Light Sensor         : ").append(light          != null ? "Yes" : "No").append("\n");
+
+            sb.append("Step Counter         : ").append(stepCounter    != null ? "Yes" : "No").append("\n");
+            sb.append("Step Detector        : ").append(stepDetector   != null ? "Yes" : "No").append("\n");
+
+            sb.append("Rotation Vector      : ").append(rotationVector != null ? "Yes" : "No").append("\n");
+            sb.append("Game Rotation Vector : ").append(gameRotation   != null ? "Yes" : "No").append("\n");
+            sb.append("Gravity Sensor       : ").append(gravity        != null ? "Yes" : "No").append("\n");
+            sb.append("Linear Acceleration  : ").append(linearAccel    != null ? "Yes" : "No").append("\n");
+
+            sb.append("Significant Motion   : ").append(significantMot != null ? "Yes" : "No").append("\n");
+            sb.append("Stationary Detect    : ").append(stationaryDet  != null ? "Yes" : "No").append("\n");
+            sb.append("Motion Detect        : ").append(motionDet      != null ? "Yes" : "No").append("\n");
         }
+    } catch (Throwable ignore) { }
 
-        sb.append("Advanced         : Extended sensor subsystem tables and raw calibration data are visible only on rooted systems.\n");
-
-        appendAccessInstructions(sb, "sensors");
-        return sb.toString();
+    if (sb.length() == 0) {
+        sb.append("No sensor information is exposed by this device.\n");
     }
+
+    appendAccessInstructions(sb, "sensors");
+    return sb.toString();
+}
 
 // ============================================================
 //  CONNECTIVITY 
@@ -1660,7 +1650,7 @@ private String buildHapticsInfo() {
 }
 
 // ============================================================
-// GNSS / LOCATION — SAFE SDK VERSION
+// GNSS / LOCATION — GEL CLEAN EDITION (API-SAFE)
 // ============================================================
 private String buildGnssInfo() {
     StringBuilder sb = new StringBuilder();
@@ -1670,81 +1660,58 @@ private String buildGnssInfo() {
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         // ---------------------------------------------------
-        // GNSS PROVIDERS
+        // PROVIDERS STATUS
         // ---------------------------------------------------
         if (lm != null) {
             boolean gps = false;
             boolean net = false;
-            try {
-                gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            } catch (Throwable ignore) {}
-            try {
-                net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            } catch (Throwable ignore) {}
+            try { gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Throwable ignore) {}
+            try { net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER); } catch (Throwable ignore) {}
 
-            sb.append("GPS Provider     : ").append(gps ? "Enabled" : "Disabled").append("\n");
-            sb.append("Network Locate   : ").append(net ? "Enabled" : "Disabled").append("\n");
+            sb.append("GPS Provider      : ").append(gps ? "Enabled" : "Disabled").append("\n");
+            sb.append("Network Location : ").append(net ? "Enabled" : "Disabled").append("\n");
         }
 
         // ---------------------------------------------------
-        // CONSTELLATION SUPPORT (strings only, no new constants)
+        // CONSTELLATIONS (CAPABILITY MATRIX)
         // ---------------------------------------------------
-        sb.append("\nConstellations   :\n");
+        sb.append("\nConstellations:\n");
 
-        sb.append("  GPS            : ")
+        sb.append("GPS               : ")
                 .append(pm.hasSystemFeature("android.hardware.location.gps") ? "Yes" : "No").append("\n");
-        sb.append("  GLONASS        : ")
+        sb.append("GLONASS           : ")
                 .append(pm.hasSystemFeature("android.hardware.location.glonass") ? "Yes" : "No").append("\n");
-        sb.append("  Galileo        : ")
+        sb.append("Galileo           : ")
                 .append(pm.hasSystemFeature("android.hardware.location.galileo") ? "Yes" : "No").append("\n");
-        sb.append("  Beidou         : ")
+        sb.append("BeiDou            : ")
                 .append(pm.hasSystemFeature("android.hardware.location.beidou") ? "Yes" : "No").append("\n");
-        sb.append("  QZSS           : ")
+        sb.append("QZSS              : ")
                 .append(pm.hasSystemFeature("android.hardware.location.qzss") ? "Yes" : "No").append("\n");
-        sb.append("  SBAS           : ")
+        sb.append("SBAS              : ")
                 .append(pm.hasSystemFeature("android.hardware.location.sbas") ? "Yes" : "No").append("\n");
-        sb.append("  NavIC/IRNSS    : ")
+        sb.append("NavIC / IRNSS     : ")
                 .append(pm.hasSystemFeature("android.hardware.location.irnss") ? "Yes" : "No").append("\n");
 
         // ---------------------------------------------------
-        // RAW MEASUREMENT SUPPORT (string feature only)
+        // CORE GNSS CAPABILITIES
         // ---------------------------------------------------
-        try {
-            boolean raw = pm.hasSystemFeature("android.hardware.location.gnss.raw_measurement");
-            sb.append("\nRaw Measurements : ").append(raw ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {}
+        boolean raw   = pm.hasSystemFeature("android.hardware.location.gnss.raw_measurement");
+        boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batch");
+
+        sb.append("\nCapabilities:\n");
+        sb.append("Raw Measurements  : ").append(raw ? "Yes" : "No").append("\n");
+        sb.append("GNSS Batching     : ").append(batch ? "Yes" : "No").append("\n");
 
         // ---------------------------------------------------
-        // GNSS BATCHING (Android 7+) — use string, NOT constant
+        // NMEA (BASIC SUPPORT INDICATOR)
         // ---------------------------------------------------
-        try {
-            boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batch");
-            sb.append("GNSS Batching    : ").append(batch ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {}
+        sb.append("NMEA Support      : ").append(lm != null ? "Yes" : "No").append("\n");
 
-        // ---------------------------------------------------
-        // NMEA Support (best-effort)
-        // ---------------------------------------------------
-        sb.append("NMEA Support     : ").append(lm != null ? "Yes" : "Unknown").append("\n");
+    } catch (Throwable ignore) {
+        sb.append("GNSS information is not exposed on this device.\n");
+    }
 
-        // ---------------------------------------------------
-        // SUPL / AGNSS (Assisted-GNSS) — string features
-        // ---------------------------------------------------
-        sb.append("\nAssisted GNSS    :\n");
-        sb.append("  SUPL Support   : ")
-                .append(pm.hasSystemFeature("com.google.location.feature.SUPL") ? "Yes" : "Unknown")
-                .append("\n");
-        sb.append("  AGNSS Injection: ")
-                .append(pm.hasSystemFeature("android.hardware.location.agnss") ? "Yes" : "No")
-                .append("\n");
-
-// FINAL NOTE — GNSS (GREEN SINGLE LINE)
-sb.append("\nAdvanced         : GNSS constellation breakdown, carrier phases, logging and raw measurement,s requires root access.\n");
-} catch (Throwable ignore) {
-    sb.append("GNSS information is not exposed on this device.\n");
-}
-
-return sb.toString();
+    return sb.toString();
 }
       
 // ============================================================
@@ -1753,14 +1720,16 @@ return sb.toString();
 private String buildUsbInfo() {
     StringBuilder sb = new StringBuilder();
 
+    PackageManager pm = getPackageManager();
+
     // ------------------------------------------------------------
     // BASIC SUPPORT FLAGS
     // ------------------------------------------------------------
-    boolean otg = getPackageManager().hasSystemFeature("android.hardware.usb.host");
-    boolean acc = getPackageManager().hasSystemFeature("android.hardware.usb.accessory");
+    boolean otg = pm.hasSystemFeature("android.hardware.usb.host");
+    boolean acc = pm.hasSystemFeature("android.hardware.usb.accessory");
 
     sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
-    sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
+    sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
 
     // ------------------------------------------------------------
     // USB MANAGER
@@ -1772,7 +1741,7 @@ private String buildUsbInfo() {
     }
 
     // ------------------------------------------------------------
-    // CURRENTLY CONNECTED DEVICES (Host Mode)
+    // CONNECTED USB DEVICES (HOST MODE)
     // ------------------------------------------------------------
     try {
         HashMap<String, UsbDevice> devs = um.getDeviceList();
@@ -1782,32 +1751,30 @@ private String buildUsbInfo() {
 
             for (UsbDevice d : devs.values()) {
                 sb.append("  • ").append(d.getDeviceName()).append("\n");
-                sb.append("    Vendor ID     : ").append(d.getVendorId()).append("\n");
-                sb.append("    Product ID    : ").append(d.getProductId()).append("\n");
-                sb.append("    Class/Subcls  : ")
+                sb.append("    Vendor ID    : ").append(d.getVendorId()).append("\n");
+                sb.append("    Product ID   : ").append(d.getProductId()).append("\n");
+                sb.append("    Class/Subcls : ")
                         .append(d.getDeviceClass()).append("/")
                         .append(d.getDeviceSubclass()).append("\n");
-                sb.append("    Interfaces    : ").append(d.getInterfaceCount()).append("\n");
-
-                sb.append("    USB Speed     : System API does not expose link speed on this device. Requires root access\n");
+                sb.append("    Interfaces   : ").append(d.getInterfaceCount()).append("\n");
+                sb.append("    USB Speed    : Not exposed by public API\n");
             }
-
         } else {
-            sb.append("Connected Dev.   : None\n");
+            sb.append("Connected Dev.  : None\n");
         }
 
     } catch (Throwable ignore) {
-        sb.append("Connected Dev.   : Error reading USB map\n");
+        sb.append("Connected Dev.  : Error reading USB devices\n");
     }
 
     // ------------------------------------------------------------
-    // USB ROLE (Device <-> Host)
+    // USB ROLE / MODE
     // ------------------------------------------------------------
-    sb.append("\nMode/Role:\n");
-    sb.append("  USB Role Support  : Vendor HAL not available on this Android version. Requires root access\n");
+    sb.append("\nMode / Role:\n");
+    sb.append("  USB Role       : Vendor HAL not exposed (API29-safe)\n");
 
     // ------------------------------------------------------------
-    // POWER + CHARGER PROFILE
+    // POWER / CHARGING PROFILE
     // ------------------------------------------------------------
     sb.append("\nPower Profiles:\n");
     try {
@@ -1830,56 +1797,122 @@ private String buildUsbInfo() {
         }
 
     } catch (Throwable ignore) {
-        sb.append("  Power Info     : Error\n");
+        sb.append("  Power Info    : Error\n");
     }
 
     // ------------------------------------------------------------
-    // ADVANCED (ROOT)
+    // CHARGE CURRENT (mA) — ROOT ONLY
     // ------------------------------------------------------------
-    sb.append("\nAdvanced         : USB descriptors & power negotiation requires root access.\n");
+    Integer mA = getRootChargeCurrentMilliAmps();
+    if (mA != null) {
+        sb.append("  Charge Current : ").append(mA).append(" mA\n");
+    } else {
+        sb.append("  Charge Current : Available only on rooted devices\n");
+    }
+
+    // ------------------------------------------------------------
+    // FINAL NOTE
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced         : USB descriptors, role switching and power negotiation require root access.\n");
 
     return sb.toString();
 }
 
+
 // ============================================================
-//  Other Peripherals 
+// ROOT HELPERS — CHARGE CURRENT (µA → mA)
+// ============================================================
+private Integer getRootChargeCurrentMilliAmps() {
+    try {
+        if (!isRootAvailable()) return null;
+
+        String[] paths = new String[] {
+                "/sys/class/power_supply/battery/current_now",
+                "/sys/class/power_supply/battery/input_current_now",
+                "/sys/class/power_supply/usb/current_now",
+                "/sys/class/power_supply/usb/input_current_now",
+                "/sys/class/power_supply/main/current_now",
+                "/sys/class/power_supply/ac/current_now",
+                "/sys/class/power_supply/charger/current_now"
+        };
+
+        for (String p : paths) {
+            String out = suCatFirstLine(p);
+            Integer uA = parseIntSafe(out);
+            if (uA != null) {
+                return (int) Math.round(uA / 1000.0); // µA → mA
+            }
+        }
+        return null;
+
+    } catch (Throwable ignore) {
+        return null;
+    }
+}
+
+private boolean isRootAvailable() {
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        p.waitFor();
+        return line != null && line.contains("uid=0");
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private String suCatFirstLine(String path) {
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "cat " + path});
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        p.waitFor();
+        return (line == null || line.trim().isEmpty()) ? null : line.trim();
+    } catch (Throwable t) {
+        return null;
+    }
+}
+
+private Integer parseIntSafe(String s) {
+    try {
+        if (s == null) return null;
+        s = s.replaceAll("[^0-9\\-+]", "");
+        if (s.isEmpty()) return null;
+        return Integer.parseInt(s);
+    } catch (Throwable t) {
+        return null;
+    }
+}
+
+// ============================================================
+//  Other Peripherals — CLEAN GEL EDITION
 // ============================================================
 private String buildOtherPeripheralsInfo() {
     StringBuilder sb = new StringBuilder();
+    PackageManager pm = getPackageManager();
 
-    sb.append("=== General Peripherals ===\n");
+    sb.append("=== Other Peripherals ===\n");
 
-    boolean vib          = getPackageManager().hasSystemFeature("android.hardware.vibrator");
-    boolean flash        = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-    boolean ir           = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
-    boolean fm           = getPackageManager().hasSystemFeature("android.hardware.fm");
-    boolean hall         = getPackageManager().hasSystemFeature("android.hardware.sensor.hall");
-    boolean therm        = getPackageManager().hasSystemFeature("android.hardware.sensor.ambient_temperature");
-    boolean hwkbd        = getPackageManager().hasSystemFeature("android.hardware.keyboard");
-    boolean wireless     = getPackageManager().hasSystemFeature("android.hardware.power.wireless_charging");
-    boolean step         = getPackageManager().hasSystemFeature("android.hardware.sensor.stepcounter");
-    boolean vulkan       = getPackageManager().hasSystemFeature("android.hardware.vulkan.level");
-    boolean renderscript = getPackageManager().hasSystemFeature("android.software.renderscript");
-    boolean barcode      = getPackageManager().hasSystemFeature("android.hardware.barcodescanner");
-    boolean tv           = getPackageManager().hasSystemFeature("android.hardware.tv.tuner");
-    boolean als          = getPackageManager().hasSystemFeature("android.hardware.light");
+    boolean ir       = pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
+    boolean fm       = pm.hasSystemFeature("android.hardware.fm");
+    boolean hall     = pm.hasSystemFeature("android.hardware.sensor.hall");
+    boolean hwkbd    = pm.hasSystemFeature("android.hardware.keyboard");
+    boolean wireless = pm.hasSystemFeature("android.hardware.power.wireless_charging");
+    boolean tv       = pm.hasSystemFeature("android.hardware.tv.tuner");
+    boolean barcode  = pm.hasSystemFeature("android.hardware.barcodescanner");
 
-    sb.append("Vibration Motor : ").append(vib ? "Yes" : "No").append("\n");
-    sb.append("Flashlight      : ").append(flash ? "Yes" : "No").append("\n");
-    sb.append("IR Blaster      : ").append(ir ? "Yes" : "No").append("\n");
-    sb.append("FM Radio        : ").append(fm ? "Yes" : "No").append("\n");
-    sb.append("Hall Sensor     : ").append(hall ? "Yes" : "No").append("\n");
-    sb.append("Thermal Sensor  : ").append(therm ? "Yes" : "No").append("\n");
-    sb.append("HW Keyboard     : ").append(hwkbd ? "Yes" : "No").append("\n");
-    sb.append("Wireless Charge : ").append(wireless ? "Yes" : "No").append("\n");
-    sb.append("Step Counter    : ").append(step ? "Yes" : "No").append("\n");
-    sb.append("Vulkan Engine   : ").append(vulkan ? "Yes" : "No").append("\n");
-    sb.append("RenderScript    : ").append(renderscript ? "Yes" : "No").append("\n");
-    sb.append("Barcode Module  : ").append(barcode ? "Yes" : "No").append("\n");
-    sb.append("TV Tuner        : ").append(tv ? "Yes" : "No").append("\n");
-    sb.append("Ambient Light   : ").append(als ? "Yes" : "No").append("\n");
+    sb.append("IR Blaster        : ").append(ir ? "Yes" : "No").append("\n");
+    sb.append("FM Radio          : ").append(fm ? "Yes" : "No").append("\n");
+    sb.append("Hall Sensor       : ").append(hall ? "Yes" : "No").append("\n");
+    sb.append("HW Keyboard       : ").append(hwkbd ? "Yes" : "No").append("\n");
+    sb.append("Wireless Charging : ").append(wireless ? "Yes" : "No").append("\n");
+    sb.append("TV Tuner          : ").append(tv ? "Yes" : "No").append("\n");
+    sb.append("Barcode Module    : ").append(barcode ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : Extended peripheral diagnostics requires root access.\n");
+    sb.append("\nAdvanced         : Extended peripheral diagnostics require root access.\n");
 
     return sb.toString();
 }
@@ -2034,7 +2067,7 @@ private String buildAudioUnifiedInfo() {
 }
 
  // ============================================================
-// Root Info (with Vendor Diag Paths for rooted devices)
+// Root Info (root-ready, honest limits)
 // ============================================================
 private String buildRootInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2066,55 +2099,45 @@ private String buildRootInfo() {
         sb.append("SELinux          : ").append(selinux).append("\n");
     }
 
+    // ------------------------------------------------------------
+    // Fusion Layer
+    // ------------------------------------------------------------
     sb.append("\nFusion Layer     : ");
     if (isRooted) {
-        sb.append("Peripherals telemetry is using GEL Dynamic Access Routing Engine v1.0 with root access.\n");
+        sb.append("Running with root access; extended diagnostics are enabled where supported.\n");
     } else {
-        sb.append("Peripherals run with standard Android permissions; advanced routing is only available on rooted devices and cannot be enabled from inside this app.\n");
+        sb.append("Standard Android permission model.\n");
     }
 
+    // ------------------------------------------------------------
+    // Root-only sections
+    // ------------------------------------------------------------
     if (isRooted) {
-        sb.append("\nAdvanced subsystem tables are fully enabled on this device.\n");
-        sb.append("Extended hardware diagnostics are active.\n");
+        sb.append("\nExtended diagnostics:\n");
+        sb.append("  Status         : Enabled (root)\n");
 
         sb.append("\nRoot indicators:\n");
-
         String[] paths = {
                 "/system/bin/su", "/system/xbin/su", "/sbin/su",
                 "/system/su", "/system/bin/.ext/.su",
                 "/system/usr/we-need-root/su-backup",
                 "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
         };
-
+        boolean any = false;
         for (String p : paths) {
             if (new File(p).exists()) {
                 sb.append("  ").append(p).append("\n");
+                any = true;
             }
         }
+        if (!any) sb.append("  (no common su paths detected)\n");
 
-        sb.append("\nPeripherals telemetry is running with root access.\n");
-
-        // --------------------------------------------------------
-        // Vendor diag / engineering paths (Samsung / Qualcomm / MTK)
-        // --------------------------------------------------------
+        // Vendor diag paths (best-effort presence check; no promises)
         String[] vendorDiag = {
-                // Qualcomm generic diag
-                "/dev/diag",
-                "/dev/diag_qti",
-
-                // Samsung EFS / modem related
-                "/efs/imei/.msl",
-                "/efs/imei/key_str",
-                "/efs/FactoryApp",
-
-                // Qualcomm / vendor diag logging
-                "/vendor/etc/diag_mdlog",
-                "/system/vendor/bin/diag_mdlog",
-
-                // MTK engineering / gps / modem helpers
-                "/system/bin/mtk_agpsd",
-                "/system/bin/mtk_engineering",
-                "/system/bin/emdlogger",
+                "/dev/diag", "/dev/diag_qti",
+                "/efs/imei/.msl", "/efs/imei/key_str", "/efs/FactoryApp",
+                "/vendor/etc/diag_mdlog", "/system/vendor/bin/diag_mdlog",
+                "/system/bin/mtk_agpsd", "/system/bin/mtk_engineering", "/system/bin/emdlogger"
         };
 
         boolean foundVendor = false;
@@ -2122,7 +2145,7 @@ private String buildRootInfo() {
             try {
                 if (new File(p).exists()) {
                     if (!foundVendor) {
-                        sb.append("\nVendor diag paths (root-only):\n");
+                        sb.append("\nVendor diagnostics (presence check):\n");
                         foundVendor = true;
                     }
                     sb.append("  ").append(p).append("\n");
@@ -2131,20 +2154,20 @@ private String buildRootInfo() {
         }
 
         if (!foundVendor) {
-            sb.append("\nVendor diag paths (Samsung / Qualcomm / MTK) are present at OS level but not exposed to this app without a full root shell and vendor tools.\n");
+            sb.append("\nVendor diagnostics:\n");
+            sb.append("  Not exposed to third-party apps; availability depends on OEM tooling.\n");
         }
 
     } else {
+        // --------------------------------------------------------
+        // Non-root: one concise, covering statement
+        // --------------------------------------------------------
         sb.append("\nThis device is not rooted.\n");
-        sb.append("Advanced subsystem tables are visible only on rooted systems.\n");
-        sb.append("Extended hardware diagnostics require root access.\n");
-        sb.append("Vendor diag paths (Samsung / Qualcomm / MTK) cannot be inspected from a non-root app.\n");
+        sb.append("Advanced subsystem tables and low-level hardware diagnostics are available only on rooted devices.\n");
     }
 
     return sb.toString();
 }
-
-    // ==================================
 
     //==========================
     // NEW MEGA-UPGRADE SECTIONS (1–12)
@@ -2769,7 +2792,7 @@ private String buildScreenInfo() {
 }
 
 // ============================================================================
-// 3. TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
+// 3. TELEPHONY / MODEM — CLEAN GEL EDITION (REAL DATA ONLY)
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2784,57 +2807,60 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     // PHONE TYPE
     // ------------------------------------------------------------
-    String phoneTypeStr = "Unknown";
     try {
         if (tm != null) {
-            switch (tm.getPhoneType()) {
-                case TelephonyManager.PHONE_TYPE_GSM:  phoneTypeStr = "GSM";  break;
-                case TelephonyManager.PHONE_TYPE_CDMA: phoneTypeStr = "CDMA"; break;
-                case TelephonyManager.PHONE_TYPE_SIP:  phoneTypeStr = "SIP";  break;
-                default: phoneTypeStr = "None"; break;
-            }
+            String phoneType =
+                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM  ? "GSM"  :
+                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA ? "CDMA" :
+                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_SIP  ? "SIP"  :
+                    "None";
+
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("Phone Type"), phoneType));
         }
     } catch (Throwable ignore) {}
-
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
 
     // ------------------------------------------------------------
     // DATA NETWORK
     // ------------------------------------------------------------
     try {
-        int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
-                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
-                       : "Unknown";
+        if (tm != null) {
+            int net = tm.getDataNetworkType();
+            String netName =
+                    net == TelephonyManager.NETWORK_TYPE_NR  ? "5G NR"  :
+                    net == TelephonyManager.NETWORK_TYPE_LTE ? "4G LTE" :
+                    "Other";
 
-        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("5G (NR) Active"),
-                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("Data Network"), netName));
+
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("5G (NR) Active"),
+                    net == TelephonyManager.NETWORK_TYPE_NR ? "Yes" : "No"));
+        }
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // CARRIER / COUNTRY / OPERATOR CODE
     // ------------------------------------------------------------
     try {
-        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
-        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
-        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
+        if (tm != null) {
+            String carrier = tm.getNetworkOperatorName();
+            String iso     = tm.getNetworkCountryIso();
+            String opCode  = tm.getNetworkOperator();
 
-        if (iso == null || iso.trim().isEmpty())
-            iso = Locale.getDefault().getCountry();
+            if (carrier != null && !carrier.isEmpty())
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("Carrier"), carrier));
 
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Carrier"),
-                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
+            if (iso != null && !iso.isEmpty())
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("Country ISO"), iso.toUpperCase(locale)));
 
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Country ISO"),
-                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Operator Code"),
-                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
+            if (opCode != null && !opCode.isEmpty())
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("Operator Code"), opCode));
+        }
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
@@ -2854,175 +2880,40 @@ private String buildModemInfo() {
     // ROAMING
     // ------------------------------------------------------------
     try {
-        boolean roaming = tm != null && tm.isNetworkRoaming();
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
+        if (tm != null) {
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("Roaming"),
+                    tm.isNetworkRoaming() ? "Yes" : "No"));
+        }
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // IMS / VoLTE / VoWiFi / VoNR
+    // ACTIVE SIMS + SLOT NAMES (REAL ONLY)
     // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
-
     try {
-        boolean volte = tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
-    }
-
-    try {
-        boolean vowifi = tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
-    }
-
-    try {
-        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
-                tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
-    }
-
-    // ========================================================================
-    // ACTIVE SIMS + FALLBACK
-    // ========================================================================
-    try {
-        List<SubscriptionInfo> subs = null;
-
-        if (sm != null) {
-            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
-        }
-
-        if ((subs == null || subs.isEmpty()) && sm != null) {
-            try {
-                Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
-                Object result = m.invoke(sm);
-                if (result instanceof List) subs = (List<SubscriptionInfo>) result;
-            } catch (Throwable ignore) {}
-        }
-
-        if (subs == null || subs.isEmpty()) {
-            try {
-                SubscriptionManager alt = SubscriptionManager.from(this);
-                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
-            } catch (Throwable ignore) {}
-        }
-
-        List<SimpleSimEntry> simpleList = new ArrayList<>();
-
-        if (subs == null || subs.isEmpty()) {
-            try {
-                for (int slot = 0; slot < 2; slot++) {
-                    int simState = tm.getSimState(slot);
-
-                    if (simState == TelephonyManager.SIM_STATE_READY ||
-                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
-                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
-                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
-
-                        String name = null;
-                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
-                        if (name == null || name.trim().isEmpty()) name = "Unknown";
-
-                        simpleList.add(new SimpleSimEntry(slot, name));
-                    }
-                }
-            } catch (Throwable ignore) {}
-        }
-
-        int count = 0;
+        List<SubscriptionInfo> subs =
+                sm != null ? sm.getActiveSubscriptionInfoList() : null;
 
         if (subs != null && !subs.isEmpty()) {
-            boolean[] seen = new boolean[2];
-            for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
-                        seen[slot] = true;
-                        count++;
-                    }
-                } catch (Throwable ignore) {}
-            }
-        } else if (!simpleList.isEmpty()) {
-            count = simpleList.size();
-        }
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Active SIMs"), (count == 0 ? "N/A" : String.valueOf(count))));
-
-        if (subs != null && !subs.isEmpty()) {
+            sb.append(String.format(locale, "%s : %d\n",
+                    padKeyModem("Active SIMs"), subs.size()));
 
             boolean[] printed = new boolean[2];
             for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot < 0 || slot > 1 || printed[slot]) continue;
+                int slot = si.getSimSlotIndex();
+                if (slot >= 0 && slot <= 1 && !printed[slot]) {
                     printed[slot] = true;
 
-                    String name = (si.getCarrierName() != null)
+                    String name = si.getCarrierName() != null
                             ? si.getCarrierName().toString()
-                            : "Unknown";
+                            : "SIM";
 
                     sb.append(String.format(locale, "%s : %s\n",
                             padKeyModem("SIM Slot " + (slot + 1)), name));
-
-                } catch (Throwable ignore) {}
-            }
-
-        } else {
-            for (SimpleSimEntry e : simpleList) {
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
+                }
             }
         }
-
     } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // IMSI / MSISDN MASKED
-    // ------------------------------------------------------------
-    try {
-        if (tm != null) {
-            String imsi = null;
-            String msisdn = null;
-
-            try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
-            try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("IMSI"),
-                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("MSISDN"),
-                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
-        }
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // ADVANCED SECTION — FIXED MULTILINE, PERFECT ALIGNMENT
-    // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown. Requires                       root access"));
-
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown. Requires                       root access"));
-
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted.                       Requires root access"));
-
-    // FULL FIXED MULTILINE — NO MORE BROKEN LINES
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Advanced"), "Full RAT tables,                       bands, CA combos, requires root access                       and OEM modem tools "));
 
     return sb.toString();
 }
@@ -3079,7 +2970,7 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 28) {
                 boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
-                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No").append("  (Indoor distance)\n");
+                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No").append(" (Indoor distance)\n");
             }
 
             // ------------------------------------------------------------
@@ -3087,7 +2978,7 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             if (Build.VERSION.SDK_INT >= 26) {
                 boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
-                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No").append("  (Device proximity)\n");
+                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No").append(" (Device proximity)\n");
             }
 
             // ------------------------------------------------------------
@@ -3111,12 +3002,6 @@ private String buildWifiAdvancedInfo() {
             // ------------------------------------------------------------
             sb.append("Wi-Fi Direct     : ")
                     .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "Yes" : "No").append("\n");
-
-            // ------------------------------------------------------------
-            // MAC RANDOMIZATION / LINK LAYER (informational)
-            // ------------------------------------------------------------
-            sb.append("MAC Randomization: Unknown (SDK level)\n");
-            sb.append("Link Layer Stats : Unknown (hidden API)\n");
 
             // ------------------------------------------------------------
             // POWER SAVE MODE
@@ -3163,106 +3048,82 @@ private String buildWifiAdvancedInfo() {
     return sb.toString();
 }
 
+// ============================
+// 5. System Feature Matrix
+// ============================
 
-    // ============================
-    // 5. Sensors EXTENDED
-    // ============================
+private String buildSystemFeaturesInfo() {
+    StringBuilder sb = new StringBuilder();
 
-   private String buildSensorsExtendedInfo() {
-        StringBuilder sb = new StringBuilder();
+    try {
+        PackageManager pm = getPackageManager();
+        FeatureInfo[] feats = pm.getSystemAvailableFeatures();
 
-        try {
-            SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            if (sm != null) {
-                java.util.List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);
-                for (Sensor s : all) {
-                    sb.append("• ").append(s.getName()).append("\n");
-                    sb.append("   Type          : ").append(s.getType()).append("\n");
-                    sb.append("   Vendor        : ").append(s.getVendor()).append("\n");
-                    sb.append("   Max Range     : ").append(s.getMaximumRange()).append("\n");
-                    sb.append("   Resolution    : ").append(s.getResolution()).append("\n");
-                    sb.append("   Power (mA)    : ").append(s.getPower()).append("\n");
-                    sb.append("   Min Delay     : ").append(s.getMinDelay()).append(" µs\n\n");
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("Sensor extended metadata is not exposed by this device.\n");
+        if (feats == null || feats.length == 0) {
+            sb.append("No system-declared features exposed by PackageManager.\n");
+            return sb.toString();
         }
 
-        sb.append("Advanced         : Dedicated sensor hubs and on-SoC fusion engines, requires root access and vendor sensor HAL.\n");
+        sb.append("Feature Count    : ").append(feats.length).append("\n\n");
 
-        return sb.toString();
-    }
-
-
-    // ============================
-    // 6. System Feature Matrix
-    // ============================
-
-  private String buildSystemFeaturesInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            PackageManager pm = getPackageManager();
-            FeatureInfo[] feats = pm.getSystemAvailableFeatures();
-            int count = feats != null ? feats.length : 0;
-
-            sb.append("Feature Count    : ").append(count).append("\n\n");
-
-            if (feats != null) {
-                int shown = 0;
-                for (FeatureInfo fi : feats) {
-                    if (fi == null) continue;
-                    if (fi.name != null) {
-                        sb.append("• ").append(fi.name).append("\n");
-                        shown++;
-                    }
-                    if (shown >= 120) break;
-                }
-            }
-        } catch (Throwable ignore) { }
-
-        if (sb.length() == 0) {
-            sb.append("No feature matrix exposed by PackageManager on this device.\n");
+        for (FeatureInfo fi : feats) {
+            if (fi == null || fi.name == null) continue;
+            sb.append("• ").append(fi.name).append("\n");
         }
 
-        return sb.toString();
+        sb.append("\nNote:\n");
+        sb.append("This list represents system-declared capabilities ");
+        sb.append("(PackageManager features).\n");
+        sb.append("It does NOT guarantee actual hardware presence, ");
+        sb.append("availability or performance.\n");
+
+    } catch (Throwable t) {
+        sb.setLength(0);
+        sb.append("System feature matrix is not accessible on this device.\n");
     }
+
+    return sb.toString();
+}
  
-    // ============================
-    // 7. SELinux / Security Flags
-    // ============================
+// ============================
+// 6. SELinux / Security Flags
+// ============================
 
-   private String buildSecurityFlagsInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildSecurityFlagsInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        String kernel = readSysString("/proc/version");
-        if (kernel != null && !kernel.isEmpty()) {
-            sb.append("Kernel          : ").append(kernel).append("\n");
-        }
-
-        String patch = Build.VERSION.SECURITY_PATCH;
-        if (patch != null && !patch.isEmpty()) {
-            sb.append("Security Patch  : ").append(patch).append("\n");
-        }
-
-        String vbState = getProp("ro.boot.verifiedbootstate");
-        if (vbState != null && !vbState.isEmpty()) {
-            sb.append("Verified Boot   : ").append(vbState).append("\n");
-        }
-
-        boolean strongBox = getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
-        sb.append("StrongBox       : ").append(strongBox ? "Yes" : "No").append("\n");
-
-        boolean hce = getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
-        sb.append("HCE / Secure NFC: ").append(hce ? "Yes" : "No").append("\n");
-
-        sb.append("Advanced         : Full SELinux policy dump and keymaster internals, requires root access and are not exposed to apps.\n");
-
-        return sb.toString();
+    String kernel = readSysString("/proc/version");
+    if (kernel != null && !kernel.isEmpty()) {
+        sb.append("Kernel           : ").append(kernel).append("\n");
     }
+
+    String patch = Build.VERSION.SECURITY_PATCH;
+    if (patch != null && !patch.isEmpty()) {
+        sb.append("Security Patch   : ").append(patch).append("\n");
+    }
+
+    String vbState = getProp("ro.boot.verifiedbootstate");
+    if (vbState != null && !vbState.isEmpty()) {
+        sb.append("Verified Boot    : ").append(vbState).append("\n");
+    }
+
+    boolean strongBox =
+            getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
+    sb.append("StrongBox        : ").append(strongBox ? "Yes" : "No").append("\n");
+
+    boolean hce =
+            getPackageManager().hasSystemFeature(
+                    PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
+    sb.append("HCE / Secure NFC : ").append(hce ? "Yes" : "No").append("\n");
+
+    sb.append(
+        "Advanced         : SELinux policy details and keymaster internals are "
+      + "hardware-isolated and not accessible to apps; inspection requires "
+      + "root or kernel-level access.\n"
+    );
+
+    return sb.toString();
+}
 
     // ============================================================
     // HELPERS (ROOT / SYSFS)

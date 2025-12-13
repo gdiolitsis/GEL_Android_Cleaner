@@ -41,6 +41,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.util.Locale;
 
 public class DeviceInfoInternalActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
@@ -123,9 +124,7 @@ protected void onCreate(Bundle savedInstanceState) {
         setNeonSectionText(txtRamContent, buildRamInfo());
     if (txtStorageContent != null)
         setNeonSectionText(txtStorageContent, buildStorageInfo());
-    if (txtConnectivityContent != null)
-        setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
-
+    
     // EXPANDERS (ONLY HEADERS THAT EXIST IN CLEAN XML)
     setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
     setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
@@ -966,4 +965,4 @@ private String padRight(String s, int n) {
     while (sb.length() < n) sb.append(' ');
     return sb.toString();
 }
-}
+                }

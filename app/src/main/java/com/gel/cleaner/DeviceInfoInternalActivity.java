@@ -450,8 +450,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append(padRight("CPU Cores", 10))
-      .append(": ")
+    sb.append("CPU Cores :" )
       .append(cores)
       .append("\n");
 
@@ -623,17 +622,21 @@ private String buildCpuInfo() {
 private String buildThermalSensorsInfo() {
 
     StringBuilder sb = new StringBuilder();
-    List<String> lines = new ArrayList<>();
+
+    // κρατάμε ΕΝΑ sensor ανά label (όχι διπλά)
+    Map<String, String> map = new LinkedHashMap<>();
+
+    final int PAD = 14;
 
     // ------------------------------------------------------------
-    // BATTERY TEMPERATURE (SYSTEM)
+    // BATTERY (SYSTEM)
     // ------------------------------------------------------------
     long batt = readSysLong("/sys/class/power_supply/battery/temp");
     if (batt > 0) {
         double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
-        lines.add(
-            padRight("Battery", 12) + ": " +
-            String.format(Locale.US, "%.1f°C", c) + "  (system)"
+        map.put(
+            "Battery",
+            String.format(Locale.US, "%.1f°C  (system)", c)
         );
     }
 
@@ -660,58 +663,56 @@ private String buildThermalSensorsInfo() {
                 double c = (t > 1000) ? t / 1000.0 : t / 10.0;
 
                 String label = null;
-                String suffix = "";
+                String value;
 
-                // ---------------- CPU ----------------
+                // ---------------- CPU CORES ----------------
                 if (low.startsWith("cpu-")) {
                     // cpu-0-0 → CPU Core 0
                     String core = low.replace("cpu-", "");
                     int idx = core.lastIndexOf("-");
-                    label = "CPU Core " + (idx >= 0 ? core.substring(idx + 1) : core);
+                    String coreId = (idx >= 0) ? core.substring(idx + 1) : core;
+                    label = "CPU Core " + coreId;
+                    value = String.format(Locale.US, "%.1f°C", c);
                 }
                 // ---------------- CPU SUBSYSTEM ----------------
                 else if (low.contains("cpuss")) {
                     label = "CPU Subsystem";
+                    value = String.format(Locale.US, "%.1f°C", c);
                 }
                 // ---------------- GPU ----------------
                 else if (low.contains("gpu")) {
                     label = "GPU Sensor";
+                    value = String.format(Locale.US, "%.1f°C", c);
                 }
-                // ---------------- SoC ----------------
+                // ---------------- SOC ----------------
                 else if (low.contains("soc")) {
                     label = "SoC Sensor";
-                    suffix = "  (aux)";
+                    value = String.format(Locale.US, "%.1f°C  (aux)", c);
                 }
                 // ---------------- BATTERY SHELL / SKIN ----------------
                 else if (low.contains("batt") || low.contains("shell") || low.contains("skin")) {
                     label = "Batt Shell";
-                    suffix = "  (sensor)";
-                }
-                else {
-                    continue; // skip άσχετα
+                    value = String.format(Locale.US, "%.1f°C  (sensor)", c);
+                } else {
+                    continue;
                 }
 
-                lines.add(
-                    padRight(label, 12) + ": " +
-                    String.format(Locale.US, "%.1f°C", c) +
-                    suffix
-                );
+                // κράτα ΜΟΝΟ το πρώτο (όχι διπλά)
+                if (!map.containsKey(label)) {
+                    map.put(label, value);
+                }
             }
         }
     }
 
     // ------------------------------------------------------------
-    // SORT
+    // OUTPUT (ευθυγράμμιση)
     // ------------------------------------------------------------
-    Collections.sort(lines, new Comparator<String>() {
-        @Override
-        public int compare(String a, String b) {
-            return a.toLowerCase(Locale.US).compareTo(b.toLowerCase(Locale.US));
-        }
-    });
-
-    for (String line : lines) {
-        sb.append(line).append("\n");
+    for (Map.Entry<String, String> e : map.entrySet()) {
+        sb.append(padRight(e.getKey(), PAD))
+          .append(": ")
+          .append(e.getValue())
+          .append("\n");
     }
 
     // ------------------------------------------------------------

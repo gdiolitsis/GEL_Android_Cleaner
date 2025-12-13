@@ -326,9 +326,8 @@ public void onScreenChanged(boolean isInner) {
         sb.append("Board        : ").append(Build.BOARD).append("\n");
         sb.append("Bootloader   : ").append(Build.BOOTLOADER).append("\n\n");
 
-        sb.append("=== System Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
-        sb.append("\n ");   // empty visible line
-        sb.append("\n");
+        sb.append("=== System Fingerprint ===\n\n");
+        sb.append(Build.FINGERPRINT).append("\n\n");
         
         String androidId = "";
         try {
@@ -389,13 +388,11 @@ private String buildAndroidInfo() {
     sb.append("Build ID      : ").append(Build.ID).append("\n");
     sb.append("Build Type    : ").append(Build.TYPE).append("\n");
     sb.append("Build Tags    : ").append(Build.TAGS).append("\n");
-
+    
     sb.append("\nIncremental   : ").append(Build.VERSION.INCREMENTAL).append("\n");
-    sb.append("\n ");   // empty visible line
-    sb.append("\n");
-    sb.append("=== Baseband ===").append(Build.getRadioVersion()).append("\n");
-    sb.append("\n ");   // empty visible line
-    sb.append("\n");
+    sb.append("=== Baseband ===\n")
+    .append(Build.getRadioVersion())
+    .append("\n\n");
     sb.append("=== Vendor Release === ").append(Build.VERSION.BASE_OS).append("\n");
 
     // MIUI / OEM hint (safe)
@@ -415,7 +412,7 @@ private String buildCpuInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ABI
-    sb.append("ABI       : ");
+    sb.append("ABI  : ");
     if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
         for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
             if (i > 0) sb.append(", ");
@@ -427,7 +424,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append("CPU Cores : ").append(cores).append("\n");
+    sb.append("CPU Cores :").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);

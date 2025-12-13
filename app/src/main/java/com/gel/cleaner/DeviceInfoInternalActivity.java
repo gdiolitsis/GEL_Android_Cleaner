@@ -402,27 +402,29 @@ private String buildAndroidInfo() {
     // ------------------------------------------------------------
     // BASEBAND
     // ------------------------------------------------------------
-    sb.append("\n=== Baseband ===\n");
+    sb.append("\n=== Baseband ===\n\n");
+
     String baseband = Build.getRadioVersion();
     if (baseband != null && !baseband.isEmpty()) {
-        sb.append(baseband).append("\n");
-    } else {
-        sb.append("Not available\n");
+        sb.append("Release        : ")
+          .append(baseband)
+          .append("\n");
     }
 
     // ------------------------------------------------------------
     // VENDOR / OEM
     // ------------------------------------------------------------
-    sb.append("\n=== Vendor Release ===\n");
-    if (Build.VERSION.BASE_OS != null && !Build.VERSION.BASE_OS.isEmpty()) {
-        sb.append(Build.VERSION.BASE_OS).append("\n");
-    } else {
-        sb.append("Not specified\n");
-    }
+    sb.append("\n=== Vendor Release ===\n\n");
 
     String miui = getProp("ro.miui.ui.version.name");
     if (miui != null && !miui.isEmpty()) {
-        sb.append("MIUI           : ").append(miui).append("\n");
+        sb.append("MIUI           : ")
+          .append(miui)
+          .append("\n");
+    } else if (Build.VERSION.BASE_OS != null && !Build.VERSION.BASE_OS.isEmpty()) {
+        sb.append("Base OS        : ")
+          .append(Build.VERSION.BASE_OS)
+          .append("\n");
     }
 
     return sb.toString();
@@ -448,7 +450,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append(padRight("CPU Cores", 12)).append(": ").append(cores).append("\n");
+    sb.append(padRight("CPU Cores", )).append(": ").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -655,40 +657,49 @@ private String buildThermalSensorsInfo() {
 
                 double c = (t > 1000) ? t / 1000.0 : t / 10.0;
 
+                String label = null;
+                String suffix = "";
+
                 // ---------------- CPU ----------------
-                if (low.startsWith("cpu")) {
-                    lines.add(
-                        padRight(type.trim(), 12) + ": " +
-                        String.format(Locale.US, "%.1f°C", c)
-                    );
+                if (low.startsWith("cpu-")) {
+                    // cpu-0-0 → CPU Core 0
+                    String core = low.replace("cpu-", "");
+                    int idx = core.lastIndexOf("-");
+                    label = "CPU Core " + (idx >= 0 ? core.substring(idx + 1) : core);
+                }
+                // ---------------- CPU SUBSYSTEM ----------------
+                else if (low.contains("cpuss")) {
+                    label = "CPU Subsystem";
                 }
                 // ---------------- GPU ----------------
                 else if (low.contains("gpu")) {
-                    lines.add(
-                        padRight("GPU Sensor", 12) + ": " +
-                        String.format(Locale.US, "%.1f°C", c)
-                    );
+                    label = "GPU Sensor";
                 }
                 // ---------------- SoC ----------------
                 else if (low.contains("soc")) {
-                    lines.add(
-                        padRight("SoC Sensor", 12) + ": " +
-                        String.format(Locale.US, "%.1f°C", c) + "  (aux)"
-                    );
+                    label = "SoC Sensor";
+                    suffix = "  (aux)";
                 }
-                // ---------------- Battery shell ----------------
-                else if (low.contains("battery")) {
-                    lines.add(
-                        padRight("Batt Shell", 12) + ": " +
-                        String.format(Locale.US, "%.1f°C", c) + "  (sensor)"
-                    );
+                // ---------------- BATTERY SHELL / SKIN ----------------
+                else if (low.contains("batt") || low.contains("shell") || low.contains("skin")) {
+                    label = "Batt Shell";
+                    suffix = "  (sensor)";
                 }
+                else {
+                    continue; // skip άσχετα
+                }
+
+                lines.add(
+                    padRight(label, 12) + ": " +
+                    String.format(Locale.US, "%.1f°C", c) +
+                    suffix
+                );
             }
         }
     }
 
     // ------------------------------------------------------------
-    // SORT (Battery → SoC → CPU → GPU)
+    // SORT
     // ------------------------------------------------------------
     Collections.sort(lines, new Comparator<String>() {
         @Override

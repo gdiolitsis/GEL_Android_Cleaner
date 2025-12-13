@@ -1944,7 +1944,7 @@ private String buildMicsInfo() {
                         sb.append("• Built-in Microphone\n")
                           .append("   Role          : ")
                           .append(hasBuiltin ?   "noise-cancel mic" : "Primary microphone")
-                          .append("\n   Present         : Yes\n\n");
+                          .append("\n   Present       : Yes\n\n");
                         hasBuiltin = true;
                         break;
 
@@ -3712,3 +3712,4 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
+

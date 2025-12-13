@@ -60,133 +60,103 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_internal);
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_device_info_internal);
 
-        foldUI = new GELFoldableUIManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
+    foldUI = new GELFoldableUIManager(this);
+    foldDetector = new GELFoldableDetector(this, this);
 
-        TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) title.setText(getString(R.string.phone_info_internal));
+    TextView title = findViewById(R.id.txtTitleDevice);
+    if (title != null) title.setText(getString(R.string.phone_info_internal));
 
-        // CONTENT
-        TextView txtSystemContent           = findViewById(R.id.txtSystemContent);
-        TextView txtAndroidContent          = findViewById(R.id.txtAndroidContent);
-        TextView txtCpuContent              = findViewById(R.id.txtCpuContent);
-        TextView txtGpuContent              = findViewById(R.id.txtGpuContent);
-        TextView txtThermalContent          = findViewById(R.id.txtThermalContent);
-        TextView txtThermalZonesContent     = findViewById(R.id.txtThermalZonesContent);
-        TextView txtVulkanContent           = findViewById(R.id.txtVulkanContent);
-        TextView txtThermalProfilesContent  = findViewById(R.id.txtThermalProfilesContent);
-        TextView txtFpsGovernorContent      = findViewById(R.id.txtFpsGovernorContent);
-        TextView txtRamContent              = findViewById(R.id.txtRamContent);
-        TextView txtStorageContent          = findViewById(R.id.txtStorageContent);
-        TextView txtScreenContent           = findViewById(R.id.txtScreenContent);
-        TextView txtConnectivityContent     = findViewById(R.id.txtConnectivityContent);
-        TextView txtRootContent             = findViewById(R.id.txtRootContent);
+    // CONTENT (ONLY IDs THAT EXIST IN CLEAN XML)
+    TextView txtSystemContent       = findViewById(R.id.txtSystemContent);
+    TextView txtAndroidContent      = findViewById(R.id.txtAndroidContent);
+    TextView txtCpuContent          = findViewById(R.id.txtCpuContent);
+    TextView txtGpuContent          = findViewById(R.id.txtGpuContent);
+    TextView txtThermalContent      = findViewById(R.id.txtThermalContent);
+    TextView txtVulkanContent       = findViewById(R.id.txtVulkanContent);
+    TextView txtRamContent          = findViewById(R.id.txtRamContent);
+    TextView txtStorageContent      = findViewById(R.id.txtStorageContent);
+    TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
 
-        // ICONS
-        TextView iconSystem           = findViewById(R.id.iconSystemToggle);
-        TextView iconAndroid          = findViewById(R.id.iconAndroidToggle);
-        TextView iconCpu              = findViewById(R.id.iconCpuToggle);
-        TextView iconGpu              = findViewById(R.id.iconGpuToggle);
-        TextView iconThermal          = findViewById(R.id.iconThermalToggle);
-        TextView iconThermalZones     = findViewById(R.id.iconThermalZonesToggle);
-        TextView iconVulkan           = findViewById(R.id.iconVulkanToggle);
-        TextView iconThermalProfiles  = findViewById(R.id.iconThermalProfilesToggle);
-        TextView iconFpsGovernor      = findViewById(R.id.iconFpsGovernorToggle);
-        TextView iconRam              = findViewById(R.id.iconRamToggle);
-        TextView iconStorage          = findViewById(R.id.iconStorageToggle);
-        TextView iconScreen           = findViewById(R.id.iconScreenToggle);
-        TextView iconConnectivity     = findViewById(R.id.iconConnectivityToggle);
-        TextView iconRoot             = findViewById(R.id.iconRootToggle);
+    // ICONS (ONLY IDs THAT EXIST IN CLEAN XML)
+    TextView iconSystem       = findViewById(R.id.iconSystemToggle);
+    TextView iconAndroid      = findViewById(R.id.iconAndroidToggle);
+    TextView iconCpu          = findViewById(R.id.iconCpuToggle);
+    TextView iconGpu          = findViewById(R.id.iconGpuToggle);
+    TextView iconThermal      = findViewById(R.id.iconThermalToggle);
+    TextView iconVulkan       = findViewById(R.id.iconVulkanToggle);
+    TextView iconRam          = findViewById(R.id.iconRamToggle);
+    TextView iconStorage      = findViewById(R.id.iconStorageToggle);
+    TextView iconConnectivity = findViewById(R.id.iconConnectivityToggle);
 
-        allContents = new TextView[]{
-                txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
-                txtThermalContent, txtThermalZonesContent, txtVulkanContent,
-                txtThermalProfilesContent, txtFpsGovernorContent, txtRamContent,
-                txtStorageContent, txtScreenContent, txtConnectivityContent,
-                txtRootContent
-        };
+    allContents = new TextView[]{
+            txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
+            txtThermalContent, txtVulkanContent, txtRamContent,
+            txtStorageContent, txtConnectivityContent
+    };
 
-        allIcons = new TextView[]{
-                iconSystem, iconAndroid, iconCpu, iconGpu, iconThermal, iconThermalZones,
-                iconVulkan, iconThermalProfiles, iconFpsGovernor, iconRam,
-                iconStorage, iconScreen, iconConnectivity, iconRoot
-        };
+    allIcons = new TextView[]{
+            iconSystem, iconAndroid, iconCpu, iconGpu, iconThermal,
+            iconVulkan, iconRam, iconStorage, iconConnectivity
+    };
 
-        isRooted = isDeviceRooted();
+    // ============================================================
+    // CONTENT BUILD (values in neon green via spans)
+    // ============================================================
+    if (txtSystemContent != null)
+        setNeonSectionText(txtSystemContent, buildSystemInfo());
+    if (txtAndroidContent != null)
+        setNeonSectionText(txtAndroidContent, buildAndroidInfo());
+    if (txtCpuContent != null)
+        setNeonSectionText(txtCpuContent, buildCpuInfo());
+    if (txtGpuContent != null)
+        setNeonSectionText(txtGpuContent, buildGpuInfo());
+    if (txtThermalContent != null)
+        setNeonSectionText(txtThermalContent, buildThermalSensorsInfo());
+    if (txtVulkanContent != null)
+        setNeonSectionText(txtVulkanContent, buildVulkanInfo());
+    if (txtRamContent != null)
+        setNeonSectionText(txtRamContent, buildRamInfo());
+    if (txtStorageContent != null)
+        setNeonSectionText(txtStorageContent, buildStorageInfo());
+    if (txtConnectivityContent != null)
+        setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
 
-        // ============================================================
-        // FULL PRO CONTENT BUILD (values in neon green via spans)
-        // ============================================================
-        if (txtSystemContent != null)
-            setNeonSectionText(txtSystemContent, buildSystemInfo());
-        if (txtAndroidContent != null)
-            setNeonSectionText(txtAndroidContent, buildAndroidInfo());
-        if (txtCpuContent != null)
-            setNeonSectionText(txtCpuContent, buildCpuInfo());
-        if (txtGpuContent != null)
-            setNeonSectionText(txtGpuContent, buildGpuInfo());
-        if (txtThermalContent != null)
-            setNeonSectionText(txtThermalContent, buildThermalSensorsInfo());
-        if (txtThermalZonesContent != null)
-            setNeonSectionText(txtThermalZonesContent, buildThermalZonesInfo());
-        if (txtVulkanContent != null)
-            setNeonSectionText(txtVulkanContent, buildVulkanInfo());
-        if (txtThermalProfilesContent != null)
-            setNeonSectionText(txtThermalProfilesContent, buildThermalProfilesInfo());
-        if (txtFpsGovernorContent != null)
-            setNeonSectionText(txtFpsGovernorContent, buildFpsGovernorInfo());
-        if (txtRamContent != null)
-            setNeonSectionText(txtRamContent, buildRamInfo());
-        if (txtStorageContent != null)
-            setNeonSectionText(txtStorageContent, buildStorageInfo());
-        if (txtScreenContent != null)
-            setNeonSectionText(txtScreenContent, buildScreenInfo());
-        if (txtConnectivityContent != null)
-            setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
-        if (txtRootContent != null)
-            setNeonSectionText(txtRootContent, buildRootInfo());
+    // EXPANDERS (ONLY HEADERS THAT EXIST IN CLEAN XML)
+    setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
+    setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
+    setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
+    setupSection(findViewById(R.id.headerGpu), txtGpuContent, iconGpu);
+    setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
+    setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
+    setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
+    setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
+    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+}
 
-        // EXPANDERS
-        setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
-        setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
-        setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
-        setupSection(findViewById(R.id.headerGpu), txtGpuContent, iconGpu);
-        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-        setupSection(findViewById(R.id.headerThermalZones), txtThermalZonesContent, iconThermalZones);
-        setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
-        setupSection(findViewById(R.id.headerThermalProfiles), txtThermalProfilesContent, iconThermalProfiles);
-        setupSection(findViewById(R.id.headerFpsGovernor), txtFpsGovernorContent, iconFpsGovernor);
-        setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
-        setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
-        setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);
-        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
-        setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);
-    }
+@Override
+protected void onResume() {
+    super.onResume();
+    if (foldDetector != null) foldDetector.start();
+}
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (foldDetector != null) foldDetector.start();
-    }
+@Override
+protected void onPause() {
+    if (foldDetector != null) foldDetector.stop();
+    super.onPause();
+}
 
-    @Override
-    protected void onPause() {
-        if (foldDetector != null) foldDetector.stop();
-        super.onPause();
-    }
+@Override
+public void onPostureChanged(@NonNull Posture posture) {}
 
-    @Override
-    public void onPostureChanged(@NonNull Posture posture) {}
-
-    @Override
-    public void onScreenChanged(boolean isInner) {
-        if (foldUI != null) foldUI.applyUI(isInner);
-    }
+@Override
+public void onScreenChanged(boolean isInner) {
+    if (foldUI != null) foldUI.applyUI(isInner);
+}
 
     // ============================================================
     // EXPANDER LOGIC WITH ANIMATION (GEL Expand Engine v3.0 — FIXED)
@@ -996,4 +966,4 @@ private String padRight(String s, int n) {
     while (sb.length() < n) sb.append(' ');
     return sb.toString();
 }
-    }
+}

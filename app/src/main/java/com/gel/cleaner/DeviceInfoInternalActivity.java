@@ -338,6 +338,10 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
     // SECTION BUILDERS — FULL PRO + ROOT EXTENDED + STEALTH
     // ============================================================
 
+    // ============================================================
+    // System Info
+    // ============================================================
+
     private String buildSystemInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -350,8 +354,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         sb.append("Board        : ").append(Build.BOARD).append("\n");
         sb.append("Bootloader   : ").append(Build.BOOTLOADER).append("\n\n");
 
-        sb.append("Fingerprint:\n").append(Build.FINGERPRINT).append("\n\n");
-
+        sb.append("=== Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
+        sb.append("\n"); // empty line for visual separation    
         String androidId = "";
         try {
             androidId = Settings.Secure.getString(
@@ -395,6 +399,10 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         return sb.toString();
     }
+
+    // ============================================================
+    // Android Info
+    // ============================================================
 
     private String buildAndroidInfo() {
         StringBuilder sb = new StringBuilder();
@@ -460,12 +468,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         sb.append("\n");
 
         int cores = Runtime.getRuntime().availableProcessors();
-        sb.append("CPU Cores    : ").append(cores).append("\n");
-
-        String arch = System.getProperty("os.arch", "");
-        if (arch != null && !arch.isEmpty()) {
-            sb.append("Arch         : ").append(arch).append("\n");
-        }
+        sb.append("CPU Cores : ").append(cores).append("\n");
 
         // /proc/cpuinfo key lines
         String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -481,17 +484,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
                     sb.append(line.trim()).append("\n");
                 }
             }
-            // Advanced CPU features (from /proc/cpuinfo)
-            if (lines != null) {
-                for (String line : lines) {
-                    String low2 = line.toLowerCase();
-                    if (low2.startsWith("features")) {
-                        sb.append("Features      : ").append(line.trim()).append("\n");
-                        break;
-                    }
-                }
-            }
-
         }
 
         // Governor & frequency (if exposed)
@@ -555,6 +547,10 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         return sb.toString();
     }
 
+    // ============================================================
+    // Gpu Info
+    // ============================================================
+
     private String buildGpuInfo() {
         StringBuilder sb = new StringBuilder();
 
@@ -564,7 +560,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
             if (am != null) {
                 ConfigurationInfo ci = am.getDeviceConfigurationInfo();
                 if (ci != null) {
-                    sb.append("OpenGL ES    : ").append(ci.getGlEsVersion()).append("\n");
+                    sb.append("OpenGL ES     : ").append(ci.getGlEsVersion()).append("\n");
                 }
             }
         } catch (Throwable ignore) {
@@ -572,17 +568,7 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         String egl = getProp("ro.hardware.egl");
         if (egl != null && !egl.isEmpty()) {
-            sb.append("EGL HW       : ").append(egl).append("\n");
-        }
-
-        String glesVer = getProp("ro.opengles.version");
-        if (glesVer != null && !glesVer.isEmpty()) {
-            sb.append("OpenGL ES Prop: ").append(glesVer).append("\n");
-        }
-
-        String vulkan = getProp("ro.hardware.vulkan");
-        if (vulkan != null && !vulkan.isEmpty()) {
-            sb.append("Vulkan Prop  : ").append(vulkan).append("\n");
+            sb.append("EGL HW        : ").append(egl).append("\n");
         }
 
         String driver0 = getProp("ro.gfx.driver.0");
@@ -638,89 +624,85 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         return sb.toString();
     }
 
-    private String buildThermalSensorsInfo() {
-        StringBuilder sb = new StringBuilder();
+// ============================================================
+// Thermal Sensors (Internal)
+// ============================================================
+private String buildThermalSensorsInfo() {
 
-        // Battery temp
-        long batt = readSysLong("/sys/class/power_supply/battery/temp");
-        if (batt > 0) {
-            double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
-            sb.append("Battery      : ").append(String.format("%.1f°C", c)).append("\n");
-        }
+    StringBuilder sb = new StringBuilder();
 
-        // A few key thermal zones by type
-        File dir = new File("/sys/class/thermal");
-        if (dir.exists() && dir.isDirectory()) {
-            File[] zones = dir.listFiles();
-            if (zones != null) {
-                for (File z : zones) {
-                    if (!z.getName().startsWith("thermal_zone")) continue;
-                    String type = readSysString(z.getAbsolutePath() + "/type");
-                    if (type == null) continue;
-                    String low = type.toLowerCase();
-
-                    if (low.contains("cpu") || low.contains("gpu")
-                            || low.contains("soc") || low.contains("skin")) {
-
-                        long t = readSysLong(z.getAbsolutePath() + "/temp");
-                        if (t <= 0) continue;
-
-                        double c = (t > 1000) ? t / 1000.0 : t / 10.0;
-                        sb.append(padRight(type, 12))
-                                .append(": ")
-                                .append(String.format("%.1f°C", c))
-                                .append("  (").append(z.getName()).append(")\n");
-                    }
-                }
-            }
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Thermal sensors are not exposed by this device/firmware.\n");
-        }
-
-        return sb.toString();
+    // ------------------------------------------------------------
+    // BATTERY TEMPERATURE
+    // ------------------------------------------------------------
+    long batt = readSysLong("/sys/class/power_supply/battery/temp");
+    if (batt > 0) {
+        double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
+        sb.append("Battery        : ")
+          .append(String.format(Locale.US, "%.1f°C", c))
+          .append("\n");
     }
 
-    private String buildThermalZonesInfo() {
-        StringBuilder sb = new StringBuilder();
-        File dir = new File("/sys/class/thermal");
-        if (!dir.exists() || !dir.isDirectory()) {
-            sb.append("Thermal directory not accessible (not exposed by this device).\n");
-            return sb.toString();
-        }
+    // ------------------------------------------------------------
+    // CORE THERMAL SENSORS (CPU / GPU / SOC / SKIN)
+    // ------------------------------------------------------------
+    File dir = new File("/sys/class/thermal");
+    if (dir.exists() && dir.isDirectory()) {
 
         File[] zones = dir.listFiles();
-        if (zones == null || zones.length == 0) {
-            sb.append("No thermal zones exposed by this device.\n");
-            return sb.toString();
-        }
+        if (zones != null) {
 
-        for (File z : zones) {
-            if (!z.getName().startsWith("thermal_zone")) continue;
-            String type = readSysString(z.getAbsolutePath() + "/type");
-            long temp = readSysLong(z.getAbsolutePath() + "/temp");
+            for (File z : zones) {
+                if (!z.getName().startsWith("thermal_zone")) continue;
 
-            if ((type == null || type.isEmpty()) && temp <= 0) continue;
+                String type = readSysString(z.getAbsolutePath() + "/type");
+                if (type == null) continue;
 
-            sb.append(z.getName()).append(" | ");
-            if (type != null) sb.append(type.trim()).append(" | ");
+                String low = type.toLowerCase(Locale.US);
 
-            if (temp > 0) {
-                double c = (temp > 1000) ? temp / 1000.0 : temp / 10.0;
-                sb.append(String.format("%.1f°C", c));
-            } else {
-                sb.append("N/A");
+                // κρατάμε ΜΟΝΟ ουσιαστικά sensors
+                if (!(low.contains("cpu")
+                   || low.contains("gpu")
+                   || low.contains("soc")
+                   || low.contains("skin")
+                   || low.contains("battery")
+                   || low.contains("modem"))) {
+                    continue;
+                }
+
+                long t = readSysLong(z.getAbsolutePath() + "/temp");
+                if (t <= 0) continue;
+
+                double c = (t > 1000) ? t / 1000.0 : t / 10.0;
+
+                sb.append(padRight(type.trim(), 14))
+                  .append(": ")
+                  .append(String.format(Locale.US, "%.1f°C", c))
+                  .append("  (")
+                  .append(z.getName())
+                  .append(")\n");
             }
-            sb.append("\n");
         }
-
-        if (sb.length() == 0) {
-            sb.append("No readable thermal zones (not exposed by current firmware).\n");
-        }
-
-        return sb.toString();
     }
+
+    // ------------------------------------------------------------
+    // FALLBACK
+    // ------------------------------------------------------------
+    if (sb.length() == 0) {
+        sb.append("Thermal sensors are not exposed by this device/firmware.\n");
+    }
+
+    // ------------------------------------------------------------
+    // ADVANCED NOTE
+    // ------------------------------------------------------------
+    sb.append("\nAdvanced        : Raw thermal zones, cooling tables and trip points ")
+      .append("are available only with elevated (root) access.\n");
+
+    return sb.toString();
+}
+
+    // ============================================================
+    // Vulkan Info
+    // ============================================================
 
     private String buildVulkanInfo() {
         StringBuilder sb = new StringBuilder();
@@ -752,90 +734,6 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
 
         if (sb.length() == 0) {
             sb.append("No Vulkan information available.\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String buildThermalProfilesInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        String[] keys = {
-                "ro.vendor.thermal.config",
-                "ro.hardware.thermal",
-                "ro.thermal_config",
-                "persist.vendor.thermal.config",
-                "persist.sys.thermal.config"
-        };
-
-        for (String k : keys) {
-            String v = getProp(k);
-            if (v != null && !v.isEmpty()) {
-                sb.append(k).append(" = ").append(v).append("\n");
-            }
-        }
-
-        // Root-extended: attempt to show thermal config file hints
-        String[] cfgFiles = {
-                "/vendor/etc/thermal-engine.conf",
-                "/system/etc/thermal-engine.conf",
-                "/vendor/etc/thermal/thermal-engine.conf"
-        };
-        boolean anyCfg = false;
-        for (String path : cfgFiles) {
-            File f = new File(path);
-            if (f.exists()) {
-                sb.append("Cfg File      : ").append(path).append("\n");
-                anyCfg = true;
-            }
-        }
-
-        if (!anyCfg) {
-            sb.append("Config Files  : Not exposed by this device.\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("No explicit thermal profile properties found.\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String buildFpsGovernorInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            DisplayMetrics dm = getResources().getDisplayMetrics();
-            int w = dm.widthPixels;
-            int h = dm.heightPixels;
-            int dpi = dm.densityDpi;
-            sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
-            sb.append("Density       : ").append(dpi).append(" dpi\n");
-        } catch (Throwable ignore) {
-        }
-
-        String refresh = getProp("ro.surface_flinger.refresh_rate");
-        if (refresh != null && !refresh.isEmpty()) {
-            sb.append("Default Ref   : ").append(refresh).append(" Hz\n");
-        }
-
-        String peak = getProp("ro.surface_flinger.max_refresh_rate");
-        if (peak != null && !peak.isEmpty()) {
-            sb.append("Max Refresh   : ").append(peak).append(" Hz\n");
-        }
-
-        String mode = getProp("ro.display.mode");
-        if (mode != null && !mode.isEmpty()) {
-            sb.append("Display Mode  : ").append(mode).append("\n");
-        }
-
-        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        if (gov != null && !gov.isEmpty()) {
-            sb.append("CPU Governor  : ").append(gov.trim()).append("\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("No FPS / governor hints available.\n");
         }
 
         return sb.toString();
@@ -997,292 +895,105 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         }
     }
 
-    private String buildScreenInfo() {
+// ============================================================
+// GENERIC HELPERS (NON-ROOT)
+// ============================================================
+
+private String readTextFile(String path, int maxLen) {
+    BufferedReader br = null;
+    try {
+        File f = new File(path);
+        if (!f.exists()) return null;
+
+        br = new BufferedReader(new FileReader(f));
         StringBuilder sb = new StringBuilder();
+        char[] buf = new char[1024];
+        int read;
 
-        try {
-            DisplayMetrics dm = getResources().getDisplayMetrics();
-            int w = dm.widthPixels;
-            int h = dm.heightPixels;
-            int dpi = dm.densityDpi;
-            float density = dm.density;
-
-            sb.append("Resolution    : ").append(w).append(" x ").append(h).append("\n");
-            sb.append("Density       : ").append(density).append(" (").append(dpi).append(" dpi)\n");
-
-            double widthInch = w / (double) dpi;
-            double heightInch = h / (double) dpi;
-            double diag = Math.sqrt(widthInch * widthInch + heightInch * heightInch);
-            sb.append("Approx. Size  : ").append(String.format("%.1f\"", diag)).append("\n");
-
-        } catch (Throwable ignore) {
+        while ((read = br.read(buf)) > 0 && sb.length() < maxLen) {
+            sb.append(buf, 0, read);
         }
-
-        if (sb.length() == 0) {
-            sb.append("Unable to read screen metrics.\n");
-        }
-
         return sb.toString();
-    }
 
-    private String buildConnectivityInfo() {
-        StringBuilder sb = new StringBuilder();
+    } catch (Throwable ignore) {
+        return null;
 
+    } finally {
         try {
-            ConnectivityManager cm =
-                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            TelephonyManager tm =
-                    (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
-            if (cm != null) {
-                Network active = cm.getActiveNetwork();
-                NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-                if (caps != null) {
-                    sb.append("Active        : ");
-                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        sb.append("Wi-Fi\n");
-                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        sb.append("Cellular\n");
-                    } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                        sb.append("Ethernet\n");
-                    } else {
-                        sb.append("Other\n");
-                    }
-
-                    sb.append("Downlink      : ")
-                            .append(caps.getLinkDownstreamBandwidthKbps())
-                            .append(" kbps\n");
-                    sb.append("Uplink        : ")
-                            .append(caps.getLinkUpstreamBandwidthKbps())
-                            .append(" kbps\n");
-                }
-            }
-
-            WifiManager wm = (WifiManager) getApplicationContext()
-                    .getSystemService(Context.WIFI_SERVICE);
-            if (wm != null) {
-                WifiInfo wi = wm.getConnectionInfo();
-                if (wi != null && wi.getNetworkId() != -1) {
-                    sb.append("\nWi-Fi:\n");
-                    sb.append("  SSID        : ").append(wi.getSSID()).append("\n");
-                    sb.append("  Link speed  : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                    sb.append("  RSSI        : ").append(wi.getRssi()).append(" dBm\n");
-                    sb.append("  Band        : ").append(describeWifiBand(wi.getFrequency())).append("\n");
-                }
-            }
-
-            if (tm != null) {
-                sb.append("\nCellular:\n");
-                String op = tm.getNetworkOperatorName();
-                if (op != null && !op.isEmpty()) {
-                    sb.append("  Operator    : ").append(op).append("\n");
-                }
-
-                int netType = tm.getDataNetworkType();
-                sb.append("  Network     : ").append(describeNetworkType(netType)).append("\n");
-            }
-
-        } catch (Throwable ignore) {
-        }
-
-        // Root-extended: /proc/net/dev snapshot
-        String netDev = readTextFile("/proc/net/dev", 8 * 1024);
-        if (netDev != null && !netDev.isEmpty()) {
-            sb.append("\n/proc/net/dev (core):\n");
-            String[] lines = netDev.split("\n");
-            for (String line : lines) {
-                if (line.contains("wlan0") || line.contains("rmnet") || line.contains("rmnet_data")) {
-                    sb.append(line.trim()).append("\n");
-                }
-            }
-        } else {
-            sb.append("Net device stats : Not exposed by this device.\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("No connectivity details available.\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String buildRootInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Root Detected : ").append(isRooted ? "YES" : "NO").append("\n");
-
-        String tags = Build.TAGS;
-        sb.append("Build Tags    : ").append(tags).append("\n");
-
-        String secure = getProp("ro.secure");
-        if (secure != null && !secure.isEmpty()) {
-            sb.append("ro.secure     : ").append(secure).append("\n");
-        }
-
-        String dbg = getProp("ro.debuggable");
-        if (dbg != null && !dbg.isEmpty()) {
-            sb.append("ro.debuggable : ").append(dbg).append("\n");
-        }
-
-        String verity = getProp("ro.boot.veritymode");
-        if (verity != null && !verity.isEmpty()) {
-            sb.append("Verity Mode   : ").append(verity).append("\n");
-        }
-
-        String selinux = getProp("ro.build.selinux");
-        if (selinux != null && !selinux.isEmpty()) {
-            sb.append("SELinux       : ").append(selinux).append("\n");
-        }
-
-        if (isRooted) {
-            sb.append("\nRoot paths found:\n");
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-            };
-            for (String p : paths) {
-                if (new File(p).exists()) {
-                    sb.append("  ").append(p).append("\n");
-                }
-            }
-        } else {
-            sb.append("\nAdvanced diagnostics : Not exposed by this device.\n");
-        }
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
-
-    private String readTextFile(String path, int maxLen) {
-        BufferedReader br = null;
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-            br = new BufferedReader(new FileReader(f));
-            StringBuilder sb = new StringBuilder();
-            char[] buf = new char[1024];
-            int read;
-            while ((read = br.read(buf)) > 0 && sb.length() < maxLen) {
-                sb.append(buf, 0, read);
-            }
-            return sb.toString();
-        } catch (Throwable ignore) {
-            return null;
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    private String readSysString(String path) {
-        BufferedReader br = null;
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-            br = new BufferedReader(new FileReader(f));
-            String line = br.readLine();
-            if (line != null) return line.trim();
-            return null;
-        } catch (Throwable ignore) {
-            return null;
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    private long readSysLong(String path) {
-        String s = readSysString(path);
-        if (s == null || s.isEmpty()) return -1;
-        try {
-            return Long.parseLong(s);
-        } catch (Throwable ignore) {
-            return -1;
-        }
-    }
-
-    private boolean isDeviceRooted() {
-        try {
-            String tags = Build.TAGS;
-            if (tags != null && tags.contains("test-keys")) return true;
-
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-            };
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
-            }
-
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            in.close();
-            return line != null && line.trim().length() > 0;
-
-        } catch (Throwable ignore) {
-            return false;
-        }
-    }
-
-    private String getProp(String key) {
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = br.readLine();
-            br.close();
-            return line != null ? line.trim() : "";
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    private String describeWifiBand(int freq) {
-        if (freq >= 2400 && freq < 2500) return "2.4 GHz";
-        if (freq >= 4900 && freq < 5900) return "5 GHz";
-        if (freq >= 5925 && freq < 7125) return "6 GHz";
-        return "Unknown";
-    }
-
-    private String describeNetworkType(int type) {
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-                return "2G (GPRS)";
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-                return "2G (EDGE)";
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-                return "3G (UMTS)";
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-                return "3G (HSDPA)";
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-                return "3G (HSUPA)";
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-                return "3G (HSPA)";
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                return "4G (LTE)";
-            case TelephonyManager.NETWORK_TYPE_NR:
-                return "5G (NR)";
-            default:
-                return "Unknown";
-        }
-    }
-
-    private String padRight(String s, int n) {
-        if (s == null) s = "";
-        if (s.length() >= n) return s;
-        StringBuilder sb = new StringBuilder(s);
-        while (sb.length() < n) sb.append(' ');
-        return sb.toString();
+            if (br != null) br.close();
+        } catch (Exception ignored) {}
     }
 }
+
+private String readSysString(String path) {
+    BufferedReader br = null;
+    try {
+        File f = new File(path);
+        if (!f.exists()) return null;
+
+        br = new BufferedReader(new FileReader(f));
+        String line = br.readLine();
+        return line != null ? line.trim() : null;
+
+    } catch (Throwable ignore) {
+        return null;
+
+    } finally {
+        try {
+            if (br != null) br.close();
+        } catch (Exception ignored) {}
+    }
+}
+
+private long readSysLong(String path) {
+    String s = readSysString(path);
+    if (s == null || s.isEmpty()) return -1;
+    try {
+        return Long.parseLong(s);
+    } catch (Throwable ignore) {
+        return -1;
+    }
+}
+
+private String getProp(String key) {
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line.trim() : "";
+    } catch (Exception e) {
+        return "";
+    }
+}
+
+private String describeWifiBand(int freq) {
+    if (freq >= 2400 && freq < 2500) return "2.4 GHz";
+    if (freq >= 4900 && freq < 5900) return "5 GHz";
+    if (freq >= 5925 && freq < 7125) return "6 GHz";
+    return "Unknown";
+}
+
+private String describeNetworkType(int type) {
+    switch (type) {
+        case TelephonyManager.NETWORK_TYPE_GPRS:   return "2G (GPRS)";
+        case TelephonyManager.NETWORK_TYPE_EDGE:   return "2G (EDGE)";
+        case TelephonyManager.NETWORK_TYPE_UMTS:   return "3G (UMTS)";
+        case TelephonyManager.NETWORK_TYPE_HSDPA:  return "3G (HSDPA)";
+        case TelephonyManager.NETWORK_TYPE_HSUPA:  return "3G (HSUPA)";
+        case TelephonyManager.NETWORK_TYPE_HSPA:   return "3G (HSPA)";
+        case TelephonyManager.NETWORK_TYPE_LTE:    return "4G (LTE)";
+        case TelephonyManager.NETWORK_TYPE_NR:     return "5G (NR)";
+        default: return "Unknown";
+    }
+}
+
+private String padRight(String s, int n) {
+    if (s == null) s = "";
+    if (s.length() >= n) return s;
+    StringBuilder sb = new StringBuilder(s);
+    while (sb.length() < n) sb.append(' ');
+    return sb.toString();
+}
+    }

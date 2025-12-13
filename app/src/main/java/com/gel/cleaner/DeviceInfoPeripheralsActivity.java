@@ -1764,12 +1764,12 @@ private String buildUsbInfo() {
     // USB ROLE / MODE
     // ------------------------------------------------------------
     sb.append("\nMode / Role\n");
-    sb.append(" USB Role       : Vendor HAL not exposed\n");
+    sb.append(" USB Role        : Vendor HAL not exposed\n");
 
     // ------------------------------------------------------------
     // POWER / CHARGING PROFILE
     // ------------------------------------------------------------
-    sb.append("\nPower Profiles:\n");
+    sb.append("\nPower Profiles\n");
     try {
         IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batt = registerReceiver(null, ifil);
@@ -1786,7 +1786,7 @@ private String buildUsbInfo() {
             sb.append(" Charge Source   : ").append(srcLabel).append("\n");
 
             int volt = batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-            sb.append(" Voltage (mV)   : ").append(volt).append("\n");
+            sb.append(" Voltage (mV)    : ").append(volt).append("\n");
         }
 
     } catch (Throwable ignore) {
@@ -1798,9 +1798,9 @@ private String buildUsbInfo() {
 // ------------------------------------------------------------
 Integer mA = getRootChargeCurrentMilliAmps();
 if (mA != null) {
-    sb.append(" Charge (mA) : ").append(mA).append("\n");
+    sb.append(" Charge (mA)     : ").append(mA).append("\n");
 } else {
-    sb.append(" Charge (mA) : N/A (requires root access)\n");
+    sb.append(" Charge (mA)     : N/A (requires root access)\n");
 }
 
     // ------------------------------------------------------------
@@ -1888,7 +1888,8 @@ private String buildOtherPeripheralsInfo() {
     PackageManager pm = getPackageManager();
 
     sb.append("=== Other Peripherals ===\n");
-
+sb.append("\n"); // empty line for visual separation
+     
     boolean ir       = pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
     boolean fm       = pm.hasSystemFeature("android.hardware.fm");
     boolean hall     = pm.hasSystemFeature("android.hardware.sensor.hall");
@@ -1905,7 +1906,7 @@ private String buildOtherPeripheralsInfo() {
     sb.append("TV Tuner          : ").append(tv ? "Yes" : "No").append("\n");
     sb.append("Barcode Module    : ").append(barcode ? "Yes" : "No").append("\n");
 
-    sb.append("\nAdvanced         : Extended peripheral diagnostics require root access.\n");
+    sb.append("\nAdvanced          : Extended peripheral diagnostics require root access.\n");
 
     return sb.toString();
 }
@@ -1938,16 +1939,16 @@ private String buildMicsInfo() {
 
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
                         sb.append("• Built-in Microphone\n")
-                          .append("   Role            : ")
+                          .append("   Role        : ")
                           .append(hasBuiltin ? "noise-cancel mic" : "Primary microphone")
-                          .append("\n   Present         : Yes\n\n");
+                          .append("\n   Present     : Yes\n\n");
                         hasBuiltin = true;
                         break;
 
                     case AudioDeviceInfo.TYPE_TELEPHONY:
     sb.append("• Telephony Microphone\n")
-      .append("   Role            : Dedicated voice call\n")
-      .append("   Present         : Yes\n\n");
+      .append("   Role          : Dedicated voice call\n")
+      .append("   Present       : Yes\n\n");
     hasTele = true;
     break;
 
@@ -1971,6 +1972,7 @@ private String buildMicsInfo() {
     } catch (Throwable ignore) {}
 
     sb.append("=== Summary ===\n");
+    sb.append("\n"); // empty line for visual separation
     sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
     sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
     sb.append("Wired Mics       : ").append(hasWired   ? "Yes ("+wired+")" : "No").append("\n");
@@ -2016,6 +2018,7 @@ private String buildAudioHalInfo() {
     } catch (Throwable ignore) {}
 
     sb.append("=== Summary ===\n");
+    sb.append("\n"); // empty line for visual separation
     sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
     sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
     sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
@@ -2048,12 +2051,15 @@ private String buildAudioUnifiedInfo() {
     StringBuilder sb = new StringBuilder();
 
     sb.append("=== Microphones ===\n");
+    sb.append("\n"); // empty line for visual separation    
     sb.append(buildMicsInfo()).append("\n");
 
     sb.append("=== Audio Outputs / HAL ===\n");
+    sb.append("\n"); // empty line for visual separation
     sb.append(buildAudioHalInfo()).append("\n");
 
     sb.append("=== Extended Audio Paths ===\n");
+    sb.append("\n"); // empty line for visual separation    
     sb.append(buildAudioExtendedInfo()).append("\n");
 
     return sb.toString();
@@ -3703,4 +3709,3 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
-

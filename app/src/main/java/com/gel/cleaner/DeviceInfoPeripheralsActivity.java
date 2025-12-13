@@ -1668,8 +1668,8 @@ private String buildGnssInfo() {
         // ---------------------------------------------------
         // CONSTELLATIONS (CAPABILITY MATRIX)
         // ---------------------------------------------------
-        sb.append("\nConstellations:\n");
-
+        sb.append("\n=== Constellations ===\n");
+        sb.append("\n"); // empty line for visual separation    
         sb.append("GPS               : ")
                 .append(pm.hasSystemFeature("android.hardware.location.gps") ? "Yes" : "No").append("\n");
         sb.append("GLONASS           : ")
@@ -1691,7 +1691,8 @@ private String buildGnssInfo() {
         boolean raw   = pm.hasSystemFeature("android.hardware.location.gnss.raw_measurement");
         boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batch");
 
-        sb.append("\nCapabilities:\n");
+        sb.append("\n=== Capabilities ===\n");
+        sb.append("\n"); // empty line for visual separation    
         sb.append("Raw Measurements  : ").append(raw ? "Yes" : "No").append("\n");
         sb.append("GNSS Batching     : ").append(batch ? "Yes" : "No").append("\n");
 
@@ -1763,13 +1764,15 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     // USB ROLE / MODE
     // ------------------------------------------------------------
-    sb.append("\nMode / Role\n");
+    sb.append("\n=== Mode / Role ===\n");
+    sb.append("\n"); // empty line for visual separation    
     sb.append(" USB Role        : Vendor HAL not exposed\n");
 
     // ------------------------------------------------------------
     // POWER / CHARGING PROFILE
     // ------------------------------------------------------------
-    sb.append("\nPower Profiles\n");
+    sb.append("\n=== Power Profiles ===\n");
+    sb.append("\n"); // empty line for visual separation    
     try {
         IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batt = registerReceiver(null, ifil);
@@ -1939,9 +1942,9 @@ private String buildMicsInfo() {
 
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
                         sb.append("• Built-in Microphone\n")
-                          .append("   Role        : ")
-                          .append(hasBuiltin ? "noise-cancel mic" : "Primary microphone")
-                          .append("\n   Present     : Yes\n\n");
+                          .append("   Role          : ")
+                          .append(hasBuiltin ?   "noise-cancel mic" : "Primary microphone")
+                          .append("\n   Present         : Yes\n\n");
                         hasBuiltin = true;
                         break;
 

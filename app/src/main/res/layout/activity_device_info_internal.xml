@@ -28,7 +28,7 @@
             android:id="@+id/txtSectionHeader"  
             android:layout_width="match_parent"  
             android:layout_height="wrap_content"  
-            android:text=" INTERNAL SYSTEM REPORT — Full Device Profile"  
+            android:text="INTERNAL SYSTEM REPORT — Full Device Profile"  
             android:textSize="15sp"  
             android:textStyle="bold"  
             android:textColor="@color/gel_gold"  

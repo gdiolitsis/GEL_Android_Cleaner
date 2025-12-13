@@ -1026,7 +1026,7 @@ private String buildSensorsInfo() {
             sb.append("Gyroscope            : ").append(gyroscope      != null ? "Yes" : "No").append("\n");
             sb.append("Magnetometer         : ").append(magnetometer   != null ? "Yes" : "No").append("\n");
             sb.append("Barometer            : ").append(barometer      != null ? "Yes" : "No").append("\n");
-            sb.append("Proximity             : ").append(proximity      != null ? "Yes" : "No").append("\n");
+            sb.append("Proximity            : ").append(proximity      != null ? "Yes" : "No").append("\n");
             sb.append("Light Sensor         : ").append(light          != null ? "Yes" : "No").append("\n");
 
             sb.append("Step Counter         : ").append(stepCounter    != null ? "Yes" : "No").append("\n");
@@ -1721,7 +1721,7 @@ private String buildUsbInfo() {
     boolean otg = pm.hasSystemFeature("android.hardware.usb.host");
     boolean acc = pm.hasSystemFeature("android.hardware.usb.accessory");
 
-    sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
+    sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
     sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
 
     // ------------------------------------------------------------
@@ -1764,7 +1764,7 @@ private String buildUsbInfo() {
     // USB ROLE / MODE
     // ------------------------------------------------------------
     sb.append("\nMode / Role:\n");
-    sb.append("  USB Role       : Vendor HAL not exposed (API29-safe)\n");
+    sb.append("  USB Role       : Vendor HAL not exposed\n");
 
     // ------------------------------------------------------------
     // POWER / CHARGING PROFILE
@@ -1794,14 +1794,14 @@ private String buildUsbInfo() {
     }
 
     // ------------------------------------------------------------
-    // CHARGE CURRENT (mA) — ROOT ONLY
-    // ------------------------------------------------------------
-    Integer mA = getRootChargeCurrentMilliAmps();
-    if (mA != null) {
-        sb.append("  Charge Current : ").append(mA).append(" mA\n");
-    } else {
-        sb.append("  Charge Current : Available only on rooted devices\n");
-    }
+// CHARGE CURRENT (mA) — ROOT ONLY
+// ------------------------------------------------------------
+Integer mA = getRootChargeCurrentMilliAmps();
+if (mA != null) {
+    sb.append("  Charge Current (mA) : ").append(mA).append("\n");
+} else {
+    sb.append("  Charge Current (mA) : N/A (requires root access)\n");
+}
 
     // ------------------------------------------------------------
     // FINAL NOTE
@@ -1945,11 +1945,11 @@ private String buildMicsInfo() {
                         break;
 
                     case AudioDeviceInfo.TYPE_TELEPHONY:
-                        sb.append("• Telephony Microphone\n")
-                          .append("   Role            : Dedicated voice calln")
-                          .append("   Present         : Yes\n\n");
-                        hasTele = true;
-                        break;
+    sb.append("• Telephony Microphone\n")
+      .append("   Role            : Dedicated voice call\n")
+      .append("   Present         : Yes\n\n");
+    hasTele = true;
+    break;
 
                     case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                     case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
@@ -2812,18 +2812,24 @@ private String buildModemInfo() {
         }
     } catch (Throwable ignore) {}
 
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("Phone Type"), phoneTypeStr));
 
     // ------------------------------------------------------------
     // DATA NETWORK
     // ------------------------------------------------------------
     try {
-        int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
-                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
-                       : "Unknown";
+        int net = (tm != null) ? tm.getDataNetworkType()
+                               : TelephonyManager.NETWORK_TYPE_UNKNOWN;
 
-        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
+        String netName =
+                (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"  :
+                (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE" :
+                "Unknown";
+
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Data Network"), netName));
+
         sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("5G (NR) Active"),
                 (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
@@ -2834,8 +2840,8 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     try {
         String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
-        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
-        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
+        String iso     = (tm != null) ? tm.getNetworkCountryIso()   : null;
+        String opCode  = (tm != null) ? tm.getNetworkOperator()     : null;
 
         if (iso == null || iso.trim().isEmpty())
             iso = Locale.getDefault().getCountry();
@@ -2874,39 +2880,6 @@ private String buildModemInfo() {
         sb.append(String.format(locale, "%s : %s\n",
                 padKeyModem("Roaming"), roaming ? "Yes" : "No"));
     } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // IMS / VoLTE / VoWiFi / VoNR
-    // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
-
-    try {
-        boolean volte = tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
-    }
-
-    try {
-        boolean vowifi = tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
-    }
-
-    try {
-        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
-                tm != null &&
-                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
-    } catch (Throwable ignore) {
-        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
-    }
 
     // ========================================================================
     // ACTIVE SIMS + FALLBACK
@@ -2973,10 +2946,10 @@ private String buildModemInfo() {
         }
 
         sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Active SIMs"), (count == 0 ? "N/A" : String.valueOf(count))));
+                padKeyModem("Active SIMs"),
+                (count == 0 ? "N/A" : String.valueOf(count))));
 
         if (subs != null && !subs.isEmpty()) {
-
             boolean[] printed = new boolean[2];
             for (SubscriptionInfo si : subs) {
                 try {
@@ -2990,10 +2963,8 @@ private String buildModemInfo() {
 
                     sb.append(String.format(locale, "%s : %s\n",
                             padKeyModem("SIM Slot " + (slot + 1)), name));
-
                 } catch (Throwable ignore) {}
             }
-
         } else {
             for (SimpleSimEntry e : simpleList) {
                 sb.append(String.format(locale, "%s : %s\n",
@@ -3004,41 +2975,17 @@ private String buildModemInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // IMSI / MSISDN MASKED
+    // ADVANCED MODEM TABLES (ROOT-AWARE, SINGLE LINE)
     // ------------------------------------------------------------
-    try {
-        if (tm != null) {
-            String imsi = null;
-            String msisdn = null;
-
-            try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
-            try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("IMSI"),
-                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("MSISDN"),
-                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
-        }
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // ADVANCED SECTION — FIXED MULTILINE, PERFECT ALIGNMENT
-    // ------------------------------------------------------------
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("4G+ CA"), "Unknown. Requires                       root access"));
-
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("NR-CA"), "Unknown. Requires                       root access"));
-
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Bands"), "Vendor restricted.                       Requires root access"));
-
-    // FULL FIXED MULTILINE — NO MORE BROKEN LINES
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Advanced"), "Full RAT tables,                       bands, CA combos, requires root access                       and OEM modem tools "));
+    if (isRooted) {
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Advanced"),
+                "Advanced modem tables are available on this device."));
+    } else {
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Advanced"),
+                "Advanced modem tables require root access."));
+    }
 
     return sb.toString();
 }

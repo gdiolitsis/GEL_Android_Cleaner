@@ -379,26 +379,50 @@ public void onScreenChanged(boolean isInner) {
 private String buildAndroidInfo() {
     StringBuilder sb = new StringBuilder();
 
-    sb.append("Android       : ").append(Build.VERSION.RELEASE)
-      .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
+    // ------------------------------------------------------------
+    // ANDROID CORE
+    // ------------------------------------------------------------
+    sb.append("Android        : ")
+      .append(Build.VERSION.RELEASE)
+      .append(" (SDK ")
+      .append(Build.VERSION.SDK_INT)
+      .append(")\n");
 
-    if (Build.VERSION.SECURITY_PATCH != null)
-        sb.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+    if (Build.VERSION.SECURITY_PATCH != null) {
+        sb.append("Security Patch : ")
+          .append(Build.VERSION.SECURITY_PATCH)
+          .append("\n");
+    }
 
-    sb.append("Build ID      : ").append(Build.ID).append("\n");
-    sb.append("Build Type    : ").append(Build.TYPE).append("\n");
-    sb.append("Build Tags    : ").append(Build.TAGS).append("\n");
-    
-    sb.append("\nIncremental   : ").append(Build.VERSION.INCREMENTAL).append("\n");
-    sb.append("=== Baseband ===\n")
-    .append(Build.getRadioVersion())
-    .append("\n\n");
-    sb.append("=== Vendor Release === ").append(Build.VERSION.BASE_OS).append("\n");
+    sb.append("Build ID       : ").append(Build.ID).append("\n");
+    sb.append("Build Type     : ").append(Build.TYPE).append("\n");
+    sb.append("Build Tags     : ").append(Build.TAGS).append("\n");
+    sb.append("Incremental    : ").append(Build.VERSION.INCREMENTAL).append("\n");
 
-    // MIUI / OEM hint (safe)
+    // ------------------------------------------------------------
+    // BASEBAND
+    // ------------------------------------------------------------
+    sb.append("\n=== Baseband ===\n");
+    String baseband = Build.getRadioVersion();
+    if (baseband != null && !baseband.isEmpty()) {
+        sb.append(baseband).append("\n");
+    } else {
+        sb.append("Not available\n");
+    }
+
+    // ------------------------------------------------------------
+    // VENDOR / OEM
+    // ------------------------------------------------------------
+    sb.append("\n=== Vendor Release ===\n");
+    if (Build.VERSION.BASE_OS != null && !Build.VERSION.BASE_OS.isEmpty()) {
+        sb.append(Build.VERSION.BASE_OS).append("\n");
+    } else {
+        sb.append("Not specified\n");
+    }
+
     String miui = getProp("ro.miui.ui.version.name");
     if (miui != null && !miui.isEmpty()) {
-        sb.append("MIUI          : ").append(miui).append("\n");
+        sb.append("MIUI           : ").append(miui).append("\n");
     }
 
     return sb.toString();
@@ -424,7 +448,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append("CPU Cores :").append(cores).append("\n");
+    sb.append(padRight("CPU Cores", 12)).append(": ").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);

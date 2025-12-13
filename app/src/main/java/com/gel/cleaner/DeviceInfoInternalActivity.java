@@ -430,7 +430,7 @@ private String buildAndroidInfo() {
     return sb.toString();
 }
 
- // ============================================================
+// ============================================================
 // CPU Info
 // ============================================================
 
@@ -450,7 +450,10 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append(padRight("CPU Cores", )).append(": ").append(cores).append("\n");
+    sb.append(padRight("CPU Cores", 10))
+      .append(": ")
+      .append(cores)
+      .append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -486,7 +489,7 @@ private String buildCpuInfo() {
         sb.append("\n");
     }
 
-    // big.LITTLE hint from clusters (if exist)
+    // big.LITTLE hint
     String policy0 = readSysString("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq");
     String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
     if ((policy0 != null && !policy0.isEmpty()) ||
@@ -494,13 +497,11 @@ private String buildCpuInfo() {
         sb.append("Cluster Hint : big.LITTLE detected\n");
     }
 
-    // ============================================================
-    // CPU CHIP Temperature (estimated from CPU cores)
-    // ============================================================
+    // CPU CHIP Temperature (estimated)
     Double socTemp = getSocTempCpuAverage();
     if (socTemp != null) {
         sb.append("SPU CHIP Temp: ")
-          .append(String.format(java.util.Locale.US, "%.1f°C", socTemp))
+          .append(String.format(Locale.US, "%.1f°C", socTemp))
           .append(" (estimated)\n");
     }
 
@@ -524,7 +525,8 @@ private String buildCpuInfo() {
                 }
                 String avail = readSysString(base + "scaling_available_frequencies");
                 if (avail != null && !avail.isEmpty()) {
-                    sb.append("cpu").append(i).append(" avail   : ").append(avail.trim()).append("\n");
+                    sb.append("cpu").append(i).append(" avail   : ")
+                      .append(avail.trim()).append("\n");
                     addedRootCpu = true;
                 }
             }

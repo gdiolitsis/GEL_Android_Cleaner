@@ -42,10 +42,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.Locale;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class DeviceInfoInternalActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
@@ -101,12 +97,12 @@ protected void onCreate(Bundle savedInstanceState) {
     allContents = new TextView[]{
             txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
             txtThermalContent, txtVulkanContent, txtRamContent,
-            txtStorageContent, txtConnectivityContent
+            txtStorageContent
     };
 
     allIcons = new TextView[]{
             iconSystem, iconAndroid, iconCpu, iconGpu, iconThermal,
-            iconVulkan, iconRam, iconStorage, iconConnectivity
+            iconVulkan, iconRam, iconStorage
     };
 
     // ============================================================
@@ -114,6 +110,8 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     if (txtSystemContent != null)
         setNeonSectionText(txtSystemContent, buildSystemInfo());
+    if (txtAndroidContent != null)
+        setNeonSectionText(txtAndroidContent, buildAndroidInfo());
     if (txtCpuContent != null)
         setNeonSectionText(txtCpuContent, buildCpuInfo());
     if (txtGpuContent != null)
@@ -136,7 +134,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
     setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
     setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
-    setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
 }
 
 @Override
@@ -325,9 +322,12 @@ public void onScreenChanged(boolean isInner) {
         sb.append("Board        : ").append(Build.BOARD).append("\n");
         sb.append("Bootloader   : ").append(Build.BOOTLOADER).append("\n\n");
 
-        sb.append("=== Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
-        sb.append("\n"); // empty line for visual separation    
-        sb.append("\n"); // empty line for visual separation    
+        sb.append("=== System Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
+        sb.append("=== System Fingerprint ===\n");
+        sb.append(Build.FINGERPRINT).append("\n");
+        sb.append("\n ");   // empty visible line
+        sb.append("\n");
+        
         String androidId = "";
         try {
             androidId = Settings.Secure.getString(
@@ -409,7 +409,7 @@ private String buildCpuInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ABI
-    sb.append("ABI       : ");
+    sb.append("ABI      : ");
     if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
         for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
             if (i > 0) sb.append(", ");
@@ -421,7 +421,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append("CPU Cores : ").append(cores).append("\n");
+    sb.append("CPU Cores: ").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -470,7 +470,7 @@ private String buildCpuInfo() {
     // ============================================================
     Double socTemp = getSocTempCpuAverage();
     if (socTemp != null) {
-        sb.append("SPU CHIP Temp : ")
+        sb.append("SPU CHIP Temp: ")
           .append(String.format(java.util.Locale.US, "%.1f°C", socTemp))
           .append(" (estimated)\n");
     }

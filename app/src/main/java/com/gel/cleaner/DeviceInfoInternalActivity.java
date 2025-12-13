@@ -369,152 +369,113 @@ public void onScreenChanged(boolean isInner) {
         return sb.toString();
     }
 
-    // ============================================================
-    // Android Info
-    // ============================================================
+ // ============================================================
+// CPU Info
+// ============================================================
 
-    private String buildAndroidInfo() {
-        StringBuilder sb = new StringBuilder();
+private String buildCpuInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        sb.append("Android      : ").append(Build.VERSION.RELEASE)
-                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            sb.append("Security Pch : ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+    // ABI
+    sb.append("ABI          : ");
+    if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
+        for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(Build.SUPPORTED_ABIS[i]);
         }
+    } else {
+        sb.append(Build.CPU_ABI);
+    }
+    sb.append("\n");
 
-        sb.append("Build ID     : ").append(Build.ID).append("\n");
-        sb.append("Build Type   : ").append(Build.TYPE).append("\n");
-        sb.append("Build Tags   : ").append(Build.TAGS).append("\n\n");
+    int cores = Runtime.getRuntime().availableProcessors();
+    sb.append("CPU Cores    : ").append(cores).append("\n");
 
-        String incr = Build.VERSION.INCREMENTAL;
-        if (incr != null) {
-            sb.append("Incremental  : ").append(incr).append("\n");
+    // /proc/cpuinfo key lines
+    String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
+    if (cpuinfo != null && !cpuinfo.isEmpty()) {
+        String[] lines = cpuinfo.split("\n");
+        for (String line : lines) {
+            String low = line.toLowerCase();
+            if (low.startsWith("hardware")) {
+                sb.append(line.trim()).append("\n");
+            } else if (low.startsWith("model name")) {
+                sb.append(line.trim()).append("\n");
+            } else if (low.startsWith("processor")) {
+                sb.append(line.trim()).append("\n");
+            }
         }
-
-        String baseband = getProp("gsm.version.baseband");
-        if (baseband != null && !baseband.isEmpty()) {
-            sb.append("Baseband     : ").append(baseband).append("\n");
-        }
-
-        String vendorRel = getProp("ro.vendor.build.version.release");
-        if (vendorRel != null && !vendorRel.isEmpty()) {
-            sb.append("Vendor Rel   : ").append(vendorRel).append("\n");
-        }
-
-        String miui = getProp("ro.miui.ui.version.name");
-        if (miui != null && !miui.isEmpty()) {
-            sb.append("MIUI         : ").append(miui).append("\n");
-        }
-
-        String hyper = getProp("ro.mi.os.version.name");
-        if (hyper != null && !hyper.isEmpty()) {
-            sb.append("HyperOS      : ").append(hyper).append("\n");
-        }
-
-        // Small root-extended flavour: SELinux props
-        String seEnforce = getProp("ro.boot.selinux");
-        if (seEnforce != null && !seEnforce.isEmpty()) {
-            sb.append("SELinux Boot : ").append(seEnforce).append("\n");
-        }
-
-        return sb.toString();
     }
 
-    private String buildCpuInfo() {
-        StringBuilder sb = new StringBuilder();
+    // Governor & frequency (if exposed)
+    String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+    if (gov != null && !gov.isEmpty()) {
+        sb.append("Governor     : ").append(gov.trim()).append("\n");
+    }
 
-        // ABI
-        sb.append("ABI          : ");
-        if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
-            for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(Build.SUPPORTED_ABIS[i]);
-            }
-        } else {
-            sb.append(Build.CPU_ABI);
-        }
+    long curFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
+    long minFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
+    long maxFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+
+    if (curFreq > 0 || minFreq > 0 || maxFreq > 0) {
+        sb.append("Freq (MHz)   : ");
+        if (curFreq > 0) sb.append("cur=").append(curFreq / 1000).append(" ");
+        if (minFreq > 0) sb.append("min=").append(minFreq / 1000).append(" ");
+        if (maxFreq > 0) sb.append("max=").append(maxFreq / 1000);
         sb.append("\n");
-
-        int cores = Runtime.getRuntime().availableProcessors();
-        sb.append("CPU Cores : ").append(cores).append("\n");
-
-        // /proc/cpuinfo key lines
-        String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
-        if (cpuinfo != null && !cpuinfo.isEmpty()) {
-            String[] lines = cpuinfo.split("\n");
-            for (String line : lines) {
-                String low = line.toLowerCase();
-                if (low.startsWith("hardware")) {
-                    sb.append(line.trim()).append("\n");
-                } else if (low.startsWith("model name")) {
-                    sb.append(line.trim()).append("\n");
-                } else if (low.startsWith("processor")) {
-                    sb.append(line.trim()).append("\n");
-                }
-            }
-        }
-
-        // Governor & frequency (if exposed)
-        String gov = readSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        if (gov != null && !gov.isEmpty()) {
-            sb.append("Governor     : ").append(gov.trim()).append("\n");
-        }
-
-        long curFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq");
-        long minFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq");
-        long maxFreq = readSysLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
-
-        if (curFreq > 0 || minFreq > 0 || maxFreq > 0) {
-            sb.append("Freq (MHz)   : ");
-            if (curFreq > 0) sb.append("cur=").append(curFreq / 1000).append(" ");
-            if (minFreq > 0) sb.append("min=").append(minFreq / 1000).append(" ");
-            if (maxFreq > 0) sb.append("max=").append(maxFreq / 1000);
-            sb.append("\n");
-        }
-
-        // big.LITTLE hint from clusters (if exist)
-        String policy0 = readSysString("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq");
-        String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
-        if ((policy0 != null && !policy0.isEmpty()) ||
-                (policy7 != null && !policy7.isEmpty())) {
-            sb.append("Cluster Hint : big.LITTLE detected\n");
-        }
-
-        // ROOT-EXTENDED CPU DETAILS
-        boolean addedRootCpu = false;
-        if (isRooted) {
-            sb.append("\n[Root CPU tables]\n");
-            try {
-                for (int i = 0; i < cores; i++) {
-                    String base = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
-                    long rMin = readSysLong(base + "cpuinfo_min_freq");
-                    long rMax = readSysLong(base + "cpuinfo_max_freq");
-                    long rCur = readSysLong(base + "scaling_cur_freq");
-                    if (rMin > 0 || rMax > 0 || rCur > 0) {
-                        sb.append("cpu").append(i).append("        : ");
-                        if (rCur > 0) sb.append("cur=").append(rCur / 1000).append("MHz ");
-                        if (rMin > 0) sb.append("min=").append(rMin / 1000).append("MHz ");
-                        if (rMax > 0) sb.append("max=").append(rMax / 1000).append("MHz");
-                        sb.append("\n");
-                        addedRootCpu = true;
-                    }
-                    String avail = readSysString(base + "scaling_available_frequencies");
-                    if (avail != null && !avail.isEmpty()) {
-                        sb.append("cpu").append(i).append(" avail   : ").append(avail.trim()).append("\n");
-                        addedRootCpu = true;
-                    }
-                }
-            } catch (Throwable ignore) {
-            }
-
-            if (!addedRootCpu) {
-                sb.append("Root CPU details not exposed by current kernel.\n");
-            }
-        }
-
-        return sb.toString();
     }
+
+    // big.LITTLE hint from clusters (if exist)
+    String policy0 = readSysString("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq");
+    String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
+    if ((policy0 != null && !policy0.isEmpty()) ||
+        (policy7 != null && !policy7.isEmpty())) {
+        sb.append("Cluster Hint : big.LITTLE detected\n");
+    }
+
+    // ============================================================
+    // SoC Temperature (estimated from CPU cores)
+    // ============================================================
+    Double socTemp = getSocTempCpuAverage();
+    if (socTemp != null) {
+        sb.append("SoC Temp     : ")
+          .append(String.format(java.util.Locale.US, "%.1f°C", socTemp))
+          .append(" (estimated)\n");
+    }
+
+    // ROOT-EXTENDED CPU DETAILS
+    boolean addedRootCpu = false;
+    if (isRooted) {
+        sb.append("\n[Root CPU tables]\n");
+        try {
+            for (int i = 0; i < cores; i++) {
+                String base = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
+                long rMin = readSysLong(base + "cpuinfo_min_freq");
+                long rMax = readSysLong(base + "cpuinfo_max_freq");
+                long rCur = readSysLong(base + "scaling_cur_freq");
+                if (rMin > 0 || rMax > 0 || rCur > 0) {
+                    sb.append("cpu").append(i).append("        : ");
+                    if (rCur > 0) sb.append("cur=").append(rCur / 1000).append("MHz ");
+                    if (rMin > 0) sb.append("min=").append(rMin / 1000).append("MHz ");
+                    if (rMax > 0) sb.append("max=").append(rMax / 1000).append("MHz");
+                    sb.append("\n");
+                    addedRootCpu = true;
+                }
+                String avail = readSysString(base + "scaling_available_frequencies");
+                if (avail != null && !avail.isEmpty()) {
+                    sb.append("cpu").append(i).append(" avail   : ").append(avail.trim()).append("\n");
+                    addedRootCpu = true;
+                }
+            }
+        } catch (Throwable ignore) {}
+
+        if (!addedRootCpu) {
+            sb.append("Root CPU details not exposed by current kernel.\n");
+        }
+    }
+
+    return sb.toString();
+}
 
     // ============================================================
     // Gpu Info
@@ -965,4 +926,4 @@ private String padRight(String s, int n) {
     while (sb.length() < n) sb.append(' ');
     return sb.toString();
 }
-                }
+}

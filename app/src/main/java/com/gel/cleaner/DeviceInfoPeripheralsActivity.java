@@ -212,7 +212,6 @@ private TextView txtModemContent;
 private TextView txtWifiAdvancedContent;
 private TextView txtAudioUnifiedContent;
 private TextView txtSensorsContent;
-private TextView txtSensorsExtendedContent;
 private TextView txtBiometricsContent;
 private TextView txtNfcContent;
 private TextView txtGnssContent;
@@ -233,7 +232,6 @@ private TextView iconModem;
 private TextView iconWifiAdvanced;
 private TextView iconAudioUnified;
 private TextView iconSensors;
-private TextView iconSensorsExtended;
 private TextView iconBiometrics;
 private TextView iconNfc;
 private TextView iconGnss;
@@ -286,7 +284,6 @@ protected void onCreate(Bundle savedInstanceState) {
     txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);
 
     txtSensorsContent         = findViewById(R.id.txtSensorsContent);
-    txtSensorsExtendedContent = findViewById(R.id.txtSensorsExtendedContent);
     txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);
     txtNfcContent             = findViewById(R.id.txtNfcContent);
     txtGnssContent            = findViewById(R.id.txtGnssContent);
@@ -308,7 +305,6 @@ protected void onCreate(Bundle savedInstanceState) {
     iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);
 
     iconSensors         = findViewById(R.id.iconSensorsToggle);
-    iconSensorsExtended = findViewById(R.id.iconSensorsExtendedToggle);
     iconBiometrics      = findViewById(R.id.iconBiometricsToggle);
     iconNfc             = findViewById(R.id.iconNfcToggle);
     iconGnss            = findViewById(R.id.iconGnssToggle);
@@ -334,7 +330,6 @@ protected void onCreate(Bundle savedInstanceState) {
             txtWifiAdvancedContent,
             txtAudioUnifiedContent,
             txtSensorsContent,
-            txtSensorsExtendedContent,
             txtBiometricsContent,
             txtNfcContent,
             txtGnssContent,
@@ -358,7 +353,6 @@ protected void onCreate(Bundle savedInstanceState) {
             iconWifiAdvanced,
             iconAudioUnified,
             iconSensors,
-            iconSensorsExtended,
             iconBiometrics,
             iconNfc,
             iconGnss,
@@ -429,7 +423,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);
     setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);
     setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);
-    setupSection(findViewById(R.id.headerSensorsExtended), txtSensorsExtendedContent, iconSensorsExtended);
     setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);
     setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);
     setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);
@@ -3257,10 +3250,6 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
     String s1 = buildSensorsInfo();
     set(R.id.txtSensorsContent, s1);
     applyNeonValues(findViewById(R.id.txtSensorsContent), s1);
-
-    String s2 = buildSensorsExtendedInfo();
-    set(R.id.txtSensorsExtendedContent, s2);
-    applyNeonValues(findViewById(R.id.txtSensorsExtendedContent), s2);
 
     // BIOMETRICS
     String bio = buildBiometricsInfo();

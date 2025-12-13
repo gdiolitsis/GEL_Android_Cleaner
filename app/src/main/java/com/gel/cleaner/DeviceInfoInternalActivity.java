@@ -617,16 +617,14 @@ private String buildCpuInfo() {
     }
 
 // ============================================================
-// Thermal Sensors (Internal)
+// Thermal Sensors (Internal) — Technical Accurate
 // ============================================================
 private String buildThermalSensorsInfo() {
 
     StringBuilder sb = new StringBuilder();
-
-    // κρατάμε ΕΝΑ sensor ανά label (όχι διπλά)
     Map<String, String> map = new LinkedHashMap<>();
 
-    final int PAD = 14;
+    final int PAD = 16;
 
     // ------------------------------------------------------------
     // BATTERY (SYSTEM)
@@ -634,17 +632,14 @@ private String buildThermalSensorsInfo() {
     long batt = readSysLong("/sys/class/power_supply/battery/temp");
     if (batt > 0) {
         double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
-        map.put(
-            "Battery",
-            String.format(Locale.US, "%.1f°C  (system)", c)
-        );
+        map.put("Battery", String.format(Locale.US, "%.1f°C  (system)", c));
     }
 
     // ------------------------------------------------------------
     // THERMAL ZONES
     // ------------------------------------------------------------
     File dir = new File("/sys/class/thermal");
-    if (dir.exists() && dir.isDirectory()) {
+    if (dir.exists()) {
 
         File[] zones = dir.listFiles();
         if (zones != null) {
@@ -665,39 +660,35 @@ private String buildThermalSensorsInfo() {
                 String label = null;
                 String value;
 
-                // ---------------- CPU CORES ----------------
-                if (low.startsWith("cpu-")) {
-                    // cpu-0-0 → CPU Core 0
-                    String core = low.replace("cpu-", "");
-                    int idx = core.lastIndexOf("-");
-                    String coreId = (idx >= 0) ? core.substring(idx + 1) : core;
-                    label = "CPU Core " + coreId;
+                // CPU CLUSTERS (correct)
+                if (low.contains("cpu") && low.contains("cluster")) {
+                    label = "CPU Cluster";
                     value = String.format(Locale.US, "%.1f°C", c);
                 }
-                // ---------------- CPU SUBSYSTEM ----------------
+                // CPU SUBSYSTEM (thermal engine reference)
                 else if (low.contains("cpuss")) {
                     label = "CPU Subsystem";
                     value = String.format(Locale.US, "%.1f°C", c);
                 }
-                // ---------------- GPU ----------------
+                // GPU
                 else if (low.contains("gpu")) {
                     label = "GPU Sensor";
                     value = String.format(Locale.US, "%.1f°C", c);
                 }
-                // ---------------- SOC ----------------
+                // SOC
                 else if (low.contains("soc")) {
                     label = "SoC Sensor";
                     value = String.format(Locale.US, "%.1f°C  (aux)", c);
                 }
-                // ---------------- BATTERY SHELL / SKIN ----------------
-                else if (low.contains("batt") || low.contains("shell") || low.contains("skin")) {
-                    label = "Batt Shell";
+                // BATTERY SHELL / SKIN
+                else if (low.contains("skin") || low.contains("shell") || low.contains("batt")) {
+                    label = "Battery Shell";
                     value = String.format(Locale.US, "%.1f°C  (sensor)", c);
                 } else {
                     continue;
                 }
 
-                // κράτα ΜΟΝΟ το πρώτο (όχι διπλά)
+                // keep first valid occurrence only
                 if (!map.containsKey(label)) {
                     map.put(label, value);
                 }
@@ -706,7 +697,7 @@ private String buildThermalSensorsInfo() {
     }
 
     // ------------------------------------------------------------
-    // OUTPUT (ευθυγράμμιση)
+    // OUTPUT
     // ------------------------------------------------------------
     for (Map.Entry<String, String> e : map.entrySet()) {
         sb.append(padRight(e.getKey(), PAD))
@@ -715,17 +706,7 @@ private String buildThermalSensorsInfo() {
           .append("\n");
     }
 
-    // ------------------------------------------------------------
-    // FALLBACK
-    // ------------------------------------------------------------
-    if (sb.length() == 0) {
-        sb.append("Thermal sensors not exposed by this device.\n");
-    }
-
-    // ------------------------------------------------------------
-    // NOTE
-    // ------------------------------------------------------------
-    sb.append("\nAdvanced      : Raw thermal tables require root access.\n");
+    sb.append("\nAdvanced        : Raw thermal tables require root access.\n");
 
     return sb.toString();
 }

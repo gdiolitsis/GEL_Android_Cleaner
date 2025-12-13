@@ -327,8 +327,6 @@ public void onScreenChanged(boolean isInner) {
         sb.append("Bootloader   : ").append(Build.BOOTLOADER).append("\n\n");
 
         sb.append("=== System Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
-        sb.append("=== System Fingerprint ===\n");
-        sb.append(Build.FINGERPRINT).append("\n");
         sb.append("\n ");   // empty visible line
         sb.append("\n");
         
@@ -393,8 +391,12 @@ private String buildAndroidInfo() {
     sb.append("Build Tags    : ").append(Build.TAGS).append("\n");
 
     sb.append("\nIncremental   : ").append(Build.VERSION.INCREMENTAL).append("\n");
-    sb.append("Baseband      : ").append(Build.getRadioVersion()).append("\n");
-    sb.append("Vendor Rel    : ").append(Build.VERSION.BASE_OS).append("\n");
+    sb.append("\n ");   // empty visible line
+    sb.append("\n");
+    sb.append("=== Baseband ===").append(Build.getRadioVersion()).append("\n");
+    sb.append("\n ");   // empty visible line
+    sb.append("\n");
+    sb.append("=== Vendor Release === ").append(Build.VERSION.BASE_OS).append("\n");
 
     // MIUI / OEM hint (safe)
     String miui = getProp("ro.miui.ui.version.name");
@@ -413,7 +415,7 @@ private String buildCpuInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ABI
-    sb.append("ABI      : ");
+    sb.append("ABI       : ");
     if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
         for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
             if (i > 0) sb.append(", ");
@@ -425,7 +427,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append("CPU Cores: ").append(cores).append("\n");
+    sb.append("CPU Cores : ").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -599,19 +601,19 @@ private String buildThermalSensorsInfo() {
     List<String> lines = new ArrayList<>();
 
     // ------------------------------------------------------------
-    // BATTERY TEMPERATURE (PRIMARY)
+    // BATTERY TEMPERATURE (SYSTEM)
     // ------------------------------------------------------------
     long batt = readSysLong("/sys/class/power_supply/battery/temp");
     if (batt > 0) {
         double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
         lines.add(
-            padRight("battery", 14) + ": " +
-            String.format(Locale.US, "%.1f°C", c) + "  (power_supply)"
+            padRight("Battery", 12) + ": " +
+            String.format(Locale.US, "%.1f°C", c) + "  (system)"
         );
     }
 
     // ------------------------------------------------------------
-    // CORE THERMAL ZONES
+    // THERMAL ZONES
     // ------------------------------------------------------------
     File dir = new File("/sys/class/thermal");
     if (dir.exists() && dir.isDirectory()) {
@@ -627,32 +629,45 @@ private String buildThermalSensorsInfo() {
 
                 String low = type.toLowerCase(Locale.US);
 
-                // κρατάμε ΜΟΝΟ ουσιαστικά sensors
-                if (!(low.contains("cpu")
-                        || low.contains("gpu")
-                        || low.contains("soc")
-                        || low.contains("skin")
-                        || low.contains("battery")
-                        || low.contains("modem"))) {
-                    continue;
-                }
-
                 long t = readSysLong(z.getAbsolutePath() + "/temp");
                 if (t <= 0) continue;
 
                 double c = (t > 1000) ? t / 1000.0 : t / 10.0;
 
-                lines.add(
-                    padRight(type.trim(), 14) + ": " +
-                    String.format(Locale.US, "%.1f°C", c) +
-                    "  (" + z.getName() + ")"
-                );
+                // ---------------- CPU ----------------
+                if (low.startsWith("cpu")) {
+                    lines.add(
+                        padRight(type.trim(), 12) + ": " +
+                        String.format(Locale.US, "%.1f°C", c)
+                    );
+                }
+                // ---------------- GPU ----------------
+                else if (low.contains("gpu")) {
+                    lines.add(
+                        padRight("GPU Sensor", 12) + ": " +
+                        String.format(Locale.US, "%.1f°C", c)
+                    );
+                }
+                // ---------------- SoC ----------------
+                else if (low.contains("soc")) {
+                    lines.add(
+                        padRight("SoC Sensor", 12) + ": " +
+                        String.format(Locale.US, "%.1f°C", c) + "  (aux)"
+                    );
+                }
+                // ---------------- Battery shell ----------------
+                else if (low.contains("battery")) {
+                    lines.add(
+                        padRight("Batt Shell", 12) + ": " +
+                        String.format(Locale.US, "%.1f°C", c) + "  (sensor)"
+                    );
+                }
             }
         }
     }
 
     // ------------------------------------------------------------
-    // SORT ORDER (cpu-0-0, cpu-0-1, cpu-1-0, gpu, soc, battery…)
+    // SORT (Battery → SoC → CPU → GPU)
     // ------------------------------------------------------------
     Collections.sort(lines, new Comparator<String>() {
         @Override
@@ -661,7 +676,6 @@ private String buildThermalSensorsInfo() {
         }
     });
 
-    // dump sorted lines
     for (String line : lines) {
         sb.append(line).append("\n");
     }
@@ -670,14 +684,13 @@ private String buildThermalSensorsInfo() {
     // FALLBACK
     // ------------------------------------------------------------
     if (sb.length() == 0) {
-        sb.append("Thermal sensors are not exposed by this device/firmware.\n");
+        sb.append("Thermal sensors not exposed by this device.\n");
     }
 
     // ------------------------------------------------------------
-    // ADVANCED NOTE
+    // NOTE
     // ------------------------------------------------------------
-    sb.append("\nAdvanced        : Raw thermal zones, cooling tables and trip points ")
-      .append("are available only with elevated (root) access.\n");
+    sb.append("\nAdvanced      : Raw thermal tables require root access.\n");
 
     return sb.toString();
 }

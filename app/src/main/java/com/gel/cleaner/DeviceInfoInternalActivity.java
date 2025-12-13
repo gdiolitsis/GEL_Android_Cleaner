@@ -323,6 +323,7 @@ public void onScreenChanged(boolean isInner) {
 
         sb.append("=== Fingerprint ===\n").append(Build.FINGERPRINT).append("\n\n");
         sb.append("\n"); // empty line for visual separation    
+        sb.append("\n"); // empty line for visual separation    
         String androidId = "";
         try {
             androidId = Settings.Secure.getString(
@@ -367,6 +368,35 @@ public void onScreenChanged(boolean isInner) {
         return sb.toString();
     }
 
+// ============================================================
+// Android Build Info
+// ============================================================
+private String buildAndroidInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("Android       : ").append(Build.VERSION.RELEASE)
+      .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
+
+    if (Build.VERSION.SECURITY_PATCH != null)
+        sb.append("Security Patch: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+
+    sb.append("Build ID      : ").append(Build.ID).append("\n");
+    sb.append("Build Type    : ").append(Build.TYPE).append("\n");
+    sb.append("Build Tags    : ").append(Build.TAGS).append("\n");
+
+    sb.append("\nIncremental   : ").append(Build.VERSION.INCREMENTAL).append("\n");
+    sb.append("Baseband      : ").append(Build.getRadioVersion()).append("\n");
+    sb.append("Vendor Rel    : ").append(Build.VERSION.BASE_OS).append("\n");
+
+    // MIUI / OEM hint (safe)
+    String miui = getProp("ro.miui.ui.version.name");
+    if (miui != null && !miui.isEmpty()) {
+        sb.append("MIUI          : ").append(miui).append("\n");
+    }
+
+    return sb.toString();
+}
+
  // ============================================================
 // CPU Info
 // ============================================================
@@ -375,7 +405,7 @@ private String buildCpuInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ABI
-    sb.append("ABI          : ");
+    sb.append("ABI       : ");
     if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
         for (int i = 0; i < Build.SUPPORTED_ABIS.length; i++) {
             if (i > 0) sb.append(", ");
@@ -387,7 +417,7 @@ private String buildCpuInfo() {
     sb.append("\n");
 
     int cores = Runtime.getRuntime().availableProcessors();
-    sb.append("CPU Cores    : ").append(cores).append("\n");
+    sb.append("CPU Cores : ").append(cores).append("\n");
 
     // /proc/cpuinfo key lines
     String cpuinfo = readTextFile("/proc/cpuinfo", 32 * 1024);
@@ -432,11 +462,11 @@ private String buildCpuInfo() {
     }
 
     // ============================================================
-    // SoC Temperature (estimated from CPU cores)
+    // CPU CHIP Temperature (estimated from CPU cores)
     // ============================================================
     Double socTemp = getSocTempCpuAverage();
     if (socTemp != null) {
-        sb.append("SoC Temp     : ")
+        sb.append("SPU CHIP Temp : ")
           .append(String.format(java.util.Locale.US, "%.1f°C", socTemp))
           .append(" (estimated)\n");
     }
@@ -558,20 +588,22 @@ private String buildCpuInfo() {
 private String buildThermalSensorsInfo() {
 
     StringBuilder sb = new StringBuilder();
+    List<String> lines = new ArrayList<>();
 
     // ------------------------------------------------------------
-    // BATTERY TEMPERATURE
+    // BATTERY TEMPERATURE (PRIMARY)
     // ------------------------------------------------------------
     long batt = readSysLong("/sys/class/power_supply/battery/temp");
     if (batt > 0) {
         double c = (batt > 1000) ? batt / 1000.0 : batt / 10.0;
-        sb.append("Battery        : ")
-          .append(String.format(Locale.US, "%.1f°C", c))
-          .append("\n");
+        lines.add(
+            padRight("battery", 14) + ": " +
+            String.format(Locale.US, "%.1f°C", c) + "  (power_supply)"
+        );
     }
 
     // ------------------------------------------------------------
-    // CORE THERMAL SENSORS (CPU / GPU / SOC / SKIN)
+    // CORE THERMAL ZONES
     // ------------------------------------------------------------
     File dir = new File("/sys/class/thermal");
     if (dir.exists() && dir.isDirectory()) {
@@ -589,11 +621,11 @@ private String buildThermalSensorsInfo() {
 
                 // κρατάμε ΜΟΝΟ ουσιαστικά sensors
                 if (!(low.contains("cpu")
-                   || low.contains("gpu")
-                   || low.contains("soc")
-                   || low.contains("skin")
-                   || low.contains("battery")
-                   || low.contains("modem"))) {
+                        || low.contains("gpu")
+                        || low.contains("soc")
+                        || low.contains("skin")
+                        || low.contains("battery")
+                        || low.contains("modem"))) {
                     continue;
                 }
 
@@ -602,14 +634,28 @@ private String buildThermalSensorsInfo() {
 
                 double c = (t > 1000) ? t / 1000.0 : t / 10.0;
 
-                sb.append(padRight(type.trim(), 14))
-                  .append(": ")
-                  .append(String.format(Locale.US, "%.1f°C", c))
-                  .append("  (")
-                  .append(z.getName())
-                  .append(")\n");
+                lines.add(
+                    padRight(type.trim(), 14) + ": " +
+                    String.format(Locale.US, "%.1f°C", c) +
+                    "  (" + z.getName() + ")"
+                );
             }
         }
+    }
+
+    // ------------------------------------------------------------
+    // SORT ORDER (cpu-0-0, cpu-0-1, cpu-1-0, gpu, soc, battery…)
+    // ------------------------------------------------------------
+    Collections.sort(lines, new Comparator<String>() {
+        @Override
+        public int compare(String a, String b) {
+            return a.toLowerCase(Locale.US).compareTo(b.toLowerCase(Locale.US));
+        }
+    });
+
+    // dump sorted lines
+    for (String line : lines) {
+        sb.append(line).append("\n");
     }
 
     // ------------------------------------------------------------
@@ -667,161 +713,214 @@ private String buildThermalSensorsInfo() {
         return sb.toString();
     }
 
-    private String buildRamInfo() {
-        StringBuilder sb = new StringBuilder();
+// ============================================================
+// RAM Info
+// ============================================================
+private String buildRamInfo() {
+    StringBuilder sb = new StringBuilder();
 
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
+    try {
+        ActivityManager am =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
-                long totalMb = mi.totalMem / (1024 * 1024);
-                long availMb = mi.availMem / (1024 * 1024);
-                long usedMb = totalMb - availMb;
+        if (am != null) {
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
 
-                sb.append("Total RAM     : ").append(totalMb).append(" MB\n");
-                sb.append("Used RAM      : ").append(usedMb).append(" MB\n");
-                sb.append("Free RAM      : ").append(availMb).append(" MB\n");
-                sb.append("Low Memory    : ").append(mi.lowMemory ? "Yes" : "No").append("\n");
-                sb.append("Threshold     : ").append(mi.threshold / (1024 * 1024)).append(" MB\n");
-            }
-        } catch (Throwable ignore) {
+            long totalMb = mi.totalMem / (1024 * 1024);
+            long availMb = mi.availMem / (1024 * 1024);
+            long usedMb  = totalMb - availMb;
+
+            sb.append(padRight("Total RAM", 14)).append(": ")
+              .append(totalMb).append(" MB\n");
+            sb.append(padRight("Used RAM", 14)).append(": ")
+              .append(usedMb).append(" MB\n");
+            sb.append(padRight("Free RAM", 14)).append(": ")
+              .append(availMb).append(" MB\n");
+            sb.append(padRight("Low Memory", 14)).append(": ")
+              .append(mi.lowMemory ? "Yes" : "No").append("\n");
+            sb.append(padRight("Threshold", 14)).append(": ")
+              .append(mi.threshold / (1024 * 1024)).append(" MB\n");
         }
+    } catch (Throwable ignore) {}
 
-        // /proc/meminfo parsing (user + kernel view)
-        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
-        if (meminfo != null && !meminfo.isEmpty()) {
-            sb.append("\n/proc/meminfo (core):\n");
-            String[] lines = meminfo.split("\n");
-            for (String line : lines) {
-                if (line.startsWith("MemTotal:")
-                        || line.startsWith("MemFree:")
-                        || line.startsWith("Buffers:")
-                        || line.startsWith("Cached:")
-                        || line.startsWith("SwapTotal:")
-                        || line.startsWith("SwapFree:")
-                        || line.startsWith("Inactive:")
-                        || line.startsWith("Active:")) {
-                    sb.append(line.trim()).append("\n");
+    // ------------------------------------------------------------
+    // /proc/meminfo (kernel view)
+    // ------------------------------------------------------------
+    String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+    if (meminfo != null && !meminfo.isEmpty()) {
+
+        sb.append("\n/proc/meminfo (core):\n\n");
+
+        String[] lines = meminfo.split("\n");
+        for (String line : lines) {
+
+            if (line.startsWith("MemTotal:")
+                    || line.startsWith("MemFree:")
+                    || line.startsWith("Buffers:")
+                    || line.startsWith("Cached:")
+                    || line.startsWith("Active:")
+                    || line.startsWith("Inactive:")
+                    || line.startsWith("SwapTotal:")
+                    || line.startsWith("SwapFree:")) {
+
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    sb.append(padRight(parts[0], 14))
+                      .append(": ")
+                      .append(parts[1].trim())
+                      .append("\n");
                 }
             }
         }
-
-        // ZRAM / swap advanced
-        boolean anyZram = false;
-        try {
-            String zramSize = readSysString("/sys/block/zram0/disksize");
-            if (zramSize != null && !zramSize.isEmpty()) {
-                sb.append("ZRAM Size     : ").append(zramSize).append(" bytes\n");
-                anyZram = true;
-            }
-            String zramStat = readTextFile("/sys/block/zram0/mm_stat", 1024);
-            if (zramStat != null && !zramStat.isEmpty()) {
-                sb.append("ZRAM mm_stat  : ").append(zramStat.replace("\n", " ")).append("\n");
-                anyZram = true;
-            }
-        } catch (Throwable ignore) {
-        }
-        if (!anyZram) {
-            sb.append("ZRAM Details  : Not exposed by this device.\n");
-        }
-
-        if (sb.length() == 0) {
-            sb.append("Unable to read RAM information.\n");
-        }
-
-        return sb.toString();
     }
 
-    private String buildStorageInfo() {
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            File internal = Environment.getDataDirectory();
-            appendStorageBlock(sb, "Internal", internal);
-
-            File ext = Environment.getExternalStorageDirectory();
-            if (ext != null && ext.exists()) {
-                appendStorageBlock(sb, "External (primary)", ext);
-            }
-        } catch (Throwable ignore) {
+    // ------------------------------------------------------------
+    // ZRAM / SWAP (advanced)
+    // ------------------------------------------------------------
+    boolean anyZram = false;
+    try {
+        String zramSize = readSysString("/sys/block/zram0/disksize");
+        if (zramSize != null && !zramSize.isEmpty()) {
+            sb.append(padRight("ZRAM Size", 14)).append(": ")
+              .append(zramSize).append(" bytes\n");
+            anyZram = true;
         }
 
-        // /proc/mounts core partitions
-        String mounts = readTextFile("/proc/mounts", 32 * 1024);
-        if (mounts != null && !mounts.isEmpty()) {
-            sb.append("Core Mounts   :\n");
-            String[] lines = mounts.split("\n");
-            String[] interesting = {"/", "/system", "/vendor", "/product", "/data", "/cache", "/metadata", "/sdcard"};
-            for (String line : lines) {
-                String[] parts = line.split("\\s+");
-                if (parts.length < 3) continue;
-                String mountPoint = parts[1];
-                boolean hit = false;
-                for (String it : interesting) {
-                    if (mountPoint.equals(it)) {
-                        hit = true;
-                        break;
-                    }
-                }
-                if (hit) {
-                    sb.append("  ").append(mountPoint)
-                            .append(" : ").append(parts[2]) // fstype
-                            .append(" (").append(parts[0]).append(")\n");
+        String zramStat = readTextFile("/sys/block/zram0/mm_stat", 1024);
+        if (zramStat != null && !zramStat.isEmpty()) {
+            sb.append(padRight("ZRAM Stats", 14)).append(": ")
+              .append(zramStat.replace("\n", " "))
+              .append("\n");
+            anyZram = true;
+        }
+    } catch (Throwable ignore) {}
+
+    if (!anyZram) {
+        sb.append(padRight("ZRAM Details", 14))
+          .append(": Not exposed by this device.\n");
+    }
+
+    if (sb.length() == 0) {
+        sb.append("Unable to read RAM information.\n");
+    }
+
+    return sb.toString();
+}
+ 
+// ============================================================
+// STORAGE Info
+// ============================================================
+private String buildStorageInfo() {
+    StringBuilder sb = new StringBuilder();
+
+    try {
+        File internal = Environment.getDataDirectory();
+        appendStorageBlock(sb, "Internal", internal);
+
+        File ext = Environment.getExternalStorageDirectory();
+        if (ext != null && ext.exists()) {
+            appendStorageBlock(sb, "External (primary)", ext);
+        }
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // CORE MOUNTS
+    // ------------------------------------------------------------
+    String mounts = readTextFile("/proc/mounts", 32 * 1024);
+    if (mounts != null && !mounts.isEmpty()) {
+
+        sb.append("\n=== Core Mounts ===\n\n");
+
+        String[] lines = mounts.split("\n");
+        String[] interesting = {
+                "/", "/system", "/vendor", "/product",
+                "/data", "/cache", "/metadata"
+        };
+
+        for (String line : lines) {
+            String[] parts = line.split("\\s+");
+            if (parts.length < 3) continue;
+
+            String mountPoint = parts[1];
+            boolean hit = false;
+            for (String it : interesting) {
+                if (mountPoint.equals(it)) {
+                    hit = true;
+                    break;
                 }
             }
+
+            if (hit) {
+                sb.append("  ")
+                  .append(padRight(mountPoint, 10))
+                  .append(": ")
+                  .append(parts[2])          // fs type
+                  .append(" (")
+                  .append(parts[0])          // device
+                  .append(")\n");
+            }
+        }
+
+    } else {
+        sb.append("\n=== Core Mounts ===\n\n");
+        sb.append("  Not exposed by this device.\n");
+    }
+
+    // ------------------------------------------------------------
+    // PARTITIONS SNAPSHOT
+    // ------------------------------------------------------------
+    String parts = readTextFile("/proc/partitions", 8 * 1024);
+    if (parts != null && !parts.isEmpty()) {
+        sb.append("\n=== Partitions ===\n\n");
+        sb.append(parts.trim()).append("\n");
+    } else {
+        sb.append("\n=== Partitions ===\n\n");
+        sb.append("  Not exposed by this device.\n");
+    }
+
+    if (sb.length() == 0) {
+        sb.append("Unable to read storage information.\n");
+    }
+
+    return sb.toString();
+}
+
+private void appendStorageBlock(StringBuilder sb, String label, File path) {
+    try {
+        StatFs stat = new StatFs(path.getAbsolutePath());
+
+        long blockSize, totalBlocks, availBlocks;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize   = stat.getBlockSizeLong();
+            totalBlocks = stat.getBlockCountLong();
+            availBlocks = stat.getAvailableBlocksLong();
         } else {
-            sb.append("Mount table   : Not exposed by this device.\n");
+            blockSize   = stat.getBlockSize();
+            totalBlocks = stat.getBlockCount();
+            availBlocks = stat.getAvailableBlocks();
         }
 
-        // /proc/partitions snapshot
-        String parts = readTextFile("/proc/partitions", 8 * 1024);
-        if (parts != null && !parts.isEmpty()) {
-            sb.append("\n/proc/partitions (snapshot):\n");
-            sb.append(parts.trim()).append("\n");
-        } else {
-            sb.append("Partitions    : Not exposed by this device.\n");
-        }
+        long totalBytes = blockSize * totalBlocks;
+        long availBytes = blockSize * availBlocks;
+        long usedBytes  = totalBytes - availBytes;
 
-        if (sb.length() == 0) {
-            sb.append("Unable to read storage partitions.\n");
-        }
+        long totalGb = totalBytes / (1024 * 1024 * 1024);
+        long usedGb  = usedBytes  / (1024 * 1024 * 1024);
+        long freeGb  = availBytes / (1024 * 1024 * 1024);
 
-        return sb.toString();
-    }
+        sb.append(label).append(":\n");
+        sb.append("  ").append(padRight("Path", 10))
+          .append(": ").append(path.getAbsolutePath()).append("\n");
+        sb.append("  ").append(padRight("Total", 10))
+          .append(": ").append(totalGb).append(" GB\n");
+        sb.append("  ").append(padRight("Used", 10))
+          .append(": ").append(usedGb).append(" GB\n");
+        sb.append("  ").append(padRight("Free", 10))
+          .append(": ").append(freeGb).append(" GB\n\n");
 
-    private void appendStorageBlock(StringBuilder sb, String label, File path) {
-        try {
-            StatFs stat = new StatFs(path.getAbsolutePath());
-            long blockSize, totalBlocks, availBlocks;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize = stat.getBlockSizeLong();
-                totalBlocks = stat.getBlockCountLong();
-                availBlocks = stat.getAvailableBlocksLong();
-            } else {
-                blockSize = stat.getBlockSize();
-                totalBlocks = stat.getBlockCount();
-                availBlocks = stat.getAvailableBlocks();
-            }
-
-            long totalBytes = blockSize * totalBlocks;
-            long availBytes = blockSize * availBlocks;
-            long usedBytes = totalBytes - availBytes;
-
-            long totalGb = totalBytes / (1024 * 1024 * 1024);
-            long usedGb = usedBytes / (1024 * 1024 * 1024);
-            long freeGb = availBytes / (1024 * 1024 * 1024);
-
-            sb.append(label).append(":\n");
-            sb.append("  Path   : ").append(path.getAbsolutePath()).append("\n");
-            sb.append("  Total  : ").append(totalGb).append(" GB\n");
-            sb.append("  Used   : ").append(usedGb).append(" GB\n");
-            sb.append("  Free   : ").append(freeGb).append(" GB\n\n");
-
-        } catch (Throwable ignore) {
-        }
-    }
+    } catch (Throwable ignore) {}
+}
 
 // ============================================================
 // SoC Temperature — CPU average (non-root, safe)

@@ -898,7 +898,7 @@ private void setupSection(View header, View content, TextView icon) {
                         if (jpegSizes != null && jpegSizes.length > 0) {
                             sb.append("• JPEG Modes     : ")
                                     .append(jpegSizes.length)
-                                    .append(" available output sizes\n");
+                                    .append(" available sizes\n");
                         }
                     }
                 } catch (Throwable ignore) { }
@@ -2785,7 +2785,24 @@ private String buildScreenInfo() {
 }
 
 // ============================================================================
-// 3. TELEPHONY / MODEM — CLEAN GEL EDITION (REAL DATA ONLY)
+// 3. TELEPHONY / MODEM — UI REFRESH (ONE BLOCK, ONE TEXTVIEW)
+// ============================================================================
+private void refreshModemInfo() {
+    try {
+        TextView modemView = findViewById(R.id.txtModemContent);
+        if (modemView != null) {
+            String info = buildModemInfo();
+            modemView.setText(info);
+            modemView.setVisibility(View.VISIBLE);
+
+            // ⭐ Neon χρωματισμός τιμών
+            applyNeonValues(modemView, info);
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================================
+// TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
 // ============================================================================
 private String buildModemInfo() {
     StringBuilder sb = new StringBuilder();
@@ -2800,64 +2817,61 @@ private String buildModemInfo() {
     // ------------------------------------------------------------
     // PHONE TYPE
     // ------------------------------------------------------------
+    String phoneTypeStr = "Unknown";
     try {
         if (tm != null) {
-            String phoneType =
-                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM  ? "GSM"  :
-                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA ? "CDMA" :
-                    tm.getPhoneType() == TelephonyManager.PHONE_TYPE_SIP  ? "SIP"  :
-                    "None";
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("Phone Type"), phoneType));
+            switch (tm.getPhoneType()) {
+                case TelephonyManager.PHONE_TYPE_GSM:  phoneTypeStr = "GSM";  break;
+                case TelephonyManager.PHONE_TYPE_CDMA: phoneTypeStr = "CDMA"; break;
+                case TelephonyManager.PHONE_TYPE_SIP:  phoneTypeStr = "SIP";  break;
+                default: phoneTypeStr = "None"; break;
+            }
         }
     } catch (Throwable ignore) {}
 
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("Phone Type"), phoneTypeStr));
+
     // ------------------------------------------------------------
-    // DATA NETWORK
+    // DATA NETWORK — LTE / NR only
     // ------------------------------------------------------------
     try {
-        if (tm != null) {
-            int net = tm.getDataNetworkType();
-            String netName =
-                    net == TelephonyManager.NETWORK_TYPE_NR  ? "5G NR"  :
-                    net == TelephonyManager.NETWORK_TYPE_LTE ? "4G LTE" :
-                    "Other";
+        int net = (tm != null) ? tm.getDataNetworkType() : TelephonyManager.NETWORK_TYPE_UNKNOWN;
+        String netName = (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"
+                       : (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE"
+                       : "Unknown";
 
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("Data Network"), netName));
-
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("5G (NR) Active"),
-                    net == TelephonyManager.NETWORK_TYPE_NR ? "Yes" : "No"));
-        }
+        sb.append(String.format(locale, "%s : %s\n", padKeyModem("Data Network"), netName));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("5G (NR) Active"),
+                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // CARRIER / COUNTRY / OPERATOR CODE
     // ------------------------------------------------------------
     try {
-        if (tm != null) {
-            String carrier = tm.getNetworkOperatorName();
-            String iso     = tm.getNetworkCountryIso();
-            String opCode  = tm.getNetworkOperator();
+        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
+        String iso     = (tm != null) ? tm.getNetworkCountryIso() : null;
+        String opCode  = (tm != null) ? tm.getNetworkOperator()    : null;
 
-            if (carrier != null && !carrier.isEmpty())
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("Carrier"), carrier));
+        if (iso == null || iso.trim().isEmpty())
+            iso = Locale.getDefault().getCountry();
 
-            if (iso != null && !iso.isEmpty())
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("Country ISO"), iso.toUpperCase(locale)));
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Carrier"),
+                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
 
-            if (opCode != null && !opCode.isEmpty())
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("Operator Code"), opCode));
-        }
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Country ISO"),
+                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
+
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Operator Code"),
+                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // SIGNAL STRENGTH
+    // SIGNAL STRENGTH — 0–4
     // ------------------------------------------------------------
     try {
         if (tm != null) {
@@ -2873,42 +2887,200 @@ private String buildModemInfo() {
     // ROAMING
     // ------------------------------------------------------------
     try {
-        if (tm != null) {
-            sb.append(String.format(locale, "%s : %s\n",
-                    padKeyModem("Roaming"),
-                    tm.isNetworkRoaming() ? "Yes" : "No"));
-        }
+        boolean roaming = tm != null && tm.isNetworkRoaming();
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ACTIVE SIMS + SLOT NAMES (REAL ONLY)
+    // IMS / VoLTE / VoWiFi / VoNR
     // ------------------------------------------------------------
+    sb.append(String.format(locale, "%s : %s\n", padKeyModem("IMS Registered"), "Unknown"));
+
     try {
-        List<SubscriptionInfo> subs =
-                sm != null ? sm.getActiveSubscriptionInfoList() : null;
+        boolean volte = tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isVolteAvailable").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoLTE Support"), volte ? "Yes" : "No"));
+    } catch (Throwable ignore) {
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoLTE Support")));
+    }
+
+    try {
+        boolean vowifi = tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isWifiCallingAvailable").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoWiFi Support"), vowifi ? "Yes" : "No"));
+    } catch (Throwable ignore) {
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoWiFi Support")));
+    }
+
+    try {
+        boolean vonr = (Build.VERSION.SDK_INT >= 33) &&
+                tm != null &&
+                (boolean) TelephonyManager.class.getMethod("isVoNrEnabled").invoke(tm);
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("VoNR Support"), vonr ? "Yes" : "No"));
+    } catch (Throwable ignore) {
+        sb.append(String.format(locale, "%s : Unknown\n", padKeyModem("VoNR Support")));
+    }
+
+    // ========================================================================
+    // ACTIVE SIMS SECTION — FULL FALLBACK PACK
+    // ========================================================================
+    try {
+        List<SubscriptionInfo> subs = null;
+
+        // 1️⃣ Standard
+        if (sm != null) {
+            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
+        }
+
+        // 2️⃣ Xiaomi reflection path (safe)
+        if ((subs == null || subs.isEmpty()) && sm != null) {
+            try {
+                Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
+                Object result = m.invoke(sm);
+                if (result instanceof List) {
+                    subs = (List<SubscriptionInfo>) result;
+                }
+            } catch (Throwable ignore) {}
+        }
+
+        // 3️⃣ SubscriptionManager.from(context)
+        if (subs == null || subs.isEmpty()) {
+            try {
+                SubscriptionManager alt = SubscriptionManager.from(this);
+                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
+            } catch (Throwable ignore) {}
+        }
+
+        // 4️⃣ Xiaomi SimpleSimEntry fallback — NO SubscriptionInfo constructors
+        List<SimpleSimEntry> simpleList = new ArrayList<>();
+
+        if (subs == null || subs.isEmpty()) {
+            try {
+                for (int slot = 0; slot < 2; slot++) {
+                    int simState = tm.getSimState(slot);
+
+                    if (simState == TelephonyManager.SIM_STATE_READY ||
+                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
+                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
+                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
+
+                        String name = null;
+                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
+
+                        if (name == null || name.trim().isEmpty())
+                            name = "Unknown";
+
+                        simpleList.add(new SimpleSimEntry(slot, name));
+                    }
+                }
+            } catch (Throwable ignore) {}
+        }
+
+        // Count SIMs
+        int count = 0;
 
         if (subs != null && !subs.isEmpty()) {
-            sb.append(String.format(locale, "%s : %d\n",
-                    padKeyModem("Active SIMs"), subs.size()));
+            boolean[] seen = new boolean[2];
+            for (SubscriptionInfo si : subs) {
+                try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
+                        seen[slot] = true;
+                        count++;
+                    }
+                } catch (Throwable ignore) {}
+            }
+        } else if (!simpleList.isEmpty()) {
+            count = simpleList.size();
+        }
+
+        String countStr = (count == 0 ? "N/A" : String.valueOf(count));
+
+        sb.append(String.format(locale, "%s : %s\n",
+                padKeyModem("Active SIMs"), countStr));
+
+        // Print SLOT details
+        if (subs != null && !subs.isEmpty()) {
 
             boolean[] printed = new boolean[2];
+
             for (SubscriptionInfo si : subs) {
-                int slot = si.getSimSlotIndex();
-                if (slot >= 0 && slot <= 1 && !printed[slot]) {
+                try {
+                    int slot = si.getSimSlotIndex();
+                    if (slot < 0 || slot > 1 || printed[slot]) continue;
+
                     printed[slot] = true;
 
-                    String name = si.getCarrierName() != null
-                            ? si.getCarrierName().toString()
-                            : "SIM";
+                    String displayName =
+                            si.getCarrierName() != null ? si.getCarrierName().toString() : "Unknown";
 
                     sb.append(String.format(locale, "%s : %s\n",
-                            padKeyModem("SIM Slot " + (slot + 1)), name));
-                }
+                            padKeyModem("SIM Slot " + (slot + 1)), displayName));
+
+                } catch (Throwable ignore) {}
             }
+
+        } else if (!simpleList.isEmpty()) {
+            for (SimpleSimEntry e : simpleList) {
+                sb.append(String.format(locale, "%s : %s\n",
+                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
+            }
+        }
+
+    } catch (Throwable ignore) {}
+
+    // ------------------------------------------------------------
+    // SUBSCRIBER INFO — masked
+    // ------------------------------------------------------------
+    try {
+        if (tm != null) {
+            String imsi = null;
+            String msisdn = null;
+
+            try { imsi = tm.getSubscriberId(); } catch (Throwable ignore) {}
+            try { msisdn = tm.getLine1Number(); } catch (Throwable ignore) {}
+
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("IMSI"),
+                    (imsi != null && !imsi.isEmpty()) ? maskSensitive(imsi) : "N/A"));
+
+            sb.append(String.format(locale, "%s : %s\n",
+                    padKeyModem("MSISDN"),
+                    (msisdn != null && !msisdn.isEmpty()) ? maskSensitive(msisdn) : "N/A"));
         }
     } catch (Throwable ignore) {}
 
+    // ------------------------------------------------------------
+    // ADVANCED
+    // ------------------------------------------------------------
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("4G+ CA"), "Unknown. Requires root access"));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("NR-CA"), "Unknown. Requires root access"));
+    sb.append(String.format(locale, "%s : %s\n",
+            padKeyModem("Bands"), "Vendor restricted. Requires root access"));
+
+    sb.append(String.format(locale,
+            "%s : Full RAT tables, NR bands, CA combos, requires root access and OEM modem tools.",
+            padKeyModem("Advanced")
+    ));
+
     return sb.toString();
+}
+
+// Local class for Xiaomi fallback
+private static class SimpleSimEntry {
+    int slot;
+    String carrier;
+
+    SimpleSimEntry(int s, String c) {
+        slot = s;
+        carrier = c;
+    }
 }
 
 // ============================================================================

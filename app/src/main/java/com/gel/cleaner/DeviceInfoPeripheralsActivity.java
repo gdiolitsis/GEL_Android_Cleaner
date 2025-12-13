@@ -1662,7 +1662,7 @@ private String buildGnssInfo() {
             try { net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER); } catch (Throwable ignore) {}
 
             sb.append("GPS Provider      : ").append(gps ? "Enabled" : "Disabled").append("\n");
-            sb.append("Network Location : ").append(net ? "Enabled" : "Disabled").append("\n");
+            sb.append("Network Location  : ").append(net ? "Enabled" : "Disabled").append("\n");
         }
 
         // ---------------------------------------------------
@@ -1721,8 +1721,8 @@ private String buildUsbInfo() {
     boolean otg = pm.hasSystemFeature("android.hardware.usb.host");
     boolean acc = pm.hasSystemFeature("android.hardware.usb.accessory");
 
-    sb.append("OTG Support     : ").append(otg ? "Yes" : "No").append("\n");
-    sb.append("Accessory Mode  : ").append(acc ? "Yes" : "No").append("\n");
+    sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
+    sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
 
     // ------------------------------------------------------------
     // USB MANAGER
@@ -1753,7 +1753,7 @@ private String buildUsbInfo() {
                 sb.append("    USB Speed    : Not exposed by public API\n");
             }
         } else {
-            sb.append("Connected Dev.  : None\n");
+            sb.append("Connected Dev.   : None\n");
         }
 
     } catch (Throwable ignore) {
@@ -1763,8 +1763,8 @@ private String buildUsbInfo() {
     // ------------------------------------------------------------
     // USB ROLE / MODE
     // ------------------------------------------------------------
-    sb.append("\nMode / Role:\n");
-    sb.append("  USB Role       : Vendor HAL not exposed\n");
+    sb.append("\nMode / Role\n");
+    sb.append(" USB Role       : Vendor HAL not exposed\n");
 
     // ------------------------------------------------------------
     // POWER / CHARGING PROFILE
@@ -1783,10 +1783,10 @@ private String buildUsbInfo() {
                     : (source == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless"
                     : "Unplugged";
 
-            sb.append("  Charge Source  : ").append(srcLabel).append("\n");
+            sb.append(" Charge Source   : ").append(srcLabel).append("\n");
 
             int volt = batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-            sb.append("  Voltage (mV)   : ").append(volt).append("\n");
+            sb.append(" Voltage (mV)   : ").append(volt).append("\n");
         }
 
     } catch (Throwable ignore) {
@@ -1798,9 +1798,9 @@ private String buildUsbInfo() {
 // ------------------------------------------------------------
 Integer mA = getRootChargeCurrentMilliAmps();
 if (mA != null) {
-    sb.append("  Charge Current (mA) : ").append(mA).append("\n");
+    sb.append(" Charge (mA) : ").append(mA).append("\n");
 } else {
-    sb.append("  Charge Current (mA) : N/A (requires root access)\n");
+    sb.append(" Charge (mA) : N/A (requires root access)\n");
 }
 
     // ------------------------------------------------------------
@@ -1939,7 +1939,7 @@ private String buildMicsInfo() {
                     case AudioDeviceInfo.TYPE_BUILTIN_MIC:
                         sb.append("• Built-in Microphone\n")
                           .append("   Role            : ")
-                          .append(hasBuiltin ? "noise-cancel microphone" : "Primary microphone")
+                          .append(hasBuiltin ? "noise-cancel mic" : "Primary microphone")
                           .append("\n   Present         : Yes\n\n");
                         hasBuiltin = true;
                         break;
@@ -3656,7 +3656,7 @@ private String getLocationCapabilities() {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "Yes" : "No")
                 .append("\n");
 
-        sb.append("Network Location   : ")
+        sb.append("Network Locatio    : ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "Yes" : "No")
                 .append("\n");
 
@@ -3703,3 +3703,4 @@ private static class SimpleSimEntry {
 
 // 🔥 END OF CLASS
 }
+

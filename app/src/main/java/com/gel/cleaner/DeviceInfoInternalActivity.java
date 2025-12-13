@@ -110,8 +110,6 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     if (txtSystemContent != null)
         setNeonSectionText(txtSystemContent, buildSystemInfo());
-    if (txtAndroidContent != null)
-        setNeonSectionText(txtAndroidContent, buildAndroidInfo());
     if (txtCpuContent != null)
         setNeonSectionText(txtCpuContent, buildCpuInfo());
     if (txtGpuContent != null)
@@ -824,6 +822,45 @@ private String buildThermalSensorsInfo() {
         } catch (Throwable ignore) {
         }
     }
+
+// ============================================================
+// SoC Temperature — CPU average (non-root, safe)
+// ============================================================
+private Double getSocTempCpuAverage() {
+    try {
+        File dir = new File("/sys/class/thermal");
+        if (!dir.exists() || !dir.isDirectory()) return null;
+
+        File[] zones = dir.listFiles();
+        if (zones == null) return null;
+
+        double sum = 0;
+        int count = 0;
+
+        for (File z : zones) {
+            if (!z.getName().startsWith("thermal_zone")) continue;
+
+            String type = readSysString(z.getAbsolutePath() + "/type");
+            if (type == null) continue;
+
+            String low = type.toLowerCase(java.util.Locale.US);
+            if (!low.contains("cpu")) continue;
+
+            long t = readSysLong(z.getAbsolutePath() + "/temp");
+            if (t <= 0) continue;
+
+            double c = (t > 1000) ? t / 1000.0 : t / 10.0;
+            sum += c;
+            count++;
+        }
+
+        if (count == 0) return null;
+        return sum / count;
+
+    } catch (Throwable ignore) {
+        return null;
+    }
+}
 
 // ============================================================
 // GENERIC HELPERS (NON-ROOT)

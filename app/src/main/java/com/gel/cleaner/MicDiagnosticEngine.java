@@ -1,202 +1,208 @@
-// ============================================================
-// MicDiagnosticEngine — Hospital Grade
-// GEL Android Doctor / GEL Phone Diagnosis
-// Author & Developer: GDiolitsis Engine Lab (GEL)
-// ============================================================
-//
-// Covers:
-// ✔ Live Mic Indicator
-// ✔ Active Mic Detect
-// ✔ AudioRecord Bench
-// ✔ RMS Analysis
-// ✔ Confidence Score
-// ✔ OK / WARN / ERROR grading
-//
-// Pure native Java — no SDKs
-// ============================================================
-
 package com.gel.cleaner;
 
 import android.content.Context;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.SystemClock;
 
+import java.util.Locale;
+
+/**
+ * ============================================================
+ * MicDiagnosticEngine — Hospital Edition (LOCKED)
+ * ------------------------------------------------------------
+ * Pure diagnostic engine (NO UI)
+ * Used by:
+ *  - Manual Labs (Mic check, Speaker feedback, Earpiece check)
+ *  - Auto Diagnosis (later)
+ *
+ * Measures:
+ *  - AudioRecord availability
+ *  - RMS amplitude
+ *  - Peak amplitude
+ *  - Silence detection
+ *  - Confidence grading
+ *
+ * Author: GDiolitsis Engine Lab (GEL)
+ * ============================================================
+ */
 public final class MicDiagnosticEngine {
 
-    // ------------------------------------------------------------
-    // CONFIG
-    // ------------------------------------------------------------
+    // =========================
+    // CONFIG (LOCKED)
+    // =========================
     private static final int SAMPLE_RATE = 44100;
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
-    private static final int FORMAT  = AudioFormat.ENCODING_PCM_16BIT;
+    private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
-    private static final int TEST_DURATION_MS = 3000; // 3 sec
-    private static final int RMS_MIN_SIGNAL   = 120;  // silence threshold
-    private static final int RMS_CLIP_LEVEL   = 25000;
+    private static final int TEST_DURATION_MS = 1800; // ~1.8 sec
+    private static final double SILENCE_RMS_THRESHOLD = 200.0;
+    private static final double GOOD_RMS_THRESHOLD = 800.0;
+    private static final double STRONG_RMS_THRESHOLD = 1500.0;
 
+    // Prevent instantiation
     private MicDiagnosticEngine() {}
 
-    // ------------------------------------------------------------
+    // =========================
     // RESULT MODEL
-    // ------------------------------------------------------------
-    public static class Result {
-        public boolean micActive;
-        public boolean micBusy;
-        public double rmsAvg;
-        public double rmsPeak;
-        public int confidence; // 0–100
-        public String grade;   // OK / WARN / ERROR
-        public String note;
+    // =========================
+    public static final class Result {
+
+        public enum Status {
+            OK,
+            WARN,
+            ERROR
+        }
+
+        public final boolean audioRecordStarted;
+        public final double rms;
+        public final double peak;
+        public final boolean silenceDetected;
+        public final String confidence;
+        public final Status status;
+        public final String note;
+
+        private Result(boolean audioRecordStarted,
+                       double rms,
+                       double peak,
+                       boolean silenceDetected,
+                       String confidence,
+                       Status status,
+                       String note) {
+
+            this.audioRecordStarted = audioRecordStarted;
+            this.rms = rms;
+            this.peak = peak;
+            this.silenceDetected = silenceDetected;
+            this.confidence = confidence;
+            this.status = status;
+            this.note = note;
+        }
+
+        public String toReportLine() {
+            return String.format(Locale.US,
+                    "MIC CHECK → %s | RMS: %.0f | PEAK: %.0f | SILENCE: %s | CONFIDENCE: %s",
+                    status.name(), rms, peak, silenceDetected ? "YES" : "NO", confidence);
+        }
     }
 
-    // ------------------------------------------------------------
-    // MAIN ENTRY
-    // ------------------------------------------------------------
-    public static Result run(Context ctx) {
+    // =========================
+    // MAIN ENTRY POINT
+    // =========================
+    public static Result run(Context context) {
 
-        Result r = new Result();
-
-        // --------------------------------------------------------
-        // 1️⃣ Active Mic / Busy Detect
-        // --------------------------------------------------------
-        AudioManager am = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
-
-        r.micActive = !am.isMicrophoneMute();
-        r.micBusy   = (am.getMode() == AudioManager.MODE_IN_CALL
-                     || am.getMode() == AudioManager.MODE_IN_COMMUNICATION);
-
-        if (!r.micActive) {
-            r.grade = "ERROR";
-            r.note  = "Microphone muted by system";
-            r.confidence = 0;
-            return r;
-        }
-
-        // --------------------------------------------------------
-        // 2️⃣ AudioRecord Bench
-        // --------------------------------------------------------
-        int minBuf = AudioRecord.getMinBufferSize(
+        int minBuffer = AudioRecord.getMinBufferSize(
                 SAMPLE_RATE, CHANNEL, FORMAT);
 
-        if (minBuf <= 0) {
-            r.grade = "ERROR";
-            r.note  = "AudioRecord unsupported on device";
-            r.confidence = 0;
-            return r;
+        if (minBuffer <= 0) {
+            return errorResult("AudioRecord buffer unavailable");
         }
 
-        AudioRecord rec = null;
+        AudioRecord record = null;
 
         try {
-            rec = new AudioRecord(
+            record = new AudioRecord(
                     MediaRecorder.AudioSource.MIC,
                     SAMPLE_RATE,
                     CHANNEL,
                     FORMAT,
-                    minBuf * 2
+                    minBuffer * 2
             );
 
-            if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
-                r.grade = "ERROR";
-                r.note  = "AudioRecord init failed";
-                r.confidence = 0;
-                return r;
+            if (record.getState() != AudioRecord.STATE_INITIALIZED) {
+                return errorResult("AudioRecord not initialized");
             }
 
-            short[] buffer = new short[minBuf];
+            record.startRecording();
+
+            if (record.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
+                return errorResult("Microphone not recording");
+            }
+
+            short[] buffer = new short[minBuffer];
             long start = SystemClock.elapsedRealtime();
 
-            double rmsSum = 0;
-            double rmsMax = 0;
-            int samples = 0;
-
-            rec.startRecording();
+            double sumSquares = 0;
+            double peak = 0;
+            long samples = 0;
 
             while (SystemClock.elapsedRealtime() - start < TEST_DURATION_MS) {
-
-                int read = rec.read(buffer, 0, buffer.length);
-                if (read <= 0) continue;
-
-                double rms = calcRms(buffer, read);
-                rmsSum += rms;
-                rmsMax = Math.max(rmsMax, rms);
-                samples++;
+                int read = record.read(buffer, 0, buffer.length);
+                if (read > 0) {
+                    for (int i = 0; i < read; i++) {
+                        double v = buffer[i];
+                        sumSquares += v * v;
+                        if (Math.abs(v) > peak)
+                            peak = Math.abs(v);
+                        samples++;
+                    }
+                }
             }
-
-            rec.stop();
 
             if (samples == 0) {
-                r.grade = "ERROR";
-                r.note  = "No audio samples captured";
-                r.confidence = 0;
-                return r;
+                return errorResult("No microphone samples captured");
             }
 
-            r.rmsAvg  = rmsSum / samples;
-            r.rmsPeak = rmsMax;
+            double rms = Math.sqrt(sumSquares / samples);
+            boolean silence = rms < SILENCE_RMS_THRESHOLD;
+
+            String confidence;
+            Result.Status status;
+            String note;
+
+            if (silence) {
+                confidence = "LOW";
+                status = Result.Status.ERROR;
+                note = "No usable microphone signal detected";
+            } else if (rms >= STRONG_RMS_THRESHOLD) {
+                confidence = "HIGH";
+                status = Result.Status.OK;
+                note = "Microphone signal strong and clear";
+            } else if (rms >= GOOD_RMS_THRESHOLD) {
+                confidence = "MEDIUM";
+                status = Result.Status.OK;
+                note = "Microphone signal detected normally";
+            } else {
+                confidence = "LOW";
+                status = Result.Status.WARN;
+                note = "Weak microphone signal detected";
+            }
+
+            return new Result(
+                    true,
+                    rms,
+                    peak,
+                    silence,
+                    confidence,
+                    status,
+                    note
+            );
 
         } catch (Throwable t) {
-
-            r.grade = "ERROR";
-            r.note  = "Mic access error: " + t.getClass().getSimpleName();
-            r.confidence = 0;
-            return r;
-
+            return errorResult("Mic exception: " + t.getClass().getSimpleName());
         } finally {
-            try { if (rec != null) rec.release(); } catch (Throwable ignore) {}
+            try {
+                if (record != null) {
+                    record.stop();
+                    record.release();
+                }
+            } catch (Throwable ignore) {}
         }
-
-        // --------------------------------------------------------
-        // 3️⃣ RMS → Confidence → Grade
-        // --------------------------------------------------------
-        if (r.rmsAvg < RMS_MIN_SIGNAL) {
-            r.grade = "ERROR";
-            r.note  = "No usable microphone signal";
-            r.confidence = 5;
-            return r;
-        }
-
-        if (r.rmsPeak >= RMS_CLIP_LEVEL) {
-            r.grade = "WARN";
-            r.note  = "Clipping detected (distortion)";
-            r.confidence = 55;
-            return r;
-        }
-
-        // Normal signal
-        r.confidence = mapConfidence(r.rmsAvg);
-
-        if (r.confidence >= 80) {
-            r.grade = "OK";
-            r.note  = "Microphone signal clean and stable";
-        } else {
-            r.grade = "WARN";
-            r.note  = "Microphone signal weak or noisy";
-        }
-
-        return r;
     }
 
-    // ------------------------------------------------------------
-    // HELPERS
-    // ------------------------------------------------------------
-    private static double calcRms(short[] buf, int len) {
-        double sum = 0;
-        for (int i = 0; i < len; i++) {
-            sum += buf[i] * buf[i];
-        }
-        return Math.sqrt(sum / len);
-    }
-
-    private static int mapConfidence(double rms) {
-        // Simple, deterministic mapping
-        if (rms >= 8000) return 95;
-        if (rms >= 4000) return 85;
-        if (rms >= 2000) return 75;
-        if (rms >= 1000) return 65;
-        return 50;
+    // =========================
+    // INTERNAL HELPERS
+    // =========================
+    private static Result errorResult(String note) {
+        return new Result(
+                false,
+                0,
+                0,
+                true,
+                "LOW",
+                Result.Status.ERROR,
+                note
+        );
     }
 }

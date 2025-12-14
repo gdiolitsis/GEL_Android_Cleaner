@@ -647,9 +647,6 @@ private String buildThermalInternalReport() {
 
     StringBuilder sb = new StringBuilder();
 
-    // ------------------------------------------------------------------------
-    // TITLE
-    // ------------------------------------------------------------------------
     sb.append("THERMAL SENSORS (INTERNAL)\n");
     sb.append("──────────────────────────\n");
 
@@ -665,35 +662,22 @@ private String buildThermalInternalReport() {
         return sb.toString();
     }
 
-    // ------------------------------------------------------------------------
-    // AGGREGATION MAP (MAX TEMP PER LABEL)
-    // ------------------------------------------------------------------------
     Map<String, Float> maxTemps = new HashMap<>();
 
     // ------------------------------------------------------------------------
-    // ZONES LOOP
+    // BASIC / HUMAN REPORT (ALL DEVICES)
     // ------------------------------------------------------------------------
     for (File zone : zones) {
         try {
             String type = readSysFile(zone, "type");
             String tempRaw = readSysFile(zone, "temp");
-
             if (type == null || tempRaw == null) continue;
 
             float tempC = Float.parseFloat(tempRaw.trim()) / 1000f;
+            if (tempC <= -100f || tempC == 0f) continue;
+
             String label = mapThermalType(type);
 
-            // ------------------------------------------------------------
-            // FILTER 1 — KERNEL GARBAGE / DUMMY VALUES
-            // ------------------------------------------------------------
-            if (tempC <= -100f) continue;     // -273°C dummy
-            if (tempC == 0.0f) continue;      // inactive
-            if (tempC < 5.0f && !label.equals("Battery"))
-                continue;
-
-            // ------------------------------------------------------------
-            // FILTER 2 — INTERNAL ONLY
-            // ------------------------------------------------------------
             boolean isInternal =
                     label.contains("CPU") ||
                     label.equals("GPU") ||
@@ -703,16 +687,6 @@ private String buildThermalInternalReport() {
 
             if (!isInternal) continue;
 
-            // ------------------------------------------------------------
-            // BATTERY SHELL — REALISTIC TEMPERATURE ONLY
-            // ------------------------------------------------------------
-            if (label.equals("Battery Shell")) {
-                if (tempC < 15f || tempC > 70f) continue;
-            }
-
-            // ------------------------------------------------------------
-            // AGGREGATE MAX TEMPERATURE PER LABEL
-            // ------------------------------------------------------------
             Float prev = maxTemps.get(label);
             if (prev == null || tempC > prev) {
                 maxTemps.put(label, tempC);
@@ -721,11 +695,7 @@ private String buildThermalInternalReport() {
         } catch (Throwable ignore) {}
     }
 
-    // ------------------------------------------------------------------------
-    // ORDERED OUTPUT (STRICT GEL ORDER)
-    // ------------------------------------------------------------------------
     final String FMT = "%-18s : %5.1f°C  (%s)\n";
-
     String[] order = {
             "CPU Core",
             "CPU Cluster 0",
@@ -737,33 +707,105 @@ private String buildThermalInternalReport() {
     };
 
     for (String key : order) {
-        Float tempC = maxTemps.get(key);
-        if (tempC != null) {
+        Float t = maxTemps.get(key);
+        if (t != null) {
             sb.append(String.format(
                     Locale.US,
                     FMT,
                     key,
-                    tempC,
-                    thermalState(tempC)
+                    t,
+                    thermalState(t)
             ));
         }
     }
 
     // ------------------------------------------------------------------------
-    // ADVANCED ACCESS (INFO ONLY)
+    // ROOT SECTION — REAL KERNEL DATA
     // ------------------------------------------------------------------------
-    sb.append("\nAdvanced Access : Requires root access\n");
+    if (isRooted) {
 
-    /*
-     * Root-only paths (kept for future use):
-     *
-     * /sys/class/thermal/thermal_zone*
-     * /sys/class/thermal/cooling_device*
-     * /sys/class/thermal/thermal_zone*/trip_point_*
-     */
+        sb.append("\nAdvanced Thermal (Root)\n");
+        sb.append("──────────────────────\n");
+
+        // ---- Thermal Zones with Trip Points ----
+        for (File zone : zones) {
+            try {
+                String type = readSysFile(zone, "type");
+                String tempRaw = readSysFile(zone, "temp");
+                if (type == null || tempRaw == null) continue;
+
+                float tempC = Float.parseFloat(tempRaw.trim()) / 1000f;
+
+                sb.append("\n")
+                  .append(zone.getName())
+                  .append(" [")
+                  .append(type.trim())
+                  .append("]\n");
+
+                sb.append("  Current Temp : ")
+                  .append(String.format(Locale.US, "%.1f°C", tempC))
+                  .append("\n");
+
+                // trip points
+                for (int i = 0; i < 10; i++) {
+                    String tp = readSysFile(zone, "trip_point_" + i + "_temp");
+                    String tpType = readSysFile(zone, "trip_point_" + i + "_type");
+                    if (tp == null || tpType == null) break;
+
+                    float tpC = Float.parseFloat(tp.trim()) / 1000f;
+                    sb.append("  Trip ")
+                      .append(i)
+                      .append(" (")
+                      .append(tpType.trim())
+                      .append(") : ")
+                      .append(String.format(Locale.US, "%.1f°C", tpC))
+                      .append("\n");
+                }
+
+            } catch (Throwable ignore) {}
+        }
+
+        // ---- Cooling Devices ----
+        File[] cooling =
+                thermalDir.listFiles((d, n) -> n.startsWith("cooling_device"));
+
+        if (cooling != null && cooling.length > 0) {
+            sb.append("\nCooling Devices\n");
+            sb.append("────────────────\n");
+
+            for (File cd : cooling) {
+                try {
+                    String type = readSysFile(cd, "type");
+                    String cur = readSysFile(cd, "cur_state");
+                    String max = readSysFile(cd, "max_state");
+
+                    sb.append(cd.getName());
+                    if (type != null) sb.append(" [").append(type.trim()).append("]");
+                    sb.append("\n");
+
+                    if (cur != null && max != null) {
+                        sb.append("  State : ")
+                          .append(cur.trim())
+                          .append(" / ")
+                          .append(max.trim())
+                          .append("\n");
+                    }
+
+                } catch (Throwable ignore) {}
+            }
+        }
+
+    } else {
+        sb.append("\nAdvanced Access : Requires root access\n");
+    }
 
     return sb.toString();
 }
+
+// ------------------------------------------------------------------------
+// ADVANCED ACCESS (INFO ONLY)
+// ------------------------------------------------------------------------
+sb.append("\nAdvanced Info: For detailed thermal and cooling information, requires root access\n");
 
     // ============================================================
     // Vulkan Info
@@ -1229,4 +1271,4 @@ private String padRight(String s, int n) {
     while (sb.length() < n) sb.append(' ');
     return sb.toString();
 }
-}
+                }

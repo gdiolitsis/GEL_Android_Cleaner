@@ -574,25 +574,41 @@ private String ipToStr(int ip) {
        ============================================================ */
     private void lab4MicManual() {
 
-        logSection("LAB 4 — Microphone Recording Check");
+    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
 
-        new Thread(() -> {
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
+    new Thread(() -> {
 
-            logInfo("Mic RMS: " + (int) r.rms);
-            logInfo("Mic Peak: " + (int) r.peak);
-            logInfo("Confidence: " + r.confidence);
+        MicDiagnosticEngine.Result bottom =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-            if (r.status == MicDiagnosticEngine.Result.Status.OK)
-                logOk("Microphone working normally");
-            else if (r.status == MicDiagnosticEngine.Result.Status.WARN)
-                logWarn("Microphone signal weak");
-            else
-                logError("Microphone NOT capturing usable signal");
+        logInfo("Bottom Mic RMS: " + (int) bottom.rms);
+        logInfo("Bottom Mic Peak: " + (int) bottom.peak);
+        logInfo("Bottom Mic Confidence: " + bottom.confidence);
 
-        }).start();
-    }
+        MicDiagnosticEngine.Result top =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+        logInfo("Top Mic RMS: " + (int) top.rms);
+        logInfo("Top Mic Peak: " + (int) top.peak);
+        logInfo("Top Mic Confidence: " + top.confidence);
+
+        // ---- FINAL VERDICT ----
+        if (bottom.status == MicDiagnosticEngine.Result.Status.OK &&
+            top.status == MicDiagnosticEngine.Result.Status.OK) {
+
+            logOk("Both microphones working normally");
+
+        } else if (bottom.status == MicDiagnosticEngine.Result.Status.FAIL ||
+                   top.status == MicDiagnosticEngine.Result.Status.FAIL) {
+
+            logError("One or more microphones NOT working correctly");
+
+        } else {
+            logWarn("Microphone signals detected but weak / inconsistent");
+        }
+
+    }).start();
+}
 
     /* ============================================================
        LAB 5 — Vibration Motor Test (AUTO)
@@ -635,32 +651,43 @@ private String ipToStr(int ip) {
 // ============================================================  
 // LABS 6–10: DISPLAY & SENSORS  
 // ============================================================  
-private void lab6DisplayTouch() {  
-    logLine();  
-    logInfo("LAB 6 — Display / Touch Basic Inspection (manual).");  
-    logInfo("1) Open a plain white or grey image full-screen.");  
-    logWarn("2) Look for yellow / purple tint, burn-in, strong shadows or vertical lines — possible panel damage.");  
-    logWarn("3) Slowly drag a finger across the entire screen (top to bottom, left to right).");  
-    logError("If there are dead touch zones or ghost touches -> digitizer / touch controller problem.");  
-}  
 
-private void lab7RotationManual() {  
-    logLine();  
-    logInfo("LAB 7 — Rotation / Auto-Rotate Check (manual).");  
-    logInfo("1) Make sure Auto-Rotate is enabled in Quick Settings.");  
-    logInfo("2) Open an app that supports rotation (gallery, browser, YouTube).");  
-    logWarn("If the UI never rotates despite Auto-Rotate ON -> suspect accelerometer failure or sensor-service bug.");  
-    logInfo("If rotation works only after reboot -> possible software/ROM issue, not pure hardware.");  
-}  
+/* ============================================================
+       LAB 6 - DISPLAY Tuch Inspection 
+       ============================================================ */
 
-private void lab8ProximityCall() {  
-    logLine();  
-    logInfo("LAB 8 — Proximity During Call (manual).");  
-    logInfo("1) Start a normal call and bring the phone to the ear.");  
-    logInfo("2) The display MUST turn off when the proximity area is covered.");  
-    logError("If the screen stays ON near the ear -> proximity sensor or glass / protector alignment problem.");  
-    logWarn("If the screen turns off but sometimes does not wake properly -> software/sensor edge cases.");  
-}  
+private void lab6DisplayTouch() {
+    startActivityForResult(
+            new Intent(this, TouchGridTestActivity.class),
+            6006
+    );
+}
+
+/* ============================================================
+       LAB 7 - AUTO ROTATION 
+       ============================================================ */
+
+private void lab7RotationManual() {
+    startActivityForResult(
+            new Intent(this, RotationCheckActivity.class),
+            7007
+    );
+}
+
+/* ============================================================
+       LAB 8 - PROXIMITY Sensor
+       ============================================================ */
+
+private void lab8ProximityCall() {
+    startActivityForResult(
+            new Intent(this, ProximityCheckActivity.class),
+            8008
+    );
+}
+
+/* ============================================================
+       LAB 9 - Sensors Quick Presence Check
+       ============================================================ */
 
 private void lab9SensorsQuick() {  
     logLine();  
@@ -689,6 +716,10 @@ private void checkSensor(SensorManager sm, int type, String name) {
     if (ok) logOk(name + " is reported as available.");  
     else logWarn(name + " is NOT reported — features depending on it will be limited or missing.");  
 }  
+
+/* ============================================================
+       LAB 10 - Full Sensor List for Report
+       ============================================================ */
 
 private void lab10FullSensorList() {  
     logLine();  
@@ -3650,41 +3681,40 @@ private void enableSingleExportButton() {
     });
 }
 
+@Override
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode == 6006) { // LAB 6 — Touch Grid
+        if (resultCode == RESULT_OK)
+            logOk("LAB 6 — Touch grid passed (all zones responsive)");
+        else
+            logError("LAB 6 — Touch grid failed (dead zone suspected)");
+
+        enableSingleExportButton();
+    }
+
+    if (requestCode == 7007) { // LAB 7 — Rotation
+        if (resultCode == RESULT_OK)
+            logOk("LAB 7 — Rotation detected via sensors");
+        else
+            logError("LAB 7 — No rotation detected");
+
+        enableSingleExportButton();
+    }
+
+    if (requestCode == 8008) { // LAB 8 — Proximity
+        if (resultCode == RESULT_OK)
+            logOk("LAB 8 — Proximity sensor responded correctly");
+        else
+            logError("LAB 8 — No proximity response detected");
+
+        enableSingleExportButton();
+    }
+}
+
 // ============================================================
 // END OF CLASS
 // ============================================================
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

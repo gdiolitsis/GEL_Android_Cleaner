@@ -598,8 +598,8 @@ private String ipToStr(int ip) {
 
             logOk("Both microphones working normally");
 
-        } else if (bottom.status == MicDiagnosticEngine.Result.Status.FAIL ||
-                   top.status == MicDiagnosticEngine.Result.Status.FAIL) {
+        } else if (bottom.status == MicDiagnosticEngine.Result.Status.ERROR ||
+                   top.status == MicDiagnosticEngine.Result.Status.ERROR) {
 
             logError("One or more microphones NOT working correctly");
 
@@ -3718,3 +3718,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 
 }
+

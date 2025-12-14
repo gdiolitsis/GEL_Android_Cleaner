@@ -744,6 +744,78 @@ private String buildThermalInternalReport() {
     return sb.toString();
 }
 
+// ============================================================================
+// SYS FILE READER
+// ============================================================================
+private String readSysFile(File base, String name) {
+    File f = new File(base, name);
+    if (!f.exists()) return null;
+
+    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        return br.readLine();
+    } catch (Throwable t) {
+        return null;
+    }
+}
+
+// ============================================================================
+// TEMPERATURE → STATE
+// ============================================================================
+private String thermalState(float tempC) {
+    if (tempC < 30f) return "COOL";
+    if (tempC < 45f) return "NORMAL";
+    if (tempC < 60f) return "WARM";
+    if (tempC < 75f) return "HOT";
+    return "CRITICAL";
+}
+
+// ============================================================================
+// THERMAL TYPE → HUMAN LABEL (INTERNAL ONLY)
+// ============================================================================
+private String mapThermalType(String type) {
+
+    if (type == null) return "";
+
+    String t = type.toLowerCase(Locale.US);
+
+    // Battery
+    if (t.contains("battery_therm") || t.contains("batt_therm"))
+        return "Battery Thermistor";
+    if (t.contains("battery"))
+        return "Battery";
+    if (t.contains("batt"))
+        return "Battery Shell";
+
+    // CPU
+    if (t.matches(".*cpu[-_]?0.*"))
+        return "CPU Cluster 0";
+    if (t.matches(".*cpu[-_]?1.*"))
+        return "CPU Cluster 1";
+    if (t.contains("cpu"))
+        return "CPU Core";
+
+    // Main silicon
+    if (t.contains("gpu"))
+        return "GPU";
+    if (t.contains("soc"))
+        return "SoC";
+
+    // Surface / internal
+    if (t.contains("skin"))
+        return "Device Skin";
+    if (t.contains("backlight"))
+        return "Backlight";
+
+    // Memory
+    if (t.contains("ddr"))
+        return "DDR Memory";
+    if (t.contains("mem"))
+        return "Memory";
+
+    // Fallback
+    return type;
+}
+
     // ============================================================
     // Vulkan Info
     // ============================================================

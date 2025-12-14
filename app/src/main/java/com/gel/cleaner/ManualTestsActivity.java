@@ -475,126 +475,162 @@ private String ipToStr(int ip) {
 // ============================================================  
 // LABS 1–5: AUDIO & VIBRATION  
 // ============================================================  
-private void lab1SpeakerTone() {  
-    logLine();  
-    logInfo("LAB 1 — Speaker Tone Test started (2 seconds).");  
-    new Thread(() -> {  
-        try {  
-            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);  
-            tg.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 2000);  
-            SystemClock.sleep(2200);  
-            tg.release();  
-            logOk("If a clear tone was heard from the main speaker, hardware path is basically OK.");  
-            logError("If NO sound was heard at all, suspect main speaker / audio amp / flex damage.");  
-        } catch (Exception e) {  
-            logError("Speaker Tone Test error: " + e.getMessage());  
-        }  
-    }).start();  
-}  
+/* ============================================================
+       LAB 1 — Speaker Tone Test (AUTO via Mic)
+       ============================================================ */
+    private void lab1SpeakerTone() {
 
-private void lab2SpeakerSweep() {  
-    logLine();  
-    logInfo("LAB 2 — Speaker Frequency Sweep (4 short tones).");  
-    new Thread(() -> {  
-        ToneGenerator tg = null;  
-        try {  
-            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);  
-            int[] tones = {  
-                    ToneGenerator.TONE_DTMF_1,  
-                    ToneGenerator.TONE_DTMF_3,  
-                    ToneGenerator.TONE_DTMF_6,  
-                    ToneGenerator.TONE_DTMF_9  
-            };  
-            for (int t : tones) {  
-                tg.startTone(t, 600);  
-                SystemClock.sleep(650);  
-            }  
-            logOk("If all tones were heard cleanly, the speaker handles a basic frequency range.");  
-            logWarn("If some tones were distorted or missing, suspect partial cone / mesh / water damage.");  
-        } catch (Exception e) {  
-            logError("Speaker Sweep error: " + e.getMessage());  
-        } finally {  
-            if (tg != null) tg.release();  
-        }  
-    }).start();  
-}  
+        logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
 
-private void lab3EarpieceManual() {  
-    logLine();  
-    logInfo("LAB 3 — Earpiece Call Check (manual instructions).");  
-    logInfo("1) Place a normal voice call or listen to a voicemail without loudspeaker.");  
-    logInfo("2) Hold the phone to the ear using the top earpiece only.");  
-    logWarn("If volume is very low or muffled while speakerphone is OK -> possible clogged mesh or earpiece wear.");  
-    logError("If there is absolutely no sound in earpiece but speakerphone works -> earpiece or audio path fault.");  
-}  
+        new Thread(() -> {
+            ToneGenerator tg = null;
+            try {
+                tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+                tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
+                SystemClock.sleep(1400);
 
-private void lab4MicManual() {  
-    logLine();  
-    logInfo("LAB 4 — Microphone Recording Check (manual).");  
-    logInfo("1) Open a voice recorder or send a voice message (WhatsApp / Viber etc.).");  
-    logInfo("2) Speak normally near the main microphone (bottom edge of the phone).");  
-    logInfo("3) Play back the recording and compare with a reference device if possible.");  
-    logWarn("If sound is very low / noisy / underwater -> suspect microphone hole clogged, mesh or early mic damage.");  
-    logError("If recording is totally silent on all apps -> strong indication of microphone / audio IC / flex failure.");  
-}  
+                MicDiagnosticEngine.Result r =
+                        MicDiagnosticEngine.run(this);
 
-private void lab5Vibration() {  
-    logLine();  
-    logInfo("LAB 5 — Vibration Motor Test (strong pattern).");  
+                logInfo("Mic RMS: " + (int) r.rms);
+                logInfo("Mic Peak: " + (int) r.peak);
+                logInfo("Confidence: " + r.confidence);
 
-    try {  
-        Vibrator v;  
+                switch (r.status) {
+                    case OK:
+                        logOk("Speaker output detected automatically");
+                        break;
+                    case WARN:
+                        logWarn("Speaker output weak or partially detected");
+                        break;
+                    default:
+                        logError("Speaker output NOT detected");
+                }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  
-            VibratorManager vm = (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);  
-            v = (vm != null) ? vm.getDefaultVibrator() : null;  
-        } else {  
-            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);  
-        }  
+            } catch (Throwable t) {
+                logError("Speaker tone test failed");
+            } finally {
+                if (tg != null) tg.release();
+            }
+        }).start();
+    }
 
-        if (v == null) {  
-            logError("No Vibrator service reported — framework issue.");  
-            return;  
-        }  
+    /* ============================================================
+       LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
+       ============================================================ */
+    private void lab2SpeakerSweep() {
 
-        if (!v.hasVibrator()) {  
-            logError("Device reports NO vibrator hardware.");  
-            return;  
-        }  
+        logSection("LAB 2 — Speaker Frequency Sweep");
 
-        try {  
-            int haptic = Settings.System.getInt(getContentResolver(),  
-                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);  
-            if (haptic == 0)  
-                logWarn("System haptic feedback is OFF (some OEMs block app vibration).");  
-        } catch (Exception ignored) {}  
+        new Thread(() -> {
+            ToneGenerator tg = null;
+            try {
+                tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 
-        try {  
-            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);  
-            if (nm != null && nm.getCurrentInterruptionFilter()  
-                    != NotificationManager.INTERRUPTION_FILTER_ALL) {  
-                logWarn("Do Not Disturb is ON — may suppress vibration on some devices.");  
-            }  
-        } catch (Exception ignored) {}  
+                int[] tones = {
+                        ToneGenerator.TONE_DTMF_1,
+                        ToneGenerator.TONE_DTMF_3,
+                        ToneGenerator.TONE_DTMF_6,
+                        ToneGenerator.TONE_DTMF_9
+                };
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {  
-            long[] pattern = {0, 300, 150, 300, 150, 450};  
-            int[] amps = {0, 255, 0, 255, 0, 255};  
-            v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));  
-        } else {  
-            //noinspection deprecation  
-            long[] pattern = {0, 300, 150, 300, 150, 450};  
-            //noinspection deprecation  
-            v.vibrate(pattern, -1);  
-        }  
+                for (int t : tones) {
+                    tg.startTone(t, 500);
+                    SystemClock.sleep(550);
+                }
 
-        logOk("If strong pulses were felt clearly, vibrator motor + driver are OK.");  
-        logWarn("If vibration is weak/intermittent, suspect worn motor or OEM suppression modes.");  
+                MicDiagnosticEngine.Result r =
+                        MicDiagnosticEngine.run(this);
 
-    } catch (Exception e) {  
-        logError("Vibration Test error: " + e.getMessage());  
-    }  
-}  
+                if (r.status == MicDiagnosticEngine.Result.Status.OK)
+                    logOk("Frequency sweep detected by microphone");
+                else if (r.status == MicDiagnosticEngine.Result.Status.WARN)
+                    logWarn("Frequency sweep partially detected");
+                else
+                    logError("Frequency sweep NOT detected");
+
+            } catch (Throwable t) {
+                logError("Speaker sweep failed");
+            } finally {
+                if (tg != null) tg.release();
+            }
+        }).start();
+    }
+
+    /* ============================================================
+       LAB 3 — Earpiece Call Check (Manual)
+       ============================================================ */
+    private void lab3EarpieceCheck() {
+
+        logSection("LAB 3 — Earpiece Call Check");
+
+        logInfo("Place a normal phone call (speaker OFF).");
+        logWarn("If other party hears you but you hear nothing → earpiece fault.");
+        logWarn("If you hear but they don’t → microphone path issue.");
+    }
+
+    /* ============================================================
+       LAB 4 — Microphone Recording Check (AUTO)
+       ============================================================ */
+    private void lab4MicManual() {
+
+        logSection("LAB 4 — Microphone Recording Check");
+
+        new Thread(() -> {
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
+
+            logInfo("Mic RMS: " + (int) r.rms);
+            logInfo("Mic Peak: " + (int) r.peak);
+            logInfo("Confidence: " + r.confidence);
+
+            if (r.status == MicDiagnosticEngine.Result.Status.OK)
+                logOk("Microphone working normally");
+            else if (r.status == MicDiagnosticEngine.Result.Status.WARN)
+                logWarn("Microphone signal weak");
+            else
+                logError("Microphone NOT capturing usable signal");
+
+        }).start();
+    }
+
+    /* ============================================================
+       LAB 5 — Vibration Motor Test (AUTO)
+       ============================================================ */
+    private void lab5Vibration() {
+
+        logSection("LAB 5 — Vibration Motor Test");
+
+        try {
+            Vibrator v;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager vm =
+                        (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                v = (vm != null) ? vm.getDefaultVibrator() : null;
+            } else {
+                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            }
+
+            if (v == null || !v.hasVibrator()) {
+                logError("No vibration motor detected");
+                return;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                long[] pattern = {0, 300, 150, 300, 150, 450};
+                int[] amps = {0, 255, 0, 255, 0, 255};
+                v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
+            } else {
+                v.vibrate(new long[]{0, 300, 150, 300, 150, 450}, -1);
+            }
+
+            logOk("Vibration pattern executed");
+
+        } catch (Throwable t) {
+            logError("Vibration test failed");
+        }
+    }
 
 // ============================================================  
 // LABS 6–10: DISPLAY & SENSORS  

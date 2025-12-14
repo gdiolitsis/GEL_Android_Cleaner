@@ -438,7 +438,7 @@ private String buildAndroidInfo() {
 private String buildCpuInfo() {
 
     StringBuilder sb = new StringBuilder();
-    final String FMT = "%-14s : %s\n";   // 👈 ΤΟ ΜΥΣΤΙΚΟ ΤΗΣ ΣΤΟΙΧΙΣΗΣ
+    final String FMT = "%-12s : %s\n";   // 👈 ΤΟ ΜΥΣΤΙΚΟ ΤΗΣ ΣΤΟΙΧΙΣΗΣ
 
     // ------------------------------------------------------------------------
     // ABI
@@ -641,7 +641,7 @@ private String buildCpuInfo() {
 
 // ============================================================================
 // THERMAL SENSORS — INTERNAL
-// Human Readable • Status Tagged • GEL Edition
+// Human Readable • Internal-Only • GEL Edition
 // ============================================================================
 private String buildThermalInternalReport() {
 
@@ -654,7 +654,6 @@ private String buildThermalInternalReport() {
     sb.append("──────────────────────────\n");
 
     File thermalDir = new File("/sys/class/thermal");
-
     if (!thermalDir.exists() || !thermalDir.isDirectory()) {
         sb.append("Thermal sensors not available on this device.\n");
         return sb.toString();
@@ -667,7 +666,7 @@ private String buildThermalInternalReport() {
     }
 
     // ------------------------------------------------------------------------
-    // ZONES
+    // ZONES LOOP
     // ------------------------------------------------------------------------
     for (File zone : zones) {
         try {
@@ -678,6 +677,33 @@ private String buildThermalInternalReport() {
 
             float tempC = Float.parseFloat(tempRaw.trim()) / 1000f;
             String label = mapThermalType(type);
+
+            // ------------------------------------------------------------
+            // FILTER 1 — KERNEL GARBAGE / DUMMY VALUES
+            // ------------------------------------------------------------
+            if (tempC <= -100f) continue;                 // -273°C dummy
+            if (tempC == 0.0f) continue;                  // inactive
+            if (tempC < 5.0f && !label.contains("Battery"))
+                continue;
+
+            // ------------------------------------------------------------
+            // FILTER 2 — INTERNAL ONLY (NO PERIPHERALS)
+            // ------------------------------------------------------------
+            boolean isInternal =
+                    label.contains("CPU") ||
+                    label.equals("GPU") ||
+                    label.equals("SoC") ||
+                    label.startsWith("Battery") ||
+                    label.contains("Skin") ||
+                    label.contains("Backlight") ||
+                    label.contains("DDR") ||
+                    label.contains("Memory");
+
+            if (!isInternal) continue;
+
+            // ------------------------------------------------------------
+            // STATE
+            // ------------------------------------------------------------
             String state = thermalState(tempC);
 
             sb.append(String.format(
@@ -720,17 +746,15 @@ private String readSysFile(File base, String name) {
 // TEMPERATURE → STATE
 // ============================================================================
 private String thermalState(float tempC) {
-
     if (tempC < 30f) return "COOL";
     if (tempC < 45f) return "NORMAL";
     if (tempC < 60f) return "WARM";
     if (tempC < 75f) return "HOT";
-
     return "CRITICAL";
 }
 
 // ============================================================================
-// THERMAL TYPE → HUMAN LABEL
+// THERMAL TYPE → HUMAN LABEL (GEL INTERNAL MAP)
 // ============================================================================
 private String mapThermalType(String type) {
 
@@ -752,29 +776,25 @@ private String mapThermalType(String type) {
     if (t.contains("cpu"))
         return "CPU Core";
 
-    // Main chips
+    // Main silicon
     if (t.contains("gpu"))
         return "GPU";
     if (t.contains("soc"))
         return "SoC";
 
-    // Power / Radio
-    if (t.contains("modem"))
-        return "Modem / Baseband";
-    if (t.contains("pmic"))
-        return "Power IC";
-    if (t.contains("charger"))
-        return "Charging Circuit";
-    if (t.contains("usb"))
-        return "USB Controller";
-
-    // Surface / ambient
+    // Surface
     if (t.contains("skin"))
         return "Device Skin";
-    if (t.contains("ambient"))
-        return "Ambient Sensor";
+    if (t.contains("backlight"))
+        return "Backlight";
 
-    // Fallback
+    // Memory
+    if (t.contains("ddr"))
+        return "DDR Memory";
+    if (t.contains("mem"))
+        return "Memory";
+
+    // Fallback (θα κοπεί από το internal filter)
     return type;
 }
 

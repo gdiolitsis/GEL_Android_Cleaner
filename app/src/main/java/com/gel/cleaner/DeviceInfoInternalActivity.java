@@ -508,7 +508,7 @@ private String buildCpuInfo() {
     String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
     if ((policy0 != null && !policy0.isEmpty()) ||
         (policy7 != null && !policy7.isEmpty())) {
-        sb.append(String.format(Locale.US, FMT, "Cluste", "big.LITTLE detected"));
+        sb.append(String.format(Locale.US, FMT, "Cluster", "big.LITTLE detected"));
     }
 
     // ------------------------------------------------------------------------
@@ -519,7 +519,7 @@ private String buildCpuInfo() {
         sb.append(String.format(
                 Locale.US,
                 FMT,
-                "SPU CHIP",
+                "CPU CHIP",
                 String.format(Locale.US, "%.1f°C (estimated)", socTemp)
         ));
     }

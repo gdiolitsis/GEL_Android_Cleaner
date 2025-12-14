@@ -1043,6 +1043,79 @@ private Double getSocTempCpuAverage() {
 }
 
 // ============================================================
+// THERMAL HELPERS — INTERNAL
+// ============================================================
+
+private String readSysFile(File base, String name) {
+    if (base == null) return null;
+    File f = new File(base, name);
+    if (!f.exists()) return null;
+
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(f));
+        String line = br.readLine();
+        return line != null ? line.trim() : null;
+    } catch (Throwable ignore) {
+        return null;
+    } finally {
+        try {
+            if (br != null) br.close();
+        } catch (Exception ignored) {}
+    }
+}
+
+private String thermalState(float tempC) {
+    if (tempC < 30f) return "COOL";
+    if (tempC < 45f) return "NORMAL";
+    if (tempC < 60f) return "WARM";
+    if (tempC < 75f) return "HOT";
+    return "CRITICAL";
+}
+
+private String mapThermalType(String type) {
+
+    if (type == null) return "";
+
+    String t = type.toLowerCase(Locale.US);
+
+    // Battery
+    if (t.contains("battery_therm") || t.contains("batt_therm"))
+        return "Battery Shell";
+    if (t.contains("battery"))
+        return "Battery";
+
+    // CPU
+    if (t.matches(".*cpu[-_]?0.*"))
+        return "CPU Cluster 0";
+    if (t.matches(".*cpu[-_]?1.*"))
+        return "CPU Cluster 1";
+    if (t.contains("cpu"))
+        return "CPU Core";
+
+    // Main silicon
+    if (t.contains("gpu"))
+        return "GPU";
+    if (t.contains("soc"))
+        return "SoC";
+
+    // Surface / internal
+    if (t.contains("skin"))
+        return "Device Skin";
+    if (t.contains("backlight"))
+        return "Backlight";
+
+    // Memory
+    if (t.contains("ddr"))
+        return "DDR Memory";
+    if (t.contains("mem"))
+        return "Memory";
+
+    // fallback
+    return type;
+}
+
+// ============================================================
 // GENERIC HELPERS (NON-ROOT)
 // ============================================================
 

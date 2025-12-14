@@ -13,21 +13,27 @@ import java.util.Locale;
  * MicDiagnosticEngine — Hospital Edition (LOCKED)
  * ------------------------------------------------------------
  * Pure diagnostic engine (NO UI)
- * Used by:
- *  - Manual Labs (Mic check, Speaker feedback, Earpiece check)
- *  - Auto Diagnosis (later)
  *
- * Measures:
- *  - AudioRecord availability
- *  - RMS amplitude
- *  - Peak amplitude
- *  - Silence detection
- *  - Confidence grading
+ * Supports:
+ *  - Bottom microphone (primary)
+ *  - Top microphone (secondary / noise-cancel)
+ *
+ * Used by:
+ *  - Manual Labs (Mic, Speaker auto verify)
+ *  - Auto Diagnosis (later)
  *
  * Author: GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public final class MicDiagnosticEngine {
+
+    // =========================
+    // MIC TYPE (LOCKED)
+    // =========================
+    public enum MicType {
+        BOTTOM, // Primary mic (calls, voice)
+        TOP     // Secondary mic (noise cancel)
+    }
 
     // =========================
     // CONFIG (LOCKED)
@@ -36,12 +42,11 @@ public final class MicDiagnosticEngine {
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
-    private static final int TEST_DURATION_MS = 1800; // ~1.8 sec
+    private static final int TEST_DURATION_MS = 1800;
     private static final double SILENCE_RMS_THRESHOLD = 200.0;
     private static final double GOOD_RMS_THRESHOLD = 800.0;
     private static final double STRONG_RMS_THRESHOLD = 1500.0;
 
-    // Prevent instantiation
     private MicDiagnosticEngine() {}
 
     // =========================
@@ -55,6 +60,7 @@ public final class MicDiagnosticEngine {
             ERROR
         }
 
+        public final MicType micType;
         public final boolean audioRecordStarted;
         public final double rms;
         public final double peak;
@@ -63,7 +69,8 @@ public final class MicDiagnosticEngine {
         public final Status status;
         public final String note;
 
-        private Result(boolean audioRecordStarted,
+        private Result(MicType micType,
+                       boolean audioRecordStarted,
                        double rms,
                        double peak,
                        boolean silenceDetected,
@@ -71,6 +78,7 @@ public final class MicDiagnosticEngine {
                        Status status,
                        String note) {
 
+            this.micType = micType;
             this.audioRecordStarted = audioRecordStarted;
             this.rms = rms;
             this.peak = peak;
@@ -82,28 +90,43 @@ public final class MicDiagnosticEngine {
 
         public String toReportLine() {
             return String.format(Locale.US,
-                    "MIC CHECK → %s | RMS: %.0f | PEAK: %.0f | SILENCE: %s | CONFIDENCE: %s",
-                    status.name(), rms, peak, silenceDetected ? "YES" : "NO", confidence);
+                    "%s MIC → %s | RMS: %.0f | PEAK: %.0f | SILENCE: %s | CONFIDENCE: %s",
+                    micType.name(),
+                    status.name(),
+                    rms,
+                    peak,
+                    silenceDetected ? "YES" : "NO",
+                    confidence
+            );
         }
     }
 
     // =========================
-    // MAIN ENTRY POINT
+    // PUBLIC ENTRY POINTS
     // =========================
+
+    /** Backward compatibility → defaults to BOTTOM mic */
     public static Result run(Context context) {
+        return run(context, MicType.BOTTOM);
+    }
+
+    /** Explicit mic selection */
+    public static Result run(Context context, MicType micType) {
+
+        int audioSource = resolveAudioSource(micType);
 
         int minBuffer = AudioRecord.getMinBufferSize(
                 SAMPLE_RATE, CHANNEL, FORMAT);
 
         if (minBuffer <= 0) {
-            return errorResult("AudioRecord buffer unavailable");
+            return errorResult(micType, "AudioRecord buffer unavailable");
         }
 
         AudioRecord record = null;
 
         try {
             record = new AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
+                    audioSource,
                     SAMPLE_RATE,
                     CHANNEL,
                     FORMAT,
@@ -111,13 +134,13 @@ public final class MicDiagnosticEngine {
             );
 
             if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-                return errorResult("AudioRecord not initialized");
+                return errorResult(micType, "AudioRecord not initialized");
             }
 
             record.startRecording();
 
             if (record.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
-                return errorResult("Microphone not recording");
+                return errorResult(micType, "Microphone not recording");
             }
 
             short[] buffer = new short[minBuffer];
@@ -141,7 +164,7 @@ public final class MicDiagnosticEngine {
             }
 
             if (samples == 0) {
-                return errorResult("No microphone samples captured");
+                return errorResult(micType, "No microphone samples captured");
             }
 
             double rms = Math.sqrt(sumSquares / samples);
@@ -170,6 +193,7 @@ public final class MicDiagnosticEngine {
             }
 
             return new Result(
+                    micType,
                     true,
                     rms,
                     peak,
@@ -180,7 +204,8 @@ public final class MicDiagnosticEngine {
             );
 
         } catch (Throwable t) {
-            return errorResult("Mic exception: " + t.getClass().getSimpleName());
+            return errorResult(micType,
+                    "Mic exception: " + t.getClass().getSimpleName());
         } finally {
             try {
                 if (record != null) {
@@ -192,10 +217,23 @@ public final class MicDiagnosticEngine {
     }
 
     // =========================
-    // INTERNAL HELPERS
+    // INTERNAL HELPERS (LOCKED)
     // =========================
-    private static Result errorResult(String note) {
+    private static int resolveAudioSource(MicType micType) {
+        switch (micType) {
+            case TOP:
+                // Secondary mic / noise cancel
+                return MediaRecorder.AudioSource.CAMCORDER;
+            case BOTTOM:
+            default:
+                // Primary mic
+                return MediaRecorder.AudioSource.MIC;
+        }
+    }
+
+    private static Result errorResult(MicType micType, String note) {
         return new Result(
+                micType,
                 false,
                 0,
                 0,

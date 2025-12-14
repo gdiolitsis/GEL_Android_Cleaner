@@ -560,7 +560,7 @@ private String ipToStr(int ip) {
     /* ============================================================
        LAB 3 — Earpiece Call Check (Manual)
        ============================================================ */
-    private void lab3EarpieceCheck() {
+    private void lab3EarpieceManual() {
 
         logSection("LAB 3 — Earpiece Call Check");
 
@@ -3655,6 +3655,7 @@ private void enableSingleExportButton() {
 // ============================================================
 
 }
+
 
 
 

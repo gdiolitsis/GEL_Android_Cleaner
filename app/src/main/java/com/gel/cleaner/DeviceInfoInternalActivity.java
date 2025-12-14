@@ -784,28 +784,26 @@ private String buildThermalInternalReport() {
                     sb.append("\n");
 
                     if (cur != null && max != null) {
-                        sb.append("  State : ")
-                          .append(cur.trim())
-                          .append(" / ")
-                          .append(max.trim())
-                          .append("\n");
-                    }
+                    sb.append("  State : ")
+                      .append(cur.trim())
+                      .append(" / ")
+                      .append(max.trim())
+                      .append("\n");
+                }
 
-                } catch (Throwable ignore) {}
-            }
+            } catch (Throwable ignore) {}
         }
-
-    } else {
-        sb.append("\nAdvanced Access : Requires root access\n");
     }
 
-    return sb.toString();
+} else {
+    // --------------------------------------------------------------------
+    // ADVANCED ACCESS (INFO ONLY)
+    // --------------------------------------------------------------------
+    sb.append("\nAdvanced Info: For detailed thermal and cooling information, requires root access\n");
 }
 
-// ------------------------------------------------------------------------
-// ADVANCED ACCESS (INFO ONLY)
-// ------------------------------------------------------------------------
-sb.append("\nAdvanced Info: For detailed thermal and cooling information, requires root access\n");
+return sb.toString();
+}
 
     // ============================================================
     // Vulkan Info
@@ -1271,4 +1269,4 @@ private String padRight(String s, int n) {
     while (sb.length() < n) sb.append(' ');
     return sb.toString();
 }
-                }
+}

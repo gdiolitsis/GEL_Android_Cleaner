@@ -668,7 +668,7 @@ private String buildThermalInternalReport() {
     // ------------------------------------------------------------------------
     // AGGREGATION MAP (MAX TEMP PER LABEL)
     // ------------------------------------------------------------------------
-    Map<String, Float> maxTemps = new LinkedHashMap<>();
+    Map<String, Float> maxTemps = new HashMap<>();
 
     // ------------------------------------------------------------------------
     // ZONES LOOP
@@ -686,8 +686,8 @@ private String buildThermalInternalReport() {
             // ------------------------------------------------------------
             // FILTER 1 — KERNEL GARBAGE / DUMMY VALUES
             // ------------------------------------------------------------
-            if (tempC <= -100f) continue;      // -273°C dummy
-            if (tempC == 0.0f) continue;       // inactive
+            if (tempC <= -100f) continue;     // -273°C dummy
+            if (tempC == 0.0f) continue;      // inactive
             if (tempC < 5.0f && !label.equals("Battery"))
                 continue;
 
@@ -697,13 +697,9 @@ private String buildThermalInternalReport() {
             boolean isInternal =
                     label.contains("CPU") ||
                     label.equals("GPU") ||
-                    label.equals("SoC") ||
                     label.equals("Battery") ||
-                    label.equals("Battery Shell") ||
-                    label.contains("Skin") ||
                     label.contains("Backlight") ||
-                    label.contains("DDR") ||
-                    label.contains("Memory");
+                    label.contains("DDR");
 
             if (!isInternal) continue;
 
@@ -711,9 +707,7 @@ private String buildThermalInternalReport() {
             // BATTERY SHELL — REALISTIC TEMPERATURE ONLY
             // ------------------------------------------------------------
             if (label.equals("Battery Shell")) {
-                if (tempC < 15f || tempC > 70f) {
-                    continue; // virtual / fuel-gauge helper
-                }
+                if (tempC < 15f || tempC > 70f) continue;
             }
 
             // ------------------------------------------------------------
@@ -728,29 +722,45 @@ private String buildThermalInternalReport() {
     }
 
     // ------------------------------------------------------------------------
-    // OUTPUT
+    // ORDERED OUTPUT (STRICT GEL ORDER)
     // ------------------------------------------------------------------------
     final String FMT = "%-18s : %5.1f°C  (%s)\n";
 
-    for (Map.Entry<String, Float> e : maxTemps.entrySet()) {
-        float tempC = e.getValue();
-        sb.append(String.format(
-                Locale.US,
-                FMT,
-                e.getKey(),
-                tempC,
-                thermalState(tempC)
-        ));
+    String[] order = {
+            "CPU Core",
+            "CPU Cluster 0",
+            "CPU Cluster 1",
+            "GPU",
+            "DDR Memory",
+            "Battery",
+            "Backlight"
+    };
+
+    for (String key : order) {
+        Float tempC = maxTemps.get(key);
+        if (tempC != null) {
+            sb.append(String.format(
+                    Locale.US,
+                    FMT,
+                    key,
+                    tempC,
+                    thermalState(tempC)
+            ));
+        }
     }
 
     // ------------------------------------------------------------------------
-    // ADVANCED ACCESS
+    // ADVANCED ACCESS (INFO ONLY)
     // ------------------------------------------------------------------------
-    sb.append("\nAdvanced Access : Root required\n");
-    sb.append("──────────────────────────\n");
-    sb.append("Thermal Zones   : /sys/class/thermal/thermal_zone*\n");
-    sb.append("Cooling Tables  : /sys/class/thermal/cooling_device*\n");
-    sb.append("Trip Points     : /sys/class/thermal/thermal_zone*/trip_point_*\n");
+    sb.append("\nAdvanced Access : Requires root access\n");
+
+    /*
+     * Root-only paths (kept for future use):
+     *
+     * /sys/class/thermal/thermal_zone*
+     * /sys/class/thermal/cooling_device*
+     * /sys/class/thermal/thermal_zone*/trip_point_*
+     */
 
     return sb.toString();
 }
@@ -800,6 +810,9 @@ private String buildThermalInternalReport() {
 private String buildRamInfo() {
     StringBuilder sb = new StringBuilder();
 
+    // ------------------------------------------------------------
+    // RAM Info (Framework) — LEAVE AS IS (MB)
+    // ------------------------------------------------------------
     try {
         ActivityManager am =
                 (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -826,7 +839,7 @@ private String buildRamInfo() {
     } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // /proc/meminfo (kernel view)
+    // /proc/meminfo (core) — CONVERT TO MB (Buffers stays kB)
     // ------------------------------------------------------------
     String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
     if (meminfo != null && !meminfo.isEmpty()) {
@@ -838,13 +851,24 @@ private String buildRamInfo() {
 
             if (line.startsWith("MemTotal:")
                     || line.startsWith("MemFree:")
-                    || line.startsWith("Buffers:")
                     || line.startsWith("Cached:")
                     || line.startsWith("Active:")
                     || line.startsWith("Inactive:")
                     || line.startsWith("SwapTotal:")
                     || line.startsWith("SwapFree:")) {
 
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    long kb = parseKb(parts[1]);
+                    sb.append(padRight(parts[0], 14))
+                      .append(": ")
+                      .append(kb / 1024)
+                      .append(" MB\n");
+                }
+            }
+
+            // Buffers — stay in kB
+            if (line.startsWith("Buffers:")) {
                 String[] parts = line.split(":");
                 if (parts.length == 2) {
                     sb.append(padRight(parts[0], 14))
@@ -857,36 +881,25 @@ private String buildRamInfo() {
     }
 
     // ------------------------------------------------------------
-    // ZRAM / SWAP (advanced)
+    // ZRAM (advanced)
     // ------------------------------------------------------------
-    boolean anyZram = false;
-    try {
-        String zramSize = readSysString("/sys/block/zram0/disksize");
-        if (zramSize != null && !zramSize.isEmpty()) {
-            sb.append(padRight("ZRAM Size", 14)).append(": ")
-              .append(zramSize).append(" bytes\n");
-            anyZram = true;
-        }
-
-        String zramStat = readTextFile("/sys/block/zram0/mm_stat", 1024);
-        if (zramStat != null && !zramStat.isEmpty()) {
-            sb.append(padRight("ZRAM Stats", 14)).append(": ")
-              .append(zramStat.replace("\n", " "))
-              .append("\n");
-            anyZram = true;
-        }
-    } catch (Throwable ignore) {}
-
-    if (!anyZram) {
+    if (!isRooted) {
         sb.append(padRight("ZRAM Details", 14))
-          .append(": Not exposed by this device.\n");
-    }
-
-    if (sb.length() == 0) {
-        sb.append("Unable to read RAM information.\n");
+          .append(": Requires Root access\n");
     }
 
     return sb.toString();
+}
+
+// ------------------------------------------------------------
+// Helper
+// ------------------------------------------------------------
+private long parseKb(String raw) {
+    try {
+        return Long.parseLong(raw.replaceAll("[^0-9]", ""));
+    } catch (Throwable t) {
+        return 0;
+    }
 }
  
 // ============================================================

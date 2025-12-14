@@ -686,25 +686,35 @@ private String buildThermalInternalReport() {
             // ------------------------------------------------------------
             // FILTER 1 — KERNEL GARBAGE / DUMMY VALUES
             // ------------------------------------------------------------
-            if (tempC <= -100f) continue;                 // -273°C dummy
-            if (tempC == 0.0f) continue;                  // inactive
-            if (tempC < 5.0f && !label.contains("Battery"))
+            if (tempC <= -100f) continue;      // -273°C dummy
+            if (tempC == 0.0f) continue;       // inactive
+            if (tempC < 5.0f && !label.equals("Battery"))
                 continue;
 
             // ------------------------------------------------------------
-            // FILTER 2 — INTERNAL ONLY (NO PERIPHERALS)
+            // FILTER 2 — INTERNAL ONLY
             // ------------------------------------------------------------
             boolean isInternal =
                     label.contains("CPU") ||
                     label.equals("GPU") ||
                     label.equals("SoC") ||
-                    label.startsWith("Battery") ||
+                    label.equals("Battery") ||
+                    label.equals("Battery Shell") ||
                     label.contains("Skin") ||
                     label.contains("Backlight") ||
                     label.contains("DDR") ||
                     label.contains("Memory");
 
             if (!isInternal) continue;
+
+            // ------------------------------------------------------------
+            // BATTERY SHELL — REALISTIC TEMPERATURE ONLY
+            // ------------------------------------------------------------
+            if (label.equals("Battery Shell")) {
+                if (tempC < 15f || tempC > 70f) {
+                    continue; // virtual / fuel-gauge helper
+                }
+            }
 
             // ------------------------------------------------------------
             // AGGREGATE MAX TEMPERATURE PER LABEL
@@ -718,7 +728,7 @@ private String buildThermalInternalReport() {
     }
 
     // ------------------------------------------------------------------------
-    // OUTPUT (ONE LINE PER INTERNAL COMPONENT)
+    // OUTPUT
     // ------------------------------------------------------------------------
     final String FMT = "%-18s : %5.1f°C  (%s)\n";
 
@@ -734,86 +744,15 @@ private String buildThermalInternalReport() {
     }
 
     // ------------------------------------------------------------------------
-    // ADVANCED NOTE
+    // ADVANCED ACCESS
     // ------------------------------------------------------------------------
-    sb.append("\nAdvanced Access\n");
-    sb.append("───────────────\n");
-    sb.append("Raw thermal zones, cooling tables and trip points\n");
-    sb.append("are available only with elevated (root) access.\n");
+    sb.append("\nAdvanced Access : Root required\n");
+    sb.append("──────────────────────────\n");
+    sb.append("Thermal Zones   : /sys/class/thermal/thermal_zone*\n");
+    sb.append("Cooling Tables  : /sys/class/thermal/cooling_device*\n");
+    sb.append("Trip Points     : /sys/class/thermal/thermal_zone*/trip_point_*\n");
 
     return sb.toString();
-}
-
-// ============================================================================
-// SYS FILE READER
-// ============================================================================
-private String readSysFile(File base, String name) {
-    File f = new File(base, name);
-    if (!f.exists()) return null;
-
-    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-        return br.readLine();
-    } catch (Throwable t) {
-        return null;
-    }
-}
-
-// ============================================================================
-// TEMPERATURE → STATE
-// ============================================================================
-private String thermalState(float tempC) {
-    if (tempC < 30f) return "COOL";
-    if (tempC < 45f) return "NORMAL";
-    if (tempC < 60f) return "WARM";
-    if (tempC < 75f) return "HOT";
-    return "CRITICAL";
-}
-
-// ============================================================================
-// THERMAL TYPE → HUMAN LABEL (INTERNAL ONLY)
-// ============================================================================
-private String mapThermalType(String type) {
-
-    if (type == null) return "";
-
-    String t = type.toLowerCase(Locale.US);
-
-    // Battery
-    if (t.contains("battery_therm") || t.contains("batt_therm"))
-        return "Battery Thermistor";
-    if (t.contains("battery"))
-        return "Battery";
-    if (t.contains("batt"))
-        return "Battery Shell";
-
-    // CPU
-    if (t.matches(".*cpu[-_]?0.*"))
-        return "CPU Cluster 0";
-    if (t.matches(".*cpu[-_]?1.*"))
-        return "CPU Cluster 1";
-    if (t.contains("cpu"))
-        return "CPU Core";
-
-    // Main silicon
-    if (t.contains("gpu"))
-        return "GPU";
-    if (t.contains("soc"))
-        return "SoC";
-
-    // Surface / internal
-    if (t.contains("skin"))
-        return "Device Skin";
-    if (t.contains("backlight"))
-        return "Backlight";
-
-    // Memory
-    if (t.contains("ddr"))
-        return "DDR Memory";
-    if (t.contains("mem"))
-        return "Memory";
-
-    // Fallback
-    return type;
 }
 
     // ============================================================

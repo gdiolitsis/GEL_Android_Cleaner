@@ -123,7 +123,7 @@ protected void onCreate(Bundle savedInstanceState) {
     if (txtGpuContent != null)
         setNeonSectionText(txtGpuContent, buildGpuInfo());
     if (txtThermalContent != null)
-        setNeonSectionText(txtThermalContent, buildThermalSensorsInfo());
+        setNeonSectionText(txtThermalContent, buildThermalInternalReport());
     if (txtVulkanContent != null)
         setNeonSectionText(txtVulkanContent, buildVulkanInfo());
     if (txtRamContent != null)

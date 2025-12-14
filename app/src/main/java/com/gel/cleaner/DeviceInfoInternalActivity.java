@@ -438,7 +438,7 @@ private String buildAndroidInfo() {
 private String buildCpuInfo() {
 
     StringBuilder sb = new StringBuilder();
-    final String FMT = "%-12s : %s\n";   // 👈 ΤΟ ΜΥΣΤΙΚΟ ΤΗΣ ΣΤΟΙΧΙΣΗΣ
+    final String FMT = "%-10s : %s\n";   // 👈 ΤΟ ΜΥΣΤΙΚΟ ΤΗΣ ΣΤΟΙΧΙΣΗΣ
 
     // ------------------------------------------------------------------------
     // ABI
@@ -508,7 +508,7 @@ private String buildCpuInfo() {
     String policy7 = readSysString("/sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq");
     if ((policy0 != null && !policy0.isEmpty()) ||
         (policy7 != null && !policy7.isEmpty())) {
-        sb.append(String.format(Locale.US, FMT, "Cluster Hint", "big.LITTLE detected"));
+        sb.append(String.format(Locale.US, FMT, "Cluste", "big.LITTLE detected"));
     }
 
     // ------------------------------------------------------------------------
@@ -519,7 +519,7 @@ private String buildCpuInfo() {
         sb.append(String.format(
                 Locale.US,
                 FMT,
-                "SPU CHIP Temp",
+                "SPU CHIP",
                 String.format(Locale.US, "%.1f°C (estimated)", socTemp)
         ));
     }
@@ -641,7 +641,7 @@ private String buildCpuInfo() {
 
 // ============================================================================
 // THERMAL SENSORS — INTERNAL
-// Human Readable • Internal-Only • GEL Edition
+// Human Readable • Internal-Only • Aggregated • GEL Edition
 // ============================================================================
 private String buildThermalInternalReport() {
 
@@ -664,6 +664,11 @@ private String buildThermalInternalReport() {
         sb.append("No thermal zones detected.\n");
         return sb.toString();
     }
+
+    // ------------------------------------------------------------------------
+    // AGGREGATION MAP (MAX TEMP PER LABEL)
+    // ------------------------------------------------------------------------
+    Map<String, Float> maxTemps = new LinkedHashMap<>();
 
     // ------------------------------------------------------------------------
     // ZONES LOOP
@@ -702,19 +707,30 @@ private String buildThermalInternalReport() {
             if (!isInternal) continue;
 
             // ------------------------------------------------------------
-            // STATE
+            // AGGREGATE MAX TEMPERATURE PER LABEL
             // ------------------------------------------------------------
-            String state = thermalState(tempC);
-
-            sb.append(String.format(
-                    Locale.US,
-                    "%-18s : %5.1f°C  (%s)\n",
-                    label,
-                    tempC,
-                    state
-            ));
+            Float prev = maxTemps.get(label);
+            if (prev == null || tempC > prev) {
+                maxTemps.put(label, tempC);
+            }
 
         } catch (Throwable ignore) {}
+    }
+
+    // ------------------------------------------------------------------------
+    // OUTPUT (ONE LINE PER INTERNAL COMPONENT)
+    // ------------------------------------------------------------------------
+    final String FMT = "%-18s : %5.1f°C  (%s)\n";
+
+    for (Map.Entry<String, Float> e : maxTemps.entrySet()) {
+        float tempC = e.getValue();
+        sb.append(String.format(
+                Locale.US,
+                FMT,
+                e.getKey(),
+                tempC,
+                thermalState(tempC)
+        ));
     }
 
     // ------------------------------------------------------------------------
@@ -726,76 +742,6 @@ private String buildThermalInternalReport() {
     sb.append("are available only with elevated (root) access.\n");
 
     return sb.toString();
-}
-
-// ============================================================================
-// SYS FILE READER
-// ============================================================================
-private String readSysFile(File base, String name) {
-    File f = new File(base, name);
-    if (!f.exists()) return null;
-
-    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-        return br.readLine();
-    } catch (Throwable t) {
-        return null;
-    }
-}
-
-// ============================================================================
-// TEMPERATURE → STATE
-// ============================================================================
-private String thermalState(float tempC) {
-    if (tempC < 30f) return "COOL";
-    if (tempC < 45f) return "NORMAL";
-    if (tempC < 60f) return "WARM";
-    if (tempC < 75f) return "HOT";
-    return "CRITICAL";
-}
-
-// ============================================================================
-// THERMAL TYPE → HUMAN LABEL (GEL INTERNAL MAP)
-// ============================================================================
-private String mapThermalType(String type) {
-
-    String t = type.toLowerCase(Locale.US);
-
-    // Battery
-    if (t.contains("battery_therm") || t.contains("batt_therm"))
-        return "Battery Thermistor";
-    if (t.contains("battery"))
-        return "Battery";
-    if (t.contains("batt"))
-        return "Battery Shell";
-
-    // CPU
-    if (t.matches(".*cpu[-_]?0.*"))
-        return "CPU Cluster 0";
-    if (t.matches(".*cpu[-_]?1.*"))
-        return "CPU Cluster 1";
-    if (t.contains("cpu"))
-        return "CPU Core";
-
-    // Main silicon
-    if (t.contains("gpu"))
-        return "GPU";
-    if (t.contains("soc"))
-        return "SoC";
-
-    // Surface
-    if (t.contains("skin"))
-        return "Device Skin";
-    if (t.contains("backlight"))
-        return "Backlight";
-
-    // Memory
-    if (t.contains("ddr"))
-        return "DDR Memory";
-    if (t.contains("mem"))
-        return "Memory";
-
-    // Fallback (θα κοπεί από το internal filter)
-    return type;
 }
 
     // ============================================================

@@ -662,7 +662,7 @@ private String buildThermalInternalReport() {
         return sb.toString();
     }
 
-    Map<String, Float> maxTemps = new HashMap<>();
+    Map<String, Float> maxTemps = new java.util.HashMap<>();
 
     // ------------------------------------------------------------------------
     // BASIC / HUMAN REPORT (ALL DEVICES)

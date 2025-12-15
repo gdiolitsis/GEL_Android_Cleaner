@@ -531,9 +531,6 @@ private String ipToStr(int ip) {
 // LABS 1–5: AUDIO & VIBRATION
 // ============================================================
 
-/* ============================================================
-   LAB 1 — Speaker Tone Test (AUTO via Mic)
-   ============================================================ */
 private void lab1SpeakerTone() {
 
     logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
@@ -559,14 +556,19 @@ private void lab1SpeakerTone() {
             } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
 
                 logWarn("Speaker output detected with low confidence");
-                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
-                        + "or device acoustic design.");
+                logInfo("If you heard the sound loud and clear, your device’s speaker may be working perfectly.");
+                logLabelValue(
+                        "Note",
+                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                );
 
-            } else {
+            } else { // ERROR → service-safe WARN
 
                 logWarn("Speaker output NOT clearly detected");
-                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
-                        + "or device acoustic design.");
+                logLabelValue(
+                        "Note",
+                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                );
             }
 
         } catch (Throwable t) {
@@ -615,14 +617,19 @@ private void lab2SpeakerSweep() {
             } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
 
                 logWarn("Frequency sweep detected with low confidence");
-                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
-                        + "or device acoustic design.");
+                logInfo("If you heard the sound changes clearly, your device’s speaker may be working perfectly.");
+                logLabelValue(
+                        "Note",
+                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                );
 
-            } else {
+            } else { // ERROR → service-safe WARN
 
                 logWarn("Frequency sweep NOT clearly detected");
-                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
-                        + "or device acoustic design.");
+                logLabelValue(
+                        "Note",
+                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                );
             }
 
         } catch (Throwable t) {
@@ -657,16 +664,16 @@ private void lab4MicManual() {
         MicDiagnosticEngine.Result bottom =
                 MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-        logLabelValue("Bottom Mic RMS: " + (int) bottom.rms);
-        logLabelValue("Bottom Mic Peak: " + (int) bottom.peak);
-        logLabelValue("Bottom Mic Confidence: " + bottom.confidence);
+        logLabelValue("Bottom Mic RMS", String.valueOf((int) bottom.rms));
+        logLabelValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
+        logLabelValue("Bottom Mic Confidence", bottom.confidence);
 
         MicDiagnosticEngine.Result top =
                 MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-        logLabelValue("Top Mic RMS: " + (int) top.rms);
-        logLabelValue("Top Mic Peak: " + (int) top.peak);
-        logLabelValue("Top Mic Confidence: " + top.confidence);
+        logLabelValue("Top Mic RMS", String.valueOf((int) top.rms));
+        logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
+        logLabelValue("Top Mic Confidence", top.confidence);
 
         boolean bottomSilent = bottom.silenceDetected;
         boolean topSilent    = top.silenceDetected;
@@ -680,13 +687,18 @@ private void lab4MicManual() {
         } else if (bottomSilent && topSilent) {
 
             logError("Both microphones show no usable signal");
-            logInfo("NOTE: This indicates a serious microphone, permission, or audio subsystem failure.");
+            logLabelValue(
+                "Note",
+                "This indicates a serious microphone, permission, or audio subsystem failure."
+            );
 
         } else {
 
-            logWarn("Microphone response detected but signal is weak or inconsistent");
-            logInfo("NOTE: Low mic response may be caused by system noise suppression, "
-                    + "directional microphone design, or quiet environment.");
+            logWarn("Microphone response detected, but signal is weak or inconsistent");
+            logLabelValue(
+                "Note",
+                "Low microphone response, may be caused by system noise suppression, directional microphone design, or quiet environment."
+            );
         }
 
     }).start();

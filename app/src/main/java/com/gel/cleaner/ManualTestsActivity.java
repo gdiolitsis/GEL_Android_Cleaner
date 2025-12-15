@@ -16,6 +16,10 @@
 // ============================================================
 package com.gel.cleaner;
 
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.pdf.PdfDocument;
@@ -412,6 +416,28 @@ private void logError(String msg) {
     appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");  
 }  
 
+private String formatLabelValue(String text) {
+    int idx = text.indexOf(":");
+    if (idx <= 0 || idx >= text.length() - 1)
+        return escape(text);
+
+    String label = text.substring(0, idx + 1);
+    String value = text.substring(idx + 1).trim();
+
+    return escape(label)
+            + " <font color='#39FF14'>"
+            + escape(value)
+            + "</font>";
+}
+
+
+private void logLabelValue(String label, String value) {
+    appendHtml(
+        escape(label) + ": "
+        + "<font color='#39FF14'>" + escape(value) + "</font>"
+    );
+}
+
 // --- GEL legacy aliases used in older labs (to avoid crashes) ---  
 private void logYellow(String msg) { logWarn(msg); }  
 private void logGreen(String msg)  { logOk(msg); }  
@@ -472,9 +498,9 @@ private String ipToStr(int ip) {
             ((ip >> 24) & 0xFF);  
 }  
 
-// ============================================================  
-// LABS 1–5: AUDIO & VIBRATION  
-// ============================================================  
+// ============================================================
+// LABS 1–5: AUDIO & VIBRATION
+// ============================================================
 
 /* ============================================================
    LAB 1 — Speaker Tone Test (AUTO via Mic)
@@ -493,27 +519,25 @@ private void lab1SpeakerTone() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
-            logInfo("Mic RMS: " + (int) r.rms);
-            logInfo("Mic Peak: " + (int) r.peak);
-            logInfo("Confidence: " + r.confidence);
+            logLabelValue("Mic RMS: " + (int) r.rms);
+            logLabelValue("Mic Peak: " + (int) r.peak);
+            logLabelValue("Confidence: " + r.confidence);
 
-            // 🔎 Interpret result
             if (r.status == MicDiagnosticEngine.Result.Status.OK) {
 
                 logOk("Speaker output detected automatically");
 
             } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
 
-                logWarn("Speaker output weak or partially detected");
-                logInfo("NOTE: Low mic response may be caused by system noise suppression "
-                        + "or device acoustic design. Not always a speaker failure.");
+                logWarn("Speaker output detected with low confidence");
+                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
+                        + "or device acoustic design.");
 
-            } else { // ERROR
+            } else {
 
-                // downgrade to WARN if weak response (service-safe)
                 logWarn("Speaker output NOT clearly detected");
-                logInfo("NOTE: Low mic response may be caused by system noise suppression "
-                        + "or device acoustic design. Not always a speaker failure.");
+                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
+                        + "or device acoustic design.");
             }
 
         } catch (Throwable t) {
@@ -524,7 +548,7 @@ private void lab1SpeakerTone() {
     }).start();
 }
 
-    /* ============================================================
+/* ============================================================
    LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
    ============================================================ */
 private void lab2SpeakerSweep() {
@@ -551,21 +575,25 @@ private void lab2SpeakerSweep() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
+            logLabelValue("Mic RMS: " + (int) r.rms);
+            logLabelValue("Mic Peak: " + (int) r.peak);
+            logLabelValue("Confidence: " + r.confidence);
+
             if (r.status == MicDiagnosticEngine.Result.Status.OK) {
 
                 logOk("Frequency sweep detected by microphone");
 
             } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
 
-                logWarn("Frequency sweep partially detected");
-                logInfo("NOTE: Low mic response may be caused by system noise suppression "
-                        + "or device acoustic design. Not always a speaker failure.");
+                logWarn("Frequency sweep detected with low confidence");
+                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
+                        + "or device acoustic design.");
 
-            } else { // ERROR
+            } else {
 
                 logWarn("Frequency sweep NOT clearly detected");
-                logInfo("NOTE: Low mic response may be caused by system noise suppression "
-                        + "or device acoustic design. Not always a speaker failure.");
+                logInfo("NOTE: Low microphone response may be caused by system noise suppression "
+                        + "or device acoustic design.");
             }
 
         } catch (Throwable t) {
@@ -576,20 +604,20 @@ private void lab2SpeakerSweep() {
     }).start();
 }
 
-    /* ============================================================
-       LAB 3 — Earpiece Call Check (Manual)
-       ============================================================ */
-    private void lab3EarpieceManual() {
+/* ============================================================
+   LAB 3 — Earpiece Call Check (Manual)
+   ============================================================ */
+private void lab3EarpieceManual() {
 
-        logSection("LAB 3 — Earpiece Call Check");
+    logSection("LAB 3 — Earpiece Call Check");
 
-        logInfo("Place a normal phone call (speaker OFF).");
-        logWarn("If other party hears you but you hear nothing → earpiece fault.");
-        logWarn("If you hear but they don’t → microphone path issue.");
-    }
+    logInfo("Place a normal phone call (speaker OFF).");
+    logWarn("If other party hears you but you hear nothing → earpiece fault.");
+    logWarn("If you hear but they don’t → microphone path issue.");
+}
 
-    /* ============================================================
-   LAB 4 — Microphone Recording Check (AUTO)
+/* ============================================================
+   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    ============================================================ */
 private void lab4MicManual() {
 
@@ -600,24 +628,23 @@ private void lab4MicManual() {
         MicDiagnosticEngine.Result bottom =
                 MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-        logInfo("Bottom Mic RMS: " + (int) bottom.rms);
-        logInfo("Bottom Mic Peak: " + (int) bottom.peak);
-        logInfo("Bottom Mic Confidence: " + bottom.confidence);
+        logLabelValue("Bottom Mic RMS: " + (int) bottom.rms);
+        logLabelValue("Bottom Mic Peak: " + (int) bottom.peak);
+        logLabelValue("Bottom Mic Confidence: " + bottom.confidence);
 
         MicDiagnosticEngine.Result top =
                 MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-        logInfo("Top Mic RMS: " + (int) top.rms);
-        logInfo("Top Mic Peak: " + (int) top.peak);
-        logInfo("Top Mic Confidence: " + top.confidence);
+        logLabelValue("Top Mic RMS: " + (int) top.rms);
+        logLabelValue("Top Mic Peak: " + (int) top.peak);
+        logLabelValue("Top Mic Confidence: " + top.confidence);
 
         boolean bottomSilent = bottom.silenceDetected;
         boolean topSilent    = top.silenceDetected;
 
-        // ---- FINAL VERDICT ----
         if (!bottomSilent && !topSilent &&
-            bottom.status == MicDiagnosticEngine.Result.Status.OK &&
-            top.status == MicDiagnosticEngine.Result.Status.OK) {
+                bottom.status == MicDiagnosticEngine.Result.Status.OK &&
+                top.status == MicDiagnosticEngine.Result.Status.OK) {
 
             logOk("Both microphones working normally");
 
@@ -630,49 +657,49 @@ private void lab4MicManual() {
 
             logWarn("Microphone response detected but signal is weak or inconsistent");
             logInfo("NOTE: Low mic response may be caused by system noise suppression, "
-                  + "directional microphone design, or quiet environment.");
+                    + "directional microphone design, or quiet environment.");
         }
 
     }).start();
 }
 
-    /* ============================================================
-       LAB 5 — Vibration Motor Test (AUTO)
-       ============================================================ */
-    private void lab5Vibration() {
+/* ============================================================
+   LAB 5 — Vibration Motor Test (AUTO)
+   ============================================================ */
+private void lab5Vibration() {
 
-        logSection("LAB 5 — Vibration Motor Test");
+    logSection("LAB 5 — Vibration Motor Test");
 
-        try {
-            Vibrator v;
+    try {
+        Vibrator v;
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                VibratorManager vm =
-                        (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-                v = (vm != null) ? vm.getDefaultVibrator() : null;
-            } else {
-                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            }
-
-            if (v == null || !v.hasVibrator()) {
-                logError("No vibration motor detected");
-                return;
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                long[] pattern = {0, 300, 150, 300, 150, 450};
-                int[] amps = {0, 255, 0, 255, 0, 255};
-                v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
-            } else {
-                v.vibrate(new long[]{0, 300, 150, 300, 150, 450}, -1);
-            }
-
-            logOk("Vibration pattern executed");
-
-        } catch (Throwable t) {
-            logError("Vibration test failed");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager vm =
+                    (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            v = (vm != null) ? vm.getDefaultVibrator() : null;
+        } else {
+            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         }
+
+        if (v == null || !v.hasVibrator()) {
+            logError("No vibration motor detected");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            long[] pattern = {0, 300, 150, 300, 150, 450};
+            int[] amps = {0, 255, 0, 255, 0, 255};
+            v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
+        } else {
+            v.vibrate(new long[]{0, 300, 150, 300, 150, 450}, -1);
+        }
+
+        logOk("Vibration pattern executed");
+
+    } catch (Throwable t) {
+        logError("Vibration test failed");
     }
+}
 
 // ============================================================  
 // LABS 6–10: DISPLAY & SENSORS  

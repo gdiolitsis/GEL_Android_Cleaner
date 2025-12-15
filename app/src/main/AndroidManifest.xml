@@ -32,32 +32,24 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- ============================================================
-         SIM / MOBILE NETWORK (FULL REQUIRED)
+         SIM / MOBILE NETWORK
          ============================================================ -->
-    <!-- Basic SIM access -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-
-    <!-- Needed for correct SIMSlotInfo + SubscriptionManager on Xiaomi/HyperOS -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
-
-    <!-- Required by MIUI for MCC/MNC, CarrierName & SubscriptionInfo list -->
     <uses-permission android:name="android.permission.READ_SMS"/>
-
-    <!-- READ_PRIVILEGED_PHONE_STATE only works for system apps, keep for compatibility -->
-    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
-        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+        tools:ignore="ProtectedPermissions"/>
 
     <!-- ============================================================
-         WIFI DIAGNOSTICS (LAB 11)
+         WIFI
          ============================================================ -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission
         android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation" />
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        android:usesPermissionFlags="neverForLocation"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <!-- ============================================================
          BLUETOOTH
@@ -70,11 +62,11 @@
          ============================================================ -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
-  <!-- ============================================================
-     AUDIO / MICROPHONE (DIAGNOSTICS & MIC BENCH)
-     ============================================================ -->
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-    
+    <!-- ============================================================
+         AUDIO / MICROPHONE
+         ============================================================ -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <!-- ============================================================
          VIBRATION
          ============================================================ -->
@@ -105,7 +97,7 @@
             </intent-filter>
         </activity>
 
-        <!-- OTHER ACTIVITIES (unchanged) -->
+        <!-- CORE ACTIVITIES -->
         <activity android:name=".AppListActivity" android:exported="false" android:screenOrientation="portrait"/>
         <activity android:name=".CleanerActivity" android:exported="false" android:screenOrientation="portrait"/>
         <activity android:name=".PermissionsActivity" android:exported="false"/>
@@ -118,6 +110,27 @@
         <activity android:name=".PerformanceDiagnosticsActivity" android:exported="false" android:screenOrientation="portrait"/>
         <activity android:name=".ServiceReportActivity" android:exported="false" android:screenOrientation="portrait"/>
         <activity android:name=".AutoDiagnosisActivity" android:exported="false" android:screenOrientation="portrait"/>
+
+        <!-- ============================================================
+             MANUAL LABS 6–8 : DISPLAY & SENSORS
+             ============================================================ -->
+        <activity
+            android:name=".TouchGridTestActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.GEL.DarkGold"/>
+
+        <activity
+            android:name=".RotationCheckActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:theme="@style/Theme.GEL.DarkGold"/>
+
+        <activity
+            android:name=".ProximityCheckActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.GEL.DarkGold"/>
 
         <!-- ACCESSIBILITY -->
         <service

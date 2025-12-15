@@ -53,6 +53,9 @@ import java.io.IOException;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.media.AudioTrack;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkCapabilities;
@@ -346,6 +349,18 @@ GELServiceLog.clear();
 logInfo(getString(R.string.manual_log_desc));
 }  // onCreate ends here
 
+// ============================================================
+// GEL legacy aliases (LOCKED)
+// ============================================================
+
+private void logYellow(String msg) { logWarn(msg); }
+private void logGreen(String msg)  { logOk(msg); }
+private void logRed(String msg)    { logError(msg); }
+
+private void logSection(String msg) {
+    logLine();
+    logInfo(msg);
+}
 
 // ============================================================
 // UI HELPERS (GEL LOCKED)

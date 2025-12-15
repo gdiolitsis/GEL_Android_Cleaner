@@ -183,7 +183,9 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     title.setPadding(0, 0, 0, dp(6));
     root.addView(title);
 
+    // ============================================================
     // SUBTITLE
+    // ============================================================
     TextView sub = new TextView(this);
     sub.setText(getString(R.string.manual_hospital_sub));
     sub.setTextSize(13f);
@@ -192,7 +194,9 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     sub.setPadding(0, 0, 0, dp(12));
     root.addView(sub);
 
+    // ============================================================
     // SECTION TITLE
+    // ============================================================
     TextView sec1 = new TextView(this);
     sec1.setText(getString(R.string.manual_section1));
     sec1.setTextSize(17f);
@@ -224,7 +228,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(body2);
 
     body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
-    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check (manual)", this::crcLab7Rotation);
+    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check (manual)", this::lab7RotationManual));
     body2.addView(makeTestButton("8. Proximity During Call (manual)", this::lab8ProximityCall));
     body2.addView(makeTestButton("9. Sensors Quick Presence Check", this::lab9SensorsQuick));
     body2.addView(makeTestButton("10. Full Sensor List for Report", this::lab10FullSensorList));
@@ -302,17 +306,42 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     txtLog.setTextColor(0xFFEEEEEE);
     txtLog.setPadding(0, dp(16), 0, dp(8));
     txtLog.setMovementMethod(new ScrollingMovementMethod());
-    txtLog.setText(Html.fromHtml(
-            "<b>" + getString(R.string.manual_log_title) + "</b><br>"
-    ));
-
+    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
     root.addView(txtLog);
 
     // ============================================================
-    // 🔥 CRITICAL FINAL BIND (DO NOT REMOVE)
+    // EXPORT BUTTON (DEFAULT ENABLED)
+    // ============================================================
+    Button btnExport = new Button(this);
+    btnExport.setText(getString(R.string.export_report_title)); // "Export Service Report"
+    btnExport.setAllCaps(false);
+    btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    btnExport.setTextColor(0xFFFFFFFF);
+
+    LinearLayout.LayoutParams lpExp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExp.setMargins(0, dp(12), 0, dp(20));
+    btnExport.setLayoutParams(lpExp);
+
+    btnExport.setOnClickListener(v -> {
+        Intent i = new Intent(ManualTestsActivity.this, ServiceReportActivity.class);
+        startActivity(i);
+    });
+
+    root.addView(btnExport);
+
+    // ============================================================
+    // FINAL BIND
     // ============================================================
     scroll.addView(root);
     setContentView(scroll);
+
+    // First log entry
+    GELServiceLog.clear();
+    logInfo(getString(R.string.manual_log_desc));
 }
 
 // ============================================================

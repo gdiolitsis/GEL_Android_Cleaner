@@ -2,6 +2,9 @@ package com.gel.cleaner;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,7 +29,8 @@ import android.widget.TextView;
  * No loops. No threads. No timers.
  * ============================================================
  */
-public class RotationCheckActivity extends Activity implements SensorEventListener {
+public class RotationCheckActivity extends Activity
+        implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -41,7 +45,7 @@ public class RotationCheckActivity extends Activity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Lock orientation to portrait (rotation detection via sensors, not UI)
+        // Lock orientation (sensor-based detection only)
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -49,26 +53,61 @@ public class RotationCheckActivity extends Activity implements SensorEventListen
         if (sensorManager != null)
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
+        // ============================================================
+        // ROOT
+        // ============================================================
         FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFF101010); // GEL black
 
+        // ============================================================
+        // INFO TEXT
+        // ============================================================
         TextView info = new TextView(this);
-        info.setText("Rotate the device to complete the test");
+        info.setText(
+                "Rotate the device slowly\n" +
+                "from portrait to landscape"
+        );
         info.setTextSize(18f);
+        info.setTextColor(Color.WHITE);
         info.setGravity(Gravity.CENTER);
-        root.addView(info);
+        info.setPadding(dp(16), dp(16), dp(16), dp(16));
 
-        Button end = new Button(this);
-        end.setText("End Test");
-        end.setAllCaps(false);
-
-        FrameLayout.LayoutParams lp =
+        FrameLayout.LayoutParams infoLp =
                 new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.WRAP_CONTENT
                 );
-        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        lp.bottomMargin = dp(24);
-        end.setLayoutParams(lp);
+        infoLp.gravity = Gravity.CENTER;
+        info.setLayoutParams(infoLp);
+
+        root.addView(info);
+
+        // ============================================================
+        // END TEST BUTTON (RED — SAME AS LAB 6 & 8)
+        // ============================================================
+        Button end = new Button(this);
+        end.setText("END TEST");
+        end.setAllCaps(false);
+        end.setTextColor(Color.WHITE);
+        end.setTextSize(15f);
+        end.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable redBtn = new GradientDrawable();
+        redBtn.setColor(0xFF8B0000);          // dark red
+        redBtn.setCornerRadius(dp(14));
+        redBtn.setStroke(dp(3), 0xFFFFD700);  // gold border
+        end.setBackground(redBtn);
+
+        FrameLayout.LayoutParams endLp =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        dp(56)
+                );
+        endLp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        endLp.leftMargin = dp(24);
+        endLp.rightMargin = dp(24);
+        endLp.bottomMargin = dp(24);
+        end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
             setResult(RESULT_CANCELED);
@@ -76,6 +115,7 @@ public class RotationCheckActivity extends Activity implements SensorEventListen
         });
 
         root.addView(end);
+
         setContentView(root);
     }
 
@@ -120,7 +160,9 @@ public class RotationCheckActivity extends Activity implements SensorEventListen
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // not used
+    }
 
     private int dp(int v) {
         float d = getResources().getDisplayMetrics().density;

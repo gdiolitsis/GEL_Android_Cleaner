@@ -1,7 +1,7 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,220 +9,177 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.widget.Toast;
 
 /**
  * ============================================================
- * LAB 6 — Touch Grid Diagnostic
+ * LAB 6 — Touch Grid Test (LOCKED)
  * ------------------------------------------------------------
- * Full-screen touch grid.
- * User must pass finger over ALL dots.
- * If all dots cleared → PASS automatically.
- * If any dead zone exists → user must END TEST → FAIL.
+ * Purpose:
+ *  - Detect dead touch zones / digitizer issues
+ *  - User must erase all dots by touching screen
+ *
+ * Rules:
+ *  - No threads
+ *  - No timers
+ *  - No loops
+ *  - No background work
+ *
+ * Exit:
+ *  - RESULT_OK       → all dots cleared
+ *  - RESULT_CANCELED → user pressed "End Test"
  *
  * Author: GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
-public class TouchGridTestActivity extends AppCompatActivity {
+public class TouchGridTestActivity extends Activity {
 
     private TouchGridView gridView;
-    private boolean passed = false;
+    private Button endButton;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Root
+        // 🔒 Force portrait to avoid rotation issues during test
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        // 🔒 Keep screen on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
 
-        // Grid view
-        gridView = new TouchGridView(this, () -> {
-            // ALL DOTS CLEARED
-            passed = true;
-            finishWithResult(Activity.RESULT_OK);
+        gridView = new TouchGridView(this);
+        root.addView(gridView);
+
+        endButton = new Button(this);
+        endButton.setText("End Test");
+        endButton.setAllCaps(false);
+        endButton.setTextSize(16f);
+        endButton.setTextColor(Color.WHITE);
+        endButton.setBackgroundColor(0xFF8B0000); // dark red
+
+        FrameLayout.LayoutParams lp =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        lp.bottomMargin = dp(20);
+
+        endButton.setLayoutParams(lp);
+
+        endButton.setOnClickListener(v -> {
+            setResult(RESULT_CANCELED);
+            finish();
         });
 
-        root.addView(gridView,
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT
-                ));
-
-        // Overlay controls (top + bottom)
-        LinearLayout overlay = new LinearLayout(this);
-        overlay.setOrientation(LinearLayout.VERTICAL);
-        overlay.setGravity(Gravity.CENTER_HORIZONTAL);
-        overlay.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-        // Title
-        TextView title = new TextView(this);
-        title.setText("LAB 6 — Touch Grid Test");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        overlay.addView(title);
-
-        // Instruction
-        TextView info = new TextView(this);
-        info.setText("Swipe your finger across the entire screen.\nAll dots must disappear.");
-        info.setTextColor(0xFF39FF14); // GEL green
-        info.setTextSize(14f);
-        info.setGravity(Gravity.CENTER_HORIZONTAL);
-        info.setPadding(0, dp(6), 0, dp(12));
-        overlay.addView(info);
-
-        // END TEST button (always visible)
-        Button end = new Button(this);
-        end.setText("END TEST");
-        end.setAllCaps(false);
-        end.setTextColor(Color.WHITE);
-        end.setBackgroundColor(0xFF8B0000); // dark red
-        end.setOnClickListener(v -> finishWithResult(Activity.RESULT_CANCELED));
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lp.topMargin = dp(12);
-        overlay.addView(end, lp);
-
-        FrameLayout.LayoutParams olp =
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        Gravity.TOP
-                );
-
-        root.addView(overlay, olp);
+        root.addView(endButton);
 
         setContentView(root);
-    }
 
-    private void finishWithResult(int result) {
-        setResult(result);
-        finish();
+        Toast.makeText(
+                this,
+                "Touch all dots to complete the test",
+                Toast.LENGTH_SHORT
+        ).show();
     }
 
     private int dp(int v) {
-        return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
     }
 
     // ============================================================
     // TOUCH GRID VIEW
     // ============================================================
-    private static class TouchGridView extends View {
+    private class TouchGridView extends View {
 
-        interface OnGridComplete {
-            void onComplete();
-        }
+        private final int COLS = 8;
+        private final int ROWS = 12;
 
-        private static class Dot {
-            float x, y;
-            boolean cleared = false;
-        }
+        private boolean[][] cleared;
+        private Paint dotPaint;
+        private Paint clearedPaint;
 
-        private final List<Dot> dots = new ArrayList<>();
-        private final Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint clearedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final float radius;
-        private final OnGridComplete callback;
+        private float cellW, cellH;
+        private float radius;
 
-        TouchGridView(Context ctx, OnGridComplete cb) {
+        public TouchGridView(Activity ctx) {
             super(ctx);
-            this.callback = cb;
-            radius = dp(ctx, 14);
 
-            dotPaint.setColor(Color.RED);
-            clearedPaint.setColor(0xFF39FF14); // green
+            cleared = new boolean[ROWS][COLS];
+
+            dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            dotPaint.setColor(Color.YELLOW);
+
+            clearedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            clearedPaint.setColor(Color.BLACK);
         }
 
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
-            dots.clear();
 
-            // GRID SIZE (LOCKED)
-            int cols = 6;
-            int rows = 10;
-
-            float dx = w / (float) (cols + 1);
-            float dy = h / (float) (rows + 1);
-
-            for (int r = 1; r <= rows; r++) {
-                for (int c = 1; c <= cols; c++) {
-                    Dot d = new Dot();
-                    d.x = c * dx;
-                    d.y = r * dy;
-                    dots.add(d);
-                }
-            }
+            cellW = w / (float) COLS;
+            cellH = h / (float) ROWS;
+            radius = Math.min(cellW, cellH) * 0.25f;
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            for (Dot d : dots) {
-                canvas.drawCircle(
-                        d.x,
-                        d.y,
-                        radius,
-                        d.cleared ? clearedPaint : dotPaint
-                );
+
+            for (int r = 0; r < ROWS; r++) {
+                for (int c = 0; c < COLS; c++) {
+
+                    float cx = c * cellW + cellW / 2f;
+                    float cy = r * cellH + cellH / 2f;
+
+                    if (!cleared[r][c]) {
+                        canvas.drawCircle(cx, cy, radius, dotPaint);
+                    }
+                }
             }
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
 
-            if (event.getAction() == MotionEvent.ACTION_MOVE ||
-                event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN ||
+                event.getAction() == MotionEvent.ACTION_MOVE) {
 
-                float x = event.getX();
-                float y = event.getY();
+                int c = (int) (event.getX() / cellW);
+                int r = (int) (event.getY() / cellH);
 
-                boolean anyChange = false;
+                if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                    if (!cleared[r][c]) {
+                        cleared[r][c] = true;
+                        invalidate();
 
-                for (Dot d : dots) {
-                    if (!d.cleared) {
-                        float dx = x - d.x;
-                        float dy = y - d.y;
-                        if (dx * dx + dy * dy <= radius * radius) {
-                            d.cleared = true;
-                            anyChange = true;
+                        if (allCleared()) {
+                            setResult(RESULT_OK);
+                            finish();
                         }
                     }
                 }
-
-                if (anyChange) {
-                    invalidate();
-                    if (allCleared()) {
-                        callback.onComplete();
-                    }
-                }
+                return true;
             }
-            return true;
+            return false;
         }
 
         private boolean allCleared() {
-            for (Dot d : dots) {
-                if (!d.cleared) return false;
+            for (int r = 0; r < ROWS; r++) {
+                for (int c = 0; c < COLS; c++) {
+                    if (!cleared[r][c])
+                        return false;
+                }
             }
             return true;
-        }
-
-        private static float dp(Context c, int v) {
-            return v * c.getResources().getDisplayMetrics().density;
         }
     }
 }

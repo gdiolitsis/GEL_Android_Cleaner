@@ -1,141 +1,129 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Color;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * ============================================================
- * LAB 7 — Rotation Diagnostic (Sensor-based)
+ * LAB 7 — Rotation Check (LOCKED)
  * ------------------------------------------------------------
- * Detects real device rotation via sensors.
- * App remains portrait-locked.
+ * Detects real device rotation via accelerometer
  *
- * PASS: rotation detected + user confirms.
- * FAIL: user ends test without rotation.
+ * Exit:
+ *  - RESULT_OK       → rotation detected
+ *  - RESULT_CANCELED → user pressed "End Test"
+ *
+ * No loops. No threads. No timers.
  * ============================================================
  */
-public class RotationCheckActivity extends AppCompatActivity
-        implements SensorEventListener {
+public class RotationCheckActivity extends Activity implements SensorEventListener {
 
-    private SensorManager sm;
-    private Sensor accel;
-    private boolean rotationDetected = false;
-    private Button okBtn;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+
+    private float lastX = 0;
+    private float lastY = 0;
+    private boolean initialized = false;
+
+    private static final float ROTATION_THRESHOLD = 4.0f;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accel = sm != null ? sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) : null;
+        // Lock orientation to portrait (rotation detection via sensors, not UI)
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        // ---------- UI ----------
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sensorManager != null)
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.BLACK);
-
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setPadding(dp(24), dp(24), dp(24), dp(24));
-
-        TextView title = new TextView(this);
-        title.setText("LAB 7 — Rotation Check");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setGravity(Gravity.CENTER);
-        box.addView(title);
 
         TextView info = new TextView(this);
-        info.setText("Rotate the device to landscape.\nSensor detection required.");
-        info.setTextColor(0xFF39FF14);
-        info.setTextSize(14f);
+        info.setText("Rotate the device to complete the test");
+        info.setTextSize(18f);
         info.setGravity(Gravity.CENTER);
-        info.setPadding(0, dp(12), 0, dp(20));
-        box.addView(info);
-
-        okBtn = new Button(this);
-        okBtn.setText("OK");
-        okBtn.setEnabled(false);
-        okBtn.setAllCaps(false);
-        okBtn.setOnClickListener(v -> finishWithResult(Activity.RESULT_OK));
-        box.addView(okBtn,
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, dp(52)));
+        root.addView(info);
 
         Button end = new Button(this);
-        end.setText("END TEST");
+        end.setText("End Test");
         end.setAllCaps(false);
-        end.setBackgroundColor(0xFF8B0000);
-        end.setTextColor(Color.WHITE);
-        end.setOnClickListener(v -> finishWithResult(Activity.RESULT_CANCELED));
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
-        lp.topMargin = dp(12);
-        box.addView(end, lp);
-
-        root.addView(box,
+        FrameLayout.LayoutParams lp =
                 new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT));
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        lp.bottomMargin = dp(24);
+        end.setLayoutParams(lp);
 
+        end.setOnClickListener(v -> {
+            setResult(RESULT_CANCELED);
+            finish();
+        });
+
+        root.addView(end);
         setContentView(root);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (sm != null && accel != null)
-            sm.registerListener(this, accel, SensorManager.SENSOR_DELAY_NORMAL);
+        if (sensorManager != null && accelerometer != null) {
+            sensorManager.registerListener(
+                    this,
+                    accelerometer,
+                    SensorManager.SENSOR_DELAY_UI
+            );
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (sm != null)
-            sm.unregisterListener(this);
+        if (sensorManager != null)
+            sensorManager.unregisterListener(this);
     }
 
     @Override
-    public void onSensorChanged(SensorEvent e) {
-        if (rotationDetected) return;
+    public void onSensorChanged(SensorEvent event) {
+        float x = event.values[0];
+        float y = event.values[1];
 
-        float x = e.values[0];
-        float y = e.values[1];
+        if (!initialized) {
+            lastX = x;
+            lastY = y;
+            initialized = true;
+            return;
+        }
 
-        // Portrait ≈ |y| > |x|
-        // Landscape ≈ |x| > |y|
-        if (Math.abs(x) > Math.abs(y) + 2f) {
-            rotationDetected = true;
-            okBtn.setEnabled(true);
-            okBtn.setText("OK (Rotation detected)");
+        float dx = Math.abs(x - lastX);
+        float dy = Math.abs(y - lastY);
+
+        if (dx > ROTATION_THRESHOLD || dy > ROTATION_THRESHOLD) {
+            setResult(RESULT_OK);
+            finish();
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    private void finishWithResult(int r) {
-        setResult(r);
-        finish();
-    }
-
     private int dp(int v) {
-        return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
     }
 }

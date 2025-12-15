@@ -3953,6 +3953,62 @@ private void enableSingleExportButton() {
     });
 }
 
+/* ============================================================
+   Earpiece test tone — 220Hz (CALL PATH SAFE)
+   ============================================================ */
+private void playEarpieceTestTone220Hz(int durationMs) {
+    try {
+        int sampleRate = 8000;
+        int samples = (int) ((durationMs / 1000f) * sampleRate);
+        if (samples <= 0) samples = sampleRate / 2;
+
+        short[] buffer = new short[samples];
+        double freq = 220.0;
+
+        for (int i = 0; i < samples; i++) {
+            double t = i / (double) sampleRate;
+            buffer[i] = (short) (Math.sin(2 * Math.PI * freq * t) * 9000);
+        }
+
+        AudioTrack track;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            track = new AudioTrack(
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build(),
+                    new AudioFormat.Builder()
+                            .setSampleRate(sampleRate)
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build(),
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+            );
+        } else {
+            track = new AudioTrack(
+                    AudioManager.STREAM_VOICE_CALL,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC
+            );
+        }
+
+        track.write(buffer, 0, buffer.length);
+        track.play();
+
+        SystemClock.sleep(durationMs + 80);
+
+        try { track.stop(); } catch (Throwable ignored) {}
+        try { track.release(); } catch (Throwable ignored) {}
+
+    } catch (Throwable ignored) {}
+}
+
 @Override
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     super.onActivityResult(requestCode, resultCode, data);

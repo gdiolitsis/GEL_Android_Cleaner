@@ -475,87 +475,106 @@ private String ipToStr(int ip) {
 // ============================================================  
 // LABS 1–5: AUDIO & VIBRATION  
 // ============================================================  
+
 /* ============================================================
-       LAB 1 — Speaker Tone Test (AUTO via Mic)
-       ============================================================ */
-    private void lab1SpeakerTone() {
+   LAB 1 — Speaker Tone Test (AUTO via Mic)
+   ============================================================ */
+private void lab1SpeakerTone() {
 
-        logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
+    logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
 
-        new Thread(() -> {
-            ToneGenerator tg = null;
-            try {
-                tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
-                tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
-                SystemClock.sleep(1400);
+    new Thread(() -> {
+        ToneGenerator tg = null;
+        try {
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+            tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
+            SystemClock.sleep(1400);
 
-                MicDiagnosticEngine.Result r =
-                        MicDiagnosticEngine.run(this);
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
 
-                logInfo("Mic RMS: " + (int) r.rms);
-                logInfo("Mic Peak: " + (int) r.peak);
-                logInfo("Confidence: " + r.confidence);
+            logInfo("Mic RMS: " + (int) r.rms);
+            logInfo("Mic Peak: " + (int) r.peak);
+            logInfo("Confidence: " + r.confidence);
 
-                switch (r.status) {
-                    case OK:
-                        logOk("Speaker output detected automatically");
-                        break;
-                    case WARN:
-                        logWarn("Speaker output weak or partially detected");
-                        break;
-                    default:
-                        logError("Speaker output NOT detected");
-                }
+            // 🔎 Interpret result
+            if (r.status == MicDiagnosticEngine.Result.Status.OK) {
 
-            } catch (Throwable t) {
-                logError("Speaker tone test failed");
-            } finally {
-                if (tg != null) tg.release();
+                logOk("Speaker output detected automatically");
+
+            } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
+
+                logWarn("Speaker output weak or partially detected");
+                logInfo("NOTE: Low mic response may be caused by system noise suppression "
+                        + "or device acoustic design. Not always a speaker failure.");
+
+            } else { // ERROR
+
+                // downgrade to WARN if weak response (service-safe)
+                logWarn("Speaker output NOT clearly detected");
+                logInfo("NOTE: Low mic response may be caused by system noise suppression "
+                        + "or device acoustic design. Not always a speaker failure.");
             }
-        }).start();
-    }
+
+        } catch (Throwable t) {
+            logError("Speaker tone test failed");
+        } finally {
+            if (tg != null) tg.release();
+        }
+    }).start();
+}
 
     /* ============================================================
-       LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
-       ============================================================ */
-    private void lab2SpeakerSweep() {
+   LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
+   ============================================================ */
+private void lab2SpeakerSweep() {
 
-        logSection("LAB 2 — Speaker Frequency Sweep");
+    logSection("LAB 2 — Speaker Frequency Sweep");
 
-        new Thread(() -> {
-            ToneGenerator tg = null;
-            try {
-                tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+    new Thread(() -> {
+        ToneGenerator tg = null;
+        try {
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 
-                int[] tones = {
-                        ToneGenerator.TONE_DTMF_1,
-                        ToneGenerator.TONE_DTMF_3,
-                        ToneGenerator.TONE_DTMF_6,
-                        ToneGenerator.TONE_DTMF_9
-                };
+            int[] tones = {
+                    ToneGenerator.TONE_DTMF_1,
+                    ToneGenerator.TONE_DTMF_3,
+                    ToneGenerator.TONE_DTMF_6,
+                    ToneGenerator.TONE_DTMF_9
+            };
 
-                for (int t : tones) {
-                    tg.startTone(t, 500);
-                    SystemClock.sleep(550);
-                }
-
-                MicDiagnosticEngine.Result r =
-                        MicDiagnosticEngine.run(this);
-
-                if (r.status == MicDiagnosticEngine.Result.Status.OK)
-                    logOk("Frequency sweep detected by microphone");
-                else if (r.status == MicDiagnosticEngine.Result.Status.WARN)
-                    logWarn("Frequency sweep partially detected");
-                else
-                    logError("Frequency sweep NOT detected");
-
-            } catch (Throwable t) {
-                logError("Speaker sweep failed");
-            } finally {
-                if (tg != null) tg.release();
+            for (int t : tones) {
+                tg.startTone(t, 500);
+                SystemClock.sleep(550);
             }
-        }).start();
-    }
+
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
+
+            if (r.status == MicDiagnosticEngine.Result.Status.OK) {
+
+                logOk("Frequency sweep detected by microphone");
+
+            } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
+
+                logWarn("Frequency sweep partially detected");
+                logInfo("NOTE: Low mic response may be caused by system noise suppression "
+                        + "or device acoustic design. Not always a speaker failure.");
+
+            } else { // ERROR
+
+                logWarn("Frequency sweep NOT clearly detected");
+                logInfo("NOTE: Low mic response may be caused by system noise suppression "
+                        + "or device acoustic design. Not always a speaker failure.");
+            }
+
+        } catch (Throwable t) {
+            logError("Speaker sweep failed");
+        } finally {
+            if (tg != null) tg.release();
+        }
+    }).start();
+}
 
     /* ============================================================
        LAB 3 — Earpiece Call Check (Manual)
@@ -570,9 +589,9 @@ private String ipToStr(int ip) {
     }
 
     /* ============================================================
-       LAB 4 — Microphone Recording Check (AUTO)
-       ============================================================ */
-    private void lab4MicManual() {
+   LAB 4 — Microphone Recording Check (AUTO)
+   ============================================================ */
+private void lab4MicManual() {
 
     logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
 
@@ -592,19 +611,26 @@ private String ipToStr(int ip) {
         logInfo("Top Mic Peak: " + (int) top.peak);
         logInfo("Top Mic Confidence: " + top.confidence);
 
+        boolean bottomSilent = bottom.silenceDetected;
+        boolean topSilent    = top.silenceDetected;
+
         // ---- FINAL VERDICT ----
-        if (bottom.status == MicDiagnosticEngine.Result.Status.OK &&
+        if (!bottomSilent && !topSilent &&
+            bottom.status == MicDiagnosticEngine.Result.Status.OK &&
             top.status == MicDiagnosticEngine.Result.Status.OK) {
 
             logOk("Both microphones working normally");
 
-        } else if (bottom.status == MicDiagnosticEngine.Result.Status.ERROR ||
-                   top.status == MicDiagnosticEngine.Result.Status.ERROR) {
+        } else if (bottomSilent && topSilent) {
 
-            logError("One or more microphones NOT working correctly");
+            logError("Both microphones show no usable signal");
+            logInfo("NOTE: This indicates a serious microphone, permission, or audio subsystem failure.");
 
         } else {
-            logWarn("Microphone signals detected but weak / inconsistent");
+
+            logWarn("Microphone response detected but signal is weak or inconsistent");
+            logInfo("NOTE: Low mic response may be caused by system noise suppression, "
+                  + "directional microphone design, or quiet environment.");
         }
 
     }).start();
@@ -3718,4 +3744,3 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 
 }
-

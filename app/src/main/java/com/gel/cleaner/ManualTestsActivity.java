@@ -756,47 +756,59 @@ private void lab3EarpieceManual() {
                 // Ask YES/NO on UI
                 ui.post(() -> {
                     try {
-                        AlertDialog.Builder b = new AlertDialog.Builder(ManualTestsActivity.this);
-                        b.setTitle("LAB 3 — Confirm");
-                        b.setMessage("Did you hear the sound clearly from the earpiece?");
-                        b.setCancelable(false);
+                        AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                ManualTestsActivity.this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
 
-                        b.setPositiveButton("YES", (d, w) -> {
-                            logOk("User confirmed earpiece audio was audible");
-                            enableSingleExportButton();
-                        });
+b.setTitle("LAB 3 — Confirm");
+b.setMessage("Did you hear the sound clearly from the earpiece?");
+b.setCancelable(false);
 
-                        b.setNegativeButton("NO", (d, w) -> {
-                            logWarn("Auto test passed but user did not hear sound clearly");
-                            enableSingleExportButton();
-                        });
+b.setPositiveButton("YES", (d, w) -> {
+    logOk("User confirmed earpiece audio was audible");
+    enableSingleExportButton();
+});
 
-                        b.show();
-                    } catch (Throwable t) {
-                        enableSingleExportButton();
-                    }
-                });
+b.setNegativeButton("NO", (d, w) -> {
+    logWarn("Auto test passed but user did not hear sound clearly");
+    enableSingleExportButton();
+});
 
-            } else {
-                logError("Earpiece audio path could not be verified automatically");
-                logInfo("NOTE: This test simulates call audio routing. Real call confirmation is still recommended.");
-                enableSingleExportButton();
-            }
+AlertDialog dialog = b.create();
+dialog.show();
 
-        } catch (Throwable t) {
-            logError("LAB 3 failed: " + t.getClass().getSimpleName());
-            enableSingleExportButton();
-        } finally {
-            try {
-                if (am != null) {
-                    am.setMode(oldMode);
-                    am.setSpeakerphoneOn(oldSpeaker);
-                }
-            } catch (Throwable ignore) {}
-        }
+// ============================================================
+// 🎨 GEL DARK STYLING (NO XML)
+// ============================================================
+try {
+    dialog.getWindow().setBackgroundDrawable(
+            new ColorDrawable(0xFF101010) // GEL black
+    );
 
-    }).start();
-}
+    TextView title = dialog.findViewById(
+            ManualTestsActivity.this.getResources()
+                    .getIdentifier("alertTitle", "id", "android")
+    );
+    if (title != null) {
+        title.setTextColor(0xFFFFFFFF);
+    }
+
+    TextView msg = dialog.findViewById(android.R.id.message);
+    if (msg != null) {
+        msg.setTextColor(0xFFEEEEEE);
+    }
+
+    Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+    Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+    if (yes != null) yes.setTextColor(0xFFFFD700); // gold
+    if (no  != null) no.setTextColor(0xFFFFD700); // gold
+
+} catch (Throwable ignore) {}
+
+});
 
 /* ============================================================
    Earpiece tone helper (no XML, no loops outside AudioTrack)

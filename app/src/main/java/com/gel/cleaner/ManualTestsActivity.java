@@ -431,6 +431,10 @@ private String formatLabelValue(String text) {
 }
 
 
+// ============================================================
+// LABEL : VALUE logging (GEL unified rule)
+// ============================================================
+
 private void logLabelValue(String label, String value) {
     appendHtml(
         escape(label) + ": "
@@ -438,65 +442,90 @@ private void logLabelValue(String label, String value) {
     );
 }
 
-// --- GEL legacy aliases used in older labs (to avoid crashes) ---  
-private void logYellow(String msg) { logWarn(msg); }  
-private void logGreen(String msg)  { logOk(msg); }  
-private void logRed(String msg)    { logError(msg); }  
-private void logSection(String msg){ logLine(); logInfo(msg); }  
+// Legacy-compatible overload (label: value in one string)
+private void logLabelValue(String text) {
+    int idx = text.indexOf(":");
+    if (idx <= 0 || idx >= text.length() - 1) {
+        logInfo(text);
+        return;
+    }
 
-private void logLine() {  
-    GELServiceLog.addLine("----------------------------------------");  
-    appendHtml("<font color='#666666'>----------------------------------------</font>");  
-}  
+    String label = text.substring(0, idx).trim();
+    String value = text.substring(idx + 1).trim();
+    logLabelValue(label, value);
+}
 
-private String escape(String s) {  
-    if (s == null) return "";  
-    return s.replace("&", "&amp;")  
-            .replace("<", "&lt;")  
-            .replace(">", "&gt;");  
-}  
+// ============================================================
+// GEL legacy aliases (LOCKED)
+// ============================================================
 
-private int dp(int v) {  
-    float d = getResources().getDisplayMetrics().density;  
-    return (int) (v * d + 0.5f);  
-}  
+private void logYellow(String msg) { logWarn(msg); }
+private void logGreen(String msg)  { logOk(msg); }
+private void logRed(String msg)    { logError(msg); }
+private void logSection(String msg){ logLine(); logInfo(msg); }
 
-private String humanBytes(long bytes) {  
-    if (bytes <= 0) return "0 B";  
-    float kb = bytes / 1024f;  
-    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);  
-    float mb = kb / 1024f;  
-    if (mb < 1024) return String.format(Locale.US, "%.1f MB", mb);  
-    float gb = mb / 1024f;  
-    return String.format(Locale.US, "%.2f GB", gb);  
-}  
+// ============================================================
+// CORE LOG HELPERS (SINGLE SOURCE OF TRUTH)
+// ============================================================
 
-private String formatUptime(long ms) {  
-    long seconds = ms / 1000;  
-    long days = seconds / (24 * 3600);  
-    seconds %= (24 * 3600);  
-    long hours = seconds / 3600;  
-    seconds %= 3600;  
-    long minutes = seconds / 60;  
-    return String.format(Locale.US, "%dd %dh %dm", days, hours, minutes);  
-}  
+private void logLine() {
+    GELServiceLog.addLine("----------------------------------------");
+    appendHtml("<font color='#666666'>----------------------------------------</font>");
+}
 
-private String cleanSsid(String raw) {  
-    if (raw == null) return "Unknown";  
-    raw = raw.trim();  
-    if (raw.equalsIgnoreCase("<unknown ssid>") || raw.equalsIgnoreCase("unknown ssid"))  
-        return "Unknown";  
-    if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)  
-        raw = raw.substring(1, raw.length() - 1);  
-    return raw;  
-}  
+private String escape(String s) {
+    if (s == null) return "";
+    return s.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+}
 
-private String ipToStr(int ip) {  
-    return (ip & 0xFF) + "." +  
-            ((ip >> 8) & 0xFF) + "." +  
-            ((ip >> 16) & 0xFF) + "." +  
-            ((ip >> 24) & 0xFF);  
-}  
+private int dp(int v) {
+    float d = getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
+}
+
+// ============================================================
+// SHARED FORMAT HELPERS (USED ACROSS LABS)
+// ============================================================
+
+private String humanBytes(long bytes) {
+    if (bytes <= 0) return "0 B";
+    float kb = bytes / 1024f;
+    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);
+    float mb = kb / 1024f;
+    if (mb < 1024) return String.format(Locale.US, "%.1f MB", mb);
+    float gb = mb / 1024f;
+    return String.format(Locale.US, "%.2f GB", gb);
+}
+
+private String formatUptime(long ms) {
+    long seconds = ms / 1000;
+    long days = seconds / (24 * 3600);
+    seconds %= (24 * 3600);
+    long hours = seconds / 3600;
+    seconds %= 3600;
+    long minutes = seconds / 60;
+    return String.format(Locale.US, "%dd %dh %dm", days, hours, minutes);
+}
+
+private String cleanSsid(String raw) {
+    if (raw == null) return "Unknown";
+    raw = raw.trim();
+    if (raw.equalsIgnoreCase("<unknown ssid>") || raw.equalsIgnoreCase("unknown ssid"))
+        return "Unknown";
+    if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
+        raw = raw.substring(1, raw.length() - 1);
+    return raw;
+}
+
+private String ipToStr(int ip) {
+    return (ip & 0xFF) + "." +
+           ((ip >> 8) & 0xFF) + "." +
+           ((ip >> 16) & 0xFF) + "." +
+           ((ip >> 24) & 0xFF);
+}
+
 
 // ============================================================
 // LABS 1–5: AUDIO & VIBRATION

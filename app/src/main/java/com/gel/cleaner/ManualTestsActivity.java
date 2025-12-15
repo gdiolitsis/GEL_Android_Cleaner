@@ -3964,6 +3964,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
             logError("LAB 6 — Touch grid failed (dead zone suspected)");
 
         enableSingleExportButton();
+        return;
     }
 
     if (requestCode == 7007) { // LAB 7 — Rotation
@@ -3973,6 +3974,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
             logError("LAB 7 — No rotation detected");
 
         enableSingleExportButton();
+        return;
     }
 
     if (requestCode == 8008) { // LAB 8 — Proximity
@@ -3988,5 +3990,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-
 }

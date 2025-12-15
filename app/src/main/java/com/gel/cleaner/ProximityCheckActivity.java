@@ -2,6 +2,9 @@ package com.gel.cleaner;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,7 +29,8 @@ import android.widget.TextView;
  * No loops. No threads. No timers.
  * ============================================================
  */
-public class ProximityCheckActivity extends Activity implements SensorEventListener {
+public class ProximityCheckActivity extends Activity
+        implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor proximity;
@@ -45,26 +49,61 @@ public class ProximityCheckActivity extends Activity implements SensorEventListe
         if (sensorManager != null)
             proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
+        // ============================================================
+        // ROOT
+        // ============================================================
         FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFF101010); // GEL black
 
+        // ============================================================
+        // INFO TEXT
+        // ============================================================
         TextView info = new TextView(this);
-        info.setText("Cover the front sensor area with your hand");
+        info.setText(
+                "Place your hand over the front sensor area\n" +
+                "(near the earpiece / front camera)"
+        );
         info.setTextSize(18f);
+        info.setTextColor(Color.WHITE);
         info.setGravity(Gravity.CENTER);
-        root.addView(info);
+        info.setPadding(dp(16), dp(16), dp(16), dp(16));
 
-        Button end = new Button(this);
-        end.setText("End Test");
-        end.setAllCaps(false);
-
-        FrameLayout.LayoutParams lp =
+        FrameLayout.LayoutParams infoLp =
                 new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.WRAP_CONTENT
                 );
-        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        lp.bottomMargin = dp(24);
-        end.setLayoutParams(lp);
+        infoLp.gravity = Gravity.CENTER;
+        info.setLayoutParams(infoLp);
+
+        root.addView(info);
+
+        // ============================================================
+        // END TEST BUTTON (RED — SAME AS LAB 6)
+        // ============================================================
+        Button end = new Button(this);
+        end.setText("END TEST");
+        end.setAllCaps(false);
+        end.setTextColor(Color.WHITE);
+        end.setTextSize(15f);
+        end.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable redBtn = new GradientDrawable();
+        redBtn.setColor(0xFF8B0000);          // dark red
+        redBtn.setCornerRadius(dp(14));
+        redBtn.setStroke(dp(3), 0xFFFFD700);  // gold border
+        end.setBackground(redBtn);
+
+        FrameLayout.LayoutParams endLp =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        dp(56)
+                );
+        endLp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        endLp.leftMargin = dp(24);
+        endLp.rightMargin = dp(24);
+        endLp.bottomMargin = dp(24);
+        end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
             setResult(RESULT_CANCELED);
@@ -72,6 +111,7 @@ public class ProximityCheckActivity extends Activity implements SensorEventListe
         });
 
         root.addView(end);
+
         setContentView(root);
     }
 
@@ -112,10 +152,12 @@ public class ProximityCheckActivity extends Activity implements SensorEventListe
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // not used
+    }
 
     private int dp(int v) {
         float d = getResources().getDisplayMetrics().density;
         return (int) (v * d + 0.5f);
     }
-}
+    }

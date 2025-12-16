@@ -217,13 +217,13 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(body1);
 
     body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
-    body1.addView(makeTestButton("2. Speaker Frequency Sweep", this::lab2SpeakerSweep));
-    body1.addView(makeTestButton("3. Earpiece Call Check (manual)", this::lab3EarpieceManual));
-    body1.addView(makeTestButton("4. Microphone Recording Check (manual)", this::lab4MicManual));
+    body1.addView(makeTestButton("2. Speaker Frequency Sweep Test", this::lab2SpeakerSweep));
+    body1.addView(makeTestButton("3. Earpiece Call Check", this::lab3EarpieceManual));
+    body1.addView(makeTestButton("4. Microphone Recording Check", this::lab4MicManual));
     body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
 
     // ============================================================
-    // SECTION 2: DISPLAY & SENSORS — LABS 6–10
+    // SECTION 2: DISPLAY & SENSORS — LABS 6–9
     // ============================================================
     LinearLayout body2 = makeSectionBody();
     Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
@@ -231,75 +231,74 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(body2);
 
     body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
-    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check (manual)", this::lab7RotationManual));
-    body2.addView(makeTestButton("8. Proximity During Call (manual)", this::lab8ProximityCall));
-    body2.addView(makeTestButton("9. Sensors Quick Presence Check", this::lab9SensorsQuick));
-    body2.addView(makeTestButton("10. Full Sensor List for Report", this::lab10FullSensorList));
+    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));
+    body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));
+    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsQuick));
 
     // ============================================================
-    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 11–14
+    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
     // ============================================================
     LinearLayout body3 = makeSectionBody();
     Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
     root.addView(header3);
     root.addView(body3);
 
-    body3.addView(makeTestButton("11. Wi-Fi Link Snapshot", this::lab11WifiSnapshot));
-    body3.addView(makeTestButton("12. Mobile Data Checklist", this::lab12MobileDataChecklist));
-    body3.addView(makeTestButton("13. Basic Call Test Guidelines", this::lab13CallGuidelines));
-    body3.addView(makeTestButton("14. Internet Access Quick Check", this::lab14InternetQuickCheck));
+    body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab11WifiSnapshot));
+    body3.addView(makeTestButton("11. Mobile Data Checklist", this::lab12MobileDataChecklist));
+    body3.addView(makeTestButton("12. Basic Call Test Guidelines", this::lab13CallGuidelines));
+    body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab14InternetQuickCheck));
 
     // ============================================================
-    // SECTION 4: BATTERY & THERMAL — LABS 15–18
+    // SECTION 4: BATTERY & THERMAL — LABS 14–17
     // ============================================================
     LinearLayout body4 = makeSectionBody();
     Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
     root.addView(header4);
     root.addView(body4);
 
-    body4.addView(makeTestButtonRedGold("15. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
-    body4.addView(makeTestButton("16. Charging Port Inspection", this::lab16ChargingPortManual));
-    body4.addView(makeTestButton("17. Thermal Snapshot", this::lab17ThermalSnapshot));
-    body4.addView(makeTestButton("18. AUTO Battery Reliability", this::lab18RunAuto));
+    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
+    body4.addView(makeTestButton("15. Charging Port Inspection", this::lab16ChargingPortManual));
+    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab17ThermalSnapshot));
+    body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab18RunAuto));
 
     // ============================================================
-    // SECTION 5: STORAGE & PERFORMANCE — LABS 19–22
+    // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
     // ============================================================
     LinearLayout body5 = makeSectionBody();
     Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
     root.addView(header5);
     root.addView(body5);
 
-    body5.addView(makeTestButton("19. Internal Storage Snapshot", this::lab19StorageSnapshot));
-    body5.addView(makeTestButton("20. Installed Apps Footprint", this::lab20AppsFootprint));
-    body5.addView(makeTestButton("21. Live RAM Snapshot", this::lab21RamSnapshot));
-    body5.addView(makeTestButton("22. Uptime / Reboot Hints", this::lab22UptimeHints));
+    body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab19StorageSnapshot));
+    body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab20AppsFootprint));
+    body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab21RamSnapshot));
+    body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab22UptimeHints));
 
     // ============================================================
-    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 23–26
+    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
     // ============================================================
     LinearLayout body6 = makeSectionBody();
     Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
     root.addView(header6);
     root.addView(body6);
 
-    body6.addView(makeTestButton("23. Screen Lock / Biometrics", this::lab23ScreenLock));
-    body6.addView(makeTestButton("24. Security Patch Check", this::lab24SecurityPatchManual));
-    body6.addView(makeTestButton("25. Developer Options Risk", this::lab25DevOptions));
-    body6.addView(makeTestButton("26. Root / Bootloader Suspicion", this::lab26RootSuspicion));
+    body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab23ScreenLock));
+    body6.addView(makeTestButton("23. Security Patch Check", this::lab24SecurityPatchManual));
+    body6.addView(makeTestButton("24. Developer Options Risk", this::lab25DevOptions));
+    body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab26RootSuspicion));
 
     // ============================================================
-    // SECTION 7: ADVANCED / LOGS — LABS 27–30
+    // SECTION 7: ADVANCED / LOGS — LABS 26–29
     // ============================================================
     LinearLayout body7 = makeSectionBody();
     Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
     root.addView(header7);
     root.addView(body7);
 
-    body7.addView(makeTestButton("27. Crash / Freeze History", this::lab27CrashHistory));
-    body7.addView(makeTestButton("28. App Permissions & Privacy", this::lab28PermissionsPrivacy));
-    body7.addView(makeTestButton("29. DEVICE SCORES Summary", this::lab29CombineFindings));
-    body7.addView(makeTestButton("30. FINAL TECH SUMMARY", this::lab30FinalSummary));
+    body7.addView(makeTestButton("26. Crash / Freeze History", this::lab27CrashHistory));
+    body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab28PermissionsPrivacy));
+    body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab29CombineFindings));
+    body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab30FinalSummary));
 
     // ============================================================
     // LOG AREA
@@ -582,12 +581,17 @@ private String ipToStr(int ip) {
 // LABS 1–5: AUDIO & VIBRATION
 // ============================================================
 
+// ============================================================
+// LAB 1 — Speaker Tone Test (AUTO verified)
+// ============================================================
 private void lab1SpeakerTone() {
 
     logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
 
     new Thread(() -> {
+
         ToneGenerator tg = null;
+
         try {
             tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
             tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
@@ -596,49 +600,55 @@ private void lab1SpeakerTone() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
-            logLabelValue("Mic RMS: " + (int) r.rms);
-            logLabelValue("Mic Peak: " + (int) r.peak);
-            logLabelValue("Confidence: " + r.confidence);
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", String.valueOf(r.confidence));
 
-            if (r.status == MicDiagnosticEngine.Result.Status.OK) {
+            // 🔑 UNIFIED SERVICE LOGIC
+            if (!r.silenceDetected && (r.rms > 0 || r.peak > 0)) {
 
-                logOk("Speaker output detected automatically");
+                if (r.status == MicDiagnosticEngine.Result.Status.OK) {
+                    logOk("Speaker output detected automatically");
+                } else {
+                    logWarn(
+                        "⚠ Speaker output detected with low confidence. " +
+                        "If you heard the sound loud and clear, your speaker is working properly."
+                    );
+                }
 
-            } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
-
-                logWarn("Speaker output detected with low confidence");
-                logInfo("If you heard the sound loud and clear, your device’s speaker may be working perfectly.");
                 logLabelValue(
                         "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                        "Low microphone response may be caused by system acoustic noise cancellation or device acoustic design."
                 );
 
-            } else { // ERROR → service-safe WARN
-
-                logWarn("Speaker output NOT clearly detected");
-                logLabelValue(
-                        "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+            } else {
+                // Absolute silence only
+                logWarn(
+                    "⚠ Speaker output could not be verified automatically. " +
+                    "If you heard the sound loud and clear, your speaker is working properly."
                 );
             }
 
         } catch (Throwable t) {
-            logError("Speaker tone test failed");
+            logWarn("Speaker tone test could not complete automatically");
         } finally {
             if (tg != null) tg.release();
         }
+
     }).start();
 }
 
-/* ============================================================
-   LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
-   ============================================================ */
+// ============================================================
+// LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
+// ============================================================
 private void lab2SpeakerSweep() {
 
     logSection("LAB 2 — Speaker Frequency Sweep");
 
     new Thread(() -> {
+
         ToneGenerator tg = null;
+
         try {
             tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 
@@ -657,37 +667,41 @@ private void lab2SpeakerSweep() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
-            logLabelValue("Mic RMS: " + (int) r.rms);
-            logLabelValue("Mic Peak: " + (int) r.peak);
-            logLabelValue("Confidence: " + r.confidence);
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", String.valueOf(r.confidence));
 
-            if (r.status == MicDiagnosticEngine.Result.Status.OK) {
+            // 🔑 UNIFIED SERVICE LOGIC
+            if (!r.silenceDetected && (r.rms > 0 || r.peak > 0)) {
 
-                logOk("Frequency sweep detected by microphone");
+                if (r.status == MicDiagnosticEngine.Result.Status.OK) {
+                    logOk("Frequency sweep detected by microphone");
+                } else {
+                    logWarn(
+                        "⚠ Frequency sweep detected with low confidence. " +
+                        "If you heard the frequency changes clearly, your speaker is working properly."
+                    );
+                }
 
-            } else if (r.status == MicDiagnosticEngine.Result.Status.WARN) {
-
-                logWarn("Frequency sweep detected with low confidence");
-                logInfo("If you heard the sound changes clearly, your device’s speaker may be working perfectly.");
                 logLabelValue(
                         "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+                        "Low microphone response may be caused by system acoustic noise cancellation or device acoustic design."
                 );
 
-            } else { // ERROR → service-safe WARN
-
-                logWarn("Frequency sweep NOT clearly detected");
-                logLabelValue(
-                        "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation, or device's acoustic design."
+            } else {
+                // Absolute silence only
+                logWarn(
+                    "⚠ Frequency sweep could not be verified automatically. " +
+                    "If you heard the frequency changes clearly, your speaker is working properly."
                 );
             }
 
         } catch (Throwable t) {
-            logError("Speaker sweep failed");
+            logWarn("Speaker frequency sweep could not complete automatically");
         } finally {
             if (tg != null) tg.release();
         }
+
     }).start();
 }
 
@@ -856,31 +870,40 @@ private void lab4MicManual() {
         logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
         logLabelValue("Top Mic Confidence", top.confidence);
 
-        boolean bottomSilent = bottom.silenceDetected;
-        boolean topSilent    = top.silenceDetected;
+        // 🔑 KEY LOGIC (MATCHES LAB 3 PHILOSOPHY)
+        boolean bottomHasSignal =
+                !bottom.silenceDetected && (bottom.rms > 0 || bottom.peak > 0);
 
-        if (!bottomSilent && !topSilent &&
-                bottom.status == MicDiagnosticEngine.Result.Status.OK &&
-                top.status == MicDiagnosticEngine.Result.Status.OK) {
+        boolean topHasSignal =
+                !top.silenceDetected && (top.rms > 0 || top.peak > 0);
 
-            logOk("Both microphones working normally");
+        if (bottomHasSignal && topHasSignal) {
 
-        } else if (bottomSilent && topSilent) {
-
-            logError("Both microphones show no usable signal");
+            logOk("Both microphones show measurable audio response");
             logLabelValue(
-                "Note",
-                "This indicates a serious microphone, permission, or audio subsystem failure."
+                    "Note",
+                    "Signal detected on both microphones. Confidence may vary depending on environment and noise suppression."
+            );
+
+        } else if (bottomHasSignal || topHasSignal) {
+
+            logWarn("Partial microphone response detected");
+            logLabelValue(
+                    "Note",
+                    "At least one microphone shows usable signal. Low confidence may be caused by quiet environment, directional mic design, or noise suppression."
             );
 
         } else {
 
-            logWarn("Microphone response detected, but signal is weak or inconsistent");
+            // ❌ TRUE FAILURE — absolute silence only
+            logError("No usable signal detected from either microphone");
             logLabelValue(
-                "Note",
-                "Low microphone response, may be caused by system noise suppression, directional microphone design, or quiet environment."
+                    "Note",
+                    "This indicates a serious microphone, permission, or audio subsystem failure."
             );
         }
+
+        enableSingleExportButton();
 
     }).start();
 }
@@ -961,136 +984,141 @@ private void lab8ProximityCall() {
 }
 
 /* ============================================================
-       LAB 9 - Sensors Quick Presence Check
-       ============================================================ */
+   LAB 9 — Sensors Check 
+   ============================================================ */
 
-private void lab9SensorsQuick() {  
-    logLine();  
-    logInfo("LAB 9 — Sensors Quick Presence Check.");  
-    try {  
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);  
-        if (sm == null) {  
-            logError("SensorManager not available — framework issue.");  
-            return;  
-        }  
-        List<Sensor> all = sm.getSensorList(Sensor.TYPE_ALL);  
-        logInfo("Total sensors reported: " + (all == null ? 0 : all.size()));  
+private void lab9_10_SensorsMerged() {
 
-        checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");  
-        checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");  
-        checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");  
-        checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");  
-        checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");  
-    } catch (Exception e) {  
-        logError("Sensors Quick Check error: " + e.getMessage());  
-    }  
-}  
+    logLine();
+    logInfo("LAB 9+10 — Sensors Presence & Full Analysis");
 
-private void checkSensor(SensorManager sm, int type, String name) {  
-    boolean ok = sm.getDefaultSensor(type) != null;  
-    if (ok) logOk(name + " is reported as available.");  
-    else logWarn(name + " is NOT reported — features depending on it will be limited or missing.");  
-}  
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            logError("SensorManager not available — framework issue.");
+            return;
+        }
+
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        int total = (sensors == null ? 0 : sensors.size());
+        logInfo("Total sensors reported: " + total);
+
+        // ------------------------------------------------------------
+        // QUICK PRESENCE CHECK (former LAB 9)
+        // ------------------------------------------------------------
+        checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+        checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+        checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
+        checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
+        checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
+
+        if (sensors == null || sensors.isEmpty()) {
+            logError("No sensors reported by the system.");
+            return;
+        }
+
+        logLine();
+        logInfo("Full Sensor List:");
+
+        // ------------------------------------------------------------
+        // RAW SENSOR LIST (former LAB 10)
+        // ------------------------------------------------------------
+        for (Sensor s : sensors) {
+            String line = "• type=" + s.getType()
+                    + " | name=" + s.getName()
+                    + " | vendor=" + s.getVendor();
+            logInfo(line);
+        }
+
+        // ------------------------------------------------------------
+        // INTERPRETATION LOGIC
+        // ------------------------------------------------------------
+        boolean hasVirtualGyro = false;
+        boolean hasDualALS = false;
+        int alsCount = 0;
+        boolean hasSAR = false;
+        boolean hasPickup = false;
+        boolean hasLargeTouch = false;
+        boolean hasGameRotation = false;
+
+        for (Sensor s : sensors) {
+            String name   = s.getName()   != null ? s.getName().toLowerCase(Locale.US)   : "";
+            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
+
+            if (name.contains("virtual") && name.contains("gyro"))
+                hasVirtualGyro = true;
+
+            if (name.contains("gyroscope") && vendor.contains("xiaomi"))
+                hasVirtualGyro = true;
+
+            if (name.contains("ambient") && name.contains("light"))
+                alsCount++;
+
+            if (name.contains("sar") || name.contains("rf"))
+                hasSAR = true;
+
+            if (name.contains("pickup"))
+                hasPickup = true;
+
+            if (name.contains("touch") && name.contains("large"))
+                hasLargeTouch = true;
+
+            if (name.contains("game") && name.contains("rotation"))
+                hasGameRotation = true;
+        }
+
+        if (alsCount >= 2) hasDualALS = true;
+
+        // ------------------------------------------------------------
+        // SUMMARY
+        // ------------------------------------------------------------
+        logLine();
+        logInfo("Sensor Interpretation Summary:");
+
+        if (hasVirtualGyro)
+            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+
+        if (hasDualALS)
+            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
+        else
+            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+
+        if (hasSAR)
+            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+
+        if (hasPickup)
+            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+
+        if (hasLargeTouch)
+            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+
+        if (hasGameRotation)
+            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+
+        logOk("Sensor suite appears complete and healthy for this device.");
+
+    } catch (Exception e) {
+        logError("Sensors analysis error: " + e.getMessage());
+    }
+}
 
 /* ============================================================
-       LAB 10 - Full Sensor List for Report
-       ============================================================ */
-
-private void lab10FullSensorList() {  
-    logLine();  
-    logInfo("LAB 10 — Full Sensor List for Report.");  
-
-    try {  
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);  
-        if (sm == null) {  
-            logError("SensorManager not available.");  
-            return;  
-        }  
-
-        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);  
-        if (sensors == null || sensors.isEmpty()) {  
-            logError("No sensors reported by the system.");  
-            return;  
-        }  
-
-        // RAW LIST  
-        for (Sensor s : sensors) {  
-            String line = "• type=" + s.getType()  
-                    + " | name=" + s.getName()  
-                    + " | vendor=" + s.getVendor();  
-            logInfo(line);  
-        }  
-
-        boolean hasVirtualGyro = false;  
-        boolean hasDualALS = false;  
-        int alsCount = 0;  
-        boolean hasSAR = false;  
-        boolean hasPickup = false;  
-        boolean hasLargeTouch = false;  
-        boolean hasGameRotation = false;  
-
-        for (Sensor s : sensors) {  
-            String name = s.getName() != null ? s.getName().toLowerCase(Locale.US) : "";  
-            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";  
-
-            if (name.contains("virtual_gyro") ||  
-                    (name.contains("gyroscope") && vendor.contains("xiaomi")))  
-                hasVirtualGyro = true;  
-
-            if (name.contains("ambient light"))  
-                alsCount++;  
-
-            if (name.contains("sar") || name.contains("rf"))  
-                hasSAR = true;  
-
-            if (name.contains("pickup"))  
-                hasPickup = true;  
-
-            if (name.contains("touch") && name.contains("large"))  
-                hasLargeTouch = true;  
-
-            if (name.contains("game rotation"))  
-                hasGameRotation = true;  
-        }  
-
-        if (alsCount >= 2) hasDualALS = true;  
-
-        logLine();  
-        logInfo("Sensor Interpretation Summary:");  
-
-        if (hasVirtualGyro)  
-            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");  
-
-        if (hasDualALS)  
-            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");  
-        else  
-            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");  
-
-        if (hasSAR)  
-            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");  
-
-        if (hasPickup)  
-            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");  
-
-        if (hasLargeTouch)  
-            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");  
-
-        if (hasGameRotation)  
-            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");  
-
-        logOk("Sensor suite appears complete and healthy for this device.");  
-
-    } catch (Exception e) {  
-        logError("Full Sensor List error: " + e.getMessage());  
-    }  
-}  
+   Helper — Sensor Presence
+   ============================================================ */
+private void checkSensor(SensorManager sm, int type, String name) {
+    boolean ok = sm.getDefaultSensor(type) != null;
+    if (ok)
+        logOk(name + " is reported as available.");
+    else
+        logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
+}
 
 // ============================================================  
-// LAB 11: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
+// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
 // ============================================================  
-private void lab11WifiSnapshot() {  
+private void lab10WifiSnapshot() {  
     logLine();  
-    logInfo("LAB 11 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
+    logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
 
     WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);  
     if (wm == null) {  
@@ -1125,7 +1153,7 @@ private void lab11WifiSnapshot() {
                     REQ_LOCATION_LAB11  
             );  
 
-            logInfo("Grant permission, then Lab 11 will auto-retry.");  
+            logInfo("Grant permission, then Lab 10 will auto-retry.");  
             return;  
         }  
 
@@ -1221,16 +1249,16 @@ public void onRequestPermissionsResult(int requestCode, String[] perms, int[] gr
 
         if (granted) {  
             logOk("Location permission granted.");  
-            if (pendingLab11AfterPermission != null) pendingLab11AfterPermission.run();  
+            if (pendingLab11AfterPermission != null) pendingLab10AfterPermission.run();  
         } else {  
             logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");  
         }  
-        pendingLab11AfterPermission = null;  
+        pendingLab10AfterPermission = null;  
     }  
 }  
 
 // ============================================================  
-// LAB 11 — DEEPSCAN v3.0  
+// LAB 10 — DEEPSCAN v3.0  
 // ============================================================  
 private void runWifiDeepScan(WifiManager wm) {  
     new Thread(() -> {  
@@ -1319,9 +1347,9 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
     return Math.max(5f, linkSpeedMbps * rssiFactor);  
 }  
 
-private void lab12MobileDataChecklist() {  
+private void lab11MobileDataChecklist() {  
     logLine();  
-    logInfo("LAB 12 — Mobile Data / Airplane Mode Checklist + SIM detection.");  
+    logInfo("LAB 11 — Mobile Data / Airplane Mode Checklist + SIM detection.");  
 
     try {  
         TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);  
@@ -1387,18 +1415,18 @@ private void lab12MobileDataChecklist() {
     logError("If there is no mobile network at all in known-good coverage -> SIM, antenna or baseband problem.");  
 }  
 
-private void lab13CallGuidelines() {  
+private void lab12CallGuidelines() {  
     logLine();  
-    logInfo("LAB 13 — Basic Call Test Guidelines (manual).");  
+    logInfo("LAB 12 — Basic Call Test Guidelines (manual).");  
     logInfo("1) Place a normal call to a known-good number.");  
     logInfo("2) Verify both directions: you hear them AND they hear you clearly.");  
     logWarn("If only one direction fails -> isolate earpiece vs microphone path.");  
     logError("If calls always drop or never connect while data works -> telephony/carrier registration issue.");  
 }  
 
-private void lab14InternetQuickCheck() {  
+private void lab13InternetQuickCheck() {  
     logLine();  
-    logInfo("LAB 14 — Internet Access Quick Check.");  
+    logInfo("LAB 13 — Internet Access Quick Check.");  
     try {  
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);  
         if (cm == null) {  
@@ -1529,9 +1557,9 @@ private String readFirstLine(File file) {
 }
     
 // ============================================================
-// LAB 15 — Battery Health Stress Test (GEL Full Mode)
+// LAB 14 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
-private void lab15BatteryHealthStressTest() {
+private void lab14BatteryHealthStressTest() {
 
     float pct = getCurrentBatteryPercent();
     if (pct < 0f) {
@@ -1647,7 +1675,7 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
     Float batt0 = pickZone(z0,"battery","batt","bat");
 
     logLine();
-    logInfo("LAB 15 — Battery Health Stress Test started.");
+    logInfo("LAB 14 — Battery Health Stress Test started.");
     logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
     logInfo("Duration: " + durationSec + " seconds.");
 
@@ -1856,11 +1884,11 @@ private String color(String text, String hex) {
 }
         
 //=============================================================
-// LAB 16 — Charging Port & Charger Inspection (manual)  
+// LAB 15 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
-private void lab16ChargingPortManual() {  
+private void lab15ChargingPortManual() {  
     logLine();  
-    logInfo("LAB 16 — Charging Port & Charger Inspection (manual).");  
+    logInfo("LAB 15 — Charging Port & Charger Inspection (manual).");  
     logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");  
     logWarn("If the cable fits loosely or disconnects easily -> worn port or bent contacts.");  
     logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");  
@@ -1887,11 +1915,11 @@ int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 
 // ============================================================
 
-// LAB 17 — Thermal Snapshot (GEL Universal Edition — SAFE)
+// LAB 16 — Thermal Snapshot (GEL Universal Edition — SAFE)
 // ============================================================
-private void lab17ThermalSnapshot() {
+private void lab16ThermalSnapshot() {
 logLine();
-logInfo("LAB 17 — Thermal Snapshot (ASCII thermal map)");
+logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
 
 // 1) Read thermal zones (CPU/GPU/PMIC/Skin)  
 Map<String, Float> zones = readThermalZones();  
@@ -1902,7 +1930,7 @@ float batt = getBatteryTemperature();
 if (zones == null || zones.isEmpty()) {  
     logWarn("Device exposes NO thermal zones. Printing battery only.");  
     printZoneAscii("Battery", batt);  
-    logOk("Lab 17 finished.");  
+    logOk("Lab 16 finished.");  
     return;  
 }  
 
@@ -1924,7 +1952,7 @@ printZoneAscii("Battery", batt);
 if (skin != null) printZoneAscii("Skin", skin);  
 if (pmic != null) printZoneAscii("PMIC", pmic);  
 
-logOk("Lab 17 finished.");
+logOk("Lab 16 finished.");
 
 }
 
@@ -1957,14 +1985,14 @@ appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>
 }
 
 // ============================================================
-// LAB 18 — GEL AUTO Battery Reliability Evaluation
+// LAB 17 — GEL AUTO Battery Reliability Evaluation
 // Premium Diagnostic Edition (FINAL FULL BLOCK)
 // ============================================================
 
-private void lab18RunAuto() {
+private void lab17RunAuto() {
 
 logLine();  
-logInfo("18. GEL Auto Battery Reliability Evaluation");  
+logInfo("17. GEL Auto Battery Reliability Evaluation");  
 logInfo("GEL Battery Reliability Evaluation started.");  
 logLine();  
 
@@ -1973,7 +2001,7 @@ new Thread(() -> {
     try {  
 
         // ============================================================  
-        // 1. STRESS TEST (LAB 15 CORE)  
+        // 1. STRESS TEST (LAB 14 CORE)  
         // ============================================================  
         float startPct = getCurrentBatteryPercent();  
         if (startPct < 50f) {  
@@ -2012,11 +2040,11 @@ new Thread(() -> {
         });  
 
         // ============================================================  
-        // 2. THERMAL ZONES (LAB 17 STYLE)  
+        // 2. THERMAL ZONES (LAB 16 STYLE)  
         // ============================================================  
         ui.post(() -> {  
             logInfo("");  
-            logInfo("▶ Running Thermal Zones (Lab 17)...");  
+            logInfo("▶ Running Thermal Zones (Lab 16)...");  
             logInfo("[██████████████████░░░░░░░░░░] 68%");  
         });  
 
@@ -2188,7 +2216,7 @@ new Thread(() -> {
         });  
 
     } catch (Exception e) {  
-        ui.post(() -> logError("Lab 18 error: " + e.getMessage()));  
+        ui.post(() -> logError("Lab 17 error: " + e.getMessage()));  
     }  
 
 }).start();
@@ -2196,7 +2224,7 @@ new Thread(() -> {
 }
 
 // ============================================================
-// SUPPORT FUNCTIONS FOR LAB 18 (HELPERS)
+// SUPPORT FUNCTIONS FOR LAB 17 (HELPERS)
 // ============================================================
 
 private float getBatteryVoltage_mV() {
@@ -2216,11 +2244,11 @@ return 5000;
 }                       
     
 // ============================================================ // ============================================================
-// LABS 19–22: STORAGE & PERFORMANCE
+// LABS 18–21: STORAGE & PERFORMANCE
 // ============================================================
-private void lab19StorageSnapshot() {
+private void lab18StorageSnapshot() {
 logLine();
-logInfo("LAB 19 — Internal Storage Snapshot.");
+logInfo("LAB 18 — Internal Storage Snapshot.");
 try {
 StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
 long total = s.getBlockCountLong() * s.getBlockSizeLong();
@@ -2242,9 +2270,9 @@ logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
     }  
 }  
 
-private void lab20AppsFootprint() {  
+private void lab19AppsFootprint() {  
     logLine();  
-    logInfo("LAB 20 — Installed Apps Footprint.");  
+    logInfo("LAB 19 — Installed Apps Footprint.");  
     try {  
         PackageManager pm = getPackageManager();  
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);  
@@ -2273,9 +2301,9 @@ private void lab20AppsFootprint() {
     }  
 }  
 
-private void lab21RamSnapshot() {  
+private void lab20RamSnapshot() {  
     logLine();  
-    logInfo("LAB 21 — Live RAM Snapshot.");  
+    logInfo("LAB 20 — Live RAM Snapshot.");  
     try {  
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
         if (am == null) {  
@@ -2301,7 +2329,7 @@ private void lab21RamSnapshot() {
 
 private void lab22UptimeHints() {  
     logLine();  
-    logInfo("LAB 22 — Uptime / Reboot History Hints.");  
+    logInfo("LAB 21 — Uptime / Reboot History Hints.");  
     long upMs = SystemClock.elapsedRealtime();  
     String upStr = formatUptime(upMs);  
     logInfo("System uptime: " + upStr);  
@@ -2315,15 +2343,15 @@ private void lab22UptimeHints() {
 }  
 
 // ============================================================  
-// LABS 23–26: SECURITY & SYSTEM HEALTH  
+// LABS 22–25: SECURITY & SYSTEM HEALTH  
 // ============================================================  
 // ============================================================
 
-// LAB 23 — Screen Lock / Biometrics Checklist (auto-detect + manual)
+// LAB 22 — Screen Lock / Biometrics Checklist (auto-detect + manual)
 // ============================================================
-private void lab23ScreenLock() {
+private void lab22ScreenLock() {
 logLine();
-logInfo("LAB 23 — Screen Lock / Biometrics Checklist");
+logInfo("LAB 22 — Screen Lock / Biometrics Checklist");
 
 try {  
     android.app.KeyguardManager km =  
@@ -2354,11 +2382,11 @@ logInfo("2) Test fingerprint / face unlock if configured to confirm sensor respo
 
 // ============================================================
 
-// LAB 24 — Security Patch & Play Protect (auto + manual)
+// LAB 23 — Security Patch & Play Protect (auto + manual)
 // ============================================================
-private void lab24SecurityPatchManual() {
+private void lab23SecurityPatchManual() {
 logLine();
-logInfo("LAB 24 — Security Patch & Play Protect Check");
+logInfo("LAB 23 — Security Patch & Play Protect Check");
 
 // ----------------------------  
 // 1) Security Patch Level  
@@ -2432,12 +2460,12 @@ logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled
 
 // ============================================================
 
-// LAB 25 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
+// LAB 24 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
 // GEL Security v3.1 (Realtime Snapshot)
 // ============================================================
-private void lab25DevOptions() {
+private void lab24DevOptions() {
 logLine();
-logInfo("LAB 25 — Developer Options / ADB Risk Note (Realtime).");
+logInfo("LAB 24 — Developer Options / ADB Risk Note (Realtime).");
 
 int risk = 0;  
 
@@ -2616,12 +2644,12 @@ return false;
 
 // ============================================================
 
-// LAB 26 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
 // GEL Universal Edition — NO external libs
 // ============================================================
-private void lab26RootSuspicion() {
+private void lab25RootSuspicion() {
 logLine();
-logInfo("LAB 26 — Root / Bootloader Integrity Scan (AUTO).");
+logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
 
 // ---------------------------  
 // (1) ROOT DETECTION  
@@ -2646,7 +2674,7 @@ String[] suPaths = {
 
 boolean suFound = false;  
 for (String p : suPaths) {  
-    if (lab26_fileExists(p)) {  
+    if (lab25_fileExists(p)) {  
         suFound = true;  
         rootScore += 18;  
         rootFindings.add("su/busybox path found: " + p);  
@@ -2654,7 +2682,7 @@ for (String p : suPaths) {
 }  
 
 // which su  
-String whichSu = lab26_execFirstLine("which su");  
+String whichSu = lab25_execFirstLine("which su");  
 if (whichSu != null && whichSu.contains("/")) {  
     rootScore += 12;  
     rootFindings.add("'which su' returned: " + whichSu);  
@@ -2662,7 +2690,7 @@ if (whichSu != null && whichSu.contains("/")) {
 }  
 
 // try exec su (best effort)  
-boolean suExec = lab26_canExecSu();  
+boolean suExec = lab25_canExecSu();  
 if (suExec) {  
     rootScore += 25;  
     rootFindings.add("su execution possible (shell granted).");  
@@ -2683,7 +2711,7 @@ String[] rootPkgs = {
         "com.ramdroid.appquarantine"  
 };  
 
-List<String> installed = lab26_getInstalledPackagesLower();  
+List<String> installed = lab25_getInstalledPackagesLower();  
 boolean pkgHit = false;  
 for (String rp : rootPkgs) {  
     if (installed.contains(rp)) {  
@@ -2703,8 +2731,8 @@ try {
 } catch (Throwable ignore) {}  
 
 // suspicious props  
-String roSecure = lab26_getProp("ro.secure");  
-String roDebug  = lab26_getProp("ro.debuggable");  
+String roSecure = lab25_getProp("ro.secure");  
+String roDebug  = lab25_getProp("ro.debuggable");  
 if ("0".equals(roSecure)) {  
     rootScore += 18;  
     rootFindings.add("ro.secure=0 (insecure build).");  
@@ -2720,10 +2748,10 @@ if ("1".equals(roDebug)) {
 int blScore = 0;  
 List<String> blFindings = new ArrayList<>();  
 
-String vbState = lab26_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red  
-String vbmeta  = lab26_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked  
-String flashL  = lab26_getProp("ro.boot.flash.locked"); // 1/0  
-String wlBit   = lab26_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs  
+String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red  
+String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked  
+String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0  
+String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs  
 
 if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {  
     blScore += 30;  
@@ -2761,7 +2789,7 @@ try {
 } catch (Throwable ignore) {}  
 
 // /proc/cmdline hints  
-String cmdline = lab26_readOneLine("/proc/cmdline");  
+String cmdline = lab25_readOneLine("/proc/cmdline");  
 if (cmdline != null) {  
     String c = cmdline.toLowerCase(Locale.US);  
     if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||  
@@ -2778,16 +2806,16 @@ int animScore = 0;
 List<String> animFindings = new ArrayList<>();  
 
 // Strong indicator: custom bootanimation in /data/local  
-if (lab26_fileExists("/data/local/bootanimation.zip")) {  
+if (lab25_fileExists("/data/local/bootanimation.zip")) {  
     animScore += 35;  
     animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
 }  
 
 // If system bootanimation missing → suspicious ROM  
-boolean sysBoot = lab26_fileExists("/system/media/bootanimation.zip") ||  
-                  lab26_fileExists("/product/media/bootanimation.zip") ||  
-                  lab26_fileExists("/oem/media/bootanimation.zip") ||  
-                  lab26_fileExists("/vendor/media/bootanimation.zip");  
+boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
+                  lab25_fileExists("/product/media/bootanimation.zip") ||  
+                  lab25_fileExists("/oem/media/bootanimation.zip") ||  
+                  lab25_fileExists("/vendor/media/bootanimation.zip");  
 if (!sysBoot) {  
     animScore += 15;  
     animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");  
@@ -2840,18 +2868,18 @@ if (risk >= 70 || suExec || pkgHit) {
     logOk("STATUS: SAFE (no significant modification evidence).");  
 }  
 
-logOk("Lab 26 finished.");
+logOk("Lab 25 finished.");
 
 }
 
 // ============================================================
-// LAB 26 — INTERNAL HELPERS (unique names to avoid conflicts)
+// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
 // ============================================================
-private boolean lab26_fileExists(String path) {
+private boolean lab25_fileExists(String path) {
 try { return new File(path).exists(); } catch (Throwable t) { return false; }
 }
 
-private List<String> lab26_getInstalledPackagesLower() {
+private List<String> lab25_getInstalledPackagesLower() {
 List<String> out = new ArrayList<>();
 try {
 PackageManager pm = getPackageManager();
@@ -2866,7 +2894,7 @@ if (p != null) out.add(p.toLowerCase(Locale.US));
 return out;
 }
 
-private boolean lab26_canExecSu() {
+private boolean lab25_canExecSu() {
 Process p = null;
 try {
 p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
@@ -2881,7 +2909,7 @@ if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
 }
 }
 
-private String lab26_execFirstLine(String cmd) {
+private String lab25_execFirstLine(String cmd) {
 Process p = null;
 try {
 p = Runtime.getRuntime().exec(cmd);
@@ -2896,14 +2924,14 @@ if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
 }
 }
 
-private String lab26_getProp(String key) {
-String v = lab26_execFirstLine("getprop " + key);
+private String lab25_getProp(String key) {
+String v = lab25_execFirstLine("getprop " + key);
 if (v == null) return null;
 v = v.trim();
 return v.isEmpty() ? null : v.toLowerCase(Locale.US);
 }
 
-private String lab26_readOneLine(String path) {
+private String lab25_readOneLine(String path) {
 BufferedReader br = null;
 try {
 br = new BufferedReader(new FileReader(new File(path)));
@@ -2915,16 +2943,16 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 }
 }
 // ============================================================
-// LABS 27–30: ADVANCED / LOGS
+// LABS 26–29: ADVANCED / LOGS
 // ============================================================
 
 // ============================================================
-// LAB 27 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
-private void lab27CrashHistory() {
+private void lab26CrashHistory() {
 
 logLine();  
-logInfo("LAB 27 — GEL Crash Intelligence (AUTO)");  
+logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
 
 int crashCount = 0;  
 int anrCount = 0;  
@@ -3052,7 +3080,7 @@ if (!details.isEmpty()) {
     logOk("No crash history found.");  
 }  
 
-logOk("Lab 27 finished.");
+logOk("Lab 26 finished.");
 
 }
 
@@ -3083,12 +3111,12 @@ BufferedReader br = new BufferedReader(new InputStreamReader(is));
 }
 
 // ============================================================
-// LAB 28 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
 // ============================================================
-private void lab28PermissionsPrivacy() {
+private void lab27PermissionsPrivacy() {
 
 logLine();  
-logInfo("LAB 28 — App Permissions & Privacy (AUTO scan)");  
+logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
 
 PackageManager pm = getPackageManager();  
 if (pm == null) {  
@@ -3230,12 +3258,12 @@ if (!details.isEmpty()) {
     logOk("No high-risk permission patterns detected.");  
 }  
 
-logOk("Lab 28 finished.");
+logOk("Lab 27 finished.");
 
 }
 
 // ============================================================
-// INTERNAL helpers for Lab 28 (keep inside same lab block)
+// INTERNAL helpers for Lab 27 (keep inside same lab block)
 // ============================================================
 
 private boolean isGrantedFlag(int[] flags, int i) {
@@ -3299,14 +3327,14 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 29 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
 // Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
 // Security + Privacy + Root + Stability into final scores.
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
-private void lab29CombineFindings() {
+private void lab28CombineFindings() {
 logLine();
-logInfo("LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
+logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  
@@ -3478,12 +3506,12 @@ if (verdict.startsWith("🟩")) logOk(verdict);
 else if (verdict.startsWith("🟨")) logWarn(verdict);  
 else logError(verdict);  
 
-logOk("Lab 29 finished.");
+logOk("Lab 28 finished.");
 
 }
 
 // ============================================================
-// ======= LAB 29 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
+// ======= LAB 28 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
 // ============================================================
 
 private static class StorageSnapshot {
@@ -3871,14 +3899,14 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
 // Does NOT modify GELServiceLog — only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
-private void lab30FinalSummary() {
+private void lab29FinalSummary() {
 
     logLine();
-    logInfo("LAB 30 — Final Technician Summary (READ-ONLY)");
+    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
 
     // ------------------------------------------------------------
     // 1) READ FULL LOG (from all labs)
@@ -4049,4 +4077,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-}
+        }

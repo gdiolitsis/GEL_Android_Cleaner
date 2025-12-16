@@ -114,7 +114,7 @@ import java.util.LinkedHashMap;
 public class ManualTestsActivity extends AppCompatActivity {
 
     // ============================================================
-    // GLOBAL FINAL SCORE FIELDS (used by Lab 30 PDF Report)
+    // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
     // ============================================================
     private String lastScoreHealth      = "N/A";
     private String lastScorePerformance = "N/A";
@@ -243,10 +243,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header3);
     root.addView(body3);
 
-    body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab11WifiSnapshot));
-    body3.addView(makeTestButton("11. Mobile Data Checklist", this::lab12MobileDataChecklist));
-    body3.addView(makeTestButton("12. Basic Call Test Guidelines", this::lab13CallGuidelines));
-    body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab14InternetQuickCheck));
+    body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab10WifiSnapshot));
+    body3.addView(makeTestButton("11. Mobile Data Checklist", this::lab11MobileDataChecklist));
+    body3.addView(makeTestButton("12. Basic Call Test Guidelines", this::lab12CallGuidelines));
+    body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab13InternetQuickCheck));
 
     // ============================================================
     // SECTION 4: BATTERY & THERMAL — LABS 14–17
@@ -256,10 +256,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header4);
     root.addView(body4);
 
-    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab15BatteryHealthStressTest));
-    body4.addView(makeTestButton("15. Charging Port Inspection", this::lab16ChargingPortManual));
-    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab17ThermalSnapshot));
-    body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab18RunAuto));
+    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
+    body4.addView(makeTestButton("15. Charging Port Inspection", this::lab15ChargingPortManual));
+    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
+    body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
 
     // ============================================================
     // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
@@ -269,10 +269,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header5);
     root.addView(body5);
 
-    body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab19StorageSnapshot));
-    body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab20AppsFootprint));
-    body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab21RamSnapshot));
-    body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab22UptimeHints));
+    body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab18StorageSnapshot));
+    body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab19AppsFootprint));
+    body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab20RamSnapshot));
+    body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab21UptimeHints));
 
     // ============================================================
     // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
@@ -282,10 +282,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header6);
     root.addView(body6);
 
-    body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab23ScreenLock));
-    body6.addView(makeTestButton("23. Security Patch Check", this::lab24SecurityPatchManual));
-    body6.addView(makeTestButton("24. Developer Options Risk", this::lab25DevOptions));
-    body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab26RootSuspicion));
+    body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab22ScreenLock));
+    body6.addView(makeTestButton("23. Security Patch Check", this::lab23SecurityPatchManual));
+    body6.addView(makeTestButton("24. Developer Options Risk", this::lab24DevOptions));
+    body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
 
     // ============================================================
     // SECTION 7: ADVANCED / LOGS — LABS 26–29
@@ -295,10 +295,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header7);
     root.addView(body7);
 
-    body7.addView(makeTestButton("26. Crash / Freeze History", this::lab27CrashHistory));
-    body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab28PermissionsPrivacy));
-    body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab29CombineFindings));
-    body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab30FinalSummary));
+    body7.addView(makeTestButton("26. Crash / Freeze History", this::lab26CrashHistory));
+    body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
+    body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
+    body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
 
     // ============================================================
     // LOG AREA
@@ -1142,7 +1142,7 @@ private void lab10WifiSnapshot() {
 
         if (!fineGranted && !coarseGranted) {  
             logWarn("Location permission required to read SSID/BSSID (Android policy).");  
-            pendingLab11AfterPermission = this::lab11WifiSnapshot;  
+            pendingLab10AfterPermission = this::lab10WifiSnapshot;  
 
             ActivityCompat.requestPermissions(  
                     this,  
@@ -1249,7 +1249,7 @@ public void onRequestPermissionsResult(int requestCode, String[] perms, int[] gr
 
         if (granted) {  
             logOk("Location permission granted.");  
-            if (pendingLab11AfterPermission != null) pendingLab10AfterPermission.run();  
+            if (pendingLab10AfterPermission != null) pendingLab10AfterPermission.run();  
         } else {  
             logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");  
         }  
@@ -4077,6 +4077,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-        }
-
-
+}

@@ -719,7 +719,7 @@ private void lab3EarpieceManual() {
             am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setSpeakerphoneOn(false);
 
-            // Play short earpiece tone
+            // Play short earpiece tone (helper MUST exist elsewhere)
             playEarpieceTestTone220Hz(900);
 
             // Let routing settle
@@ -734,7 +734,7 @@ private void lab3EarpieceManual() {
             logLabelValue("Top Mic Confidence", String.valueOf(r.confidence));
 
             // 🔑 KEY LOGIC:
-            // If ANY signal is detected → ask user (NO auto failure)
+            // Any measurable signal → user confirmation (NO auto-fail)
             boolean anySignalDetected =
                     !r.silenceDetected &&
                     (r.rms > 0 || r.peak > 0);
@@ -754,7 +754,7 @@ private void lab3EarpieceManual() {
                 logInfo("This test simulates call audio routing.");
                 logInfo("Real call confirmation is still recommended.");
 
-                // Ask user confirmation
+                // Ask user confirmation (MANDATORY)
                 ui.post(() -> {
                     try {
                         AlertDialog.Builder b =
@@ -831,62 +831,6 @@ private void lab3EarpieceManual() {
         }
 
     }).start();
-}
-
-/* ============================================================
-   Earpiece test tone — 220Hz (CALL PATH SAFE)
-   ============================================================ */
-private void playEarpieceTestTone220Hz(int durationMs) {
-    try {
-        int sampleRate = 8000;
-        int samples = (int) ((durationMs / 1000f) * sampleRate);
-        if (samples <= 0) samples = sampleRate / 2;
-
-        short[] buffer = new short[samples];
-        double freq = 220.0;
-
-        for (int i = 0; i < samples; i++) {
-            double t = i / (double) sampleRate;
-            buffer[i] = (short) (Math.sin(2 * Math.PI * freq * t) * 9000);
-        }
-
-        AudioTrack track;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            track = new AudioTrack(
-                    new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                            .build(),
-                    new AudioFormat.Builder()
-                            .setSampleRate(sampleRate)
-                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                            .build(),
-                    buffer.length * 2,
-                    AudioTrack.MODE_STATIC,
-                    AudioManager.AUDIO_SESSION_ID_GENERATE
-            );
-        } else {
-            track = new AudioTrack(
-                    AudioManager.STREAM_VOICE_CALL,
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    buffer.length * 2,
-                    AudioTrack.MODE_STATIC
-            );
-        }
-
-        track.write(buffer, 0, buffer.length);
-        track.play();
-
-        SystemClock.sleep(durationMs + 80);
-
-        try { track.stop(); } catch (Throwable ignore) {}
-        try { track.release(); } catch (Throwable ignore) {}
-
-    } catch (Throwable ignore) {}
 }
 
 /* ============================================================

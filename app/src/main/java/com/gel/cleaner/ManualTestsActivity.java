@@ -144,9 +144,9 @@ public class ManualTestsActivity extends AppCompatActivity {
     private boolean oldKeepScreenOn = false;
 
     // ============================================================
-    // Lab 11 location permission internals
+    // Lab 10 location permission internals
     // ============================================================
-    private static final int REQ_LOCATION_LAB11 = 11012;
+    private static final int REQ_LOCATION_LAB10 = 11012;
     private Runnable pendingLab11AfterPermission = null;
 
     /* =========================================================
@@ -4078,3 +4078,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
         }
+

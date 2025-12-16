@@ -233,7 +233,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
     body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));
     body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));
-    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsQuick));
+    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
 
     // ============================================================
     // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
@@ -987,7 +987,7 @@ private void lab8ProximityCall() {
    LAB 9 — Sensors Check 
    ============================================================ */
 
-private void lab9_10_SensorsMerged() {
+private void lab9SensorsCheck() {
 
     logLine();
     logInfo("LAB 9+10 — Sensors Presence & Full Analysis");

@@ -24,19 +24,25 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK / NDK / CMake  (FIXED)
+      # Android SDK cmdline-tools ONLY
       # --------------------------------------------
-      - name: Set up Android SDK
+      - name: Set up Android SDK (cmdline-tools only)
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
           accept-android-sdk-licenses: true
-          packages: |
-            platform-tools
-            platforms;android-34
-            build-tools;34.0.0
-            ndk;25.2.9519653
-            cmake;3.22.1
+
+      # --------------------------------------------
+      # Install SDK packages (FIXED – manual sdkmanager)
+      # --------------------------------------------
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;25.2.9519653" \
+            "cmake;3.22.1"
 
       # --------------------------------------------
       # Gradle 8.2.1
@@ -66,7 +72,7 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       # --------------------------------------------
-      # Build Release (NDK + CMake via Gradle)
+      # Build Release
       # --------------------------------------------
       - name: Build Release
         run: gradle assembleRelease

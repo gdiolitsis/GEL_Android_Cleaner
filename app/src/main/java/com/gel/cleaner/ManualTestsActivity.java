@@ -147,7 +147,7 @@ public class ManualTestsActivity extends AppCompatActivity {
     // Lab 10 location permission internals
     // ============================================================
     private static final int REQ_LOCATION_LAB10 = 11012;
-    private Runnable pendingLab11AfterPermission = null;
+    private Runnable pendingLab10AfterPermission = null;
 
     /* =========================================================
      * FIX: APPLY SAVED LANGUAGE TO THIS ACTIVITY
@@ -4078,4 +4078,5 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
         }
+
 

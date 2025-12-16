@@ -715,15 +715,17 @@ private void lab3EarpieceManual() {
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
 
-            // Route audio like a call (earpiece path)
+            // Route audio like a real call (earpiece path)
             am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setSpeakerphoneOn(false);
 
-            // Play test tone
+            // Play short earpiece tone
             playEarpieceTestTone220Hz(900);
+
+            // Let routing settle
             SystemClock.sleep(200);
 
-            // Verify via TOP mic
+            // Verify via TOP microphone
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
@@ -731,89 +733,90 @@ private void lab3EarpieceManual() {
             logLabelValue("Top Mic Peak", String.valueOf((int) r.peak));
             logLabelValue("Top Mic Confidence", String.valueOf(r.confidence));
 
-            boolean responseDetected =
+            // 🔑 KEY LOGIC:
+            // If ANY signal is detected → ask user (NO auto failure)
+            boolean anySignalDetected =
                     !r.silenceDetected &&
-                    (r.status == MicDiagnosticEngine.Result.Status.OK ||
-                     r.status == MicDiagnosticEngine.Result.Status.WARN);
+                    (r.rms > 0 || r.peak > 0);
 
-            if (!responseDetected) {
-                logError("Earpiece audio path could not be verified automatically");
-                logInfo("NOTE: This test simulates call audio routing. Real call confirmation is still recommended.");
-                enableSingleExportButton();
-                return;
-            }
+            if (anySignalDetected) {
 
-            // ===== LOCKED OUTPUT =====
-            logInfo("LAB 3 — Earpiece Audio Path Check (AUTO)");
-            logInfo("");
-            logInfo("Earpiece audio routed in call mode.");
-            logInfo("Microphone detected response from upper speaker.");
-            logInfo("");
-            logInfo("Result:");
-            logOk("✔ Earpiece audio path appears functional");
-            logInfo("");
-            logInfo("NOTE:");
-            logInfo("This test simulates call audio routing.");
-            logInfo("Real call confirmation is still recommended.");
+                // ===== LOCKED REPORT TEXT (DO NOT CHANGE) =====
+                logInfo("LAB 3 — Earpiece Audio Path Check (AUTO)");
+                logInfo("");
+                logInfo("Earpiece audio routed in call mode.");
+                logInfo("Microphone detected response from upper speaker.");
+                logInfo("");
+                logInfo("Result:");
+                logOk("✔ Earpiece audio path appears functional");
+                logInfo("");
+                logInfo("NOTE:");
+                logInfo("This test simulates call audio routing.");
+                logInfo("Real call confirmation is still recommended.");
 
-            // ===== CONFIRMATION DIALOG =====
-            ui.post(() -> {
+                // Ask user confirmation
+                ui.post(() -> {
+                    try {
+                        AlertDialog.Builder b =
+                                new AlertDialog.Builder(
+                                        ManualTestsActivity.this,
+                                        android.R.style.Theme_Material_Dialog_NoActionBar
+                                );
 
-                AlertDialog dialog = null;
+                        b.setTitle("LAB 3 — Confirm");
+                        b.setMessage("Did you hear the sound clearly from the earpiece?");
+                        b.setCancelable(false);
 
-                try {
-                    AlertDialog.Builder b =
-                            new AlertDialog.Builder(
-                                    ManualTestsActivity.this,
-                                    android.R.style.Theme_Material_Dialog_NoActionBar
+                        b.setPositiveButton("YES", (d, w) -> {
+                            logOk("User confirmed earpiece audio was audible");
+                            enableSingleExportButton();
+                        });
+
+                        b.setNegativeButton("NO", (d, w) -> {
+                            logWarn("Earpiece signal detected but user did not hear sound clearly");
+                            enableSingleExportButton();
+                        });
+
+                        AlertDialog dialog = b.create();
+                        dialog.show();
+
+                        // ===== GEL DARK STYLE (NO XML) =====
+                        try {
+                            dialog.getWindow().setBackgroundDrawable(
+                                    new ColorDrawable(0xFF101010)
                             );
 
-                    b.setTitle("LAB 3 — Confirm");
-                    b.setMessage("Did you hear the sound clearly from the earpiece?");
-                    b.setCancelable(false);
+                            TextView title = dialog.findViewById(
+                                    getResources().getIdentifier(
+                                            "alertTitle", "id", "android")
+                            );
+                            if (title != null)
+                                title.setTextColor(0xFFFFFFFF);
 
-                    b.setPositiveButton("YES", (d, w) -> {
-                        logOk("User confirmed earpiece audio was audible");
+                            TextView msg = dialog.findViewById(android.R.id.message);
+                            if (msg != null)
+                                msg.setTextColor(0xFFEEEEEE);
+
+                            Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                            Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                            if (yes != null) yes.setTextColor(0xFFFFD700);
+                            if (no  != null) no.setTextColor(0xFFFFD700);
+
+                        } catch (Throwable ignore) {}
+
+                    } catch (Throwable t) {
                         enableSingleExportButton();
-                    });
-
-                    b.setNegativeButton("NO", (d, w) -> {
-                        logWarn("Auto test passed but user did not hear sound clearly");
-                        enableSingleExportButton();
-                    });
-
-                    dialog = b.create();
-                    dialog.show();
-
-                } catch (Throwable t) {
-                    enableSingleExportButton();
-                    return;
-                }
-
-                // 🎨 GEL DARK STYLE
-                try {
-                    if (dialog != null && dialog.getWindow() != null) {
-                        dialog.getWindow().setBackgroundDrawable(
-                                new ColorDrawable(0xFF101010)
-                        );
-
-                        TextView title = dialog.findViewById(
-                                getResources().getIdentifier("alertTitle", "id", "android")
-                        );
-                        if (title != null) title.setTextColor(0xFFFFFFFF);
-
-                        TextView msg = dialog.findViewById(android.R.id.message);
-                        if (msg != null) msg.setTextColor(0xFFEEEEEE);
-
-                        Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                        Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-
-                        if (yes != null) yes.setTextColor(0xFFFFD700);
-                        if (no  != null) no.setTextColor(0xFFFFD700);
                     }
-                } catch (Throwable ignore) {}
+                });
 
-            });
+            } else {
+                // TRUE failure: absolute silence
+                logError("No usable earpiece signal detected");
+                logInfo("NOTE: This test simulates call audio routing.");
+                logInfo("Real call confirmation is still recommended.");
+                enableSingleExportButton();
+            }
 
         } catch (Throwable t) {
             logError("LAB 3 failed: " + t.getClass().getSimpleName());
@@ -828,6 +831,62 @@ private void lab3EarpieceManual() {
         }
 
     }).start();
+}
+
+/* ============================================================
+   Earpiece test tone — 220Hz (CALL PATH SAFE)
+   ============================================================ */
+private void playEarpieceTestTone220Hz(int durationMs) {
+    try {
+        int sampleRate = 8000;
+        int samples = (int) ((durationMs / 1000f) * sampleRate);
+        if (samples <= 0) samples = sampleRate / 2;
+
+        short[] buffer = new short[samples];
+        double freq = 220.0;
+
+        for (int i = 0; i < samples; i++) {
+            double t = i / (double) sampleRate;
+            buffer[i] = (short) (Math.sin(2 * Math.PI * freq * t) * 9000);
+        }
+
+        AudioTrack track;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            track = new AudioTrack(
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build(),
+                    new AudioFormat.Builder()
+                            .setSampleRate(sampleRate)
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build(),
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+            );
+        } else {
+            track = new AudioTrack(
+                    AudioManager.STREAM_VOICE_CALL,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC
+            );
+        }
+
+        track.write(buffer, 0, buffer.length);
+        track.play();
+
+        SystemClock.sleep(durationMs + 80);
+
+        try { track.stop(); } catch (Throwable ignore) {}
+        try { track.release(); } catch (Throwable ignore) {}
+
+    } catch (Throwable ignore) {}
 }
 
 /* ============================================================

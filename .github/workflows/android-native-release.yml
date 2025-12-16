@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # --------------------------------------------
+      # Checkout
+      # --------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -21,7 +24,7 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK + NDK + CMake (CORRECT WAY)
+      # Android SDK / NDK / CMake  (FIXED)
       # --------------------------------------------
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -41,7 +44,7 @@ jobs:
       - name: Install Gradle
         run: |
           wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
-          unzip gradle-8.2.1-bin.zip
+          unzip -q gradle-8.2.1-bin.zip
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
@@ -63,20 +66,28 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       # --------------------------------------------
-      # BUILD (NDK + CMake handled automatically)
+      # Build Release (NDK + CMake via Gradle)
       # --------------------------------------------
       - name: Build Release
         run: gradle assembleRelease
 
       # --------------------------------------------
-      # Align & Sign
+      # Zipalign + Sign
       # --------------------------------------------
+      - name: Install Android build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zipalign apksigner
+
       - name: Align & Sign APK
         run: |
           cd app/build/outputs/apk/release
-          ls -la
+          echo ">>> APKs:"
+          ls -1 *.apk
 
           unsigned=$(ls *-unsigned.apk | head -n 1)
+          echo ">>> Signing: $unsigned"
+
           zipalign -f 4 "$unsigned" aligned.apk
 
           apksigner sign \
@@ -92,7 +103,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
       # --------------------------------------------
-      # Upload APK
+      # Upload Artifact
       # --------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4

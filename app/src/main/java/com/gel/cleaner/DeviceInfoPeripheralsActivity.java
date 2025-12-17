@@ -2909,7 +2909,7 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
 // ============================================================
 // GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)
-// ======================================================= =====
+// ============================================================
     private void showPermissionDebugInfo() {
 
         StringBuilder dbg = new StringBuilder();

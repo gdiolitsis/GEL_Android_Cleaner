@@ -448,7 +448,7 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     appendAccessInstructions(sb, "camera");
-    return sb.toString();
+return sb.toString();
 }
 
 // ============================================================

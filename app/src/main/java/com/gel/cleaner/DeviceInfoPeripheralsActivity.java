@@ -341,7 +341,6 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
         return "Settings → Battery";
     }
-}
 
     // ============================================================
     // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION

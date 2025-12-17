@@ -459,6 +459,67 @@ private Button makeTestButtonRedGold(String text, Runnable action) {
 }
 
 // ============================================================
+// LAB 3 — User Confirmation Dialog (Earpiece)
+// ============================================================
+private void askUserEarpieceConfirmation() {
+
+    ui.post(() -> {
+        try {
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+
+            b.setTitle("LAB 3 — Confirm");
+            b.setMessage("Did you hear the sound clearly from the earpiece?");
+            b.setCancelable(false);
+
+            b.setPositiveButton("YES", (d, w) -> {
+                logOk("User confirmed earpiece audio was audible");
+                enableSingleExportButton();
+            });
+
+            b.setNegativeButton("NO", (d, w) -> {
+                logWarn("Earpiece signal detected but user did not hear sound clearly");
+                enableSingleExportButton();
+            });
+
+            AlertDialog dialog = b.create();
+            dialog.show();
+
+            // 🔥 GEL DARK STYLE (NO XML)
+            try {
+                dialog.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(0xFF101010)
+                );
+
+                TextView title = dialog.findViewById(
+                        getResources().getIdentifier(
+                                "alertTitle", "id", "android")
+                );
+                if (title != null)
+                    title.setTextColor(0xFFFFFFFF);
+
+                TextView msg = dialog.findViewById(android.R.id.message);
+                if (msg != null)
+                    msg.setTextColor(0xFFEEEEEE);
+
+                Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                if (yes != null) yes.setTextColor(0xFFFFD700);
+                if (no  != null) no.setTextColor(0xFFFFD700);
+
+            } catch (Throwable ignore) {}
+
+        } catch (Throwable t) {
+            enableSingleExportButton();
+        }
+    });
+}
+    
+// ============================================================
 // LOGGING (GEL CANONICAL)
 // ============================================================
 
@@ -4000,3 +4061,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
         }
+

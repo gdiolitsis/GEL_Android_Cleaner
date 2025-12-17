@@ -400,12 +400,12 @@ requestPermissions(new String[]{
         Manifest.permission.READ_PHONE_NUMBERS  
 }, 101);  
 
-// ------------------------------------------------------------  
-// 6️⃣  INIT BATTERY MODULE  
-// ------------------------------------------------------------  
+// ------------------------------------------------------------
+// 6️⃣ INIT BATTERY MODULE — FINAL
+// ------------------------------------------------------------
 initBatterySection();
 
-// Αρχική κατάσταση: όλα κλειστά
+// Αρχική κατάσταση: ΟΛΑ ΚΛΕΙΣΤΑ
 batteryContainer.setVisibility(View.GONE);
 
 if (txtBatteryContent != null)
@@ -424,15 +424,16 @@ if (headerBattery != null) {
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
         if (!isOpen) {
-            // ⚠️ ΚΛΕΙΝΟΥΜΕ ΟΛΑ ΤΑ ΑΛΛΑ ΜΟΝΟ ΟΤΑΝ ΑΝΟΙΓΟΥΜΕ
+            // Κλείνουμε ΟΛΑ τα άλλα sections
             collapseAllExceptBattery();
 
-            // ✅ ΑΝΟΙΓΜΑ BATTERY
+            // ΑΝΟΙΓΜΑ BATTERY
             batteryContainer.setVisibility(View.VISIBLE);
 
             if (txtBatteryContent != null)
                 txtBatteryContent.setVisibility(View.VISIBLE);
 
+            // 👉 ΑΝΟΙΓΕΙ ΜΟΝΟ ΕΔΩ
             if (txtBatteryModelCapacity != null)
                 txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
@@ -442,12 +443,13 @@ if (headerBattery != null) {
             refreshBatteryInfoView();
 
         } else {
-            // ✅ ΚΛΕΙΣΙΜΟ BATTERY (ΠΛΗΡΕΣ)
+            // ΚΛΕΙΣΙΜΟ BATTERY (ΠΛΗΡΕΣ)
             batteryContainer.setVisibility(View.GONE);
 
             if (txtBatteryContent != null)
                 txtBatteryContent.setVisibility(View.GONE);
 
+            // 👉 ΚΛΕΙΝΕΙ ΥΠΟΧΡΕΩΤΙΚΑ ΕΔΩ
             if (txtBatteryModelCapacity != null)
                 txtBatteryModelCapacity.setVisibility(View.GONE);
 

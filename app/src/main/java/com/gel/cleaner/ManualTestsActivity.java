@@ -582,11 +582,11 @@ private String ipToStr(int ip) {
 // ============================================================
 
 // ============================================================
-// LAB 1 — Speaker Tone Test (AUTO verified)
+// LAB 1 — Speaker Tone Test (AUTO)
 // ============================================================
 private void lab1SpeakerTone() {
 
-    logSection("LAB 1 — Speaker Tone Test (AUTO verified)");
+    logSection("LAB 1 — Speaker Tone Test");
 
     new Thread(() -> {
 
@@ -604,33 +604,28 @@ private void lab1SpeakerTone() {
             logLabelValue("Mic Peak", String.valueOf((int) r.peak));
             logLabelValue("Confidence", String.valueOf(r.confidence));
 
-            // 🔑 UNIFIED SERVICE LOGIC
-            if (!r.silenceDetected && (r.rms > 0 || r.peak > 0)) {
+            boolean hasSignal =
+                    !r.silenceDetected && (r.rms > 0 || r.peak > 0);
 
-                if (r.status == MicDiagnosticEngine.Result.Status.OK) {
-                    logOk("Speaker output detected automatically");
-                } else {
-                    logWarn(
-                        "⚠ Speaker output detected with low confidence. " +
-                        "If you heard the sound loud and clear, your speaker is working properly."
-                    );
-                }
+            if (hasSignal) {
 
+                logOk("Speaker output detected");
                 logLabelValue(
                         "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation or device acoustic design."
+                        "Signal detected successfully. Low confidence may be caused by system noise cancellation or device acoustic design."
                 );
 
             } else {
-                // Absolute silence only
-                logWarn(
-                    "⚠ Speaker output could not be verified automatically. " +
-                    "If you heard the sound loud and clear, your speaker is working properly."
+
+                logError("No usable speaker signal detected");
+                logLabelValue(
+                        "Note",
+                        "Absolute silence detected. This indicates a speaker, microphone, or audio subsystem failure."
                 );
             }
 
         } catch (Throwable t) {
-            logWarn("Speaker tone test could not complete automatically");
+            logError("Speaker tone test failed");
         } finally {
             if (tg != null) tg.release();
         }
@@ -639,7 +634,7 @@ private void lab1SpeakerTone() {
 }
 
 // ============================================================
-// LAB 2 — Speaker Frequency Sweep (AUTO via Mic)
+// LAB 2 — Speaker Frequency Sweep
 // ============================================================
 private void lab2SpeakerSweep() {
 
@@ -671,33 +666,28 @@ private void lab2SpeakerSweep() {
             logLabelValue("Mic Peak", String.valueOf((int) r.peak));
             logLabelValue("Confidence", String.valueOf(r.confidence));
 
-            // 🔑 UNIFIED SERVICE LOGIC
-            if (!r.silenceDetected && (r.rms > 0 || r.peak > 0)) {
+            boolean hasSignal =
+                    !r.silenceDetected && (r.rms > 0 || r.peak > 0);
 
-                if (r.status == MicDiagnosticEngine.Result.Status.OK) {
-                    logOk("Frequency sweep detected by microphone");
-                } else {
-                    logWarn(
-                        "⚠ Frequency sweep detected with low confidence. " +
-                        "If you heard the frequency changes clearly, your speaker is working properly."
-                    );
-                }
+            if (hasSignal) {
 
+                logOk("Frequency sweep detected");
                 logLabelValue(
                         "Note",
-                        "Low microphone response may be caused by system acoustic noise cancellation or device acoustic design."
+                        "Sweep detected successfully. Low confidence may be caused by system noise cancellation or acoustic design."
                 );
 
             } else {
-                // Absolute silence only
-                logWarn(
-                    "⚠ Frequency sweep could not be verified automatically. " +
-                    "If you heard the frequency changes clearly, your speaker is working properly."
+
+                logError("No usable frequency sweep signal detected");
+                logLabelValue(
+                        "Note",
+                        "Absolute silence detected. This indicates a speaker or audio subsystem failure."
                 );
             }
 
         } catch (Throwable t) {
-            logWarn("Speaker frequency sweep could not complete automatically");
+            logError("Speaker frequency sweep failed");
         } finally {
             if (tg != null) tg.release();
         }
@@ -706,11 +696,11 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (AUTO)
+   LAB 3 — Earpiece Audio Path Check
    ============================================================ */
 private void lab3EarpieceManual() {
 
-    logSection("LAB 3 — Earpiece Audio Path Check (AUTO)");
+    logSection("LAB 3 — Earpiece Audio Path Check");
 
     new Thread(() -> {
 
@@ -729,111 +719,44 @@ private void lab3EarpieceManual() {
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
 
-            // Route audio like a real call (earpiece path)
             am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setSpeakerphoneOn(false);
 
-            // Play short earpiece tone (helper MUST exist elsewhere)
             playEarpieceTestTone220Hz(900);
-
-            // Let routing settle
             SystemClock.sleep(200);
 
-            // Verify via TOP microphone
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
             logLabelValue("Top Mic RMS", String.valueOf((int) r.rms));
             logLabelValue("Top Mic Peak", String.valueOf((int) r.peak));
-            logLabelValue("Top Mic Confidence", String.valueOf(r.confidence));
+            logLabelValue("Confidence", String.valueOf(r.confidence));
 
-            // 🔑 KEY LOGIC:
-            // Any measurable signal → user confirmation (NO auto-fail)
-            boolean anySignalDetected =
-                    !r.silenceDetected &&
-                    (r.rms > 0 || r.peak > 0);
+            boolean hasSignal =
+                    !r.silenceDetected && (r.rms > 0 || r.peak > 0);
 
-            if (anySignalDetected) {
+            if (hasSignal) {
 
-                // ===== LOCKED REPORT TEXT (DO NOT CHANGE) =====
-                logInfo("LAB 3 — Earpiece Audio Path Check (AUTO)");
-                logInfo("");
-                logInfo("Earpiece audio routed in call mode.");
-                logInfo("Microphone detected response from upper speaker.");
-                logInfo("");
-                logInfo("Result:");
-                logOk("✔ Earpiece audio path appears functional");
-                logInfo("");
-                logInfo("NOTE:");
-                logInfo("This test simulates call audio routing.");
-                logInfo("Real call confirmation is still recommended.");
+                logOk("Earpiece audio path detected");
+                logLabelValue(
+                        "Note",
+                        "Signal detected successfully. This test simulates call audio routing. Real call confirmation is recommended."
+                );
 
-                // Ask user confirmation (MANDATORY)
-                ui.post(() -> {
-                    try {
-                        AlertDialog.Builder b =
-                                new AlertDialog.Builder(
-                                        ManualTestsActivity.this,
-                                        android.R.style.Theme_Material_Dialog_NoActionBar
-                                );
-
-                        b.setTitle("LAB 3 — Confirm");
-                        b.setMessage("Did you hear the sound clearly from the earpiece?");
-                        b.setCancelable(false);
-
-                        b.setPositiveButton("YES", (d, w) -> {
-                            logOk("User confirmed earpiece audio was audible");
-                            enableSingleExportButton();
-                        });
-
-                        b.setNegativeButton("NO", (d, w) -> {
-                            logWarn("Earpiece signal detected but user did not hear sound clearly");
-                            enableSingleExportButton();
-                        });
-
-                        AlertDialog dialog = b.create();
-                        dialog.show();
-
-                        // ===== GEL DARK STYLE (NO XML) =====
-                        try {
-                            dialog.getWindow().setBackgroundDrawable(
-                                    new ColorDrawable(0xFF101010)
-                            );
-
-                            TextView title = dialog.findViewById(
-                                    getResources().getIdentifier(
-                                            "alertTitle", "id", "android")
-                            );
-                            if (title != null)
-                                title.setTextColor(0xFFFFFFFF);
-
-                            TextView msg = dialog.findViewById(android.R.id.message);
-                            if (msg != null)
-                                msg.setTextColor(0xFFEEEEEE);
-
-                            Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                            Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-
-                            if (yes != null) yes.setTextColor(0xFFFFD700);
-                            if (no  != null) no.setTextColor(0xFFFFD700);
-
-                        } catch (Throwable ignore) {}
-
-                    } catch (Throwable t) {
-                        enableSingleExportButton();
-                    }
-                });
+                askUserEarpieceConfirmation();
 
             } else {
-                // TRUE failure: absolute silence
+
                 logError("No usable earpiece signal detected");
-                logInfo("NOTE: This test simulates call audio routing.");
-                logInfo("Real call confirmation is still recommended.");
+                logLabelValue(
+                        "Note",
+                        "Absolute silence detected. This indicates an earpiece or audio routing failure."
+                );
                 enableSingleExportButton();
             }
 
         } catch (Throwable t) {
-            logError("LAB 3 failed: " + t.getClass().getSimpleName());
+            logError("LAB 3 failed");
             enableSingleExportButton();
         } finally {
             try {
@@ -870,36 +793,26 @@ private void lab4MicManual() {
         logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
         logLabelValue("Top Mic Confidence", top.confidence);
 
-        // 🔑 SIGNAL DETECTION (NOT CONFIDENCE-BASED)
         boolean bottomHasSignal =
                 !bottom.silenceDetected && (bottom.rms > 0 || bottom.peak > 0);
 
         boolean topHasSignal =
                 !top.silenceDetected && (top.rms > 0 || top.peak > 0);
 
-        if (bottomHasSignal && topHasSignal) {
+        if (bottomHasSignal || topHasSignal) {
 
-            logOk("Both microphones show measurable audio response");
+            logOk("Microphone signal detected");
             logLabelValue(
                     "Note",
-                    "Both microphones detected signal. Low confidence may be caused by quiet environment, directional mic design, or noise suppression."
-            );
-
-        } else if (bottomHasSignal || topHasSignal) {
-
-            logWarn("One microphone responded, the other did not");
-            logLabelValue(
-                    "Note",
-                    "Partial microphone response detected. This may indicate a blocked mic, hardware issue, or strong noise suppression."
+                    "At least one microphone detected signal successfully. Low confidence may be caused by environment or noise suppression."
             );
 
         } else {
 
-            // ❌ TRUE FAILURE — absolute silence only
-            logError("No usable signal detected from either microphone");
+            logError("No usable microphone signal detected");
             logLabelValue(
                     "Note",
-                    "This indicates a serious microphone, permission, or audio subsystem failure."
+                    "Absolute silence detected. This indicates a microphone, permission, or audio subsystem failure."
             );
         }
 
@@ -956,7 +869,7 @@ private void lab5Vibration() {
 
 private void lab6DisplayTouch() {
 
-    logSection("LAB 6 — Display / Touch Basic Inspection (manual)");
+    logSection("LAB 6 — Display / Touch Basic Inspection");
 
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
@@ -970,7 +883,7 @@ private void lab6DisplayTouch() {
 
 private void lab7RotationManual() {
 
-    logSection("LAB 7 — Rotation / Auto-Rotate Check (manual)");
+    logSection("LAB 7 — Rotation / Auto-Rotate Check");
 
     startActivityForResult(
             new Intent(this, RotationCheckActivity.class),
@@ -984,7 +897,7 @@ private void lab7RotationManual() {
 
 private void lab8ProximityCall() {
 
-    logSection("LAB 8 — Proximity During Call (manual)");
+    logSection("LAB 8 — Proximity During Call");
 
     startActivityForResult(
             new Intent(this, ProximityCheckActivity.class),
@@ -4086,4 +3999,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-}
+        }

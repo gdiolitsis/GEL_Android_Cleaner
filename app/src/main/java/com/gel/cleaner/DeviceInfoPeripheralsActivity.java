@@ -528,8 +528,8 @@ private String buildConnectivityInfo() {
             break;
     }
     sb.append("\n");
-
-    // ⚠️ ΕΔΩ ΤΕΛΕΙΩΝΕΙ — ΟΧΙ ΑΛΛΟ CODE ΑΠΟ ΚΑΤΩ
+    
+    sb.append(buildWifiAndBluetoothInfo());
 
     return sb.toString();
 }
@@ -951,6 +951,19 @@ private String buildSensorsInfo() {
     return sb.toString();
 }
 
+// ============================================================
+// WIFI + BLUETOOTH INFO — CONNECTIVITY EXTENSION (FULL + ROOT)
+// ============================================================
+
+private String buildWifiAndBluetoothInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    try {
+
+        WifiManager wm = (WifiManager) getApplicationContext()
+                .getSystemService(Context.WIFI_SERVICE);
+
         // ============================================================
         // WI-FI DETAILS
         // ============================================================
@@ -990,7 +1003,8 @@ private String buildSensorsInfo() {
     sb.append("\nBluetooth:\n");
 
     try {
-        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bm =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
 
         if (ba == null) {
@@ -1017,14 +1031,16 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             String btName = ba.getName();
             if (btName == null || btName.trim().isEmpty()) {
-                btName = isRooted ? "Unavailable" : "Unavailable (requires root access)";
+                btName = isDeviceRooted()
+                        ? "Unavailable"
+                        : "Unavailable (requires root access)";
             }
 
             String btAddr = ba.getAddress();
             if (btAddr == null
                     || btAddr.trim().isEmpty()
                     || "02:00:00:00:00:00".equals(btAddr)) {
-                btAddr = isRooted
+                btAddr = isDeviceRooted()
                         ? "Unavailable"
                         : "Masked by Android security (requires root access)";
             }
@@ -1035,7 +1051,7 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
             // ------------------------------------------------------------
-            if (isRooted) {
+            if (isDeviceRooted()) {
                 sb.append("  Version        : ");
 
                 String v = readSysString("/proc/bluetooth/version");
@@ -1055,11 +1071,14 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
             sb.append("  Discoverable   : ")
-                    .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
+                    .append(ba.getScanMode() ==
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
+                            ? "Yes" : "No")
                     .append("\n");
 
             // BLE Support
-            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            boolean le = getPackageManager()
+                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
             sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
 
             // ------------------------------------------------------------
@@ -1067,28 +1086,34 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             sb.append("  Multiple Adv   : ");
             try {
-                sb.append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No").append("\n");
+                sb.append(ba.isMultipleAdvertisementSupported()
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             sb.append("  LE Scanner     : ");
             try {
-                sb.append(ba.getBluetoothLeScanner() != null ? "Yes" : "No").append("\n");
+                sb.append(ba.getBluetoothLeScanner() != null
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             sb.append("  Offloaded Filt.: ");
             try {
-                sb.append(ba.isOffloadedFilteringSupported() ? "Yes" : "No").append("\n");
+                sb.append(ba.isOffloadedFilteringSupported()
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             // ------------------------------------------------------------
             // CONNECTED DEVICES (GATT)
             // ------------------------------------------------------------
             try {
-                List<BluetoothDevice> con = (bm != null)
-                        ? bm.getConnectedDevices(BluetoothProfile.GATT)
-                        : null;
+                List<BluetoothDevice> con =
+                        (bm != null)
+                                ? bm.getConnectedDevices(BluetoothProfile.GATT)
+                                : null;
 
-                sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
+                sb.append("  GATT Devices   : ")
+                        .append(con != null ? con.size() : 0)
+                        .append("\n");
             } catch (Throwable ignore) {
                 sb.append("  GATT Devices   : Unknown\n");
             }
@@ -1097,10 +1122,9 @@ private String buildSensorsInfo() {
             // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
             // ------------------------------------------------------------
             sb.append("\n  Firmware Info  : ");
-            if (isRooted) {
+            if (isDeviceRooted()) {
                 String fw = null;
 
-                // Common vendor BLUETOOTH firmware paths
                 if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
                 if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
                 if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");

@@ -126,12 +126,12 @@
 
     <!-- 7 CATEGORIES -->
     <string name="manual_cat_1">Audio &amp; Vibration — Manual Labs 1–5</string>
-    <string name="manual_cat_2">Display &amp; Sensors — Manual Labs 6–10</string>
-    <string name="manual_cat_3">Wireless &amp; Connectivity — Manual Labs 11–14</string>
-    <string name="manual_cat_4">Battery &amp; Thermal — Manual Labs 15–18</string>
-    <string name="manual_cat_5">Storage &amp; Performance — Manual Labs 19–22</string>
-    <string name="manual_cat_6">Security &amp; System Health — Manual Labs 23–26</string>
-    <string name="manual_cat_7">Advanced / Logs — Manual Labs 27–30</string>
+    <string name="manual_cat_2">Display &amp; Sensors — Manual Labs 6–9</string>
+    <string name="manual_cat_3">Wireless &amp; Connectivity — Manual Labs 10–13</string>
+    <string name="manual_cat_4">Battery &amp; Thermal — Manual Labs 14–17</string>
+    <string name="manual_cat_5">Storage &amp; Performance — Manual Labs 18–21</string>
+    <string name="manual_cat_6">Security &amp; System Health — Manual Labs 22–25</string>
+    <string name="manual_cat_7">Advanced / Logs — Manual Labs 26–29</string>
 
     <!-- LOG -->
     <string name="manual_log_title">Manual Tests Log</string>

@@ -172,6 +172,13 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     private TextView[] allContents;
     private TextView[] allIcons;
 
+    // ------------------------------------------------------------
+    // Fields referenced by setupSection (must exist)
+    // ------------------------------------------------------------
+    private LinearLayout batteryContainer = null;
+    private TextView iconBattery = null;
+    private TextView txtBatteryModelCapacity = null;
+
     // ============================================================
     // TELEPHONY SNAPSHOT — SINGLE SOURCE
     // ============================================================
@@ -196,6 +203,11 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
 
+        // Bind what we know exists (safe)
+        batteryContainer = findViewById(R.id.batteryContainer);
+        iconBattery = findViewById(R.id.iconBatteryToggle);
+        txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
+
         TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
 
         populateAllSections();
@@ -209,140 +221,85 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // CONNECTIVITY INFO
+    //  PERMISSION CALLBACK — FINAL CLEAN VERSION
     // ============================================================
-    private String buildConnectivityInfo() {
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        TelephonySnapshot s = getTelephonySnapshot();
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Airplane Mode: ").append(s.airplaneOn ? "ON" : "OFF").append("\n");
-
-        sb.append("SIM State: ").append(s.simState).append("\n");
-
-        sb.append("Mobile Service: ")
-                .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")
-                .append("\n");
-
-        sb.append("Mobile Data: ").append(s.dataState);
-
-        return sb.toString();
-    }
-
-    private TelephonySnapshot getTelephonySnapshot() {
-
-        TelephonySnapshot s = new TelephonySnapshot();
-
-        try {
-            s.airplaneOn = Settings.Global.getInt(
-                    getContentResolver(),
-                    Settings.Global.AIRPLANE_MODE_ON, 0
-            ) == 1;
-        } catch (Exception ignored) {}
-
-        TelephonyManager tm =
-                (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-
-        if (tm != null) {
-
-            try { s.simState = tm.getSimState(); } catch (Exception ignored) {}
-
-            try {
-                ServiceState ss = tm.getServiceState();
-                if (ss != null) {
-                    s.serviceState = ss.getState();
-                    s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);
-                }
-            } catch (Exception ignored) {}
-
-            try { s.dataState = tm.getDataState(); } catch (Exception ignored) {}
+        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
+            // no-op for now
         }
 
-        return s;
-    }
-}
-
-// ============================================================
-//  PERMISSION CALLBACK — FINAL CLEAN VERSION
-// ============================================================
-@Override
-public void onRequestPermissionsResult(int requestCode,
-                                       @NonNull String[] permissions,
-                                       @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    // 🔹 GEL universal permissions
-    if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-        // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν
-    }
-
-    // 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)
-    if (requestCode == 101) {
-        refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block
-    }
-}
-
-// ============================================================
-// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (FINAL, FIXED — NO AUDIO)
-// ============================================================
-private void setupSection(View header, View content, TextView icon) {
-
-    if (header == null || content == null || icon == null)
-        return;
-
-    content.setVisibility(View.GONE);
-    icon.setText("＋");
-
-    header.setOnClickListener(v -> {
-
-        final boolean isOpen = (content.getVisibility() == View.VISIBLE);
-
-        // ------------------------------------------------------------
-        // 1️⃣ Close Battery safely (if open)
-        // ------------------------------------------------------------
-        if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
-            animateCollapse(batteryContainer);
-            if (iconBattery != null) iconBattery.setText("＋");
-            if (txtBatteryModelCapacity != null)
-                txtBatteryModelCapacity.setVisibility(View.GONE);
+        if (requestCode == 101) {
+            refreshModemInfo();   // requires your existing method
         }
+    }
 
-        // ------------------------------------------------------------
-        // 2️⃣ Close all other sections
-        // ------------------------------------------------------------
-        if (allContents != null && allIcons != null) {
-            for (int i = 1; i < allContents.length; i++) { // 0 = Battery
-                if (allContents[i] != null && allContents[i] != content) {
-                    allContents[i].setVisibility(View.GONE);
-                    if (i < allIcons.length && allIcons[i] != null)
-                        allIcons[i].setText("＋");
+    // ============================================================
+    // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
+    // ============================================================
+    private void setupSection(View header, View content, TextView icon) {
+
+        if (header == null || content == null || icon == null)
+            return;
+
+        content.setVisibility(View.GONE);
+        icon.setText("＋");
+
+        header.setOnClickListener(v -> {
+
+            final boolean isOpen = (content.getVisibility() == View.VISIBLE);
+
+            // ------------------------------------------------------------
+            // 1️⃣ Close Battery safely (if open)
+            // ------------------------------------------------------------
+            if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
+                animateCollapse(batteryContainer);
+                if (iconBattery != null) iconBattery.setText("＋");
+                if (txtBatteryModelCapacity != null)
+                    txtBatteryModelCapacity.setVisibility(View.GONE);
+            }
+
+            // ------------------------------------------------------------
+            // 2️⃣ Close all other sections
+            // ------------------------------------------------------------
+            if (allContents != null && allIcons != null) {
+                for (int i = 1; i < allContents.length; i++) { // 0 = Battery
+                    if (allContents[i] != null && allContents[i] != content) {
+                        allContents[i].setVisibility(View.GONE);
+                        if (i < allIcons.length && allIcons[i] != null)
+                            allIcons[i].setText("＋");
+                    }
                 }
             }
-        }
 
-        // ------------------------------------------------------------
-        // 3️⃣ Toggle pressed section
-        // ------------------------------------------------------------
-        if (isOpen) {
-            animateCollapse(content);
-            icon.setText("＋");
-        } else {
-            content.setVisibility(View.VISIBLE);
-            animateExpand(content);
-            icon.setText("－");
-        }
-    });
-}
+            // ------------------------------------------------------------
+            // 3️⃣ Toggle pressed section
+            // ------------------------------------------------------------
+            if (isOpen) {
+                animateCollapse(content);
+                icon.setText("＋");
+            } else {
+                content.setVisibility(View.VISIBLE);
+                animateExpand(content);
+                icon.setText("－");
+            }
+        });
+    }
 
     // ============================================================
     // GEL Expand Engine v3.0 — FINAL
     // ============================================================
     private void toggleSection(TextView targetContent, TextView targetIcon) {
 
+        if (allContents == null || allIcons == null) return;
+
         for (int i = 0; i < allContents.length; i++) {
             TextView c  = allContents[i];
-            TextView ic = allIcons[i];
+            TextView ic = (i < allIcons.length) ? allIcons[i] : null;
 
             if (c == null || ic == null) continue;
 
@@ -362,11 +319,14 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     private void animateExpand(final View v) {
+        if (v == null) return;
         v.post(() -> {
-            v.measure(
-                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
+            try {
+                v.measure(
+                        View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                );
+            } catch (Throwable ignore) {}
 
             final int target = v.getMeasuredHeight();
 
@@ -387,9 +347,9 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     private void animateCollapse(final View v) {
+        if (v == null) return;
         if (v.getVisibility() != View.VISIBLE) return;
 
-        final int initial = v.getHeight();
         v.setAlpha(1f);
 
         v.animate()
@@ -433,17 +393,15 @@ private void setupSection(View header, View content, TextView icon) {
             if (pi.requestedPermissions == null) return false;
 
             for (String p : pi.requestedPermissions) {
-                if (perm.equals(p)) {
-                    return true;
-                }
+                if (perm.equals(p)) return true;
             }
-        } catch (Throwable ignore) {
-        }
+        } catch (Throwable ignore) {}
         return false;
     }
 
     private boolean sectionNeedsPermission(String type) {
 
+        if (type == null) return false;
         type = type.toLowerCase(Locale.US);
 
         if (type.contains("camera")) {
@@ -468,15 +426,12 @@ private void setupSection(View header, View content, TextView icon) {
             return appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES);
         }
 
-        if (type.contains("nfc")) {
-            return false;
-        }
-
         return false;
     }
 
     private boolean userHasPermission(String type) {
 
+        if (type == null) return true;
         type = type.toLowerCase(Locale.US);
 
         if (type.contains("camera")) {
@@ -526,10 +481,6 @@ private void setupSection(View header, View content, TextView icon) {
             return true;
         }
 
-        if (type.contains("nfc")) {
-            return true;
-        }
-
         if (type.contains("nearby")) {
             if (Build.VERSION.SDK_INT >= 31) {
                 if (!appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES)) return true;
@@ -544,6 +495,7 @@ private void setupSection(View header, View content, TextView icon) {
 
     private void appendAccessInstructions(StringBuilder sb, String type) {
 
+        if (sb == null) return;
         if (!sectionNeedsPermission(type)) return;
         if (userHasPermission(type)) return;
 
@@ -877,7 +829,7 @@ private String buildSensorsInfo() {
 }
 
 // ============================================================
-//  CONNECTIVITY 
+//  CONNECTIVITY  (Wi-Fi + Bluetooth + Root paths) — GEL Edition
 // ============================================================
 private String buildConnectivityInfo() {
     StringBuilder sb = new StringBuilder();
@@ -908,17 +860,17 @@ private String buildConnectivityInfo() {
                 boolean notMetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
 
                 sb.append("Downlink         : ")
-                  .append(caps.getLinkDownstreamBandwidthKbps())
-                  .append(" kbps\n");
+                        .append(caps.getLinkDownstreamBandwidthKbps())
+                        .append(" kbps\n");
                 sb.append("Uplink           : ")
-                  .append(caps.getLinkUpstreamBandwidthKbps())
-                  .append(" kbps\n");
+                        .append(caps.getLinkUpstreamBandwidthKbps())
+                        .append(" kbps\n");
                 sb.append("Validated        : ")
-                  .append(validated ? "Yes" : "No")
-                  .append("\n");
+                        .append(validated ? "Yes" : "No")
+                        .append("\n");
                 sb.append("Metered          : ")
-                  .append(notMetered ? "No" : "Yes")
-                  .append("\n");
+                        .append(notMetered ? "No" : "Yes")
+                        .append("\n");
             }
         }
 
@@ -955,142 +907,144 @@ private String buildConnectivityInfo() {
 
     } catch (Throwable ignore) {}
 
-// ============================================================
-// BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
-// ============================================================
-sb.append("\nBluetooth:\n");
+    // ============================================================
+    // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
+    // ============================================================
+    sb.append("\nBluetooth:\n");
 
-try {
-    BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-    BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+    try {
+        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
 
-    if (ba == null) {
-        sb.append("  Supported      : No\n");
-    } else {
-        sb.append("  Supported      : Yes\n");
-        sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-
-        // ------------------------------------------------------------
-        // STATE
-        // ------------------------------------------------------------
-        int state = ba.getState();
-        String stateStr;
-        switch (state) {
-            case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-            case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-            case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-            default:                                 stateStr = "Off";         break;
-        }
-        sb.append("  State          : ").append(stateStr).append("\n");
-
-        // ------------------------------------------------------------
-        // NAME / ADDRESS (MASKED IF UNROOTED)
-        // ------------------------------------------------------------
-        String btName = ba.getName();
-        if (btName == null || btName.trim().isEmpty()) {
-            btName = isRooted ? "Unavailable" : "Unavailable (requires root access)";
-        }
-
-        String btAddr = ba.getAddress();
-        if (btAddr == null
-                || btAddr.trim().isEmpty()
-                || "02:00:00:00:00:00".equals(btAddr)) {
-            btAddr = isRooted
-                    ? "Unavailable"
-                    : "Masked by Android security (requires root access)";
-        }
-
-        sb.append("  Name           : ").append(btName).append("\n");
-        sb.append("  Address        : ").append(btAddr).append("\n");
-
-        // ------------------------------------------------------------
-        // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
-        // ------------------------------------------------------------
-        if (isRooted) {
-            sb.append("  Version        : ");
-
-            String v = readSysString("/proc/bluetooth/version");
-            if (v == null || v.isEmpty())
-                v = readSysString("/sys/module/bluetooth/version");
-
-            sb.append(v != null && !v.isEmpty()
-                    ? v
-                    : "Not exposed by vendor firmware").append("\n");
-
+        if (ba == null) {
+            sb.append("  Supported      : No\n");
         } else {
-            sb.append("  Version        : Not exposed by Android (requires root access)\n");
+            sb.append("  Supported      : Yes\n");
+            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+
+            // ------------------------------------------------------------
+            // STATE
+            // ------------------------------------------------------------
+            int state = ba.getState();
+            String stateStr;
+            switch (state) {
+                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+                default:                                 stateStr = "Off";         break;
+            }
+            sb.append("  State          : ").append(stateStr).append("\n");
+
+            // ------------------------------------------------------------
+            // NAME / ADDRESS (MASKED IF UNROOTED)
+            // ------------------------------------------------------------
+            String btName = ba.getName();
+            if (btName == null || btName.trim().isEmpty()) {
+                btName = isRooted ? "Unavailable" : "Unavailable (requires root access)";
+            }
+
+            String btAddr = ba.getAddress();
+            if (btAddr == null
+                    || btAddr.trim().isEmpty()
+                    || "02:00:00:00:00:00".equals(btAddr)) {
+                btAddr = isRooted
+                        ? "Unavailable"
+                        : "Masked by Android security (requires root access)";
+            }
+
+            sb.append("  Name           : ").append(btName).append("\n");
+            sb.append("  Address        : ").append(btAddr).append("\n");
+
+            // ------------------------------------------------------------
+            // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
+            // ------------------------------------------------------------
+            if (isRooted) {
+                sb.append("  Version        : ");
+
+                String v = readSysString("/proc/bluetooth/version");
+                if (v == null || v.isEmpty())
+                    v = readSysString("/sys/module/bluetooth/version");
+
+                sb.append(v != null && !v.isEmpty()
+                        ? v
+                        : "Not exposed by vendor firmware").append("\n");
+
+            } else {
+                sb.append("  Version        : Not exposed by Android (requires root access)\n");
+            }
+
+            // ------------------------------------------------------------
+            // CLASSIC CAPABILITIES
+            // ------------------------------------------------------------
+            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
+            sb.append("  Discoverable   : ")
+                    .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
+                    .append("\n");
+
+            // BLE Support
+            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+
+            // ------------------------------------------------------------
+            // HARDWARE CAPABILITIES
+            // ------------------------------------------------------------
+            sb.append("  Multiple Adv   : ");
+            try {
+                sb.append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+            sb.append("  LE Scanner     : ");
+            try {
+                sb.append(ba.getBluetoothLeScanner() != null ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+            sb.append("  Offloaded Filt.: ");
+            try {
+                sb.append(ba.isOffloadedFilteringSupported() ? "Yes" : "No").append("\n");
+            } catch (Throwable ignore) { sb.append("Unknown\n"); }
+
+            // ------------------------------------------------------------
+            // CONNECTED DEVICES (GATT)
+            // ------------------------------------------------------------
+            try {
+                List<BluetoothDevice> con = (bm != null)
+                        ? bm.getConnectedDevices(BluetoothProfile.GATT)
+                        : null;
+
+                sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
+            } catch (Throwable ignore) {
+                sb.append("  GATT Devices   : Unknown\n");
+            }
+
+            // ------------------------------------------------------------
+            // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
+            // ------------------------------------------------------------
+            sb.append("\n  Firmware Info  : ");
+            if (isRooted) {
+                String fw = null;
+
+                // Common vendor BLUETOOTH firmware paths
+                if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
+                if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
+                if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");
+                if (fw == null) fw = readSysString("/proc/bluetooth/soc");
+
+                sb.append(fw != null && !fw.isEmpty()
+                        ? fw
+                        : "Not exposed by vendor").append("\n");
+
+            } else {
+                sb.append("Requires root access\n");
+            }
         }
 
-        // ------------------------------------------------------------
-        // CLASSIC CAPABILITIES
-        // ------------------------------------------------------------
-        sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-        sb.append("  Discoverable   : ")
-                .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
-                .append("\n");
-
-        // BLE Support
-        boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-        sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
-
-        // ------------------------------------------------------------
-        // HARDWARE CAPABILITIES
-        // ------------------------------------------------------------
-        sb.append("  Multiple Adv   : ");
-        try {
-            sb.append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) { sb.append("Unknown\n"); }
-
-        sb.append("  LE Scanner     : ");
-        try {
-            sb.append(ba.getBluetoothLeScanner() != null ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) { sb.append("Unknown\n"); }
-
-        sb.append("  Offloaded Filt.: ");
-        try {
-            sb.append(ba.isOffloadedFilteringSupported() ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) { sb.append("Unknown\n"); }
-
-        // ------------------------------------------------------------
-        // CONNECTED DEVICES (GATT)
-        // ------------------------------------------------------------
-        try {
-            List<BluetoothDevice> con =
-                    bm.getConnectedDevices(BluetoothProfile.GATT);
-            sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
-        } catch (Throwable ignore) {
-            sb.append("  GATT Devices   : Unknown\n");
-        }
-
-        // ------------------------------------------------------------
-        // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
-        // ------------------------------------------------------------
-        sb.append("\n  Firmware Info  : ");
-        if (isRooted) {
-            String fw = null;
-
-            // Common vendor BLUETOOTH firmware paths
-            if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
-            if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
-            if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");
-            if (fw == null) fw = readSysString("/proc/bluetooth/soc");
-
-            sb.append(fw != null && !fw.isEmpty()
-                    ? fw
-                    : "Not exposed by vendor").append("\n");
-
-        } else {
-            sb.append("Requires root access\n");
-        }
-    }
-
-} catch (Throwable ignore) {}
+    } catch (Throwable ignore) {}
 
     // ============================================================
     // ADVANCED INFO (green comment style)
     // ============================================================
     sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
-              "Bluetooth controller logs and HCI traces, requires root access.\n");
+            "Bluetooth controller logs and HCI traces, requires root access.\n");
 
     return sb.toString();
 }

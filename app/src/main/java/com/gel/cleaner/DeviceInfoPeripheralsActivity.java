@@ -403,47 +403,58 @@ requestPermissions(new String[]{
 // ------------------------------------------------------------  
 // 6️⃣  INIT BATTERY MODULE  
 // ------------------------------------------------------------  
-initBatterySection();  
+initBatterySection();
 
-batteryContainer.setVisibility(View.GONE);  
-txtBatteryModelCapacity.setVisibility(View.GONE);  
-if (iconBattery != null) iconBattery.setText("＋");  
+// Αρχική κατάσταση: όλα κλειστά
+batteryContainer.setVisibility(View.GONE);
 
-LinearLayout headerBattery = findViewById(R.id.headerBattery);  
-if (headerBattery != null) {  
-    headerBattery.setOnClickListener(v -> {  
+if (txtBatteryContent != null)
+    txtBatteryContent.setVisibility(View.GONE);
 
-        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);  
+if (txtBatteryModelCapacity != null)
+    txtBatteryModelCapacity.setVisibility(View.GONE);
+
+if (iconBattery != null)
+    iconBattery.setText("＋");
+
+LinearLayout headerBattery = findViewById(R.id.headerBattery);
+if (headerBattery != null) {
+    headerBattery.setOnClickListener(v -> {
+
+        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
         // ⚠️ ΜΗΝ πειράξεις αυτό
-        collapseAllExceptBattery();  
+        collapseAllExceptBattery();
 
-        if (!isOpen) {  
-            // ✅ ΑΝΟΙΓΜΑ BATTERY (ΑΥΤΟ ΕΛΕΙΠΕ ΠΡΙΝ)
-            batteryContainer.setVisibility(View.VISIBLE);  
+        if (!isOpen) {
+            // ✅ ΑΝΟΙΓΜΑ BATTERY
+            batteryContainer.setVisibility(View.VISIBLE);
 
-            if (txtBatteryContent != null)  
-                txtBatteryContent.setVisibility(View.VISIBLE);  
+            if (txtBatteryContent != null)
+                txtBatteryContent.setVisibility(View.VISIBLE);
 
-            if (iconBattery != null)  
-                iconBattery.setText("－");  
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
-            if (txtBatteryModelCapacity != null)  
-                txtBatteryModelCapacity.setVisibility(View.VISIBLE);  
+            if (iconBattery != null)
+                iconBattery.setText("－");
 
-            refreshBatteryInfoView();  
+            refreshBatteryInfoView();
 
-        } else {  
-            // ✅ ΚΛΕΙΣΙΜΟ BATTERY
-            batteryContainer.setVisibility(View.GONE);  
+        } else {
+            // ✅ ΚΛΕΙΣΙΜΟ BATTERY (ΠΛΗΡΕΣ)
+            batteryContainer.setVisibility(View.GONE);
 
-            if (iconBattery != null)  
-                iconBattery.setText("＋");  
+            if (txtBatteryContent != null)
+                txtBatteryContent.setVisibility(View.GONE);
 
-            if (txtBatteryModelCapacity != null)  
-                txtBatteryModelCapacity.setVisibility(View.GONE);  
-        }  
-    });  
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.GONE);
+
+            if (iconBattery != null)
+                iconBattery.setText("＋");
+        }
+    });
 }
 
 // ------------------------------------------------------------  

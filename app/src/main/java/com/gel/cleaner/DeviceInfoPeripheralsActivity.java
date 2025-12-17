@@ -401,12 +401,13 @@ requestPermissions(new String[]{
 }, 101);  
 
 // ------------------------------------------------------------
-// 6️⃣ INIT BATTERY MODULE — FINAL
+// 6️⃣ INIT BATTERY MODULE — FIXED (NO XML CHANGES)
 // ------------------------------------------------------------
 initBatterySection();
 
-// Αρχική κατάσταση: ΟΛΑ ΚΛΕΙΣΤΑ
-batteryContainer.setVisibility(View.GONE);
+// 🔒 Αρχική κατάσταση: BATTERY ΠΛΗΡΩΣ ΚΛΕΙΣΤΟ
+if (batteryContainer != null)
+    batteryContainer.setVisibility(View.GONE);
 
 if (txtBatteryContent != null)
     txtBatteryContent.setVisibility(View.GONE);
@@ -421,19 +422,22 @@ LinearLayout headerBattery = findViewById(R.id.headerBattery);
 if (headerBattery != null) {
     headerBattery.setOnClickListener(v -> {
 
-        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
+        boolean isOpen =
+                batteryContainer != null &&
+                batteryContainer.getVisibility() == View.VISIBLE;
 
         if (!isOpen) {
-            // Κλείνουμε ΟΛΑ τα άλλα sections
+
+            // 🔻 Κλείνουμε ΟΛΑ τα άλλα sections
             collapseAllExceptBattery();
 
-            // ΑΝΟΙΓΜΑ BATTERY
-            batteryContainer.setVisibility(View.VISIBLE);
+            // 🔺 ΑΝΟΙΓΜΑ BATTERY (ΟΛΑ ΜΑΖΙ)
+            if (batteryContainer != null)
+                batteryContainer.setVisibility(View.VISIBLE);
 
             if (txtBatteryContent != null)
                 txtBatteryContent.setVisibility(View.VISIBLE);
 
-            // 👉 ΑΝΟΙΓΕΙ ΜΟΝΟ ΕΔΩ
             if (txtBatteryModelCapacity != null)
                 txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
@@ -443,13 +447,14 @@ if (headerBattery != null) {
             refreshBatteryInfoView();
 
         } else {
-            // ΚΛΕΙΣΙΜΟ BATTERY (ΠΛΗΡΕΣ)
-            batteryContainer.setVisibility(View.GONE);
+
+            // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
+            if (batteryContainer != null)
+                batteryContainer.setVisibility(View.GONE);
 
             if (txtBatteryContent != null)
                 txtBatteryContent.setVisibility(View.GONE);
 
-            // 👉 ΚΛΕΙΝΕΙ ΥΠΟΧΡΕΩΤΙΚΑ ΕΔΩ
             if (txtBatteryModelCapacity != null)
                 txtBatteryModelCapacity.setVisibility(View.GONE);
 
@@ -3450,13 +3455,13 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
     }
     
 // ============================================================
-// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY  (FIXED)
+// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY (CLEAN)
 // ============================================================
 private void collapseAllExceptBattery() {
 
     if (allContents == null || allIcons == null) return;
 
-    // 1) Κλείσε όλα τα κανονικά sections (Battery = index 0 → μην το ακουμπήσεις)
+    // Κλείσε όλα τα sections εκτός Battery (index 0)
     for (int i = 1; i < allContents.length; i++) {
 
         TextView content = allContents[i];
@@ -3468,23 +3473,28 @@ private void collapseAllExceptBattery() {
         if (icon != null)
             icon.setText("＋");
     }
+}
 
-    // ⭐ FIX: Μην αγγίζεις το batteryContainer εδώ.
+// ============================================================
+// COLLAPSE ENGINE — PUBLIC WRAPPER (GLOBAL CLOSE)
+// ============================================================
+private void collapseAll() {
 
-    // ⭐ FIX: Κρύψε μόνο το capacity button όταν το Battery είναι κλειστό
+    // Κλείσε όλα τα non-battery sections
+    collapseAllExceptBattery();
+
+    // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
+    if (batteryContainer != null)
+        batteryContainer.setVisibility(View.GONE);
+
+    if (txtBatteryContent != null)
+        txtBatteryContent.setVisibility(View.GONE);
+
     if (txtBatteryModelCapacity != null)
         txtBatteryModelCapacity.setVisibility(View.GONE);
 
-    // ⭐ Reset battery icon (always safe)
     if (iconBattery != null)
         iconBattery.setText("＋");
-} 
-
-// ============================================================
-// COLLAPSE ENGINE — PUBLIC WRAPPER
-// ============================================================
-private void collapseAll() {
-    collapseAllExceptBattery();
 }
 
 // ===================================================================

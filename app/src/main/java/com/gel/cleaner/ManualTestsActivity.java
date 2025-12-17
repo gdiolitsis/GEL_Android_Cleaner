@@ -1150,7 +1150,7 @@ private void lab10WifiSnapshot() {
                             Manifest.permission.ACCESS_FINE_LOCATION,  
                             Manifest.permission.ACCESS_COARSE_LOCATION  
                     },  
-                    REQ_LOCATION_LAB11  
+                    REQ_LOCATION_LAB10  
             );  
 
             logInfo("Grant permission, then Lab 10 will auto-retry.");  
@@ -1236,7 +1236,7 @@ private void lab10WifiSnapshot() {
 public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {  
     super.onRequestPermissionsResult(requestCode, perms, grantResults);  
 
-    if (requestCode == REQ_LOCATION_LAB11) {  
+    if (requestCode == REQ_LOCATION_LAB10) {  
         boolean granted = false;  
         if (grantResults != null) {  
             for (int r : grantResults) {  
@@ -2327,7 +2327,7 @@ private void lab20RamSnapshot() {
     }  
 }  
 
-private void lab22UptimeHints() {  
+private void lab21UptimeHints() {  
     logLine();  
     logInfo("LAB 21 — Uptime / Reboot History Hints.");  
     long upMs = SystemClock.elapsedRealtime();  

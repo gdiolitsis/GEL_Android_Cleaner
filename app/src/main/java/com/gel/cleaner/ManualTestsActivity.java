@@ -870,7 +870,7 @@ private void lab4MicManual() {
         logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
         logLabelValue("Top Mic Confidence", top.confidence);
 
-        // 🔑 KEY LOGIC (MATCHES LAB 3 PHILOSOPHY)
+        // 🔑 SIGNAL DETECTION (NOT CONFIDENCE-BASED)
         boolean bottomHasSignal =
                 !bottom.silenceDetected && (bottom.rms > 0 || bottom.peak > 0);
 
@@ -882,15 +882,15 @@ private void lab4MicManual() {
             logOk("Both microphones show measurable audio response");
             logLabelValue(
                     "Note",
-                    "Signal detected on both microphones. Confidence may vary depending on environment and noise suppression."
+                    "Both microphones detected signal. Low confidence may be caused by quiet environment, directional mic design, or noise suppression."
             );
 
         } else if (bottomHasSignal || topHasSignal) {
 
-            logWarn("Partial microphone response detected");
+            logWarn("One microphone responded, the other did not");
             logLabelValue(
                     "Note",
-                    "At least one microphone shows usable signal. Low confidence may be caused by quiet environment, directional mic design, or noise suppression."
+                    "Partial microphone response detected. This may indicate a blocked mic, hardware issue, or strong noise suppression."
             );
 
         } else {
@@ -947,14 +947,17 @@ private void lab5Vibration() {
 }
 
 // ============================================================  
-// LABS 6–10: DISPLAY & SENSORS  
+// LABS 6–9: DISPLAY & SENSORS  
 // ============================================================  
 
 /* ============================================================
-       LAB 6 - DISPLAY Tuch Inspection 
-       ============================================================ */
+   LAB 6 — Display / Touch Basic Inspection (manual)
+   ============================================================ */
 
 private void lab6DisplayTouch() {
+
+    logSection("LAB 6 — Display / Touch Basic Inspection (manual)");
+
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
             6006
@@ -962,10 +965,13 @@ private void lab6DisplayTouch() {
 }
 
 /* ============================================================
-       LAB 7 - AUTO ROTATION 
-       ============================================================ */
+   LAB 7 — Rotation / Auto-Rotate Check (manual)
+   ============================================================ */
 
 private void lab7RotationManual() {
+
+    logSection("LAB 7 — Rotation / Auto-Rotate Check (manual)");
+
     startActivityForResult(
             new Intent(this, RotationCheckActivity.class),
             7007
@@ -973,10 +979,13 @@ private void lab7RotationManual() {
 }
 
 /* ============================================================
-       LAB 8 - PROXIMITY Sensor
-       ============================================================ */
+   LAB 8 — Proximity During Call (manual)
+   ============================================================ */
 
 private void lab8ProximityCall() {
+
+    logSection("LAB 8 — Proximity During Call (manual)");
+
     startActivityForResult(
             new Intent(this, ProximityCheckActivity.class),
             8008
@@ -990,7 +999,7 @@ private void lab8ProximityCall() {
 private void lab9SensorsCheck() {
 
     logLine();
-    logInfo("LAB 9+10 — Sensors Presence & Full Analysis");
+    logInfo("LAB 9 — Sensors Presence & Full Analysis");
 
     try {
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);

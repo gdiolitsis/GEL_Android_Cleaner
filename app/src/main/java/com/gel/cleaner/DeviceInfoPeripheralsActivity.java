@@ -130,6 +130,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.telecom.TelecomManager;
 import android.telephony.CellInfo;
+import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
@@ -416,13 +417,12 @@ if (headerBattery != null) {
 
         if (!isOpen) {  
             if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.VISIBLE);  
-            animateExpand(batteryContainer);  
             if (iconBattery != null) iconBattery.setText("－");  
             if (txtBatteryModelCapacity != null)  
                 txtBatteryModelCapacity.setVisibility(View.VISIBLE);  
             refreshBatteryInfoView();  
         } else {  
-            animateCollapse(batteryContainer);  
+            batteryContainer.setVisibility(View.GONE);
             if (iconBattery != null) iconBattery.setText("＋");  
             if (txtBatteryModelCapacity != null)  
                 txtBatteryModelCapacity.setVisibility(View.GONE);  
@@ -908,52 +908,6 @@ private String buildSensorsInfo() {
     appendAccessInstructions(sb, "sensors");
     return sb.toString();
 }
-
-// ============================================================
-//  CONNECTIVITY  (Wi-Fi + Bluetooth + Root paths) — GEL Edition
-// ============================================================
-private String buildConnectivityInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    // ============================================================
-    // NETWORK TRANSPORTS (Wi-Fi / Cellular / Ethernet)
-    // ============================================================
-    try {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        if (cm != null) {
-            NetworkCapabilities caps = cm.getNetworkCapabilities(cm.getActiveNetwork());
-            if (caps != null) {
-
-                sb.append("Connection Type  : ");
-
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-                    sb.append("Wi-Fi\n");
-                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-                    sb.append("Cellular\n");
-                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-                    sb.append("Ethernet\n");
-                else
-                    sb.append("Other\n");
-
-                boolean validated  = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-                boolean notMetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
-
-                sb.append("Downlink         : ")
-                        .append(caps.getLinkDownstreamBandwidthKbps())
-                        .append(" kbps\n");
-                sb.append("Uplink           : ")
-                        .append(caps.getLinkUpstreamBandwidthKbps())
-                        .append(" kbps\n");
-                sb.append("Validated        : ")
-                        .append(validated ? "Yes" : "No")
-                        .append("\n");
-                sb.append("Metered          : ")
-                        .append(notMetered ? "No" : "Yes")
-                        .append("\n");
-            }
-        }
 
         // ============================================================
         // WI-FI DETAILS

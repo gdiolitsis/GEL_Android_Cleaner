@@ -236,17 +236,17 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
 
     // ============================================================
-    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
-    // ============================================================
-    LinearLayout body3 = makeSectionBody();
-    Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
-    root.addView(header3);
-    root.addView(body3);
+// SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
+// ============================================================
+LinearLayout body3 = makeSectionBody();
+Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
+root.addView(header3);
+root.addView(body3);
 
-    body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab10WifiSnapshot));
-    body3.addView(makeTestButton("11. Mobile Data Checklist", this::lab11MobileDataChecklist));
-    body3.addView(makeTestButton("12. Basic Call Test Guidelines", this::lab12CallGuidelines));
-    body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab13InternetQuickCheck));
+body3.addView(makeTestButton("10. Wi-Fi Link Snapshot",this::lab10WifiSnapshot));
+body3.addView(makeTestButton("11. Mobile Network Diagnostic",this::lab11MobileDataDiagnostic));
+body3.addView(makeTestButton("12. Call Function Interpretation",this::lab12CallFunctionInterpretation));
+body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13InternetQuickCheck));
 
     // ============================================================
     // SECTION 4: BATTERY & THERMAL — LABS 14–17
@@ -1304,82 +1304,209 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
     return Math.max(5f, linkSpeedMbps * rssiFactor);  
 }  
 
-private void lab11MobileDataChecklist() {  
-    logLine();  
-    logInfo("LAB 11 — Mobile Data / Airplane Mode Checklist + SIM detection.");  
+private void lab11MobileDataDiagnostic() {
 
-    try {  
-        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);  
-        if (tm == null) {  
-            logWarn("TelephonyManager not available — cannot detect SIM.");  
-        } else {  
-            int simState = tm.getSimState();  
-            switch (simState) {  
-                case TelephonyManager.SIM_STATE_READY:  
-                    logOk("SIM detected and READY.");  
-                    break;  
-                case TelephonyManager.SIM_STATE_ABSENT:  
-                    logError("NO SIM detected (SIM_STATE_ABSENT).");  
-                    break;  
-                case TelephonyManager.SIM_STATE_PIN_REQUIRED:  
-                    logWarn("SIM detected but locked (PIN required).");  
-                    break;  
-                case TelephonyManager.SIM_STATE_PUK_REQUIRED:  
-                    logWarn("SIM detected but locked (PUK required).");  
-                    break;  
-                case TelephonyManager.SIM_STATE_NETWORK_LOCKED:  
-                    logWarn("SIM detected but network-locked.");  
-                    break;  
-                case TelephonyManager.SIM_STATE_NOT_READY:  
-                    logWarn("SIM present but not ready yet.");  
-                    break;  
-                default:  
-                    logWarn("SIM state unknown: " + simState);  
-                    break;  
-            }  
+    logLine();
+    logInfo("LAB 11 — Mobile Network Diagnostic (Auto)");
 
-            // Service state (best-effort, may be blocked on some OEMs)  
-            try {  
-                ServiceState ss = tm.getServiceState();  
-                if (ss != null) {  
-                    int state = ss.getState();  
-                    if (state == ServiceState.STATE_IN_SERVICE) {  
-                        logOk("Mobile service: IN SERVICE.");  
-                    } else if (state == ServiceState.STATE_OUT_OF_SERVICE) {  
-                        logWarn("Mobile service: OUT OF SERVICE.");  
-                    } else if (state == ServiceState.STATE_EMERGENCY_ONLY) {  
-                        logWarn("Mobile service: EMERGENCY ONLY.");  
-                    } else if (state == ServiceState.STATE_POWER_OFF) {  
-                        logWarn("Mobile service: RADIO OFF / AIRPLANE?");  
-                    } else {  
-                        logWarn("Mobile service state: " + state);  
-                    }  
-                } else {  
-                    logWarn("ServiceState not available.");  
-                }  
-            } catch (SecurityException se) {  
-                logWarn("ServiceState blocked by OS/OEM (no permission).");  
-            } catch (Exception ignored) {}  
-        }  
+    TelephonyManager tm =
+            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
-    } catch (Exception e) {  
-        logWarn("SIM detection error: " + e.getMessage());  
-    }  
+    if (tm == null) {
+        logError("TelephonyManager unavailable. Mobile diagnostics not possible.");
+        return;
+    }
 
-    logInfo("1) Check that Airplane mode is OFF and mobile data is enabled.");  
-    logInfo("2) Ensure a valid SIM with active data plan is inserted.");  
-    logWarn("If the device shows signal bars but mobile data never works -> APN/carrier/modem issue.");  
-    logError("If there is no mobile network at all in known-good coverage -> SIM, antenna or baseband problem.");  
-}  
+    // ------------------------------------------------------------
+    // 1️⃣ Airplane mode — automatic
+    // ------------------------------------------------------------
+    boolean airplaneOn = false;
+    try {
+        airplaneOn = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.AIRPLANE_MODE_ON, 0
+        ) == 1;
+    } catch (Exception ignored) {}
 
-private void lab12CallGuidelines() {  
-    logLine();  
-    logInfo("LAB 12 — Basic Call Test Guidelines (manual).");  
-    logInfo("1) Place a normal call to a known-good number.");  
-    logInfo("2) Verify both directions: you hear them AND they hear you clearly.");  
-    logWarn("If only one direction fails -> isolate earpiece vs microphone path.");  
-    logError("If calls always drop or never connect while data works -> telephony/carrier registration issue.");  
-}  
+    if (airplaneOn) {
+        logWarn("Airplane mode is ENABLED. Mobile network disabled.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 2️⃣ SIM state
+    // ------------------------------------------------------------
+    int simState = tm.getSimState();
+    if (simState != TelephonyManager.SIM_STATE_READY) {
+
+        switch (simState) {
+            case TelephonyManager.SIM_STATE_ABSENT:
+                logError("No SIM detected.");
+                return;
+
+            case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+                logWarn("SIM detected but locked (PIN required).");
+                return;
+
+            case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+                logWarn("SIM detected but locked (PUK required).");
+                return;
+
+            case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+                logWarn("SIM detected but network locked.");
+                return;
+
+            case TelephonyManager.SIM_STATE_NOT_READY:
+                logWarn("SIM present but not ready yet.");
+                return;
+
+            default:
+                logWarn("SIM state unknown: " + simState);
+                return;
+        }
+    }
+
+    logOk("SIM detected and READY.");
+
+    // ------------------------------------------------------------
+    // 3️⃣ Service state — best effort
+    // ------------------------------------------------------------
+    ServiceState ss = null;
+    try {
+        ss = tm.getServiceState();
+    } catch (SecurityException se) {
+        logWarn("ServiceState blocked by OS/OEM (no permission).");
+        return;
+    }
+
+    if (ss == null) {
+        logWarn("ServiceState unavailable.");
+        return;
+    }
+
+    int serviceState = ss.getState();
+
+    // ------------------------------------------------------------
+    // 4️⃣ Verdict logic
+    // ------------------------------------------------------------
+    if (serviceState == ServiceState.STATE_IN_SERVICE) {
+
+        int dataState = tm.getDataState();
+
+        if (dataState == TelephonyManager.DATA_CONNECTED
+                || dataState == TelephonyManager.DATA_CONNECTING) {
+
+            // 🟢 Everything OK — no extra noise
+            return;
+
+        } else {
+            logWarn(
+                    "Mobile network available, but data connection inactive. " +
+                    "Possible APN, carrier configuration, or modem issue."
+            );
+            return;
+        }
+
+    }
+
+    if (serviceState == ServiceState.STATE_OUT_OF_SERVICE
+            || serviceState == ServiceState.STATE_POWER_OFF) {
+
+        logError(
+                "No mobile network detected in known-good coverage. " +
+                "Possible SIM, antenna, or baseband issue."
+        );
+        return;
+    }
+
+    if (serviceState == ServiceState.STATE_EMERGENCY_ONLY) {
+
+        logWarn(
+                "Mobile network limited to emergency calls only. " +
+                "Carrier or coverage restriction detected."
+        );
+    }
+}
+
+private void lab12CallFunctionInterpretation() {
+
+    logLine();
+    logInfo("LAB 12 — Call Function Interpretation (Informational)");
+
+    // Flags that should already be set by previous labs
+    boolean callAudioOk = lab3CallAudioOk;          // from LAB 3
+    boolean networkOk   = lab11NetworkOk;           // from LAB 11
+    boolean networkWarn = lab11NetworkWarning;      // APN / data inactive
+    boolean internetOk  = lab13InternetOk;          // from LAB 13
+
+    // ------------------------------------------------------------
+    // Case 1: Audio + Network OK
+    // ------------------------------------------------------------
+    if (callAudioOk && networkOk) {
+
+        logOk("Call audio path and mobile network have been verified.");
+
+        logInfo(
+                "If real calls fail despite the above, the issue is not related to audio hardware or routing."
+        );
+        logInfo(
+                "Possible causes include carrier registration, IMS/VoLTE configuration, or network-side restrictions."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Case 2: Audio OK, network warning
+    // ------------------------------------------------------------
+    if (callAudioOk && networkWarn) {
+
+        logWarn("Call audio path verified, but mobile network shows limitations.");
+
+        logInfo(
+                "If calls connect but drop or fail intermittently, this may indicate carrier configuration or IMS issues."
+        );
+        logInfo(
+                "Audio subsystem has been ruled out."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Case 3: Network NOT OK
+    // ------------------------------------------------------------
+    if (!networkOk) {
+
+        logError("Mobile network service not available.");
+
+        logInfo(
+                "Call functionality cannot be verified without network service."
+        );
+        logInfo(
+                "Possible causes include SIM issues, antenna problems, or baseband failure."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Case 4: Internet OK but calls fail (edge case)
+    // ------------------------------------------------------------
+    if (internetOk && networkOk && !callAudioOk) {
+
+        logWarn("Internet connectivity is active, but call audio path is not verified.");
+
+        logInfo(
+                "This may indicate call routing, microphone, or earpiece-related issues."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Fallback
+    // ------------------------------------------------------------
+    logInfo(
+            "Call functionality depends on both audio routing and mobile network availability."
+    );
+}
 
 private void lab13InternetQuickCheck() {  
     logLine();  
@@ -4034,4 +4161,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-    }
+}

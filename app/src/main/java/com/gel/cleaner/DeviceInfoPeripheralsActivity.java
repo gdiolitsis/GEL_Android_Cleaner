@@ -6,6 +6,7 @@ package com.gel.cleaner;
 // ============================================================
 // JAVA / UTIL
 // ============================================================
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
@@ -40,6 +41,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.net.Network;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -3219,6 +3221,47 @@ private static class SimpleSimEntry {
         slot = s;
         carrier = c;
     }
+}
+
+// ============================================================
+// GEL UI HELPERS — REQUIRED
+// ============================================================
+
+private void setNeonSectionText(TextView tv, String text) {
+    if (tv == null) return;
+    tv.setText(text);
+}
+
+private void appendAccessInstructions(StringBuilder sb, String type) {
+    if (sb == null) return;
+
+    sb.append("\n");
+    sb.append("Access Info       : ");
+
+    switch (type) {
+        case "camera":
+            sb.append("Camera permission required\n");
+            sb.append("Settings → Apps → Permissions → Camera\n");
+            break;
+        case "sensors":
+            sb.append("Sensor access is system managed\n");
+            break;
+        default:
+            sb.append("Additional permissions may be required\n");
+    }
+}
+
+private void handleSettingsClick(Context ctx, String path) {
+    try {
+        Intent i = new Intent(Settings.ACTION_SETTINGS);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ctx.startActivity(i);
+    } catch (Throwable ignore) {}
+}
+
+private void animateCollapse(TextView v) {
+    if (v == null) return;
+    v.setVisibility(View.GONE);
 }
 
 // 🔥 END OF CLASS

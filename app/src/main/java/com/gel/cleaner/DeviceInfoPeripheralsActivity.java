@@ -1,12 +1,11 @@
 // DeviceInfoPeripheralsActivity.java — MEGA UPGRADE v30
-// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25
+// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
 
 package com.gel.cleaner;
 
 // ============================================================
 // JAVA / UTIL
 // ============================================================
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
@@ -41,7 +40,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.net.Network;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -82,7 +80,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 // ============================================================
-// ANDROID MEDIA / AUDIO
+// ANDROID MEDIA / AUDIO (MIC BENCH + LIVE MIC)
 // ============================================================
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
@@ -136,7 +134,6 @@ import android.telephony.SignalStrength;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
-import android.telephony.ServiceState;
 
 // ============================================================
 // ANDROIDX
@@ -146,102 +143,452 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+// ============================================================
+// STATIC
+// ============================================================
 import static android.content.Context.MODE_PRIVATE;
 
 public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
 
-    // ============================================================
-    // PERMISSIONS
-    // ============================================================
-    private static final String[] PERMISSIONS_ALL = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.NEARBY_WIFI_DEVICES
-    };
+// ============================================================  
+// GEL Permission Request Engine v1.0 — Option B (Auto Request All)  
+// ============================================================  
+private static final String[] PERMISSIONS_ALL = new String[]{  
+        Manifest.permission.CAMERA,  
+        Manifest.permission.RECORD_AUDIO,  
+        Manifest.permission.ACCESS_FINE_LOCATION,  
+        Manifest.permission.ACCESS_COARSE_LOCATION,  
+        Manifest.permission.BLUETOOTH_SCAN,  
+        Manifest.permission.BLUETOOTH_CONNECT,  
+        Manifest.permission.NEARBY_WIFI_DEVICES  
+};  
 
-    private static final int REQ_CODE_GEL_PERMISSIONS = 7777;
+private static final int REQ_CODE_GEL_PERMISSIONS = 7777;  
 
-    // ============================================================
-    // MAIN FIELDS
-    // ============================================================
-    private static final String NEON_GREEN = "#39FF14";
-    private static final String GOLD_COLOR = "#FFD700";
-    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+private void requestAllRuntimePermissions() {  
 
-    private boolean isRooted = false;
+    if (Build.VERSION.SDK_INT < 23) return;  
 
-    private TextView[] allContents;
-    private TextView[] allIcons;
+    java.util.List<String> toRequest = new java.util.ArrayList<>();  
 
-    private LinearLayout batteryContainer = null;
-    private TextView iconBattery = null;
-    private TextView txtBatteryModelCapacity = null;
-    private TextView txtBatteryContent = null;
+    for (String p : PERMISSIONS_ALL) {  
+        if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {  
+            toRequest.add(p);  
+        }  
+    }  
 
-    // ============================================================
-    // TELEPHONY SNAPSHOT — SINGLE SOURCE
-    // ============================================================
-    private static class TelephonySnapshot {
-        boolean airplaneOn;
-        int simState;
-        int serviceState;
-        boolean inService;
-        int dataState;
-    }
+    if (!toRequest.isEmpty()) {  
+        requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);  
+    }  
+}  
 
-    // ============================================================
-    // LIFECYCLE
-    // ============================================================
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_peripherals);
+// ============================================================  
+// MAIN CLASS FIELDS  
+// ============================================================  
+private static final String NEON_GREEN = "#39FF14";  
+private static final String GOLD_COLOR = "#FFD700";  
+private static final int LINK_BLUE     = Color.parseColor("#1E90FF");  
 
-        isRooted = isDeviceRooted();
+private boolean isRooted = false;  
 
-        batteryContainer = findViewById(R.id.batteryContainer);
-        iconBattery = findViewById(R.id.iconBatteryToggle);
-        txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
-        txtBatteryContent = findViewById(R.id.txtBatteryContent);
+private TextView[] allContents;  
+private TextView[] allIcons;
 
-        TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
+// ============================================================
+// SECTION FIELDS
+// ============================================================
+private LinearLayout batteryContainer;
+private TextView txtBatteryContent;
+private TextView iconBattery;
+private TextView txtBatteryModelCapacity;
 
-        populateAllSections();
+private TextView txtScreenContent;
+private TextView txtCameraContent;
+private TextView txtConnectivityContent;   // ⭐ FIXED — Η ΜΟΝΗ ΠΟΥ ΕΛΕΙΠΕ
+private TextView txtLocationContent;
+private TextView txtThermalContent;
+private TextView txtModemContent;
+private TextView txtWifiAdvancedContent;
+private TextView txtAudioUnifiedContent;
+private TextView txtSensorsContent;
+private TextView txtBiometricsContent;
+private TextView txtNfcContent;
+private TextView txtGnssContent;
+private TextView txtUwbContent;
+private TextView txtUsbContent;
+private TextView txtHapticsContent;
+private TextView txtSystemFeaturesContent;
+private TextView txtSecurityFlagsContent;
+private TextView txtRootContent;
+private TextView txtOtherPeripherals;
 
-        if (txtConnectivityContent != null) {
-            setNeonSectionText(
-                    txtConnectivityContent,
-                    buildConnectivityInfo()
-            );
+private TextView iconScreen;
+private TextView iconCamera;
+private TextView iconConnectivity;
+private TextView iconLocation;
+private TextView iconThermal;
+private TextView iconModem;
+private TextView iconWifiAdvanced;
+private TextView iconAudioUnified;
+private TextView iconSensors;
+private TextView iconBiometrics;
+private TextView iconNfc;
+private TextView iconGnss;
+private TextView iconUwb;
+private TextView iconUsb;
+private TextView iconHaptics;
+private TextView iconSystemFeatures;
+private TextView iconSecurityFlags;
+private TextView iconRoot;
+private TextView iconOther;
+
+// ============================================================
+// TELEPHONY SNAPSHOT — GEL SINGLE SOURCE OF TRUTH
+// ============================================================
+private static class TelephonySnapshot {
+
+boolean airplaneOn = false;  
+
+    int simState = TelephonyManager.SIM_STATE_UNKNOWN;  
+    boolean simReady = false;  
+
+    int serviceState = ServiceState.STATE_OUT_OF_SERVICE;  
+    boolean inService = false;  
+
+    int dataState = TelephonyManager.DATA_UNKNOWN;  
+}
+
+// ============================================================
+// attachBaseContext
+// ============================================================
+@Override
+protected void attachBaseContext(Context base) {
+super.attachBaseContext(LocaleHelper.apply(base));
+}
+
+// ============================================================
+//  ON CREATE — FINAL CLEAN (AUDIO INCLUDED, NO LABS)
+// ============================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_device_info_peripherals);
+
+    // ✅ ROOT FLAG — MUST BE HERE
+    isRooted = isDeviceRooted();
+
+// ------------------------------------------------------------  
+// 1️⃣  TITLE  
+// ------------------------------------------------------------  
+TextView title = findViewById(R.id.txtTitleDevice);  
+if (title != null)  
+    title.setText(getString(R.string.phone_info_peripherals));  
+
+// ------------------------------------------------------------  
+// 2️⃣  BIND VIEWS (FULL UI READY)  
+// ------------------------------------------------------------  
+batteryContainer        = findViewById(R.id.batteryContainer);  
+txtBatteryContent       = findViewById(R.id.txtBatteryContent);  
+iconBattery             = findViewById(R.id.iconBatteryToggle);  
+txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);  
+
+txtScreenContent          = findViewById(R.id.txtScreenContent);  
+txtCameraContent          = findViewById(R.id.txtCameraContent);  
+txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);  
+txtLocationContent        = findViewById(R.id.txtLocationContent);  
+txtThermalContent         = findViewById(R.id.txtThermalContent);  
+txtModemContent           = findViewById(R.id.txtModemContent);  
+txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);  
+txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);  
+
+txtSensorsContent         = findViewById(R.id.txtSensorsContent);  
+txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);  
+txtNfcContent             = findViewById(R.id.txtNfcContent);  
+txtGnssContent            = findViewById(R.id.txtGnssContent);  
+txtUwbContent             = findViewById(R.id.txtUwbContent);  
+txtUsbContent             = findViewById(R.id.txtUsbContent);  
+txtHapticsContent         = findViewById(R.id.txtHapticsContent);  
+txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);  
+txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);  
+txtRootContent            = findViewById(R.id.txtRootContent);  
+txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);  
+
+iconScreen          = findViewById(R.id.iconScreenToggle);  
+iconCamera          = findViewById(R.id.iconCameraToggle);  
+iconConnectivity    = findViewById(R.id.iconConnectivityToggle);  
+iconLocation        = findViewById(R.id.iconLocationToggle);  
+iconThermal         = findViewById(R.id.iconThermalToggle);  
+iconModem           = findViewById(R.id.iconModemToggle);  
+iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);  
+iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);  
+
+iconSensors         = findViewById(R.id.iconSensorsToggle);  
+iconBiometrics      = findViewById(R.id.iconBiometricsToggle);  
+iconNfc             = findViewById(R.id.iconNfcToggle);  
+iconGnss            = findViewById(R.id.iconGnssToggle);  
+iconUwb             = findViewById(R.id.iconUwbToggle);  
+iconUsb             = findViewById(R.id.iconUsbToggle);  
+iconHaptics         = findViewById(R.id.iconHapticsToggle);  
+iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);  
+iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);  
+iconRoot            = findViewById(R.id.iconRootToggle);  
+iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);  
+
+// ------------------------------------------------------------  
+// 3️⃣  MASTER ARRAYS (WITH AUDIO)  
+// ------------------------------------------------------------  
+allContents = new TextView[]{  
+        txtBatteryContent,  
+        txtScreenContent,  
+        txtCameraContent,  
+        txtConnectivityContent,  
+        txtLocationContent,  
+        txtThermalContent,  
+        txtModemContent,  
+        txtWifiAdvancedContent,  
+        txtAudioUnifiedContent,  
+        txtSensorsContent,  
+        txtBiometricsContent,  
+        txtNfcContent,  
+        txtGnssContent,  
+        txtUwbContent,  
+        txtUsbContent,  
+        txtHapticsContent,  
+        txtSystemFeaturesContent,  
+        txtSecurityFlagsContent,  
+        txtRootContent,  
+        txtOtherPeripherals  
+};  
+
+allIcons = new TextView[]{  
+        iconBattery,  
+        iconScreen,  
+        iconCamera,  
+        iconConnectivity,  
+        iconLocation,  
+        iconThermal,  
+        iconModem,  
+        iconWifiAdvanced,  
+        iconAudioUnified,  
+        iconSensors,  
+        iconBiometrics,  
+        iconNfc,  
+        iconGnss,  
+        iconUwb,  
+        iconUsb,  
+        iconHaptics,  
+        iconSystemFeatures,  
+        iconSecurityFlags,  
+        iconRoot,  
+        iconOther  
+};  
+
+// ------------------------------------------------------------  
+// 4️⃣  LOAD ALL SECTION TEXTS (LIGHT ONLY)  
+// ------------------------------------------------------------  
+populateAllSections();  
+
+// ------------------------------------------------------------  
+// 5️⃣  PERMISSIONS  
+// ------------------------------------------------------------  
+requestAllRuntimePermissions();  
+requestPermissions(new String[]{  
+        Manifest.permission.READ_PHONE_STATE,  
+        Manifest.permission.READ_SMS,  
+        Manifest.permission.READ_PHONE_NUMBERS  
+}, 101);  
+
+// ------------------------------------------------------------  
+// 6️⃣  INIT BATTERY MODULE  
+// ------------------------------------------------------------  
+initBatterySection();  
+batteryContainer.setVisibility(View.GONE);  
+txtBatteryModelCapacity.setVisibility(View.GONE);  
+if (iconBattery != null) iconBattery.setText("＋");  
+
+LinearLayout headerBattery = findViewById(R.id.headerBattery);  
+if (headerBattery != null) {  
+    headerBattery.setOnClickListener(v -> {  
+        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);  
+
+        collapseAllExceptBattery(); // ΜΗΝ αλλάξεις αυτό  
+
+        if (!isOpen) {  
+            if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.VISIBLE);  
+            animateExpand(batteryContainer);  
+            if (iconBattery != null) iconBattery.setText("－");  
+            if (txtBatteryModelCapacity != null)  
+                txtBatteryModelCapacity.setVisibility(View.VISIBLE);  
+            refreshBatteryInfoView();  
+        } else {  
+            animateCollapse(batteryContainer);  
+            if (iconBattery != null) iconBattery.setText("＋");  
+            if (txtBatteryModelCapacity != null)  
+                txtBatteryModelCapacity.setVisibility(View.GONE);  
+        }  
+    });  
+}  
+
+// ------------------------------------------------------------  
+// 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
+// ------------------------------------------------------------  
+setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);  
+setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
+setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  
+setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);  
+setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);  
+setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);  
+setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);  
+setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);  
+setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);  
+setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);  
+setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);  
+setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);  
+setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);  
+setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);  
+setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);  
+setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);  
+setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);  
+setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);  
+setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+
+}
+
+// 🔥 END onCreate()
+
+// ============================================================
+// CONNECTIVITY INFO — SNAPSHOT BASED
+// ============================================================
+private String buildConnectivityInfo() {
+
+TelephonySnapshot s = getTelephonySnapshot();  
+    StringBuilder sb = new StringBuilder();  
+
+    sb.append("Airplane Mode: ").append(s.airplaneOn ? "ON" : "OFF").append("\n");  
+
+    sb.append("SIM State: ");  
+    switch (s.simState) {  
+        case TelephonyManager.SIM_STATE_READY: sb.append("READY"); break;  
+        case TelephonyManager.SIM_STATE_ABSENT: sb.append("ABSENT"); break;  
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED: sb.append("PIN REQUIRED"); break;  
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED: sb.append("PUK REQUIRED"); break;  
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED: sb.append("NETWORK LOCKED"); break;  
+        default: sb.append("UNKNOWN"); break;  
+    }  
+    sb.append("\n");  
+
+    sb.append("Mobile Service: ")  
+            .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")  
+            .append("\n");  
+
+    sb.append("Mobile Data: ");  
+    switch (s.dataState) {  
+        case TelephonyManager.DATA_CONNECTED: sb.append("CONNECTED"); break;  
+        case TelephonyManager.DATA_CONNECTING: sb.append("CONNECTING"); break;  
+        case TelephonyManager.DATA_DISCONNECTED: sb.append("DISCONNECTED"); break;  
+        default: sb.append("UNKNOWN"); break;  
+    }  
+
+    return sb.toString();  
+}  
+
+private TelephonySnapshot getTelephonySnapshot() {  
+
+    TelephonySnapshot s = new TelephonySnapshot();  
+
+    try {  
+        s.airplaneOn = Settings.Global.getInt(  
+                getContentResolver(),  
+                Settings.Global.AIRPLANE_MODE_ON, 0  
+        ) == 1;  
+    } catch (Exception ignored) {}  
+
+    TelephonyManager tm =  
+            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);  
+
+    if (tm != null) {  
+
+        try {  
+            s.simState = tm.getSimState();  
+            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);  
+        } catch (Exception ignored) {}  
+
+        try {  
+            ServiceState ss = tm.getServiceState();  
+            if (ss != null) {  
+                s.serviceState = ss.getState();  
+                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);  
+            }  
+        } catch (Exception ignored) {}  
+
+        try {  
+            s.dataState = tm.getDataState();  
+        } catch (Exception ignored) {}  
+    }  
+
+    return s;  
+}
+
+// ============================================================
+//  PERMISSION CALLBACK — FINAL CLEAN VERSION
+// ============================================================
+@Override
+public void onRequestPermissionsResult(int requestCode,
+@NonNull String[] permissions,
+@NonNull int[] grantResults) {
+super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+// 🔹 GEL universal permissions  
+if (requestCode == REQ_CODE_GEL_PERMISSIONS) {  
+    // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν  
+}  
+
+// 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)  
+if (requestCode == 101) {  
+    refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block  
+}
+
+}
+
+// ============================================================
+// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
+// Battery-Safe Edition (FINAL, FIXED — NO AUDIO)
+// ============================================================
+private void setupSection(View header, View content, TextView icon) {
+
+    if (header == null || content == null || icon == null)
+        return;
+
+    // αρχική κατάσταση
+    content.setVisibility(View.GONE);
+    icon.setText("+"); // ΜΗΝ βάζεις unicode, μόνο ASCII
+
+    header.setOnClickListener(v -> {
+
+        boolean isOpen = (content.getVisibility() == View.VISIBLE);
+
+        // ------------------------------------------------------------
+        // 1️⃣ Κλείσε ΟΛΑ τα sections
+        // ------------------------------------------------------------
+        if (allContents != null && allIcons != null) {
+            for (int i = 0; i < allContents.length; i++) {
+                if (allContents[i] != null)
+                    allContents[i].setVisibility(View.GONE);
+                if (allIcons[i] != null)
+                    allIcons[i].setText("+");
+            }
         }
-    }
 
-    // ============================================================
-    //  PERMISSION CALLBACK — FINAL CLEAN VERSION
-    // ============================================================
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-            // no-op
+        // ------------------------------------------------------------
+        // 2️⃣ Αν ήταν κλειστό → άνοιξέ το
+        // ------------------------------------------------------------
+        if (!isOpen) {
+            content.setVisibility(View.VISIBLE);
+            icon.setText("-");
         }
-
-        if (requestCode == 101) {
-            refreshModemInfo();
-        }
-    }
+    });
+}
 
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED

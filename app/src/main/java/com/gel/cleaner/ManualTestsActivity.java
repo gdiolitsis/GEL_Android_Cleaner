@@ -667,12 +667,23 @@ private void lab1SpeakerTone() {
 
             logOk("Speaker output detected");
 
-            logLabelValue(
-                    "Note",
-                    r.silenceDetected
-                            ? "Signal detected at very low level. Low confidence may be caused by noise cancellation, mic isolation, or acoustic design."
-                            : "Speaker signal detected successfully."
-            );
+            // 🔧 FIX: Explain LOW confidence explicitly
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
+
+                logLabelValue(
+                        "Note",
+                        r.silenceDetected
+                                ? "Signal detected at extremely low level. Low confidence may be caused by aggressive noise cancellation, microphone isolation, or device acoustic shielding."
+                                : "Signal detected successfully, but with low confidence. This may be caused by system noise cancellation, microphone placement, or acoustic design."
+                );
+
+            } else {
+
+                logLabelValue(
+                        "Note",
+                        "Speaker signal detected successfully."
+                );
+            }
 
         } catch (Throwable t) {
             logError("Speaker tone test failed");
@@ -718,12 +729,23 @@ private void lab2SpeakerSweep() {
 
             logOk("Frequency sweep executed");
 
-            logLabelValue(
-                    "Note",
-                    r.silenceDetected
-                            ? "Sweep executed at very low level. Low confidence may be caused by noise cancellation or speaker frequency response."
-                            : "Frequency sweep detected successfully."
-            );
+            // 🔧 FIX: Explain LOW confidence explicitly
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
+
+                logLabelValue(
+                        "Note",
+                        r.silenceDetected
+                                ? "Sweep executed at extremely low level. Low confidence may be caused by aggressive noise cancellation, narrow speaker frequency response, or acoustic isolation."
+                                : "Sweep executed successfully, but with low confidence. This may be caused by DSP filtering, speaker frequency roll-off, or microphone placement."
+                );
+
+            } else {
+
+                logLabelValue(
+                        "Note",
+                        "Frequency sweep detected successfully."
+                );
+            }
 
         } catch (Throwable t) {
             logError("Speaker frequency sweep failed");
@@ -4012,4 +4034,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-}
+    }

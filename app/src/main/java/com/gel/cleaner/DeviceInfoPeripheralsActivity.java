@@ -423,10 +423,10 @@ if (headerBattery != null) {
 
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-        // ⚠️ ΜΗΝ πειράξεις αυτό
-        collapseAllExceptBattery();
-
         if (!isOpen) {
+            // ⚠️ ΚΛΕΙΝΟΥΜΕ ΟΛΑ ΤΑ ΑΛΛΑ ΜΟΝΟ ΟΤΑΝ ΑΝΟΙΓΟΥΜΕ
+            collapseAllExceptBattery();
+
             // ✅ ΑΝΟΙΓΜΑ BATTERY
             batteryContainer.setVisibility(View.VISIBLE);
 

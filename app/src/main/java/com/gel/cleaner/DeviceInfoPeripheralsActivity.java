@@ -339,9 +339,8 @@ iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 // ------------------------------------------------------------  
 // 3️⃣  MASTER ARRAYS (WITH AUDIO)  
 // ------------------------------------------------------------  
-allContents = new TextView[]{
-        txtBatteryContent,
-        txtBatteryModelCapacity,  
+allContents = new TextView[]{  
+        txtBatteryContent,  
         txtScreenContent,  
         txtCameraContent,  
         txtConnectivityContent,  

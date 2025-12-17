@@ -168,16 +168,17 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
     // ============================================================
     private static final String NEON_GREEN = "#39FF14";
     private static final String GOLD_COLOR = "#FFD700";
+    private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
+
+    private boolean isRooted = false;
 
     private TextView[] allContents;
     private TextView[] allIcons;
 
-    // ------------------------------------------------------------
-    // Fields referenced by setupSection (must exist)
-    // ------------------------------------------------------------
     private LinearLayout batteryContainer = null;
     private TextView iconBattery = null;
     private TextView txtBatteryModelCapacity = null;
+    private TextView txtBatteryContent = null;
 
     // ============================================================
     // TELEPHONY SNAPSHOT — SINGLE SOURCE
@@ -203,10 +204,12 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
 
-        // Bind what we know exists (safe)
+        isRooted = isDeviceRooted();
+
         batteryContainer = findViewById(R.id.batteryContainer);
         iconBattery = findViewById(R.id.iconBatteryToggle);
         txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);
+        txtBatteryContent = findViewById(R.id.txtBatteryContent);
 
         TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
 
@@ -230,280 +233,14 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == REQ_CODE_GEL_PERMISSIONS) {
-            // no-op for now
+            // no-op
         }
 
         if (requestCode == 101) {
-            refreshModemInfo();   // requires your existing method
+            refreshModemInfo();
         }
     }
 
-    // ============================================================
-    // GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-    // ============================================================
-    private void setupSection(View header, View content, TextView icon) {
-
-        if (header == null || content == null || icon == null)
-            return;
-
-        content.setVisibility(View.GONE);
-        icon.setText("＋");
-
-        header.setOnClickListener(v -> {
-
-            final boolean isOpen = (content.getVisibility() == View.VISIBLE);
-
-            // ------------------------------------------------------------
-            // 1️⃣ Close Battery safely (if open)
-            // ------------------------------------------------------------
-            if (batteryContainer != null && batteryContainer.getVisibility() == View.VISIBLE) {
-                animateCollapse(batteryContainer);
-                if (iconBattery != null) iconBattery.setText("＋");
-                if (txtBatteryModelCapacity != null)
-                    txtBatteryModelCapacity.setVisibility(View.GONE);
-            }
-
-            // ------------------------------------------------------------
-            // 2️⃣ Close all other sections
-            // ------------------------------------------------------------
-            if (allContents != null && allIcons != null) {
-                for (int i = 1; i < allContents.length; i++) { // 0 = Battery
-                    if (allContents[i] != null && allContents[i] != content) {
-                        allContents[i].setVisibility(View.GONE);
-                        if (i < allIcons.length && allIcons[i] != null)
-                            allIcons[i].setText("＋");
-                    }
-                }
-            }
-
-            // ------------------------------------------------------------
-            // 3️⃣ Toggle pressed section
-            // ------------------------------------------------------------
-            if (isOpen) {
-                animateCollapse(content);
-                icon.setText("＋");
-            } else {
-                content.setVisibility(View.VISIBLE);
-                animateExpand(content);
-                icon.setText("－");
-            }
-        });
-    }
-
-    // ============================================================
-    // GEL Expand Engine v3.0 — FINAL
-    // ============================================================
-    private void toggleSection(TextView targetContent, TextView targetIcon) {
-
-        if (allContents == null || allIcons == null) return;
-
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c  = allContents[i];
-            TextView ic = (i < allIcons.length) ? allIcons[i] : null;
-
-            if (c == null || ic == null) continue;
-
-            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-                animateCollapse(c);
-                ic.setText("＋");
-            }
-        }
-
-        if (targetContent.getVisibility() == View.VISIBLE) {
-            animateCollapse(targetContent);
-            targetIcon.setText("＋");
-        } else {
-            animateExpand(targetContent);
-            targetIcon.setText("－");
-        }
-    }
-
-    private void animateExpand(final View v) {
-        if (v == null) return;
-        v.post(() -> {
-            try {
-                v.measure(
-                        View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-                );
-            } catch (Throwable ignore) {}
-
-            final int target = v.getMeasuredHeight();
-
-            v.getLayoutParams().height = 0;
-            v.setVisibility(View.VISIBLE);
-            v.setAlpha(0f);
-
-            v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        v.getLayoutParams().height = target;
-                        v.requestLayout();
-                    })
-                    .start();
-        });
-    }
-
-    private void animateCollapse(final View v) {
-        if (v == null) return;
-        if (v.getVisibility() != View.VISIBLE) return;
-
-        v.setAlpha(1f);
-
-        v.animate()
-                .alpha(0f)
-                .setDuration(160)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.getLayoutParams().height = 0;
-                    v.setVisibility(View.GONE);
-                    v.requestLayout();
-                })
-                .start();
-    }
-
-    // ============================================================
-    // GEL SettingsClick Engine v17 — OPEN SETTINGS ONLY
-    // ============================================================
-    private void handleSettingsClick(Context context, String path) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } catch (Throwable ignore) {
-            try {
-                Intent fallback = new Intent(Settings.ACTION_SETTINGS);
-                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(fallback);
-            } catch (Throwable e) { }
-        }
-    }
-
-    // ============================================================
-    // GEL Permission Engine v25 — Manifest-Aware + Hide Fake Links
-    // ============================================================
-    private boolean appDeclaresPermission(String perm) {
-        try {
-            PackageInfo pi = getPackageManager().getPackageInfo(
-                    getPackageName(),
-                    PackageManager.GET_PERMISSIONS
-            );
-            if (pi.requestedPermissions == null) return false;
-
-            for (String p : pi.requestedPermissions) {
-                if (perm.equals(p)) return true;
-            }
-        } catch (Throwable ignore) {}
-        return false;
-    }
-
-    private boolean sectionNeedsPermission(String type) {
-
-        if (type == null) return false;
-        type = type.toLowerCase(Locale.US);
-
-        if (type.contains("camera")) {
-            return appDeclaresPermission(Manifest.permission.CAMERA);
-        }
-
-        if (type.contains("mic") || type.contains("microphone")) {
-            return appDeclaresPermission(Manifest.permission.RECORD_AUDIO);
-        }
-
-        if (type.contains("location")) {
-            return appDeclaresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    || appDeclaresPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-
-        if (type.contains("bluetooth") && Build.VERSION.SDK_INT >= 31) {
-            return appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN)
-                    || appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
-        }
-
-        if (type.contains("nearby") && Build.VERSION.SDK_INT >= 31) {
-            return appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES);
-        }
-
-        return false;
-    }
-
-    private boolean userHasPermission(String type) {
-
-        if (type == null) return true;
-        type = type.toLowerCase(Locale.US);
-
-        if (type.contains("camera")) {
-            if (!appDeclaresPermission(Manifest.permission.CAMERA)) return true;
-            return checkSelfPermission(Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-
-        if (type.contains("mic") || type.contains("microphone")) {
-            if (!appDeclaresPermission(Manifest.permission.RECORD_AUDIO)) return true;
-            return checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-
-        if (type.contains("location")) {
-            boolean hasFine   = appDeclaresPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-            boolean hasCoarse = appDeclaresPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-
-            if (!hasFine && !hasCoarse) return true;
-
-            boolean fine = hasFine &&
-                    (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED);
-            boolean coarse = hasCoarse &&
-                    (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED);
-
-            return fine || coarse;
-        }
-
-        if (type.contains("bluetooth")) {
-            if (Build.VERSION.SDK_INT >= 31) {
-                boolean hasScan = appDeclaresPermission(Manifest.permission.BLUETOOTH_SCAN);
-                boolean hasConn = appDeclaresPermission(Manifest.permission.BLUETOOTH_CONNECT);
-
-                if (!hasScan && !hasConn) return true;
-
-                boolean scan = !hasScan ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN)
-                                == PackageManager.PERMISSION_GRANTED);
-                boolean conn = !hasConn ||
-                        (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                                == PackageManager.PERMISSION_GRANTED);
-
-                return scan && conn;
-            }
-            return true;
-        }
-
-        if (type.contains("nearby")) {
-            if (Build.VERSION.SDK_INT >= 31) {
-                if (!appDeclaresPermission(Manifest.permission.NEARBY_WIFI_DEVICES)) return true;
-                return checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
-                        == PackageManager.PERMISSION_GRANTED;
-            }
-            return true;
-        }
-
-        return true;
-    }
-
-    private void appendAccessInstructions(StringBuilder sb, String type) {
-
-        if (sb == null) return;
-        if (!sectionNeedsPermission(type)) return;
-        if (userHasPermission(type)) return;
-
-        sb.append("\nRequired Access  : ").append(type).append("\n");
-        sb.append("Open Settings\n");
-        sb.append("Settings → Apps → Permissions\n");
-    }
-    
     // ============================================================
     // ROOT CHECK (GEL Stable v5.1) — FIXED
     // ============================================================
@@ -602,13 +339,9 @@ public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
             return "Settings → Battery";
         }
 
-        if (isSony || isAsus || isNokia || isLenovo || isLG || isZTE
-                || isTecno || isInfinix || isMeizu || isNothing) {
-            return "Settings → Battery";
-        }
-
         return "Settings → Battery";
     }
+}
 
     // ============================================================
     // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION

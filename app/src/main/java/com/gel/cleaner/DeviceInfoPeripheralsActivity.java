@@ -404,47 +404,58 @@ requestPermissions(new String[]{
 // ------------------------------------------------------------  
 // 6️⃣  INIT BATTERY MODULE  
 // ------------------------------------------------------------  
-initBatterySection();  
+initBatterySection();
 
-batteryContainer.setVisibility(View.GONE);  
-txtBatteryModelCapacity.setVisibility(View.GONE);  
-if (iconBattery != null) iconBattery.setText("＋");  
+// Αρχική κατάσταση: όλα κλειστά
+batteryContainer.setVisibility(View.GONE);
 
-LinearLayout headerBattery = findViewById(R.id.headerBattery);  
-if (headerBattery != null) {  
-    headerBattery.setOnClickListener(v -> {  
+if (txtBatteryContent != null)
+    txtBatteryContent.setVisibility(View.GONE);
 
-        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);  
+if (txtBatteryModelCapacity != null)
+    txtBatteryModelCapacity.setVisibility(View.GONE);
 
-        // ⚠️ ΜΗΝ πειράξεις αυτό
-        collapseAllExceptBattery();  
+if (iconBattery != null)
+    iconBattery.setText("＋");
 
-        if (!isOpen) {  
-            // ✅ ΑΝΟΙΓΜΑ BATTERY (ΑΥΤΟ ΕΛΕΙΠΕ ΠΡΙΝ)
-            batteryContainer.setVisibility(View.VISIBLE);  
+LinearLayout headerBattery = findViewById(R.id.headerBattery);
+if (headerBattery != null) {
+    headerBattery.setOnClickListener(v -> {
 
-            if (txtBatteryContent != null)  
-                txtBatteryContent.setVisibility(View.VISIBLE);  
+        boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);
 
-            if (iconBattery != null)  
-                iconBattery.setText("－");  
+        if (!isOpen) {
+            // ⚠️ ΚΛΕΙΝΟΥΜΕ ΟΛΑ ΤΑ ΑΛΛΑ ΜΟΝΟ ΟΤΑΝ ΑΝΟΙΓΟΥΜΕ
+            collapseAllExceptBattery();
 
-            if (txtBatteryModelCapacity != null)  
-                txtBatteryModelCapacity.setVisibility(View.VISIBLE);  
+            // ✅ ΑΝΟΙΓΜΑ BATTERY
+            batteryContainer.setVisibility(View.VISIBLE);
 
-            refreshBatteryInfoView();  
+            if (txtBatteryContent != null)
+                txtBatteryContent.setVisibility(View.VISIBLE);
 
-        } else {  
-            // ✅ ΚΛΕΙΣΙΜΟ BATTERY
-            batteryContainer.setVisibility(View.GONE);  
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
-            if (iconBattery != null)  
-                iconBattery.setText("＋");  
+            if (iconBattery != null)
+                iconBattery.setText("－");
 
-            if (txtBatteryModelCapacity != null)  
-                txtBatteryModelCapacity.setVisibility(View.GONE);  
-        }  
-    });  
+            refreshBatteryInfoView();
+
+        } else {
+            // ✅ ΚΛΕΙΣΙΜΟ BATTERY (ΠΛΗΡΕΣ)
+            batteryContainer.setVisibility(View.GONE);
+
+            if (txtBatteryContent != null)
+                txtBatteryContent.setVisibility(View.GONE);
+
+            if (txtBatteryModelCapacity != null)
+                txtBatteryModelCapacity.setVisibility(View.GONE);
+
+            if (iconBattery != null)
+                iconBattery.setText("＋");
+        }
+    });
 }
 
 // ------------------------------------------------------------  
@@ -475,76 +486,102 @@ setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, ico
 // 🔥 END onCreate()
 
 // ============================================================
-// CONNECTIVITY INFO — SNAPSHOT BASED
+// CONNECTIVITY INFO — SNAPSHOT BASED (FIXED)
 // ============================================================
 private String buildConnectivityInfo() {
 
-TelephonySnapshot s = getTelephonySnapshot();  
-    StringBuilder sb = new StringBuilder();  
+    TelephonySnapshot s = getTelephonySnapshot();
+    StringBuilder sb = new StringBuilder();
 
-    sb.append("Airplane Mode: ").append(s.airplaneOn ? "ON" : "OFF").append("\n");  
+    sb.append("Airplane Mode: ")
+      .append(s.airplaneOn ? "ON" : "OFF")
+      .append("\n");
 
-    sb.append("SIM State: ");  
-    switch (s.simState) {  
-        case TelephonyManager.SIM_STATE_READY: sb.append("READY"); break;  
-        case TelephonyManager.SIM_STATE_ABSENT: sb.append("ABSENT"); break;  
-        case TelephonyManager.SIM_STATE_PIN_REQUIRED: sb.append("PIN REQUIRED"); break;  
-        case TelephonyManager.SIM_STATE_PUK_REQUIRED: sb.append("PUK REQUIRED"); break;  
-        case TelephonyManager.SIM_STATE_NETWORK_LOCKED: sb.append("NETWORK LOCKED"); break;  
-        default: sb.append("UNKNOWN"); break;  
-    }  
-    sb.append("\n");  
+    sb.append("SIM State: ");
+    switch (s.simState) {
+        case TelephonyManager.SIM_STATE_READY:
+            sb.append("READY");
+            break;
+        case TelephonyManager.SIM_STATE_ABSENT:
+            sb.append("ABSENT");
+            break;
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+            sb.append("PIN REQUIRED");
+            break;
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+            sb.append("PUK REQUIRED");
+            break;
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+            sb.append("NETWORK LOCKED");
+            break;
+        default:
+            sb.append("UNKNOWN");
+            break;
+    }
+    sb.append("\n");
 
-    sb.append("Mobile Service: ")  
-            .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")  
-            .append("\n");  
+    sb.append("Mobile Service: ")
+      .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")
+      .append("\n");
 
-    sb.append("Mobile Data: ");  
-    switch (s.dataState) {  
-        case TelephonyManager.DATA_CONNECTED: sb.append("CONNECTED"); break;  
-        case TelephonyManager.DATA_CONNECTING: sb.append("CONNECTING"); break;  
-        case TelephonyManager.DATA_DISCONNECTED: sb.append("DISCONNECTED"); break;  
-        default: sb.append("UNKNOWN"); break;  
-    }  
+    sb.append("Mobile Data: ");
+    switch (s.dataState) {
+        case TelephonyManager.DATA_CONNECTED:
+            sb.append("CONNECTED");
+            break;
+        case TelephonyManager.DATA_CONNECTING:
+            sb.append("CONNECTING");
+            break;
+        case TelephonyManager.DATA_DISCONNECTED:
+            sb.append("DISCONNECTED");
+            break;
+        default:
+            sb.append("UNKNOWN");
+            break;
+    }
+    sb.append("\n");
+    
+    sb.append(buildWifiAndBluetoothInfo());
 
-    return sb.toString();  
-}  
+    return sb.toString();
+}
 
-private TelephonySnapshot getTelephonySnapshot() {  
+private TelephonySnapshot getTelephonySnapshot() {
 
-    TelephonySnapshot s = new TelephonySnapshot();  
+    TelephonySnapshot s = new TelephonySnapshot();
 
-    try {  
-        s.airplaneOn = Settings.Global.getInt(  
-                getContentResolver(),  
-                Settings.Global.AIRPLANE_MODE_ON, 0  
-        ) == 1;  
-    } catch (Exception ignored) {}  
+    try {
+        s.airplaneOn = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.AIRPLANE_MODE_ON,
+                0
+        ) == 1;
+    } catch (Throwable ignore) {}
 
-    TelephonyManager tm =  
-            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);  
+    TelephonyManager tm =
+            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
-    if (tm != null) {  
+    if (tm != null) {
 
-        try {  
-            s.simState = tm.getSimState();  
-            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);  
-        } catch (Exception ignored) {}  
+        try {
+            s.simState = tm.getSimState();
+            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);
+        } catch (Throwable ignore) {}
 
-        try {  
-            ServiceState ss = tm.getServiceState();  
-            if (ss != null) {  
-                s.serviceState = ss.getState();  
-                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);  
-            }  
-        } catch (Exception ignored) {}  
+        try {
+            ServiceState ss = tm.getServiceState();
+            if (ss != null) {
+                s.serviceState = ss.getState();
+                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);
+            }
+        } catch (Throwable ignore) {}
 
-        try {  
-            s.dataState = tm.getDataState();  
-        } catch (Exception ignored) {}  
-    }  
+        try {
+            s.dataState = tm.getDataState();
+        } catch (Throwable ignore) {}
+    }
 
-    return s;  
+    return s;
 }
 
 // ============================================================
@@ -926,6 +963,19 @@ private String buildSensorsInfo() {
     return sb.toString();
 }
 
+// ============================================================
+// WIFI + BLUETOOTH INFO — CONNECTIVITY EXTENSION (FULL + ROOT)
+// ============================================================
+
+private String buildWifiAndBluetoothInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    try {
+
+        WifiManager wm = (WifiManager) getApplicationContext()
+                .getSystemService(Context.WIFI_SERVICE);
+
         // ============================================================
         // WI-FI DETAILS
         // ============================================================
@@ -965,7 +1015,8 @@ private String buildSensorsInfo() {
     sb.append("\nBluetooth:\n");
 
     try {
-        BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bm =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
 
         if (ba == null) {
@@ -992,14 +1043,16 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             String btName = ba.getName();
             if (btName == null || btName.trim().isEmpty()) {
-                btName = isRooted ? "Unavailable" : "Unavailable (requires root access)";
+                btName = isDeviceRooted()
+                        ? "Unavailable"
+                        : "Unavailable (requires root access)";
             }
 
             String btAddr = ba.getAddress();
             if (btAddr == null
                     || btAddr.trim().isEmpty()
                     || "02:00:00:00:00:00".equals(btAddr)) {
-                btAddr = isRooted
+                btAddr = isDeviceRooted()
                         ? "Unavailable"
                         : "Masked by Android security (requires root access)";
             }
@@ -1010,7 +1063,7 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
             // ------------------------------------------------------------
-            if (isRooted) {
+            if (isDeviceRooted()) {
                 sb.append("  Version        : ");
 
                 String v = readSysString("/proc/bluetooth/version");
@@ -1030,11 +1083,14 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
             sb.append("  Discoverable   : ")
-                    .append(ba.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ? "Yes" : "No")
+                    .append(ba.getScanMode() ==
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
+                            ? "Yes" : "No")
                     .append("\n");
 
             // BLE Support
-            boolean le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            boolean le = getPackageManager()
+                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
             sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
 
             // ------------------------------------------------------------
@@ -1042,28 +1098,34 @@ private String buildSensorsInfo() {
             // ------------------------------------------------------------
             sb.append("  Multiple Adv   : ");
             try {
-                sb.append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No").append("\n");
+                sb.append(ba.isMultipleAdvertisementSupported()
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             sb.append("  LE Scanner     : ");
             try {
-                sb.append(ba.getBluetoothLeScanner() != null ? "Yes" : "No").append("\n");
+                sb.append(ba.getBluetoothLeScanner() != null
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             sb.append("  Offloaded Filt.: ");
             try {
-                sb.append(ba.isOffloadedFilteringSupported() ? "Yes" : "No").append("\n");
+                sb.append(ba.isOffloadedFilteringSupported()
+                        ? "Yes" : "No").append("\n");
             } catch (Throwable ignore) { sb.append("Unknown\n"); }
 
             // ------------------------------------------------------------
             // CONNECTED DEVICES (GATT)
             // ------------------------------------------------------------
             try {
-                List<BluetoothDevice> con = (bm != null)
-                        ? bm.getConnectedDevices(BluetoothProfile.GATT)
-                        : null;
+                List<BluetoothDevice> con =
+                        (bm != null)
+                                ? bm.getConnectedDevices(BluetoothProfile.GATT)
+                                : null;
 
-                sb.append("  GATT Devices   : ").append(con != null ? con.size() : 0).append("\n");
+                sb.append("  GATT Devices   : ")
+                        .append(con != null ? con.size() : 0)
+                        .append("\n");
             } catch (Throwable ignore) {
                 sb.append("  GATT Devices   : Unknown\n");
             }
@@ -1072,10 +1134,9 @@ private String buildSensorsInfo() {
             // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
             // ------------------------------------------------------------
             sb.append("\n  Firmware Info  : ");
-            if (isRooted) {
+            if (isDeviceRooted()) {
                 String fw = null;
 
-                // Common vendor BLUETOOTH firmware paths
                 if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
                 if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
                 if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");

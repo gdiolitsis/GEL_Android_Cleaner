@@ -404,6 +404,7 @@ requestPermissions(new String[]{
 // 6️⃣  INIT BATTERY MODULE  
 // ------------------------------------------------------------  
 initBatterySection();  
+
 batteryContainer.setVisibility(View.GONE);  
 txtBatteryModelCapacity.setVisibility(View.GONE);  
 if (iconBattery != null) iconBattery.setText("＋");  
@@ -411,24 +412,39 @@ if (iconBattery != null) iconBattery.setText("＋");
 LinearLayout headerBattery = findViewById(R.id.headerBattery);  
 if (headerBattery != null) {  
     headerBattery.setOnClickListener(v -> {  
+
         boolean isOpen = (batteryContainer.getVisibility() == View.VISIBLE);  
 
-        collapseAllExceptBattery(); // ΜΗΝ αλλάξεις αυτό  
+        // ⚠️ ΜΗΝ πειράξεις αυτό
+        collapseAllExceptBattery();  
 
         if (!isOpen) {  
-            if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.VISIBLE);  
-            if (iconBattery != null) iconBattery.setText("－");  
+            // ✅ ΑΝΟΙΓΜΑ BATTERY (ΑΥΤΟ ΕΛΕΙΠΕ ΠΡΙΝ)
+            batteryContainer.setVisibility(View.VISIBLE);  
+
+            if (txtBatteryContent != null)  
+                txtBatteryContent.setVisibility(View.VISIBLE);  
+
+            if (iconBattery != null)  
+                iconBattery.setText("－");  
+
             if (txtBatteryModelCapacity != null)  
                 txtBatteryModelCapacity.setVisibility(View.VISIBLE);  
+
             refreshBatteryInfoView();  
+
         } else {  
-            batteryContainer.setVisibility(View.GONE);
-            if (iconBattery != null) iconBattery.setText("＋");  
+            // ✅ ΚΛΕΙΣΙΜΟ BATTERY
+            batteryContainer.setVisibility(View.GONE);  
+
+            if (iconBattery != null)  
+                iconBattery.setText("＋");  
+
             if (txtBatteryModelCapacity != null)  
                 txtBatteryModelCapacity.setVisibility(View.GONE);  
         }  
     });  
-}  
+}
 
 // ------------------------------------------------------------  
 // 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
@@ -458,76 +474,102 @@ setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, ico
 // 🔥 END onCreate()
 
 // ============================================================
-// CONNECTIVITY INFO — SNAPSHOT BASED
+// CONNECTIVITY INFO — SNAPSHOT BASED (FIXED)
 // ============================================================
 private String buildConnectivityInfo() {
 
-TelephonySnapshot s = getTelephonySnapshot();  
-    StringBuilder sb = new StringBuilder();  
+    TelephonySnapshot s = getTelephonySnapshot();
+    StringBuilder sb = new StringBuilder();
 
-    sb.append("Airplane Mode: ").append(s.airplaneOn ? "ON" : "OFF").append("\n");  
+    sb.append("Airplane Mode: ")
+      .append(s.airplaneOn ? "ON" : "OFF")
+      .append("\n");
 
-    sb.append("SIM State: ");  
-    switch (s.simState) {  
-        case TelephonyManager.SIM_STATE_READY: sb.append("READY"); break;  
-        case TelephonyManager.SIM_STATE_ABSENT: sb.append("ABSENT"); break;  
-        case TelephonyManager.SIM_STATE_PIN_REQUIRED: sb.append("PIN REQUIRED"); break;  
-        case TelephonyManager.SIM_STATE_PUK_REQUIRED: sb.append("PUK REQUIRED"); break;  
-        case TelephonyManager.SIM_STATE_NETWORK_LOCKED: sb.append("NETWORK LOCKED"); break;  
-        default: sb.append("UNKNOWN"); break;  
-    }  
-    sb.append("\n");  
+    sb.append("SIM State: ");
+    switch (s.simState) {
+        case TelephonyManager.SIM_STATE_READY:
+            sb.append("READY");
+            break;
+        case TelephonyManager.SIM_STATE_ABSENT:
+            sb.append("ABSENT");
+            break;
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+            sb.append("PIN REQUIRED");
+            break;
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+            sb.append("PUK REQUIRED");
+            break;
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+            sb.append("NETWORK LOCKED");
+            break;
+        default:
+            sb.append("UNKNOWN");
+            break;
+    }
+    sb.append("\n");
 
-    sb.append("Mobile Service: ")  
-            .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")  
-            .append("\n");  
+    sb.append("Mobile Service: ")
+      .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")
+      .append("\n");
 
-    sb.append("Mobile Data: ");  
-    switch (s.dataState) {  
-        case TelephonyManager.DATA_CONNECTED: sb.append("CONNECTED"); break;  
-        case TelephonyManager.DATA_CONNECTING: sb.append("CONNECTING"); break;  
-        case TelephonyManager.DATA_DISCONNECTED: sb.append("DISCONNECTED"); break;  
-        default: sb.append("UNKNOWN"); break;  
-    }  
+    sb.append("Mobile Data: ");
+    switch (s.dataState) {
+        case TelephonyManager.DATA_CONNECTED:
+            sb.append("CONNECTED");
+            break;
+        case TelephonyManager.DATA_CONNECTING:
+            sb.append("CONNECTING");
+            break;
+        case TelephonyManager.DATA_DISCONNECTED:
+            sb.append("DISCONNECTED");
+            break;
+        default:
+            sb.append("UNKNOWN");
+            break;
+    }
+    sb.append("\n");
 
-    return sb.toString();  
-}  
+    // ⚠️ ΕΔΩ ΤΕΛΕΙΩΝΕΙ — ΟΧΙ ΑΛΛΟ CODE ΑΠΟ ΚΑΤΩ
 
-private TelephonySnapshot getTelephonySnapshot() {  
+    return sb.toString();
+}
 
-    TelephonySnapshot s = new TelephonySnapshot();  
+private TelephonySnapshot getTelephonySnapshot() {
 
-    try {  
-        s.airplaneOn = Settings.Global.getInt(  
-                getContentResolver(),  
-                Settings.Global.AIRPLANE_MODE_ON, 0  
-        ) == 1;  
-    } catch (Exception ignored) {}  
+    TelephonySnapshot s = new TelephonySnapshot();
 
-    TelephonyManager tm =  
-            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);  
+    try {
+        s.airplaneOn = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.AIRPLANE_MODE_ON,
+                0
+        ) == 1;
+    } catch (Throwable ignore) {}
 
-    if (tm != null) {  
+    TelephonyManager tm =
+            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
-        try {  
-            s.simState = tm.getSimState();  
-            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);  
-        } catch (Exception ignored) {}  
+    if (tm != null) {
 
-        try {  
-            ServiceState ss = tm.getServiceState();  
-            if (ss != null) {  
-                s.serviceState = ss.getState();  
-                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);  
-            }  
-        } catch (Exception ignored) {}  
+        try {
+            s.simState = tm.getSimState();
+            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);
+        } catch (Throwable ignore) {}
 
-        try {  
-            s.dataState = tm.getDataState();  
-        } catch (Exception ignored) {}  
-    }  
+        try {
+            ServiceState ss = tm.getServiceState();
+            if (ss != null) {
+                s.serviceState = ss.getState();
+                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);
+            }
+        } catch (Throwable ignore) {}
 
-    return s;  
+        try {
+            s.dataState = tm.getDataState();
+        } catch (Throwable ignore) {}
+    }
+
+    return s;
 }
 
 // ============================================================

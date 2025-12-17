@@ -628,7 +628,7 @@ private String buildConnectivityInfo() {
                         && !"02:00:00:00:00:00".equals(rawMac)) {
                     macLine = rawMac;   // real MAC (root / older Android)
                 } else {
-                    if (!isRooted) {
+                    if (!isDeviceRooted()) {
                         macLine = "Masked by Android security. Requires root access";
                     } else {
                         macLine = "Unavailable";

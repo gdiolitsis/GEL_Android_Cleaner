@@ -1325,11 +1325,8 @@ private String buildBatteryInfo() {
 // ===================================================================
 private void refreshBatteryInfoView() {
     try {
-        TextView content = findViewById(R.id.txtBatteryContent);
-        if (content != null) {
-            String info = buildBatteryInfo();
-            content.setText(info);
-            applyNeonValues(content, info);
+        if (txtBatteryContent != null) {
+            txtBatteryContent.setText(buildBatteryInfo());
         }
         refreshBatteryButton();
     } catch (Throwable ignore) {}
@@ -3107,111 +3104,146 @@ private String buildSecurityFlagsInfo() {
     }
 
 // ============================================================
-// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED
+// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED (FINAL)
 // ============================================================
 private void populateAllSections() {
 
     // =====================
-    // CORE HARDWARE
-    //======================
+    // BATTERY (CORE HARDWARE)
+    // =====================
+    String bat = buildBatteryInfo();
+    set(R.id.txtBatteryContent, bat);
+    applyNeonValues(findViewById(R.id.txtBatteryContent), bat);
+
+    // =====================
+    // SCREEN
+    // =====================
     String scr = buildScreenInfo();
     set(R.id.txtScreenContent, scr);
     applyNeonValues(findViewById(R.id.txtScreenContent), scr);
 
+    // =====================
+    // CAMERA
+    // =====================
     String cam = buildCameraInfo();
     set(R.id.txtCameraContent, cam);
     applyNeonValues(findViewById(R.id.txtCameraContent), cam);
 
+    // =====================
+    // CONNECTIVITY
+    // =====================
     String con = buildConnectivityInfo();
-set(R.id.txtConnectivityContent, con);
-applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
-
-    // ============================================================================
-    // LOCATION (Universal, No-Permission Crash-Free)
-    // ============================================================================
-    try {
-        String loc = getLocationCapabilities();
-        set(R.id.txtLocationContent, loc);
-        applyNeonValues(findViewById(R.id.txtLocationContent), loc);
-    } catch (Throwable ignore) {}
+    set(R.id.txtConnectivityContent, con);
+    applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
 
     // =====================
-    // THERMAL (FIXED)
+    // LOCATION
     // =====================
-    CharSequence thr = buildThermalInfo();
-    set(R.id.txtThermalContent, thr.toString());
-    applyNeonValues(findViewById(R.id.txtThermalContent), thr.toString());
+    String loc = buildLocationInfo();
+    set(R.id.txtLocationContent, loc);
+    applyNeonValues(findViewById(R.id.txtLocationContent), loc);
 
+    // =====================
+    // THERMAL
+    // =====================
+    String th = buildThermalInfo();
+    set(R.id.txtThermalContent, th);
+    applyNeonValues(findViewById(R.id.txtThermalContent), th);
+
+    // =====================
     // MODEM
+    // =====================
     String mod = buildModemInfo();
     set(R.id.txtModemContent, mod);
     applyNeonValues(findViewById(R.id.txtModemContent), mod);
 
-    // ADVANCED WIFI
-    String wadv = buildWifiAdvancedInfo();
-    set(R.id.txtWifiAdvancedContent, wadv);
-    applyNeonValues(findViewById(R.id.txtWifiAdvancedContent), wadv);
+    // =====================
+    // WIFI ADVANCED
+    // =====================
+    String wifi = buildWifiAdvancedInfo();
+    set(R.id.txtWifiAdvancedContent, wifi);
+    applyNeonValues(findViewById(R.id.txtWifiAdvancedContent), wifi);
 
-    // AUDIO
+    // =====================
+    // AUDIO (UNIFIED)
+    // =====================
     String aud = buildAudioUnifiedInfo();
     set(R.id.txtAudioUnifiedContent, aud);
     applyNeonValues(findViewById(R.id.txtAudioUnifiedContent), aud);
 
+    // =====================
     // SENSORS
-    String s1 = buildSensorsInfo();
-    set(R.id.txtSensorsContent, s1);
-    applyNeonValues(findViewById(R.id.txtSensorsContent), s1);
+    // =====================
+    String sen = buildSensorsInfo();
+    set(R.id.txtSensorsContent, sen);
+    applyNeonValues(findViewById(R.id.txtSensorsContent), sen);
 
+    // =====================
     // BIOMETRICS
+    // =====================
     String bio = buildBiometricsInfo();
     set(R.id.txtBiometricsContent, bio);
     applyNeonValues(findViewById(R.id.txtBiometricsContent), bio);
 
-    // ============================================================================
-    // NFC (Compiler-Safe, Universal)
-    // ============================================================================
-    try {
-        String nfc = getNfcBasicInfo();
-        set(R.id.txtNfcContent, nfc);
-        applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
-    } catch (Throwable ignore) {}
+    // =====================
+    // NFC
+    // =====================
+    String nfc = buildNfcInfo();
+    set(R.id.txtNfcContent, nfc);
+    applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
 
+    // =====================
     // GNSS
-    String gn = buildGnssInfo();
-    set(R.id.txtGnssContent, gn);
-    applyNeonValues(findViewById(R.id.txtGnssContent), gn);
+    // =====================
+    String gnss = buildGnssInfo();
+    set(R.id.txtGnssContent, gnss);
+    applyNeonValues(findViewById(R.id.txtGnssContent), gnss);
 
+    // =====================
     // UWB
-    String uw = buildUwbInfo();
-    set(R.id.txtUwbContent, uw);
-    applyNeonValues(findViewById(R.id.txtUwbContent), uw);
+    // =====================
+    String uwb = buildUwbInfo();
+    set(R.id.txtUwbContent, uwb);
+    applyNeonValues(findViewById(R.id.txtUwbContent), uwb);
 
+    // =====================
     // USB
+    // =====================
     String usb = buildUsbInfo();
     set(R.id.txtUsbContent, usb);
     applyNeonValues(findViewById(R.id.txtUsbContent), usb);
 
+    // =====================
     // HAPTICS
+    // =====================
     String hap = buildHapticsInfo();
     set(R.id.txtHapticsContent, hap);
     applyNeonValues(findViewById(R.id.txtHapticsContent), hap);
 
+    // =====================
     // SYSTEM FEATURES
-    String sysf = buildSystemFeaturesInfo();
-    set(R.id.txtSystemFeaturesContent, sysf);
-    applyNeonValues(findViewById(R.id.txtSystemFeaturesContent), sysf);
+    // =====================
+    String sys = buildSystemFeaturesInfo();
+    set(R.id.txtSystemFeaturesContent, sys);
+    applyNeonValues(findViewById(R.id.txtSystemFeaturesContent), sys);
 
+    // =====================
     // SECURITY FLAGS
+    // =====================
     String sec = buildSecurityFlagsInfo();
     set(R.id.txtSecurityFlagsContent, sec);
     applyNeonValues(findViewById(R.id.txtSecurityFlagsContent), sec);
 
+    // =====================
     // ROOT
-    String r = buildRootInfo();
-    set(R.id.txtRootContent, r);
-    applyNeonValues(findViewById(R.id.txtRootContent), r);
+    // =====================
+    String root = buildRootInfo();
+    set(R.id.txtRootContent, root);
+    applyNeonValues(findViewById(R.id.txtRootContent), root);
 
+    // =====================
     // OTHER PERIPHERALS
+    // =====================
     String oth = buildOtherPeripheralsInfo();
     set(R.id.txtOtherPeripheralsContent, oth);
     applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);

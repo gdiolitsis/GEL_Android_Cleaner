@@ -400,37 +400,40 @@ requestPermissions(new String[]{
 }, 101);  
 
 // ============================================================
-    // 5️⃣ BATTERY — MANUAL SECTION 
-    // ============================================================
-    LinearLayout headerBattery = findViewById(R.id.headerBattery);
+// 5️⃣ BATTERY — MANUAL SECTION (FINAL, FIXED)
+// ============================================================
+LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
-    if (headerBattery != null) {
-        headerBattery.setOnClickListener(v -> {
+if (headerBattery != null && batteryContainer != null) {
+    headerBattery.setOnClickListener(v -> {
 
-            boolean isOpen =
-                    batteryContainer != null &&
-                    batteryContainer.getVisibility() == View.VISIBLE;
+        boolean isOpen = batteryContainer.getVisibility() == View.VISIBLE;
 
-            // κλείσε όλα τα άλλα sections
-            if (allContents != null && allIcons != null) {
-                for (int i = 1; i < allContents.length; i++) {
-                    if (allContents[i] != null)
-                        allContents[i].setVisibility(View.GONE);
-                    if (allIcons[i] != null)
-                        allIcons[i].setText("+");
-                }
+        // 🔻 Κλείσε όλα τα άλλα sections
+        if (allContents != null && allIcons != null) {
+            for (int i = 1; i < allContents.length; i++) {
+                if (allContents[i] != null)
+                    allContents[i].setVisibility(View.GONE);
+                if (allIcons[i] != null)
+                    allIcons[i].setText("+");
             }
+        }
 
-            if (!isOpen) {
-                batteryContainer.setVisibility(View.VISIBLE);
-                iconBattery.setText("-");
-            } else {
-                batteryContainer.setVisibility(View.GONE);
-                iconBattery.setText("+");
-            }
-        });
-    }
+        if (!isOpen) {
+            // 🔺 ΑΝΟΙΓΜΑ BATTERY (ΚΑΙ ΕΝΕΡΓΟΠΟΙΗΣΗ)
+            batteryContainer.setVisibility(View.VISIBLE);
+            batteryContainer.setClickable(true);
+            batteryContainer.setFocusable(true);
+            batteryContainer.setFocusableInTouchMode(true);
 
+            iconBattery.setText("-");
+        } else {
+            // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
+            batteryContainer.setVisibility(View.GONE);
+            iconBattery.setText("+");
+        }
+    });
+}
 
 // ------------------------------------------------------------  
 // 7️⃣  NORMAL SECTIONS (WITH AUDIO)  

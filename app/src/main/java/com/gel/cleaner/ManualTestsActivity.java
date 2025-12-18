@@ -193,8 +193,6 @@ private static class TelephonySnapshot {
 protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    ui = new Handler(Looper.getMainLooper());
-
     // ============================================================
     // ROOT SCROLL + LAYOUT
     // ============================================================
@@ -488,6 +486,54 @@ private Button makeTestButtonRedGold(String text, Runnable action) {
     b.setOnClickListener(v -> action.run());
 
     return b;
+}
+
+// ============================================================
+// LAB 14 — STRESS TEST DIALOG (DURATION SELECTOR)
+// ============================================================
+private void showBatteryHealthTestDialog() {
+
+AlertDialog.Builder b = new AlertDialog.Builder(this);  
+b.setTitle("Battery Stress Test");  
+
+LinearLayout root = new LinearLayout(this);  
+root.setOrientation(LinearLayout.VERTICAL);  
+root.setPadding(40, 30, 40, 10);  
+
+TextView info = new TextView(this);  
+info.setText("Select stress test duration.\nHigher duration = higher accuracy.");  
+info.setTextColor(Color.WHITE);  
+info.setPadding(0, 0, 0, 20);  
+root.addView(info);  
+
+SeekBar seek = new SeekBar(this);  
+seek.setMax(4); // 1–5 min  
+seek.setProgress(0);  
+root.addView(seek);  
+
+TextView value = new TextView(this);  
+value.setTextColor(Color.GREEN);  
+value.setText("Duration: 1 min");  
+root.addView(value);  
+
+seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {  
+    @Override public void onProgressChanged(SeekBar s, int p, boolean f) {  
+        lastSelectedStressDurationSec = (p + 1) * 60;  
+        value.setText("Duration: " + (p + 1) + " min");  
+    }  
+    @Override public void onStartTrackingTouch(SeekBar s) {}  
+    @Override public void onStopTrackingTouch(SeekBar s) {}  
+});  
+
+b.setView(root);  
+
+b.setPositiveButton("Start", (d, w) -> d.dismiss());  
+b.setNegativeButton("Cancel", null);  
+
+AlertDialog dlg = b.create();  
+dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));  
+dlg.show();
+
 }
 
 // ============================================================
@@ -4619,4 +4665,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-    }
+}

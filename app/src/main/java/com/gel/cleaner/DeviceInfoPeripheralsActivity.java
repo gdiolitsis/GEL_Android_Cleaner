@@ -1344,16 +1344,26 @@ private void refreshBatteryButton() {
 }
 
 // ===================================================================
-// INIT BATTERY SECTION
+// INIT BATTERY SECTION (FINAL – CORRECT)
 // ===================================================================
 private void initBatterySection() {
+
     txtBatteryContent = findViewById(R.id.txtBatteryContent);
     TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
     refreshBatteryInfoView();
 
     if (btnCapacity != null) {
-        btnCapacity.setOnTouchListener((v, e) -> true);
+
+        // 🔒 ΜΗΝ αφήνεις το parent (accordion) να φάει το touch
+        btnCapacity.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            return false; // ❗ ΑΠΑΡΑΙΤΗΤΟ: για να περάσει το click
+        });
+
+        btnCapacity.setClickable(true);
+        btnCapacity.setFocusable(true);
+
         btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
     }
 

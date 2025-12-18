@@ -1717,12 +1717,16 @@ private String readFirstLine(File file) {
 }
     
 // ============================================================
-// LAB 14 — Battery Health Stress Test (GEL Full Mode)
+// LAB 14 — Battery Health Stress Test (GEL Full Mode) — LAB DIAGNOSTIC EDITION
+// Objective: (1) Full-capacity estimate (mAh) + (2) Stress drain rate (mAh/hour) + (3) Replace guidance
+// NOTE: Always paste full blocks. No partial edits.
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
+    BatteryInfo bi = getBatteryInfo();
     float pct = getCurrentBatteryPercent();
-    if (pct < 0f) {
+
+    if (pct < 0f || bi == null || bi.level < 0) {
         logError("Unable to read battery level.");
         return;
     }
@@ -1733,6 +1737,21 @@ private void lab14BatteryHealthStressTest() {
         logError("Battery level too low (<50%). Please charge the battery to run a reliable stress test.");
         return;
     }
+
+    // BLOCK TEST IF CHARGING / PLUGGED (OBJECTIVE LAB CONDITION)
+    // Must be on Battery (discharging or not charging) to make drain rate meaningful.
+    try {
+        if (bi.chargingSource != null && !"Battery".equalsIgnoreCase(bi.chargingSource)) {
+            logLine();
+            logError("Stress test requires DISCONNECTED charger (current source: " + bi.chargingSource + ").");
+            return;
+        }
+        if (bi.status != null && bi.status.toLowerCase(Locale.US).contains("charging")) {
+            logLine();
+            logError("Stress test requires NOT CHARGING (status: " + bi.status + ").");
+            return;
+        }
+    } catch (Throwable ignore) {}
 
     showBatteryHealthTestDialog();
 }
@@ -1748,7 +1767,7 @@ private void showBatteryHealthTestDialog() {
     layout.setPadding(pad, pad, pad, pad);
 
     TextView info = new TextView(this);
-    info.setText("GEL Stress Test burns CPU + max brightness and checks real battery % drop.\nSelect duration then start.");
+    info.setText("GEL Stress Test burns CPU + max brightness and performs a laboratory-grade battery check.\nSelect duration then start.");
     info.setTextSize(13f);
     info.setTextColor(0xFFFFFFFF);
     info.setPadding(0, 0, 0, dp(8));
@@ -1820,10 +1839,53 @@ private void showBatteryHealthTestDialog() {
 
 private void runBatteryHealthTest_C_Mode(int durationSec) {
 
+    // ------------------------------------------------------------
+    // BASELINE (LAB-GRADE) — capacity + source + conditions
+    // ------------------------------------------------------------
+    BatteryInfo bi0 = getBatteryInfo();
     float startPct = getCurrentBatteryPercent();
-    if (startPct < 0f) {
+
+    if (startPct < 0f || bi0 == null || bi0.level < 0) {
         logWarn("Battery Stress Test: unable to read initial battery level.");
         return;
+    }
+
+    // Re-check conditions at run-time (user might plug charger after dialog)
+    try {
+        if (bi0.chargingSource != null && !"Battery".equalsIgnoreCase(bi0.chargingSource)) {
+            logError("Stress test requires DISCONNECTED charger (current source: " + bi0.chargingSource + ").");
+            return;
+        }
+        if (bi0.status != null && bi0.status.toLowerCase(Locale.US).contains("charging")) {
+            logError("Stress test requires NOT CHARGING (status: " + bi0.status + ").");
+            return;
+        }
+    } catch (Throwable ignore) {}
+
+    long modelCap = getStoredModelCapacity();
+
+    // Capacity baseline: prefer estimatedFullMah (Charge Counter / OEM), fallback to modelCap.
+    long baselineFullMah = -1;
+    String baselineSource = "Unknown";
+
+    try {
+        if (bi0.estimatedFullMah > 0) {
+            baselineFullMah = bi0.estimatedFullMah;
+            baselineSource = (bi0.source != null ? bi0.source : "Estimated");
+        } else if (modelCap > 0) {
+            baselineFullMah = modelCap;
+            baselineSource = "Model Capacity";
+        }
+    } catch (Throwable ignore) {}
+
+    // Compute health ratio ONLY if we have both: modelCap (nominal) and estimatedFullMah (measured)
+    int healthPct = -1;
+    if (modelCap > 0 && bi0.estimatedFullMah > 0) {
+        try {
+            healthPct = (int) Math.round((bi0.estimatedFullMah * 100.0) / (double) modelCap);
+            if (healthPct < 0) healthPct = -1;
+            if (healthPct > 140) healthPct = 140; // clamp absurd devices
+        } catch (Throwable ignore) { healthPct = -1; }
     }
 
     // ---- READ THERMALS BEFORE ----
@@ -1839,6 +1901,27 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
     logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
     logInfo("Duration: " + durationSec + " seconds.");
 
+    // LAB CONDITIONS (objective)
+    logInfo(String.format(Locale.US,
+            "Start conditions: level=%d%%, status=%s, source=%s, temp=%.1f°C.",
+            bi0.level,
+            (bi0.status != null ? bi0.status : "N/A"),
+            (bi0.chargingSource != null ? bi0.chargingSource : "Unknown"),
+            bi0.temperature));
+
+    if (baselineFullMah > 0) {
+        logInfo("Capacity baseline: " + baselineFullMah + " mAh (" + baselineSource + ").");
+    } else {
+        logWarn("Capacity baseline unavailable (mAh). Results will be limited to percentage-based drain.");
+    }
+
+    if (healthPct > 0) {
+        logInfo("Battery health estimate: ~" + healthPct + "% (measured full / model full).");
+    } else {
+        if (modelCap <= 0) logWarn("Model capacity not set. Health % estimate unavailable.");
+        else logWarn("Measured full capacity unavailable. Health % estimate unavailable.");
+    }
+
     long startTime = SystemClock.elapsedRealtime();
 
     applyMaxBrightnessAndKeepOn();
@@ -1849,8 +1932,10 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         stopCpuBurn();
         restoreBrightnessAndKeepOn();
 
+        BatteryInfo bi1 = getBatteryInfo();
         float endPct = getCurrentBatteryPercent();
-        if (endPct < 0f) {
+
+        if (endPct < 0f || bi1 == null || bi1.level < 0) {
             logWarn("Battery Stress Test: unable to read final battery level.");
             return;
         }
@@ -1859,12 +1944,31 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
         long dtMs = endTime - startTime;
         if (dtMs <= 0) dtMs = durationSec * 1000L;
 
-        float delta = startPct - endPct;
-        float perHour = (delta * 3600000f) / dtMs;
+        float deltaPct = startPct - endPct;
+        float pctPerHour = (deltaPct * 3600000f) / dtMs;
+
+        // mAh drain (preferred)
+        double consumedMah = -1;
+        double mahPerHour  = -1;
+
+        if (baselineFullMah > 0 && deltaPct > 0f) {
+            consumedMah = (deltaPct / 100.0) * (double) baselineFullMah;
+            mahPerHour  = (consumedMah * 3600000.0) / (double) dtMs;
+        }
 
         logInfo(String.format(Locale.US,
                 "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
-                startPct, endPct, delta, dtMs / 1000f));
+                startPct, endPct, deltaPct, dtMs / 1000f));
+
+        if (consumedMah >= 0) {
+            logInfo(String.format(Locale.US,
+                    "Drain (lab): %.0f mAh consumed (≈ %.0f mAh/hour).",
+                    consumedMah, mahPerHour));
+        } else {
+            logInfo(String.format(Locale.US,
+                    "Drain (lab): ≈ %.1f%%/hour (mAh baseline unavailable).",
+                    pctPerHour));
+        }
 
         // ---- READ THERMALS AFTER ----
         Map<String,Float> z1 = readThermalZones();
@@ -1884,28 +1988,78 @@ private void runBatteryHealthTest_C_Mode(int durationSec) {
                 "Thermal change during stress: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
                 dCPU, dGPU, dSKIN, dPMIC, dBATT));
 
-        // ---- DRAIN BEHAVIOR ----
-        if (delta <= 0.1f) {
-            logOk("Almost zero drain in stress window — battery behavior looks strong.");
-        } else if (perHour <= 12f) {
-            logOk(String.format(Locale.US,
-                    "Estimated drain ≈ %.1f%%/hour under stress — strong.", perHour));
-        } else if (perHour <= 20f) {
-            logWarn(String.format(Locale.US,
-                    "Estimated drain ≈ %.1f%%/hour under stress — borderline.", perHour));
-        } else {
-            logError(String.format(Locale.US,
-                    "Estimated drain ≈ %.1f%%/hour under stress — heavy wear.", perHour));
+        // ------------------------------------------------------------
+        // OBJECTIVE LAB INTERPRETATION — Replacement guidance
+        // Primary: health% (if available)  Secondary: stress drain rate
+        // ------------------------------------------------------------
+        // Health band (capacity-based)
+        String capBand = "Unknown";
+        if (healthPct > 0) {
+            if (healthPct >= 90) capBand = "Strong";
+            else if (healthPct >= 80) capBand = "Good";
+            else if (healthPct >= 70) capBand = "Worn";
+            else capBand = "Replace";
         }
 
-        // ---- HEALTH CATEGORY (CHECKBOX MAP) ----
-        String health;
+        // Stress band (drain-based) — use mAh/h if available; else %/h
+        // Conservative thresholds to avoid false alarms across devices.
+        String stressBand = "Unknown";
+        if (mahPerHour >= 0) {
+            if (mahPerHour <= 450) stressBand = "Strong";
+            else if (mahPerHour <= 650) stressBand = "Good";
+            else if (mahPerHour <= 900) stressBand = "Worn";
+            else stressBand = "Replace";
+        } else {
+            if (pctPerHour <= 12f) stressBand = "Strong";
+            else if (pctPerHour <= 18f) stressBand = "Good";
+            else if (pctPerHour <= 26f) stressBand = "Worn";
+            else stressBand = "Replace";
+        }
 
-        if (perHour <= 6f)      health = "Strong";       // NEW highest level  
-        else if (perHour <= 8f) health = "Excellent";
-        else if (perHour <=12f) health = "Very good";
-        else if (perHour <=20f) health = "Normal";
-        else                    health = "Weak";
+        // Final lab decision (requires both signals when possible)
+        String finalDecision;
+        if ("Replace".equals(capBand)) {
+            // capacity is decisive
+            finalDecision = "Replace";
+        } else if ("Worn".equals(capBand) && ("Replace".equals(stressBand) || "Worn".equals(stressBand))) {
+            finalDecision = "Worn";
+        } else if ("Unknown".equals(capBand)) {
+            // no capacity health% → rely on stress band only, but never overreact
+            finalDecision = ("Replace".equals(stressBand) ? "Worn" : stressBand);
+        } else {
+            // capacity says Strong/Good; stress can downgrade one step
+            if ("Replace".equals(stressBand)) finalDecision = "Worn";
+            else if ("Worn".equals(stressBand) && "Strong".equals(capBand)) finalDecision = "Good";
+            else finalDecision = capBand;
+        }
+
+        // Print summary lines
+        if (healthPct > 0) {
+            logInfo("Capacity health band: " + capBand + " (≈" + healthPct + "%).");
+        } else {
+            logInfo("Capacity health band: Unknown (needs model capacity + measured full).");
+        }
+        logInfo("Stress behavior band : " + stressBand + ".");
+
+        // Clear recommendation line (objective + conservative)
+        if ("Replace".equals(finalDecision)) {
+            logError("LAB conclusion: Replace recommended (capacity indicates severe degradation).");
+        } else if ("Worn".equals(finalDecision)) {
+            logWarn("LAB conclusion: Worn battery. Replacement should be considered.");
+        } else if ("Good".equals(finalDecision)) {
+            logOk("LAB conclusion: Battery is OK (good). No replacement indicated by this test.");
+        } else {
+            logOk("LAB conclusion: Battery is strong. No replacement indicated by this test.");
+        }
+
+        // Health checkbox map (kept compatible with your UI)
+        // We map bands into your existing labels.
+        String health;
+        if ("Strong".equals(finalDecision))      health = "Strong";
+        else if ("Good".equals(finalDecision))   health = "Excellent";
+        else if ("Worn".equals(finalDecision))   health = "Normal";
+        else if ("Replace".equals(finalDecision))health = "Weak";
+        else                                     health = "Very good";
 
         printHealthCheckboxMap(health);
 
@@ -2004,8 +2158,8 @@ private void startCpuBurn_C_Mode() {
 private void stopCpuBurn() {
     cpuBurnRunning = false;
     for (Thread t : cpuBurnThreads) {
-        try { 
-            t.join(50); 
+        try {
+            t.join(50);
         } catch (Exception ignored) {}
     }
     cpuBurnThreads.clear();
@@ -2032,7 +2186,6 @@ private float getCurrentBatteryPercent() {
 // ============================================================
 // LOG RAW + COLOR HELPERS (ΑΠΑΡΑΙΤΗΤΟΙ ΓΙΑ CHECKBOXES)
 // ============================================================
-
 private void logRaw(String s) {
     // raw HTML output inside log (χωρίς prefix)
     logInfo(s);

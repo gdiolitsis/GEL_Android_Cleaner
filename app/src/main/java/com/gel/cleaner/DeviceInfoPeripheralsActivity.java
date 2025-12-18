@@ -183,7 +183,6 @@ private void requestAllRuntimePermissions() {
     }  
 }  
 
-
 // ============================================================  
 // MAIN CLASS FIELDS  
 // ============================================================  
@@ -400,10 +399,43 @@ requestPermissions(new String[]{
         Manifest.permission.READ_PHONE_NUMBERS  
 }, 101);  
 
+// ============================================================
+    // 5️⃣ BATTERY — MANUAL SECTION 
+    // ============================================================
+    LinearLayout headerBattery = findViewById(R.id.headerBattery);
+
+    if (headerBattery != null) {
+        headerBattery.setOnClickListener(v -> {
+
+            boolean isOpen =
+                    batteryContainer != null &&
+                    batteryContainer.getVisibility() == View.VISIBLE;
+
+            // κλείσε όλα τα άλλα sections
+            if (allContents != null && allIcons != null) {
+                for (int i = 1; i < allContents.length; i++) {
+                    if (allContents[i] != null)
+                        allContents[i].setVisibility(View.GONE);
+                    if (allIcons[i] != null)
+                        allIcons[i].setText("+");
+                }
+            }
+
+            if (!isOpen) {
+                batteryContainer.setVisibility(View.VISIBLE);
+                iconBattery.setText("-");
+            } else {
+                batteryContainer.setVisibility(View.GONE);
+                iconBattery.setText("+");
+            }
+        });
+    }
+
+
 // ------------------------------------------------------------  
 // 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
 // ------------------------------------------------------------  
-setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
+
 setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);  
 setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
 setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  

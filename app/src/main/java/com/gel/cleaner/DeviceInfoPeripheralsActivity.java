@@ -1344,7 +1344,7 @@ private void refreshBatteryButton() {
 }
 
 // ===================================================================
-// INIT BATTERY SECTION (FINAL — CLEAN, NO TOUCH HACKS)
+// INIT BATTERY SECTION (DIAGNOSTIC MODE)
 // ===================================================================
 private void initBatterySection() {
 
@@ -1354,16 +1354,7 @@ private void initBatterySection() {
     refreshBatteryInfoView();
 
     if (btnCapacity != null) {
-
-        // 🔑 Καθαρό click — ΟΧΙ onTouch
-        btnCapacity.setClickable(true);
-        btnCapacity.setFocusable(true);
-        btnCapacity.setEnabled(true);
-
-        btnCapacity.setOnClickListener(v -> {
-            // ΣΙΓΟΥΡΟ context Activity
-            showBatteryCapacityDialog();
-        });
+        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
     }
 
     maybeShowBatteryCapacityDialogOnce();

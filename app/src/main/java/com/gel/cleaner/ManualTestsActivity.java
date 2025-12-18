@@ -16,51 +16,41 @@
 // ============================================================
 package com.gel.cleaner;
 
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
-import android.graphics.Color;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.pdf.PdfDocument;
-import android.graphics.Canvas;
-import android.graphics.Paint;
+// ============================================================
+// ANDROID — CORE
+// ============================================================
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.Color;
+import android.graphics.pdf.PdfDocument;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.net.Uri;
-import androidx.core.content.FileProvider;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.util.Map;
-import java.util.HashMap;
-import java.io.IOException;
 import android.location.LocationManager;
-import android.media.AudioManager;
-import android.media.ToneGenerator;
-import android.media.AudioTrack;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -76,41 +66,64 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
-import android.telephony.TelephonyManager;
 import android.telephony.ServiceState;
-import java.text.SimpleDateFormat;
+import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
+// ============================================================
+// ANDROIDX
+// ============================================================
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
+// ============================================================
+// JAVA — IO / NET
+// ============================================================
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+// ============================================================
+// JAVA — UTIL
+// ============================================================
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class ManualTestsActivity extends AppCompatActivity {
 
@@ -730,6 +743,117 @@ private String ipToStr(int ip) {
            ((ip >> 8) & 0xFF) + "." +
            ((ip >> 16) & 0xFF) + "." +
            ((ip >> 24) & 0xFF);
+}
+
+// ============================================================
+// LAB 14 — REQUIRED SUPPORT METHODS
+// (DO NOT MODIFY — shared infra)
+// ============================================================
+
+// ------------------------------------------------------------
+// UI handler (fallback safety)
+// ------------------------------------------------------------
+private final Handler ui = new Handler(Looper.getMainLooper());
+
+// ------------------------------------------------------------
+// Battery percentage (stable & safe)
+// ------------------------------------------------------------
+private float getCurrentBatteryPercent() {
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return -1f;
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        if (level < 0 || scale <= 0) return -1f;
+        return (level * 100f) / scale;
+
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+// ------------------------------------------------------------
+// Brightness + keep screen on (LAB stress)
+// ------------------------------------------------------------
+private int __oldBrightness = -1;
+
+private void applyMaxBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness < 0) {
+            __oldBrightness = Settings.System.getInt(
+                    getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    128
+            );
+        }
+
+        lp.screenBrightness = 1.0f;
+        getWindow().setAttributes(lp);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+private void restoreBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness >= 0) {
+            lp.screenBrightness = __oldBrightness / 255f;
+            getWindow().setAttributes(lp);
+        }
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// CPU stress (controlled)
+// ------------------------------------------------------------
+private volatile boolean __cpuBurn = false;
+
+private void startCpuBurn_C_Mode() {
+    __cpuBurn = true;
+
+    new Thread(() -> {
+        try {
+            while (__cpuBurn) {
+                double x = 0;
+                for (int i = 0; i < 100_000; i++) {
+                    x += Math.sqrt(i);
+                }
+            }
+        } catch (Throwable ignore) {}
+    }, "LAB14-CPU-BURN").start();
+}
+
+private void stopCpuBurn() {
+    __cpuBurn = false;
+}
+
+// ------------------------------------------------------------
+// UI health map (fallback implementation)
+// ------------------------------------------------------------
+private void printHealthCheckboxMap(String decision) {
+
+    logLine();
+
+    if ("Strong".equalsIgnoreCase(decision)) {
+        logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
+    }
+    else if ("Normal".equalsIgnoreCase(decision)) {
+        logWarn("Health Map: ⚠ Moderate wear detected");
+    }
+    else {
+        logError("Health Map: ✖ Battery health critical");
+    }
 }
 
 // ============================================================
@@ -4495,4 +4619,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-        }
+}

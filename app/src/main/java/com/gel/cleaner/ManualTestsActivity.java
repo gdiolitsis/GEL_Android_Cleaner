@@ -1748,7 +1748,8 @@ private void lab14BatteryHealthStressTest() {
     }
 
     // Must NOT be charging
-    if (biStart.status != null && biStart.status.toLowerCase(Locale.US).contains("charging")) {
+    if (biStart.status != null &&
+            biStart.status.toLowerCase(Locale.US).contains("charging")) {
         logError("Stress test requires the device to be NOT charging.");
         return;
     }
@@ -1818,7 +1819,7 @@ private void lab14BatteryHealthStressTest() {
         startCpuBurn_C_Mode();
 
         // ------------------------------------------------------------
-        // 4️⃣ STOP STRESS AFTER DURATION
+        // 4️⃣ STOP STRESS AFTER DURATION (FROM POPUP)
         // ------------------------------------------------------------
         ui.postDelayed(() -> {
 
@@ -1891,7 +1892,8 @@ private void lab14BatteryHealthStressTest() {
                 decision = "Weak";
                 logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
             }
-            else if ((healthPct > 0 && healthPct < 80) || (mahPerHour > 0 && mahPerHour > 650)) {
+            else if ((healthPct > 0 && healthPct < 80) ||
+                     (mahPerHour > 0 && mahPerHour > 650)) {
                 decision = "Normal";
                 logWarn("LAB conclusion: Battery shows wear but is still usable.");
             }
@@ -1900,16 +1902,405 @@ private void lab14BatteryHealthStressTest() {
                 logOk("LAB conclusion: Battery health is good. No replacement indicated.");
             }
 
-            // ------------------------------------------------------------
-            // 6️⃣ HEALTH MAP (UI COMPATIBLE)
-            // ------------------------------------------------------------
             printHealthCheckboxMap(decision);
 
-        }, 60 * 1000L); // duration handled by popup (unchanged)
+            // save metrics for confidence %
+            saveLab14DrainValue(mahPerHour);
+
+            // run tracking & analysis
+            saveLab14Run();
+            logLab14Confidence();
+            computeAndLogAgingIndex(mahPerHour, healthPct, batt1, batt0);
+            computeAndLogConfidenceScore();
+
+        }, lastSelectedStressDurationSec * 1000L);
 
     });
 }
-        
+
+// ===================================================================
+// LAB 14 — AGING INDEX ENGINE
+// Objective trend-based battery aging indicator
+// ===================================================================
+private void computeAndLogAgingIndex(
+        double mahPerHour,
+        int healthPct,
+        Float battTempAfter,
+        Float battTempBefore
+) {
+    // ------------------------------------------------------------
+    // Preconditions
+    // ------------------------------------------------------------
+    int runs = getLab14RunCount();
+    if (runs < 2) {
+        logLine();
+        logInfo("Battery Aging Index: not available (requires at least 2 runs).");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Baselines (conservative, service-grade)
+    // ------------------------------------------------------------
+    final double BASE_DRAIN_MAH_PER_HOUR = 600.0; // healthy stress drain
+    final double BASE_THERMAL_DELTA_C    = 6.0;   // healthy thermal rise
+
+    // ------------------------------------------------------------
+    // Drain factor
+    // ------------------------------------------------------------
+    double drainFactor;
+    if (mahPerHour > 0) {
+        drainFactor = mahPerHour / BASE_DRAIN_MAH_PER_HOUR;
+    } else {
+        // fallback when mAh not available
+        drainFactor = 1.0;
+    }
+
+    // ------------------------------------------------------------
+    // Capacity factor
+    // ------------------------------------------------------------
+    double capacityFactor = 1.0;
+    if (healthPct > 0) {
+        capacityFactor = 100.0 / Math.max(healthPct, 1);
+    }
+
+    // ------------------------------------------------------------
+    // Thermal factor
+    // ------------------------------------------------------------
+    double thermalFactor = 1.0;
+    if (battTempAfter != null && battTempBefore != null) {
+        double dT = battTempAfter - battTempBefore;
+        if (dT > 0) {
+            thermalFactor = dT / BASE_THERMAL_DELTA_C;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Clamp factors to avoid extremes
+    // ------------------------------------------------------------
+    drainFactor    = clamp(drainFactor,    0.7, 1.4);
+    capacityFactor = clamp(capacityFactor, 0.7, 1.4);
+    thermalFactor  = clamp(thermalFactor,  0.7, 1.4);
+
+    // ------------------------------------------------------------
+    // Aging Index (weighted)
+    // ------------------------------------------------------------
+    double agingIndex =
+            0.5 * drainFactor +
+            0.3 * capacityFactor +
+            0.2 * thermalFactor;
+
+    agingIndex = clamp(agingIndex, 0.7, 1.3);
+
+    // ------------------------------------------------------------
+    // Interpretation
+    // ------------------------------------------------------------
+    String interpretation;
+    if (agingIndex <= 0.85) {
+        interpretation = "Low aging (battery condition is strong).";
+    } else if (agingIndex <= 1.00) {
+        interpretation = "Normal aging (expected wear).";
+    } else if (agingIndex <= 1.15) {
+        interpretation = "Moderate wear detected.";
+    } else {
+        interpretation = "Heavy aging detected. Battery replacement should be considered.";
+    }
+
+    // ------------------------------------------------------------
+    // Log output
+    // ------------------------------------------------------------
+    logLine();
+    logInfo(String.format(Locale.US,
+            "Battery Aging Index: %.2f (based on %d runs).",
+            agingIndex, runs));
+    logInfo("Interpretation: " + interpretation);
+}
+
+// ------------------------------------------------------------
+// Utility clamp
+// ------------------------------------------------------------
+private double clamp(double v, double min, double max) {
+    return Math.max(min, Math.min(max, v));
+}
+
+// ===================================================================
+// LAB 14 — CONFIDENCE SCORE (%)
+// Variance-based reliability indicator
+// ===================================================================
+private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
+private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
+private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
+
+// ------------------------------------------------------------
+// Save last drain value (called from LAB 14 end)
+// ------------------------------------------------------------
+private void saveLab14DrainValue(double mahPerHour) {
+
+    if (mahPerHour <= 0) return;
+
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+
+        double d1 = Double.longBitsToDouble(
+                sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))
+        );
+        double d2 = Double.longBitsToDouble(
+                sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))
+        );
+
+        sp.edit()
+                .putLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(d2))
+                .putLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(d1))
+                .putLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(mahPerHour))
+                .apply();
+
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// Compute and log confidence score
+// ------------------------------------------------------------
+private void computeAndLogConfidenceScore() {
+
+    int runs = getLab14RunCount();
+    if (runs < 2) {
+        logLine();
+        logInfo("Confidence Score: not available (requires multiple runs).");
+        return;
+    }
+
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+
+        double[] vals = new double[]{
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
+        };
+
+        // collect valid values
+        double sum = 0;
+        int n = 0;
+        for (double v : vals) {
+            if (v > 0) {
+                sum += v;
+                n++;
+            }
+        }
+
+        if (n < 2) {
+            logInfo("Confidence Score: insufficient data.");
+            return;
+        }
+
+        double mean = sum / n;
+
+        double var = 0;
+        for (double v : vals) {
+            if (v > 0) {
+                var += (v - mean) * (v - mean);
+            }
+        }
+        var /= n;
+
+        double std = Math.sqrt(var);
+
+        // --------------------------------------------------------
+        // Confidence formula
+        // --------------------------------------------------------
+        // std / mean ≈ relative variance
+        double relVar = std / mean;
+
+        // Map variance → confidence %
+        int confidence;
+        if (relVar < 0.05)       confidence = 95;
+        else if (relVar < 0.08)  confidence = 90;
+        else if (relVar < 0.12)  confidence = 80;
+        else if (relVar < 0.18)  confidence = 70;
+        else                     confidence = 60;
+
+        // --------------------------------------------------------
+        // Log
+        // --------------------------------------------------------
+        logLine();
+        logInfo(String.format(Locale.US,
+                "Confidence Score: %d%% (based on %d runs).",
+                confidence, n));
+
+        if (confidence >= 90) {
+            logOk("Results are highly consistent.");
+        } else if (confidence >= 80) {
+            logInfo("Results show good consistency.");
+        } else {
+            logWarn("Results show noticeable variance. Additional runs may improve accuracy.");
+        }
+
+    } catch (Throwable t) {
+        logWarn("Confidence Score calculation failed.");
+    }
+}
+
+// ===================================================================
+// BATTERY REAL CAPACITY ENGINE — copied from DeviceInfoPeripheralsActivity
+// (needed by LAB 14 + any battery labs)
+// ===================================================================
+private static final String PREFS_NAME_BATTERY = "gel_prefs";
+private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
+private int lastSelectedStressDurationSec = 60;
+
+// ===================================================================
+// BATTERY DATA STRUCT
+// ===================================================================
+private static class BatteryInfo {
+
+    int level = -1;
+    String status = "Unknown";
+    float temperature = 0f;
+
+    long currentChargeMah = -1;
+    long estimatedFullMah = -1;
+    String source = "Unknown";
+}
+
+// ===================================================================
+// MODEL CAPACITY HELPERS
+// ===================================================================
+private long getStoredModelCapacity() {
+    try {
+        SharedPreferences sp =
+                getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
+        return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
+    } catch (Throwable t) {
+        return -1L;
+    }
+}
+
+// ===================================================================
+// NORMALIZE mAh / μAh
+// ===================================================================
+private long normalizeMah(long raw) {
+    if (raw <= 0) return -1;
+    if (raw > 200000) return raw / 1000;
+    return raw;
+}
+
+// ===================================================================
+// UNIVERSAL BATTERY SCANNER — GEL v7.1
+// ===================================================================
+private BatteryInfo getBatteryInfo() {
+
+    BatteryInfo bi = new BatteryInfo();
+
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i != null) {
+
+            bi.level = i.getIntExtra(
+                    BatteryManager.EXTRA_LEVEL, -1);
+
+            bi.temperature =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
+
+            switch (i.getIntExtra(
+                    BatteryManager.EXTRA_STATUS, -1)) {
+
+                case BatteryManager.BATTERY_STATUS_CHARGING:
+                    bi.status = "Charging";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                    bi.status = "Discharging";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_FULL:
+                    bi.status = "Full";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                    bi.status = "Not charging";
+                    break;
+
+                default:
+                    bi.status = "Unknown";
+                    break;
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    try {
+        BatteryManager bm =
+                (BatteryManager) getSystemService(BATTERY_SERVICE);
+
+        if (bm != null) {
+            long cc = normalizeMah(
+                    bm.getLongProperty(
+                            BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
+
+            if (cc > 0 && bi.level > 0) {
+                bi.currentChargeMah = cc;
+                bi.estimatedFullMah =
+                        (long) (cc / (bi.level / 100f));
+                bi.source = "Charge Counter";
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    return bi;
+}
+
+// ===================================================================
+// LAB 14 — RUN HISTORY & CONFIDENCE ENGINE
+// ===================================================================
+private static final String LAB14_PREFS = "lab14_prefs";
+private static final String KEY_LAB14_RUNS = "lab14_run_count";
+
+// ------------------------------------------------------------
+// Save one LAB 14 run
+// ------------------------------------------------------------
+private void saveLab14Run() {
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+        int runs = sp.getInt(KEY_LAB14_RUNS, 0);
+        sp.edit().putInt(KEY_LAB14_RUNS, runs + 1).apply();
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// Get number of completed LAB 14 runs
+// ------------------------------------------------------------
+private int getLab14RunCount() {
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+        return sp.getInt(KEY_LAB14_RUNS, 0);
+    } catch (Throwable ignore) {
+        return 0;
+    }
+}
+
+// ------------------------------------------------------------
+// Log confidence message based on run count
+// ------------------------------------------------------------
+private void logLab14Confidence() {
+
+    int runs = getLab14RunCount();
+
+    logLine();
+
+    if (runs <= 1) {
+        logInfo("Confidence: Preliminary (1 run).");
+        logInfo("For higher diagnostic accuracy, run this test 2 more times under similar conditions.");
+    }
+    else if (runs == 2) {
+        logInfo("Confidence: Medium (2 runs).");
+        logInfo("One additional run is recommended to confirm battery aging trend.");
+    }
+    else {
+        logOk("Confidence: High (3+ consistent runs).");
+        logInfo("Battery diagnostic confidence is high.");
+    }
+}
+     
 //=============================================================
 // LAB 15 — Charging Port & Charger Inspection (manual)  
 // ============================================================  
@@ -4104,4 +4495,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-}
+        }

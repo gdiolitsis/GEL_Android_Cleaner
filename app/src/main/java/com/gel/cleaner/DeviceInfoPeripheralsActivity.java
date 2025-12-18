@@ -400,73 +400,10 @@ requestPermissions(new String[]{
         Manifest.permission.READ_PHONE_NUMBERS  
 }, 101);  
 
-// ------------------------------------------------------------
-// 6️⃣ INIT BATTERY MODULE — FIXED (NO XML CHANGES)
-// ------------------------------------------------------------
-initBatterySection();
-
-// 🔒 Αρχική κατάσταση: BATTERY ΠΛΗΡΩΣ ΚΛΕΙΣΤΟ
-if (batteryContainer != null)
-    batteryContainer.setVisibility(View.GONE);
-
-if (txtBatteryContent != null)
-    txtBatteryContent.setVisibility(View.GONE);
-
-if (txtBatteryModelCapacity != null)
-    txtBatteryModelCapacity.setVisibility(View.GONE);
-
-if (iconBattery != null)
-    iconBattery.setText("+");
-
-LinearLayout headerBattery = findViewById(R.id.headerBattery);
-if (headerBattery != null) {
-    headerBattery.setOnClickListener(v -> {
-
-        boolean isOpen =
-                batteryContainer != null &&
-                batteryContainer.getVisibility() == View.VISIBLE;
-
-        if (!isOpen) {
-
-            // 🔻 Κλείνουμε ΟΛΑ τα άλλα sections
-            collapseAllExceptBattery();
-
-            // 🔺 ΑΝΟΙΓΜΑ BATTERY (ΟΛΑ ΜΑΖΙ)
-            if (batteryContainer != null)
-                batteryContainer.setVisibility(View.VISIBLE);
-
-            if (txtBatteryContent != null)
-                txtBatteryContent.setVisibility(View.VISIBLE);
-
-            if (txtBatteryModelCapacity != null)
-                txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-
-            if (iconBattery != null)
-                iconBattery.setText("-");
-
-            refreshBatteryInfoView();
-
-        } else {
-
-            // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
-            if (batteryContainer != null)
-                batteryContainer.setVisibility(View.GONE);
-
-            if (txtBatteryContent != null)
-                txtBatteryContent.setVisibility(View.GONE);
-
-            if (txtBatteryModelCapacity != null)
-                txtBatteryModelCapacity.setVisibility(View.GONE);
-
-            if (iconBattery != null)
-                iconBattery.setText("+");
-        }
-    });
-}
-
 // ------------------------------------------------------------  
 // 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
 // ------------------------------------------------------------  
+setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);
 setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);  
 setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
 setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  
@@ -1407,18 +1344,6 @@ private void refreshBatteryButton() {
         long cap = getStoredModelCapacity();
         btn.setText(cap > 0 ? "Set model capacity (" + cap + " mAh)" : "Set model capacity");
     }
-}
-
-// ===================================================================
-// CLOSE BATTERY COMPLETELY
-// ===================================================================
-private void closeBatteryModule() {
-    try {
-        if (batteryContainer != null) batteryContainer.setVisibility(View.GONE);
-        if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.GONE);
-        if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
-        if (iconBattery != null) iconBattery.setText("+");
-    } catch (Throwable ignore) {}
 }
 
 // ===================================================================
@@ -3454,62 +3379,6 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
         tv.setText(ssb);
     }
     
-// ============================================================
-// COLLAPSE ENGINE — CLOSE ALL SECTIONS (SIMPLE & CORRECT)
-// ============================================================
-private void collapseAllExceptBattery() {
-
-    if (allContents == null || allIcons == null) return;
-
-    // Κλείσε ΟΛΑ τα sections (μαζί και το Battery)
-    for (int i = 0; i < allContents.length; i++) {
-
-        TextView content = allContents[i];
-        TextView icon    = allIcons[i];
-
-        if (content != null && content.getVisibility() == View.VISIBLE)
-            animateCollapse(content);
-
-        if (icon != null)
-            icon.setText("＋");
-    }
-
-    // 🔒 Κλείσε ΚΑΙ τα battery extras
-    if (batteryContainer != null)
-        batteryContainer.setVisibility(View.GONE);
-
-    if (txtBatteryContent != null)
-        txtBatteryContent.setVisibility(View.GONE);
-
-    if (txtBatteryModelCapacity != null)
-        txtBatteryModelCapacity.setVisibility(View.GONE);
-
-    if (iconBattery != null)
-        iconBattery.setText("+");
-}
-
-// ============================================================
-// COLLAPSE ENGINE — PUBLIC WRAPPER (GLOBAL CLOSE)
-// ============================================================
-private void collapseAll() {
-
-    // Κλείσε όλα τα non-battery sections
-    collapseAllExceptBattery();
-
-    // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
-    if (batteryContainer != null)
-        batteryContainer.setVisibility(View.GONE);
-
-    if (txtBatteryContent != null)
-        txtBatteryContent.setVisibility(View.GONE);
-
-    if (txtBatteryModelCapacity != null)
-        txtBatteryModelCapacity.setVisibility(View.GONE);
-
-    if (iconBattery != null)
-        iconBattery.setText("+");
-}
-
 // ===================================================================
 // HELPERS — alignment + indent  (REQUIRED for Battery Builder)
 // ===================================================================

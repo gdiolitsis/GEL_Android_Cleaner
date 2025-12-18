@@ -416,7 +416,7 @@ if (txtBatteryModelCapacity != null)
     txtBatteryModelCapacity.setVisibility(View.GONE);
 
 if (iconBattery != null)
-    iconBattery.setText("＋");
+    iconBattery.setText("+");
 
 LinearLayout headerBattery = findViewById(R.id.headerBattery);
 if (headerBattery != null) {
@@ -442,7 +442,7 @@ if (headerBattery != null) {
                 txtBatteryModelCapacity.setVisibility(View.VISIBLE);
 
             if (iconBattery != null)
-                iconBattery.setText("－");
+                iconBattery.setText("-");
 
             refreshBatteryInfoView();
 
@@ -459,7 +459,7 @@ if (headerBattery != null) {
                 txtBatteryModelCapacity.setVisibility(View.GONE);
 
             if (iconBattery != null)
-                iconBattery.setText("＋");
+                iconBattery.setText("+");
         }
     });
 }
@@ -1417,7 +1417,7 @@ private void closeBatteryModule() {
         if (batteryContainer != null) batteryContainer.setVisibility(View.GONE);
         if (txtBatteryContent != null) txtBatteryContent.setVisibility(View.GONE);
         if (txtBatteryModelCapacity != null) txtBatteryModelCapacity.setVisibility(View.GONE);
-        if (iconBattery != null) iconBattery.setText("＋");
+        if (iconBattery != null) iconBattery.setText("+");
     } catch (Throwable ignore) {}
 }
 
@@ -3455,14 +3455,14 @@ applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
     }
     
 // ============================================================
-// COLLAPSE ENGINE — CLOSE ALL SECTIONS EXCEPT BATTERY (CLEAN)
+// COLLAPSE ENGINE — CLOSE ALL SECTIONS (SIMPLE & CORRECT)
 // ============================================================
 private void collapseAllExceptBattery() {
 
     if (allContents == null || allIcons == null) return;
 
-    // Κλείσε όλα τα sections εκτός Battery (index 0)
-    for (int i = 1; i < allContents.length; i++) {
+    // Κλείσε ΟΛΑ τα sections (μαζί και το Battery)
+    for (int i = 0; i < allContents.length; i++) {
 
         TextView content = allContents[i];
         TextView icon    = allIcons[i];
@@ -3473,6 +3473,19 @@ private void collapseAllExceptBattery() {
         if (icon != null)
             icon.setText("＋");
     }
+
+    // 🔒 Κλείσε ΚΑΙ τα battery extras
+    if (batteryContainer != null)
+        batteryContainer.setVisibility(View.GONE);
+
+    if (txtBatteryContent != null)
+        txtBatteryContent.setVisibility(View.GONE);
+
+    if (txtBatteryModelCapacity != null)
+        txtBatteryModelCapacity.setVisibility(View.GONE);
+
+    if (iconBattery != null)
+        iconBattery.setText("+");
 }
 
 // ============================================================
@@ -3494,7 +3507,7 @@ private void collapseAll() {
         txtBatteryModelCapacity.setVisibility(View.GONE);
 
     if (iconBattery != null)
-        iconBattery.setText("＋");
+        iconBattery.setText("+");
 }
 
 // ===================================================================

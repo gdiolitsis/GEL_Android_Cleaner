@@ -193,7 +193,7 @@ private static final int LINK_BLUE     = Color.parseColor("#1E90FF");
 
 private boolean isRooted = false;  
 
-private TextView[] allContents;  
+private View[] allContents;
 private TextView[] allIcons;
 
 // ============================================================
@@ -339,28 +339,28 @@ iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);
 // ------------------------------------------------------------  
 // 3️⃣  MASTER ARRAYS (WITH AUDIO)  
 // ------------------------------------------------------------  
-allContents = new TextView[]{  
-        txtBatteryContent,  
-        txtScreenContent,  
-        txtCameraContent,  
-        txtConnectivityContent,  
-        txtLocationContent,  
-        txtThermalContent,  
-        txtModemContent,  
-        txtWifiAdvancedContent,  
-        txtAudioUnifiedContent,  
-        txtSensorsContent,  
-        txtBiometricsContent,  
-        txtNfcContent,  
-        txtGnssContent,  
-        txtUwbContent,  
-        txtUsbContent,  
-        txtHapticsContent,  
-        txtSystemFeaturesContent,  
-        txtSecurityFlagsContent,  
-        txtRootContent,  
-        txtOtherPeripherals  
-};  
+allContents = new View[]{
+        batteryContainer,            // ✅ Battery content = container
+        txtScreenContent,
+        txtCameraContent,
+        txtConnectivityContent,
+        txtLocationContent,
+        txtThermalContent,
+        txtModemContent,
+        txtWifiAdvancedContent,
+        txtAudioUnifiedContent,
+        txtSensorsContent,
+        txtBiometricsContent,
+        txtNfcContent,
+        txtGnssContent,
+        txtUwbContent,
+        txtUsbContent,
+        txtHapticsContent,
+        txtSystemFeaturesContent,
+        txtSecurityFlagsContent,
+        txtRootContent,
+        txtOtherPeripherals
+};
 
 allIcons = new TextView[]{  
         iconBattery,  

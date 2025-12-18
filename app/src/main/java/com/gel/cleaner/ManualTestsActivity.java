@@ -58,8 +58,8 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
-import android.net.NetworkCapabilities;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -1398,106 +1398,191 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
     return Math.max(5f, linkSpeedMbps * rssiFactor);  
 }  
 
+// ============================================================  
+// LAB 11 — Mobile Data Diagnostic
+// ============================================================  
+
 private void lab11MobileDataDiagnostic() {
 
     logLine();
-    logInfo("LAB 11 — Mobile Network Diagnostic (Auto)");
+    logInfo("LAB 11 — Mobile Network Diagnostic (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
+    // ------------------------------------------------------------
+    // Airplane mode (context only)
+    // ------------------------------------------------------------
     if (s.airplaneOn) {
-        logWarn("Airplane mode is ENABLED. Mobile network disabled.");
+        logInfo("Airplane mode is ENABLED. Radio interfaces are intentionally disabled.");
         return;
     }
 
+    // ------------------------------------------------------------
+    // SIM state (laboratory reporting)
+    // ------------------------------------------------------------
     if (!s.simReady) {
 
         switch (s.simState) {
             case TelephonyManager.SIM_STATE_ABSENT:
-                logError("No SIM detected.");
+                logInfo("SIM state: ABSENT.");
                 return;
 
             case TelephonyManager.SIM_STATE_PIN_REQUIRED:
-                logWarn("SIM detected but locked (PIN required).");
+                logInfo("SIM state: PRESENT but locked (PIN required).");
                 return;
 
             case TelephonyManager.SIM_STATE_PUK_REQUIRED:
-                logWarn("SIM detected but locked (PUK required).");
+                logInfo("SIM state: PRESENT but locked (PUK required).");
                 return;
 
             case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
-                logWarn("SIM detected but network locked.");
+                logInfo("SIM state: PRESENT but network locked.");
                 return;
 
             default:
-                logWarn("SIM present but not ready.");
+                logInfo("SIM state: PRESENT but not ready.");
                 return;
         }
     }
 
-    logOk("SIM detected and READY.");
+    logLabelValue("SIM State", "READY");
+
+    // ------------------------------------------------------------
+    // Service state (legacy domain — informational)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Service State (legacy)",
+            s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"
+    );
 
     if (!s.inService) {
-        logError(
-                "No mobile network detected in known-good coverage. " +
-                "Possible SIM, antenna, or baseband issue."
+        logInfo(
+                "Legacy service registration is not reported. " +
+                "On modern LTE/5G devices, voice and data may be provided via IMS (VoLTE / VoWiFi)."
         );
-        return;
     }
 
-    if (s.dataState != TelephonyManager.DATA_CONNECTED
-            && s.dataState != TelephonyManager.DATA_CONNECTING) {
-
-        logWarn(
-                "Mobile network available, but data connection inactive. " +
-                "Possible APN or carrier configuration issue."
-        );
-        return;
+    // ------------------------------------------------------------
+    // Data state (packet domain — informational)
+    // ------------------------------------------------------------
+    String dataStateLabel;
+    switch (s.dataState) {
+        case TelephonyManager.DATA_CONNECTED:
+            dataStateLabel = "CONNECTED";
+            break;
+        case TelephonyManager.DATA_CONNECTING:
+            dataStateLabel = "CONNECTING";
+            break;
+        case TelephonyManager.DATA_DISCONNECTED:
+            dataStateLabel = "DISCONNECTED";
+            break;
+        default:
+            dataStateLabel = "UNKNOWN";
+            break;
     }
 
-    // 🟢 Everything OK → silence
+    logLabelValue("Data State", dataStateLabel);
+
+    // ------------------------------------------------------------
+    // Internet routing context (best effort)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Internet Context",
+            s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"
+    );
+
+    // ------------------------------------------------------------
+    // Laboratory conclusion
+    // ------------------------------------------------------------
+    logOk("Laboratory snapshot collected. No functional verdict inferred.");
 }
+
+// ============================================================
+// LAB 12 — Call Function Interpretation (Laboratory)
+// ============================================================
 
 private void lab12CallFunctionInterpretation() {
 
     logLine();
-    logInfo("LAB 12 — Call Function Interpretation (Informational)");
+    logInfo("LAB 12 — Call Function Interpretation (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
+    // ------------------------------------------------------------
+    // Airplane mode (context only)
+    // ------------------------------------------------------------
     if (s.airplaneOn) {
-        logError("Airplane mode is enabled. Call functionality is disabled.");
+        logInfo("Airplane mode is ENABLED. Voice radio interfaces are intentionally disabled.");
         return;
     }
+
+    // ------------------------------------------------------------
+    // SIM availability (context only)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "SIM State",
+            s.simReady ? "READY" : "NOT READY"
+    );
 
     if (!s.simReady) {
-        logError("No ready SIM detected. Calls cannot be placed.");
+        logInfo(
+                "Voice service availability depends on SIM readiness. " +
+                "No functional verdict inferred."
+        );
         return;
     }
+
+    // ------------------------------------------------------------
+    // Legacy voice service state (informational)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Voice Service (legacy)",
+            s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"
+    );
 
     if (!s.inService) {
-        logError("Mobile network service unavailable. Calls cannot be completed.");
-        return;
+        logInfo(
+                "Legacy circuit-switched voice service is not reported. " +
+                "On modern LTE/5G devices, voice calls may be provided via IMS (VoLTE / VoWiFi)."
+        );
     }
 
-    logOk("Mobile network conditions allow call attempts.");
+    // ------------------------------------------------------------
+    // Internet context (IMS relevance)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Internet Context",
+            s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"
+    );
 
     if (s.hasInternet) {
         logInfo(
-                "Internet connectivity is active. " +
-                "If calls fail, this suggests a carrier, IMS, or VoLTE configuration issue."
+                "Active internet routing detected. " +
+                "IMS-based calling (VoLTE / VoWiFi) may be supported depending on carrier configuration."
         );
     } else {
         logInfo(
-                "Internet connectivity is not active. " +
-                "Calls may still work, but VoLTE or IMS-based calling may be unavailable."
+                "No active internet routing detected. " +
+                "Legacy voice calling may still function if supported by the network."
         );
     }
 
+    // ------------------------------------------------------------
+    // Laboratory conclusion
+    // ------------------------------------------------------------
+    logOk(
+            "Laboratory interpretation complete. " +
+            "This test does not initiate or verify real call execution."
+    );
+
     logInfo(
-            "Call audio routing and microphone/earpiece paths are verified separately (LAB 3)."
+            "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
     );
 }
+
+// ============================================================
+// LAB 13 — Internet Quich Check
+// ============================================================
 
 private void lab13InternetQuickCheck() {  
     logLine();  
@@ -4152,5 +4237,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // ============================================================
 // END OF CLASS
 // ============================================================
-
 }

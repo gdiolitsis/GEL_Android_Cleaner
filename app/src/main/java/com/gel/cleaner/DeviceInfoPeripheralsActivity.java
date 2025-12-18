@@ -1344,7 +1344,7 @@ private void refreshBatteryButton() {
 }
 
 // ===================================================================
-// INIT BATTERY SECTION (FINAL – CORRECT)
+// INIT BATTERY SECTION (FINAL — CLEAN, NO TOUCH HACKS)
 // ===================================================================
 private void initBatterySection() {
 
@@ -1355,16 +1355,15 @@ private void initBatterySection() {
 
     if (btnCapacity != null) {
 
-        // 🔒 ΜΗΝ αφήνεις το parent (accordion) να φάει το touch
-        btnCapacity.setOnTouchListener((v, event) -> {
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-            return false; // ❗ ΑΠΑΡΑΙΤΗΤΟ: για να περάσει το click
-        });
-
+        // 🔑 Καθαρό click — ΟΧΙ onTouch
         btnCapacity.setClickable(true);
         btnCapacity.setFocusable(true);
+        btnCapacity.setEnabled(true);
 
-        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
+        btnCapacity.setOnClickListener(v -> {
+            // ΣΙΓΟΥΡΟ context Activity
+            showBatteryCapacityDialog();
+        });
     }
 
     maybeShowBatteryCapacityDialogOnce();

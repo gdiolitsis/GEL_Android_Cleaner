@@ -292,6 +292,7 @@ batteryContainer        = findViewById(R.id.batteryContainer);
 txtBatteryContent       = findViewById(R.id.txtBatteryContent);  
 iconBattery             = findViewById(R.id.iconBatteryToggle);  
 txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);  
+initBatterySection();
 
 txtScreenContent          = findViewById(R.id.txtScreenContent);  
 txtCameraContent          = findViewById(R.id.txtCameraContent);  

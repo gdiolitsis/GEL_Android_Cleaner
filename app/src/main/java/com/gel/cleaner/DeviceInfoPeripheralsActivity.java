@@ -403,7 +403,7 @@ requestPermissions(new String[]{
 // ------------------------------------------------------------  
 // 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
 // ------------------------------------------------------------  
-setupSection(findViewById(R.id.headerBattery), txtBatteryContent, iconBattery);
+setupSection(findViewById(R.id.headerBattery), batteryContainer, iconBattery);
 setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);  
 setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
 setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  

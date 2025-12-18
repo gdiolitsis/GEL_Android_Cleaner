@@ -3139,9 +3139,9 @@ private void populateAllSections() {
     // =====================
     // LOCATION
     // =====================
-    String loc = buildLocationInfo();
-    set(R.id.txtLocationContent, loc);
-    applyNeonValues(findViewById(R.id.txtLocationContent), loc);
+    String loc = getLocationCapabilities();
+set(R.id.txtLocationContent, loc);
+applyNeonValues(findViewById(R.id.txtLocationContent), loc);
 
     // =====================
     // THERMAL
@@ -3188,9 +3188,9 @@ private void populateAllSections() {
     // =====================
     // NFC
     // =====================
-    String nfc = buildNfcInfo();
-    set(R.id.txtNfcContent, nfc);
-    applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
+    String nfc = getNfcBasicInfo();
+set(R.id.txtNfcContent, nfc);
+applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
 
     // =====================
     // GNSS

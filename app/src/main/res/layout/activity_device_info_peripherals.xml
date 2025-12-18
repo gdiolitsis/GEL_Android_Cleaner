@@ -46,8 +46,7 @@
     android:gravity="center_vertical"
     android:layout_marginTop="6dp"
     android:clickable="true"
-    android:focusable="true"
-    android:descendantFocusability="afterDescendants">
+    android:focusable="true">
 
     <TextView
         android:layout_width="0dp"
@@ -62,7 +61,7 @@
         android:id="@+id/iconBatteryToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ï¼‹"
+        android:text="+"
         android:textColor="#00FFBF"
         android:textSize="18sp" />
 </LinearLayout>
@@ -130,7 +129,7 @@
                 android:id="@+id/iconScreenToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -171,7 +170,7 @@
                 android:id="@+id/iconCameraToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -212,7 +211,7 @@
                 android:id="@+id/iconConnectivityToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -253,7 +252,7 @@
                 android:id="@+id/iconLocationToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -294,7 +293,7 @@
                 android:id="@+id/iconThermalToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -336,7 +335,7 @@
         android:id="@+id/iconModemToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ï¼‹"
+        android:text="+"
         android:textColor="#00FFBF"
         android:textSize="18sp" />
 </LinearLayout>
@@ -378,7 +377,7 @@
                 android:id="@+id/iconWifiAdvancedToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -419,7 +418,7 @@
                 android:id="@+id/iconAudioUnifiedToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -460,7 +459,7 @@
                 android:id="@+id/iconSensorsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -501,7 +500,7 @@
                 android:id="@+id/iconBiometricsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -542,7 +541,7 @@
                 android:id="@+id/iconNfcToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -583,7 +582,7 @@
                 android:id="@+id/iconGnssToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -624,7 +623,7 @@
                 android:id="@+id/iconUwbToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -665,7 +664,7 @@
                 android:id="@+id/iconUsbToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -706,7 +705,7 @@
                 android:id="@+id/iconHapticsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -747,7 +746,7 @@
                 android:id="@+id/iconSystemFeaturesToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -788,7 +787,7 @@
                 android:id="@+id/iconSecurityFlagsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -829,7 +828,7 @@
                 android:id="@+id/iconRootToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textColor="#00FFBF"
                 android:textSize="18sp"/>
         </LinearLayout>
@@ -871,7 +870,7 @@
                 android:id="@+id/iconOtherPeripheralsToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ï¼‹"
+                android:text="+"
                 android:textSize="18sp"
                 android:textColor="@color/gel_gold"/>
         </LinearLayout>

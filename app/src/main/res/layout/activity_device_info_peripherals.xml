@@ -28,7 +28,7 @@
             android:id="@+id/txtSectionHeaderPeripherals"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ðŸ“‚ PERIPHERALS REPORT â€” Full Device Capability Map"
+            android:text="PERIPHERALS REPORT — Full Device Capability Map"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/gel_gold"

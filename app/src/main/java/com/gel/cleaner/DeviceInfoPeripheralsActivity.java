@@ -1350,10 +1350,12 @@ private void initBatterySection() {
     txtBatteryContent = findViewById(R.id.txtBatteryContent);
     TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
 
-    refreshBatteryInfoView();  // Always fresh
+    refreshBatteryInfoView();
 
-    if (btnCapacity != null)
+    if (btnCapacity != null) {
+        btnCapacity.setOnTouchListener((v, e) -> true);
         btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
+    }
 
     maybeShowBatteryCapacityDialogOnce();
 }

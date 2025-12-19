@@ -490,6 +490,23 @@ private Button makeTestButtonRedGold(String text, Runnable action) {
     return b;
 }
 
+// ============================================================
+// GEL Battery Temperature Reader (Universal)
+// ============================================================
+private float getBatteryTemperature() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return 0f;
+
+        int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        if (raw <= 0) return 0f;
+
+        return raw / 10f; // tenths of °C
+    } catch (Exception e) {
+        return 0f;
+    }
+}
+
 // ------------------------------------------------------------
 // Reliable charging detection (plugged-based)
 // ------------------------------------------------------------
@@ -544,11 +561,11 @@ private void showLab14RunningDialog() {
     root.addView(info);
 
     // ------------------------------------------------------------
-    // Progress text
+    // Progress text (HUMAN, CONSISTENT)
     // ------------------------------------------------------------
     lab14ProgressText = new TextView(this);
-    lab14ProgressText.setText("Progress: 0 / 5 min");
-    lab14ProgressText.setTextColor(0xFF39FF14); // neon green
+    lab14ProgressText.setText("Progress: 0.0 / 5.0 min");
+    lab14ProgressText.setTextColor(0xFF39FF14);
     lab14ProgressText.setGravity(Gravity.CENTER);
     lab14ProgressText.setPadding(0, 0, 0, 16);
     root.addView(lab14ProgressText);
@@ -566,7 +583,7 @@ private void showLab14RunningDialog() {
                 new LinearLayout.LayoutParams(0, dp(12), 1f);
         lp.setMargins(dp(3), 0, dp(3), 0);
         seg.setLayoutParams(lp);
-        seg.setBackgroundColor(0xFF333333); // inactive
+        seg.setBackgroundColor(0xFF333333);
         lab14ProgressBar.addView(seg);
     }
 
@@ -591,8 +608,7 @@ private void showLab14RunningDialog() {
         public void run() {
 
             long now = SystemClock.elapsedRealtime();
-            int elapsedSec =
-                    (int) ((now - startTs) / 1000);
+            int elapsedSec = (int) ((now - startTs) / 1000);
 
             int step = Math.min(elapsedSec / 30, 10);
 
@@ -600,22 +616,22 @@ private void showLab14RunningDialog() {
                 lastStep = step;
 
                 if (step > 0) {
-                    View seg =
-                            lab14ProgressBar.getChildAt(step - 1);
+                    View seg = lab14ProgressBar.getChildAt(step - 1);
                     if (seg != null) {
-                        seg.setBackgroundColor(0xFF39FF14); // green
+                        seg.setBackgroundColor(0xFF39FF14);
                     }
                 }
 
                 lab14ProgressText.setText(
-                        "Progress: " + step + " / 10 steps"
+                        String.format(Locale.US,
+                                "Progress: %.1f / 5.0 min",
+                                step / 2f)
                 );
             }
 
             if (elapsedSec < LAB14_TOTAL_SECONDS) {
                 ui.postDelayed(this, 1000);
             } else {
-                // Done — dialog stays until LAB finishes
                 lab14ProgressText.setText("Finalizing analysis…");
             }
         }
@@ -631,6 +647,11 @@ private void dismissLab14RunningDialog() {
             lab14Dialog.dismiss();
         }
     } catch (Throwable ignore) {}
+    finally {
+        lab14Dialog = null;
+        lab14ProgressText = null;
+        lab14ProgressBar = null;
+    }
 }
 
 // ============================================================
@@ -2610,7 +2631,6 @@ private void lab15ChargingPortManual() {
 }  
 
 // ============================================================
-
 // GEL Battery Temperature Reader (Universal)
 // ============================================================
 private float getBatteryTemperature() {

@@ -127,8 +127,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ManualTestsActivity extends AppCompatActivity {
-
-    // ============================================================
+  
+   // ============================================================
     // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
     // ============================================================
     private String lastScoreHealth      = "N/A";
@@ -136,6 +136,12 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String lastScoreSecurity    = "N/A";
     private String lastScorePrivacy     = "N/A";
     private String lastFinalVerdict     = "N/A";
+    
+// ============================================================
+// LAB 15 — FLAGS (DO NOT MOVE)
+// ============================================================
+private volatile boolean lab15FlapUnstable = false;
+private volatile boolean lab15OverTempDuringCharge = false;
 
 // ============================================================
 // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
@@ -1177,6 +1183,7 @@ private void startChargingDotsAnimation() {
 
 // ============================================================
 // LAB 15 — CORE RUNNER (180 sec)
+// Battery-based strength estimation (NO mA)
 // ============================================================
 private static final int LAB15_TOTAL_SEC = 180;
 private static final int LAB15_FLAP_WINDOW_SEC = 20;
@@ -1184,34 +1191,157 @@ private static final int LAB15_FLAP_WINDOW_SEC = 20;
 private void runLab15Core() {
 
     final long startTs = SystemClock.elapsedRealtime();
+
+    // reset flags κάθε run (HARD RESET)
+    lab15OverTempDuringCharge = false;
+    lab15FlapUnstable = false;
+
+    // start flapping monitor (20 sec)
     startChargingFlapMonitor();
+
+    // ------------------------------------------------------------
+    // Capture BATTERY INFO at start (Peripherals logic)
+    // ------------------------------------------------------------
+    final BatteryInfo startInfo = getBatteryInfo();
+
+    final long startChargeMah =
+            (startInfo != null && startInfo.currentChargeMah > 0)
+                    ? startInfo.currentChargeMah
+                    : -1;
+
+    final long startEstimatedFull =
+            (startInfo != null && startInfo.estimatedFullMah > 0)
+                    ? startInfo.estimatedFullMah
+                    : -1;
 
     ui.post(new Runnable() {
         @Override
         public void run() {
 
-            int elapsed = (int)
-                    ((SystemClock.elapsedRealtime() - startTs) / 1000);
+            int elapsed =
+                    (int) ((SystemClock.elapsedRealtime() - startTs) / 1000);
 
             updateLab15Status(elapsed);
             updateLab15Progress(elapsed);
 
-            if (getBatteryTemperature() >= 47f)
+            // passive thermal watch
+            if (getBatteryTemperature() >= 47f) {
                 lab15OverTempDuringCharge = true;
+            }
 
             if (elapsed < LAB15_TOTAL_SEC) {
                 ui.postDelayed(this, 1000);
                 return;
             }
 
+            // =====================================================
+            // FINAL EVALUATION
+            // =====================================================
             logLine();
 
+            // ----------------------------------------------------
+            // Final battery snapshot
+            // ----------------------------------------------------
+            BatteryInfo endInfo = getBatteryInfo();
+
+            final long endChargeMah =
+                    (endInfo != null && endInfo.currentChargeMah > 0)
+                            ? endInfo.currentChargeMah
+                            : -1;
+
+            // κρατάμε ΜΙΑ estimated full reference
+            final long estimatedFullMah =
+                    (endInfo != null && endInfo.estimatedFullMah > 0)
+                            ? endInfo.estimatedFullMah
+                            : startEstimatedFull;
+
+            // ----------------------------------------------------
+            // CORE VERDICT (STABILITY / THERMAL)
+            // ----------------------------------------------------
             if (lab15FlapUnstable) {
-                logError("LAB decision: ⚠ Charging system UNSTABLE.");
+
+                logError(
+                        "Charging connection is unstable.\n\n" +
+                        "Most likely cause:\n" +
+                        "• Worn or damaged charging cable\n\n" +
+                        "Action:\n" +
+                        "• Replace the cable and retry the test\n\n" +
+                        "If instability persists with another cable:\n" +
+                        "• Charging port may require cleaning or inspection"
+                );
+
             } else if (lab15OverTempDuringCharge) {
-                logError("LAB decision: ❌ Battery replacement recommended.");
+
+                logError(
+                        "High battery temperature detected during charging.\n\n" +
+                        "This may indicate elevated internal resistance\n" +
+                        "or battery degradation."
+                );
+
+                logError(
+                        "LAB decision: ❌ Battery replacement recommended."
+                );
+
             } else {
-                logOk("LAB decision: ✅ Charging system OK.");
+
+                logOk(
+                        "Charging behavior stable for the full test duration.\n" +
+                        "No abnormal connection or thermal issues detected."
+                );
+
+                logOk(
+                        "LAB decision: ✅ Charging system OK."
+                );
+            }
+
+            // ----------------------------------------------------
+            // 🔋 CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
+            // ----------------------------------------------------
+            logLine();
+
+            if (startChargeMah > 0 &&
+                endChargeMah > startChargeMah &&
+                estimatedFullMah > 0) {
+
+                long deltaMah = endChargeMah - startChargeMah;
+                float deltaPct =
+                        (deltaMah * 100f) / (float) estimatedFullMah;
+
+                if (deltaPct >= 1.2f) {
+
+                    logOk(
+                            "Charging strength: STRONG — φορτίζει δυνατά\n" +
+                            "Fast / high-quality charging path detected."
+                    );
+
+                } else if (deltaPct >= 0.6f) {
+
+                    logOk(
+                            "Charging strength: NORMAL — φορτίζει κανονικά\n" +
+                            "Typical charger and cable behavior."
+                    );
+
+                } else if (deltaPct >= 0.3f) {
+
+                    logWarn(
+                            "Charging strength: MODERATE — φορτίζει αλλά όχι φουλ\n" +
+                            "USB, wireless, or aging cable possible."
+                    );
+
+                } else {
+
+                    logError(
+                            "Charging strength: POOR — κάτι δεν πάει καλά\n" +
+                            "Very low effective charging detected."
+                    );
+                }
+
+            } else {
+
+                logWarn(
+                        "Charging strength: Unable to estimate accurately.\n" +
+                        "Charge counter or capacity data unavailable on this device."
+                );
             }
 
             dismissChargingStatusDialog();

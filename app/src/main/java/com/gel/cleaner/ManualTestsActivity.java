@@ -193,6 +193,10 @@ private static class TelephonySnapshot {
 protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    setContentView(R.layout.activity_manual_tests);
+
+    ui = new Handler(Looper.getMainLooper());
+
     // ============================================================
     // ROOT SCROLL + LAYOUT
     // ============================================================
@@ -795,11 +799,6 @@ private String ipToStr(int ip) {
 // LAB 14 — REQUIRED SUPPORT METHODS
 // (DO NOT MODIFY — shared infra)
 // ============================================================
-
-// ------------------------------------------------------------
-// UI handler (fallback safety)
-// ------------------------------------------------------------
-private final Handler ui = new Handler(Looper.getMainLooper());
 
 // ------------------------------------------------------------
 // Battery percentage (stable & safe)

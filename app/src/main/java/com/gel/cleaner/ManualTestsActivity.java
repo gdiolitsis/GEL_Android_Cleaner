@@ -1016,6 +1016,225 @@ private void printHealthCheckboxMap(String decision) {
 }
 
 // ============================================================
+// LAB 15 — Charging Required Dialog (BLOCKING)
+// ============================================================
+private void showChargingRequiredDialog() {
+
+    ui.post(() -> {
+        try {
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+
+            b.setTitle("LAB 15 — Charging System Diagnostic");
+            b.setMessage(
+                    "No charging detected.\n\n" +
+                    "Please connect a charging cable to the device\n" +
+                    "and ensure it is actively charging\n" +
+                    "before running this test."
+            );
+            b.setCancelable(false);
+
+            b.setPositiveButton("OK", (d, w) -> d.dismiss());
+
+            AlertDialog dialog = b.create();
+            dialog.show();
+
+            // 🔥 GEL DARK STYLE (NO XML)
+            try {
+                dialog.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(0xFF101010)
+                );
+
+                TextView title = dialog.findViewById(
+                        getResources().getIdentifier(
+                                "alertTitle", "id", "android")
+                );
+                if (title != null)
+                    title.setTextColor(0xFFFFFFFF);
+
+                TextView msg = dialog.findViewById(android.R.id.message);
+                if (msg != null)
+                    msg.setTextColor(0xFFDDDDDD);
+
+                Button ok = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                if (ok != null)
+                    ok.setTextColor(0xFFFFD700);
+
+            } catch (Throwable ignore) {}
+
+        } catch (Throwable ignore) {}
+    });
+}
+
+//=============================================================
+// LAB 15 — Charging Instability Detection (GEL)
+// Detects plug/unplug flapping within short time window
+//=============================================================
+private void detectChargingInstability() {
+
+    logLine();
+    logInfo("LAB 15 — Charging Instability Check.");
+
+    final int WINDOW_SEC = 20;
+    final int MIN_TOGGLES = 3;
+
+    final boolean[] lastState = { isDeviceCharging() };
+    final int[] toggles = { 0 };
+
+    logInfo("Monitoring charging stability for " + WINDOW_SEC + " seconds…");
+
+    final long startTs = SystemClock.elapsedRealtime();
+
+    ui.post(new Runnable() {
+        @Override
+        public void run() {
+
+            boolean nowCharging = isDeviceCharging();
+
+            if (nowCharging != lastState[0]) {
+                toggles[0]++;
+                lastState[0] = nowCharging;
+
+                logWarn(
+                    "Charging state changed: " +
+                    (nowCharging ? "CONNECTED" : "DISCONNECTED")
+                );
+            }
+
+            long elapsed =
+                (SystemClock.elapsedRealtime() - startTs) / 1000;
+
+            if (elapsed < WINDOW_SEC) {
+                ui.postDelayed(this, 1000);
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // Decision
+            // ------------------------------------------------------------
+            if (toggles[0] >= MIN_TOGGLES) {
+
+                logError(
+                    "Charging instability detected.\n" +
+                    "Connection toggled " + toggles[0] + " times in " +
+                    WINDOW_SEC + " seconds."
+                );
+
+                logWarn(
+                    "Most likely cause:\n" +
+                    "• Worn or damaged charging cable (very common)"
+                );
+
+                logInfo(
+                    "Next step:\n" +
+                    "• Test with a NEW, known-good cable\n" +
+                    "• Avoid moving the connector during test"
+                );
+
+                logWarn(
+                    "If instability persists with another cable:\n" +
+                    "• Charging port or charging IC may require replacement"
+                );
+
+                logError("LAB decision: ⚠ Charging system UNSTABLE.");
+
+            } else {
+
+                logOk(
+                    "Charging connection appears stable.\n" +
+                    "No abnormal plug/unplug behavior detected."
+                );
+
+                logOk("LAB decision: ✅ Charging stability OK.");
+            }
+        }
+    });
+}
+
+// ============================================================
+// LAB 15 — Charging Required Dialog (LIVE AUTO-RETRY)
+// ============================================================
+private AlertDialog chargingDialog;
+private BroadcastReceiver chargingReceiver;
+
+private void showChargingRequiredDialogWithAutoRetry(Runnable onChargingDetected) {
+
+    ui.post(() -> {
+        try {
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+
+            b.setTitle("LAB 15 — Charging Required");
+            b.setMessage(
+                    "Please connect a charging cable to the device.\n\n" +
+                    "The test will start automatically\n" +
+                    "once charging is detected."
+            );
+            b.setCancelable(false);
+
+            chargingDialog = b.create();
+            chargingDialog.show();
+
+            // 🔥 GEL DARK STYLE
+            try {
+                chargingDialog.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(0xFF101010)
+                );
+
+                TextView title = chargingDialog.findViewById(
+                        getResources().getIdentifier(
+                                "alertTitle", "id", "android")
+                );
+                if (title != null)
+                    title.setTextColor(0xFFFFFFFF);
+
+                TextView msg = chargingDialog.findViewById(android.R.id.message);
+                if (msg != null)
+                    msg.setTextColor(0xFFDDDDDD);
+
+            } catch (Throwable ignore) {}
+
+            // ------------------------------------------------------------
+            // Live charging detector
+            // ------------------------------------------------------------
+            chargingReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (isDeviceCharging()) {
+
+                        try {
+                            unregisterReceiver(this);
+                        } catch (Exception ignore) {}
+
+                        if (chargingDialog != null && chargingDialog.isShowing()) {
+                            chargingDialog.dismiss();
+                        }
+
+                        chargingDialog = null;
+                        chargingReceiver = null;
+
+                        // 🚀 AUTO RETRY
+                        ui.postDelayed(onChargingDetected, 300);
+                    }
+                }
+            };
+
+            registerReceiver(
+                    chargingReceiver,
+                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            );
+
+        } catch (Throwable ignore) {}
+    });
+}
+
+// ============================================================
 // LABS 1–5: AUDIO & VIBRATION
 // ============================================================
 
@@ -2624,6 +2843,14 @@ private void logLab14Confidence() {
 // GEL LAB EDITION — Clean / Replace / Board-Level Decision
 //=============================================================
 private void lab15ChargingSystemSmart() {
+	
+    // ------------------------------------------------------------
+    // 🔒 HARD GUARD — Require charging with LIVE auto-retry
+    // ------------------------------------------------------------
+    if (!isDeviceCharging()) {
+        showChargingRequiredDialogWithAutoRetry(this::lab15ChargingSystemSmart);
+        return;
+    }
 
     logLine();
     logInfo("LAB 15 — Charging System Diagnostic (Smart).");
@@ -2711,7 +2938,12 @@ private void lab15ChargingSystemSmart() {
     }
 
     // ------------------------------------------------------------
-    // 4️⃣ Normal charging conditions
+    // 4️⃣ Charging instability detection (GEL LEVEL-UP)
+    // ------------------------------------------------------------
+    detectChargingInstability();
+
+    // ------------------------------------------------------------
+    // 5️⃣ Normal charging conditions
     // ------------------------------------------------------------
     logOk(
         "Charging behavior appears normal.\n" +

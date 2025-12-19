@@ -23,6 +23,7 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -1201,29 +1202,30 @@ private void showChargingRequiredDialogWithAutoRetry(Runnable onChargingDetected
             } catch (Throwable ignore) {}
 
             // ------------------------------------------------------------
-            // Live charging detector
             // ------------------------------------------------------------
-            chargingReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    if (isDeviceCharging()) {
+// Live charging detector
+// ------------------------------------------------------------
+chargingReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (isDeviceCharging()) {
 
-                        try {
-                            unregisterReceiver(this);
-                        } catch (Exception ignore) {}
+            try {
+                ManualTestsActivity.this.unregisterReceiver(this);
+            } catch (Exception ignore) {}
 
-                        if (chargingDialog != null && chargingDialog.isShowing()) {
-                            chargingDialog.dismiss();
-                        }
+            if (chargingDialog != null && chargingDialog.isShowing()) {
+                chargingDialog.dismiss();
+            }
 
-                        chargingDialog = null;
-                        chargingReceiver = null;
+            chargingDialog = null;
+            chargingReceiver = null;
 
-                        // 🚀 AUTO RETRY
-                        ui.postDelayed(onChargingDetected, 300);
-                    }
-                }
-            };
+            // 🚀 AUTO RETRY
+            ui.postDelayed(onChargingDetected, 300);
+        }
+    }
+};
 
             registerReceiver(
                     chargingReceiver,

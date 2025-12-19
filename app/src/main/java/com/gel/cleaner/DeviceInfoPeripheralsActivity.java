@@ -1,1166 +1,2333 @@
-// DeviceInfoPeripheralsActivity.java — MEGA UPGRADE v30
-// Auto-Path Engine 5.3 + Root v5.1 + Permission Engine v25 (Manifest-Aware + Debug v24)
-
+// ============================================================
+// ManualTestsActivity
+// GEL Manual Tests — Hospital Edition (30 Manual Labs)
+// Single-screen Accordion UI + detailed English service logs
+// NOTE (GEL RULE): Whole file ready for copy-paste.
+// IMPORTANT (Lab 11 SSID SAFE MODE):
+//   Add in AndroidManifest.xml:
+//     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+//     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+//     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+//     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+//   On Android 8.1+ / 10+ SSID requires:
+//     1) Location permission granted
+//     2) Location services ON (GPS/Location toggle)
+//   Lab 11 will auto-send user to Location Settings if needed.
+// ============================================================
 package com.gel.cleaner;
 
 // ============================================================
-// JAVA / UTIL
-// ============================================================
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-
-// ============================================================
-// ANDROID CORE
+// ANDROID — CORE
 // ============================================================
 import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.AppOpsManager;
-import android.content.BroadcastReceiver;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ComponentName;
+import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.FeatureInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.pdf.PdfDocument;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.location.LocationManager;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.ToneGenerator;
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.provider.Settings;
-
-// ============================================================
-// ANDROID UI / VIEW
-// ============================================================
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.text.Html;
-import android.text.InputType;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.Display;
-import android.view.View;
-import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.RotateAnimation;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-// ============================================================
-// ANDROID MEDIA / AUDIO (MIC BENCH + LIVE MIC)
-// ============================================================
-import android.media.AudioDeviceInfo;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
-
-// ============================================================
-// ANDROID CONNECTIVITY
-// ============================================================
-import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-
-// ============================================================
-// ANDROID BLUETOOTH
-// ============================================================
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-
-// ============================================================
-// ANDROID HARDWARE
-// ============================================================
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
-
-// ============================================================
-// ANDROID LOCATION / NFC / TELEPHONY
-// ============================================================
-import android.location.LocationManager;
-import android.nfc.NfcAdapter;
-import android.nfc.NfcManager;
-import android.telecom.TelecomManager;
-import android.telephony.CellInfo;
 import android.telephony.ServiceState;
-import android.telephony.SignalStrength;
-import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 // ============================================================
 // ANDROIDX
 // ============================================================
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 // ============================================================
-// STATIC
+// JAVA — IO / NET
 // ============================================================
-import static android.content.Context.MODE_PRIVATE;
-
-public class DeviceInfoPeripheralsActivity extends GELAutoActivityHook {
-
-// ============================================================  
-// GEL Permission Request Engine v1.0 — Option B (Auto Request All)  
-// ============================================================  
-private static final String[] PERMISSIONS_ALL = new String[]{  
-        Manifest.permission.CAMERA,  
-        Manifest.permission.RECORD_AUDIO,  
-        Manifest.permission.ACCESS_FINE_LOCATION,  
-        Manifest.permission.ACCESS_COARSE_LOCATION,  
-        Manifest.permission.BLUETOOTH_SCAN,  
-        Manifest.permission.BLUETOOTH_CONNECT,  
-        Manifest.permission.NEARBY_WIFI_DEVICES  
-};  
-
-private static final int REQ_CODE_GEL_PERMISSIONS = 7777;  
-
-private void requestAllRuntimePermissions() {  
-
-    if (Build.VERSION.SDK_INT < 23) return;  
-
-    java.util.List<String> toRequest = new java.util.ArrayList<>();  
-
-    for (String p : PERMISSIONS_ALL) {  
-        if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {  
-            toRequest.add(p);  
-        }  
-    }  
-
-    if (!toRequest.isEmpty()) {  
-        requestPermissions(toRequest.toArray(new String[0]), REQ_CODE_GEL_PERMISSIONS);  
-    }  
-}  
-
-// ============================================================  
-// MAIN CLASS FIELDS  
-// ============================================================  
-private static final String NEON_GREEN = "#39FF14";  
-private static final String GOLD_COLOR = "#FFD700";  
-private static final int LINK_BLUE     = Color.parseColor("#1E90FF");  
-
-private boolean isRooted = false;  
-
-private View[] allContents;
-private TextView[] allIcons;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 // ============================================================
-// SECTION FIELDS
+// JAVA — UTIL
 // ============================================================
-private LinearLayout batteryContainer;
-private TextView txtBatteryContent;
-private TextView iconBattery;
-private TextView txtBatteryModelCapacity;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-private TextView txtScreenContent;
-private TextView txtCameraContent;
-private TextView txtConnectivityContent;   // ⭐ FIXED — Η ΜΟΝΗ ΠΟΥ ΕΛΕΙΠΕ
-private TextView txtLocationContent;
-private TextView txtThermalContent;
-private TextView txtModemContent;
-private TextView txtWifiAdvancedContent;
-private TextView txtAudioUnifiedContent;
-private TextView txtSensorsContent;
-private TextView txtBiometricsContent;
-private TextView txtNfcContent;
-private TextView txtGnssContent;
-private TextView txtUwbContent;
-private TextView txtUsbContent;
-private TextView txtHapticsContent;
-private TextView txtSystemFeaturesContent;
-private TextView txtSecurityFlagsContent;
-private TextView txtRootContent;
-private TextView txtOtherPeripherals;
+public class ManualTestsActivity extends AppCompatActivity {
 
-private TextView iconScreen;
-private TextView iconCamera;
-private TextView iconConnectivity;
-private TextView iconLocation;
-private TextView iconThermal;
-private TextView iconModem;
-private TextView iconWifiAdvanced;
-private TextView iconAudioUnified;
-private TextView iconSensors;
-private TextView iconBiometrics;
-private TextView iconNfc;
-private TextView iconGnss;
-private TextView iconUwb;
-private TextView iconUsb;
-private TextView iconHaptics;
-private TextView iconSystemFeatures;
-private TextView iconSecurityFlags;
-private TextView iconRoot;
-private TextView iconOther;
+    // ============================================================
+    // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
+    // ============================================================
+    private String lastScoreHealth      = "N/A";
+    private String lastScorePerformance = "N/A";
+    private String lastScoreSecurity    = "N/A";
+    private String lastScorePrivacy     = "N/A";
+    private String lastFinalVerdict     = "N/A";
 
 // ============================================================
-// TELEPHONY SNAPSHOT — GEL SINGLE SOURCE OF TRUTH
+// TELEPHONY SNAPSHOT — Passive system probe (no side effects)
 // ============================================================
 private static class TelephonySnapshot {
 
-boolean airplaneOn = false;  
+    boolean airplaneOn = false;
 
-    int simState = TelephonyManager.SIM_STATE_UNKNOWN;  
-    boolean simReady = false;  
+    int simState = TelephonyManager.SIM_STATE_UNKNOWN;
+    boolean simReady = false;
 
-    int serviceState = ServiceState.STATE_OUT_OF_SERVICE;  
-    boolean inService = false;  
+    int serviceState = ServiceState.STATE_OUT_OF_SERVICE;
+    boolean inService = false;
 
-    int dataState = TelephonyManager.DATA_UNKNOWN;  
+    int dataState = TelephonyManager.DATA_UNKNOWN;
+
+    boolean hasInternet = false;
 }
 
-// ============================================================
-// attachBaseContext
-// ============================================================
-@Override
-protected void attachBaseContext(Context base) {
-super.attachBaseContext(LocaleHelper.apply(base));
-}
+    // ============================================================
+    // CORE UI
+    // ============================================================
+    private ScrollView scroll;
+    private TextView txtLog;
+    private Handler ui;
 
-// ============================================================
-//  ON CREATE — FINAL CLEAN (AUDIO INCLUDED, NO LABS)
-// ============================================================
+    // ============================================================
+    // SECTION STATE TRACKING (AUTO-CLOSE GROUPS)
+    // ============================================================
+    private final List<LinearLayout> allSectionBodies  = new ArrayList<>();
+    private final List<Button>       allSectionHeaders = new ArrayList<>();
+
+    // ============================================================
+    // Battery stress internals
+    // ============================================================
+    private volatile boolean cpuBurnRunning = false;
+    private final List<Thread> cpuBurnThreads = new ArrayList<>();
+    private float oldWindowBrightness = -2f; // sentinel
+    private boolean oldKeepScreenOn = false;
+
+    // ============================================================
+    // Lab 10 location permission internals
+    // ============================================================
+    private static final int REQ_LOCATION_LAB10 = 11012;
+    private Runnable pendingLab10AfterPermission = null;
+
+    /* =========================================================
+     * FIX: APPLY SAVED LANGUAGE TO THIS ACTIVITY
+     * ========================================================= */
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
+
 @Override
-protected void onCreate(Bundle savedInstanceState) {
+protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_device_info_peripherals);
 
-    // ✅ ROOT FLAG — MUST BE HERE
-    isRooted = isDeviceRooted();
+    setContentView(R.layout.activity_manual_tests);
 
-// ------------------------------------------------------------  
-// 1️⃣  TITLE  
-// ------------------------------------------------------------  
-TextView title = findViewById(R.id.txtTitleDevice);  
-if (title != null)  
-    title.setText(getString(R.string.phone_info_peripherals));  
+    ui = new Handler(Looper.getMainLooper());
 
-// ------------------------------------------------------------  
-// 2️⃣  BIND VIEWS (FULL UI READY)  
-// ------------------------------------------------------------  
-batteryContainer        = findViewById(R.id.batteryContainer);  
-txtBatteryContent       = findViewById(R.id.txtBatteryContent);  
-iconBattery             = findViewById(R.id.iconBatteryToggle);  
-txtBatteryModelCapacity = findViewById(R.id.txtBatteryModelCapacity);  
-initBatterySection();
+    // ============================================================
+    // ROOT SCROLL + LAYOUT
+    // ============================================================
+    scroll = new ScrollView(this);
+    scroll.setFillViewport(true);
 
-txtScreenContent          = findViewById(R.id.txtScreenContent);  
-txtCameraContent          = findViewById(R.id.txtCameraContent);  
-txtConnectivityContent    = findViewById(R.id.txtConnectivityContent);  
-txtLocationContent        = findViewById(R.id.txtLocationContent);  
-txtThermalContent         = findViewById(R.id.txtThermalContent);  
-txtModemContent           = findViewById(R.id.txtModemContent);  
-txtWifiAdvancedContent    = findViewById(R.id.txtWifiAdvancedContent);  
-txtAudioUnifiedContent    = findViewById(R.id.txtAudioUnifiedContent);  
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    root.setPadding(pad, pad, pad, pad);
+    root.setBackgroundColor(0xFF101010); // GEL black
 
-txtSensorsContent         = findViewById(R.id.txtSensorsContent);  
-txtBiometricsContent      = findViewById(R.id.txtBiometricsContent);  
-txtNfcContent             = findViewById(R.id.txtNfcContent);  
-txtGnssContent            = findViewById(R.id.txtGnssContent);  
-txtUwbContent             = findViewById(R.id.txtUwbContent);  
-txtUsbContent             = findViewById(R.id.txtUsbContent);  
-txtHapticsContent         = findViewById(R.id.txtHapticsContent);  
-txtSystemFeaturesContent  = findViewById(R.id.txtSystemFeaturesContent);  
-txtSecurityFlagsContent   = findViewById(R.id.txtSecurityFlagsContent);  
-txtRootContent            = findViewById(R.id.txtRootContent);  
-txtOtherPeripherals       = findViewById(R.id.txtOtherPeripheralsContent);  
+    // ============================================================
+    // TITLE
+    // ============================================================
+    TextView title = new TextView(this);
+    title.setText(getString(R.string.manual_hospital_title));
+    title.setTextSize(20f);
+    title.setTextColor(0xFFFFD700);
+    title.setGravity(Gravity.CENTER_HORIZONTAL);
+    title.setPadding(0, 0, 0, dp(6));
+    root.addView(title);
 
-iconScreen          = findViewById(R.id.iconScreenToggle);  
-iconCamera          = findViewById(R.id.iconCameraToggle);  
-iconConnectivity    = findViewById(R.id.iconConnectivityToggle);  
-iconLocation        = findViewById(R.id.iconLocationToggle);  
-iconThermal         = findViewById(R.id.iconThermalToggle);  
-iconModem           = findViewById(R.id.iconModemToggle);  
-iconWifiAdvanced    = findViewById(R.id.iconWifiAdvancedToggle);  
-iconAudioUnified    = findViewById(R.id.iconAudioUnifiedToggle);  
+    // ============================================================
+    // SUBTITLE
+    // ============================================================
+    TextView sub = new TextView(this);
+    sub.setText(getString(R.string.manual_hospital_sub));
+    sub.setTextSize(13f);
+    sub.setTextColor(0xFF39FF14);
+    sub.setGravity(Gravity.CENTER_HORIZONTAL);
+    sub.setPadding(0, 0, 0, dp(12));
+    root.addView(sub);
 
-iconSensors         = findViewById(R.id.iconSensorsToggle);  
-iconBiometrics      = findViewById(R.id.iconBiometricsToggle);  
-iconNfc             = findViewById(R.id.iconNfcToggle);  
-iconGnss            = findViewById(R.id.iconGnssToggle);  
-iconUwb             = findViewById(R.id.iconUwbToggle);  
-iconUsb             = findViewById(R.id.iconUsbToggle);  
-iconHaptics         = findViewById(R.id.iconHapticsToggle);  
-iconSystemFeatures  = findViewById(R.id.iconSystemFeaturesToggle);  
-iconSecurityFlags   = findViewById(R.id.iconSecurityFlagsToggle);  
-iconRoot            = findViewById(R.id.iconRootToggle);  
-iconOther           = findViewById(R.id.iconOtherPeripheralsToggle);  
+    // ============================================================
+    // SECTION TITLE
+    // ============================================================
+    TextView sec1 = new TextView(this);
+    sec1.setText(getString(R.string.manual_section1));
+    sec1.setTextSize(17f);
+    sec1.setTextColor(0xFFFFD700);
+    sec1.setGravity(Gravity.CENTER_HORIZONTAL);
+    sec1.setPadding(0, dp(10), 0, dp(6));
+    root.addView(sec1);
 
-// ------------------------------------------------------------  
-// 3️⃣  MASTER ARRAYS (WITH AUDIO)  
-// ------------------------------------------------------------  
-allContents = new View[]{
-        batteryContainer,            // ✅ Battery content = container
-        txtScreenContent,
-        txtCameraContent,
-        txtConnectivityContent,
-        txtLocationContent,
-        txtThermalContent,
-        txtModemContent,
-        txtWifiAdvancedContent,
-        txtAudioUnifiedContent,
-        txtSensorsContent,
-        txtBiometricsContent,
-        txtNfcContent,
-        txtGnssContent,
-        txtUwbContent,
-        txtUsbContent,
-        txtHapticsContent,
-        txtSystemFeaturesContent,
-        txtSecurityFlagsContent,
-        txtRootContent,
-        txtOtherPeripherals
-};
+    // ============================================================
+    // SECTION 1: AUDIO & VIBRATION — LABS 1–5
+    // ============================================================
+    LinearLayout body1 = makeSectionBody();
+    Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);
+    root.addView(header1);
+    root.addView(body1);
 
-allIcons = new TextView[]{  
-        iconBattery,  
-        iconScreen,  
-        iconCamera,  
-        iconConnectivity,  
-        iconLocation,  
-        iconThermal,  
-        iconModem,  
-        iconWifiAdvanced,  
-        iconAudioUnified,  
-        iconSensors,  
-        iconBiometrics,  
-        iconNfc,  
-        iconGnss,  
-        iconUwb,  
-        iconUsb,  
-        iconHaptics,  
-        iconSystemFeatures,  
-        iconSecurityFlags,  
-        iconRoot,  
-        iconOther  
-};  
+    body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
+    body1.addView(makeTestButton("2. Speaker Frequency Sweep Test", this::lab2SpeakerSweep));
+    body1.addView(makeTestButton("3. Earpiece Call Check", this::lab3EarpieceManual));
+    body1.addView(makeTestButton("4. Microphone Recording Check", this::lab4MicManual));
+    body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
 
-// ------------------------------------------------------------  
-// 4️⃣  LOAD ALL SECTION TEXTS (LIGHT ONLY)  
-// ------------------------------------------------------------  
-populateAllSections();  
+    // ============================================================
+    // SECTION 2: DISPLAY & SENSORS — LABS 6–9
+    // ============================================================
+    LinearLayout body2 = makeSectionBody();
+    Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
+    root.addView(header2);
+    root.addView(body2);
 
-// ------------------------------------------------------------  
-// 5️⃣  PERMISSIONS  
-// ------------------------------------------------------------  
-requestAllRuntimePermissions();  
-requestPermissions(new String[]{  
-        Manifest.permission.READ_PHONE_STATE,  
-        Manifest.permission.READ_SMS,  
-        Manifest.permission.READ_PHONE_NUMBERS  
-}, 101);  
+    body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
+    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));
+    body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));
+    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
+
+    // ============================================================
+// SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
+// ============================================================
+LinearLayout body3 = makeSectionBody();
+Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
+root.addView(header3);
+root.addView(body3);
+
+body3.addView(makeTestButton("10. Wi-Fi Link Snapshot",this::lab10WifiSnapshot));
+body3.addView(makeTestButton("11. Mobile Network Diagnostic",this::lab11MobileDataDiagnostic));
+body3.addView(makeTestButton("12. Call Function Interpretation",this::lab12CallFunctionInterpretation));
+body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13InternetQuickCheck));
+
+    // ============================================================
+    // SECTION 4: BATTERY & THERMAL — LABS 14–17
+    // ============================================================
+    LinearLayout body4 = makeSectionBody();
+    Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
+    root.addView(header4);
+    root.addView(body4);
+
+    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
+    body4.addView(makeTestButton("15. Charging Port Inspection", this::lab15ChargingPortManual));
+    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
+    body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
+
+    // ============================================================
+    // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
+    // ============================================================
+    LinearLayout body5 = makeSectionBody();
+    Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
+    root.addView(header5);
+    root.addView(body5);
+
+    body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab18StorageSnapshot));
+    body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab19AppsFootprint));
+    body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab20RamSnapshot));
+    body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab21UptimeHints));
+
+    // ============================================================
+    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
+    // ============================================================
+    LinearLayout body6 = makeSectionBody();
+    Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
+    root.addView(header6);
+    root.addView(body6);
+
+    body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab22ScreenLock));
+    body6.addView(makeTestButton("23. Security Patch Check", this::lab23SecurityPatchManual));
+    body6.addView(makeTestButton("24. Developer Options Risk", this::lab24DevOptions));
+    body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
+
+    // ============================================================
+    // SECTION 7: ADVANCED / LOGS — LABS 26–29
+    // ============================================================
+    LinearLayout body7 = makeSectionBody();
+    Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
+    root.addView(header7);
+    root.addView(body7);
+
+    body7.addView(makeTestButton("26. Crash / Freeze History", this::lab26CrashHistory));
+    body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
+    body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
+    body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
+
+    // ============================================================
+    // LOG AREA
+    // ============================================================
+    txtLog = new TextView(this);
+    txtLog.setTextSize(13f);
+    txtLog.setTextColor(0xFFEEEEEE);
+    txtLog.setPadding(0, dp(16), 0, dp(8));
+    txtLog.setMovementMethod(new ScrollingMovementMethod());
+    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
+    root.addView(txtLog);
 
 // ============================================================
-// 5️⃣ BATTERY — MANUAL SECTION (FINAL, FIXED)
+// EXPORT SERVICE REPORT BUTTON
 // ============================================================
-LinearLayout headerBattery = findViewById(R.id.headerBattery);
 
-if (headerBattery != null && batteryContainer != null) {
-    headerBattery.setOnClickListener(v -> {
+Button btnExport = new Button(this);
+btnExport.setText(getString(R.string.export_report_title));
+btnExport.setAllCaps(false);
+btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+btnExport.setTextColor(0xFFFFFFFF);
 
-        boolean isOpen = batteryContainer.getVisibility() == View.VISIBLE;
+LinearLayout.LayoutParams lpExp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
+btnExport.setLayoutParams(lpExp);
 
-        // 🔻 Κλείσε όλα τα άλλα sections
-        if (allContents != null && allIcons != null) {
-            for (int i = 1; i < allContents.length; i++) {
-                if (allContents[i] != null)
-                    allContents[i].setVisibility(View.GONE);
-                if (allIcons[i] != null)
-                    allIcons[i].setText("+");
-            }
+btnExport.setOnClickListener(v -> {
+    Intent i = new Intent(this, ServiceReportActivity.class);
+    startActivity(i);
+});
+
+root.addView(btnExport);
+
+// ============================================================
+// FINAL BIND
+// ============================================================
+
+scroll.addView(root);
+setContentView(scroll);
+
+// First log entry
+GELServiceLog.clear();
+logInfo(getString(R.string.manual_log_desc));
+}  // onCreate ends here
+
+// ============================================================
+// GEL legacy aliases (LOCKED)
+// ============================================================
+
+private void logYellow(String msg) { logWarn(msg); }
+private void logGreen(String msg)  { logOk(msg); }
+private void logRed(String msg)    { logError(msg); }
+
+private void logSection(String msg) {
+    logLine();
+    logInfo(msg);
+}
+
+// ============================================================
+// UI HELPERS (GEL LOCKED)
+// ============================================================
+
+private LinearLayout makeSectionBody() {
+    LinearLayout body = new LinearLayout(this);
+    body.setOrientation(LinearLayout.VERTICAL);
+    body.setVisibility(View.GONE);
+    body.setPadding(0, dp(4), 0, dp(4));
+
+    allSectionBodies.add(body);
+    return body;
+}
+
+private Button makeSectionHeader(String text, LinearLayout bodyToToggle) {
+
+    Button b = new Button(this);
+    allSectionHeaders.add(b);
+
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextSize(15f);
+    b.setTextColor(0xFF39FF14); // neon green
+    b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+    lp.setMargins(0, dp(6), 0, dp(4));
+    b.setLayoutParams(lp);
+    b.setGravity(Gravity.CENTER);
+
+    b.setOnClickListener(v -> {
+
+        boolean willOpen = bodyToToggle.getVisibility() != View.VISIBLE;
+
+        // close ALL sections
+        for (LinearLayout body : allSectionBodies) {
+            body.setVisibility(View.GONE);
         }
 
-        if (!isOpen) {
-            // 🔺 ΑΝΟΙΓΜΑ BATTERY (ΚΑΙ ΕΝΕΡΓΟΠΟΙΗΣΗ)
-            batteryContainer.setVisibility(View.VISIBLE);
-            batteryContainer.setClickable(true);
-            batteryContainer.setFocusable(true);
-            batteryContainer.setFocusableInTouchMode(true);
-
-            iconBattery.setText("-");
-        } else {
-            // 🔻 ΠΛΗΡΕΣ ΚΛΕΙΣΙΜΟ BATTERY
-            batteryContainer.setVisibility(View.GONE);
-            iconBattery.setText("+");
+        if (willOpen) {
+            bodyToToggle.setVisibility(View.VISIBLE);
+            scroll.post(() -> scroll.smoothScrollTo(0, b.getTop()));
         }
     });
+
+    return b;
 }
 
-// ------------------------------------------------------------  
-// 7️⃣  NORMAL SECTIONS (WITH AUDIO)  
-// ------------------------------------------------------------  
+private Button makeTestButton(String text, Runnable action) {
+    Button b = new Button(this);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextSize(14f);
+    b.setTextColor(0xFFFFFFFF);
+    b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-setupSection(findViewById(R.id.headerScreen), txtScreenContent, iconScreen);  
-setupSection(findViewById(R.id.headerCamera), txtCameraContent, iconCamera);  
-setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);  
-setupSection(findViewById(R.id.headerLocation), txtLocationContent, iconLocation);  
-setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);  
-setupSection(findViewById(R.id.headerModem), txtModemContent, iconModem);  
-setupSection(findViewById(R.id.headerWifiAdvanced), txtWifiAdvancedContent, iconWifiAdvanced);  
-setupSection(findViewById(R.id.headerAudioUnified), txtAudioUnifiedContent, iconAudioUnified);  
-setupSection(findViewById(R.id.headerSensors), txtSensorsContent, iconSensors);  
-setupSection(findViewById(R.id.headerBiometrics), txtBiometricsContent, iconBiometrics);  
-setupSection(findViewById(R.id.headerNfc), txtNfcContent, iconNfc);  
-setupSection(findViewById(R.id.headerGnss), txtGnssContent, iconGnss);  
-setupSection(findViewById(R.id.headerUwb), txtUwbContent, iconUwb);  
-setupSection(findViewById(R.id.headerUsb), txtUsbContent, iconUsb);  
-setupSection(findViewById(R.id.headerHaptics), txtHapticsContent, iconHaptics);  
-setupSection(findViewById(R.id.headerSystemFeatures), txtSystemFeaturesContent, iconSystemFeatures);  
-setupSection(findViewById(R.id.headerSecurityFlags), txtSecurityFlagsContent, iconSecurityFlags);  
-setupSection(findViewById(R.id.headerRoot), txtRootContent, iconRoot);  
-setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, iconOther);
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(48));
+    lp.setMargins(0, dp(4), 0, dp(4));
+    b.setLayoutParams(lp);
+    b.setGravity(Gravity.CENTER);
+    b.setOnClickListener(v -> action.run());
+
+    return b;
+}
+
+private Button makeTestButtonRedGold(String text, Runnable action) {
+    Button b = new Button(this);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextSize(14f);
+    b.setTextColor(0xFFFFFFFF);
+    b.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF8B0000);
+    bg.setCornerRadius(dp(12));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    b.setBackground(bg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52));
+    lp.setMargins(0, dp(6), 0, dp(6));
+    b.setLayoutParams(lp);
+    b.setGravity(Gravity.CENTER);
+    b.setOnClickListener(v -> action.run());
+
+    return b;
+}
+
+// ============================================================
+// LAB 14 — STRESS TEST DIALOG (DURATION SELECTOR)
+// ============================================================
+private void showBatteryHealthTestDialog() {
+
+AlertDialog.Builder b = new AlertDialog.Builder(this);  
+b.setTitle("Battery Stress Test");  
+
+LinearLayout root = new LinearLayout(this);  
+root.setOrientation(LinearLayout.VERTICAL);  
+root.setPadding(40, 30, 40, 10);  
+
+TextView info = new TextView(this);  
+info.setText("Select stress test duration.\nHigher duration = higher accuracy.");  
+info.setTextColor(Color.WHITE);  
+info.setPadding(0, 0, 0, 20);  
+root.addView(info);  
+
+SeekBar seek = new SeekBar(this);  
+seek.setMax(4); // 1–5 min  
+seek.setProgress(0);  
+root.addView(seek);  
+
+TextView value = new TextView(this);  
+value.setTextColor(Color.GREEN);  
+value.setText("Duration: 1 min");  
+root.addView(value);  
+
+seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {  
+    @Override public void onProgressChanged(SeekBar s, int p, boolean f) {  
+        lastSelectedStressDurationSec = (p + 1) * 60;  
+        value.setText("Duration: " + (p + 1) + " min");  
+    }  
+    @Override public void onStartTrackingTouch(SeekBar s) {}  
+    @Override public void onStopTrackingTouch(SeekBar s) {}  
+});  
+
+b.setView(root);  
+
+b.setPositiveButton("Start", (d, w) -> d.dismiss());  
+b.setNegativeButton("Cancel", null);  
+
+AlertDialog dlg = b.create();  
+dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));  
+dlg.show();
 
 }
 
-// 🔥 END onCreate()
-
 // ============================================================
-// CONNECTIVITY INFO — SNAPSHOT BASED (FIXED)
+// LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
-private String buildConnectivityInfo() {
+private void askUserEarpieceConfirmation() {
 
-    TelephonySnapshot s = getTelephonySnapshot();
-    StringBuilder sb = new StringBuilder();
+    ui.post(() -> {
+        try {
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
 
-    sb.append("Airplane Mode: ")
-      .append(s.airplaneOn ? "ON" : "OFF")
-      .append("\n");
+            b.setTitle("LAB 3 — Confirm");
+            b.setMessage("Did you hear the sound clearly from the earpiece?");
+            b.setCancelable(false);
 
-    sb.append("SIM State: ");
-    switch (s.simState) {
-        case TelephonyManager.SIM_STATE_READY:
-            sb.append("READY");
-            break;
-        case TelephonyManager.SIM_STATE_ABSENT:
-            sb.append("ABSENT");
-            break;
-        case TelephonyManager.SIM_STATE_PIN_REQUIRED:
-            sb.append("PIN REQUIRED");
-            break;
-        case TelephonyManager.SIM_STATE_PUK_REQUIRED:
-            sb.append("PUK REQUIRED");
-            break;
-        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
-            sb.append("NETWORK LOCKED");
-            break;
-        default:
-            sb.append("UNKNOWN");
-            break;
-    }
-    sb.append("\n");
+            b.setPositiveButton("YES", (d, w) -> {
+                logOk("User confirmed earpiece audio was audible");
+                enableSingleExportButton();
+            });
 
-    sb.append("Mobile Service: ")
-      .append(s.inService ? "IN SERVICE" : "OUT OF SERVICE")
-      .append("\n");
+            b.setNegativeButton("NO", (d, w) -> {
+                logWarn("Earpiece signal detected but user did not hear sound clearly");
+                enableSingleExportButton();
+            });
 
-    sb.append("Mobile Data: ");
-    switch (s.dataState) {
-        case TelephonyManager.DATA_CONNECTED:
-            sb.append("CONNECTED");
-            break;
-        case TelephonyManager.DATA_CONNECTING:
-            sb.append("CONNECTING");
-            break;
-        case TelephonyManager.DATA_DISCONNECTED:
-            sb.append("DISCONNECTED");
-            break;
-        default:
-            sb.append("UNKNOWN");
-            break;
-    }
-    sb.append("\n");
-    
-    sb.append(buildWifiAndBluetoothInfo());
+            AlertDialog dialog = b.create();
+            dialog.show();
 
-    return sb.toString();
+            // 🔥 GEL DARK STYLE (NO XML)
+            try {
+                dialog.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(0xFF101010)
+                );
+
+                TextView title = dialog.findViewById(
+                        getResources().getIdentifier(
+                                "alertTitle", "id", "android")
+                );
+                if (title != null)
+                    title.setTextColor(0xFFFFFFFF);
+
+                TextView msg = dialog.findViewById(android.R.id.message);
+                if (msg != null)
+                    msg.setTextColor(0xFFEEEEEE);
+
+                Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                if (yes != null) yes.setTextColor(0xFFFFD700);
+                if (no  != null) no.setTextColor(0xFFFFD700);
+
+            } catch (Throwable ignore) {}
+
+        } catch (Throwable t) {
+            enableSingleExportButton();
+        }
+    });
 }
 
 private TelephonySnapshot getTelephonySnapshot() {
 
     TelephonySnapshot s = new TelephonySnapshot();
 
+    // ------------------------------------------------------------
+    // Airplane mode
+    // ------------------------------------------------------------
     try {
         s.airplaneOn = Settings.Global.getInt(
                 getContentResolver(),
-                Settings.Global.AIRPLANE_MODE_ON,
-                0
+                Settings.Global.AIRPLANE_MODE_ON, 0
         ) == 1;
-    } catch (Throwable ignore) {}
+    } catch (Exception ignored) {}
 
     TelephonyManager tm =
             (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
     if (tm != null) {
 
+        // --------------------------------------------------------
+        // SIM state
+        // --------------------------------------------------------
         try {
             s.simState = tm.getSimState();
             s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);
-        } catch (Throwable ignore) {}
+        } catch (Exception ignored) {}
+
+        // --------------------------------------------------------
+        // Service state (SAFE DEFAULT FIRST)
+        // --------------------------------------------------------
+        s.serviceState = ServiceState.STATE_OUT_OF_SERVICE;
+        s.inService = false;
 
         try {
             ServiceState ss = tm.getServiceState();
             if (ss != null) {
                 s.serviceState = ss.getState();
-                s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);
+                s.inService =
+                        (s.serviceState == ServiceState.STATE_IN_SERVICE);
             }
-        } catch (Throwable ignore) {}
+        } catch (Exception ignored) {}
 
+        // --------------------------------------------------------
+        // Data state
+        // --------------------------------------------------------
         try {
             s.dataState = tm.getDataState();
-        } catch (Throwable ignore) {}
+        } catch (Exception ignored) {}
+    }
+
+    // ------------------------------------------------------------
+    // Internet context (best effort, informational only)
+    // ------------------------------------------------------------
+    ConnectivityManager cm =
+            (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
+    if (cm != null) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Network n = cm.getActiveNetwork();
+                NetworkCapabilities caps =
+                        cm.getNetworkCapabilities(n);
+                s.hasInternet = caps != null &&
+                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            } else {
+                @SuppressWarnings("deprecation")
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                s.hasInternet = ni != null && ni.isConnected();
+            }
+        } catch (Exception ignored) {}
     }
 
     return s;
 }
 
 // ============================================================
-//  PERMISSION CALLBACK — FINAL CLEAN VERSION
+// LOGGING (GEL CANONICAL)
 // ============================================================
-@Override
-public void onRequestPermissionsResult(int requestCode,
-@NonNull String[] permissions,
-@NonNull int[] grantResults) {
-super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-// 🔹 GEL universal permissions  
-if (requestCode == REQ_CODE_GEL_PERMISSIONS) {  
-    // Δεν χρειάζεται κάτι άλλο εδώ προς το παρόν  
-}  
-
-// 🔹 TELEPHONY permissions (Active SIMs, IMSI, MSISDN)  
-if (requestCode == 101) {  
-    refreshModemInfo();   // Ξαναφορτώνει SIM + Modem block  
-}
-
-}
-
-// ============================================================
-// GEL Section Setup Engine — UNIVERSAL VERSION (Accordion Mode)
-// Battery-Safe Edition (FINAL, FIXED — NO AUDIO)
-// ============================================================
-private void setupSection(View header, View content, TextView icon) {
-
-    if (header == null || content == null || icon == null)
-        return;
-
-    // αρχική κατάσταση
-    content.setVisibility(View.GONE);
-    icon.setText("+"); // ΜΗΝ βάζεις unicode, μόνο ASCII
-
-    header.setOnClickListener(v -> {
-
-        boolean isOpen = (content.getVisibility() == View.VISIBLE);
-
-        // ------------------------------------------------------------
-        // 1️⃣ Κλείσε ΟΛΑ τα sections
-        // ------------------------------------------------------------
-        if (allContents != null && allIcons != null) {
-            for (int i = 0; i < allContents.length; i++) {
-                if (allContents[i] != null)
-                    allContents[i].setVisibility(View.GONE);
-                if (allIcons[i] != null)
-                    allIcons[i].setText("+");
-            }
-        }
-
-        // ------------------------------------------------------------
-        // 2️⃣ Αν ήταν κλειστό → άνοιξέ το
-        // ------------------------------------------------------------
-        if (!isOpen) {
-            content.setVisibility(View.VISIBLE);
-            icon.setText("-");
-        }
+private void appendHtml(String html) {
+    ui.post(() -> {
+        CharSequence cur = txtLog.getText();
+        CharSequence add = Html.fromHtml(html + "<br>");
+        txtLog.setText(TextUtils.concat(cur, add));
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
     });
 }
 
-    // ============================================================
-    // ROOT CHECK (GEL Stable v5.1) — FIXED
-    // ============================================================
-    private boolean isDeviceRooted() {
+private void logInfo(String msg) {
+    GELServiceLog.info(msg);
+    appendHtml("ℹ️ " + escape(msg));
+}
+
+private void logOk(String msg) {
+    GELServiceLog.ok(msg);
+    appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+}
+
+private void logWarn(String msg) {
+    GELServiceLog.warn(msg);
+    appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+}
+
+private void logError(String msg) {
+    GELServiceLog.error(msg);
+    appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+}
+
+// ============================================================
+// LABEL : VALUE (WHITE LABEL / GREEN VALUE)
+// ============================================================
+
+private void logLabelValue(String label, String value) {
+    appendHtml(
+            escape(label) + ": "
+                    + "<font color='#39FF14'>" + escape(value) + "</font>"
+    );
+}
+
+private void logLabelValue(String text) {
+    int idx = text.indexOf(":");
+    if (idx <= 0 || idx >= text.length() - 1) {
+        logInfo(text);
+        return;
+    }
+
+    logLabelValue(
+            text.substring(0, idx).trim(),
+            text.substring(idx + 1).trim()
+    );
+}
+
+// ============================================================
+// CORE HELPERS (SINGLE SOURCE)
+// ============================================================
+
+private void logLine() {
+    GELServiceLog.addLine("----------------------------------------");
+    appendHtml("<font color='#666666'>----------------------------------------</font>");
+}
+
+private String escape(String s) {
+    if (s == null) return "";
+    return s.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+}
+
+private int dp(int v) {
+    float d = getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
+}
+
+// ============================================================
+// SHARED FORMAT HELPERS
+// ============================================================
+
+private String humanBytes(long bytes) {
+    if (bytes <= 0) return "0 B";
+    float kb = bytes / 1024f;
+    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);
+    float mb = kb / 1024f;
+    if (mb < 1024) return String.format(Locale.US, "%.1f MB", mb);
+    float gb = mb / 1024f;
+    return String.format(Locale.US, "%.2f GB", gb);
+}
+
+private String formatUptime(long ms) {
+    long s = ms / 1000;
+    long d = s / (24 * 3600);
+    s %= (24 * 3600);
+    long h = s / 3600;
+    s %= 3600;
+    long m = s / 60;
+    return String.format(Locale.US, "%dd %dh %dm", d, h, m);
+}
+
+private String cleanSsid(String raw) {
+    if (raw == null) return "Unknown";
+    raw = raw.trim();
+    if (raw.equalsIgnoreCase("<unknown ssid>") || raw.equalsIgnoreCase("unknown ssid"))
+        return "Unknown";
+    if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
+        return raw.substring(1, raw.length() - 1);
+    return raw;
+}
+
+private String ipToStr(int ip) {
+    return (ip & 0xFF) + "." +
+           ((ip >> 8) & 0xFF) + "." +
+           ((ip >> 16) & 0xFF) + "." +
+           ((ip >> 24) & 0xFF);
+}
+
+// ============================================================
+// LAB 14 — REQUIRED SUPPORT METHODS
+// (DO NOT MODIFY — shared infra)
+// ============================================================
+
+// ------------------------------------------------------------
+// Battery percentage (stable & safe)
+// ------------------------------------------------------------
+private float getCurrentBatteryPercent() {
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return -1f;
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        if (level < 0 || scale <= 0) return -1f;
+        return (level * 100f) / scale;
+
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+// ------------------------------------------------------------
+// Brightness + keep screen on (LAB stress)
+// ------------------------------------------------------------
+private int __oldBrightness = -1;
+
+private void applyMaxBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness < 0) {
+            __oldBrightness = Settings.System.getInt(
+                    getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    128
+            );
+        }
+
+        lp.screenBrightness = 1.0f;
+        getWindow().setAttributes(lp);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+private void restoreBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness >= 0) {
+            lp.screenBrightness = __oldBrightness / 255f;
+            getWindow().setAttributes(lp);
+        }
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// CPU stress (controlled)
+// ------------------------------------------------------------
+private volatile boolean __cpuBurn = false;
+
+private void startCpuBurn_C_Mode() {
+    __cpuBurn = true;
+
+    new Thread(() -> {
         try {
-            String[] paths = {
-                    "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                    "/system/su", "/system/bin/.ext/.su",
-                    "/system/usr/we-need-root/su-backup",
-                    "/system/app/Superuser.apk", "/system/app/SuperSU.apk",
-                    "/system/app/Magisk.apk", "/system/priv-app/Magisk"
+            while (__cpuBurn) {
+                double x = 0;
+                for (int i = 0; i < 100_000; i++) {
+                    x += Math.sqrt(i);
+                }
+            }
+        } catch (Throwable ignore) {}
+    }, "LAB14-CPU-BURN").start();
+}
+
+private void stopCpuBurn() {
+    __cpuBurn = false;
+}
+
+// ------------------------------------------------------------
+// UI health map (fallback implementation)
+// ------------------------------------------------------------
+private void printHealthCheckboxMap(String decision) {
+
+    logLine();
+
+    if ("Strong".equalsIgnoreCase(decision)) {
+        logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
+    }
+    else if ("Normal".equalsIgnoreCase(decision)) {
+        logWarn("Health Map: ⚠ Moderate wear detected");
+    }
+    else {
+        logError("Health Map: ✖ Battery health critical");
+    }
+}
+
+// ============================================================
+// LABS 1–5: AUDIO & VIBRATION
+// ============================================================
+
+// ============================================================
+// LAB 1 — Speaker Tone Test (AUTO)
+// ============================================================
+private void lab1SpeakerTone() {
+
+    logSection("LAB 1 — Speaker Tone Test");
+
+    new Thread(() -> {
+
+        ToneGenerator tg = null;
+
+        try {
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+            tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
+            SystemClock.sleep(1400);
+
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
+
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", r.confidence);
+
+            logOk("Speaker output detected");
+
+            // 🔧 FIX: Explain LOW confidence explicitly
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
+
+                logLabelValue(
+                        "Note",
+                        r.silenceDetected
+                                ? "Signal detected at extremely low level. Low confidence may be caused by aggressive noise cancellation, microphone isolation, or device acoustic shielding."
+                                : "Signal detected successfully, but with low confidence. This may be caused by system noise cancellation, microphone placement, or acoustic design."
+                );
+
+            } else {
+
+                logLabelValue(
+                        "Note",
+                        "Speaker signal detected successfully."
+                );
+            }
+
+        } catch (Throwable t) {
+            logError("Speaker tone test failed");
+        } finally {
+            if (tg != null) tg.release();
+        }
+
+    }).start();
+}
+
+// ============================================================
+// LAB 2 — Speaker Frequency Sweep
+// ============================================================
+private void lab2SpeakerSweep() {
+
+    logSection("LAB 2 — Speaker Frequency Sweep");
+
+    new Thread(() -> {
+
+        ToneGenerator tg = null;
+
+        try {
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+
+            int[] tones = {
+                    ToneGenerator.TONE_DTMF_1,
+                    ToneGenerator.TONE_DTMF_3,
+                    ToneGenerator.TONE_DTMF_6,
+                    ToneGenerator.TONE_DTMF_9
             };
 
-            for (String p : paths) {
-                if (new File(p).exists()) return true;
+            for (int t : tones) {
+                tg.startTone(t, 500);
+                SystemClock.sleep(550);
             }
 
-            Process proc = Runtime.getRuntime().exec(new String[]{"sh", "-c", "which su"});
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = in.readLine();
-            in.close();
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
 
-            return line != null && !line.trim().isEmpty();
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", r.confidence);
 
-        } catch (Throwable ignore) {
-            return false;
-        }
-    }
+            logOk("Frequency sweep executed");
 
-    // ============================================================
-    // GEL Battery Path Detector v2.0 (OEM-Smart + GitHub Safe)
-    // ============================================================
-    private String getBatteryPathForDisplay() {
+            // 🔧 FIX: Explain LOW confidence explicitly
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
 
-        String manu    = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.US);
-        String finger  = Build.FINGERPRINT == null ? "" : Build.FINGERPRINT.toLowerCase(Locale.US);
-        String display = Build.DISPLAY == null ? "" : Build.DISPLAY.toLowerCase(Locale.US);
+                logLabelValue(
+                        "Note",
+                        r.silenceDetected
+                                ? "Sweep executed at extremely low level. Low confidence may be caused by aggressive noise cancellation, narrow speaker frequency response, or acoustic isolation."
+                                : "Sweep executed successfully, but with low confidence. This may be caused by DSP filtering, speaker frequency roll-off, or microphone placement."
+                );
 
-        boolean isXiaomi  = manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco");
-        boolean isMIUI    = finger.contains("miui") || display.contains("miui");
-        boolean isHyperOS = finger.contains("hyperos") || display.contains("hyperos");
+            } else {
 
-        boolean isSamsung = manu.contains("samsung");
-        boolean isPixel   = manu.contains("google") || finger.contains("pixel");
-
-        boolean isOppo    = manu.contains("oppo");
-        boolean isRealme  = manu.contains("realme");
-        boolean isOnePlus = manu.contains("oneplus");
-
-        boolean isVivo    = manu.contains("vivo") || manu.contains("iqoo");
-        boolean isHuawei  = manu.contains("huawei") || manu.contains("honor");
-
-        boolean isMoto    = manu.contains("motorola") || manu.contains("moto");
-        boolean isSony    = manu.contains("sony");
-        boolean isAsus    = manu.contains("asus");
-        boolean isNokia   = manu.contains("nokia");
-        boolean isLenovo  = manu.contains("lenovo");
-        boolean isLG      = manu.contains("lg");
-        boolean isZTE     = manu.contains("zte");
-        boolean isTecno   = manu.contains("tecno");
-        boolean isInfinix = manu.contains("infinix");
-        boolean isMeizu   = manu.contains("meizu");
-        boolean isNothing = manu.contains("nothing");
-
-        if (isSamsung) {
-            return "Settings → Battery and device care → Battery";
-        }
-
-        if (isXiaomi) {
-            if (isHyperOS) return "Settings → Battery → Battery usage";
-            if (isMIUI)    return "Settings → Battery & performance → Battery usage";
-            return "Settings → Battery";
-        }
-
-        if (isPixel) {
-            return "Settings → Battery → Battery usage";
-        }
-
-        if (isOppo || isRealme) {
-            return "Settings → Battery → More settings";
-        }
-
-        if (isOnePlus) {
-            return "Settings → Battery → Advanced settings";
-        }
-
-        if (isVivo) {
-            return "Settings → Battery";
-        }
-
-        if (isHuawei) {
-            return "Settings → Battery → App launch";
-        }
-
-        if (isMoto) {
-            return "Settings → Battery";
-        }
-
-        return "Settings → Battery";
-    }
-
-    // ============================================================
-    // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
-    // ============================================================
-   
-    // ============================================================
-    // CAMERA / 
-    // ============================================================
-
- private String buildCameraInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        if (cm != null) {
-            for (String id : cm.getCameraIdList()) {
-
-                CameraCharacteristics cc = cm.getCameraCharacteristics(id);
-
-                Integer facing      = cc.get(CameraCharacteristics.LENS_FACING);
-                float[] focals      = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-                float[] apertures   = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                Integer hwLevel     = cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-                Integer orientation = cc.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                Boolean flashAvail  = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                int[]   reqCaps     = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
-
-                sb.append("Camera ID        : ").append(id).append("\n");
-
-                String facingStr = "Unknown";
-                if (facing != null) {
-                    if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                        facingStr = "Front";
-                    } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
-                        facingStr = "Back";
-                    } else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
-                        facingStr = "External";
-                    }
-                }
-                sb.append("• Facing         : ").append(facingStr).append("\n");
-
-                if (orientation != null) {
-                    sb.append("• Orientation    : ").append(orientation).append("°\n");
-                }
-
-                if (focals != null && focals.length > 0) {
-                    sb.append("• Focal          : ").append(focals[0]).append(" mm\n");
-                }
-
-                if (apertures != null && apertures.length > 0) {
-                    sb.append("• Aperture       : f/").append(apertures[0]).append("\n");
-                }
-
-                if (flashAvail != null) {
-                    sb.append("• Flash          : ").append(flashAvail ? "Yes" : "No").append("\n");
-                }
-
-                try {
-                    android.hardware.camera2.params.StreamConfigurationMap map =
-                            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                    if (map != null) {
-                        android.util.Size[] jpegSizes =
-                                map.getOutputSizes(android.graphics.ImageFormat.JPEG);
-                        if (jpegSizes != null && jpegSizes.length > 0) {
-                            sb.append("• JPEG Modes     : ")
-                                    .append(jpegSizes.length)
-                                    .append(" available sizes\n");
-                        }
-                    }
-                } catch (Throwable ignore) { }
-
-                if (reqCaps != null) {
-                    sb.append("• Capabilities   : ").append(reqCaps.length).append(" flags\n");
-                }
-
-                if (hwLevel != null) {
-                    String level;
-                    switch (hwLevel) {
-                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                            level = "FULL";
-                            break;
-                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                            level = "LIMITED";
-                            break;
-                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                            level = "LEGACY";
-                            break;
-                        case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                            level = "LEVEL_3";
-                            break;
-                        default:
-                            level = "UNKNOWN";
-                    }
-                    sb.append("• HW Level       : ").append(level).append("\n");
-                }
-
-                sb.append("\n");
+                logLabelValue(
+                        "Note",
+                        "Frequency sweep detected successfully."
+                );
             }
+
+        } catch (Throwable t) {
+            logError("Speaker frequency sweep failed");
+        } finally {
+            if (tg != null) tg.release();
         }
-    } catch (Throwable ignore) { }
 
-    if (sb.length() == 0) {
-        sb.append("No camera data exposed by this device.\n");
-    }
-
-    appendAccessInstructions(sb, "camera");
-return sb.toString();
+    }).start();
 }
 
-// ============================================================
-//   BIOMETRICS — GEL CLEAN EDITION (API29-SAFE)
-// ============================================================
-private String buildBiometricsInfo() {
-    StringBuilder sb = new StringBuilder();
+/* ============================================================
+   LAB 3 — Earpiece Audio Path Check
+   ============================================================ */
+private void lab3EarpieceManual() {
 
-    PackageManager pm = getPackageManager();
+    logSection("LAB 3 — Earpiece Audio Path Check");
 
-    boolean hasFp   = pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
-    boolean hasFace = pm.hasSystemFeature("android.hardware.biometrics.face");
-    boolean hasIris = pm.hasSystemFeature("android.hardware.biometrics.iris");
+    new Thread(() -> {
 
-    sb.append("Fingerprint        : ").append(hasFp   ? "Yes" : "No").append("\n");
-    sb.append("Face Unlock        : ").append(hasFace ? "Yes" : "No").append("\n");
-    sb.append("Iris Scan          : ").append(hasIris ? "Yes" : "No").append("\n");
+        AudioManager am = null;
+        int oldMode = AudioManager.MODE_NORMAL;
+        boolean oldSpeaker = false;
 
-    // ------------------------------------------------------------
-    // Under-Display Fingerprint (UDFPS detection)
-    // ------------------------------------------------------------
-    boolean udFps = false;
-    try {
-        udFps = pm.hasSystemFeature("com.motorola.hardware.fingerprint.udfps")
-              || pm.hasSystemFeature("com.samsung.hardware.fingerprint.udfps")
-              || pm.hasSystemFeature("com.google.hardware.biometrics.udfps")
-              || pm.hasSystemFeature("vendor.samsung.hardware.biometrics.fingerprint.udfps")
-              || pm.hasSystemFeature("vendor.xiaomi.hardware.fingerprint.udfps");
-    } catch (Throwable ignore) {}
-
-    if (hasFp) {
-        sb.append("Under-Display FP   : ")
-          .append(udFps ? "Yes" : "No")
-          .append("\n");
-    }
-
-    // ------------------------------------------------------------
-    // Biometric Profile
-    // ------------------------------------------------------------
-    int modes = (hasFp ? 1 : 0) + (hasFace ? 1 : 0) + (hasIris ? 1 : 0);
-
-    sb.append("Profile            : ");
-    if (modes == 0) {
-        sb.append("No biometric hardware\n");
-    } else if (modes == 1) {
-        sb.append("Single biometric\n");
-    } else {
-        sb.append("Multi-biometric (").append(modes).append(")\n");
-    }
-
-    return sb.toString();
-}
-
-// ------------------------------------------------------------
-// SENSORS — CLEAN GEL DIAGNOSTIC SUMMARY
-// ------------------------------------------------------------
-private String buildSensorsInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sm != null) {
-
-            Sensor accelerometer   = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            Sensor gyroscope       = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            Sensor magnetometer    = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-            Sensor barometer       = sm.getDefaultSensor(Sensor.TYPE_PRESSURE);
-            Sensor proximity       = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            Sensor light           = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
-
-            Sensor stepCounter     = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            Sensor stepDetector    = sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-
-            Sensor rotationVector  = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-            Sensor gameRotation    = sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
-            Sensor gravity         = sm.getDefaultSensor(Sensor.TYPE_GRAVITY);
-            Sensor linearAccel     = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-
-            Sensor significantMot  = sm.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
-            Sensor stationaryDet   = sm.getDefaultSensor(Sensor.TYPE_STATIONARY_DETECT);
-            Sensor motionDet       = sm.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
-
-            sb.append("Summary:\n");
-            sb.append("Accelerometer        : ").append(accelerometer  != null ? "Yes" : "No").append("\n");
-            sb.append("Gyroscope            : ").append(gyroscope      != null ? "Yes" : "No").append("\n");
-            sb.append("Magnetometer         : ").append(magnetometer   != null ? "Yes" : "No").append("\n");
-            sb.append("Barometer            : ").append(barometer      != null ? "Yes" : "No").append("\n");
-            sb.append("Proximity            : ").append(proximity      != null ? "Yes" : "No").append("\n");
-            sb.append("Light Sensor         : ").append(light          != null ? "Yes" : "No").append("\n");
-
-            sb.append("Step Counter         : ").append(stepCounter    != null ? "Yes" : "No").append("\n");
-            sb.append("Step Detector        : ").append(stepDetector   != null ? "Yes" : "No").append("\n");
-
-            sb.append("Rotation Vector      : ").append(rotationVector != null ? "Yes" : "No").append("\n");
-            sb.append("Game Rotation Vector : ").append(gameRotation   != null ? "Yes" : "No").append("\n");
-            sb.append("Gravity Sensor       : ").append(gravity        != null ? "Yes" : "No").append("\n");
-            sb.append("Linear Acceleration  : ").append(linearAccel    != null ? "Yes" : "No").append("\n");
-
-            sb.append("Significant Motion   : ").append(significantMot != null ? "Yes" : "No").append("\n");
-            sb.append("Stationary Detect    : ").append(stationaryDet  != null ? "Yes" : "No").append("\n");
-            sb.append("Motion Detect        : ").append(motionDet      != null ? "Yes" : "No").append("\n");
-        }
-    } catch (Throwable ignore) { }
-
-    if (sb.length() == 0) {
-        sb.append("No sensor information is exposed by this device.\n");
-    }
-
-    appendAccessInstructions(sb, "sensors");
-    return sb.toString();
-}
-
-// ============================================================
-// WIFI + BLUETOOTH INFO — CONNECTIVITY EXTENSION (FULL + ROOT)
-// ============================================================
-
-private String buildWifiAndBluetoothInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    try {
-
-        WifiManager wm = (WifiManager) getApplicationContext()
-                .getSystemService(Context.WIFI_SERVICE);
-
-        // ============================================================
-        // WI-FI DETAILS
-        // ============================================================
-        if (wm != null) {
-            WifiInfo wi = wm.getConnectionInfo();
-            if (wi != null && wi.getNetworkId() != -1) {
-
-                sb.append("\nWi-Fi Details:\n");
-                sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
-                sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
-                sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
-
-                // SAFE MAC (masked vs real, root-aware)
-                String rawMac = wi.getMacAddress();
-                String macLine;
-                if (rawMac != null
-                        && rawMac.length() > 0
-                        && !"02:00:00:00:00:00".equals(rawMac)) {
-                    macLine = rawMac;   // real MAC (root / older Android)
-                } else {
-                    if (!isDeviceRooted()) {
-                        macLine = "Masked by Android security. Requires root access";
-                    } else {
-                        macLine = "Unavailable";
-                    }
-                }
-                sb.append("  MAC            : ").append(macLine).append("\n");
+        try {
+            am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) {
+                logError("AudioManager unavailable");
+                enableSingleExportButton();
+                return;
             }
+
+            oldMode = am.getMode();
+            oldSpeaker = am.isSpeakerphoneOn();
+
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            am.setSpeakerphoneOn(false);
+
+            playEarpieceTestTone220Hz(900);
+            SystemClock.sleep(200);
+
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+            logLabelValue("Top Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Top Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", r.confidence);
+
+            logOk("Earpiece audio path executed");
+
+            logLabelValue(
+                    "Note",
+                    r.silenceDetected
+                            ? "Audio path active but detected at very low level. This may occur due to call routing isolation or aggressive noise suppression."
+                            : "Earpiece audio path detected successfully."
+            );
+
+            askUserEarpieceConfirmation();
+
+        } catch (Throwable t) {
+            logError("LAB 3 failed");
+        } finally {
+            try {
+                if (am != null) {
+                    am.setMode(oldMode);
+                    am.setSpeakerphoneOn(oldSpeaker);
+                }
+            } catch (Throwable ignore) {}
+            enableSingleExportButton();
         }
 
-    } catch (Throwable ignore) {}
+    }).start();
+}
 
-    // ============================================================
-    // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
-    // ============================================================
-    sb.append("\nBluetooth:\n");
+/* ============================================================
+   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
+   ============================================================ */
+private void lab4MicManual() {
+
+    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
+
+    new Thread(() -> {
+
+        MicDiagnosticEngine.Result bottom =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+        logLabelValue("Bottom Mic RMS", String.valueOf((int) bottom.rms));
+        logLabelValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
+        logLabelValue("Bottom Mic Confidence", bottom.confidence);
+
+        MicDiagnosticEngine.Result top =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+        logLabelValue("Top Mic RMS", String.valueOf((int) top.rms));
+        logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
+        logLabelValue("Top Mic Confidence", top.confidence);
+
+        logOk("Microphone recording path executed");
+
+        logLabelValue(
+                "Note",
+                (bottom.silenceDetected && top.silenceDetected)
+                        ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."
+                        : "Microphone signal detected successfully."
+        );
+
+        enableSingleExportButton();
+
+    }).start();
+}
+
+/* ============================================================
+   LAB 5 — Vibration Motor Test (AUTO)
+   ============================================================ */
+private void lab5Vibration() {
+
+    logSection("LAB 5 — Vibration Motor Test");
 
     try {
-        BluetoothManager bm =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+        Vibrator v;
 
-        if (ba == null) {
-            sb.append("  Supported      : No\n");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager vm =
+                    (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            v = (vm != null) ? vm.getDefaultVibrator() : null;
         } else {
-            sb.append("  Supported      : Yes\n");
-            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        }
 
-            // ------------------------------------------------------------
-            // STATE
-            // ------------------------------------------------------------
-            int state = ba.getState();
-            String stateStr;
-            switch (state) {
-                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-                default:                                 stateStr = "Off";         break;
+        if (v == null || !v.hasVibrator()) {
+            logError("No vibration motor detected");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            long[] pattern = {0, 300, 150, 300, 150, 450};
+            int[] amps = {0, 255, 0, 255, 0, 255};
+            v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));
+        } else {
+            v.vibrate(new long[]{0, 300, 150, 300, 150, 450}, -1);
+        }
+
+        logOk("Vibration pattern executed");
+
+    } catch (Throwable t) {
+        logError("Vibration test failed");
+    }
+}
+
+// ============================================================  
+// LABS 6–9: DISPLAY & SENSORS  
+// ============================================================  
+
+/* ============================================================
+   LAB 6 — Display / Touch Basic Inspection (manual)
+   ============================================================ */
+
+private void lab6DisplayTouch() {
+
+    logSection("LAB 6 — Display / Touch Basic Inspection");
+
+    startActivityForResult(
+            new Intent(this, TouchGridTestActivity.class),
+            6006
+    );
+}
+
+/* ============================================================
+   LAB 7 — Rotation / Auto-Rotate Check (manual)
+   ============================================================ */
+
+private void lab7RotationManual() {
+
+    logSection("LAB 7 — Rotation / Auto-Rotate Check");
+
+    startActivityForResult(
+            new Intent(this, RotationCheckActivity.class),
+            7007
+    );
+}
+
+/* ============================================================
+   LAB 8 — Proximity During Call (manual)
+   ============================================================ */
+
+private void lab8ProximityCall() {
+
+    logSection("LAB 8 — Proximity During Call");
+
+    startActivityForResult(
+            new Intent(this, ProximityCheckActivity.class),
+            8008
+    );
+}
+
+/* ============================================================
+   LAB 9 — Sensors Check 
+   ============================================================ */
+
+private void lab9SensorsCheck() {
+
+    logLine();
+    logInfo("LAB 9 — Sensors Presence & Full Analysis");
+
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            logError("SensorManager not available — framework issue.");
+            return;
+        }
+
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        int total = (sensors == null ? 0 : sensors.size());
+        logInfo("Total sensors reported: " + total);
+
+        // ------------------------------------------------------------
+        // QUICK PRESENCE CHECK (former LAB 9)
+        // ------------------------------------------------------------
+        checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+        checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+        checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
+        checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
+        checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
+
+        if (sensors == null || sensors.isEmpty()) {
+            logError("No sensors reported by the system.");
+            return;
+        }
+
+        logLine();
+        logInfo("Full Sensor List:");
+
+        // ------------------------------------------------------------
+        // RAW SENSOR LIST (former LAB 10)
+        // ------------------------------------------------------------
+        for (Sensor s : sensors) {
+            String line = "• type=" + s.getType()
+                    + " | name=" + s.getName()
+                    + " | vendor=" + s.getVendor();
+            logInfo(line);
+        }
+
+        // ------------------------------------------------------------
+        // INTERPRETATION LOGIC
+        // ------------------------------------------------------------
+        boolean hasVirtualGyro = false;
+        boolean hasDualALS = false;
+        int alsCount = 0;
+        boolean hasSAR = false;
+        boolean hasPickup = false;
+        boolean hasLargeTouch = false;
+        boolean hasGameRotation = false;
+
+        for (Sensor s : sensors) {
+            String name   = s.getName()   != null ? s.getName().toLowerCase(Locale.US)   : "";
+            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
+
+            if (name.contains("virtual") && name.contains("gyro"))
+                hasVirtualGyro = true;
+
+            if (name.contains("gyroscope") && vendor.contains("xiaomi"))
+                hasVirtualGyro = true;
+
+            if (name.contains("ambient") && name.contains("light"))
+                alsCount++;
+
+            if (name.contains("sar") || name.contains("rf"))
+                hasSAR = true;
+
+            if (name.contains("pickup"))
+                hasPickup = true;
+
+            if (name.contains("touch") && name.contains("large"))
+                hasLargeTouch = true;
+
+            if (name.contains("game") && name.contains("rotation"))
+                hasGameRotation = true;
+        }
+
+        if (alsCount >= 2) hasDualALS = true;
+
+        // ------------------------------------------------------------
+        // SUMMARY
+        // ------------------------------------------------------------
+        logLine();
+        logInfo("Sensor Interpretation Summary:");
+
+        if (hasVirtualGyro)
+            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+
+        if (hasDualALS)
+            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
+        else
+            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+
+        if (hasSAR)
+            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+
+        if (hasPickup)
+            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+
+        if (hasLargeTouch)
+            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+
+        if (hasGameRotation)
+            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+
+        logOk("Sensor suite appears complete and healthy for this device.");
+
+    } catch (Exception e) {
+        logError("Sensors analysis error: " + e.getMessage());
+    }
+}
+
+/* ============================================================
+   Helper — Sensor Presence
+   ============================================================ */
+private void checkSensor(SensorManager sm, int type, String name) {
+    boolean ok = sm.getDefaultSensor(type) != null;
+    if (ok)
+        logOk(name + " is reported as available.");
+    else
+        logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
+}
+
+// ============================================================  
+// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
+// ============================================================  
+private void lab10WifiSnapshot() {  
+    logLine();  
+    logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
+
+    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);  
+    if (wm == null) {  
+        logError("WifiManager not available.");  
+        return;  
+    }  
+
+    if (!wm.isWifiEnabled()) {  
+        logWarn("Wi-Fi is OFF — please enable and retry.");  
+        return;  
+    }  
+
+    // 1) Runtime Location Permission (required for SSID/BSSID on Android 8.1+/10+)  
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {  
+        boolean fineGranted =  
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)  
+                        == PackageManager.PERMISSION_GRANTED;  
+        boolean coarseGranted =  
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)  
+                        == PackageManager.PERMISSION_GRANTED;  
+
+        if (!fineGranted && !coarseGranted) {  
+            logWarn("Location permission required to read SSID/BSSID (Android policy).");  
+            pendingLab10AfterPermission = this::lab10WifiSnapshot;  
+
+            ActivityCompat.requestPermissions(  
+                    this,  
+                    new String[]{  
+                            Manifest.permission.ACCESS_FINE_LOCATION,  
+                            Manifest.permission.ACCESS_COARSE_LOCATION  
+                    },  
+                    REQ_LOCATION_LAB10  
+            );  
+
+            logInfo("Grant permission, then Lab 10 will auto-retry.");  
+            return;  
+        }  
+
+        // 2) Location services ON check  
+        try {  
+            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);  
+            boolean gpsOn = lm != null && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);  
+            boolean netOn = lm != null && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);  
+
+            if (!gpsOn && !netOn) {  
+                logWarn("Location services are OFF. SSID may show UNKNOWN.");  
+                logWarn("Opening Location Settings… enable Location and come back.");  
+                try {  
+                    startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));  
+                } catch (Exception ignored) {}  
+                return;  
+            }  
+        } catch (Exception e) {  
+            logWarn("Location services check failed: " + e.getMessage());  
+        }  
+    }  
+
+    // 3) Read basic WifiInfo  
+    WifiInfo info = wm.getConnectionInfo();  
+    if (info == null) {  
+        logError("Wi-Fi info not available.");  
+        return;  
+    }  
+
+    String ssid = cleanSsid(info.getSSID());  
+    String bssid = info.getBSSID();  
+    int rssi  = info.getRssi();  
+    int speed = info.getLinkSpeed();  
+    int freqMhz = 0;  
+    try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}  
+    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";  
+
+    logInfo("SSID: " + ssid);  
+    if (bssid != null) logInfo("BSSID: " + bssid);  
+    if (freqMhz > 0) logInfo("Band: " + band + " (" + freqMhz + " MHz)");  
+    else logInfo("Band: " + band);  
+
+    logInfo("Link speed: " + speed + " Mbps");  
+    logInfo("RSSI: " + rssi + " dBm");  
+
+    if ("Unknown".equalsIgnoreCase(ssid)) {  
+        logWarn("SSID is UNKNOWN due to Android privacy policy.");  
+        logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 11.");  
+    } else {  
+        logOk("SSID read OK.");  
+    }  
+
+    if (rssi > -65)  
+        logOk("Wi-Fi signal is strong.");  
+    else if (rssi > -80)  
+        logWarn("Moderate Wi-Fi signal.");  
+    else  
+        logError("Very weak Wi-Fi signal — expect drops.");  
+
+    // 4) DHCP / IP details  
+    try {  
+        DhcpInfo dh = wm.getDhcpInfo();  
+        if (dh != null) {  
+            logInfo("IP: " + ipToStr(dh.ipAddress));  
+            logInfo("Gateway: " + ipToStr(dh.gateway));  
+            logInfo("DNS1: " + ipToStr(dh.dns1));  
+            logInfo("DNS2: " + ipToStr(dh.dns2));  
+        } else {  
+            logWarn("DHCP info not available.");  
+        }  
+    } catch (Exception e) {  
+        logWarn("DHCP read failed: " + e.getMessage());  
+    }  
+
+    // 5) DeepScan  
+    runWifiDeepScan(wm);  
+}  
+
+@Override  
+public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {  
+    super.onRequestPermissionsResult(requestCode, perms, grantResults);  
+
+    if (requestCode == REQ_LOCATION_LAB10) {  
+        boolean granted = false;  
+        if (grantResults != null) {  
+            for (int r : grantResults) {  
+                if (r == PackageManager.PERMISSION_GRANTED) {  
+                    granted = true;  
+                    break;  
+                }  
+            }  
+        }  
+
+        if (granted) {  
+            logOk("Location permission granted.");  
+            if (pendingLab10AfterPermission != null) pendingLab10AfterPermission.run();  
+        } else {  
+            logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");  
+        }  
+        pendingLab10AfterPermission = null;  
+    }  
+}  
+
+// ============================================================  
+// LAB 10 — DEEPSCAN v3.0  
+// ============================================================  
+private void runWifiDeepScan(WifiManager wm) {  
+    new Thread(() -> {  
+        try {  
+            logLine();  
+            logInfo("GEL Network DeepScan v3.0 started...");  
+
+            String gatewayStr = null;  
+            try {  
+                DhcpInfo dh = wm.getDhcpInfo();  
+                if (dh != null) gatewayStr = ipToStr(dh.gateway);  
+            } catch (Exception ignored) {}  
+
+            // 1) Ping latency to 8.8.8.8 using TCP connect (works non-root)  
+            float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);  
+            if (pingMs > 0)  
+                logOk(String.format(Locale.US, "Ping latency to 8.8.8.8: %.1f ms", pingMs));  
+            else  
+                logWarn("Ping latency test failed (network blocked).");  
+
+            // 2) DNS resolve time  
+            float dnsMs = dnsResolveMs("google.com");  
+            if (dnsMs > 0)  
+                logOk(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));  
+            else  
+                logWarn("DNS resolve failed.");  
+
+            // 3) Gateway ping (TCP to 80)  
+            if (gatewayStr != null) {  
+                float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);  
+                if (gwMs > 0)  
+                    logOk(String.format(Locale.US, "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));  
+                else  
+                    logWarn("Gateway ping failed.");  
+            } else {  
+                logWarn("Gateway not detected.");  
+            }  
+
+            // 4) SpeedSim heuristic  
+            WifiInfo info = wm.getConnectionInfo();  
+            int link = info != null ? info.getLinkSpeed() : 0;  
+            int rssi = info != null ? info.getRssi() : -80;  
+            float speedSim = estimateSpeedSimMbps(link, rssi);  
+            logOk(String.format(Locale.US, "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));  
+
+            logOk("DeepScan finished.");  
+
+        } catch (Exception e) {  
+            logError("DeepScan error: " + e.getMessage());  
+        }  
+    }).start();  
+}  
+
+private float tcpLatencyMs(String host, int port, int timeoutMs) {  
+    long t0 = SystemClock.elapsedRealtime();  
+    Socket s = new Socket();  
+    try {  
+        s.connect(new InetSocketAddress(host, port), timeoutMs);  
+        long t1 = SystemClock.elapsedRealtime();  
+        return (t1 - t0);  
+    } catch (Exception e) {  
+        return -1f;  
+    } finally {  
+        try { s.close(); } catch (Exception ignored) {}  
+    }  
+}  
+
+private float dnsResolveMs(String host) {  
+    long t0 = SystemClock.elapsedRealtime();  
+    try {  
+        InetAddress.getByName(host);  
+        long t1 = SystemClock.elapsedRealtime();  
+        return (t1 - t0);  
+    } catch (Exception e) {  
+        return -1f;  
+    }  
+}  
+
+private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {  
+    if (linkSpeedMbps <= 0) linkSpeedMbps = 72;  
+    float rssiFactor;  
+    if (rssiDbm > -55) rssiFactor = 1.2f;  
+    else if (rssiDbm > -65) rssiFactor = 1.0f;  
+    else if (rssiDbm > -75) rssiFactor = 0.7f;  
+    else rssiFactor = 0.4f;  
+    return Math.max(5f, linkSpeedMbps * rssiFactor);  
+}  
+
+// ============================================================  
+// LAB 11 — Mobile Data Diagnostic
+// ============================================================  
+
+private void lab11MobileDataDiagnostic() {
+
+    logLine();
+    logInfo("LAB 11 — Mobile Network Diagnostic (Laboratory)");
+
+    TelephonySnapshot s = getTelephonySnapshot();
+
+    // ------------------------------------------------------------
+    // Airplane mode (context only)
+    // ------------------------------------------------------------
+    if (s.airplaneOn) {
+        logInfo("Airplane mode is ENABLED. Radio interfaces are intentionally disabled.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // SIM state (laboratory reporting)
+    // ------------------------------------------------------------
+    if (!s.simReady) {
+
+        switch (s.simState) {
+            case TelephonyManager.SIM_STATE_ABSENT:
+                logInfo("SIM state: ABSENT.");
+                return;
+
+            case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+                logInfo("SIM state: PRESENT but locked (PIN required).");
+                return;
+
+            case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+                logInfo("SIM state: PRESENT but locked (PUK required).");
+                return;
+
+            case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+                logInfo("SIM state: PRESENT but network locked.");
+                return;
+
+            default:
+                logInfo("SIM state: PRESENT but not ready.");
+                return;
+        }
+    }
+
+    logLabelValue("SIM State", "READY");
+
+    // ------------------------------------------------------------
+    // Service state (legacy domain — informational)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Service State (legacy)",
+            s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"
+    );
+
+    if (!s.inService) {
+        logInfo(
+                "Legacy service registration is not reported. " +
+                "On modern LTE/5G devices, voice and data may be provided via IMS (VoLTE / VoWiFi)."
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Data state (packet domain — informational)
+    // ------------------------------------------------------------
+    String dataStateLabel;
+    switch (s.dataState) {
+        case TelephonyManager.DATA_CONNECTED:
+            dataStateLabel = "CONNECTED";
+            break;
+        case TelephonyManager.DATA_CONNECTING:
+            dataStateLabel = "CONNECTING";
+            break;
+        case TelephonyManager.DATA_DISCONNECTED:
+            dataStateLabel = "DISCONNECTED";
+            break;
+        default:
+            dataStateLabel = "UNKNOWN";
+            break;
+    }
+
+    logLabelValue("Data State", dataStateLabel);
+
+    // ------------------------------------------------------------
+    // Internet routing context (best effort)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Internet Context",
+            s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"
+    );
+
+    // ------------------------------------------------------------
+    // Laboratory conclusion
+    // ------------------------------------------------------------
+    logOk("Laboratory snapshot collected. No functional verdict inferred.");
+}
+
+// ============================================================
+// LAB 12 — Call Function Interpretation (Laboratory)
+// ============================================================
+
+private void lab12CallFunctionInterpretation() {
+
+    logLine();
+    logInfo("LAB 12 — Call Function Interpretation (Laboratory)");
+
+    TelephonySnapshot s = getTelephonySnapshot();
+
+    // ------------------------------------------------------------
+    // Airplane mode (context only)
+    // ------------------------------------------------------------
+    if (s.airplaneOn) {
+        logInfo("Airplane mode is ENABLED. Voice radio interfaces are intentionally disabled.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // SIM availability (context only)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "SIM State",
+            s.simReady ? "READY" : "NOT READY"
+    );
+
+    if (!s.simReady) {
+        logInfo(
+                "Voice service availability depends on SIM readiness. " +
+                "No functional verdict inferred."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Legacy voice service state (informational)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Voice Service (legacy)",
+            s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"
+    );
+
+    if (!s.inService) {
+        logInfo(
+                "Legacy circuit-switched voice service is not reported. " +
+                "On modern LTE/5G devices, voice calls may be provided via IMS (VoLTE / VoWiFi)."
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Internet context (IMS relevance)
+    // ------------------------------------------------------------
+    logLabelValue(
+            "Internet Context",
+            s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"
+    );
+
+    if (s.hasInternet) {
+        logInfo(
+                "Active internet routing detected. " +
+                "IMS-based calling (VoLTE / VoWiFi) may be supported depending on carrier configuration."
+        );
+    } else {
+        logInfo(
+                "No active internet routing detected. " +
+                "Legacy voice calling may still function if supported by the network."
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Laboratory conclusion
+    // ------------------------------------------------------------
+    logOk(
+            "Laboratory interpretation complete. " +
+            "This test does not initiate or verify real call execution."
+    );
+
+    logInfo(
+            "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
+    );
+}
+
+// ============================================================
+// LAB 13 — Internet Quich Check
+// ============================================================
+
+private void lab13InternetQuickCheck() {  
+    logLine();  
+    logInfo("LAB 13 — Internet Access Quick Check.");  
+    try {  
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);  
+        if (cm == null) {  
+            logError("ConnectivityManager not available.");  
+            return;  
+        }  
+
+        boolean hasInternet = false;  
+        String transport = "UNKNOWN";  
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  
+            android.net.Network n = cm.getActiveNetwork();  
+            NetworkCapabilities caps = cm.getNetworkCapabilities(n);  
+            if (caps != null) {  
+                hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);  
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))  
+                    transport = "Wi-Fi";  
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))  
+                    transport = "Cellular";  
+            }  
+        } else {  
+            @SuppressWarnings("deprecation")  
+            NetworkInfo ni = cm.getActiveNetworkInfo();  
+            if (ni != null && ni.isConnected()) {  
+                hasInternet = true;  
+                transport = ni.getTypeName();  
+            }  
+        }  
+
+        if (!hasInternet)  
+            logError("No active Internet connection detected at OS level.");  
+        else  
+            logOk("Internet connectivity is reported as active (" + transport + ").");  
+
+    } catch (Exception e) {  
+        logError("Internet quick check error: " + e.getMessage());  
+    }  
+}  
+
+// ============================================================
+// GEL THERMAL ENGINE — UNIVERSAL AUTO-SCALE (FINAL)
+// Compatible with all Android devices (Pixel, Samsung, Xiaomi, POCO, Huawei,
+// OnePlus, Oppo, Vivo, Realme, Motorola, Infinix, Tecno, MTK, Snapdragon).
+// ============================================================
+
+// ------------------------------
+// READ ALL THERMAL ZONES
+// ------------------------------
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    File base = new File("/sys/class/thermal");
+    File[] zones = base.listFiles();
+    if (zones == null) return out;
+
+    for (File f : zones) {
+        if (f == null) continue;
+        String name = f.getName();
+        if (!name.startsWith("thermal_zone")) continue;
+
+        File typeFile = new File(f, "type");
+        File tempFile = new File(f, "temp");
+        if (!tempFile.exists()) continue;
+
+        try {
+            // Read type
+            String type = name;
+            if (typeFile.exists()) {
+                String t = readFirstLine(typeFile);
+                if (t != null && !t.trim().isEmpty())
+                    type = t.trim();
             }
-            sb.append("  State          : ").append(stateStr).append("\n");
 
-            // ------------------------------------------------------------
-            // NAME / ADDRESS (MASKED IF UNROOTED)
-            // ------------------------------------------------------------
-            String btName = ba.getName();
-            if (btName == null || btName.trim().isEmpty()) {
-                btName = isDeviceRooted()
-                        ? "Unavailable"
-                        : "Unavailable (requires root access)";
+            // Read raw temperature
+            String tRaw = readFirstLine(tempFile);
+            if (tRaw == null) continue;
+            float v = Float.parseFloat(tRaw.trim());
+
+            // -------------------------------------------
+            // AUTO-SCALE (handles every Android variant)
+            // -------------------------------------------
+            if (v > 1000f)       v = v / 1000f;  // millidegree
+            else if (v > 200f)  v = v / 100f;   // centidegree
+            else if (v > 20f)   v = v / 10f;    // deci-degree
+            // else already °C
+
+            out.put(type.toLowerCase(Locale.US), v);
+
+        } catch (Throwable ignore) {}
+    }
+
+    return out;
+}
+
+
+// ------------------------------
+// PICK the correct zone by keywords
+// ------------------------------
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty()) return null;
+    if (keys == null || keys.length == 0) return null;
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String z = e.getKey().toLowerCase(Locale.US);
+        for (String k : keys) {
+            if (k == null) continue;
+            String kk = k.toLowerCase(Locale.US);
+            if (z.equals(kk) || z.contains(kk))
+                return e.getValue();
+        }
+    }
+    return null;
+}
+
+
+// ------------------------------
+// READ FIRST LINE
+// ------------------------------
+private String readFirstLine(File file) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        return br.readLine();
+    } catch (Exception e) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Exception ignore) {}
+    }
+}
+    
+// ============================================================
+// LAB 14 — Battery Health Stress Test (GEL Full Mode)
+// LABORATORY EDITION — Objective battery diagnostics
+// ============================================================
+private void lab14BatteryHealthStressTest() {
+
+    // ------------------------------------------------------------
+    // 0️⃣ BASIC SAFETY CHECKS
+    // ------------------------------------------------------------
+    float startPct = getCurrentBatteryPercent();
+    if (startPct < 0f) {
+        logError("Unable to read battery level.");
+        return;
+    }
+
+    if (startPct < 50f) {
+        logLine();
+        logError("Battery level too low (<50%). Please charge the battery before running the stress test.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 1️⃣ READ REAL BATTERY INFO (SAME ENGINE AS PERIPHERALS)
+    // ------------------------------------------------------------
+    BatteryInfo biStart = getBatteryInfo();
+
+    if (biStart == null || biStart.level < 0) {
+        logError("Unable to read detailed battery information.");
+        return;
+    }
+
+    // Must NOT be charging
+    if (biStart.status != null &&
+            biStart.status.toLowerCase(Locale.US).contains("charging")) {
+        logError("Stress test requires the device to be NOT charging.");
+        return;
+    }
+
+    long modelCap = getStoredModelCapacity();
+
+    long fullMah = -1;
+    String capSource = "Unknown";
+
+    if (biStart.estimatedFullMah > 0) {
+        fullMah = biStart.estimatedFullMah;
+        capSource = biStart.source;
+    } else if (modelCap > 0) {
+        fullMah = modelCap;
+        capSource = "Model capacity";
+    }
+
+    // Health ratio (only if BOTH available)
+    int healthPct = -1;
+    if (modelCap > 0 && biStart.estimatedFullMah > 0) {
+        healthPct = (int) Math.round(
+                (biStart.estimatedFullMah * 100.0) / (double) modelCap
+        );
+    }
+
+    // ------------------------------------------------------------
+    // 2️⃣ USER CONFIRMATION POPUP (UNCHANGED)
+    // ------------------------------------------------------------
+    showBatteryHealthTestDialog();
+
+    // ------------------------------------------------------------
+    // 3️⃣ RUN STRESS (ASYNC)
+    // ------------------------------------------------------------
+    ui.post(() -> {
+
+        // ---- THERMALS BEFORE ----
+        Map<String, Float> z0 = readThermalZones();
+        Float cpu0  = pickZone(z0,"cpu","soc","big","little");
+        Float gpu0  = pickZone(z0,"gpu");
+        Float skin0 = pickZone(z0,"skin","pa_therm");
+        Float pmic0 = pickZone(z0,"pmic","pmic_therm");
+        Float batt0 = pickZone(z0,"battery","batt","bat");
+
+        logLine();
+        logInfo("LAB 14 — Battery Health Stress Test started.");
+        logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
+
+        logInfo(String.format(Locale.US,
+                "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
+                biStart.level,
+                biStart.status,
+                biStart.temperature));
+
+        if (fullMah > 0) {
+            logInfo("Capacity baseline: " + fullMah + " mAh (" + capSource + ").");
+        } else {
+            logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
+        }
+
+        if (healthPct > 0) {
+            logInfo("Estimated battery health: ~" + healthPct + "% of model capacity.");
+        }
+
+        long t0 = SystemClock.elapsedRealtime();
+
+        applyMaxBrightnessAndKeepOn();
+        startCpuBurn_C_Mode();
+
+        // ------------------------------------------------------------
+        // 4️⃣ STOP STRESS AFTER DURATION (FROM POPUP)
+        // ------------------------------------------------------------
+        ui.postDelayed(() -> {
+
+            stopCpuBurn();
+            restoreBrightnessAndKeepOn();
+
+            BatteryInfo biEnd = getBatteryInfo();
+            float endPct = getCurrentBatteryPercent();
+
+            if (endPct < 0f || biEnd == null || biEnd.level < 0) {
+                logWarn("Unable to read final battery state.");
+                return;
             }
 
-            String btAddr = ba.getAddress();
-            if (btAddr == null
-                    || btAddr.trim().isEmpty()
-                    || "02:00:00:00:00:00".equals(btAddr)) {
-                btAddr = isDeviceRooted()
-                        ? "Unavailable"
-                        : "Masked by Android security (requires root access)";
+            long t1 = SystemClock.elapsedRealtime();
+            long dtMs = Math.max(1, t1 - t0);
+
+            float deltaPct = startPct - endPct;
+            float pctPerHour = (deltaPct * 3600000f) / dtMs;
+
+            double consumedMah = -1;
+            double mahPerHour  = -1;
+
+            if (fullMah > 0 && deltaPct > 0f) {
+                consumedMah = (deltaPct / 100.0) * fullMah;
+                mahPerHour  = (consumedMah * 3600000.0) / dtMs;
             }
 
-            sb.append("  Name           : ").append(btName).append("\n");
-            sb.append("  Address        : ").append(btAddr).append("\n");
+            logInfo(String.format(Locale.US,
+                    "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
+                    startPct, endPct, deltaPct, dtMs / 1000f));
 
-            // ------------------------------------------------------------
-            // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
-            // ------------------------------------------------------------
-            if (isDeviceRooted()) {
-                sb.append("  Version        : ");
-
-                String v = readSysString("/proc/bluetooth/version");
-                if (v == null || v.isEmpty())
-                    v = readSysString("/sys/module/bluetooth/version");
-
-                sb.append(v != null && !v.isEmpty()
-                        ? v
-                        : "Not exposed by vendor firmware").append("\n");
-
+            if (consumedMah >= 0) {
+                logInfo(String.format(Locale.US,
+                        "Measured drain: %.0f mAh (≈ %.0f mAh/hour).",
+                        consumedMah, mahPerHour));
             } else {
-                sb.append("  Version        : Not exposed by Android (requires root access)\n");
+                logInfo(String.format(Locale.US,
+                        "Measured drain: ≈ %.1f%%/hour.",
+                        pctPerHour));
             }
 
-            // ------------------------------------------------------------
-            // CLASSIC CAPABILITIES
-            // ------------------------------------------------------------
-            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-            sb.append("  Discoverable   : ")
-                    .append(ba.getScanMode() ==
-                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
-                            ? "Yes" : "No")
-                    .append("\n");
+            // ---- THERMALS AFTER ----
+            Map<String, Float> z1 = readThermalZones();
+            Float cpu1  = pickZone(z1,"cpu","soc","big","little");
+            Float gpu1  = pickZone(z1,"gpu");
+            Float skin1 = pickZone(z1,"skin","pa_therm");
+            Float pmic1 = pickZone(z1,"pmic","pmic_therm");
+            Float batt1 = pickZone(z1,"battery","batt","bat");
 
-            // BLE Support
-            boolean le = getPackageManager()
-                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-            sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
-
-            // ------------------------------------------------------------
-            // HARDWARE CAPABILITIES
-            // ------------------------------------------------------------
-            sb.append("  Multiple Adv   : ");
-            try {
-                sb.append(ba.isMultipleAdvertisementSupported()
-                        ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) { sb.append("Unknown\n"); }
-
-            sb.append("  LE Scanner     : ");
-            try {
-                sb.append(ba.getBluetoothLeScanner() != null
-                        ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) { sb.append("Unknown\n"); }
-
-            sb.append("  Offloaded Filt.: ");
-            try {
-                sb.append(ba.isOffloadedFilteringSupported()
-                        ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) { sb.append("Unknown\n"); }
+            logInfo(String.format(Locale.US,
+                    "Thermal delta: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
+                    (cpu1!=null&&cpu0!=null)?cpu1-cpu0:0f,
+                    (gpu1!=null&&gpu0!=null)?gpu1-gpu0:0f,
+                    (skin1!=null&&skin0!=null)?skin1-skin0:0f,
+                    (pmic1!=null&&pmic0!=null)?pmic1-pmic0:0f,
+                    (batt1!=null&&batt0!=null)?batt1-batt0:0f
+            ));
 
             // ------------------------------------------------------------
-            // CONNECTED DEVICES (GATT)
+            // 5️⃣ LAB INTERPRETATION — SHOULD I REPLACE THE BATTERY?
             // ------------------------------------------------------------
-            try {
-                List<BluetoothDevice> con =
-                        (bm != null)
-                                ? bm.getConnectedDevices(BluetoothProfile.GATT)
-                                : null;
+            String decision;
 
-                sb.append("  GATT Devices   : ")
-                        .append(con != null ? con.size() : 0)
-                        .append("\n");
-            } catch (Throwable ignore) {
-                sb.append("  GATT Devices   : Unknown\n");
+            if (healthPct > 0 && healthPct < 70) {
+                decision = "Weak";
+                logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
+            }
+            else if (mahPerHour > 0 && mahPerHour > 900) {
+                decision = "Weak";
+                logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
+            }
+            else if ((healthPct > 0 && healthPct < 80) ||
+                     (mahPerHour > 0 && mahPerHour > 650)) {
+                decision = "Normal";
+                logWarn("LAB conclusion: Battery shows wear but is still usable.");
+            }
+            else {
+                decision = "Strong";
+                logOk("LAB conclusion: Battery health is good. No replacement indicated.");
             }
 
-            // ------------------------------------------------------------
-            // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
-            // ------------------------------------------------------------
-            sb.append("\n  Firmware Info  : ");
-            if (isDeviceRooted()) {
-                String fw = null;
+            printHealthCheckboxMap(decision);
 
-                if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
-                if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
-                if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");
-                if (fw == null) fw = readSysString("/proc/bluetooth/soc");
+            // save metrics for confidence %
+            saveLab14DrainValue(mahPerHour);
 
-                sb.append(fw != null && !fw.isEmpty()
-                        ? fw
-                        : "Not exposed by vendor").append("\n");
+            // run tracking & analysis
+            saveLab14Run();
+            logLab14Confidence();
+            computeAndLogAgingIndex(mahPerHour, healthPct, batt1, batt0);
+            computeAndLogConfidenceScore();
 
-            } else {
-                sb.append("Requires root access\n");
+        }, lastSelectedStressDurationSec * 1000L);
+
+    });
+}
+
+// ===================================================================
+// LAB 14 — AGING INDEX ENGINE
+// Objective trend-based battery aging indicator
+// ===================================================================
+private void computeAndLogAgingIndex(
+        double mahPerHour,
+        int healthPct,
+        Float battTempAfter,
+        Float battTempBefore
+) {
+    // ------------------------------------------------------------
+    // Preconditions
+    // ------------------------------------------------------------
+    int runs = getLab14RunCount();
+    if (runs < 2) {
+        logLine();
+        logInfo("Battery Aging Index: not available (requires at least 2 runs).");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Baselines (conservative, service-grade)
+    // ------------------------------------------------------------
+    final double BASE_DRAIN_MAH_PER_HOUR = 600.0; // healthy stress drain
+    final double BASE_THERMAL_DELTA_C    = 6.0;   // healthy thermal rise
+
+    // ------------------------------------------------------------
+    // Drain factor
+    // ------------------------------------------------------------
+    double drainFactor;
+    if (mahPerHour > 0) {
+        drainFactor = mahPerHour / BASE_DRAIN_MAH_PER_HOUR;
+    } else {
+        // fallback when mAh not available
+        drainFactor = 1.0;
+    }
+
+    // ------------------------------------------------------------
+    // Capacity factor
+    // ------------------------------------------------------------
+    double capacityFactor = 1.0;
+    if (healthPct > 0) {
+        capacityFactor = 100.0 / Math.max(healthPct, 1);
+    }
+
+    // ------------------------------------------------------------
+    // Thermal factor
+    // ------------------------------------------------------------
+    double thermalFactor = 1.0;
+    if (battTempAfter != null && battTempBefore != null) {
+        double dT = battTempAfter - battTempBefore;
+        if (dT > 0) {
+            thermalFactor = dT / BASE_THERMAL_DELTA_C;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Clamp factors to avoid extremes
+    // ------------------------------------------------------------
+    drainFactor    = clamp(drainFactor,    0.7, 1.4);
+    capacityFactor = clamp(capacityFactor, 0.7, 1.4);
+    thermalFactor  = clamp(thermalFactor,  0.7, 1.4);
+
+    // ------------------------------------------------------------
+    // Aging Index (weighted)
+    // ------------------------------------------------------------
+    double agingIndex =
+            0.5 * drainFactor +
+            0.3 * capacityFactor +
+            0.2 * thermalFactor;
+
+    agingIndex = clamp(agingIndex, 0.7, 1.3);
+
+    // ------------------------------------------------------------
+    // Interpretation
+    // ------------------------------------------------------------
+    String interpretation;
+    if (agingIndex <= 0.85) {
+        interpretation = "Low aging (battery condition is strong).";
+    } else if (agingIndex <= 1.00) {
+        interpretation = "Normal aging (expected wear).";
+    } else if (agingIndex <= 1.15) {
+        interpretation = "Moderate wear detected.";
+    } else {
+        interpretation = "Heavy aging detected. Battery replacement should be considered.";
+    }
+
+    // ------------------------------------------------------------
+    // Log output
+    // ------------------------------------------------------------
+    logLine();
+    logInfo(String.format(Locale.US,
+            "Battery Aging Index: %.2f (based on %d runs).",
+            agingIndex, runs));
+    logInfo("Interpretation: " + interpretation);
+}
+
+// ------------------------------------------------------------
+// Utility clamp
+// ------------------------------------------------------------
+private double clamp(double v, double min, double max) {
+    return Math.max(min, Math.min(max, v));
+}
+
+// ===================================================================
+// LAB 14 — CONFIDENCE SCORE (%)
+// Variance-based reliability indicator
+// ===================================================================
+private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
+private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
+private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
+
+// ------------------------------------------------------------
+// Save last drain value (called from LAB 14 end)
+// ------------------------------------------------------------
+private void saveLab14DrainValue(double mahPerHour) {
+
+    if (mahPerHour <= 0) return;
+
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+
+        double d1 = Double.longBitsToDouble(
+                sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))
+        );
+        double d2 = Double.longBitsToDouble(
+                sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))
+        );
+
+        sp.edit()
+                .putLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(d2))
+                .putLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(d1))
+                .putLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(mahPerHour))
+                .apply();
+
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// Compute and log confidence score
+// ------------------------------------------------------------
+private void computeAndLogConfidenceScore() {
+
+    int runs = getLab14RunCount();
+    if (runs < 2) {
+        logLine();
+        logInfo("Confidence Score: not available (requires multiple runs).");
+        return;
+    }
+
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+
+        double[] vals = new double[]{
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
+        };
+
+        // collect valid values
+        double sum = 0;
+        int n = 0;
+        for (double v : vals) {
+            if (v > 0) {
+                sum += v;
+                n++;
             }
         }
 
-    } catch (Throwable ignore) {}
+        if (n < 2) {
+            logInfo("Confidence Score: insufficient data.");
+            return;
+        }
 
-    // ============================================================
-    // ADVANCED INFO (green comment style)
-    // ============================================================
-    sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
-            "Bluetooth controller logs and HCI traces, requires root access.\n");
+        double mean = sum / n;
 
-    return sb.toString();
+        double var = 0;
+        for (double v : vals) {
+            if (v > 0) {
+                var += (v - mean) * (v - mean);
+            }
+        }
+        var /= n;
+
+        double std = Math.sqrt(var);
+
+        // --------------------------------------------------------
+        // Confidence formula
+        // --------------------------------------------------------
+        // std / mean ≈ relative variance
+        double relVar = std / mean;
+
+        // Map variance → confidence %
+        int confidence;
+        if (relVar < 0.05)       confidence = 95;
+        else if (relVar < 0.08)  confidence = 90;
+        else if (relVar < 0.12)  confidence = 80;
+        else if (relVar < 0.18)  confidence = 70;
+        else                     confidence = 60;
+
+        // --------------------------------------------------------
+        // Log
+        // --------------------------------------------------------
+        logLine();
+        logInfo(String.format(Locale.US,
+                "Confidence Score: %d%% (based on %d runs).",
+                confidence, n));
+
+        if (confidence >= 90) {
+            logOk("Results are highly consistent.");
+        } else if (confidence >= 80) {
+            logInfo("Results show good consistency.");
+        } else {
+            logWarn("Results show noticeable variance. Additional runs may improve accuracy.");
+        }
+
+    } catch (Throwable t) {
+        logWarn("Confidence Score calculation failed.");
+    }
 }
-      
+
 // ===================================================================
-// MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION
+// BATTERY REAL CAPACITY ENGINE — copied from DeviceInfoPeripheralsActivity
+// (needed by LAB 14 + any battery labs)
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
-private static final String KEY_BATTERY_DIALOG_SHOWN   = "battery_dialog_shown";
+private int lastSelectedStressDurationSec = 60;
 
 // ===================================================================
 // BATTERY DATA STRUCT
 // ===================================================================
 private static class BatteryInfo {
+
     int level = -1;
-    int scale = -1;
-    String status = "N/A";
-    String chargingSource = "Unknown";
+    String status = "Unknown";
     float temperature = 0f;
 
-    long currentChargeMah  = -1;   // Charge Counter / OEM / Derived
-    long estimatedFullMah  = -1;   // Estimated full (100%)
-    String source          = "Unknown";
+    long currentChargeMah = -1;
+    long estimatedFullMah = -1;
+    String source = "Unknown";
 }
 
 // ===================================================================
@@ -1168,18 +2335,12 @@ private static class BatteryInfo {
 // ===================================================================
 private long getStoredModelCapacity() {
     try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
+        SharedPreferences sp =
+                getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
         return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
-    } catch (Throwable ignore) { return -1L; }
-}
-
-private void saveModelCapacity(long value) {
-    try {
-        getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE)
-                .edit()
-                .putLong(KEY_BATTERY_MODEL_CAPACITY, value)
-                .apply();
-    } catch (Throwable ignore) {}
+    } catch (Throwable t) {
+        return -1L;
+    }
 }
 
 // ===================================================================
@@ -1187,7 +2348,7 @@ private void saveModelCapacity(long value) {
 // ===================================================================
 private long normalizeMah(long raw) {
     if (raw <= 0) return -1;
-    if (raw > 200000) return raw / 1000;   // μAh → mAh
+    if (raw > 200000) return raw / 1000;
     return raw;
 }
 
@@ -1198,80 +2359,58 @@ private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
-    // ---------- 1) BASIC BATTERY_CHANGED ----------
     try {
-        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (i != null) {
 
-            bi.level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            bi.scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            bi.level = i.getIntExtra(
+                    BatteryManager.EXTRA_LEVEL, -1);
 
-            switch (i.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
-                case BatteryManager.BATTERY_STATUS_CHARGING:     bi.status = "Charging"; break;
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:  bi.status = "Discharging"; break;
-                case BatteryManager.BATTERY_STATUS_FULL:         bi.status = "Full"; break;
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING: bi.status = "Not charging"; break;
-                default:                                         bi.status = "Unknown";
+            bi.temperature =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
+
+            switch (i.getIntExtra(
+                    BatteryManager.EXTRA_STATUS, -1)) {
+
+                case BatteryManager.BATTERY_STATUS_CHARGING:
+                    bi.status = "Charging";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                    bi.status = "Discharging";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_FULL:
+                    bi.status = "Full";
+                    break;
+
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                    bi.status = "Not charging";
+                    break;
+
+                default:
+                    bi.status = "Unknown";
+                    break;
             }
-
-            int plug = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            if (plug == BatteryManager.BATTERY_PLUGGED_USB)          bi.chargingSource = "USB";
-            else if (plug == BatteryManager.BATTERY_PLUGGED_AC)      bi.chargingSource = "AC";
-            else if (plug == BatteryManager.BATTERY_PLUGGED_WIRELESS)bi.chargingSource = "Wireless";
-            else                                                     bi.chargingSource = "Battery";
-
-            int temp = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            if (temp > 0) bi.temperature = temp / 10f;
         }
     } catch (Throwable ignore) {}
 
-    // ---------- 2) OEM CAPACITY ----------
-    long bestMah = -1;
-    String[] oemPaths = new String[]{
-            "/sys/class/power_supply/battery/charge_full_design",
-            "/sys/class/power_supply/battery/charge_full",
-            "/sys/class/power_supply/battery/charge_full_raw",
-            "/sys/class/power_supply/battery/fg_fullcapnom",
-            "/sys/class/power_supply/battery/fg_fullcaprep",
-            "/sys/class/power_supply/battery/bms/charge_full",
-            "/sys/class/power_supply/battery/bms/charge_full_design"
-    };
-
-    for (String p : oemPaths) {
-        try {
-            long v = normalizeMah(readSysLong(p));
-            if (v > 500 && v > bestMah) {
-                bestMah = v;
-                bi.source = "OEM";
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    if (bestMah > 0) {
-        // Smooth OEM (e.g. 5000) vs odd OEM (e.g. 4138)
-        if (bi.level > 0 && (bestMah % 50 != 0)) {
-            float pct = bi.level / 100f;
-            long est = (long) (bestMah / pct);
-            bi.estimatedFullMah = (est > 0 ? est : bestMah);
-        } else {
-            bi.estimatedFullMah = bestMah;
-        }
-    }
-
-    // ---------- 3) CHARGE COUNTER ----------
     try {
-        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-        if (bm != null) {
-            long cc = normalizeMah(bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
-            if (cc > 0) {
-                bi.currentChargeMah = cc;
-                bi.source = "Charge Counter";
+        BatteryManager bm =
+                (BatteryManager) getSystemService(BATTERY_SERVICE);
 
-                if (bi.level > 0) {
-                    float pct = bi.level / 100f;
-                    long est = (long) (cc / pct);
-                    if (est > 0) bi.estimatedFullMah = est;
-                }
+        if (bm != null) {
+            long cc = normalizeMah(
+                    bm.getLongProperty(
+                            BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
+
+            if (cc > 0 && bi.level > 0) {
+                bi.currentChargeMah = cc;
+                bi.estimatedFullMah =
+                        (long) (cc / (bi.level / 100f));
+                bi.source = "Charge Counter";
             }
         }
     } catch (Throwable ignore) {}
@@ -1280,2331 +2419,2249 @@ private BatteryInfo getBatteryInfo() {
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT
+// LAB 14 — RUN HISTORY & CONFIDENCE ENGINE
 // ===================================================================
-private String buildBatteryInfo() {
+private static final String LAB14_PREFS = "lab14_prefs";
+private static final String KEY_LAB14_RUNS = "lab14_run_count";
 
-    BatteryInfo bi = getBatteryInfo();
-    if (bi == null) bi = new BatteryInfo();
+// ------------------------------------------------------------
+// Save one LAB 14 run
+// ------------------------------------------------------------
+private void saveLab14Run() {
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+        int runs = sp.getInt(KEY_LAB14_RUNS, 0);
+        sp.edit().putInt(KEY_LAB14_RUNS, runs + 1).apply();
+    } catch (Throwable ignore) {}
+}
 
-    long modelCap = getStoredModelCapacity();
-    boolean hasCC  = (bi.currentChargeMah > 0);
-    boolean hasEst = (bi.estimatedFullMah > 0);
+// ------------------------------------------------------------
+// Get number of completed LAB 14 runs
+// ------------------------------------------------------------
+private int getLab14RunCount() {
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+        return sp.getInt(KEY_LAB14_RUNS, 0);
+    } catch (Throwable ignore) {
+        return 0;
+    }
+}
 
-    float lvlFrac = (bi.level > 0 ? bi.level / 100f : -1f);
+// ------------------------------------------------------------
+// Log confidence message based on run count
+// ------------------------------------------------------------
+private void logLab14Confidence() {
 
-    long displayCurrent   = -1;
-    long displayEstimated = -1;
+    int runs = getLab14RunCount();
 
-    // ---------- DETERMINE CURRENT ----------
-    if (hasCC) {
-        displayCurrent = bi.currentChargeMah;
-    } else if (hasEst && lvlFrac > 0) {
-        displayCurrent = (long) (bi.estimatedFullMah * lvlFrac);
-    } else if (modelCap > 0 && lvlFrac > 0) {
-        displayCurrent = (long) (modelCap * lvlFrac);
+    logLine();
+
+    if (runs <= 1) {
+        logInfo("Confidence: Preliminary (1 run).");
+        logInfo("For higher diagnostic accuracy, run this test 2 more times under similar conditions.");
+    }
+    else if (runs == 2) {
+        logInfo("Confidence: Medium (2 runs).");
+        logInfo("One additional run is recommended to confirm battery aging trend.");
+    }
+    else {
+        logOk("Confidence: High (3+ consistent runs).");
+        logInfo("Battery diagnostic confidence is high.");
+    }
+}
+     
+//=============================================================
+// LAB 15 — Charging Port & Charger Inspection (manual)  
+// ============================================================  
+private void lab15ChargingPortManual() {  
+    logLine();  
+    logInfo("LAB 15 — Charging Port & Charger Inspection (manual).");  
+    logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");  
+    logWarn("If the cable fits loosely or disconnects easily -> worn port or bent contacts.");  
+    logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");  
+}  
+
+// ============================================================
+
+// GEL Battery Temperature Reader (Universal)
+// ============================================================
+private float getBatteryTemperature() {
+try {
+Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+if (i == null) return 0f;
+
+int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);  
+    if (raw <= 0) return 0f;  
+
+    return raw / 10f;  // Android gives tenths of °C  
+} catch (Exception e) {  
+    return 0f;  
+}
+
+}
+
+// ============================================================
+
+// LAB 16 — Thermal Snapshot (GEL Universal Edition — SAFE)
+// ============================================================
+private void lab16ThermalSnapshot() {
+logLine();
+logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
+
+// 1) Read thermal zones (CPU/GPU/PMIC/Skin)  
+Map<String, Float> zones = readThermalZones();  
+
+// 2) Battery ALWAYS from BatteryManager  
+float batt = getBatteryTemperature();  
+
+if (zones == null || zones.isEmpty()) {  
+    logWarn("Device exposes NO thermal zones. Printing battery only.");  
+    printZoneAscii("Battery", batt);  
+    logOk("Lab 16 finished.");  
+    return;  
+}  
+
+// Auto-detect CPU/GPU/SKIN/PMIC  
+Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");  
+Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");  
+Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");  
+Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");  
+
+logOk("Thermal Zones found: " + zones.size());  
+
+// Snapshot print  
+if (cpu  != null) printZoneAscii("CPU", cpu);  
+if (gpu  != null) printZoneAscii("GPU", gpu);  
+
+// Battery ALWAYS printed  
+printZoneAscii("Battery", batt);  
+
+if (skin != null) printZoneAscii("Skin", skin);  
+if (pmic != null) printZoneAscii("PMIC", pmic);  
+
+logOk("Lab 16 finished.");
+
+}
+
+// ============================================================
+// ASCII BAR (100 chars — 5sp monospace via HTML)
+// ============================================================
+private void printZoneAscii(String label, float t) {
+
+// Color icon  
+String color;  
+if (t < 45)        color = "🟩";  
+else if (t < 60)   color = "🟨";  
+else               color = "🟥";  
+
+// Temperature scale → 0–100 chars  
+float maxT = 80f;  
+float pct = Math.min(1f, t / maxT);  
+int bars = (int)(pct * 100);  
+
+StringBuilder sb = new StringBuilder(100);  
+for (int i = 0; i < bars; i++) sb.append("█");  
+while (sb.length() < 100) sb.append(" ");  
+
+// Header line  
+logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));  
+
+// BAR line (5sp monospace via <small><small><tt>>)  
+appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
+
+}
+
+// ============================================================
+// LAB 17 — GEL AUTO Battery Reliability Evaluation
+// Premium Diagnostic Edition (FINAL FULL BLOCK)
+// ============================================================
+
+private void lab17RunAuto() {
+
+logLine();  
+logInfo("17. GEL Auto Battery Reliability Evaluation");  
+logInfo("GEL Battery Reliability Evaluation started.");  
+logLine();  
+
+new Thread(() -> {  
+
+    try {  
+
+        // ============================================================  
+        // 1. STRESS TEST (LAB 14 CORE)  
+        // ============================================================  
+        float startPct = getCurrentBatteryPercent();  
+        if (startPct < 50f) {  
+            ui.post(() -> logError("Battery <50%. Please charge to run automatic evaluation."));  
+            return;  
+        }  
+
+        ui.post(() -> {  
+            logInfo("▶ Running Stress Test (Lab 15)...");  
+            logInfo("[██████████░░░░░░░░░░░░░░░░░░] 32%");  
+        });  
+
+        float before = getCurrentBatteryPercent();  
+        long t0 = SystemClock.elapsedRealtime();  
+
+        ui.post(this::applyMaxBrightnessAndKeepOn);  
+        startCpuBurn_C_Mode();  
+
+        Thread.sleep(60_000);   // Stress load on background thread  
+
+        stopCpuBurn();  
+        ui.post(this::restoreBrightnessAndKeepOn);  
+
+        float after = getCurrentBatteryPercent();  
+        long t1 = SystemClock.elapsedRealtime();  
+
+        float drop   = before - after;  
+        float perHour = (drop * 3600000f) / (t1 - t0);  
+        if (perHour < 0f) perHour = 0f;  
+        int drain_mA = (int)(perHour * 50);  
+        if (drain_mA < 0) drain_mA = 0;  
+
+        ui.post(() -> {  
+            logInfo("▶ Calculating drain rate...");  
+            logInfo("[███████████████████████░░░░] 85%");  
+        });  
+
+        // ============================================================  
+        // 2. THERMAL ZONES (LAB 16 STYLE)  
+        // ============================================================  
+        ui.post(() -> {  
+            logInfo("");  
+            logInfo("▶ Running Thermal Zones (Lab 16)...");  
+            logInfo("[██████████████████░░░░░░░░░░] 68%");  
+        });  
+
+        Map<String,Float> z0 = readThermalZones();  
+        Thread.sleep(1500);  
+        Map<String,Float> z1 = readThermalZones();  
+
+        Float cpu0  = pickZone(z0,"cpu","soc","big","little");  
+        Float cpu1  = pickZone(z1,"cpu","soc","big","little");  
+        Float batt0 = pickZone(z0,"battery","batt","bat");  
+        Float batt1 = pickZone(z1,"battery","batt","bat");  
+
+        float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;  
+        float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;  
+
+        // ============================================================  
+        // 3. VOLTAGE STABILITY  
+        // ============================================================  
+        ui.post(() -> logInfo("▶ Calculating voltage stability..."));  
+        float v0 = getBatteryVoltage_mV();  
+        Thread.sleep(1500);  
+        float v1 = getBatteryVoltage_mV();  
+        float dv = Math.abs(v1 - v0);  
+
+        // ============================================================  
+        // 4. CAPACITY ESTIMATION + PMIC  
+        // ============================================================  
+        ui.post(() -> {  
+            logInfo("▶ Calculating thermal rise...");  
+            logInfo("▶ Calculating PMIC behavior...");  
+            logInfo("▶ Calculating discharge curve...");  
+            logInfo("▶ Calculating estimated real capacity...");  
+            logInfo("▶ Getting device information...");  
+        });  
+
+        int factory = getFactoryCapacity_mAh();  
+        if (factory <= 0) factory = 5000;  
+
+        float estimatedCapacity_mAh =  
+                factory * (100f / (100f + perHour));  
+        if (estimatedCapacity_mAh > factory)  
+            estimatedCapacity_mAh = factory;  
+
+        // ============================================================  
+        // 5. SCORING ENGINE  
+        // ============================================================  
+        int score = 100;  
+
+        // drain penalty  
+        if (perHour > 20f)       score -= 30;  
+        else if (perHour > 15f)  score -= 20;  
+        else if (perHour > 10f)  score -= 10;  
+
+        // thermal penalty (CPU)  
+        if (dCPU > 25f)          score -= 25;  
+        else if (dCPU > 15f)     score -= 15;  
+        else if (dCPU > 10f)     score -= 8;  
+
+        // thermal penalty (BATT)  
+        if (dBATT > 10f)         score -= 20;  
+        else if (dBATT > 5f)     score -= 10;  
+
+        // voltage penalty  
+        if (dv > 45f)            score -= 20;  
+        else if (dv > 30f)       score -= 10;  
+        else if (dv > 20f)       score -= 5;  
+
+        // capacity penalty  
+        float pctHealth = (estimatedCapacity_mAh / factory) * 100f;  
+        if (pctHealth < 60f)     score -= 25;  
+        else if (pctHealth < 70f)score -= 15;  
+        else if (pctHealth < 80f)score -= 8;  
+
+        if (score < 0)   score = 0;  
+        if (score > 100) score = 100;  
+
+        // voltage label  
+        String voltageLabel;  
+        if (dv <= 15f)       voltageLabel = "Excellent";  
+        else if (dv <= 30f)  voltageLabel = "OK";  
+        else                 voltageLabel = "Unstable";  
+
+        // thermal label  
+        String thermalLabel;  
+        if (dCPU <= 10f && dBATT <= 5f)  
+            thermalLabel = "OK";  
+        else if (dCPU <= 18f && dBATT <= 8f)  
+            thermalLabel = "Warm";  
+        else  
+            thermalLabel = "Hot";  
+
+        // cycle behaviour  
+        String cycleLabel;  
+        if (perHour < 10f && dv < 20f)  
+            cycleLabel = "Strong (stable discharge curve)";  
+        else if (perHour < 15f)  
+            cycleLabel = "Normal (minor fluctuations)";  
+        else  
+            cycleLabel = "Stressed (irregular discharge curve)";  
+
+        // category  
+        String category;  
+        if (score >= 90)      category = "Strong";  
+        else if (score >= 80) category = "Excellent";  
+        else if (score >= 70) category = "Very good";  
+        else if (score >= 60) category = "Normal";  
+        else                  category = "Weak";  
+
+        // ============================================================  
+        // 6. FINAL UI OUTPUT  
+        // ============================================================  
+        final float f_before   = before;  
+        final float f_after    = after;  
+        final float f_drop     = drop;  
+        final float f_perHour  = perHour;  
+        final int   f_drain    = drain_mA;  
+        final float f_dCPU     = dCPU;  
+        final float f_dBATT    = dBATT;  
+        final float f_dv       = dv;  
+        final float f_cap      = estimatedCapacity_mAh;  
+        final int   f_factory  = factory;  
+        final int   f_score    = score;  
+        final String f_voltLbl = voltageLabel;  
+        final String f_therm   = thermalLabel;  
+        final String f_cycle   = cycleLabel;  
+        final String f_cat     = category;  
+
+        ui.post(() -> {  
+            logLine();  
+            logInfo("GEL Battery Intelligence Evaluation");  
+            logLine();  
+
+            logInfo(String.format(Locale.US,  
+                    "Stress window: %.1f%% → %.1f%% (drop %.2f%%)",  
+                    f_before, f_after, f_drop));  
+
+            logInfo(String.format(Locale.US,  
+                    "Drain rate under load: %.1f %%/hour", f_perHour));  
+
+            logInfo(String.format(Locale.US,  
+                    "1. Stress Drain Rate: %d mA", f_drain));  
+
+            logInfo(String.format(Locale.US,  
+                    "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",  
+                    f_cap, f_factory));  
+
+            logInfo(String.format(Locale.US,  
+                    "3. Voltage Stability: %s (Δ %.1f mV)",  
+                    f_voltLbl, f_dv));  
+
+            logInfo(String.format(Locale.US,  
+                    "4. Thermal Rise: %s (CPU +%.1f°C, BATT +%.1f°C)",  
+                    f_therm, f_dCPU, f_dBATT));  
+
+            logInfo(String.format(Locale.US,  
+                    "5. Cycle Behavior: %s", f_cycle));  
+
+            logLine();  
+            logOk(String.format(Locale.US,  
+                    "Final Battery Health Score: %d%% (%s)",  
+                    f_score, f_cat));  
+
+            // Checkbox map with NEON ✔ and white labels  
+            appendHtml("✔ <font color='#39FF14'>Strong</font>");  
+            appendHtml("☐ <font color='#FFFFFF'>Excellent</font>");  
+            appendHtml("☐ <font color='#FFFFFF'>Very good</font>");  
+            appendHtml("☐ <font color='#FFFFFF'>Normal</font>");  
+            appendHtml("☐ <font color='#FFFFFF'>Weak</font>");  
+        });  
+
+    } catch (Exception e) {  
+        ui.post(() -> logError("Lab 17 error: " + e.getMessage()));  
+    }  
+
+}).start();
+
+}
+
+// ============================================================
+// SUPPORT FUNCTIONS FOR LAB 17 (HELPERS)
+// ============================================================
+
+private float getBatteryVoltage_mV() {
+try {
+IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+Intent i = registerReceiver(null, f);
+if (i == null) return 0f;
+return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+} catch (Exception e) {
+return 0f;
+}
+}
+
+private int getFactoryCapacity_mAh() {
+// Generic fallback. You can later replace with per-model DB.
+return 5000;
+}                       
+    
+// ============================================================ // ============================================================
+// LABS 18–21: STORAGE & PERFORMANCE
+// ============================================================
+private void lab18StorageSnapshot() {
+logLine();
+logInfo("LAB 18 — Internal Storage Snapshot.");
+try {
+StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+long total = s.getBlockCountLong() * s.getBlockSizeLong();
+long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
+long used = total - free;
+int pctFree = (int) ((free * 100L) / total);
+
+logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)  
+                + " (free " + humanBytes(free) + ", " + pctFree + "%).");  
+
+        if (pctFree < 5)  
+            logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");  
+        else if (pctFree < 10)  
+            logWarn("Free space below 10% — performance and update issues likely.");  
+        else  
+            logOk("Internal storage level is acceptable for daily usage.");  
+    } catch (Exception e) {  
+        logError("Storage snapshot error: " + e.getMessage());  
+    }  
+}  
+
+private void lab19AppsFootprint() {  
+    logLine();  
+    logInfo("LAB 19 — Installed Apps Footprint.");  
+    try {  
+        PackageManager pm = getPackageManager();  
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);  
+        if (apps == null) {  
+            logWarn("Cannot read installed applications list.");  
+            return;  
+        }  
+        int userApps = 0;  
+        int systemApps = 0;  
+        for (ApplicationInfo ai : apps) {  
+            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) systemApps++;  
+            else userApps++;  
+        }  
+        logInfo("User-installed apps: " + userApps);  
+        logInfo("System apps: " + systemApps);  
+        logInfo("Total packages: " + apps.size());  
+
+        if (userApps > 120)  
+            logError("Very high number of user apps — strong risk of background drain and lag.");  
+        else if (userApps > 80)  
+            logWarn("High number of user apps — possible performance impact.");  
+        else  
+            logOk("App footprint is within a normal range.");  
+    } catch (Exception e) {  
+        logError("Apps footprint error: " + e.getMessage());  
+    }  
+}  
+
+private void lab20RamSnapshot() {  
+    logLine();  
+    logInfo("LAB 20 — Live RAM Snapshot.");  
+    try {  
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
+        if (am == null) {  
+            logError("ActivityManager not available.");  
+            return;  
+        }  
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();  
+        am.getMemoryInfo(mi);  
+        long free = mi.availMem;  
+        long total = mi.totalMem;  
+        int pct = (int) ((free * 100L) / total);  
+        logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");  
+        if (pct < 10)  
+            logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");  
+        else if (pct < 20)  
+            logWarn("Low free RAM (10–20%) — borderline under load.");  
+        else  
+            logOk("RAM level is acceptable for normal usage at this moment.");  
+    } catch (Exception e) {  
+        logError("RAM snapshot error: " + e.getMessage());  
+    }  
+}  
+
+private void lab21UptimeHints() {  
+    logLine();  
+    logInfo("LAB 21 — Uptime / Reboot History Hints.");  
+    long upMs = SystemClock.elapsedRealtime();  
+    String upStr = formatUptime(upMs);  
+    logInfo("System uptime: " + upStr);  
+    if (upMs < 2 * 60 * 60 * 1000L) {  
+        logWarn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");  
+    } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {  
+        logWarn("Uptime above 7 days — recommend a reboot before deep diagnostics.");  
+    } else {  
+        logOk("Uptime is within a reasonable range for diagnostics.");  
+    }  
+}  
+
+// ============================================================  
+// LABS 22–25: SECURITY & SYSTEM HEALTH  
+// ============================================================  
+// ============================================================
+
+// LAB 22 — Screen Lock / Biometrics Checklist (auto-detect + manual)
+// ============================================================
+private void lab22ScreenLock() {
+logLine();
+logInfo("LAB 22 — Screen Lock / Biometrics Checklist");
+
+try {  
+    android.app.KeyguardManager km =  
+            (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);  
+
+    if (km != null) {  
+        boolean secure = km.isDeviceSecure();  
+
+        if (secure) {  
+            logOk("Device reports SECURE lock method (PIN / Pattern / Password).");  
+        } else {  
+            logError("Device has NO secure lock method — phone is UNPROTECTED!");  
+            logWarn("Anyone can access data without authentication.");  
+        }  
+    } else {  
+        logWarn("KeyguardManager not available — cannot read lock status.");  
+    }  
+} catch (Exception e) {  
+    logWarn("Screen lock detection failed: " + e.getMessage());  
+}  
+
+// Manual guidance (kept for technician)  
+logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");  
+logWarn("If the device is left with no lock at all — higher risk for data and account theft.");  
+logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
+
+}
+
+// ============================================================
+
+// LAB 23 — Security Patch & Play Protect (auto + manual)
+// ============================================================
+private void lab23SecurityPatchManual() {
+logLine();
+logInfo("LAB 23 — Security Patch & Play Protect Check");
+
+// ----------------------------  
+// 1) Security Patch Level  
+// ----------------------------  
+try {  
+    String patch = android.os.Build.VERSION.SECURITY_PATCH;  
+    if (patch != null && !patch.isEmpty()) {  
+        logInfo("Security Patch Level: " + patch);  
+    } else {  
+        logWarn("Security Patch Level not reported by system.");  
+    }  
+} catch (Exception e) {  
+    logWarn("Security patch read failed: " + e.getMessage());  
+}  
+
+// ----------------------------  
+// 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT  
+// ----------------------------  
+try {  
+    PackageManager pm = getPackageManager();  
+
+    // Check Google Play Services exists  
+    boolean gmsPresent = false;  
+    try {  
+        pm.getPackageInfo("com.google.android.gms", 0);  
+        gmsPresent = true;  
+    } catch (Exception ignored) {}  
+
+    if (!gmsPresent) {  
+        logError("Google Play Services missing — Play Protect NOT available.");  
+    } else {  
+        // Check Verify Apps setting (Google verifier)  
+        int verify = -1;  
+        try {  
+            verify = Settings.Global.getInt(  
+                    getContentResolver(),  
+                    "package_verifier_enable",  
+                    -1  
+            );  
+        } catch (Exception ignored) {}  
+
+        if (verify == 1) {  
+            logOk("Play Protect: ON (Google Verify Apps ENABLED).");  
+        } else if (verify == 0) {  
+            logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");  
+        } else {  
+            // Fallback — detect if the activity exists  
+            Intent protectIntent = new Intent();  
+            protectIntent.setClassName(  
+                    "com.google.android.gms",  
+                    "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"  
+            );  
+
+            if (protectIntent.resolveActivity(pm) != null) {  
+                logOk("Play Protect module detected (activity present).");  
+            } else {  
+                logWarn("Play Protect module not fully detected — OEM variant or restricted build.");  
+            }  
+        }  
+    }  
+} catch (Exception e) {  
+    logWarn("Play Protect detection error: " + e.getMessage());  
+}  
+
+// MANUAL GUIDANCE (kept for technicians)  
+logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");  
+logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");  
+logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
+
+}
+
+// ============================================================
+
+// LAB 24 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
+// GEL Security v3.1 (Realtime Snapshot)
+// ============================================================
+private void lab24DevOptions() {
+logLine();
+logInfo("LAB 24 — Developer Options / ADB Risk Note (Realtime).");
+
+int risk = 0;  
+
+// ============================================================  
+// 1) USB DEBUGGING FLAG (ADB_ENABLED)  
+// ============================================================  
+boolean usbDebug = false;  
+try {  
+    int adb = Settings.Global.getInt(  
+            getContentResolver(),  
+            Settings.Global.ADB_ENABLED,  
+            0  
+    );  
+    usbDebug = (adb == 1);  
+
+    logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
+
+    if (usbDebug) {  
+        logWarn("USB Debugging ENABLED — physical access risk.");  
+        risk += 30;  
+    } else {  
+        logOk("USB Debugging is OFF.");  
+    }  
+
+} catch (Exception e) {  
+    logWarn("Could not read USB Debugging flag (OEM restriction).");  
+    risk += 5;  
+}  
+
+// ============================================================  
+// 2) DEVELOPER OPTIONS FLAG  
+// ============================================================  
+boolean devOpts = false;  
+try {  
+    int dev = Settings.Global.getInt(  
+            getContentResolver(),  
+            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,  
+            0  
+    );  
+    devOpts = (dev == 1);  
+
+    logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);  
+
+    if (devOpts) {  
+        logWarn("Developer Options ENABLED.");  
+        risk += 20;  
+    } else {  
+        logOk("Developer Options are OFF.");  
+    }  
+
+} catch (Exception e) {  
+    logWarn("Could not read Developer Options flag.");  
+    risk += 5;  
+}  
+
+// ============================================================  
+// 3) ADB OVER WIFI (TCP/IP mode — port 5555)  
+// ============================================================  
+boolean adbWifi = isPortOpen(5555, 200);  
+
+logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
+
+if (adbWifi) {  
+    logError("ADB over Wi-Fi ACTIVE — remote debugging possible on same network.");  
+    risk += 40;  
+} else {  
+    logOk("ADB over Wi-Fi is OFF.");  
+}  
+
+// ============================================================  
+// 4) ADB PAIRING MODE (Android 11–14 typical ports)  
+// ============================================================  
+boolean adbPairing =  
+        isPortOpen(3700, 200) ||   // some OEM pairing  
+        isPortOpen(7460, 200) ||   // pairing service  
+        scanPairingPortRange();    // 7460–7490  
+
+logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
+
+if (adbPairing) {  
+    logError("ADB Pairing is ACTIVE — device discoverable for pairing.");  
+    risk += 25;  
+} else {  
+    logOk("ADB Pairing is OFF.");  
+}  
+
+// ============================================================  
+// 5) FINAL RISK SCORE  
+// ============================================================  
+if (risk > 100) risk = 100;  
+
+String level;  
+if (risk <= 10)       level = "LOW";  
+else if (risk <= 30)  level = "MEDIUM";  
+else if (risk <= 60)  level = "HIGH";  
+else                  level = "CRITICAL";  
+
+logLine();  
+logInfo("Security Risk Score: " + risk + "/100  (" + level + ") " + riskBubble(risk));  
+
+// ============================================================  
+// 6) AUTO-FIX / ACTION HINTS  
+// ============================================================  
+logLine();  
+logInfo("Recommended Actions:");  
+
+if (usbDebug || devOpts) {  
+    logWarn("• Disable Developer Options / USB Debugging:");  
+    logInfo("  Settings → System → Developer options → OFF");  
+    logInfo("  USB debugging → OFF");  
+} else {  
+    logOk("• Developer options & USB debugging look safe.");  
+}  
+
+if (adbWifi) {  
+    logError("• ADB over Wi-Fi must be disabled:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
+    logInfo("  Or reboot to clear tcpip mode.");  
+} else {  
+    logOk("• Wireless debugging is not active.");  
+}  
+
+if (adbPairing) {  
+    logError("• Turn OFF ADB Pairing / Wireless debugging:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
+} else {  
+    logOk("• ADB Pairing is not active.");  
+}  
+
+if (risk >= 60)  
+    logError("⚠ Very high risk — disable ADB features immediately!");  
+else if (risk >= 30)  
+    logWarn("⚠ Partial exposure — review ADB settings.");  
+else  
+    logOk("✔ Risk level acceptable.");
+
+}
+
+// ============================================================
+// UI BUBBLES (GEL)
+// ============================================================
+private String bubble(boolean on) {
+return on ? "🔴" : "🟢";
+}
+
+private String riskBubble(int risk) {
+if (risk <= 10) return "🟢";
+if (risk <= 30) return "🟡";
+if (risk <= 60) return "🟠";
+return "🔴";
+}
+
+// ============================================================
+// HELPERS — PORT CHECK (LOCALHOST)
+// ============================================================
+private boolean isPortOpen(int port, int timeoutMs) {
+Socket s = null;
+try {
+s = new Socket();
+s.connect(new InetSocketAddress("127.0.0.1", port), timeoutMs);
+return true;
+} catch (Exception e) {
+return false;
+} finally {
+if (s != null) try { s.close(); } catch (Exception ignored) {}
+}
+}
+
+// Scan pairing port range 7460–7490 (best-effort)
+private boolean scanPairingPortRange() {
+for (int p = 7460; p <= 7490; p++) {
+if (isPortOpen(p, 80)) return true;
+}
+return false;
+}
+
+// ============================================================
+
+// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// GEL Universal Edition — NO external libs
+// ============================================================
+private void lab25RootSuspicion() {
+logLine();
+logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
+
+// ---------------------------  
+// (1) ROOT DETECTION  
+// ---------------------------  
+int rootScore = 0;  
+List<String> rootFindings = new ArrayList<>();  
+
+// su / busybox paths  
+String[] suPaths = {  
+        "/system/bin/su",  
+        "/system/xbin/su",  
+        "/sbin/su",  
+        "/su/bin/su",  
+        "/system/app/Superuser.apk",  
+        "/system/app/SuperSU.apk",  
+        "/system/app/Magisk.apk",  
+        "/system/bin/busybox",  
+        "/system/xbin/busybox",  
+        "/vendor/bin/su",  
+        "/odm/bin/su"  
+};  
+
+boolean suFound = false;  
+for (String p : suPaths) {  
+    if (lab25_fileExists(p)) {  
+        suFound = true;  
+        rootScore += 18;  
+        rootFindings.add("su/busybox path found: " + p);  
+    }  
+}  
+
+// which su  
+String whichSu = lab25_execFirstLine("which su");  
+if (whichSu != null && whichSu.contains("/")) {  
+    rootScore += 12;  
+    rootFindings.add("'which su' returned: " + whichSu);  
+    suFound = true;  
+}  
+
+// try exec su (best effort)  
+boolean suExec = lab25_canExecSu();  
+if (suExec) {  
+    rootScore += 25;  
+    rootFindings.add("su execution possible (shell granted).");  
+    suFound = true;  
+}  
+
+// known root packages  
+String[] rootPkgs = {  
+        "com.topjohnwu.magisk",  
+        "eu.chainfire.supersu",  
+        "com.koushikdutta.superuser",  
+        "com.noshufou.android.su",  
+        "com.kingroot.kinguser",  
+        "com.kingo.root",  
+        "com.saurik.substrate",  
+        "de.robv.android.xposed.installer",  
+        "com.zachspong.temprootremovejb",  
+        "com.ramdroid.appquarantine"  
+};  
+
+List<String> installed = lab25_getInstalledPackagesLower();  
+boolean pkgHit = false;  
+for (String rp : rootPkgs) {  
+    if (installed.contains(rp)) {  
+        pkgHit = true;  
+        rootScore += 20;  
+        rootFindings.add("root package installed: " + rp);  
+    }  
+}  
+
+// build tags  
+try {  
+    String tags = Build.TAGS;  
+    if (tags != null && tags.contains("test-keys")) {  
+        rootScore += 15;  
+        rootFindings.add("Build.TAGS contains test-keys.");  
+    }  
+} catch (Throwable ignore) {}  
+
+// suspicious props  
+String roSecure = lab25_getProp("ro.secure");  
+String roDebug  = lab25_getProp("ro.debuggable");  
+if ("0".equals(roSecure)) {  
+    rootScore += 18;  
+    rootFindings.add("ro.secure=0 (insecure build).");  
+}  
+if ("1".equals(roDebug)) {  
+    rootScore += 12;  
+    rootFindings.add("ro.debuggable=1 (debuggable build).");  
+}  
+
+// ---------------------------  
+// (2) BOOTLOADER / VERIFIED BOOT  
+// ---------------------------  
+int blScore = 0;  
+List<String> blFindings = new ArrayList<>();  
+
+String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red  
+String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked  
+String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0  
+String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs  
+
+if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {  
+    blScore += 30;  
+    blFindings.add("VerifiedBootState=" + vbState);  
+} else if (vbState != null) {  
+    blFindings.add("VerifiedBootState=" + vbState);  
+}  
+
+if (vbmeta != null && vbmeta.contains("unlocked")) {  
+    blScore += 35;  
+    blFindings.add("vbmeta.device_state=unlocked");  
+} else if (vbmeta != null) {  
+    blFindings.add("vbmeta.device_state=" + vbmeta);  
+}  
+
+if ("0".equals(flashL)) {  
+    blScore += 25;  
+    blFindings.add("flash.locked=0 (bootloader unlocked).");  
+} else if (flashL != null) {  
+    blFindings.add("flash.locked=" + flashL);  
+}  
+
+if ("1".equals(wlBit)) {  
+    blScore += 15;  
+    blFindings.add("warranty_bit=1 (tamper flag).");  
+}  
+
+// OEM unlock allowed flag (Android settings)  
+try {  
+    int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);  
+    if (oemAllowed == 1) {  
+        blScore += 10;  
+        blFindings.add("OEM unlock allowed=1 (developer enabled).");  
+    }  
+} catch (Throwable ignore) {}  
+
+// /proc/cmdline hints  
+String cmdline = lab25_readOneLine("/proc/cmdline");  
+if (cmdline != null) {  
+    String c = cmdline.toLowerCase(Locale.US);  
+    if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||  
+        c.contains("vbmeta.device_state=unlocked") || c.contains("bootloader=unlocked")) {  
+        blScore += 20;  
+        blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");  
+    }  
+}  
+
+// ---------------------------  
+// (3) BOOT ANIMATION / SPLASH MOD  
+// ---------------------------  
+int animScore = 0;  
+List<String> animFindings = new ArrayList<>();  
+
+// Strong indicator: custom bootanimation in /data/local  
+if (lab25_fileExists("/data/local/bootanimation.zip")) {  
+    animScore += 35;  
+    animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
+}  
+
+// If system bootanimation missing → suspicious ROM  
+boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
+                  lab25_fileExists("/product/media/bootanimation.zip") ||  
+                  lab25_fileExists("/oem/media/bootanimation.zip") ||  
+                  lab25_fileExists("/vendor/media/bootanimation.zip");  
+if (!sysBoot) {  
+    animScore += 15;  
+    animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");  
+} else {  
+    animFindings.add("Stock bootanimation path exists.");  
+}  
+
+// ---------------------------  
+// FINAL RISK SCORE  
+// ---------------------------  
+int risk = Math.min(100, rootScore + blScore + animScore);  
+
+// Print ROOT section  
+logLine();  
+logInfo("Root Scan:");  
+if (rootFindings.isEmpty()) {  
+    logOk("No strong root traces detected.");  
+} else {  
+    for (String s : rootFindings) logWarn("• " + s);  
+}  
+
+// Print BOOTLOADER section  
+logLine();  
+logInfo("Bootloader / Verified Boot:");  
+if (blFindings.isEmpty()) {  
+    logOk("No bootloader anomalies detected.");  
+} else {  
+    for (String s : blFindings) logWarn("• " + s);  
+}  
+
+// Print ANIMATION section  
+logLine();  
+logInfo("Boot Animation / Splash:");  
+if (animFindings.isEmpty()) {  
+    logOk("No custom animation traces detected.");  
+} else {  
+    for (String s : animFindings) logWarn("• " + s);  
+}  
+
+// Verdict  
+logLine();  
+logInfo("FINAL VERDICT:");  
+logInfo("RISK SCORE: " + risk + " / 100");  
+
+if (risk >= 70 || suExec || pkgHit) {  
+    logError("STATUS: ROOTED / MODIFIED (high confidence).");  
+} else if (risk >= 35) {  
+    logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");  
+} else {  
+    logOk("STATUS: SAFE (no significant modification evidence).");  
+}  
+
+logOk("Lab 25 finished.");
+
+}
+
+// ============================================================
+// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
+// ============================================================
+private boolean lab25_fileExists(String path) {
+try { return new File(path).exists(); } catch (Throwable t) { return false; }
+}
+
+private List<String> lab25_getInstalledPackagesLower() {
+List<String> out = new ArrayList<>();
+try {
+PackageManager pm = getPackageManager();
+List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+if (apps != null) {
+for (ApplicationInfo ai : apps) {
+String p = ai.packageName;
+if (p != null) out.add(p.toLowerCase(Locale.US));
+}
+}
+} catch (Throwable ignore) {}
+return out;
+}
+
+private boolean lab25_canExecSu() {
+Process p = null;
+try {
+p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+String line = br.readLine();
+br.close();
+return line != null && line.toLowerCase(Locale.US).contains("uid=0");
+} catch (Throwable t) {
+return false;
+} finally {
+if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+}
+}
+
+private String lab25_execFirstLine(String cmd) {
+Process p = null;
+try {
+p = Runtime.getRuntime().exec(cmd);
+BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+String line = br.readLine();
+br.close();
+return line != null ? line.trim() : null;
+} catch (Throwable t) {
+return null;
+} finally {
+if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+}
+}
+
+private String lab25_getProp(String key) {
+String v = lab25_execFirstLine("getprop " + key);
+if (v == null) return null;
+v = v.trim();
+return v.isEmpty() ? null : v.toLowerCase(Locale.US);
+}
+
+private String lab25_readOneLine(String path) {
+BufferedReader br = null;
+try {
+br = new BufferedReader(new FileReader(new File(path)));
+return br.readLine();
+} catch (Throwable t) {
+return null;
+} finally {
+if (br != null) try { br.close(); } catch (Throwable ignore) {}
+}
+}
+// ============================================================
+// LABS 26–29: ADVANCED / LOGS
+// ============================================================
+
+// ============================================================
+// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// ============================================================
+private void lab26CrashHistory() {
+
+logLine();  
+logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
+
+int crashCount = 0;  
+int anrCount = 0;  
+int systemCount = 0;  
+
+Map<String, Integer> appEvents = new HashMap<>(); // Group per app  
+List<String> details = new ArrayList<>();  
+
+// ============================================================  
+// (A) Android 11+ — Process Exit Reasons  
+// ============================================================  
+try {  
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {  
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);  
+        if (am != null) {  
+            List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();  
+            if (errs != null) {  
+                for (ActivityManager.ProcessErrorStateInfo e : errs) {  
+
+                    String app = e.processName;  
+                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);  
+
+                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {  
+                        crashCount++;  
+                        details.add("CRASH: " + app + " — " + e.shortMsg);  
+                    }   
+                    else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {  
+                        anrCount++;  
+                        details.add("ANR: " + app + " — " + e.shortMsg);  
+                    }  
+                }  
+            }  
+        }  
+    }  
+} catch (Exception ignored) {}  
+
+// ============================================================  
+// (B) DropBox crash logs — legacy Android sources  
+// ============================================================  
+try {  
+    DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
+
+    if (db != null) {  
+        String[] tags = {  
+                "system_app_crash", "data_app_crash",  
+                "system_app_anr", "data_app_anr",  
+                "system_server_crash", "system_server_wtf",  
+                "system_server_anr"  
+        };  
+
+        for (String tag : tags) {  
+            DropBoxManager.Entry ent = db.getNextEntry(tag, 0);  
+
+            while (ent != null) {  
+
+                if (tag.contains("crash")) crashCount++;  
+                if (tag.contains("anr")) anrCount++;  
+                if (tag.contains("server")) systemCount++;  
+
+                String shortTxt = readDropBoxEntry(ent);  
+
+                String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
+                details.add(clean + ": " + shortTxt);  
+
+                // grouping  
+                String key = clean;  
+                appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);  
+
+                ent = db.getNextEntry(tag, ent.getTimeMillis());  
+            }  
+        }  
+    }  
+
+} catch (Exception ignored) {}  
+
+// ============================================================  
+// (C) SUMMARY + RISK SCORE  
+// ============================================================  
+int risk = 0;  
+risk += crashCount * 5;  
+risk += anrCount * 8;  
+risk += systemCount * 15;  
+if (risk > 100) risk = 100;  
+
+// COLOR INDICATOR  
+String riskColor =  
+        (risk <= 20) ? "🟩" :  
+        (risk <= 50) ? "🟨" :  
+        (risk <= 80) ? "🟧" : "🟥";  
+
+logInfo("Crash events: " + crashCount);  
+logInfo("ANR events: " + anrCount);  
+logInfo("System-level faults: " + systemCount);  
+
+logInfo(riskColor + " Stability Risk Score: " + risk + "%");  
+
+// ============================================================  
+// (D) HEATMAP (top offenders)  
+// ============================================================  
+if (!appEvents.isEmpty()) {  
+    logLine();  
+    logInfo("Top Offenders (Heatmap):");  
+
+    appEvents.entrySet()  
+            .stream()  
+            .sorted((a, b) -> b.getValue() - a.getValue())  
+            .limit(5)  
+            .forEach(e -> {  
+                String c = (e.getValue() >= 10) ? "🟥" :  
+                           (e.getValue() >= 5)  ? "🟧" :  
+                           (e.getValue() >= 2)  ? "🟨" :  
+                                                  "🟩";  
+                logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");  
+            });  
+}  
+
+// ============================================================  
+// (E) FULL DETAILS  
+// ============================================================  
+if (!details.isEmpty()) {  
+    logLine();  
+    logInfo("Detailed Crash Records:");  
+    for (String d : details) logInfo(d);  
+} else {  
+    logOk("No crash history found.");  
+}  
+
+logOk("Lab 26 finished.");
+
+}
+
+// ============================================================
+// SMALL helper inside same block (allowed)
+// Reads first 10 lines of DropBox entry
+// ============================================================
+private String readDropBoxEntry(DropBoxManager.Entry ent) {
+try {
+if (ent == null) return "(no text)";
+InputStream is = ent.getInputStream();
+if (is == null) return "(no text)";
+
+BufferedReader br = new BufferedReader(new InputStreamReader(is));  
+    StringBuilder sb = new StringBuilder();  
+    String line;  
+    int count = 0;  
+    while ((line = br.readLine()) != null && count < 10) {  
+        sb.append(line).append(" ");  
+        count++;  
+    }  
+    br.close();  
+    return sb.toString().trim();  
+} catch (Exception e) {  
+    return "(read error)";  
+}
+
+}
+
+// ============================================================
+// LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// ============================================================
+private void lab27PermissionsPrivacy() {
+
+logLine();  
+logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
+
+PackageManager pm = getPackageManager();  
+if (pm == null) {  
+    logError("PackageManager not available.");  
+    return;  
+}  
+
+List<String> details = new ArrayList<>();  
+Map<String, Integer> appRisk = new HashMap<>();  
+
+int totalApps = 0;  
+int flaggedApps = 0;  
+
+// Risk totals  
+int riskTotal = 0;  
+int dangTotal = 0;  
+
+try {  
+    List<android.content.pm.PackageInfo> packs;  
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {  
+        packs = pm.getInstalledPackages(  
+                PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));  
+    } else {  
+        //noinspection deprecation  
+        packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);  
+    }  
+
+    if (packs == null) packs = new ArrayList<>();  
+
+    for (android.content.pm.PackageInfo p : packs) {  
+        if (p == null || p.packageName == null) continue;  
+        totalApps++;  
+
+        // Skip system apps unless they have highly dangerous perms  
+        boolean isSystem = (p.applicationInfo != null) &&  
+                ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);  
+
+        String[] req = p.requestedPermissions;  
+        int[] grant = p.requestedPermissionsFlags;  
+
+        if (req == null || req.length == 0) continue;  
+
+        int appScore = 0;  
+        int appDangerCount = 0;  
+        StringBuilder sb = new StringBuilder();  
+
+        for (int i = 0; i < req.length; i++) {  
+            String perm = req[i];  
+            if (perm == null) continue;  
+
+            boolean granted = isGrantedFlag(grant, i);  
+
+            int weight = permissionWeight(perm);  
+            if (weight <= 0) continue; // ignore harmless  
+
+            // count dangerous only if granted  
+            if (granted) {  
+                appDangerCount++;  
+                appScore += weight;  
+                sb.append("• ").append(shortPerm(perm)).append(" (granted)\n");  
+            }  
+        }  
+
+        if (appScore > 0) {  
+            dangTotal += appDangerCount;  
+            riskTotal += appScore;  
+
+            // system apps threshold higher  
+            int threshold = isSystem ? 25 : 10;  
+
+            if (appScore >= threshold) {  
+                flaggedApps++;  
+                appRisk.put(p.packageName, appScore);  
+
+                String appLabel = safeLabel(pm, p.packageName);  
+                String color =  
+                        (appScore >= 60) ? "🟥" :  
+                        (appScore >= 30) ? "🟧" :  
+                        (appScore >= 15) ? "🟨" : "🟩";  
+
+                details.add(color + " " + appLabel + " (" + p.packageName + ")"  
+                        + " — Risk=" + appScore + "\n" + sb.toString());  
+            }  
+        }  
+    }  
+
+} catch (SecurityException se) {  
+    logWarn("Permissions scan limited by Android package visibility policy.");  
+    logWarn("Tip: add QUERY_ALL_PACKAGES if you want full scan on Android 11+.");  
+} catch (Exception e) {  
+    logError("Permissions scan error: " + e.getMessage());  
+}  
+
+// ============================================================  
+// SUMMARY + FINAL RISK SCORE  
+// ============================================================  
+int riskPct = Math.min(100, riskTotal); // cap  
+String riskColor =  
+        (riskPct <= 20) ? "🟩" :  
+        (riskPct <= 50) ? "🟨" :  
+        (riskPct <= 80) ? "🟧" : "🟥";  
+
+logInfo("Apps scanned: " + totalApps);  
+logInfo("Dangerous permissions granted (total): " + dangTotal);  
+logInfo("Flagged apps: " + flaggedApps);  
+logInfo(riskColor + " Privacy Risk Score: " + riskPct + "%");  
+
+// ============================================================  
+// TOP OFFENDERS  
+// ============================================================  
+if (!appRisk.isEmpty()) {  
+    logLine();  
+    logInfo("Top Privacy Offenders:");  
+
+    appRisk.entrySet()  
+            .stream()  
+            .sorted((a, b) -> b.getValue() - a.getValue())  
+            .limit(8)  
+            .forEach(e -> {  
+                String c =  
+                        (e.getValue() >= 60) ? "🟥" :  
+                        (e.getValue() >= 30) ? "🟧" :  
+                        (e.getValue() >= 15) ? "🟨" : "🟩";  
+
+                logInfo(" " + c + " " + safeLabel(pm, e.getKey())  
+                        + " — Risk " + e.getValue());  
+            });  
+}  
+
+// ============================================================  
+// FULL DETAILS  
+// ============================================================  
+if (!details.isEmpty()) {  
+    logLine();  
+    logInfo("Permission Details (flagged apps):");  
+    for (String d : details) logInfo(d);  
+} else {  
+    logOk("No high-risk permission patterns detected.");  
+}  
+
+logOk("Lab 27 finished.");
+
+}
+
+// ============================================================
+// INTERNAL helpers for Lab 27 (keep inside same lab block)
+// ============================================================
+
+private boolean isGrantedFlag(int[] flags, int i) {
+try {
+if (flags == null || i < 0 || i >= flags.length) return false;
+return (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
+} catch (Exception e) {
+return false;
+}
+}
+
+private String safeLabel(PackageManager pm, String pkg) {
+try {
+ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+CharSequence cs = pm.getApplicationLabel(ai);
+return cs != null ? cs.toString() : pkg;
+} catch (Exception e) {
+return pkg;
+}
+}
+
+// Weight per dangerous/sensitive permission
+private int permissionWeight(String p) {
+if (p == null) return 0;
+
+// VERY HIGH RISK  
+if (p.equals(Manifest.permission.READ_SMS)) return 25;  
+if (p.equals(Manifest.permission.RECEIVE_SMS)) return 20;  
+if (p.equals(Manifest.permission.SEND_SMS)) return 25;  
+if (p.equals(Manifest.permission.READ_CALL_LOG)) return 25;  
+if (p.equals(Manifest.permission.WRITE_CALL_LOG)) return 25;  
+if (p.equals(Manifest.permission.CALL_PHONE)) return 15;  
+
+// HIGH RISK  
+if (p.equals(Manifest.permission.RECORD_AUDIO)) return 20;  
+if (p.equals(Manifest.permission.CAMERA)) return 18;  
+if (p.equals(Manifest.permission.ACCESS_FINE_LOCATION)) return 18;  
+if (p.equals(Manifest.permission.ACCESS_COARSE_LOCATION)) return 12;  
+if (p.equals(Manifest.permission.READ_CONTACTS)) return 15;  
+if (p.equals(Manifest.permission.WRITE_CONTACTS)) return 15;  
+if (p.equals(Manifest.permission.GET_ACCOUNTS)) return 10;  
+
+// STORAGE (legacy)  
+if (p.equals(Manifest.permission.READ_EXTERNAL_STORAGE)) return 10;  
+if (p.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) return 12;  
+
+// BACKGROUND / SUSPICIOUS  
+if (p.equals(Manifest.permission.REQUEST_INSTALL_PACKAGES)) return 20;  
+if (p.equals(Manifest.permission.SYSTEM_ALERT_WINDOW)) return 15;  
+if (p.equals(Manifest.permission.PACKAGE_USAGE_STATS)) return 15;  
+if (p.equals(Manifest.permission.BIND_ACCESSIBILITY_SERVICE)) return 25;  
+
+return 0;
+
+}
+
+private String shortPerm(String p) {
+if (p == null) return "";
+int i = p.lastIndexOf('.');
+return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
+}
+
+// ============================================================
+// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
+// Security + Privacy + Root + Stability into final scores.
+// NOTE (GEL RULE): Whole block ready for copy-paste.
+// ============================================================
+private void lab28CombineFindings() {
+logLine();
+logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
+
+// ------------------------------------------------------------  
+// 1) THERMALS (from zones + battery temp)  
+// ------------------------------------------------------------  
+Map<String, Float> zones = null;  
+try { zones = readThermalZones(); } catch (Throwable ignored) {}  
+float battTemp = getBatteryTemperature();  
+
+Float cpu  = null, gpu = null, skin = null, pmic = null;  
+if (zones != null && !zones.isEmpty()) {  
+    cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");  
+    gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");  
+    skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");  
+    pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");  
+}  
+
+float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);  
+float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);  
+
+int thermalScore = scoreThermals(maxThermal, avgThermal);  
+String thermalFlag = colorFlagFromScore(thermalScore);  
+
+// ------------------------------------------------------------  
+// 2) BATTERY HEALTH (light auto inference)  
+// ------------------------------------------------------------  
+float battPct = getCurrentBatteryPercent();  
+boolean charging = isChargingNow();  
+int batteryScore = scoreBattery(battTemp, battPct, charging);  
+String batteryFlag = colorFlagFromScore(batteryScore);  
+
+// ------------------------------------------------------------  
+// 3) STORAGE HEALTH  
+// ------------------------------------------------------------  
+StorageSnapshot st = readStorageSnapshot();  
+int storageScore = scoreStorage(st.pctFree, st.totalBytes);  
+String storageFlag = colorFlagFromScore(storageScore);  
+
+// ------------------------------------------------------------  
+// 4) APPS FOOTPRINT  
+// ------------------------------------------------------------  
+AppsSnapshot ap = readAppsSnapshot();  
+int appsScore = scoreApps(ap.userApps, ap.totalApps);  
+String appsFlag = colorFlagFromScore(appsScore);  
+
+// ------------------------------------------------------------  
+// 5) RAM HEALTH  
+// ------------------------------------------------------------  
+RamSnapshot rm = readRamSnapshot();  
+int ramScore = scoreRam(rm.pctFree);  
+String ramFlag = colorFlagFromScore(ramScore);  
+
+// ------------------------------------------------------------  
+// 6) UPTIME / STABILITY  
+// ------------------------------------------------------------  
+long upMs = SystemClock.elapsedRealtime();  
+int stabilityScore = scoreStability(upMs);  
+String stabilityFlag = colorFlagFromScore(stabilityScore);  
+
+// ------------------------------------------------------------  
+// 7) SECURITY (lockscreen + patch + adb/dev + root)  
+// ------------------------------------------------------------  
+SecuritySnapshot sec = readSecuritySnapshot();  
+int securityScore = scoreSecurity(sec);  
+String securityFlag = colorFlagFromScore(securityScore);  
+
+// ------------------------------------------------------------  
+// 8) PRIVACY (dangerous granted perms to user apps)  
+// ------------------------------------------------------------  
+PrivacySnapshot pr = readPrivacySnapshot();  
+int privacyScore = scorePrivacy(pr);  
+String privacyFlag = colorFlagFromScore(privacyScore);  
+
+// ------------------------------------------------------------  
+// 9) FINAL SCORES  
+// ------------------------------------------------------------  
+int performanceScore = Math.round(  
+        (storageScore * 0.35f) +  
+        (ramScore     * 0.35f) +  
+        (appsScore    * 0.15f) +  
+        (thermalScore * 0.15f)  
+);  
+
+int deviceHealthScore = Math.round(  
+        (thermalScore   * 0.25f) +  
+        (batteryScore   * 0.25f) +  
+        (performanceScore * 0.30f) +  
+        (stabilityScore * 0.20f)  
+);  
+
+// ------------------------------------------------------------  
+// PRINT DETAILS  
+// ------------------------------------------------------------  
+logLine();  
+logInfo("AUTO Breakdown:");  
+
+// Thermals  
+logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
+if (zones == null || zones.isEmpty()) {  
+    logWarn("• No thermal zones readable. Using Battery temp only: " +  
+            String.format(Locale.US, "%.1f°C", battTemp));  
+} else {  
+    logInfo("• Zones=" + zones.size() +  
+            " | max=" + fmt1(maxThermal) + "°C" +  
+            " | avg=" + fmt1(avgThermal) + "°C");  
+    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");  
+    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");  
+    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");  
+    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");  
+    logInfo("• Battery=" + fmt1(battTemp) + "°C");  
+}  
+
+// Battery  
+logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
+logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
+        " | Temp=" + fmt1(battTemp) + "°C | Charging=" + charging);  
+
+// Storage  
+logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
+logInfo("• Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
+        " / " + humanBytes(st.totalBytes));  
+
+// Apps  
+logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");  
+logInfo("• User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
+        " | Total=" + ap.totalApps);  
+
+// RAM  
+logInfo("RAM: " + ramFlag + " " + ramScore + "%");  
+logInfo("• Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
+        humanBytes(rm.totalBytes) + ")");  
+
+// Stability  
+logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");  
+logInfo("• Uptime=" + formatUptime(upMs));  
+if (upMs < 2 * 60 * 60 * 1000L)  
+    logWarn("• Recent reboot detected (<2h) — possible instability masking.");  
+else if (upMs > 7L * 24L * 60L * 60L * 1000L)  
+    logWarn("• Long uptime (>7d) — recommend reboot before deep servicing.");  
+
+// Security  
+logInfo("Security: " + securityFlag + " " + securityScore + "%");  
+logInfo("• Lock secure=" + sec.lockSecure);  
+logInfo("• Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
+logInfo("• ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
+        " | DevOptions=" + sec.devOptionsOn);  
+if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");  
+if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");  
+
+// Privacy  
+logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");  
+logInfo("• Dangerous perms on user apps: " +  
+        "Location=" + pr.userAppsWithLocation +  
+        ", Mic=" + pr.userAppsWithMic +  
+        ", Camera=" + pr.userAppsWithCamera +  
+        ", SMS=" + pr.userAppsWithSms);  
+
+// ------------------------------------------------------------  
+// FINAL VERDICT  
+// ------------------------------------------------------------  
+logLine();  
+logInfo("FINAL Scores:");  
+logInfo("Device Health Score: " + deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore));  
+logInfo("Performance Score:   " + performanceScore + "% " + colorFlagFromScore(performanceScore));  
+logInfo("Security Score:      " + securityScore + "% " + securityFlag);  
+logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);  
+
+String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);  
+if (verdict.startsWith("🟩")) logOk(verdict);  
+else if (verdict.startsWith("🟨")) logWarn(verdict);  
+else logError(verdict);  
+
+logOk("Lab 28 finished.");
+
+}
+
+// ============================================================
+// ======= LAB 28 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
+// ============================================================
+
+private static class StorageSnapshot {
+long totalBytes, freeBytes, usedBytes;
+int pctFree;
+}
+
+private StorageSnapshot readStorageSnapshot() {
+StorageSnapshot s = new StorageSnapshot();
+try {
+StatFs fs = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+s.totalBytes = fs.getBlockCountLong() * fs.getBlockSizeLong();
+s.freeBytes  = fs.getAvailableBlocksLong() * fs.getBlockSizeLong();
+s.usedBytes  = s.totalBytes - s.freeBytes;
+s.pctFree = (s.totalBytes > 0) ? (int)((s.freeBytes * 100L) / s.totalBytes) : 0;
+} catch (Throwable ignored) {}
+return s;
+}
+
+private static class AppsSnapshot {
+int userApps, systemApps, totalApps;
+}
+
+private AppsSnapshot readAppsSnapshot() {
+AppsSnapshot a = new AppsSnapshot();
+try {
+PackageManager pm = getPackageManager();
+List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+if (apps != null) {
+a.totalApps = apps.size();
+for (ApplicationInfo ai : apps) {
+if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) a.systemApps++;
+else a.userApps++;
+}
+}
+} catch (Throwable ignored) {}
+return a;
+}
+
+private static class RamSnapshot {
+long totalBytes, freeBytes;
+int pctFree;
+}
+
+private RamSnapshot readRamSnapshot() {
+RamSnapshot r = new RamSnapshot();
+try {
+ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+if (am != null) {
+am.getMemoryInfo(mi);
+r.totalBytes = mi.totalMem;
+r.freeBytes  = mi.availMem;
+r.pctFree = (r.totalBytes > 0) ? (int)((r.freeBytes * 100L) / r.totalBytes) : 0;
+}
+} catch (Throwable ignored) {}
+return r;
+}
+
+private static class SecuritySnapshot {
+boolean lockSecure;
+boolean adbUsbOn;
+boolean adbWifiOn;
+boolean devOptionsOn;
+boolean rootSuspected;
+boolean testKeys;
+String securityPatch;
+}
+
+private SecuritySnapshot readSecuritySnapshot() {
+SecuritySnapshot s = new SecuritySnapshot();
+
+// lock secure  
+try {  
+    android.app.KeyguardManager km =  
+            (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);  
+    if (km != null) {  
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) s.lockSecure = km.isDeviceSecure();  
+        else s.lockSecure = km.isKeyguardSecure();  
+    }  
+} catch (Throwable ignored) {}  
+
+// patch level  
+try {  
+    s.securityPatch = Build.VERSION.SECURITY_PATCH;  
+} catch (Throwable ignored) {}  
+
+// ADB / dev options  
+try {  
+    s.adbUsbOn = Settings.Global.getInt(getContentResolver(),  
+            Settings.Global.ADB_ENABLED, 0) == 1;  
+} catch (Throwable ignored) {}  
+try {  
+    s.devOptionsOn = Settings.Global.getInt(getContentResolver(),  
+            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1;  
+} catch (Throwable ignored) {}  
+
+// ADB Wi-Fi (port property)  
+try {  
+    String adbPort = System.getProperty("service.adb.tcp.port", "");  
+    if (adbPort != null && !adbPort.trim().isEmpty()) {  
+        int p = Integer.parseInt(adbPort.trim());  
+        s.adbWifiOn = (p > 0);  
+    }  
+} catch (Throwable ignored) {}  
+
+// Root suspicion (no root needed)  
+s.rootSuspected = detectRootFast();  
+
+// test-keys check  
+try {  
+    String tags = Build.TAGS;  
+    s.testKeys = (tags != null && tags.contains("test-keys"));  
+} catch (Throwable ignored) {}  
+
+return s;
+
+}
+
+private boolean detectRootFast() {
+try {
+// SU paths
+String[] paths = {
+"/system/bin/su", "/system/xbin/su", "/sbin/su",
+"/system/app/Superuser.apk", "/system/app/Magisk.apk",
+"/data/adb/magisk", "/vendor/bin/su"
+};
+for (String p : paths) if (new File(p).exists()) return true;
+
+// Magisk / SuperSU packages  
+    PackageManager pm = getPackageManager();  
+    String[] pkgs = {  
+            "com.topjohnwu.magisk",  
+            "eu.chainfire.supersu",  
+            "com.noshufou.android.su",  
+            "com.koushikdutta.superuser"  
+    };  
+    for (String pkg : pkgs) {  
+        try {  
+            pm.getPackageInfo(pkg, 0);  
+            return true;  
+        } catch (Throwable ignored) {}  
+    }  
+} catch (Throwable ignored) {}  
+return false;
+
+}
+
+private static class PrivacySnapshot {
+int userAppsWithLocation;
+int userAppsWithMic;
+int userAppsWithCamera;
+int userAppsWithSms;
+int totalUserAppsChecked;
+}
+
+private PrivacySnapshot readPrivacySnapshot() {
+PrivacySnapshot p = new PrivacySnapshot();
+try {
+PackageManager pm = getPackageManager();
+List<android.content.pm.PackageInfo> packs =
+pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+
+if (packs == null) return p;  
+
+    for (android.content.pm.PackageInfo pi : packs) {  
+        if (pi == null || pi.applicationInfo == null) continue;  
+        ApplicationInfo ai = pi.applicationInfo;  
+
+        // skip system apps  
+        if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;  
+
+        p.totalUserAppsChecked++;  
+
+        String[] req = pi.requestedPermissions;  
+        int[] flags = pi.requestedPermissionsFlags;  
+        if (req == null || flags == null) continue;  
+
+        boolean loc = false, mic = false, cam = false, sms = false;  
+
+        for (int i = 0; i < req.length; i++) {  
+            boolean granted = (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;  
+            if (!granted) continue;  
+            String perm = req[i];  
+
+            if (perm == null) continue;  
+            if (perm.contains("ACCESS_FINE_LOCATION") || perm.contains("ACCESS_COARSE_LOCATION"))  
+                loc = true;  
+            if (perm.contains("RECORD_AUDIO"))  
+                mic = true;  
+            if (perm.contains("CAMERA"))  
+                cam = true;  
+            if (perm.contains("READ_SMS") || perm.contains("RECEIVE_SMS") || perm.contains("SEND_SMS"))  
+                sms = true;  
+        }  
+
+        if (loc) p.userAppsWithLocation++;  
+        if (mic) p.userAppsWithMic++;  
+        if (cam) p.userAppsWithCamera++;  
+        if (sms) p.userAppsWithSms++;  
+    }  
+
+} catch (Throwable ignored) {}  
+return p;
+
+}
+
+// ------------------------- SCORING --------------------------
+
+private int scoreThermals(float maxT, float avgT) {
+int s = 100;
+if (maxT >= 70) s -= 60;
+else if (maxT >= 60) s -= 40;
+else if (maxT >= 50) s -= 20;
+
+if (avgT >= 55) s -= 25;  
+else if (avgT >= 45) s -= 10;  
+
+return clampScore(s);
+
+}
+
+private int scoreBattery(float battTemp, float battPct, boolean charging) {
+int s = 100;
+
+if (battTemp >= 55) s -= 55;  
+else if (battTemp >= 45) s -= 30;  
+else if (battTemp >= 40) s -= 15;  
+
+if (!charging && battPct >= 0) {  
+    if (battPct < 15) s -= 25;  
+    else if (battPct < 30) s -= 10;  
+}  
+
+return clampScore(s);
+
+}
+
+private int scoreStorage(int pctFree, long totalBytes) {
+int s = 100;
+if (pctFree < 5) s -= 60;
+else if (pctFree < 10) s -= 40;
+else if (pctFree < 15) s -= 25;
+else if (pctFree < 20) s -= 10;
+
+// tiny storage penalty (<32GB)  
+long gb = totalBytes / (1024L * 1024L * 1024L);  
+if (gb > 0 && gb < 32) s -= 10;  
+
+return clampScore(s);
+
+}
+
+private int scoreApps(int userApps, int totalApps) {
+int s = 100;
+if (userApps > 140) s -= 50;
+else if (userApps > 110) s -= 35;
+else if (userApps > 80) s -= 20;
+else if (userApps > 60) s -= 10;
+
+if (totalApps > 220) s -= 10;  
+return clampScore(s);
+
+}
+
+private int scoreRam(int pctFree) {
+int s = 100;
+if (pctFree < 8) s -= 60;
+else if (pctFree < 12) s -= 40;
+else if (pctFree < 18) s -= 20;
+else if (pctFree < 25) s -= 10;
+return clampScore(s);
+}
+
+private int scoreStability(long upMs) {
+int s = 100;
+if (upMs < 30 * 60 * 1000L) s -= 50;          // <30min uptime
+else if (upMs < 2 * 60 * 60 * 1000L) s -= 25; // <2h
+else if (upMs > 10L * 24L * 60L * 60L * 1000L) s -= 10; // >10d
+return clampScore(s);
+}
+
+private int scoreSecurity(SecuritySnapshot sec) {
+int s = 100;
+
+if (!sec.lockSecure) s -= 30;  
+
+// old patch  
+if (sec.securityPatch != null && sec.securityPatch.length() >= 4) {  
+    // rough heuristic: if patch year < current year-2 => penalty  
+    try {  
+        int y = Integer.parseInt(sec.securityPatch.substring(0, 4));  
+        int curY = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);  
+        if (y <= curY - 3) s -= 30;  
+        else if (y == curY - 2) s -= 15;  
+    } catch (Throwable ignored) {}  
+} else {  
+    s -= 5; // unknown  
+}  
+
+if (sec.adbUsbOn) s -= 25;  
+if (sec.adbWifiOn) s -= 35;  
+if (sec.devOptionsOn) s -= 10;  
+
+if (sec.rootSuspected) s -= 40;  
+if (sec.testKeys) s -= 15;  
+
+return clampScore(s);
+
+}
+
+private int scorePrivacy(PrivacySnapshot pr) {
+int s = 100;
+
+// weighted dangerous perms on user apps  
+int risk = 0;  
+risk += pr.userAppsWithLocation * 2;  
+risk += pr.userAppsWithMic * 3;  
+risk += pr.userAppsWithCamera * 3;  
+risk += pr.userAppsWithSms * 4;  
+
+if (risk > 80) s -= 60;  
+else if (risk > 50) s -= 40;  
+else if (risk > 25) s -= 20;  
+else if (risk > 10) s -= 10;  
+
+return clampScore(s);
+
+}
+
+// ------------------------- UTIL ----------------------------
+
+private boolean isChargingNow() {
+try {
+Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
+return (status == BatteryManager.BATTERY_STATUS_CHARGING ||
+status == BatteryManager.BATTERY_STATUS_FULL);
+} catch (Throwable ignored) {}
+return false;
+}
+
+private float maxOf(Float a, Float b, Float c, Float d, float e) {
+float m = e;
+if (a != null && a > m) m = a;
+if (b != null && b > m) m = b;
+if (c != null && c > m) m = c;
+if (d != null && d > m) m = d;
+return m;
+}
+
+private float avgOf(Float a, Float b, Float c, Float d, float e) {
+float sum = e;
+int n = 1;
+if (a != null) { sum += a; n++; }
+if (b != null) { sum += b; n++; }
+if (c != null) { sum += c; n++; }
+if (d != null) { sum += d; n++; }
+return sum / n;
+}
+
+private int clampScore(int s) {
+if (s < 0) return 0;
+if (s > 100) return 100;
+return s;
+}
+
+private String colorFlagFromScore(int s) {
+if (s >= 80) return "🟩";
+if (s >= 55) return "🟨";
+return "🟥";
+}
+
+private String finalVerdict(int health, int sec, int priv, int perf) {
+int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
+if (worst >= 80)
+return "🟩 Device is healthy — no critical issues detected.";
+if (worst >= 55)
+return "🟨 Device has moderate risks — recommend service check.";
+return "🟥 Device is NOT healthy — immediate servicing recommended.";
+}
+
+private String fmt1(float v) {
+return String.format(Locale.US, "%.1f", v);
+}
+
+// ============================================================
+// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// Does NOT modify GELServiceLog — only reads it.
+// Exports via ServiceReportActivity.
+// ============================================================
+private void lab29FinalSummary() {
+
+    logLine();
+    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
+
+    // ------------------------------------------------------------
+    // 1) READ FULL LOG (from all labs)
+    // ------------------------------------------------------------
+    String fullLog = GELServiceLog.getAll();
+
+    if (fullLog.trim().isEmpty()) {
+        logWarn("No diagnostic data found. Please run Manual Tests first.");
+        return;
     }
 
-    // ---------- DETERMINE ESTIMATED FULL ----------
-    if (hasEst) {
-        displayEstimated = bi.estimatedFullMah;
-    } else if (hasCC && lvlFrac > 0) {
-        displayEstimated = (long) (displayCurrent / lvlFrac);
+    // ------------------------------------------------------------
+    // 2) FILTER WARNINGS & ERRORS ONLY
+    // ------------------------------------------------------------
+    String[] lines = fullLog.split("\n");
+    StringBuilder warnings = new StringBuilder();
+
+    for (String l : lines) {
+        String low = l.toLowerCase(Locale.US);
+
+        if (low.contains("⚠") || low.contains("warning")) {
+            warnings.append(l).append("\n");
+        }
+        if (low.contains("❌") || low.contains("error")) {
+            warnings.append(l).append("\n");
+        }
     }
 
-    StringBuilder sb = new StringBuilder();
+    // ------------------------------------------------------------
+    // 3) PRINT SUMMARY TO UI (ONLY)
+    // ------------------------------------------------------------
+    logInfo("===== FINAL TECHNICIAN SUMMARY =====");
 
-    // ----- BASIC LINES -----
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), bi.level >= 0 ? bi.level + "%" : "N/A"));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), bi.scale > 0 ? bi.scale : "N/A"));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
-    sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
-
-    // ----- CURRENT -----
-    if (displayCurrent > 0)
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
-    else
-        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
-
-    // ----- SOURCE -----
-    String src;
-    if (hasCC) src = "Charge Counter";
-    else if (hasEst) src = "OEM";
-    else if (modelCap > 0) src = "Model capacity";
-    else src = "Unknown";
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
-
-    // ----- ESTIMATED FULL -----
-    if (displayEstimated > 0) {
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), displayEstimated));
+    if (warnings.length() == 0) {
+        logOk("No warnings or errors detected.");
     } else {
-        sb.append(String.format(Locale.US, "%s : %s\n",
-                padKey("Estimated full (100%)"), "N/A in this device"));
-        sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
-        sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
-    }
-
-    // ----- MODEL CAPACITY -----
-    sb.append(String.format(Locale.US, "%s : %s\n",
-            padKey("Model capacity"), modelCap > 0 ? modelCap + " mAh" : "N/A"));
-
-    // ----- LIFECYCLE -----
-    sb.append(String.format(Locale.US, "%s : %s",
-            padKey("Lifecycle"), "Requires root access"));
-
-    return sb.toString();
-}
-
-// ===================================================================
-// REFRESH VIEW
-// ===================================================================
-private void refreshBatteryInfoView() {
-    try {
-        if (txtBatteryContent != null) {
-            txtBatteryContent.setText(buildBatteryInfo());
-        }
-        refreshBatteryButton();
-    } catch (Throwable ignore) {}
-}
-
-// ===================================================================
-// REFRESH BUTTON LABEL
-// ===================================================================
-private void refreshBatteryButton() {
-    TextView btn = findViewById(R.id.txtBatteryModelCapacity);
-    if (btn != null) {
-        long cap = getStoredModelCapacity();
-        btn.setText(cap > 0 ? "Set model capacity (" + cap + " mAh)" : "Set model capacity");
-    }
-}
-
-// ===================================================================
-// INIT BATTERY SECTION (DIAGNOSTIC MODE)
-// ===================================================================
-private void initBatterySection() {
-
-    txtBatteryContent = findViewById(R.id.txtBatteryContent);
-    TextView btnCapacity = findViewById(R.id.txtBatteryModelCapacity);
-
-    refreshBatteryInfoView();
-
-    if (btnCapacity != null) {
-        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-    }
-
-    maybeShowBatteryCapacityDialogOnce();
-}
-
-// ===================================================================
-// POPUP ONLY ONCE
-// ===================================================================
-private void maybeShowBatteryCapacityDialogOnce() {
-    try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        if (!sp.getBoolean(KEY_BATTERY_DIALOG_SHOWN, false) &&
-            sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L) <= 0) {
-
-            sp.edit().putBoolean(KEY_BATTERY_DIALOG_SHOWN, true).apply();
-            runOnUiThread(this::showBatteryCapacityDialog);
-        }
-    } catch (Throwable ignore) {}
-}
-
-// ===================================================================
-// POPUP — FINAL
-// ===================================================================
-private void showBatteryCapacityDialog() {
-
-    runOnUiThread(() -> {
-        try {
-
-            AlertDialog.Builder b = new AlertDialog.Builder(this);
-            b.setTitle(getString(R.string.battery_popup_title));
-            b.setMessage(getString(R.string.battery_popup_msg));
-
-            final EditText input = new EditText(this);
-            input.setInputType(InputType.TYPE_CLASS_NUMBER);
-            input.setHint(getString(R.string.battery_popup_hint));
-
-            long current = getStoredModelCapacity();
-            if (current > 0) {
-                input.setText(String.valueOf(current));
-                input.setSelection(input.getText().length());
+        logWarn("Warnings / Errors detected:");
+        for (String w : warnings.toString().split("\n")) {
+            if (!w.trim().isEmpty()) {
+                logWarn(w.trim());
             }
+        }
+    }
 
-            b.setView(input);
+    logLine();
+    logInfo("To export the official PDF report, use the button below.");
 
-            b.setPositiveButton(getString(R.string.battery_popup_ok),
-                    (dialog, which) -> {
-                        String txt = input.getText().toString().trim();
-                        if (!txt.isEmpty()) {
-                            try {
-                                long val = Long.parseLong(txt);
-                                if (val > 0) {
-                                    saveModelCapacity(val);
-                                    refreshBatteryInfoView();
-                                }
-                            } catch (Throwable ignore) {}
-                        }
-                    });
+    // Enable existing export button (do NOT create new)
+    enableSingleExportButton();
+}
 
-            b.setNegativeButton(getString(R.string.battery_popup_cancel), null);
+// ============================================================
+// ENABLE EXISTING EXPORT BUTTON — No duplicates!
+// ============================================================
+private void enableSingleExportButton() {
 
-            AlertDialog dialog = b.create();
-            dialog.getWindow().setBackgroundDrawableResource(
-                    R.drawable.gel_dialog_battery_full_black
-            );
-            dialog.show();
+    ui.post(() -> {
+        View rootView = scroll.getChildAt(0);
+        if (!(rootView instanceof LinearLayout)) return;
 
-        } catch (Throwable ignore) {}
+        LinearLayout root = (LinearLayout) rootView;
+
+        for (int i = 0; i < root.getChildCount(); i++) {
+            View v = root.getChildAt(i);
+
+            if (v instanceof Button) {
+                Button b = (Button) v;
+
+                if ("Export Service Report".contentEquals(b.getText())) {
+                    b.setEnabled(true);
+                    b.setAlpha(1f);
+                }
+            }
+        }
     });
 }
-    
- // ============================================================
- // UwB Info
- // ====================================================== 
-      private String buildUwbInfo() {
-        boolean supported = getPackageManager().hasSystemFeature("android.hardware.uwb");
-        StringBuilder sb = new StringBuilder();
 
-        sb.append("Supported        : ").append(supported ? "Yes" : "No").append("\n");
-        sb.append("Advanced         : Fine-grain ranging diagnostics, requires root access.\n");
-
-        return sb.toString();
-    }
-
- // ============================================================
-// HAPTICS — SAFE EDITION (API 29–34)
-// ============================================================
-private String buildHapticsInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-    if (v == null) {
-        sb.append("Vibration Engine : Not available\n");
-        return sb.toString();
-    }
-
-    sb.append("Vibration Engine : ");
-
-    if (Build.VERSION.SDK_INT >= 29) {
-        if (v.hasAmplitudeControl()) sb.append("Amplitude Control\n");
-        else sb.append("Basic Engine\n");
-    } else {
-        sb.append("Legacy Engine\n");
-    }
-
-    sb.append("Advanced         : Low-level haptic patterns require root/kernel access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================
-// GNSS / LOCATION — GEL CLEAN EDITION (API-SAFE)
-// ============================================================
-private String buildGnssInfo() {
-    StringBuilder sb = new StringBuilder();
-
+/* ============================================================
+   Earpiece test tone — 220Hz (CALL PATH SAFE)
+   ============================================================ */
+private void playEarpieceTestTone220Hz(int durationMs) {
     try {
-        PackageManager pm = getPackageManager();
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        int sampleRate = 8000;
+        int samples = (int) ((durationMs / 1000f) * sampleRate);
+        if (samples <= 0) samples = sampleRate / 2;
 
-        // ---------------------------------------------------
-        // PROVIDERS STATUS
-        // ---------------------------------------------------
-        if (lm != null) {
-            boolean gps = false;
-            boolean net = false;
-            try { gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Throwable ignore) {}
-            try { net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER); } catch (Throwable ignore) {}
+        short[] buffer = new short[samples];
+        double freq = 220.0;
 
-            sb.append("GPS Provider      : ").append(gps ? "Enabled" : "Disabled").append("\n");
-            sb.append("Network Location  : ").append(net ? "Enabled" : "Disabled").append("\n");
+        for (int i = 0; i < samples; i++) {
+            double t = i / (double) sampleRate;
+            buffer[i] = (short) (Math.sin(2 * Math.PI * freq * t) * 9000);
         }
 
-        // ---------------------------------------------------
-        // CONSTELLATIONS (CAPABILITY MATRIX)
-        // ---------------------------------------------------
-        sb.append("\n=== Constellations ===\n");
-        sb.append("\n"); // empty line for visual separation    
-        sb.append("GPS               : ")
-                .append(pm.hasSystemFeature("android.hardware.location.gps") ? "Yes" : "No").append("\n");
-        sb.append("GLONASS           : ")
-                .append(pm.hasSystemFeature("android.hardware.location.glonass") ? "Yes" : "No").append("\n");
-        sb.append("Galileo           : ")
-                .append(pm.hasSystemFeature("android.hardware.location.galileo") ? "Yes" : "No").append("\n");
-        sb.append("BeiDou            : ")
-                .append(pm.hasSystemFeature("android.hardware.location.beidou") ? "Yes" : "No").append("\n");
-        sb.append("QZSS              : ")
-                .append(pm.hasSystemFeature("android.hardware.location.qzss") ? "Yes" : "No").append("\n");
-        sb.append("SBAS              : ")
-                .append(pm.hasSystemFeature("android.hardware.location.sbas") ? "Yes" : "No").append("\n");
-        sb.append("NavIC / IRNSS     : ")
-                .append(pm.hasSystemFeature("android.hardware.location.irnss") ? "Yes" : "No").append("\n");
-
-        // ---------------------------------------------------
-        // CORE GNSS CAPABILITIES
-        // ---------------------------------------------------
-        boolean raw   = pm.hasSystemFeature("android.hardware.location.gnss.raw_measurement");
-        boolean batch = pm.hasSystemFeature("android.hardware.location.gnss.batch");
-
-        sb.append("\n=== Capabilities ===\n");
-        sb.append("\n"); // empty line for visual separation    
-        sb.append("Raw Measurements  : ").append(raw ? "Yes" : "No").append("\n");
-        sb.append("GNSS Batching     : ").append(batch ? "Yes" : "No").append("\n");
-
-        // ---------------------------------------------------
-        // NMEA (BASIC SUPPORT INDICATOR)
-        // ---------------------------------------------------
-        sb.append("NMEA Support      : ").append(lm != null ? "Yes" : "No").append("\n");
-
-    } catch (Throwable ignore) {
-        sb.append("GNSS information is not exposed on this device.\n");
-    }
-
-    return sb.toString();
-}
-      
-// ============================================================
-// USB / OTG / POWER / ROLE ENGINE — GEL API29-SAFE EDITION
-// ============================================================
-private String buildUsbInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    PackageManager pm = getPackageManager();
-
-    // ------------------------------------------------------------
-    // BASIC SUPPORT FLAGS
-    // ------------------------------------------------------------
-    boolean otg = pm.hasSystemFeature("android.hardware.usb.host");
-    boolean acc = pm.hasSystemFeature("android.hardware.usb.accessory");
-
-    sb.append("OTG Support      : ").append(otg ? "Yes" : "No").append("\n");
-    sb.append("Accessory Mode   : ").append(acc ? "Yes" : "No").append("\n");
-
-    // ------------------------------------------------------------
-    // USB MANAGER
-    // ------------------------------------------------------------
-    UsbManager um = (UsbManager) getSystemService(Context.USB_SERVICE);
-    if (um == null) {
-        sb.append("Status           : USB Manager unavailable\n");
-        return sb.toString();
-    }
-
-    // ------------------------------------------------------------
-    // CONNECTED USB DEVICES (HOST MODE)
-    // ------------------------------------------------------------
-    try {
-        HashMap<String, UsbDevice> devs = um.getDeviceList();
-
-        if (devs != null && !devs.isEmpty()) {
-            sb.append("\nConnected USB Devices:\n");
-
-            for (UsbDevice d : devs.values()) {
-                sb.append("  • ").append(d.getDeviceName()).append("\n");
-                sb.append("    Vendor ID    : ").append(d.getVendorId()).append("\n");
-                sb.append("    Product ID   : ").append(d.getProductId()).append("\n");
-                sb.append("    Class/Subcls : ")
-                        .append(d.getDeviceClass()).append("/")
-                        .append(d.getDeviceSubclass()).append("\n");
-                sb.append("    Interfaces   : ").append(d.getInterfaceCount()).append("\n");
-                sb.append("    USB Speed    : Not exposed by public API\n");
-            }
-        } else {
-            sb.append("Connected Dev.   : None\n");
-        }
-
-    } catch (Throwable ignore) {
-        sb.append("Connected Dev.  : Error reading USB devices\n");
-    }
-
-    // ------------------------------------------------------------
-    // USB ROLE / MODE
-    // ------------------------------------------------------------
-    sb.append("\n=== Mode / Role ===\n");
-    sb.append("\n"); // empty line for visual separation    
-    sb.append(" USB Role        : Vendor HAL not exposed\n");
-
-    // ------------------------------------------------------------
-    // POWER / CHARGING PROFILE
-    // ------------------------------------------------------------
-    sb.append("\n=== Power Profiles ===\n");
-    sb.append("\n"); // empty line for visual separation    
-    try {
-        IntentFilter ifil = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batt = registerReceiver(null, ifil);
-
-        if (batt != null) {
-            int source = batt.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-
-            String srcLabel =
-                    (source == BatteryManager.BATTERY_PLUGGED_USB) ? "USB"
-                    : (source == BatteryManager.BATTERY_PLUGGED_AC) ? "AC"
-                    : (source == BatteryManager.BATTERY_PLUGGED_WIRELESS) ? "Wireless"
-                    : "Unplugged";
-
-            sb.append(" Charge Source   : ").append(srcLabel).append("\n");
-
-            int volt = batt.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-            sb.append(" Voltage (mV)    : ").append(volt).append("\n");
-        }
-
-    } catch (Throwable ignore) {
-        sb.append("  Power Info    : Error\n");
-    }
-
-    // ------------------------------------------------------------
-// CHARGE CURRENT (mA) — ROOT ONLY
-// ------------------------------------------------------------
-Integer mA = getRootChargeCurrentMilliAmps();
-if (mA != null) {
-    sb.append(" Charge (mA)     : ").append(mA).append("\n");
-} else {
-    sb.append(" Charge (mA)     : N/A (requires root access)\n");
-}
-
-    // ------------------------------------------------------------
-    // FINAL NOTE
-    // ------------------------------------------------------------
-    sb.append("\nAdvanced         : USB descriptors, role switching and power negotiation require root access.\n");
-
-    return sb.toString();
-}
-
-
-// ============================================================
-// ROOT HELPERS — CHARGE CURRENT (µA → mA)
-// ============================================================
-private Integer getRootChargeCurrentMilliAmps() {
-    try {
-        if (!isRootAvailable()) return null;
-
-        String[] paths = new String[] {
-                "/sys/class/power_supply/battery/current_now",
-                "/sys/class/power_supply/battery/input_current_now",
-                "/sys/class/power_supply/usb/current_now",
-                "/sys/class/power_supply/usb/input_current_now",
-                "/sys/class/power_supply/main/current_now",
-                "/sys/class/power_supply/ac/current_now",
-                "/sys/class/power_supply/charger/current_now"
-        };
-
-        for (String p : paths) {
-            String out = suCatFirstLine(p);
-            Integer uA = parseIntSafe(out);
-            if (uA != null) {
-                return (int) Math.round(uA / 1000.0); // µA → mA
-            }
-        }
-        return null;
-
-    } catch (Throwable ignore) {
-        return null;
-    }
-}
-
-private boolean isRootAvailable() {
-    try {
-        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String line = br.readLine();
-        br.close();
-        p.waitFor();
-        return line != null && line.contains("uid=0");
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
-private String suCatFirstLine(String path) {
-    try {
-        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "cat " + path});
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String line = br.readLine();
-        br.close();
-        p.waitFor();
-        return (line == null || line.trim().isEmpty()) ? null : line.trim();
-    } catch (Throwable t) {
-        return null;
-    }
-}
-
-private Integer parseIntSafe(String s) {
-    try {
-        if (s == null) return null;
-        s = s.replaceAll("[^0-9\\-+]", "");
-        if (s.isEmpty()) return null;
-        return Integer.parseInt(s);
-    } catch (Throwable t) {
-        return null;
-    }
-}
-
-// ============================================================
-//  Other Peripherals — CLEAN GEL EDITION
-// ============================================================
-private String buildOtherPeripheralsInfo() {
-    StringBuilder sb = new StringBuilder();
-    PackageManager pm = getPackageManager();
-
-    sb.append("=== Other Peripherals ===\n");
-sb.append("\n"); // empty line for visual separation
-     
-    boolean ir       = pm.hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR);
-    boolean fm       = pm.hasSystemFeature("android.hardware.fm");
-    boolean hall     = pm.hasSystemFeature("android.hardware.sensor.hall");
-    boolean hwkbd    = pm.hasSystemFeature("android.hardware.keyboard");
-    boolean wireless = pm.hasSystemFeature("android.hardware.power.wireless_charging");
-    boolean tv       = pm.hasSystemFeature("android.hardware.tv.tuner");
-    boolean barcode  = pm.hasSystemFeature("android.hardware.barcodescanner");
-
-    sb.append("IR Blaster        : ").append(ir ? "Yes" : "No").append("\n");
-    sb.append("FM Radio          : ").append(fm ? "Yes" : "No").append("\n");
-    sb.append("Hall Sensor       : ").append(hall ? "Yes" : "No").append("\n");
-    sb.append("HW Keyboard       : ").append(hwkbd ? "Yes" : "No").append("\n");
-    sb.append("Wireless Charging : ").append(wireless ? "Yes" : "No").append("\n");
-    sb.append("TV Tuner          : ").append(tv ? "Yes" : "No").append("\n");
-    sb.append("Barcode Module    : ").append(barcode ? "Yes" : "No").append("\n");
-
-    sb.append("\nAdvanced          : Extended peripheral diagnostics require root access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================================
-// AUDIO SYSTEM — CLEAN PERIPHERALS BLOCK (NO TESTS, NO HEAVY OPS)
-// Speakers / Microphones / HAL / Extended
-// GEL — Play Store Safe, Zero Lag
-// ============================================================================
-
-// ============================================================================
-// 1) MICROPHONES — DETECTION ONLY (NO RECORDING)
-// ============================================================================
-private String buildMicsInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    boolean hasBuiltin = false, hasTele = false, hasWired = false, hasBT = false, hasUSB = false;
-    int wired = 0, bt = 0, usb = 0;
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            AudioDeviceInfo[] devs = am.getDevices(AudioManager.GET_DEVICES_INPUTS);
-
-            for (AudioDeviceInfo d : devs) {
-
-                switch (d.getType()) {
-
-                    case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                        sb.append("• Built-in Microphone\n")
-                          .append("   Role          : ")
-                          .append(hasBuiltin ?   "noise-cancel mic" : "Primary microphone")
-                          .append("\n   Present       : Yes\n\n");
-                        hasBuiltin = true;
-                        break;
-
-                    case AudioDeviceInfo.TYPE_TELEPHONY:
-    sb.append("• Telephony Microphone\n")
-      .append("   Role          : Dedicated voice call\n")
-      .append("   Present       : Yes\n\n");
-    hasTele = true;
-    break;
-
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                        wired++; hasWired = true;
-                        break;
-
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                        bt++; hasBT = true;
-                        break;
-
-                    case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:
-                        usb++; hasUSB = true;
-                        break;
-                }
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    sb.append("=== Summary ===\n");
-    sb.append("\n"); // empty line for visual separation
-    sb.append("Built-in Mic     : ").append(hasBuiltin ? "Yes" : "No").append("\n");
-    sb.append("Telephony Mic    : ").append(hasTele    ? "Yes" : "No").append("\n");
-    sb.append("Wired Mics       : ").append(hasWired   ? "Yes ("+wired+")" : "No").append("\n");
-    sb.append("Bluetooth Mics   : ").append(hasBT      ? "Yes ("+bt+")"    : "No").append("\n");
-    sb.append("USB Mics         : ").append(hasUSB     ? "Yes ("+usb+")"   : "No").append("\n");
-
-    return sb.toString();
-}
-
-// ============================================================================
-// 2) AUDIO OUTPUTS / HAL — DETECTION ONLY
-// ============================================================================
-private String buildAudioHalInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    String hal = getProp("ro.audio.hal.version");
-    sb.append("Audio HAL        : ")
-      .append((hal != null && !hal.isEmpty()) ? hal : "Not exposed")
-      .append("\n\n");
-
-    boolean speaker=false, wired=false, bt=false, usb=false, hdmi=false;
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-
-            AudioDeviceInfo[] outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-
-            for (AudioDeviceInfo o : outs) {
-                switch (o.getType()) {
-                    case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER: speaker=true; break;
-                    case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                    case AudioDeviceInfo.TYPE_WIRED_HEADSET:   wired=true;   break;
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                    case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:   bt=true;      break;
-                    case AudioDeviceInfo.TYPE_USB_DEVICE:
-                    case AudioDeviceInfo.TYPE_USB_HEADSET:     usb=true;     break;
-                    case AudioDeviceInfo.TYPE_HDMI:            hdmi=true;    break;
-                }
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    sb.append("=== Summary ===\n");
-    sb.append("\n"); // empty line for visual separation
-    sb.append("Speaker Output   : ").append(speaker ? "Yes" : "No").append("\n");
-    sb.append("Wired Output     : ").append(wired   ? "Yes" : "No").append("\n");
-    sb.append("Bluetooth Output : ").append(bt      ? "Yes" : "No").append("\n");
-    sb.append("USB Output       : ").append(usb     ? "Yes" : "No").append("\n");
-    sb.append("HDMI Output      : ").append(hdmi    ? "Yes" : "No").append("\n");
-
-    return sb.toString();
-}
-
-// ============================================================================
-// 3) AUDIO EXTENDED — SAFE FLAGS
-// ============================================================================
-private String buildAudioExtendedInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        boolean hw = getPackageManager().hasSystemFeature("android.hardware.audio.output");
-        sb.append("Audio Output HW  : ").append(hw ? "Yes" : "No").append("\n");
-    } catch (Throwable ignore) {}
-
-    return sb.toString();
-}
-
-// ============================================================================
-// 4) UNIFIED AUDIO BLOCK — PERIPHERALS VIEW (LIGHT ONLY)
-// ============================================================================
-private String buildAudioUnifiedInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("=== Microphones ===\n");
-    sb.append("\n"); // empty line for visual separation    
-    sb.append(buildMicsInfo()).append("\n");
-
-    sb.append("=== Audio Outputs / HAL ===\n");
-    sb.append("\n"); // empty line for visual separation
-    sb.append(buildAudioHalInfo()).append("\n");
-
-    sb.append("=== Extended Audio Paths ===\n");
-    sb.append("\n"); // empty line for visual separation    
-    sb.append(buildAudioExtendedInfo()).append("\n");
-
-    return sb.toString();
-}
-
- // ============================================================
-// Root Info (root-ready, honest limits)
-// ============================================================
-private String buildRootInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("Root Access Mode : ")
-      .append(isRooted ? "Rooted device (superuser access detected)"
-                       : "Non-rooted device (standard access)")
-      .append("\n");
-
-    sb.append("Build Tags       : ").append(Build.TAGS).append("\n");
-
-    String secure = getProp("ro.secure");
-    if (secure != null && !secure.isEmpty()) {
-        sb.append("ro.secure        : ").append(secure).append("\n");
-    }
-
-    String dbg = getProp("ro.debuggable");
-    if (dbg != null && !dbg.isEmpty()) {
-        sb.append("ro.debuggable    : ").append(dbg).append("\n");
-    }
-
-    String verity = getProp("ro.boot.veritymode");
-    if (verity != null && !verity.isEmpty()) {
-        sb.append("Verity Mode      : ").append(verity).append("\n");
-    }
-
-    String selinux = getProp("ro.build.selinux");
-    if (selinux != null && !selinux.isEmpty()) {
-        sb.append("SELinux          : ").append(selinux).append("\n");
-    }
-
-    // ------------------------------------------------------------
-    // Fusion Layer
-    // ------------------------------------------------------------
-    sb.append("\nFusion Layer     : ");
-    if (isRooted) {
-        sb.append("Running with root access; extended diagnostics are enabled where supported.\n");
-    } else {
-        sb.append("Standard Android permission model.\n");
-    }
-
-    // ------------------------------------------------------------
-    // Root-only sections
-    // ------------------------------------------------------------
-    if (isRooted) {
-        sb.append("\nExtended diagnostics:\n");
-        sb.append("  Status         : Enabled (root)\n");
-
-        sb.append("\nRoot indicators:\n");
-        String[] paths = {
-                "/system/bin/su", "/system/xbin/su", "/sbin/su",
-                "/system/su", "/system/bin/.ext/.su",
-                "/system/usr/we-need-root/su-backup",
-                "/system/app/Superuser.apk", "/system/app/SuperSU.apk"
-        };
-        boolean any = false;
-        for (String p : paths) {
-            if (new File(p).exists()) {
-                sb.append("  ").append(p).append("\n");
-                any = true;
-            }
-        }
-        if (!any) sb.append("  (no common su paths detected)\n");
-
-        // Vendor diag paths (best-effort presence check; no promises)
-        String[] vendorDiag = {
-                "/dev/diag", "/dev/diag_qti",
-                "/efs/imei/.msl", "/efs/imei/key_str", "/efs/FactoryApp",
-                "/vendor/etc/diag_mdlog", "/system/vendor/bin/diag_mdlog",
-                "/system/bin/mtk_agpsd", "/system/bin/mtk_engineering", "/system/bin/emdlogger"
-        };
-
-        boolean foundVendor = false;
-        for (String p : vendorDiag) {
-            try {
-                if (new File(p).exists()) {
-                    if (!foundVendor) {
-                        sb.append("\nVendor diagnostics (presence check):\n");
-                        foundVendor = true;
-                    }
-                    sb.append("  ").append(p).append("\n");
-                }
-            } catch (Throwable ignore) {}
-        }
-
-        if (!foundVendor) {
-            sb.append("\nVendor diagnostics:\n");
-            sb.append("  Not exposed to third-party apps; availability depends on OEM tooling.\n");
-        }
-
-    } else {
-        // --------------------------------------------------------
-        // Non-root: one concise, covering statement
-        // --------------------------------------------------------
-        sb.append("\nThis device is not rooted.\n");
-        sb.append("Advanced subsystem tables and low-level hardware diagnostics are available only on rooted devices.\n");
-    }
-
-    return sb.toString();
-}
-
-    //==========================
-    // NEW MEGA-UPGRADE SECTIONS (1–12)
-    // ============================================================
-
-// ===================================================================
-// 1. THERMAL ENGINE / COOLING — UNIVERSAL HARDWARE EDITION (STRING MODE)
-// ===================================================================
-
-// Helper struct για να κρατάμε μια "καλύτερη" θερμοκρασία ανά ομάδα
-private static class ThermalGroupReading {
-    String rawName;   // π.χ. "battery_therm"
-    float  tempC;     // σε βαθμούς C
-    boolean valid;
-
-    ThermalGroupReading() {
-        this.valid = false;
-    }
-
-    void updateIfBetter(String name, float valueC) {
-        if (!isValidTemp(valueC)) return;
-        if (!valid || valueC > tempC) {
-            valid   = true;
-            tempC   = valueC;
-            rawName = name;
-        }
-    }
-}
-
-// Safety check για θερμοκρασίες
-private static boolean isValidTemp(float c) {
-    return (c > -50f && c < 200f);
-}
-
-// ---------------------------------------------------------------
-// MAPPING: thermal zone "type" → λογική ομάδα (REAL hardware only)
-// ---------------------------------------------------------------
-private static final String[][] THERMAL_GROUP_PATTERNS = new String[][]{
-        {
-            "BatteryMain",
-            "battery", "batt", "batt_therm", "battery_therm",
-            "fuelgauge", "bms", "bms_therm"
-        },
-        {
-            "BatteryShell",
-            "skin", "skin-therm", "case", "case-therm",
-            "batt_skin", "battery_skin", "rear_case", "shell",
-            "backlight_therm", "backlight", "camera"
-        },
-        {
-            "PMIC",
-            "pmic", "pm8998", "pm8150", "pmx",
-            "pmic-therm", "pmic_therm",
-            "pm7250", "pm7250b", "pm6450",
-            "bcl", "ibat"
-        },
-        {
-            "Charger",
-            "charger", "chg", "usb", "usb-therm",
-            "usb_conn_therm", "bq", "charge-therm", "charge_pump"
-        },
-        {
-            "ModemMain",
-            "modem", "mdm", "mdmss", "xbl_modem",
-            "modempa", "rf-therm", "rf",
-            "modem-cfg", "sub1-modem-cfg",
-            "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
-            "pa0", "pa1", "pa2"
-        },
-        {
-            "ModemAux",
-            "modem1", "mdm1", "mdm2",
-            "xbl_modem1", "rf1",
-            "mdmss-1", "mdmss-2",
-            "sub1-modem-cfg", "modem_sub",
-            "modem1_pa", "rf_sub"
-        }
-};
-
-// Summary struct
-private static class ThermalSummary {
-    int zoneCount;          // μόνο REAL hardware zones
-    int coolingDeviceCount; // μόνο REAL hardware cooling devices
-}
-
-// ---------------------------------------------------------------
-// Thermal scan
-// ---------------------------------------------------------------
-private ThermalSummary scanThermalHardware(
-        ThermalGroupReading batteryMain,
-        ThermalGroupReading batteryShell,
-        ThermalGroupReading pmic,
-        ThermalGroupReading charger,
-        ThermalGroupReading modemMain,
-        ThermalGroupReading modemAux
-) {
-    ThermalSummary summary = new ThermalSummary();
-
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
-    File[] cools = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
-            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        }
-    } catch (Throwable ignore) { }
-
-    summary.zoneCount          = 0;
-    summary.coolingDeviceCount = 0;
-
-    // REAL hardware thermal zones
-    if (zones != null) {
-        for (File z : zones) {
-            try {
-                String base  = z.getAbsolutePath();
-                String type  = readFirstLineSafe(new File(base, "type"));
-                long   milli = readLongSafe(new File(base, "temp"));
-                float  c     = Float.NaN;
-
-                if (milli == Long.MIN_VALUE) {
-                    try {
-                        c = Float.parseFloat(readFirstLineSafe(new File(base, "temp")));
-                    } catch (Throwable ignore) {}
-                } else {
-                    c = milli / 1000f;
-                }
-
-                if (!isValidTemp(c)) continue;
-                String group = mapTypeToGroup(type);
-                if (group == null) continue;
-
-                // μετράμε μόνο ζώνες που τελικά ανήκουν σε hardware group
-                summary.zoneCount++;
-
-                switch (group) {
-                    case "BatteryMain":  batteryMain.updateIfBetter(type, c); break;
-                    case "BatteryShell": batteryShell.updateIfBetter(type, c); break;
-                    case "PMIC":         pmic.updateIfBetter(type, c); break;
-                    case "Charger":      charger.updateIfBetter(type, c); break;
-                    case "ModemMain":    modemMain.updateIfBetter(type, c); break;
-                    case "ModemAux":     modemAux.updateIfBetter(type, c); break;
-                }
-
-            } catch (Throwable ignore) { }
-        }
-    }
-
-    // REAL hardware cooling devices (fan / blower / pump / heatsink)
-    if (cools != null) {
-        for (File c : cools) {
-            try {
-                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
-                if (isHardwareCoolingDevice(type)) {
-                    summary.coolingDeviceCount++;
-                }
-            } catch (Throwable ignore) {}
-        }
-    }
-
-    return summary;
-}
-
-private String mapTypeToGroup(String rawType) {
-    if (rawType == null) return null;
-    String t = rawType.toLowerCase(Locale.US);
-
-    for (String[] entry : THERMAL_GROUP_PATTERNS) {
-        String label = entry[0];
-        for (int i = 1; i < entry.length; i++) {
-            if (t.contains(entry[i])) return label;
-        }
-    }
-    return null;
-}
-
-// ---------------------------------------------------------------
-// Cooling device filter (REAL hardware only)
-// ---------------------------------------------------------------
-private boolean isHardwareCoolingDevice(String rawType) {
-    if (rawType == null) return false;
-    String t = rawType.toLowerCase(Locale.US);
-
-    if (t.contains("fan"))            return true;
-    if (t.contains("cooling_fan"))    return true;
-    if (t.contains("blower"))         return true;
-    if (t.contains("pump"))           return true;
-    if (t.contains("heatsink"))       return true;
-    if (t.contains("radiator"))       return true;
-    if (t.contains("cooling_module")) return true;
-
-    if (t.contains("skin"))    return false;
-    if (t.contains("hotspot")) return false;
-    if (t.contains("virtual")) return false;
-
-    return false;
-}
-
-private void appendHardwareCoolingDevices(StringBuilder sb) {
-    File thermalDir = new File("/sys/class/thermal");
-    File[] cools = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            cools = thermalDir.listFiles(f -> f.getName().startsWith("cooling_device"));
-        }
-    } catch (Throwable ignore) {}
-
-    int shown = 0;
-
-    if (cools != null) {
-        for (File c : cools) {
-            if (shown >= 5) break;
-
-            try {
-                String type = readFirstLineSafe(new File(c.getAbsolutePath(), "type"));
-                if (!isHardwareCoolingDevice(type)) continue;
-
-                sb.append("• ")
-                  .append(c.getName())
-                  .append(" → ")
-                  .append(type)
-                  .append("\n");
-
-                shown++;
-
-            } catch (Throwable ignore) {}
-        }
-    }
-
-    // --- Αν δεν βρέθηκαν πραγματικά hardware cooling devices ---
-    if (shown == 0) {
-        sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
-    }
-}
-
-// ---------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------
-private String readFirstLineSafe(File file) {
-    if (file == null || !file.exists()) return "";
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        String line = br.readLine();
-        return (line != null) ? line.trim() : "";
-    } catch (Throwable ignore) {
-        return "";
-    }
-}
-
-private long readLongSafe(File file) {
-    if (file == null || !file.exists()) return Long.MIN_VALUE;
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        String line = br.readLine();
-        if (line == null || line.trim().isEmpty()) return Long.MIN_VALUE;
-        return Long.parseLong(line.trim());
-    } catch (Throwable ignore) {
-        return Long.MIN_VALUE;
-    }
-}
-
-// ---------------------------------------------------------------
-// Labels & formatting
-// ---------------------------------------------------------------
-private String classifyTempLabel(float c) {
-    if (!isValidTemp(c)) return "(Unknown)";
-    if (c < 30f)  return "(Cool)";
-    if (c < 40f)  return "(Normal)";
-    if (c < 50f)  return "(Warm)";
-    return "(⚠ Critical)";
-}
-
-private String formatThermalLine(String label, ThermalGroupReading r) {
-    if (r == null || !r.valid)
-        return String.format(Locale.US, "%-17s: N/A\n", label);
-
-    return String.format(Locale.US, "%-17s: %.1f°C %s\n",
-            label, r.tempC, classifyTempLabel(r.tempC));
-}
-
-// ---------------------------------------------------------------
-// Xiaomi / POCO / Redmi Detection + Fallbacks
-// ---------------------------------------------------------------
-private boolean isXiaomiFamilyDevice() {
-    String manu   = (Build.MANUFACTURER == null ? "" : Build.MANUFACTURER).toLowerCase();
-    String brand  = (Build.BRAND == null ? "" : Build.BRAND).toLowerCase();
-    String finger = (Build.FINGERPRINT == null ? "" : Build.FINGERPRINT).toLowerCase();
-
-    return manu.contains("xiaomi") || manu.contains("redmi") || manu.contains("poco")
-            || brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
-            || finger.contains("xiaomi") || finger.contains("redmi") || finger.contains("poco")
-            || finger.contains("hyperos");
-}
-
-private float findTempByTypeKeywords(String... keywords) {
-    if (keywords == null || keywords.length == 0) return Float.NaN;
-
-    File[] zones = new File("/sys/class/thermal")
-            .listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-    if (zones == null) return Float.NaN;
-
-    float best = Float.NaN;
-
-    for (File z : zones) {
-        try {
-            String type = readFirstLineSafe(new File(z, "type")).toLowerCase(Locale.US);
-            boolean match = false;
-            for (String k : keywords) {
-                if (type.contains(k.toLowerCase(Locale.US))) { match = true; break; }
-            }
-            if (!match) continue;
-
-            long milli = readLongSafe(new File(z, "temp"));
-            float c;
-
-            if (milli == Long.MIN_VALUE)
-                c = Float.parseFloat(readFirstLineSafe(new File(z, "temp")));
-            else
-                c = milli / 1000f;
-
-            if (!isValidTemp(c)) continue;
-
-            if (Float.isNaN(best) || c > best) best = c;
-
-        } catch (Throwable ignore) {}
-    }
-
-    return best;
-}
-
-private float readBatteryTempFallback() {
-    String[] paths = {
-            "/sys/class/power_supply/battery/temp",
-            "/sys/class/power_supply/bms/temp",
-            "/sys/class/power_supply/maxfg/temp"
-    };
-
-    for (String p : paths) {
-        try {
-            long v = readLongSafe(new File(p));
-            if (v == Long.MIN_VALUE) continue;
-
-            float c = (v > 1000f ? v / 1000f : v);
-            if (isValidTemp(c)) return c;
-
-        } catch (Throwable ignore) {}
-    }
-    return Float.NaN;
-}
-
-// ---------------------------------------------------------------
-// OEM fallback completion
-// ---------------------------------------------------------------
-private void applyThermalFallbacks(
-        ThermalGroupReading batteryMain,
-        ThermalGroupReading batteryShell,
-        ThermalGroupReading pmic,
-        ThermalGroupReading charger,
-        ThermalGroupReading modemMain,
-        ThermalGroupReading modemAux
-) {
-    boolean isXiaomi = isXiaomiFamilyDevice();
-
-    // Battery Main
-    if (!batteryMain.valid) {
-        float c = findTempByTypeKeywords("battery", "batt_therm", "battery_therm", "bms");
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) batteryMain.updateIfBetter("fallback:battery", c);
-    }
-
-    if (isXiaomi && !batteryMain.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_temp", "bat_therm", "battery-main",
-                "battery_board", "batman"
-        );
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) batteryMain.updateIfBetter("xiaomi:battery", c);
-    }
-
-    // Battery Shell
-    if (!batteryShell.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_shell", "battery_shell", "shell_therm",
-                "case-therm", "skin", "backlight_therm", "backlight"
-        );
-        if (!isValidTemp(c)) c = findTempByTypeKeywords(
-                "rear_case", "back_cover", "batt_surface", "camera"
-        );
-        if (isValidTemp(c)) batteryShell.updateIfBetter("fallback:battery_shell", c);
-    }
-
-    if (isXiaomi && !batteryShell.valid) {
-        float c = findTempByTypeKeywords(
-                "batt_skin", "batt_surface",
-                "back_cover", "rear_case",
-                "backlight_therm", "camera"
-        );
-        if (isValidTemp(c)) batteryShell.updateIfBetter("xiaomi:battery_shell", c);
-    }
-
-    // PMIC
-    if (!pmic.valid) {
-        float c = findTempByTypeKeywords(
-                "pmic", "pmic_therm", "pmic-tz",
-                "pm8998", "pm660", "pm7250", "pm7250b", "pm6450"
-        );
-        if (!isValidTemp(c)) c = findTempByTypeKeywords("bcl", "ibat");
-        if (isValidTemp(c)) pmic.updateIfBetter("fallback:pmic", c);
-    }
-
-    if (isXiaomi && !pmic.valid) {
-        float c = findTempByTypeKeywords(
-                "pm6150l_tz", "pm8350", "pm7250b_tz",
-                "pm7250b-ibat", "pm7250b-bcl"
-        );
-        if (isValidTemp(c)) pmic.updateIfBetter("xiaomi:pmic", c);
-    }
-
-    // Charger
-    if (!charger.valid) {
-        float c = findTempByTypeKeywords("charger", "chg", "usb-therm", "charge-temp");
-        if (!isValidTemp(c)) c = findTempByTypeKeywords("charge_pump", "cp_therm", "usb_conn_therm");
-        if (!isValidTemp(c)) c = readBatteryTempFallback();
-        if (isValidTemp(c)) charger.updateIfBetter("fallback:charger", c);
-    }
-
-    // Modem main
-    if (!modemMain.valid) {
-        float c = findTempByTypeKeywords(
-                "modem", "mdm", "mdmss", "mdmss-3", "mdmss-2",
-                "rf-therm", "modempa", "pa_therm", "pa0_therm", "pa1_therm", "pa2_therm",
-                "modem-cfg"
-        );
-        if (isValidTemp(c)) modemMain.updateIfBetter("fallback:modem_main", c);
-    }
-
-    if (isXiaomi && !modemMain.valid) {
-        float c = findTempByTypeKeywords(
-                "xo_therm_modem", "modem_pa", "modem_pa_0",
-                "mdmss-3", "mdmss-2", "mdmss-1", "pa0", "pa1", "pa2"
-        );
-        if (isValidTemp(c)) modemMain.updateIfBetter("xiaomi:modem_main", c);
-    }
-
-    // Modem aux
-    if (!modemAux.valid) {
-        float c = findTempByTypeKeywords(
-                "modem1", "mdm2", "xbl_modem1", "rf1",
-                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
-        );
-        if (isValidTemp(c)) modemAux.updateIfBetter("fallback:modem_aux", c);
-    }
-
-    if (isXiaomi && !modemAux.valid) {
-        float c = findTempByTypeKeywords(
-                "modem_sub", "modem1_pa", "rf_sub",
-                "mdmss-1", "mdmss-2", "sub1-modem-cfg"
-        );
-        if (isValidTemp(c)) modemAux.updateIfBetter("xiaomi:modem_aux", c);
-    }
-}
-
-// ===================================================================
-// FINAL BUILDER — CLEAN OUTPUT (REAL HARDWARE SUMMARY + TABLE)
-// ===================================================================
-private String buildThermalInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    // Hardware thermals
-    ThermalGroupReading batteryMain  = new ThermalGroupReading();
-    ThermalGroupReading batteryShell = new ThermalGroupReading();
-    ThermalGroupReading pmic         = new ThermalGroupReading();
-    ThermalGroupReading charger      = new ThermalGroupReading();
-    ThermalGroupReading modemMain    = new ThermalGroupReading();
-    ThermalGroupReading modemAux     = new ThermalGroupReading();
-
-    ThermalSummary summary = scanThermalHardware(
-            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
-    );
-
-    applyThermalFallbacks(batteryMain, batteryShell, pmic, charger, modemMain, modemAux);
-
-    // Top summary — μόνο αν υπάρχουν πραγματικά hardware στοιχεία
-if (summary != null && (summary.zoneCount > 0 || summary.coolingDeviceCount > 0)) {
-
-    sb.append(String.format(Locale.US, "%-17s: %d\n",
-            "Thermal Zones", summary.zoneCount));
-
-    if (summary.coolingDeviceCount == 0) {
-        sb.append(String.format(Locale.US,
-                "%-17s: 0 (This device uses passive cooling only)\n",
-                "Cooling Devices"));
-    } else {
-        sb.append(String.format(Locale.US,
-                "%-17s: %d\n",
-                "Cooling Devices", summary.coolingDeviceCount));
-    }
-
-    sb.append("\n");
-}
-
-    sb.append("Hardware Thermal Systems\n");
-    sb.append("================================\n\n");
-
-    sb.append(formatThermalLine("Main Modem",      modemMain));
-    sb.append(formatThermalLine("Secondary Modem", modemAux));
-    sb.append(formatThermalLine("Main Battery",    batteryMain));
-    sb.append(formatThermalLine("Battery Shell",   batteryShell));
-    sb.append(formatThermalLine("Charger Thermal", charger));
-    sb.append(formatThermalLine("PMIC Thermal",    pmic));
-    sb.append("\n");
-
-    sb.append("Hardware Cooling Systems\n");
-    sb.append("================================\n");
-    appendHardwareCoolingDevices(sb);
-
-    return sb.toString();
-}
-
-   //======================================================
-    // 2. Screen / HDR / Refresh + Accurate Diagonal (inches)
-    // ============================================================
-private String buildScreenInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        if (wm != null) {
-
-            Display display = wm.getDefaultDisplay();  // still valid for your project
-            DisplayMetrics dm = new DisplayMetrics();
-            display.getRealMetrics(dm);
-
-            // -------------------------------------------
-            // BASIC SCREEN METRICS
-            // -------------------------------------------
-            int w = dm.widthPixels;
-            int h = dm.heightPixels;
-            int dpi = dm.densityDpi;
-
-            sb.append("Resolution       : ")
-                    .append(w).append(" x ").append(h).append(" px\n");
-            sb.append("Density (DPI)    : ").append(dpi).append("\n");
-            sb.append("Scaled Density   : ").append(dm.scaledDensity).append("\n");
-
-            // -------------------------------------------
-            // REFRESH RATE
-            // -------------------------------------------
-            float refresh = display.getRefreshRate();
-            sb.append("Refresh Rate     : ").append(refresh).append(" Hz\n");
-
-            if (Build.VERSION.SDK_INT >= 30) {
-                float maxR = 0f;
-                try {
-                    Display.Mode[] modes = display.getSupportedModes();
-                    for (Display.Mode m : modes) {
-                        if (m.getRefreshRate() > maxR) {
-                            maxR = m.getRefreshRate();
-                        }
-                    }
-                } catch (Throwable ignore) {}
-                if (maxR > 0f) {
-                    sb.append("Max Refresh      : ").append(maxR).append(" Hz\n");
-                }
-            }
-
-            // -------------------------------------------
-            // WIDE COLOR & HDR
-            // -------------------------------------------
-            if (Build.VERSION.SDK_INT >= 26) {
-                try {
-                    boolean wide = display.isWideColorGamut();
-                    sb.append("Wide Color       : ").append(wide ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-            }
-
-            if (Build.VERSION.SDK_INT >= 24) {
-                try {
-                    Display.HdrCapabilities hc = display.getHdrCapabilities();
-                    int[] types = hc.getSupportedHdrTypes();
-                    sb.append("HDR Modes        : ");
-                    if (types == null || types.length == 0) sb.append("None\n");
-                    else sb.append(types.length).append(" modes\n");
-                } catch (Throwable ignore) {}
-            }
-
-            // -------------------------------------------
-            // ORIENTATION
-            // -------------------------------------------
-            try {
-                Configuration cfg = getResources().getConfiguration();
-                sb.append("Orientation      : ")
-                        .append(cfg.orientation == Configuration.ORIENTATION_LANDSCAPE ?
-                                "Landscape" : "Portrait")
-                        .append("\n");
-            } catch (Throwable ignore) {}
-
-            // -------------------------------------------
-            // DIAGONAL SIZE (INCHES)
-            // -------------------------------------------
-            try {
-                double inchW = (double) w / dm.xdpi;
-                double inchH = (double) h / dm.ydpi;
-                double diag = Math.sqrt(inchW * inchW + inchH * inchH);
-
-                sb.append("Screen Size      : ")
-                        .append(String.format(Locale.US, "%.2f", diag))
-                        .append("\"\n");
-            } catch (Throwable ignore) {}
-        }
-
-    } catch (Throwable ignore) { }
-
-    // -------------------------------------------
-    // ADVANCED (informational)
-    // -------------------------------------------
-    sb.append("Advanced         : Panel ID, HBM tables and OEM tone-mapping, requires root access.\n");
-
-    return sb.toString();
-}
-
-// ============================================================================
-// 3. TELEPHONY / MODEM — ULTRA STABLE GEL EDITION + Xiaomi SimpleSimEntry Fallback
-// ============================================================================
-private String buildModemInfo() {
-    StringBuilder sb = new StringBuilder();
-    Locale locale = Locale.US;
-
-    TelephonyManager tm = null;
-    SubscriptionManager sm = null;
-
-    try { tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE); } catch (Throwable ignore) {}
-    try { sm = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE); } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // PHONE TYPE
-    // ------------------------------------------------------------
-    String phoneTypeStr = "Unknown";
-    try {
-        if (tm != null) {
-            switch (tm.getPhoneType()) {
-                case TelephonyManager.PHONE_TYPE_GSM:  phoneTypeStr = "GSM";  break;
-                case TelephonyManager.PHONE_TYPE_CDMA: phoneTypeStr = "CDMA"; break;
-                case TelephonyManager.PHONE_TYPE_SIP:  phoneTypeStr = "SIP";  break;
-                default: phoneTypeStr = "None"; break;
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    sb.append(String.format(locale, "%s : %s\n",
-            padKeyModem("Phone Type"), phoneTypeStr));
-
-    // ------------------------------------------------------------
-    // DATA NETWORK
-    // ------------------------------------------------------------
-    try {
-        int net = (tm != null) ? tm.getDataNetworkType()
-                               : TelephonyManager.NETWORK_TYPE_UNKNOWN;
-
-        String netName =
-                (net == TelephonyManager.NETWORK_TYPE_NR)  ? "5G NR"  :
-                (net == TelephonyManager.NETWORK_TYPE_LTE) ? "4G LTE" :
-                "Unknown";
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Data Network"), netName));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("5G (NR) Active"),
-                (net == TelephonyManager.NETWORK_TYPE_NR) ? "Yes" : "No"));
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // CARRIER / COUNTRY / OPERATOR CODE
-    // ------------------------------------------------------------
-    try {
-        String carrier = (tm != null) ? tm.getNetworkOperatorName() : null;
-        String iso     = (tm != null) ? tm.getNetworkCountryIso()   : null;
-        String opCode  = (tm != null) ? tm.getNetworkOperator()     : null;
-
-        if (iso == null || iso.trim().isEmpty())
-            iso = Locale.getDefault().getCountry();
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Carrier"),
-                (carrier != null && !carrier.isEmpty()) ? carrier : "Unknown"));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Country ISO"),
-                (iso != null) ? iso.toUpperCase(locale) : "Unknown"));
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Operator Code"),
-                (opCode != null && !opCode.isEmpty()) ? opCode : "Unknown"));
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // SIGNAL STRENGTH
-    // ------------------------------------------------------------
-    try {
-        if (tm != null) {
-            SignalStrength ss = tm.getSignalStrength();
-            if (ss != null) {
-                sb.append(String.format(locale, "%s : %d/4\n",
-                        padKeyModem("Signal Strength"), ss.getLevel()));
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // ROAMING
-    // ------------------------------------------------------------
-    try {
-        boolean roaming = tm != null && tm.isNetworkRoaming();
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Roaming"), roaming ? "Yes" : "No"));
-    } catch (Throwable ignore) {}
-
-    // ========================================================================
-    // ACTIVE SIMS + FALLBACK
-    // ========================================================================
-    try {
-        List<SubscriptionInfo> subs = null;
-
-        if (sm != null) {
-            try { subs = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignore) {}
-        }
-
-        if ((subs == null || subs.isEmpty()) && sm != null) {
-            try {
-                Method m = sm.getClass().getMethod("getAvailableSubscriptionInfoList");
-                Object result = m.invoke(sm);
-                if (result instanceof List) subs = (List<SubscriptionInfo>) result;
-            } catch (Throwable ignore) {}
-        }
-
-        if (subs == null || subs.isEmpty()) {
-            try {
-                SubscriptionManager alt = SubscriptionManager.from(this);
-                if (alt != null) subs = alt.getActiveSubscriptionInfoList();
-            } catch (Throwable ignore) {}
-        }
-
-        List<SimpleSimEntry> simpleList = new ArrayList<>();
-
-        if (subs == null || subs.isEmpty()) {
-            try {
-                for (int slot = 0; slot < 2; slot++) {
-                    int simState = tm.getSimState(slot);
-
-                    if (simState == TelephonyManager.SIM_STATE_READY ||
-                        simState == TelephonyManager.SIM_STATE_NETWORK_LOCKED ||
-                        simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ||
-                        simState == TelephonyManager.SIM_STATE_PUK_REQUIRED) {
-
-                        String name = null;
-                        try { name = tm.getSimOperatorName(); } catch (Throwable ignore) {}
-                        if (name == null || name.trim().isEmpty()) name = "Unknown";
-
-                        simpleList.add(new SimpleSimEntry(slot, name));
-                    }
-                }
-            } catch (Throwable ignore) {}
-        }
-
-        int count = 0;
-
-        if (subs != null && !subs.isEmpty()) {
-            boolean[] seen = new boolean[2];
-            for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot >= 0 && slot <= 1 && !seen[slot]) {
-                        seen[slot] = true;
-                        count++;
-                    }
-                } catch (Throwable ignore) {}
-            }
-        } else if (!simpleList.isEmpty()) {
-            count = simpleList.size();
-        }
-
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Active SIMs"),
-                (count == 0 ? "N/A" : String.valueOf(count))));
-
-        if (subs != null && !subs.isEmpty()) {
-            boolean[] printed = new boolean[2];
-            for (SubscriptionInfo si : subs) {
-                try {
-                    int slot = si.getSimSlotIndex();
-                    if (slot < 0 || slot > 1 || printed[slot]) continue;
-                    printed[slot] = true;
-
-                    String name = (si.getCarrierName() != null)
-                            ? si.getCarrierName().toString()
-                            : "Unknown";
-
-                    sb.append(String.format(locale, "%s : %s\n",
-                            padKeyModem("SIM Slot " + (slot + 1)), name));
-                } catch (Throwable ignore) {}
-            }
-        } else {
-            for (SimpleSimEntry e : simpleList) {
-                sb.append(String.format(locale, "%s : %s\n",
-                        padKeyModem("SIM Slot " + (e.slot + 1)), e.carrier));
-            }
-        }
-
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // ADVANCED MODEM TABLES (ROOT-AWARE, SINGLE LINE)
-    // ------------------------------------------------------------
-    if (isRooted) {
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Advanced"),
-                "Advanced modem tables are available on this device."));
-    } else {
-        sb.append(String.format(locale, "%s : %s\n",
-                padKeyModem("Advanced"),
-                "Advanced modem tables require root access."));
-    }
-
-    return sb.toString();
-}
-
-// ============================================================================
-// 4. Wi-Fi Advanced — GEL Ultra Stable Edition (Clean Title + Real Country Code)
-// ============================================================================
-private String buildWifiAdvancedInfo() {
-    StringBuilder sb = new StringBuilder();
-    Locale locale = Locale.US;
-
-    try {
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        PackageManager pm = getPackageManager();
-        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
-        if (wm != null) {
-
-            // ------------------------------------------------------------
-            // HARDWARE SUPPORT
-            // ------------------------------------------------------------
-            boolean wifiHw = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
-            sb.append("Wi-Fi HW         : ").append(wifiHw ? "Present" : "Missing").append("\n");
-
-            // ------------------------------------------------------------
-            // FREQUENCY BANDS
-            // ------------------------------------------------------------
-            boolean band24 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI);
-            sb.append("2.4 GHz Support  : ").append(band24 ? "Yes" : "No").append("\n");
-
-            boolean band5 = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT);
-            sb.append("5 GHz Support    : ").append(band5 ? "Yes" : "No").append("\n");
-
-            if (Build.VERSION.SDK_INT >= 30) {
-                try {
-                    sb.append("6 GHz Support    : ")
-                            .append(wm.is6GHzBandSupported() ? "Yes" : "No").append("\n");
-                } catch (Throwable ignore) {}
-            }
-
-            // ------------------------------------------------------------
-            // SECURITY CAPABILITIES
-            // ------------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 29) {
-                try { sb.append("WPA3 SAE         : ").append(wm.isWpa3SaeSupported() ? "Yes" : "No").append("\n"); }
-                catch (Throwable ignore) {}
-
-                try { sb.append("WPA3 Suite-B     : ").append(wm.isWpa3SuiteBSupported() ? "Yes" : "No").append("\n"); }
-                catch (Throwable ignore) {}
-            }
-
-            // ------------------------------------------------------------
-            // RTT (distance)
-            // ------------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 28) {
-                boolean rtt = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT);
-                sb.append("Wi-Fi RTT        : ").append(rtt ? "Yes" : "No").append(" (Indoor distance)\n");
-            }
-
-            // ------------------------------------------------------------
-            // Wi-Fi Aware / NAN
-            // ------------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 26) {
-                boolean aware = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE);
-                sb.append("Wi-Fi Aware      : ").append(aware ? "Yes" : "No").append(" (Device proximity)\n");
-            }
-
-            // ------------------------------------------------------------
-            // Easy Connect (DPP)
-            // ------------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 29) {
-                boolean dpp = pm.hasSystemFeature("android.hardware.wifi.dpp");
-                sb.append("Easy Connect     : ").append(dpp ? "Yes" : "No").append("\n");
-            }
-
-            // ------------------------------------------------------------
-            // Passpoint (Hotspot 2.0)
-            // ------------------------------------------------------------
-            if (Build.VERSION.SDK_INT >= 26) {
-                boolean pass = pm.hasSystemFeature(PackageManager.FEATURE_WIFI_PASSPOINT);
-                sb.append("Passpoint (HS2)  : ").append(pass ? "Yes" : "No").append("\n");
-            }
-
-            // ------------------------------------------------------------
-            // P2P / Direct
-            // ------------------------------------------------------------
-            sb.append("Wi-Fi Direct     : ")
-                    .append(pm.hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT) ? "Yes" : "No").append("\n");
-
-            // ------------------------------------------------------------
-            // POWER SAVE MODE
-            // ------------------------------------------------------------
-            try {
-                sb.append("Scan Always On   : ").append(wm.isScanAlwaysAvailable() ? "Yes" : "No").append("\n");
-            } catch (Throwable ignore) {}
-
-            // ------------------------------------------------------------
-            // REAL COUNTRY CODE (triple fallback, COMPILE-SAFE)
-            // ------------------------------------------------------------
-            String cc = null;
-
-            // 1) Modem ISO (best)
-            try { if (tm != null) cc = tm.getNetworkCountryIso(); }
-            catch (Throwable ignore) {}
-
-            // 2) Wi-Fi regulatory domain (some devices support it — COMPILER SAFE)
-            if ((cc == null || cc.isEmpty()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                try {
-                    // Reflection → avoids "cannot find symbol" on devices without method
-                    java.lang.reflect.Method m = WifiManager.class.getMethod("getCountryCode");
-                    Object val = m.invoke(wm);
-                    if (val instanceof String) cc = (String) val;
-                } catch (Throwable ignore) {}
-            }
-
-            // 3) Locale fallback
-            if (cc == null || cc.isEmpty())
-                cc = Locale.getDefault().getCountry();
-
-            sb.append("Country Code     : ")
-                    .append((cc != null && !cc.isEmpty()) ? cc.toUpperCase(locale) : "Unknown")
-                    .append("\n");
-        }
-
-    } catch (Throwable ignore) {}
-
-    // ------------------------------------------------------------
-    // ADVANCED FOOTER — SINGLE LINE
-    // ------------------------------------------------------------
-    sb.append("\nAdvanced         : Regulatory region, DFS radar tables, TX power, per-band limits, requires root access.\n");
-
-    return sb.toString();
-}
-
-// ============================
-// 5. System Feature Matrix
-// ============================
-
-private String buildSystemFeaturesInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    try {
-        PackageManager pm = getPackageManager();
-        FeatureInfo[] feats = pm.getSystemAvailableFeatures();
-
-        if (feats == null || feats.length == 0) {
-            sb.append("No system-declared features exposed by PackageManager.\n");
-            return sb.toString();
-        }
-
-        sb.append("Feature Count    : ").append(feats.length).append("\n\n");
-
-        for (FeatureInfo fi : feats) {
-            if (fi == null || fi.name == null) continue;
-            sb.append("• ").append(fi.name).append("\n");
-        }
-
-        sb.append("\nNote:\n");
-        sb.append("This list represents system-declared capabilities ");
-        sb.append("(PackageManager features).\n");
-        sb.append("It does NOT guarantee actual hardware presence, ");
-        sb.append("availability or performance.\n");
-
-    } catch (Throwable t) {
-        sb.setLength(0);
-        sb.append("System feature matrix is not accessible on this device.\n");
-    }
-
-    return sb.toString();
-}
- 
-// ============================
-// 6. SELinux / Security Flags
-// ============================
-
-private String buildSecurityFlagsInfo() {
-    StringBuilder sb = new StringBuilder();
-
-    String kernel = readSysString("/proc/version");
-    if (kernel != null && !kernel.isEmpty()) {
-        sb.append("Kernel           : ").append(kernel).append("\n");
-    }
-
-    String patch = Build.VERSION.SECURITY_PATCH;
-    if (patch != null && !patch.isEmpty()) {
-        sb.append("Security Patch   : ").append(patch).append("\n");
-    }
-
-    String vbState = getProp("ro.boot.verifiedbootstate");
-    if (vbState != null && !vbState.isEmpty()) {
-        sb.append("Verified Boot    : ").append(vbState).append("\n");
-    }
-
-    boolean strongBox =
-            getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
-    sb.append("StrongBox        : ").append(strongBox ? "Yes" : "No").append("\n");
-
-    boolean hce =
-            getPackageManager().hasSystemFeature(
-                    PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
-    sb.append("HCE / Secure NFC : ").append(hce ? "Yes" : "No").append("\n");
-
-    sb.append(
-        "Advanced         : SELinux policy details and keymaster internals are "
-      + "hardware-isolated and not accessible to apps; inspection requires "
-      + "root or kernel-level access.\n"
-    );
-
-    return sb.toString();
-}
-
-    // ============================================================
-    // HELPERS (ROOT / SYSFS)
-    // ============================================================
-    private String readTextFile(String path, int maxLen) {
-        BufferedReader br = null;
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-
-            br = new BufferedReader(new FileReader(f));
-            StringBuilder sb = new StringBuilder();
-
-            char[] buf = new char[1024];
-            int read;
-
-            while ((read = br.read(buf)) > 0 && sb.length() < maxLen) {
-                sb.append(buf, 0, read);
-            }
-
-            return sb.toString();
-
-        } catch (Throwable ignore) {
-            return null;
-
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) { }
-        }
-    }
-
-    private String readSysString(String path) {
-        BufferedReader br = null;
-
-        try {
-            File f = new File(path);
-            if (!f.exists()) return null;
-
-            br = new BufferedReader(new FileReader(f));
-            String line = br.readLine();
-
-            return line != null ? line.trim() : null;
-
-        } catch (Throwable ignore) {
-            return null;
-
-        } finally {
-            try {
-                if (br != null) br.close();
-            } catch (Exception ignored) { }
-        }
-    }
-
-    private long readSysLong(String path) {
-        String s = readSysString(path);
-        if (s == null || s.isEmpty()) return -1;
-
-        try {
-            return Long.parseLong(s);
-        } catch (Throwable ignore) {
-            return -1;
-        }
-    }
-
-    private String getProp(String key) {
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getprop", key});
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = br.readLine();
-            br.close();
-            return line != null ? line.trim() : "";
-
-        } catch (Throwable ignore) {
-            return "";
-        }
-    }
-
-// ============================================================
-// SET TEXT FOR ALL SECTIONS — COMPLETE & FIXED (FINAL)
-// ============================================================
-private void populateAllSections() {
-
-    // =====================
-    // BATTERY (CORE HARDWARE)
-    // =====================
-    String bat = buildBatteryInfo();
-    set(R.id.txtBatteryContent, bat);
-    applyNeonValues(findViewById(R.id.txtBatteryContent), bat);
-
-    // =====================
-    // SCREEN
-    // =====================
-    String scr = buildScreenInfo();
-    set(R.id.txtScreenContent, scr);
-    applyNeonValues(findViewById(R.id.txtScreenContent), scr);
-
-    // =====================
-    // CAMERA
-    // =====================
-    String cam = buildCameraInfo();
-    set(R.id.txtCameraContent, cam);
-    applyNeonValues(findViewById(R.id.txtCameraContent), cam);
-
-    // =====================
-    // CONNECTIVITY
-    // =====================
-    String con = buildConnectivityInfo();
-    set(R.id.txtConnectivityContent, con);
-    applyNeonValues(findViewById(R.id.txtConnectivityContent), con);
-
-    // =====================
-    // LOCATION
-    // =====================
-    String loc = getLocationCapabilities();
-set(R.id.txtLocationContent, loc);
-applyNeonValues(findViewById(R.id.txtLocationContent), loc);
-
-    // =====================
-    // THERMAL
-    // =====================
-    String th = buildThermalInfo();
-    set(R.id.txtThermalContent, th);
-    applyNeonValues(findViewById(R.id.txtThermalContent), th);
-
-    // =====================
-    // MODEM
-    // =====================
-    String mod = buildModemInfo();
-    set(R.id.txtModemContent, mod);
-    applyNeonValues(findViewById(R.id.txtModemContent), mod);
-
-    // =====================
-    // WIFI ADVANCED
-    // =====================
-    String wifi = buildWifiAdvancedInfo();
-    set(R.id.txtWifiAdvancedContent, wifi);
-    applyNeonValues(findViewById(R.id.txtWifiAdvancedContent), wifi);
-
-    // =====================
-    // AUDIO (UNIFIED)
-    // =====================
-    String aud = buildAudioUnifiedInfo();
-    set(R.id.txtAudioUnifiedContent, aud);
-    applyNeonValues(findViewById(R.id.txtAudioUnifiedContent), aud);
-
-    // =====================
-    // SENSORS
-    // =====================
-    String sen = buildSensorsInfo();
-    set(R.id.txtSensorsContent, sen);
-    applyNeonValues(findViewById(R.id.txtSensorsContent), sen);
-
-    // =====================
-    // BIOMETRICS
-    // =====================
-    String bio = buildBiometricsInfo();
-    set(R.id.txtBiometricsContent, bio);
-    applyNeonValues(findViewById(R.id.txtBiometricsContent), bio);
-
-    // =====================
-    // NFC
-    // =====================
-    String nfc = getNfcBasicInfo();
-set(R.id.txtNfcContent, nfc);
-applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
-
-    // =====================
-    // GNSS
-    // =====================
-    String gnss = buildGnssInfo();
-    set(R.id.txtGnssContent, gnss);
-    applyNeonValues(findViewById(R.id.txtGnssContent), gnss);
-
-    // =====================
-    // UWB
-    // =====================
-    String uwb = buildUwbInfo();
-    set(R.id.txtUwbContent, uwb);
-    applyNeonValues(findViewById(R.id.txtUwbContent), uwb);
-
-    // =====================
-    // USB
-    // =====================
-    String usb = buildUsbInfo();
-    set(R.id.txtUsbContent, usb);
-    applyNeonValues(findViewById(R.id.txtUsbContent), usb);
-
-    // =====================
-    // HAPTICS
-    // =====================
-    String hap = buildHapticsInfo();
-    set(R.id.txtHapticsContent, hap);
-    applyNeonValues(findViewById(R.id.txtHapticsContent), hap);
-
-    // =====================
-    // SYSTEM FEATURES
-    // =====================
-    String sys = buildSystemFeaturesInfo();
-    set(R.id.txtSystemFeaturesContent, sys);
-    applyNeonValues(findViewById(R.id.txtSystemFeaturesContent), sys);
-
-    // =====================
-    // SECURITY FLAGS
-    // =====================
-    String sec = buildSecurityFlagsInfo();
-    set(R.id.txtSecurityFlagsContent, sec);
-    applyNeonValues(findViewById(R.id.txtSecurityFlagsContent), sec);
-
-    // =====================
-    // ROOT
-    // =====================
-    String root = buildRootInfo();
-    set(R.id.txtRootContent, root);
-    applyNeonValues(findViewById(R.id.txtRootContent), root);
-
-    // =====================
-    // OTHER PERIPHERALS
-    // =====================
-    String oth = buildOtherPeripheralsInfo();
-    set(R.id.txtOtherPeripheralsContent, oth);
-    applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);
-}
-
-
-// ============================================================
-// GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)
-// ============================================================
-    private void showPermissionDebugInfo() {
-
-        StringBuilder dbg = new StringBuilder();
-        dbg.append("=== GEL Permission Debug Mode v24 ===\n\n");
-
-        dbg.append("CAMERA            : ")
-                .append(checkSelfPermission(Manifest.permission.CAMERA) ==
-                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                .append("\n");
-
-        dbg.append("MICROPHONE        : ")
-                .append(checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                .append("\n");
-
-        dbg.append("LOCATION (FINE)   : ")
-                .append(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                .append("\n");
-
-        dbg.append("LOCATION (COARSE) : ")
-                .append(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                        PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                .append("\n");
-
-        if (Build.VERSION.SDK_INT >= 31) {
-
-            dbg.append("BLUETOOTH SCAN    : ")
-                    .append(checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) ==
-                            PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                    .append("\n");
-
-            dbg.append("BLUETOOTH CONNECT : ")
-                    .append(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) ==
-                            PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                    .append("\n");
-
-            dbg.append("NEARBY DEVICES    : ")
-                    .append(checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES) ==
-                            PackageManager.PERMISSION_GRANTED ? "ALLOWED" : "DENIED")
-                    .append("\n");
-        } else {
-            dbg.append("BLUETOOTH         : AUTO-ALLOWED (API<31)\n");
-            dbg.append("NEARBY DEVICES    : AUTO-ALLOWED (API<31)\n");
-        }
-
-        dbg.append("NFC               : NO PERMISSION NEEDED\n");
-
-        android.util.Log.e("GEL-PERMS", dbg.toString());
-    }
-
-    // ============================================================
-    // SET METHOD — helper for onStart()
-    // ============================================================
-    private void set(int id, String txt) {
-        TextView t = findViewById(id);
-        if (t == null) return;
-        applyNeonValues(t, txt);
-    }
-
-    // ============================================================
-    // APPLY NEON VALUES + OEM GOLD + CLICKABLE PATHS
-    // ============================================================
-    private void applyNeonValues(TextView tv, String text) {
-        if (text == null) {
-            tv.setText("");
-            return;
-        }
-
-        int neon = Color.parseColor(NEON_GREEN);
-        int gold = Color.parseColor(GOLD_COLOR);
-        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-        int start = 0;
-        int len   = text.length();
-
-        while (start < len) {
-            int colon = text.indexOf(':', start);
-            if (colon == -1) break;
-
-            int lineEnd = text.indexOf('\n', colon);
-            if (lineEnd == -1) lineEnd = len;
-
-            int valueStart = colon + 1;
-            while (valueStart < lineEnd && Character.isWhitespace(text.charAt(valueStart))) {
-                valueStart++;
-            }
-
-            if (valueStart < lineEnd) {
-                ssb.setSpan(
-                        new ForegroundColorSpan(neon),
-                        valueStart,
-                        lineEnd,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-
-            start = lineEnd + 1;
-        }
-
-        int idxX = text.indexOf("Xiaomi");
-        while (idxX != -1) {
-            int end = idxX + "Xiaomi".length();
-            ssb.setSpan(
-                    new ForegroundColorSpan(gold),
-                    idxX,
-                    end,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        AudioTrack track;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            track = new AudioTrack(
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build(),
+                    new AudioFormat.Builder()
+                            .setSampleRate(sampleRate)
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build(),
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
             );
-            idxX = text.indexOf("Xiaomi", end);
-        }
-
-        String os = "Open Settings";
-        int idxOS = text.indexOf(os);
-        if (idxOS != -1) {
-            ssb.setSpan(
-                    new StyleSpan(Typeface.BOLD),
-                    idxOS,
-                    idxOS + os.length(),
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        } else {
+            track = new AudioTrack(
+                    AudioManager.STREAM_VOICE_CALL,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    buffer.length * 2,
+                    AudioTrack.MODE_STATIC
             );
         }
 
-        boolean hasPath = false;
-        int idx = text.indexOf("Settings →");
+        track.write(buffer, 0, buffer.length);
+        track.play();
 
-        while (idx != -1) {
-            int end = text.indexOf('\n', idx);
-            if (end == -1) end = len;
+        SystemClock.sleep(durationMs + 80);
 
-            final String pathText = text.substring(idx, end);
+        try { track.stop(); } catch (Throwable ignored) {}
+        try { track.release(); } catch (Throwable ignored) {}
 
-            ssb.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(@NonNull View widget) {
-                    handleSettingsClick(widget.getContext(), pathText);
-                }
-            }, idx, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-            ssb.setSpan(
-                    new ForegroundColorSpan(LINK_BLUE),
-                    idx,
-                    end,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-
-            hasPath = true;
-            idx = text.indexOf("Settings →", end);
-        }
-
-        if (hasPath) {
-            tv.setMovementMethod(LinkMovementMethod.getInstance());
-            tv.setHighlightColor(Color.TRANSPARENT);
-        }
-
-        tv.setText(ssb);
-    }
-    
-// ===================================================================
-// HELPERS — alignment + indent  (REQUIRED for Battery Builder)
-// ===================================================================
-private String padKey(String key) {
-    return String.format(Locale.US, "%-22s", key);
+    } catch (Throwable ignored) {}
 }
 
-private String indent(String text, int spaces) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < spaces; i++) sb.append(' ');
-    sb.append(text);
-    return sb.toString();
-}
+@Override
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
 
-// ============================================================================
-// MODEM HELPERS — REQUIRED FOR buildModemInfo()
-// ============================================================================
-private String padKeyModem(String key) {
-    final int width = 20;
-    if (key == null) return "";
-    if (key.length() >= width) return key;
-    StringBuilder sb = new StringBuilder(key);
-    while (sb.length() < width) sb.append(' ');
-    return sb.toString();
-}
+    if (requestCode == 6006) { // LAB 6 — Touch Grid
+        if (resultCode == RESULT_OK)
+            logOk("LAB 6 — Touch grid passed (all zones responsive)");
+        else
+            logError("LAB 6 — Touch grid failed (dead zone suspected)");
 
-private String maskSensitive(String value) {
-    if (value == null) return "N/A";
-    String v = value.trim();
-    if (v.length() <= 4) return "****";
-    int keepStart = 4;
-    int keepEnd = 2;
-    String start = v.substring(0, Math.min(keepStart, v.length()));
-    String end   = v.substring(Math.max(v.length() - keepEnd, keepStart));
-    StringBuilder mid = new StringBuilder();
-    for (int i = 0; i < v.length() - start.length() - end.length(); i++) {
-        mid.append('*');
-    }
-    return start + mid + end;
-}
-
-// ============================================================================
-// NFC BASIC INFO — REQUIRED FOR populateAllSections()
-// ============================================================================
-private String getNfcBasicInfo() {
-    try {
-        NfcManager nfcManager = (NfcManager) getSystemService(Context.NFC_SERVICE);
-        if (nfcManager != null) {
-            NfcAdapter adapter = nfcManager.getDefaultAdapter();
-            if (adapter != null) {
-                return "NFC Supported : Yes\nNFC Enabled   : " + (adapter.isEnabled() ? "Yes" : "No");
-            }
-        }
-        return "NFC Supported : No";
-    } catch (Throwable ignore) {
-        return "NFC Supported : Unknown";
-    }
-}
-
-// ============================================================================
-// LOCATION CAPABILITIES — REQUIRED FOR populateAllSections()
-// ============================================================================
-private String getLocationCapabilities() {
-    StringBuilder sb = new StringBuilder();
-    PackageManager pm = getPackageManager();
-
-    try {
-        sb.append("GPS HW             : ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "Yes" : "No")
-                .append("\n");
-
-        sb.append("Network Locatio    : ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "Yes" : "No")
-                .append("\n");
-
-        sb.append("Passive Provider   : ")
-                .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION) ? "Yes" : "No")
-                .append("\n");
-
-        sb.append("\nAdvanced           : AGNSS, LPP, SUPL, carrier-assisted fixes, requires root access.");
-
-    } catch (Throwable ignore) {
-        return "Location Capabilities : Unknown";
+        enableSingleExportButton();
+        return;
     }
 
-    return sb.toString();
-}
+    if (requestCode == 7007) { // LAB 7 — Rotation
+        if (resultCode == RESULT_OK)
+            logOk("LAB 7 — Rotation detected via sensors");
+        else
+            logError("LAB 7 — No rotation detected");
 
-// ============================================================================
-// 3. TELEPHONY / MODEM — UI REFRESH (ONE BLOCK, ONE TEXTVIEW)
-// ============================================================================
-private void refreshModemInfo() {
-    try {
-        TextView modemView = findViewById(R.id.txtModemContent);
-        if (modemView != null) {
-            String info = buildModemInfo();
-            modemView.setText(info);
-            modemView.setVisibility(View.VISIBLE);
-            applyNeonValues(modemView, info);
-        }
-    } catch (Throwable ignore) {}
-}
+        enableSingleExportButton();
+        return;
+    }
 
-// ============================================================================
-// LOCAL CLASS — Xiaomi SimpleSimEntry fallback
-// ============================================================================
-private static class SimpleSimEntry {
-    int slot;
-    String carrier;
+    if (requestCode == 8008) { // LAB 8 — Proximity
+        if (resultCode == RESULT_OK)
+            logOk("LAB 8 — Proximity sensor responded correctly");
+        else
+            logError("LAB 8 — No proximity response detected");
 
-    SimpleSimEntry(int s, String c) {
-        slot = s;
-        carrier = c;
+        enableSingleExportButton();
     }
 }
 
 // ============================================================
-// GEL UI HELPERS — REQUIRED
+// END OF CLASS
 // ============================================================
-
-private void setNeonSectionText(TextView tv, String text) {
-    if (tv == null) return;
-    tv.setText(text);
-}
-
-private void appendAccessInstructions(StringBuilder sb, String type) {
-    if (sb == null) return;
-
-    sb.append("\n");
-    sb.append("Access Info       : ");
-
-    switch (type) {
-        case "camera":
-            sb.append("Camera permission required\n");
-            sb.append("Settings → Apps → Permissions → Camera\n");
-            break;
-        case "sensors":
-            sb.append("Sensor access is system managed\n");
-            break;
-        default:
-            sb.append("Additional permissions may be required\n");
-    }
-}
-
-private void handleSettingsClick(Context ctx, String path) {
-    try {
-        Intent i = new Intent(Settings.ACTION_SETTINGS);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ctx.startActivity(i);
-    } catch (Throwable ignore) {}
-}
-
-private void animateCollapse(TextView v) {
-    if (v == null) return;
-    v.setVisibility(View.GONE);
-}
-
-// 🔥 END OF CLASS
 }

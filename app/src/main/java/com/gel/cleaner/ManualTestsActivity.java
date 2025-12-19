@@ -289,7 +289,7 @@ body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13Intern
     root.addView(body4);
 
     body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
-    body4.addView(makeTestButton("15. Charging Port Inspection", this::lab15ChargingPortManual));
+    body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));
     body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
     body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
 
@@ -2620,32 +2620,108 @@ private void logLab14Confidence() {
 }
      
 //=============================================================
-// LAB 15 — Charging Port & Charger Inspection (manual)  
-// ============================================================  
-private void lab15ChargingPortManual() {  
-    logLine();  
-    logInfo("LAB 15 — Charging Port & Charger Inspection (manual).");  
-    logInfo("1) Inspect the charging port with a flashlight for dust, lint or corrosion.");  
-    logWarn("If the cable fits loosely or disconnects easily -> worn port or bent contacts.");  
-    logError("If the device does not charge with known-good chargers -> possible port or board-level power issue.");  
-}  
+// LAB 15 — Charging System Diagnostic (SMART AUTO ENGINE)
+// GEL LAB EDITION — Clean / Replace / Board-Level Decision
+//=============================================================
+private void lab15ChargingSystemSmart() {
 
-// ============================================================
-// GEL Battery Temperature Reader (Universal)
-// ============================================================
-private float getBatteryTemperature() {
-try {
-Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-if (i == null) return 0f;
+    logLine();
+    logInfo("LAB 15 — Charging System Diagnostic (Smart).");
 
-int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);  
-    if (raw <= 0) return 0f;  
+    // ------------------------------------------------------------
+    // 1️⃣ Baseline checks
+    // ------------------------------------------------------------
+    boolean charging = isDeviceCharging();
+    float battTemp = getBatteryTemperature();
+    float battPct  = getCurrentBatteryPercent();
 
-    return raw / 10f;  // Android gives tenths of °C  
-} catch (Exception e) {  
-    return 0f;  
-}
+    if (battPct < 0) {
+        logWarn("Unable to read battery percentage reliably.");
+    } else {
+        logInfo(String.format(Locale.US,
+                "Battery level: %.1f%%", battPct));
+    }
 
+    if (battTemp > 0) {
+        logInfo(String.format(Locale.US,
+                "Battery temperature: %.1f°C", battTemp));
+    } else {
+        logWarn("Battery temperature unavailable.");
+    }
+
+    // ------------------------------------------------------------
+    // 2️⃣ Charging state analysis
+    // ------------------------------------------------------------
+    if (!charging) {
+
+        logError("Device is NOT charging.");
+
+        if (battTemp > 45f) {
+            logError(
+                "High battery temperature while not charging.\n" +
+                "Likely cause: charging safety shutdown or internal resistance issue."
+            );
+            logError("LAB decision: ⚠ Board-level or battery fault suspected.");
+            return;
+        }
+
+        logWarn(
+            "No charging detected.\n" +
+            "Possible causes:\n" +
+            "• Dirty charging port (lint/dust)\n" +
+            "• Worn or loose connector\n" +
+            "• Faulty charger or cable"
+        );
+
+        logInfo("LAB decision: 🧹 CLEAN charging port and retry with known-good cable.");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 3️⃣ Charging detected — quality check
+    // ------------------------------------------------------------
+    logOk("Charging state detected.");
+
+    if (battTemp >= 47f) {
+
+        logError(
+            "Charging detected but battery temperature is very high.\n" +
+            "Charging throttling or shutdown may occur."
+        );
+
+        logError(
+            "LAB decision: ❌ Battery replacement recommended.\n" +
+            "High internal resistance detected."
+        );
+        return;
+    }
+
+    if (battTemp >= 40f) {
+
+        logWarn(
+            "Battery temperature elevated during charging.\n" +
+            "This may indicate partial connector resistance or aging battery."
+        );
+
+        logWarn(
+            "LAB decision: ⚠ CLEAN port first.\n" +
+            "If issue persists → consider battery replacement."
+        );
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 4️⃣ Normal charging conditions
+    // ------------------------------------------------------------
+    logOk(
+        "Charging behavior appears normal.\n" +
+        "Temperature within safe limits."
+    );
+
+    logOk(
+        "LAB decision: ✅ Charging system OK.\n" +
+        "No cleaning or replacement required."
+    );
 }
 
 // ============================================================

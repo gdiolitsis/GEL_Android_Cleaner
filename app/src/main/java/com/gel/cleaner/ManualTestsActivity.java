@@ -2914,7 +2914,7 @@ private void lab15ChargingSystemSmart() {
     // 🔒 HARD GUARD — Require charging with LIVE auto-retry
     // ------------------------------------------------------------
     if (!isDeviceCharging()) {
-        showChargingRequiredDialogWithAutoRetry(this::lab15ChargingSystemSmart);
+        showChargingRequiredDialogWithLiveStatus(this::lab15ChargingSystemSmart);
         return;
     }
 

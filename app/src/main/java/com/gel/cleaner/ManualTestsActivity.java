@@ -2482,6 +2482,8 @@ private void logLab14Confidence() {
     int runs = getLab14RunCount();
     logLine();
 
+    if (txtLog == null) return;
+
     if (runs <= 1) {
 
         SpannableString sp =
@@ -2494,7 +2496,8 @@ private void logLab14Confidence() {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        appendLog(sp);
+        txtLog.append(sp);
+        txtLog.append("\n");
 
         logInfo("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES UNDER SIMILAR CONDITIONS.");
     }
@@ -2510,7 +2513,8 @@ private void logLab14Confidence() {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        appendLog(sp);
+        txtLog.append(sp);
+        txtLog.append("\n");
 
         logInfo("ONE ADDITIONAL RUN IS RECOMMENDED TO CONFIRM BATTERY AGING TREND.");
     }
@@ -2526,7 +2530,8 @@ private void logLab14Confidence() {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        appendLog(sp);
+        txtLog.append(sp);
+        txtLog.append("\n");
 
         logInfo("Battery diagnostic confidence is high.");
     }

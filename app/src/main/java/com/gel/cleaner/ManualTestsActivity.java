@@ -1060,7 +1060,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             // TITLE
             // -------------------------
             chargingTitleView = new TextView(this);
-            chargingTitleView.setText("LAB 15 — Charging Required");
+            chargingTitleView.setText("Lab 15 — Connect the charger to the device charging port");
             chargingTitleView.setTextColor(0xFFFFFFFF);
             chargingTitleView.setTextSize(18f);
             chargingTitleView.setPadding(0, 0, 0, dp(12));
@@ -1070,7 +1070,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             // MESSAGE
             // -------------------------
             chargingMsgView = new TextView(this);
-            chargingMsgView.setText("Waiting for charging…");
+            chargingMsgView.setText("Connect the charger to the device charging port");
             chargingMsgView.setTextColor(0xFFDDDDDD);
             chargingMsgView.setTextSize(14f);
             chargingMsgView.setPadding(0, 0, 0, dp(12));
@@ -1135,7 +1135,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
                     lab15Running = true;
 
                     chargingTitleView.setTextColor(0xFF39FF14);
-                    chargingMsgView.setText("Charging detected");
+                    chargingMsgView.setText("Charging connection detected");
 
                     try {
                         unregisterReceiver(this);
@@ -2910,13 +2910,13 @@ private void logLab14Confidence() {
 //=============================================================
 private void lab15ChargingSystemSmart() {
 
-    // ------------------------------------------------------------
-    // 🔒 HARD GUARD — Require charging with LIVE auto-retry
-    // ------------------------------------------------------------
-    if (!isDeviceCharging()) {
-        showChargingRequiredDialogWithLiveStatus(this::lab15ChargingSystemSmart);
-        return;
-    }
+    // ΠΑΝΤΑ άνοιγμα popup
+showChargingRequiredDialogWithLiveStatus(this::lab15ChargingSystemSmart);
+
+// αν ΔΕΝ φορτίζει, σταματάμε εδώ
+if (!isDeviceCharging()) {
+    return;
+}
 
     // ------------------------------------------------------------
     // HEADER
@@ -2944,6 +2944,19 @@ private void lab15ChargingSystemSmart() {
         logWarn("Battery temperature unavailable.");
     }
 
+    // ------------------------------------------------------------
+    // CONFIRM CHARGING STATE (MISSING BEFORE)
+    // ------------------------------------------------------------
+    logOk("Charging state detected.");
+
+    // ------------------------------------------------------------
+    // PRE-ANNOUNCE STABILITY CHECK (MATCHES OLD VERSION)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("LAB 15 — Charging Instability Check");
+    logInfo("Monitoring charging stability for 20 seconds...");
+    logInfo("Monitoring charging system for 180 seconds...");
+    
     // ------------------------------------------------------------
     // 🚀 START CORE LAB 15 (180 sec)
     // Single Final Decision happens INSIDE

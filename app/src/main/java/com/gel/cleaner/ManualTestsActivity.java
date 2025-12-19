@@ -490,6 +490,26 @@ private Button makeTestButtonRedGold(String text, Runnable action) {
     return b;
 }
 
+// ------------------------------------------------------------
+// Reliable charging detection (plugged-based)
+// ------------------------------------------------------------
+private boolean isDeviceCharging() {
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return false;
+
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+            || plugged == BatteryManager.BATTERY_PLUGGED_USB
+            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
 // ============================================================
 // LAB 14 — STRESS TEST DIALOG (DURATION SELECTOR)
 // ============================================================
@@ -1914,12 +1934,12 @@ private void lab14BatteryHealthStressTest() {
         return;
     }
 
-    // Must NOT be charging
-    if (biStart.status != null &&
-            biStart.status.toLowerCase(Locale.US).contains("charging")) {
-        logError("Stress test requires the device to be NOT charging.");
-        return;
-    }
+    // Must NOT be charging (reliable check)
+if (isDeviceCharging()) {
+    logLine();
+    logError("Stress test requires the device to be NOT charging.");
+    return;
+}
 
     long modelCap = getStoredModelCapacity();
 

@@ -2175,15 +2175,6 @@ private void lab14BatteryHealthStressTest() {
     });
 }
 
-    // ------------------------------------------------------------
-    // ✅ Freeze values for lambdas (Java requirement)
-    // ------------------------------------------------------------
-    final float  fStartPct   = startPct;
-    final long   fFullMah    = fullMah;
-    final String fCapSource  = capSource;
-    final int    fHealthPct  = healthPct;
-    final BatteryInfo fBiStart = biStart;
-
 // ===================================================================
 // LAB 14 — AGING INDEX ENGINE
 // Objective trend-based battery aging indicator

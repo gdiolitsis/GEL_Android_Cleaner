@@ -2475,24 +2475,59 @@ private int getLab14RunCount() {
 }
 
 // ------------------------------------------------------------
-// Log confidence message based on run count
+// Log confidence message based on run count (COLOR CODED)
 // ------------------------------------------------------------
 private void logLab14Confidence() {
 
     int runs = getLab14RunCount();
-
     logLine();
 
     if (runs <= 1) {
-        logInfo("Confidence: Preliminary (1 run).");
-        logInfo("For higher diagnostic accuracy, run this test 2 more times under similar conditions.");
+
+        SpannableString sp =
+                new SpannableString("Confidence: Preliminary (1 run)");
+
+        sp.setSpan(
+                new ForegroundColorSpan(Color.RED),
+                "Confidence:".length(),
+                sp.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+
+        appendLog(sp);
+
+        logInfo("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES UNDER SIMILAR CONDITIONS.");
     }
     else if (runs == 2) {
-        logInfo("Confidence: Medium (2 runs).");
-        logInfo("One additional run is recommended to confirm battery aging trend.");
+
+        SpannableString sp =
+                new SpannableString("Confidence: Medium (2 runs)");
+
+        sp.setSpan(
+                new ForegroundColorSpan(0xFFFFA500), // orange
+                "Confidence:".length(),
+                sp.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+
+        appendLog(sp);
+
+        logInfo("ONE ADDITIONAL RUN IS RECOMMENDED TO CONFIRM BATTERY AGING TREND.");
     }
     else {
-        logOk("Confidence: High (3+ consistent runs).");
+
+        SpannableString sp =
+                new SpannableString("Confidence: High (3+ consistent runs)");
+
+        sp.setSpan(
+                new ForegroundColorSpan(0xFF39FF14), // GEL green
+                "Confidence:".length(),
+                sp.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+
+        appendLog(sp);
+
         logInfo("Battery diagnostic confidence is high.");
     }
 }

@@ -193,8 +193,6 @@ private static class TelephonySnapshot {
 protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    setContentView(R.layout.activity_manual_tests);
-
     ui = new Handler(Looper.getMainLooper());
 
     // ============================================================
@@ -4665,3 +4663,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
+

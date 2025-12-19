@@ -1037,8 +1037,7 @@ private BroadcastReceiver chargingReceiver;
 
 private volatile boolean lab15Running = false;
 private volatile boolean chargingDetected = false;
-private volatile boolean lab15FlapUnstable = false;
-private volatile boolean lab15OverTempDuringCharge = false;
+
 
 // ============================================================
 // SHOW DIALOG — WAIT FOR CHARGING (PHASE 1)

@@ -1351,6 +1351,7 @@ private void runLab15Core() {
         dismissChargingStatusDialog();
     }
 });
+}
 
 // ============================================================
 // FLAPPING MONITOR (20 sec — EARLY SIGNAL ONLY)

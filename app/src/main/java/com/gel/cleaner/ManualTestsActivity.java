@@ -1025,14 +1025,18 @@ private AlertDialog chargingDialog;
 private TextView chargingTitleView;
 private TextView chargingMsgView;
 private TextView chargingDotsView;
-private android.content.BroadcastReceiver chargingReceiver;
+private TextView lab15StatusText;
+private LinearLayout lab15ProgressBar;
+private BroadcastReceiver chargingReceiver;
 
 private volatile boolean lab15Running = false;
 private volatile boolean chargingDetected = false;
+private volatile boolean lab15FlapUnstable = false;
+private volatile boolean lab15OverTempDuringCharge = false;
 
-// ------------------------------------------------------------
+// ============================================================
 // SHOW DIALOG — WAIT FOR CHARGING (PHASE 1)
-// ------------------------------------------------------------
+// ============================================================
 private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetected) {
 
     ui.post(() -> {
@@ -1042,7 +1046,6 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
                             ManualTestsActivity.this,
                             android.R.style.Theme_Material_Dialog_NoActionBar
                     );
-
             b.setCancelable(false);
 
             // -------------------------
@@ -1078,51 +1081,67 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             // -------------------------
             chargingDotsView = new TextView(this);
             chargingDotsView.setText("•");
-            chargingDotsView.setTextColor(0xFF39FF14); // neon green
+            chargingDotsView.setTextColor(0xFF39FF14);
             chargingDotsView.setTextSize(22f);
-            chargingDotsView.setGravity(Gravity.START);
             root.addView(chargingDotsView);
+
+            // -------------------------
+            // STATUS TEXT
+            // -------------------------
+            lab15StatusText = new TextView(this);
+            lab15StatusText.setText("Monitoring charging system… 0 / 180 sec");
+            lab15StatusText.setTextColor(0xFFDDDDDD);
+            lab15StatusText.setGravity(Gravity.CENTER);
+            lab15StatusText.setPadding(0, dp(8), 0, dp(8));
+            root.addView(lab15StatusText);
+
+            // -------------------------
+            // PROGRESS BAR (6 × 30s)
+            // -------------------------
+            lab15ProgressBar = new LinearLayout(this);
+            lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+            lab15ProgressBar.setGravity(Gravity.CENTER);
+
+            for (int i = 0; i < 6; i++) {
+                View seg = new View(this);
+                LinearLayout.LayoutParams lp =
+                        new LinearLayout.LayoutParams(0, dp(10), 1f);
+                lp.setMargins(dp(3), 0, dp(3), 0);
+                seg.setLayoutParams(lp);
+                seg.setBackgroundColor(0xFF333333);
+                lab15ProgressBar.addView(seg);
+            }
+
+            root.addView(lab15ProgressBar);
 
             b.setView(root);
 
             chargingDialog = b.create();
             chargingDialog.show();
 
-            // ------------------------------------------------------------
-            // DOTS ANIMATION — NEVER STOPS DURING LAB
-            // ------------------------------------------------------------
             startChargingDotsAnimation();
 
-            // ------------------------------------------------------------
+            // -------------------------
             // LIVE CHARGING DETECTOR
-            // ------------------------------------------------------------
-            chargingReceiver = new android.content.BroadcastReceiver() {
+            // -------------------------
+            chargingReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
 
-                    if (chargingDetected)
-                        return;
-
-                    if (!isDeviceCharging())
+                    if (chargingDetected || !isDeviceCharging())
                         return;
 
                     chargingDetected = true;
                     lab15Running = true;
 
-                    // 🔁 CHANGE UI — PHASE 2
-                    ui.post(() -> {
-                        chargingTitleView.setTextColor(0xFF39FF14); // green
-                        chargingMsgView.setText("Charging detected");
-                    });
+                    chargingTitleView.setTextColor(0xFF39FF14);
+                    chargingMsgView.setText("Charging detected");
 
-                    // stop listening (charging locked)
                     try {
-                        ManualTestsActivity.this.unregisterReceiver(this);
+                        unregisterReceiver(this);
                     } catch (Throwable ignore) {}
 
                     chargingReceiver = null;
-
-                    // 🚀 START LAB AFTER SHORT STABILIZATION
                     ui.postDelayed(onChargingDetected, 300);
                 }
             };
@@ -1136,460 +1155,149 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
     });
 }
 
-// ------------------------------------------------------------
+// ============================================================
 // DOTS ANIMATION ENGINE
-// ------------------------------------------------------------
+// ============================================================
 private void startChargingDotsAnimation() {
 
     ui.post(new Runnable() {
 
         int step = 0;
-        final String[] frames = {
-                "•",
-                "• •",
-                "• • •"
-        };
+        final String[] frames = {"•", "• •", "• • •"};
 
         @Override
         public void run() {
-
-            if (chargingDotsView == null)
-                return;
-
+            if (chargingDotsView == null) return;
             chargingDotsView.setText(frames[step % frames.length]);
             step++;
-
-            // animation continues for ENTIRE LAB duration
             ui.postDelayed(this, 500);
         }
     });
 }
 
-// ------------------------------------------------------------
-// LAB 15 — Status text
-// ------------------------------------------------------------
-lab15StatusText = new TextView(this);
-lab15StatusText.setText("Monitoring charging system… 0 / 180 sec");
-lab15StatusText.setTextColor(0xFFDDDDDD);
-lab15StatusText.setGravity(Gravity.CENTER);
-lab15StatusText.setPadding(0, dp(8), 0, dp(8));
-root.addView(lab15StatusText);
-
-// ------------------------------------------------------------
-// LAB 15 — Segmented progress bar (6 × 30s)
-// ------------------------------------------------------------
-lab15ProgressBar = new LinearLayout(this);
-lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-lab15ProgressBar.setGravity(Gravity.CENTER);
-
-for (int i = 0; i < 6; i++) {
-    View seg = new View(this);
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(10), 1f);
-    lp.setMargins(dp(3), 0, dp(3), 0);
-    seg.setLayoutParams(lp);
-    seg.setBackgroundColor(0xFF333333); // inactive
-    lab15ProgressBar.addView(seg);
-}
-
-root.addView(lab15ProgressBar);
-
-// ------------------------------------------------------------
-// CLOSE DIALOG — CALLED ONLY WHEN LAB 15 ENDS
-// ------------------------------------------------------------
-private void dismissChargingStatusDialog() {
-    try {
-        if (chargingDialog != null && chargingDialog.isShowing()) {
-            chargingDialog.dismiss();
-        }
-    } catch (Throwable ignore) {}
-
-    chargingDialog = null;
-    chargingTitleView = null;
-    chargingMsgView = null;
-    chargingDotsView = null;
-    lab15Running = false;
-    chargingDetected = false;
-}
-
 // ============================================================
 // LAB 15 — CORE RUNNER (180 sec)
-// Single Final Decision Point
 // ============================================================
-
 private static final int LAB15_TOTAL_SEC = 180;
 private static final int LAB15_FLAP_WINDOW_SEC = 20;
 
-private volatile boolean lab15FlapUnstable = false;
-
 private void runLab15Core() {
 
-    logLine();
-    logInfo("LAB 15 — Monitoring charging system (180 sec).");
-    logInfo("Do NOT disconnect the charger during the test.");
-
     final long startTs = SystemClock.elapsedRealtime();
-
-    // ------------------------------------------------------------
-    // START FLAPPING DETECTION (20 sec, NON-BLOCKING)
-    // ------------------------------------------------------------
     startChargingFlapMonitor();
-
-    // ------------------------------------------------------------
-    // MAIN TIMER (180 sec)
-    // ------------------------------------------------------------
-    ui.post(new Runnable() {
-    @Override
-    public void run() {
-
-        int elapsed = (int)
-                ((SystemClock.elapsedRealtime() - startTs) / 1000);
-
-        // ------------------------------------------------------------
-        // 🔄 STATUS TEXT UPDATE
-        // ------------------------------------------------------------
-        if (lab15StatusText != null) {
-            lab15StatusText.setText(
-                "Monitoring charging system… " +
-                elapsed + " / " + LAB15_TOTAL_SEC + " sec"
-            );
-        }
-
-        // ------------------------------------------------------------
-        // 🔋 PROGRESS BAR UPDATE (1 segment κάθε 30 sec)
-        // ------------------------------------------------------------
-        if (lab15ProgressBar != null) {
-            int segment = elapsed / 30; // 0..5
-
-            for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
-                View seg = lab15ProgressBar.getChildAt(i);
-                if (i < segment) {
-                    seg.setBackgroundColor(0xFF39FF14); // GEL green
-                }
-            }
-        }
-
-        // ------------------------------------------------------------
-        // 🌡️ PASSIVE TEMPERATURE WATCH
-        // ------------------------------------------------------------
-        float battTempLive = getBatteryTemperature();
-        if (battTempLive >= 47f) {
-            lab15OverTempDuringCharge = true;
-        }
-
-        // ------------------------------------------------------------
-        // ⏱️ KEEP RUNNING
-        // ------------------------------------------------------------
-        if (elapsed < LAB15_TOTAL_SEC) {
-            ui.postDelayed(this, 1000);
-            return;
-        }
-
-        // =====================================================
-        // FINAL DECISION — SINGLE OUTPUT (ONLY HERE)
-        // =====================================================
-        logLine();
-
-        float battTemp = getBatteryTemperature();
-
-        if (lab15FlapUnstable) {
-
-            logError(
-                "Charging instability detected during test.\n" +
-                "Connection fluctuated within first " +
-                LAB15_FLAP_WINDOW_SEC + " seconds."
-            );
-
-            logWarn(
-                "Most likely cause:\n" +
-                "• Worn or damaged charging cable (very common)"
-            );
-
-            logInfo(
-                "Next steps:\n" +
-                "• Replace cable with a NEW one\n" +
-                "• Avoid moving connector during charging"
-            );
-
-            logWarn(
-                "If instability persists with another cable:\n" +
-                "• Charging port or charging IC may require replacement"
-            );
-
-            logError(
-                "LAB decision: ⚠ Charging system UNSTABLE.\n" +
-                "Cable or port diagnosis required."
-            );
-
-        } else if (battTemp >= 47f) {
-
-            logError(
-                "High battery temperature during charging.\n" +
-                "Internal resistance likely elevated."
-            );
-
-            logError(
-                "LAB decision: ❌ Battery replacement recommended."
-            );
-
-        } else {
-
-            logOk(
-                "Charging behavior stable for full duration.\n" +
-                "Temperature within safe limits."
-            );
-
-            logOk(
-                "LAB decision: ✅ Charging system OK.\n" +
-                "No cleaning or replacement required."
-            );
-        }
-
-        // ----------------------------------------------------
-        // END LAB — CLOSE LIVE PANEL
-        // ----------------------------------------------------
-        dismissChargingStatusDialog();
-    }
-});
-}
-
-// ============================================================
-// FLAPPING MONITOR (20 sec — EARLY SIGNAL ONLY)
-// ============================================================
-private void startChargingFlapMonitor() {
-
-    final boolean[] lastState = { isDeviceCharging() };
-    final int[] toggles = { 0 };
-    final long startTs = SystemClock.elapsedRealtime();
 
     ui.post(new Runnable() {
         @Override
         public void run() {
 
-            boolean nowCharging = isDeviceCharging();
+            int elapsed = (int)
+                    ((SystemClock.elapsedRealtime() - startTs) / 1000);
 
-            if (nowCharging != lastState[0]) {
-                toggles[0]++;
-                lastState[0] = nowCharging;
+            updateLab15Status(elapsed);
+            updateLab15Progress(elapsed);
+
+            if (getBatteryTemperature() >= 47f)
+                lab15OverTempDuringCharge = true;
+
+            if (elapsed < LAB15_TOTAL_SEC) {
+                ui.postDelayed(this, 1000);
+                return;
             }
 
-            long elapsed =
-                    (SystemClock.elapsedRealtime() - startTs) / 1000;
+            logLine();
+
+            if (lab15FlapUnstable) {
+                logError("LAB decision: ⚠ Charging system UNSTABLE.");
+            } else if (lab15OverTempDuringCharge) {
+                logError("LAB decision: ❌ Battery replacement recommended.");
+            } else {
+                logOk("LAB decision: ✅ Charging system OK.");
+            }
+
+            dismissChargingStatusDialog();
+        }
+    });
+}
+
+// ============================================================
+// FLAPPING MONITOR (20 sec)
+// ============================================================
+private void startChargingFlapMonitor() {
+
+    final boolean[] last = { isDeviceCharging() };
+    final int[] toggles = { 0 };
+    final long ts = SystemClock.elapsedRealtime();
+
+    ui.post(new Runnable() {
+        @Override
+        public void run() {
+
+            boolean now = isDeviceCharging();
+            if (now != last[0]) {
+                toggles[0]++;
+                last[0] = now;
+            }
+
+            int elapsed =
+                    (int) ((SystemClock.elapsedRealtime() - ts) / 1000);
 
             if (elapsed < LAB15_FLAP_WINDOW_SEC) {
                 ui.postDelayed(this, 1000);
                 return;
             }
 
-            // only SET FLAG — no logging here
             lab15FlapUnstable = (toggles[0] >= 3);
         }
     });
 }
 
-//=============================================================
-// LAB 15 — Charging Instability Detection (GEL SENSOR)
-// Detects plug/unplug flapping within short time window
-// SENSOR ONLY — NO FINAL DECISION HERE
-//=============================================================
-private void detectChargingInstability() {
-
-    logLine();
-    logInfo("LAB 15 — Charging Instability Sensor.");
-
-    final int WINDOW_SEC  = 20;
-    final int MIN_TOGGLES = 3;
-
-    final boolean[] lastState = { isDeviceCharging() };
-    final int[] toggles = { 0 };
-    final boolean[] finished = { false };
-
-    logInfo("Monitoring charging stability for " + WINDOW_SEC + " seconds…");
-
-    final long startTs = SystemClock.elapsedRealtime();
-
-    ui.post(new Runnable() {
-        @Override
-        public void run() {
-
-            if (finished[0])
-                return;
-
-            boolean nowCharging = isDeviceCharging();
-
-            if (nowCharging != lastState[0]) {
-                toggles[0]++;
-                lastState[0] = nowCharging;
-
-                logWarn(
-                        "Charging state changed: " +
-                        (nowCharging ? "CONNECTED" : "DISCONNECTED")
-                );
-            }
-
-            long elapsed =
-                    (SystemClock.elapsedRealtime() - startTs) / 1000;
-
-            if (elapsed < WINDOW_SEC) {
-                ui.postDelayed(this, 1000);
-                return;
-            }
-
-            // ------------------------------------------------------------
-            // SENSOR RESULT (NO FINAL DECISION HERE)
-            // ------------------------------------------------------------
-            finished[0] = true;
-
-            if (toggles[0] >= MIN_TOGGLES) {
-                lab15ChargingUnstable = true;
-
-                logWarn(
-                        "Charging instability pattern detected (" +
-                        toggles[0] + " toggles / " + WINDOW_SEC + " sec)."
-                );
-            } else {
-                logInfo(
-                        "No abnormal charging flapping detected " +
-                        "during instability window."
-                );
-            }
-        }
-    });
-}
-
 // ============================================================
-// LAB 15 — Charging Required Dialog (LIVE AUTO-RETRY)
+// UI HELPERS
 // ============================================================
-private AlertDialog chargingDialog;
-private BroadcastReceiver chargingReceiver;
-
-private void showChargingRequiredDialogWithAutoRetry(Runnable onChargingDetected) {
-
-    ui.post(() -> {
-        try {
-            // cleanup previous receiver/dialog (SAFE)
-            try {
-                if (chargingReceiver != null) {
-                    unregisterReceiver(chargingReceiver);
-                }
-            } catch (Throwable ignore) {}
-
-            try {
-                if (chargingDialog != null && chargingDialog.isShowing()) {
-                    chargingDialog.dismiss();
-                }
-            } catch (Throwable ignore) {}
-
-            chargingReceiver = null;
-            chargingDialog = null;
-
-            AlertDialog.Builder b =
-                    new AlertDialog.Builder(
-                            ManualTestsActivity.this,
-                            android.R.style.Theme_Material_Dialog_NoActionBar
-                    );
-
-            b.setTitle("LAB 15 — Charging Required");
-            b.setMessage(
-                    "Please connect a charging cable to the device.\n\n" +
-                    "Waiting for charging…"
-            );
-            b.setCancelable(false);
-
-            chargingDialog = b.create();
-            chargingDialog.show();
-
-            // 🔥 GEL DARK STYLE (NO XML)
-            try {
-                if (chargingDialog.getWindow() != null) {
-                    chargingDialog.getWindow().setBackgroundDrawable(
-                            new ColorDrawable(0xFF101010)
-                    );
-                }
-
-                TextView title = chargingDialog.findViewById(
-                        getResources().getIdentifier(
-                                "alertTitle", "id", "android")
-                );
-                if (title != null) title.setTextColor(0xFFFFFFFF);
-
-                TextView msg = chargingDialog.findViewById(android.R.id.message);
-                if (msg != null) msg.setTextColor(0xFFDDDDDD);
-
-            } catch (Throwable ignore) {}
-
-            // ------------------------------------------------------------
-            // Live charging detector (SAFE)
-            // ------------------------------------------------------------
-            chargingReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-
-                    if (!isDeviceCharging())
-                        return;
-
-                    // stop listening immediately
-                    try {
-                        if (chargingReceiver != null) {
-                            unregisterReceiver(chargingReceiver);
-                        }
-                    } catch (Throwable ignore) {}
-
-                    // close dialog
-                    try {
-                        if (chargingDialog != null && chargingDialog.isShowing()) {
-                            chargingDialog.dismiss();
-                        }
-                    } catch (Throwable ignore) {}
-
-                    chargingDialog = null;
-                    chargingReceiver = null;
-
-                    // 🚀 AUTO RETRY
-                    ui.postDelayed(onChargingDetected, 300);
-                }
-            };
-
-            registerReceiver(
-                    chargingReceiver,
-                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            );
-
-        } catch (Throwable ignore) {}
-    });
-}
-
-// ============================================================
-// LAB 15 — UI PROGRESS (SAFE)
-// ============================================================
-private TextView lab15StatusText;
-private LinearLayout lab15ProgressBar; // 6 segments
-
-// ============================================================
-// LAB 15 — Progress UI update helpers
-// ============================================================
-private void updateLab15Status(int elapsedSec) {
+private void updateLab15Status(int sec) {
     if (lab15StatusText != null) {
         lab15StatusText.setText(
-            "Monitoring charging system… " +
-            elapsedSec + " / 180 sec"
+                "Monitoring charging system… " + sec + " / 180 sec"
         );
     }
 }
 
-private void updateLab15Progress(int elapsedSec) {
+private void updateLab15Progress(int sec) {
     if (lab15ProgressBar == null) return;
 
-    int segment = elapsedSec / 30; // 0..5
-
+    int segment = sec / 30;
     for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
         View v = lab15ProgressBar.getChildAt(i);
-        if (v != null) {
-            v.setBackgroundColor(
-                i < segment ? 0xFF39FF14 : 0xFF333333
-            );
-        }
+        v.setBackgroundColor(i < segment ? 0xFF39FF14 : 0xFF333333);
     }
+}
+
+// ============================================================
+// CLOSE PANEL
+// ============================================================
+private void dismissChargingStatusDialog() {
+
+    try {
+        if (chargingReceiver != null) {
+            unregisterReceiver(chargingReceiver);
+        }
+    } catch (Throwable ignore) {}
+
+    try {
+        if (chargingDialog != null) {
+            chargingDialog.dismiss();
+        }
+    } catch (Throwable ignore) {}
+
+    chargingDialog = null;
+    chargingReceiver = null;
+    chargingDotsView = null;
+    chargingTitleView = null;
+    chargingMsgView = null;
+    lab15StatusText = null;
+    lab15ProgressBar = null;
+    lab15Running = false;
+    chargingDetected = false;
 }
 
 // ============================================================

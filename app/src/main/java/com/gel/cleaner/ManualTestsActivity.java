@@ -511,51 +511,126 @@ private boolean isDeviceCharging() {
 }
 
 // ============================================================
-// LAB 14 — STRESS TEST DIALOG (DURATION SELECTOR)
+// LAB 14 — STRESS RUNNING DIALOG (LOCKED 5 MIN)
+// Visual progress + discipline mode
 // ============================================================
-private void showBatteryHealthTestDialog() {
+private AlertDialog lab14Dialog;
+private TextView lab14ProgressText;
+private LinearLayout lab14ProgressBar;
+private final int LAB14_TOTAL_SECONDS = 5 * 60; // 🔒 5 minutes hard lock
 
-AlertDialog.Builder b = new AlertDialog.Builder(this);  
-b.setTitle("Battery Stress Test");  
+private void showLab14RunningDialog() {
 
-LinearLayout root = new LinearLayout(this);  
-root.setOrientation(LinearLayout.VERTICAL);  
-root.setPadding(40, 30, 40, 10);  
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setTitle("LAB 14 — Battery Stress Test");
+    b.setCancelable(false);
 
-TextView info = new TextView(this);  
-info.setText("Select stress test duration.\nHigher duration = higher accuracy.");  
-info.setTextColor(Color.WHITE);  
-info.setPadding(0, 0, 0, 20);  
-root.addView(info);  
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(40, 30, 40, 20);
+    root.setBackgroundColor(0xFF000000);
 
-SeekBar seek = new SeekBar(this);  
-seek.setMax(4); // 1–5 min  
-seek.setProgress(0);  
-root.addView(seek);  
+    // ------------------------------------------------------------
+    // Info text
+    // ------------------------------------------------------------
+    TextView info = new TextView(this);
+    info.setText(
+            "Running controlled battery stress test.\n" +
+            "Duration locked to 5 minutes for reliable diagnostics.\n\n" +
+            "Please do NOT use the device."
+    );
+    info.setTextColor(Color.WHITE);
+    info.setPadding(0, 0, 0, 20);
+    root.addView(info);
 
-TextView value = new TextView(this);  
-value.setTextColor(Color.GREEN);  
-value.setText("Duration: 1 min");  
-root.addView(value);  
+    // ------------------------------------------------------------
+    // Progress text
+    // ------------------------------------------------------------
+    lab14ProgressText = new TextView(this);
+    lab14ProgressText.setText("Progress: 0 / 5 min");
+    lab14ProgressText.setTextColor(0xFF39FF14); // neon green
+    lab14ProgressText.setGravity(Gravity.CENTER);
+    lab14ProgressText.setPadding(0, 0, 0, 16);
+    root.addView(lab14ProgressText);
 
-seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {  
-    @Override public void onProgressChanged(SeekBar s, int p, boolean f) {  
-        lastSelectedStressDurationSec = (p + 1) * 60;  
-        value.setText("Duration: " + (p + 1) + " min");  
-    }  
-    @Override public void onStartTrackingTouch(SeekBar s) {}  
-    @Override public void onStopTrackingTouch(SeekBar s) {}  
-});  
+    // ------------------------------------------------------------
+    // Segmented progress bar (10 × 30s)
+    // ------------------------------------------------------------
+    lab14ProgressBar = new LinearLayout(this);
+    lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+    lab14ProgressBar.setGravity(Gravity.CENTER);
 
-b.setView(root);  
+    for (int i = 0; i < 10; i++) {
+        View seg = new View(this);
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(12), 1f);
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        seg.setLayoutParams(lp);
+        seg.setBackgroundColor(0xFF333333); // inactive
+        lab14ProgressBar.addView(seg);
+    }
 
-b.setPositiveButton("Start", (d, w) -> d.dismiss());  
-b.setNegativeButton("Cancel", null);  
+    root.addView(lab14ProgressBar);
 
-AlertDialog dlg = b.create();  
-dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));  
-dlg.show();
+    b.setView(root);
 
+    lab14Dialog = b.create();
+    lab14Dialog.getWindow()
+            .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+    lab14Dialog.show();
+
+    // ------------------------------------------------------------
+    // Progress updater (every 30 sec)
+    // ------------------------------------------------------------
+    final long startTs = SystemClock.elapsedRealtime();
+
+    ui.post(new Runnable() {
+        int lastStep = -1;
+
+        @Override
+        public void run() {
+
+            long now = SystemClock.elapsedRealtime();
+            int elapsedSec =
+                    (int) ((now - startTs) / 1000);
+
+            int step = Math.min(elapsedSec / 30, 10);
+
+            if (step != lastStep && step <= 10) {
+                lastStep = step;
+
+                if (step > 0) {
+                    View seg =
+                            lab14ProgressBar.getChildAt(step - 1);
+                    if (seg != null) {
+                        seg.setBackgroundColor(0xFF39FF14); // green
+                    }
+                }
+
+                lab14ProgressText.setText(
+                        "Progress: " + step + " / 10 steps"
+                );
+            }
+
+            if (elapsedSec < LAB14_TOTAL_SECONDS) {
+                ui.postDelayed(this, 1000);
+            } else {
+                // Done — dialog stays until LAB finishes
+                lab14ProgressText.setText("Finalizing analysis…");
+            }
+        }
+    });
+}
+
+// ------------------------------------------------------------
+// Call when LAB 14 fully ends
+// ------------------------------------------------------------
+private void dismissLab14RunningDialog() {
+    try {
+        if (lab14Dialog != null && lab14Dialog.isShowing()) {
+            lab14Dialog.dismiss();
+        }
+    } catch (Throwable ignore) {}
 }
 
 // ============================================================
@@ -1912,13 +1987,13 @@ private void lab14BatteryHealthStressTest() {
     // ------------------------------------------------------------
     // 0️⃣ BASIC SAFETY CHECKS
     // ------------------------------------------------------------
-    float startPct = getCurrentBatteryPercent();
-    if (startPct < 0f) {
+    final float fStartPct = getCurrentBatteryPercent();
+    if (fStartPct < 0f) {
         logError("Unable to read battery level.");
         return;
     }
 
-    if (startPct < 50f) {
+    if (fStartPct < 50f) {
         logLine();
         logError("Battery level too low (<50%). Please charge the battery before running the stress test.");
         return;
@@ -1927,54 +2002,51 @@ private void lab14BatteryHealthStressTest() {
     // ------------------------------------------------------------
     // 1️⃣ READ REAL BATTERY INFO (SAME ENGINE AS PERIPHERALS)
     // ------------------------------------------------------------
-    BatteryInfo biStart = getBatteryInfo();
-
-    if (biStart == null || biStart.level < 0) {
+    final BatteryInfo fBiStart = getBatteryInfo();
+    if (fBiStart == null || fBiStart.level < 0) {
         logError("Unable to read detailed battery information.");
         return;
     }
 
-    // Must NOT be charging (reliable check)
-if (isDeviceCharging()) {
-    logLine();
-    logError("Stress test requires the device to be NOT charging.");
-    return;
-}
-
-    long modelCap = getStoredModelCapacity();
-
-    long fullMah = -1;
-    String capSource = "Unknown";
-
-    if (biStart.estimatedFullMah > 0) {
-        fullMah = biStart.estimatedFullMah;
-        capSource = biStart.source;
-    } else if (modelCap > 0) {
-        fullMah = modelCap;
-        capSource = "Model capacity";
+    if (isDeviceCharging()) {
+        logError("Stress test requires the device to be NOT charging.");
+        return;
     }
 
-    // Health ratio (only if BOTH available)
-    int healthPct = -1;
-    if (modelCap > 0 && biStart.estimatedFullMah > 0) {
-        healthPct = (int) Math.round(
-                (biStart.estimatedFullMah * 100.0) / (double) modelCap
+    final long modelCap = getStoredModelCapacity();
+
+    long tmpFullMah = -1;
+    String tmpCapSource = "Unknown";
+
+    if (fBiStart.estimatedFullMah > 0) {
+        tmpFullMah = fBiStart.estimatedFullMah;
+        tmpCapSource = fBiStart.source;
+    } else if (modelCap > 0) {
+        tmpFullMah = modelCap;
+        tmpCapSource = "Model capacity";
+    }
+
+    final long fFullMah = tmpFullMah;
+    final String fCapSource = tmpCapSource;
+
+    int tmpHealth = -1;
+    if (modelCap > 0 && fBiStart.estimatedFullMah > 0) {
+        tmpHealth = (int) Math.round(
+                (fBiStart.estimatedFullMah * 100.0) / (double) modelCap
         );
     }
+    final int fHealthPct = tmpHealth;
 
     // ------------------------------------------------------------
-    // ✅ Freeze values for lambdas (Java requirement)
+    // 2️⃣ FIXED DURATION — LAB MODE (5 MIN)
     // ------------------------------------------------------------
-    final float  fStartPct   = startPct;
-    final long   fFullMah    = fullMah;
-    final String fCapSource  = capSource;
-    final int    fHealthPct  = healthPct;
-    final BatteryInfo fBiStart = biStart;
+    final int durationSec = 300; // 5 minutes FIXED
+    lastSelectedStressDurationSec = durationSec;
 
     // ------------------------------------------------------------
-    // 2️⃣ USER CONFIRMATION POPUP (UNCHANGED)
+    // 🔴 SHOW RUNNING DIALOG (LOCK UI)
     // ------------------------------------------------------------
-    showBatteryHealthTestDialog();
+    showLab14RunningDialog();
 
     // ------------------------------------------------------------
     // 3️⃣ RUN STRESS (ASYNC)
@@ -1983,15 +2055,12 @@ if (isDeviceCharging()) {
 
         // ---- THERMALS BEFORE ----
         Map<String, Float> z0 = readThermalZones();
-        Float cpu0  = pickZone(z0,"cpu","soc","big","little");
-        Float gpu0  = pickZone(z0,"gpu");
-        Float skin0 = pickZone(z0,"skin","pa_therm");
-        Float pmic0 = pickZone(z0,"pmic","pmic_therm");
         Float batt0 = pickZone(z0,"battery","batt","bat");
 
         logLine();
         logInfo("LAB 14 — Battery Health Stress Test started.");
         logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
+        logInfo("Duration: 5 minutes (fixed laboratory mode).");
 
         logInfo(String.format(Locale.US,
                 "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
@@ -2009,18 +2078,21 @@ if (isDeviceCharging()) {
             logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
         }
 
-        long t0 = SystemClock.elapsedRealtime();
+        final long t0 = SystemClock.elapsedRealtime();
 
         applyMaxBrightnessAndKeepOn();
         startCpuBurn_C_Mode();
 
         // ------------------------------------------------------------
-        // 4️⃣ STOP STRESS AFTER DURATION (FROM POPUP)
+        // 4️⃣ STOP STRESS AFTER 5 MIN
         // ------------------------------------------------------------
         ui.postDelayed(() -> {
 
             stopCpuBurn();
             restoreBrightnessAndKeepOn();
+
+            // 🔴 CLOSE RUNNING DIALOG
+            dismissLab14RunningDialog();
 
             BatteryInfo biEnd = getBatteryInfo();
             float endPct = getCurrentBatteryPercent();
@@ -2044,6 +2116,7 @@ if (isDeviceCharging()) {
                 mahPerHour  = (consumedMah * 3600000.0) / dtMs;
             }
 
+            logLine();
             logInfo(String.format(Locale.US,
                     "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                     fStartPct, endPct, deltaPct, dtMs / 1000f));
@@ -2058,28 +2131,13 @@ if (isDeviceCharging()) {
                         pctPerHour));
             }
 
-            // ---- THERMALS AFTER ----
             Map<String, Float> z1 = readThermalZones();
-            Float cpu1  = pickZone(z1,"cpu","soc","big","little");
-            Float gpu1  = pickZone(z1,"gpu");
-            Float skin1 = pickZone(z1,"skin","pa_therm");
-            Float pmic1 = pickZone(z1,"pmic","pmic_therm");
             Float batt1 = pickZone(z1,"battery","batt","bat");
 
-            logInfo(String.format(Locale.US,
-                    "Thermal delta: CPU=%.1f°C, GPU=%.1f°C, SKIN=%.1f°C, PMIC=%.1f°C, BATT=%.1f°C.",
-                    (cpu1!=null&&cpu0!=null)?cpu1-cpu0:0f,
-                    (gpu1!=null&&gpu0!=null)?gpu1-gpu0:0f,
-                    (skin1!=null&&skin0!=null)?skin1-skin0:0f,
-                    (pmic1!=null&&pmic0!=null)?pmic1-pmic0:0f,
-                    (batt1!=null&&batt0!=null)?batt1-batt0:0f
-            ));
-
             // ------------------------------------------------------------
-            // 5️⃣ LAB INTERPRETATION — SHOULD I REPLACE THE BATTERY?
+            // 5️⃣ LAB INTERPRETATION
             // ------------------------------------------------------------
             String decision;
-
             if (fHealthPct > 0 && fHealthPct < 70) {
                 decision = "Weak";
                 logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
@@ -2089,7 +2147,7 @@ if (isDeviceCharging()) {
                 logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
             }
             else if ((fHealthPct > 0 && fHealthPct < 80) ||
-                    (mahPerHour > 0 && mahPerHour > 650)) {
+                     (mahPerHour > 0 && mahPerHour > 650)) {
                 decision = "Normal";
                 logWarn("LAB conclusion: Battery shows wear but is still usable.");
             }
@@ -2098,21 +2156,33 @@ if (isDeviceCharging()) {
                 logOk("LAB conclusion: Battery health is good. No replacement indicated.");
             }
 
+            // ------------------------------------------------------------
+            // 6️⃣ HEALTH MAP
+            // ------------------------------------------------------------
             printHealthCheckboxMap(decision);
 
-            // save metrics for confidence %
+            // ------------------------------------------------------------
+            // 7️⃣ ANALYTICS & CONFIDENCE (ALWAYS LAST)
+            // ------------------------------------------------------------
             saveLab14DrainValue(mahPerHour);
-
-            // run tracking & analysis
             saveLab14Run();
-            logLab14Confidence();
             computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
             computeAndLogConfidenceScore();
+            logLab14Confidence();
 
-        }, lastSelectedStressDurationSec * 1000L);
+        }, durationSec * 1000L);
 
     });
 }
+
+    // ------------------------------------------------------------
+    // ✅ Freeze values for lambdas (Java requirement)
+    // ------------------------------------------------------------
+    final float  fStartPct   = startPct;
+    final long   fFullMah    = fullMah;
+    final String fCapSource  = capSource;
+    final int    fHealthPct  = healthPct;
+    final BatteryInfo fBiStart = biStart;
 
 // ===================================================================
 // LAB 14 — AGING INDEX ENGINE

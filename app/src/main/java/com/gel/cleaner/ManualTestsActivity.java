@@ -1943,6 +1943,15 @@ private void lab14BatteryHealthStressTest() {
     }
 
     // ------------------------------------------------------------
+    // ✅ Freeze values for lambdas (Java requirement)
+    // ------------------------------------------------------------
+    final float  fStartPct   = startPct;
+    final long   fFullMah    = fullMah;
+    final String fCapSource  = capSource;
+    final int    fHealthPct  = healthPct;
+    final BatteryInfo fBiStart = biStart;
+
+    // ------------------------------------------------------------
     // 2️⃣ USER CONFIRMATION POPUP (UNCHANGED)
     // ------------------------------------------------------------
     showBatteryHealthTestDialog();
@@ -1966,18 +1975,18 @@ private void lab14BatteryHealthStressTest() {
 
         logInfo(String.format(Locale.US,
                 "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
-                biStart.level,
-                biStart.status,
-                biStart.temperature));
+                fBiStart.level,
+                fBiStart.status,
+                fBiStart.temperature));
 
-        if (fullMah > 0) {
-            logInfo("Capacity baseline: " + fullMah + " mAh (" + capSource + ").");
+        if (fFullMah > 0) {
+            logInfo("Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
         } else {
             logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
         }
 
-        if (healthPct > 0) {
-            logInfo("Estimated battery health: ~" + healthPct + "% of model capacity.");
+        if (fHealthPct > 0) {
+            logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
         }
 
         long t0 = SystemClock.elapsedRealtime();
@@ -2004,20 +2013,20 @@ private void lab14BatteryHealthStressTest() {
             long t1 = SystemClock.elapsedRealtime();
             long dtMs = Math.max(1, t1 - t0);
 
-            float deltaPct = startPct - endPct;
+            float deltaPct = fStartPct - endPct;
             float pctPerHour = (deltaPct * 3600000f) / dtMs;
 
             double consumedMah = -1;
             double mahPerHour  = -1;
 
-            if (fullMah > 0 && deltaPct > 0f) {
-                consumedMah = (deltaPct / 100.0) * fullMah;
+            if (fFullMah > 0 && deltaPct > 0f) {
+                consumedMah = (deltaPct / 100.0) * fFullMah;
                 mahPerHour  = (consumedMah * 3600000.0) / dtMs;
             }
 
             logInfo(String.format(Locale.US,
                     "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
-                    startPct, endPct, deltaPct, dtMs / 1000f));
+                    fStartPct, endPct, deltaPct, dtMs / 1000f));
 
             if (consumedMah >= 0) {
                 logInfo(String.format(Locale.US,
@@ -2051,7 +2060,7 @@ private void lab14BatteryHealthStressTest() {
             // ------------------------------------------------------------
             String decision;
 
-            if (healthPct > 0 && healthPct < 70) {
+            if (fHealthPct > 0 && fHealthPct < 70) {
                 decision = "Weak";
                 logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
             }
@@ -2059,8 +2068,8 @@ private void lab14BatteryHealthStressTest() {
                 decision = "Weak";
                 logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
             }
-            else if ((healthPct > 0 && healthPct < 80) ||
-                     (mahPerHour > 0 && mahPerHour > 650)) {
+            else if ((fHealthPct > 0 && fHealthPct < 80) ||
+                    (mahPerHour > 0 && mahPerHour > 650)) {
                 decision = "Normal";
                 logWarn("LAB conclusion: Battery shows wear but is still usable.");
             }
@@ -2077,7 +2086,7 @@ private void lab14BatteryHealthStressTest() {
             // run tracking & analysis
             saveLab14Run();
             logLab14Confidence();
-            computeAndLogAgingIndex(mahPerHour, healthPct, batt1, batt0);
+            computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
             computeAndLogConfidenceScore();
 
         }, lastSelectedStressDurationSec * 1000L);
@@ -4663,4 +4672,3 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
-

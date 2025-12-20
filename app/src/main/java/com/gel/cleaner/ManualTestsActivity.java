@@ -1052,51 +1052,117 @@ private static class ThermalSummary {
 }
 
 // ------------------------------------------------------------
-// THERMAL SCAN
+// THERMAL SCAN — PRIMARY (NO ARGS)
 // ------------------------------------------------------------
 private ThermalSummary scanThermalHardware() {
+
     ThermalSummary out = new ThermalSummary();
+
     try {
         File dir = new File(SYS_THERMAL);
         File[] zones = dir.listFiles();
         if (zones == null) return out;
 
+        int zoneCount = 0;
+
         for (File z : zones) {
-            if (!z.isDirectory() || !z.getName().startsWith("thermal_zone"))
-                continue;
+            if (z == null || !z.isDirectory() || z.getName() == null) continue;
+            if (!z.getName().startsWith("thermal_zone")) continue;
+
+            zoneCount++;
 
             float c = normalizeTempFromSys(readLongSafe(new File(z, "temp")));
             if (!isValidTemp(c)) continue;
 
             String type = readFirstLineSafe(new File(z, "type"));
-            String t = (type != null ? type : z.getName()).toLowerCase(Locale.US);
+            String label = (type != null ? type : z.getName());
+            String t = label.toLowerCase(Locale.US);
 
-            if (t.contains("battery") || t.contains("batt")) out.battery.add(t, c);
-            else if (t.contains("cpu") || t.contains("soc")) out.cpu.add(t, c);
-            else if (t.contains("skin") || t.contains("shell")) out.skin.add(t, c);
-            else out.other.add(t, c);
+            if (t.contains("battery") || t.contains("batt")) {
+                out.batteryMain.add(label, c);
+            }
+            else if (t.contains("cpu") || t.contains("soc") || t.contains("ap")) {
+                out.cpu.add(label, c);
+            }
+            else if (t.contains("skin") || t.contains("shell")) {
+                out.skin.add(label, c);
+                out.batteryShell.add(label, c);
+            }
+            else {
+                out.other.add(label, c);
+            }
         }
+
+        // stats (αν χρησιμοποιούνται στο report)
+        try { out.zoneCount = zoneCount; } catch (Throwable ignore) {}
+
     } catch (Throwable ignore) {}
+
     return out;
 }
 
 // ------------------------------------------------------------
-// COOLING DEVICES
+// THERMAL SCAN — OVERLOAD (OLD CALLS COMPATIBILITY)
+// ------------------------------------------------------------
+private ThermalSummary scanThermalHardware(
+        ThermalGroupReading batteryMain,
+        ThermalGroupReading batteryShell,
+        ThermalGroupReading pmic,
+        ThermalGroupReading charger,
+        ThermalGroupReading modemMain,
+        ThermalGroupReading modemAux
+) {
+
+    ThermalSummary out = scanThermalHardware();
+
+    if (batteryMain  != null) batteryMain  = out.batteryMain;
+    if (batteryShell != null) batteryShell = out.batteryShell;
+    if (pmic         != null) pmic         = out.pmic;
+    if (charger      != null) charger      = out.charger;
+    if (modemMain    != null) modemMain    = out.modemMain;
+    if (modemAux     != null) modemAux     = out.modemAux;
+
+    return out;
+}
+
+// ------------------------------------------------------------
+// COOLING DEVICES — SAFE
 // ------------------------------------------------------------
 private void appendHardwareCoolingDevices(StringBuilder sb) {
+
     if (sb == null) return;
+
     try {
         File dir = new File(SYS_THERMAL);
         File[] cds = dir.listFiles();
-        if (cds == null) return;
+        if (cds == null) {
+            sb.append("• Cooling devices: none\n");
+            return;
+        }
+
+        int count = 0;
 
         for (File d : cds) {
-            if (!d.isDirectory() || !d.getName().startsWith("cooling_device"))
-                continue;
+            if (d == null || !d.isDirectory() || d.getName() == null) continue;
+            if (!d.getName().startsWith("cooling_device")) continue;
+
             String type = readFirstLineSafe(new File(d, "type"));
-            sb.append("• ").append(type != null ? type : d.getName()).append("\n");
+            sb.append("• ")
+              .append(type != null ? type : d.getName())
+              .append("\n");
+
+            count++;
         }
-    } catch (Throwable ignore) {}
+
+        try { /* αν υπάρχει field */ } catch (Throwable ignore) {}
+
+        if (count == 0) {
+            sb.append("• Cooling devices: none\n");
+        }
+
+    } catch (Throwable ignore) {
+        sb.append("• Cooling devices: unavailable\n");
+    }
 }
 
 // ------------------------------------------------------------

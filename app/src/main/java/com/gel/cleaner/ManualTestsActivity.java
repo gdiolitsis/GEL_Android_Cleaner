@@ -972,88 +972,190 @@ private void updateLab15PeakTemperature() {
 }
 
 // ============================================================
-// LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
+// ✅ LAB 15 / THERMAL HARDWARE — FULL RESTORE PACK (FINAL)
 // ============================================================
 
+private static final String SYS_THERMAL = "/sys/class/thermal";
+
+// ------------------------------------------------------------
+// SAFE FILE READERS
+// ------------------------------------------------------------
+private String readFirstLineSafe(File f) {
+    try {
+        if (f == null || !f.exists() || !f.canRead()) return null;
+        BufferedReader br = new BufferedReader(new FileReader(f));
+        try {
+            String line = br.readLine();
+            if (line == null) return null;
+            line = line.trim();
+            return line.isEmpty() ? null : line;
+        } finally {
+            try { br.close(); } catch (Throwable ignore) {}
+        }
+    } catch (Throwable ignore) {
+        return null;
+    }
+}
+
+private long readLongSafe(File f) {
+    try {
+        String s = readFirstLineSafe(f);
+        if (s == null) return -1L;
+        s = s.replaceAll("[^0-9\\-]", "");
+        if (s.isEmpty() || "-".equals(s)) return -1L;
+        return Long.parseLong(s);
+    } catch (Throwable ignore) {
+        return -1L;
+    }
+}
+
+// ------------------------------------------------------------
+// TEMP NORMALIZATION + VALIDATION
+// ------------------------------------------------------------
+private float normalizeTempFromSys(long raw) {
+    if (raw == -1L) return Float.NaN;
+    return Math.abs(raw) > 1000L ? (float)(raw / 1000.0) : (float) raw;
+}
+
+private boolean isValidTemp(float c) {
+    return !Float.isNaN(c) && c > -40f && c < 140f;
+}
+
+// ------------------------------------------------------------
+// THERMAL GROUP MODEL
+// ------------------------------------------------------------
+private static class ThermalGroupReading {
+    int count = 0;
+    float maxC = Float.NaN;
+    float sumC = 0f;
+
+    void add(String label, float c) {
+        sumC += c;
+        count++;
+        if (Float.isNaN(maxC) || c > maxC) maxC = c;
+    }
+
+    float avgC() {
+        return count > 0 ? (sumC / count) : Float.NaN;
+    }
+}
+
+private static class ThermalSummary {
+    ThermalGroupReading battery = new ThermalGroupReading();
+    ThermalGroupReading cpu     = new ThermalGroupReading();
+    ThermalGroupReading skin    = new ThermalGroupReading();
+    ThermalGroupReading other   = new ThermalGroupReading();
+
+    float peakC() {
+        return maxOf(battery.maxC, cpu.maxC, skin.maxC, other.maxC, Float.NaN);
+    }
+}
+
+// ------------------------------------------------------------
+// THERMAL SCAN
+// ------------------------------------------------------------
+private ThermalSummary scanThermalHardware() {
+    ThermalSummary out = new ThermalSummary();
+    try {
+        File dir = new File(SYS_THERMAL);
+        File[] zones = dir.listFiles();
+        if (zones == null) return out;
+
+        for (File z : zones) {
+            if (!z.isDirectory() || !z.getName().startsWith("thermal_zone"))
+                continue;
+
+            float c = normalizeTempFromSys(readLongSafe(new File(z, "temp")));
+            if (!isValidTemp(c)) continue;
+
+            String type = readFirstLineSafe(new File(z, "type"));
+            String t = (type != null ? type : z.getName()).toLowerCase(Locale.US);
+
+            if (t.contains("battery") || t.contains("batt")) out.battery.add(t, c);
+            else if (t.contains("cpu") || t.contains("soc")) out.cpu.add(t, c);
+            else if (t.contains("skin") || t.contains("shell")) out.skin.add(t, c);
+            else out.other.add(t, c);
+        }
+    } catch (Throwable ignore) {}
+    return out;
+}
+
+// ------------------------------------------------------------
+// COOLING DEVICES
+// ------------------------------------------------------------
+private void appendHardwareCoolingDevices(StringBuilder sb) {
+    if (sb == null) return;
+    try {
+        File dir = new File(SYS_THERMAL);
+        File[] cds = dir.listFiles();
+        if (cds == null) return;
+
+        for (File d : cds) {
+            if (!d.isDirectory() || !d.getName().startsWith("cooling_device"))
+                continue;
+            String type = readFirstLineSafe(new File(d, "type"));
+            sb.append("• ").append(type != null ? type : d.getName()).append("\n");
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+private float maxOf(float a, float b, float c, float d, float e) {
+    float m = e;
+    if (!Float.isNaN(a) && a > m) m = a;
+    if (!Float.isNaN(b) && b > m) m = b;
+    if (!Float.isNaN(c) && c > m) m = c;
+    if (!Float.isNaN(d) && d > m) m = d;
+    return m;
+}
+
+// ============================================================
+// LAB 15 — CHARGING HELPERS (SINGLE SOURCE OF TRUTH)
+// ============================================================
 private boolean isDeviceCharging() {
     try {
-        Intent i = registerReceiver(
-                null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        );
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (i == null) return false;
-
         int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
         return plugged == BatteryManager.BATTERY_PLUGGED_AC
-                || plugged == BatteryManager.BATTERY_PLUGGED_USB
-                || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-
+            || plugged == BatteryManager.BATTERY_PLUGGED_USB
+            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
     } catch (Throwable t) {
         return false;
     }
 }
 
-// ------------------------------------------------------------
-// LAB 15 — Thermal Correlation Logger
-// ------------------------------------------------------------
+// ============================================================
+// LAB 15 — PEAK TEMPERATURE TRACKING (ONE & ONLY)
+// ============================================================
+private void updateLab15PeakTemperature() {
+    if (!isDeviceCharging()) return;
 
+    float t = getBatteryTemperature();
+    if (t <= 0f || Float.isNaN(t)) return;
+
+    if (Float.isNaN(lab15BattTempPeak) || t > lab15BattTempPeak)
+        lab15BattTempPeak = t;
+}
+
+// ============================================================
+// LAB 15 — THERMAL CORRELATION LOGGER
+// ============================================================
 private void logLab15ThermalCorrelation(
-        float battTempStart,
-        float battTempPeak,
-        float battTempEnd
-) {
+        float start, float peak, float end) {
 
-    if (Float.isNaN(battTempStart) || Float.isNaN(battTempEnd)) {
-        logWarn("Thermal correlation: insufficient data.");
-        return;
-    }
+    if (Float.isNaN(start) || Float.isNaN(end)) return;
 
-    // --------------------------------------------------------
-    // ΔT calculation (start → peak/end)
-    // --------------------------------------------------------
-    float rawDelta = !Float.isNaN(battTempPeak)
-            ? (battTempPeak - battTempStart)
-            : (battTempEnd - battTempStart);
+    float dT = (!Float.isNaN(peak) ? peak : end) - start;
+    String verdict = dT <= 4 ? "OK" : dT <= 7 ? "Warm" : "Risk";
 
-    float dPeak = Math.max(0f, rawDelta);
-
-    // --------------------------------------------------------
-    // VERDICT (LAB STYLE)
-    // --------------------------------------------------------
-    String verdict;
-    String note;
-
-    if (dPeak <= 4.0f) {
-        verdict = "OK";
-        note = "Normal thermal behavior during charging";
-    } else if (dPeak <= 7.0f) {
-        verdict = "Warm";
-        note = "Elevated thermal load during charging";
-    } else {
-        verdict = "Risk";
-        note = "Abnormal thermal rise detected";
-    }
-
-    // --------------------------------------------------------
-    // LOG OUTPUT
-    // --------------------------------------------------------
     logLine();
-
-    logInfo(String.format(
-            Locale.US,
-            "Thermal correlation (charging): start %.1f°C → peak %.1f°C → end %.1f°C",
-            battTempStart,
-            (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
-            battTempEnd
-    ));
-
-    logOk(String.format(
-            Locale.US,
-            "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
-            verdict,
-            dPeak,
-            note
-    ));
+    logInfo(String.format(Locale.US,
+            "Thermal charging: %.1f → %.1f → %.1f°C", start, peak, end));
+    logOk("Thermal verdict: " + verdict + " (ΔT +" + String.format("%.1f", dT) + "°C)");
 }
 
 // ============================================================

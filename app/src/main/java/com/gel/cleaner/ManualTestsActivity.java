@@ -2760,7 +2760,7 @@ ui.post(() -> {
 
 // ============================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
-// Visual progress + animated dots
+// Visual progress + animated dots + EXIT
 // ============================================================
 private void showLab14RunningDialog() {
 
@@ -2779,7 +2779,9 @@ private void showLab14RunningDialog() {
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
         root.setBackgroundColor(0xFF101010);
 
-        // Info
+        // ------------------------------------------------------------
+        // Info text
+        // ------------------------------------------------------------
         TextView info = new TextView(this);
         info.setText(
                 "Running controlled battery stress test.\n" +
@@ -2791,7 +2793,9 @@ private void showLab14RunningDialog() {
         info.setPadding(0, 0, 0, dp(12));
         root.addView(info);
 
-        // Progress text — SECONDS
+        // ------------------------------------------------------------
+        // Progress text (seconds)
+        // ------------------------------------------------------------
         lab14ProgressText = new TextView(this);
         lab14ProgressText.setText("Progress: 0 / 300 seconds");
         lab14ProgressText.setTextColor(0xFF39FF14);
@@ -2799,7 +2803,9 @@ private void showLab14RunningDialog() {
         lab14ProgressText.setPadding(0, 0, 0, dp(10));
         root.addView(lab14ProgressText);
 
+        // ------------------------------------------------------------
         // Animated dots
+        // ------------------------------------------------------------
         lab14DotsView = new TextView(this);
         lab14DotsView.setText("•");
         lab14DotsView.setTextColor(0xFF39FF14);
@@ -2808,7 +2814,9 @@ private void showLab14RunningDialog() {
         lab14DotsView.setPadding(0, 0, 0, dp(10));
         root.addView(lab14DotsView);
 
+        // ------------------------------------------------------------
         // Segmented progress bar (10 × 30s)
+        // ------------------------------------------------------------
         lab14ProgressBar = new LinearLayout(this);
         lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
         lab14ProgressBar.setGravity(Gravity.CENTER);
@@ -2825,16 +2833,53 @@ private void showLab14RunningDialog() {
 
         root.addView(lab14ProgressBar);
 
+        // ------------------------------------------------------------
+        // EXIT / CANCEL BUTTON — RED / GOLD
+        // ------------------------------------------------------------
+        Button btnExit = new Button(this);
+        btnExit.setText("Exit test");
+        btnExit.setAllCaps(false);
+        btnExit.setTextSize(15f);
+        btnExit.setTextColor(0xFFFFFFFF);
+        btnExit.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable exitBg = new GradientDrawable();
+        exitBg.setColor(0xFF8B0000);          // deep red
+        exitBg.setCornerRadius(dp(14));
+        exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
+        btnExit.setBackground(exitBg);
+
+        LinearLayout.LayoutParams lpExit =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpExit.setMargins(0, dp(14), 0, 0);
+        btnExit.setLayoutParams(lpExit);
+
+        btnExit.setOnClickListener(v -> abortLab14ByUser());
+        root.addView(btnExit);
+
+        // ------------------------------------------------------------
+        // FINALIZE DIALOG
+        // ------------------------------------------------------------
         b.setView(root);
 
         lab14Dialog = b.create();
-        lab14Dialog.getWindow()
-                .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+        if (lab14Dialog.getWindow() != null) {
+            lab14Dialog.getWindow()
+                    .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+        }
         lab14Dialog.show();
 
+        // ------------------------------------------------------------
+        // Start dots animation
+        // ------------------------------------------------------------
         startLab14DotsAnimation();
 
-        // Progress updater (every 1 sec — visual step every 30 sec)
+        // ------------------------------------------------------------
+        // Progress updater (every 1 sec)
+        // ------------------------------------------------------------
         final long startTs = SystemClock.elapsedRealtime();
 
         ui.post(new Runnable() {
@@ -2845,7 +2890,9 @@ private void showLab14RunningDialog() {
             public void run() {
 
                 // 🛑 GUARD
-                if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
+                if (!lab14Running ||
+                        lab14ProgressBar == null ||
+                        lab14ProgressText == null) {
                     return;
                 }
 
@@ -2855,13 +2902,14 @@ private void showLab14RunningDialog() {
                         LAB14_TOTAL_SECONDS
                 );
 
-                // 10 segments × 30 sec = 300 sec
-                int step = Math.min(elapsedSec / 30, lab14ProgressBar.getChildCount());
+                // 10 segments × 30 sec
+                int step = Math.min(
+                        elapsedSec / 30,
+                        lab14ProgressBar.getChildCount()
+                );
 
-                // Update segments
                 if (step != lastStep) {
                     lastStep = step;
-
                     for (int i = 0; i < lab14ProgressBar.getChildCount(); i++) {
                         View seg = lab14ProgressBar.getChildAt(i);
                         if (seg != null) {
@@ -2872,9 +2920,9 @@ private void showLab14RunningDialog() {
                     }
                 }
 
-                // Update text — seconds
                 lab14ProgressText.setText(
-                        "Progress: " + elapsedSec + " / " + LAB14_TOTAL_SECONDS + " seconds"
+                        "Progress: " + elapsedSec + " / " +
+                        LAB14_TOTAL_SECONDS + " seconds"
                 );
 
                 if (elapsedSec < LAB14_TOTAL_SECONDS) {

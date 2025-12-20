@@ -552,26 +552,6 @@ private boolean isDeviceCharging() {
     }
 }
 
-// ============================================================
-// LAB 14 — STRESS RUNNING DIALOG (LOCKED 5 MIN)
-// Visual progress + discipline mode
-// ============================================================
-private AlertDialog lab14Dialog;
-private TextView lab14ProgressText;
-private LinearLayout lab14ProgressBar;
-private final int LAB14_TOTAL_SECONDS = 5 * 60; // 🔒 5 minutes hard lock
-
-private void showLab14RunningDialog() {
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setTitle("LAB 14 — Battery Stress Test");
-    b.setCancelable(false);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(40, 30, 40, 20);
-    root.setBackgroundColor(0xFF000000);
-
     // ------------------------------------------------------------
     // Info text
     // ------------------------------------------------------------
@@ -614,12 +594,44 @@ private void showLab14RunningDialog() {
 
     root.addView(lab14ProgressBar);
 
-    b.setView(root);
+// ------------------------------------------------------------
+// EXIT / CANCEL BUTTON — RED / GOLD (LAB 14 STYLE)
+// ------------------------------------------------------------
+Button btnExit = new Button(this);
+btnExit.setText("Exit test");
+btnExit.setAllCaps(false);
+btnExit.setTextSize(15f);
+btnExit.setTextColor(0xFFFFFFFF);
+btnExit.setTypeface(null, Typeface.BOLD);
 
-    lab14Dialog = b.create();
-    lab14Dialog.getWindow()
-            .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
-    lab14Dialog.show();
+// 🔴 RED + GOLD BORDER
+GradientDrawable exitBg = new GradientDrawable();
+exitBg.setColor(0xFF8B0000);          // deep red
+exitBg.setCornerRadius(dp(14));
+exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
+btnExit.setBackground(exitBg);
+
+LinearLayout.LayoutParams lpExit =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExit.setMargins(0, dp(14), 0, 0);
+btnExit.setLayoutParams(lpExit);
+
+btnExit.setOnClickListener(v -> abortLab14ByUser());
+
+root.addView(btnExit);
+
+// ------------------------------------------------------------
+// ΤΕΛΟΣ UI — ΜΕΤΑ ΑΠΟ ΑΥΤΟ ΔΕΝ ΠΡΟΣΘΕΤΟΥΜΕ VIEWS
+// ------------------------------------------------------------
+b.setView(root);
+
+lab14Dialog = b.create();
+lab14Dialog.getWindow()
+        .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+lab14Dialog.show();
 
 // ------------------------------------------------------------
 // Progress updater (every 1 sec — visual step every 30 sec)
@@ -2875,35 +2887,6 @@ private void showLab14RunningDialog() {
         dismissLab14RunningDialog();
     }
 }
-
-// ------------------------------------------------------------
-// EXIT / CANCEL BUTTON — RED / GOLD (LAB 14 STYLE)
-// ------------------------------------------------------------
-Button btnExit = new Button(this);
-btnExit.setText("Exit test");
-btnExit.setAllCaps(false);
-btnExit.setTextSize(15f);
-btnExit.setTextColor(0xFFFFFFFF);
-btnExit.setTypeface(null, Typeface.BOLD);
-
-// 🔴 RED + GOLD BORDER
-GradientDrawable exitBg = new GradientDrawable();
-exitBg.setColor(0xFF8B0000);          // deep red
-exitBg.setCornerRadius(dp(14));
-exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
-btnExit.setBackground(exitBg);
-
-LinearLayout.LayoutParams lpExit =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpExit.setMargins(0, dp(14), 0, 0);
-btnExit.setLayoutParams(lpExit);
-
-btnExit.setOnClickListener(v -> abortLab14ByUser());
-
-root.addView(btnExit);
 
 // ============================================================
 // LAB 14 — DOTS ANIMATION ENGINE

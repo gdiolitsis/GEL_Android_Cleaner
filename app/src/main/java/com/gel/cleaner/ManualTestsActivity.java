@@ -2992,7 +2992,7 @@ private void showLab14RunningDialog() {
     seg.setBackgroundColor(0xFF333333);
 
     lab14ProgressBar.addView(seg);
-}
+    }
 
 root.addView(lab14ProgressBar);
 

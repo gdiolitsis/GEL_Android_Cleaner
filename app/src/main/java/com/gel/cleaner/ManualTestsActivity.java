@@ -144,6 +144,12 @@ private volatile boolean lab15FlapUnstable = false;
 private volatile boolean lab15OverTempDuringCharge = false;
 
 // ============================================================
+// LAB 14 — FLAGS / UI STATE
+// ============================================================
+private volatile boolean lab14Running = false;
+private TextView lab14DotsView;
+
+// ============================================================
 // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
 // ============================================================
 private static class TelephonySnapshot {
@@ -202,50 +208,61 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     ui = new Handler(Looper.getMainLooper());
 
-    // ============================================================
-    // ROOT SCROLL + LAYOUT
-    // ============================================================
-    scroll = new ScrollView(this);
-    scroll.setFillViewport(true);
+// ============================================================
+// ROOT SCROLL + LAYOUT
+// ============================================================
+scroll = new ScrollView(this);
+scroll.setFillViewport(true);
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    int pad = dp(16);
-    root.setPadding(pad, pad, pad, pad);
-    root.setBackgroundColor(0xFF101010); // GEL black
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+int pad = dp(16);
+root.setPadding(pad, pad, pad, pad);
+root.setBackgroundColor(0xFF101010); // GEL black
 
-    // ============================================================
-    // TITLE
-    // ============================================================
-    TextView title = new TextView(this);
-    title.setText(getString(R.string.manual_hospital_title));
-    title.setTextSize(20f);
-    title.setTextColor(0xFFFFD700);
-    title.setGravity(Gravity.CENTER_HORIZONTAL);
-    title.setPadding(0, 0, 0, dp(6));
-    root.addView(title);
+// ============================================================
+// TITLE
+// ============================================================
+TextView title = new TextView(this);
+title.setText(getString(R.string.manual_hospital_title));
+title.setTextSize(20f);
+title.setTextColor(0xFFFFD700);
+title.setGravity(Gravity.CENTER_HORIZONTAL);
+title.setPadding(0, 0, 0, dp(6));
+root.addView(title);
 
-    // ============================================================
-    // SUBTITLE
-    // ============================================================
-    TextView sub = new TextView(this);
-    sub.setText(getString(R.string.manual_hospital_sub));
-    sub.setTextSize(13f);
-    sub.setTextColor(0xFF39FF14);
-    sub.setGravity(Gravity.CENTER_HORIZONTAL);
-    sub.setPadding(0, 0, 0, dp(12));
-    root.addView(sub);
+// ============================================================
+// SUBTITLE
+// ============================================================
+TextView sub = new TextView(this);
+sub.setText(getString(R.string.manual_hospital_sub));
+sub.setTextSize(13f);
+sub.setTextColor(0xFF39FF14);
+sub.setGravity(Gravity.CENTER_HORIZONTAL);
+sub.setPadding(0, 0, 0, dp(12));
+root.addView(sub);
 
-    // ============================================================
-    // SECTION TITLE
-    // ============================================================
-    TextView sec1 = new TextView(this);
-    sec1.setText(getString(R.string.manual_section1));
-    sec1.setTextSize(17f);
-    sec1.setTextColor(0xFFFFD700);
-    sec1.setGravity(Gravity.CENTER_HORIZONTAL);
-    sec1.setPadding(0, dp(10), 0, dp(6));
-    root.addView(sec1);
+// ============================================================
+// SECTION TITLE
+// ============================================================
+TextView sec1 = new TextView(this);
+sec1.setText(getString(R.string.manual_section1));
+sec1.setTextSize(17f);
+sec1.setTextColor(0xFFFFD700);
+sec1.setGravity(Gravity.CENTER_HORIZONTAL);
+sec1.setPadding(0, dp(10), 0, dp(6));
+root.addView(sec1);
+
+// ============================================================
+// LAB 14 — DOTS (LIVE RUN INDICATOR)
+// ============================================================
+lab14DotsView = new TextView(this);
+lab14DotsView.setText("•");
+lab14DotsView.setTextSize(22f);
+lab14DotsView.setTextColor(0xFF39FF14); // GEL green
+lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
+lab14DotsView.setPadding(0, dp(6), 0, dp(10));
+root.addView(lab14DotsView);
 
     // ============================================================
     // SECTION 1: AUDIO & VIBRATION — LABS 1–5
@@ -603,46 +620,58 @@ private void showLab14RunningDialog() {
             .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
     lab14Dialog.show();
 
-    // ------------------------------------------------------------
-    // Progress updater (every 30 sec)
-    // ------------------------------------------------------------
-    final long startTs = SystemClock.elapsedRealtime();
+// ------------------------------------------------------------
+// Progress updater (every 30 sec)
+// ------------------------------------------------------------
+final long startTs = SystemClock.elapsedRealtime();
 
-    ui.post(new Runnable() {
-        int lastStep = -1;
+ui.post(new Runnable() {
+    int lastStep = -1;
 
-        @Override
-        public void run() {
+    @Override
+    public void run() {
 
-            long now = SystemClock.elapsedRealtime();
-            int elapsedSec = (int) ((now - startTs) / 1000);
+        // 🛑 GUARD: αν το lab έχει τελειώσει / panel έκλεισε
+        if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
+            return;
+        }
 
-            int step = Math.min(elapsedSec / 30, 10);
+        long now = SystemClock.elapsedRealtime();
+        int elapsedSec = (int) ((now - startTs) / 1000);
 
-            if (step != lastStep && step <= 10) {
-                lastStep = step;
+        int step = Math.min(elapsedSec / 30, 10);
 
-                if (step > 0) {
-                    View seg = lab14ProgressBar.getChildAt(step - 1);
-                    if (seg != null) {
-                        seg.setBackgroundColor(0xFF39FF14);
-                    }
+        if (step != lastStep && step <= 10) {
+            lastStep = step;
+
+            if (step > 0 && lab14ProgressBar.getChildCount() >= step) {
+                View seg = lab14ProgressBar.getChildAt(step - 1);
+                if (seg != null) {
+                    seg.setBackgroundColor(0xFF39FF14);
                 }
-
-                lab14ProgressText.setText(
-                        String.format(Locale.US,
-                                "Progress: %.1f / 5.0 min",
-                                step / 2f)
-                );
             }
 
-            if (elapsedSec < LAB14_TOTAL_SECONDS) {
-                ui.postDelayed(this, 1000);
-            } else {
+            // ✅ FIX: minutes → seconds (120 / 300 seconds)
+            lab14ProgressText.setText(
+                    "Progress: " + elapsedSec + " / " +
+                    LAB14_TOTAL_SECONDS + " seconds"
+            );
+        }
+
+        if (elapsedSec < LAB14_TOTAL_SECONDS) {
+            ui.postDelayed(this, 1000);
+        } else {
+
+            // ✅ ΚΡΙΣΙΜΟ FIX — STOP RUNNER & CLOSE PANEL
+            lab14Running = false;
+            dismissLab14Dialog();
+
+            if (lab14ProgressText != null) {
                 lab14ProgressText.setText("Finalizing analysis…");
             }
         }
-    });
+    }
+});
 }
 
 // ------------------------------------------------------------

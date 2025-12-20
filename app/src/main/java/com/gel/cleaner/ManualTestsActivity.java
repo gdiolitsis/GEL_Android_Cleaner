@@ -148,6 +148,7 @@ private AlertDialog lab15Dialog;
 private TextView lab15StatusText;
 private LinearLayout lab15ProgressBar;
 private Button lab15ExitBtn;
+private TextView lab15CounterText;
 
 private static final int LAB15_TOTAL_SECONDS = 180;
 
@@ -3240,8 +3241,19 @@ private void lab15ChargingSystemSmart() {
     dotsView.setTextColor(0xFF39FF14);
     dotsView.setTextSize(22f);
     dotsView.setGravity(Gravity.CENTER);
-    dotsView.setPadding(0, 0, 0, dp(10));
+    dotsView.setPadding(0, 0, 0, dp(6));
     root.addView(dotsView);
+
+    // ------------------------------------------------------------
+    // COUNTER TEXT (POPUP ONLY)
+    // ------------------------------------------------------------
+    lab15CounterText = new TextView(this);
+    lab15CounterText.setText("0 / 180 sec");
+    lab15CounterText.setTextColor(0xFFAAAAAA);
+    lab15CounterText.setTextSize(13f);
+    lab15CounterText.setGravity(Gravity.CENTER);
+    lab15CounterText.setPadding(0, 0, 0, dp(10));
+    root.addView(lab15CounterText);
 
     // ------------------------------------------------------------
     // PROGRESS BAR (6 × 30s = 180s)
@@ -3392,51 +3404,48 @@ private void lab15ChargingSystemSmart() {
                 return;
             }
 
-// ----------------------------------------------------  
-// PROGRESS
-// ----------------------------------------------------  
-int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);  
+            // ----------------------------------------------------
+            // PROGRESS + COUNTER (POPUP ONLY)
+            // ----------------------------------------------------
+            int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
 
-// ----------------------------------------------------
-// COUNTER (POPUP ONLY)
-// ----------------------------------------------------
-if (lab15CounterText != null) {
-    lab15CounterText.setText(
-            Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
-            " / " + LAB15_TOTAL_SECONDS + " sec"
-    );
-}
+            if (lab15CounterText != null) {
+                lab15CounterText.setText(
+                        Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
+                        " / " + LAB15_TOTAL_SECONDS + " sec"
+                );
+            }
 
-int step = Math.min(  
-        elapsedSec / 30,  
-        lab15ProgressBar.getChildCount()  
-);  
+            int step = Math.min(
+                    elapsedSec / 30,
+                    lab15ProgressBar.getChildCount()
+            );
 
-if (step != lastStep) {  
-    lastStep = step;  
-    for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {  
-        View seg = lab15ProgressBar.getChildAt(i);  
-        if (seg != null) {  
-            seg.setBackgroundColor(  
-                    i < step ? 0xFF39FF14 : 0xFF333333  
-            );  
-        }  
-    }  
-}  
+            if (step != lastStep) {
+                lastStep = step;
+                for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
+                    View seg = lab15ProgressBar.getChildAt(i);
+                    if (seg != null) {
+                        seg.setBackgroundColor(
+                                i < step ? 0xFF39FF14 : 0xFF333333
+                        );
+                    }
+                }
+            }
 
-if (elapsedSec < LAB15_TOTAL_SECONDS) {  
-    ui.postDelayed(this, 1000);  
-} else {  
+            if (elapsedSec < LAB15_TOTAL_SECONDS) {
+                ui.postDelayed(this, 1000);
+            } else {
 
-    lab15StatusText.setText("Charging system stable");  
-    lab15StatusText.setTextColor(0xFF39FF14);  
+                lab15StatusText.setText("Charging system stable");
+                lab15StatusText.setTextColor(0xFF39FF14);
 
-    logLine();  
-    logOk("Charging behavior appears normal. Temperature within safe limits.");  
-    logOk("LAB decision: Charging system OK. No cleaning or replacement required.");  
+                logLine();
+                logOk("Charging behavior appears normal. Temperature within safe limits.");
+                logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
 
-    logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");  
-    logOk("LAB decision: Charging stability OK.");
+                logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
+                logOk("LAB decision: Charging stability OK.");
 
                 // 🔋 CHARGING STRENGTH ESTIMATION — UNCHANGED
                 logLine();

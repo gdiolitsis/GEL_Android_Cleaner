@@ -534,6 +534,48 @@ private float getBatteryTemperature() {
     }
 }
 
+// ============================================================
+// LAB 14 — FINAL BATTERY HEALTH SCORE (Judge Layer)
+// ============================================================
+private void logFinalBatteryHealthScore(
+        double mahPerHour,
+        int healthPct,
+        Float battTempAfter,
+        Float battTempBefore
+) {
+
+    int score = 100;
+
+    if (mahPerHour > 900)       score -= 30;
+    else if (mahPerHour > 750)  score -= 20;
+    else if (mahPerHour > 600)  score -= 10;
+
+    if (battTempAfter != null && battTempBefore != null) {
+        double dT = battTempAfter - battTempBefore;
+        if (dT > 10)       score -= 20;
+        else if (dT > 7)   score -= 10;
+    }
+
+    if (healthPct > 0) {
+        if (healthPct < 60)       score -= 25;
+        else if (healthPct < 70)  score -= 15;
+        else if (healthPct < 80)  score -= 8;
+    }
+
+    score = Math.max(0, Math.min(100, score));
+
+    String category;
+    if (score >= 90)      category = "Strong";
+    else if (score >= 75) category = "Very good";
+    else if (score >= 60) category = "Normal";
+    else                  category = "Weak";
+
+    logLine();
+    logOk(String.format(Locale.US,
+            "Final Battery Health Score: %d%% (%s)",
+            score, category));
+}
+
 // ------------------------------------------------------------
 // Call when LAB 14 fully ends
 // ------------------------------------------------------------
@@ -2406,7 +2448,7 @@ private void lab14BatteryHealthStressTest() {
         logWarn("LAB 14 already running.");
         return;
     }
-    lab14Running = true; // 🔥 REQUIRED
+    lab14Running = true;
 
     try {
 
@@ -2428,7 +2470,7 @@ private void lab14BatteryHealthStressTest() {
         }
 
         // ------------------------------------------------------------
-        // 1️⃣ READ REAL BATTERY INFO (SAME ENGINE AS PERIPHERALS)
+        // 1️⃣ READ REAL BATTERY INFO
         // ------------------------------------------------------------
         final BatteryInfo fBiStart = getBatteryInfo();
         if (fBiStart == null || fBiStart.level < 0) {
@@ -2468,153 +2510,152 @@ private void lab14BatteryHealthStressTest() {
         final int fHealthPct = tmpHealth;
 
         // ------------------------------------------------------------
-        // 2️⃣ FIXED DURATION — LAB MODE (5 MIN)
+        // 2️⃣ FIXED DURATION — LAB MODE
         // ------------------------------------------------------------
-        final int durationSec = 300; // 5 minutes FIXED
+        final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
         // ------------------------------------------------------------
-        // 🔴 SHOW RUNNING DIALOG (LOCK UI)
+        // 🔴 SHOW RUNNING DIALOG
         // ------------------------------------------------------------
         showLab14RunningDialog();
 
         // ------------------------------------------------------------
-// 3️⃣ RUN STRESS (ASYNC)
-// ------------------------------------------------------------
-ui.post(() -> {
+        // 3️⃣ RUN STRESS (ASYNC)
+        // ------------------------------------------------------------
+        ui.post(() -> {
 
-    // ---- THERMALS BEFORE ----
-    Map<String, Float> z0 = readThermalZones();
-    Float batt0 = pickZone(z0, "battery", "batt", "bat");
+            Map<String, Float> z0 = readThermalZones();
+            Float batt0 = pickZone(z0, "battery", "batt", "bat");
 
-    logLine();
-    logInfo("LAB 14 — Battery Health Stress Test started.");
-    logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
-    logInfo("Duration: 5 minutes (fixed laboratory mode).");
+            logLine();
+            logInfo("LAB 14 — Battery Health Stress Test started.");
+            logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
+            logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
 
-    logInfo(String.format(Locale.US,
-            "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
-            fBiStart.level,
-            fBiStart.status,
-            fBiStart.temperature));
-
-    if (fFullMah > 0) {
-        logInfo("Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
-    } else {
-        logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
-    }
-
-    if (fHealthPct > 0) {
-        logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
-    }
-
-    final long t0 = SystemClock.elapsedRealtime();
-
-    applyMaxBrightnessAndKeepOn();
-    startCpuBurn_C_Mode();
-
-    // ------------------------------------------------------------
-    // 4️⃣ STOP STRESS AFTER 5 MIN
-    // ------------------------------------------------------------
-    ui.postDelayed(() -> {
-
-        // 🛑 GUARD — aborted by user
-        if (!lab14Running) {
-            return;
-        }
-
-        try {
-            stopCpuBurn();
-            restoreBrightnessAndKeepOn();
-        } catch (Throwable ignore) {}
-
-        // 🔴 CLOSE RUNNING DIALOG
-        dismissLab14RunningDialog();
-
-        BatteryInfo biEnd = getBatteryInfo();
-        float endPct = getCurrentBatteryPercent();
-
-        if (endPct < 0f || biEnd == null || biEnd.level < 0) {
-            logWarn("Unable to read final battery state.");
-            lab14Running = false;
-            return;
-        }
-
-        long t1 = SystemClock.elapsedRealtime();
-        long dtMs = Math.max(1, t1 - t0);
-
-        float deltaPct = fStartPct - endPct;
-        float pctPerHour = (deltaPct * 3600000f) / dtMs;
-
-        double consumedMah = -1;
-        double mahPerHour  = -1;
-
-        if (fFullMah > 0 && deltaPct > 0f) {
-            consumedMah = (deltaPct / 100.0) * fFullMah;
-            mahPerHour  = (consumedMah * 3600000.0) / dtMs;
-        }
-
-        logLine();
-        logInfo(String.format(Locale.US,
-                "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
-                fStartPct, endPct, deltaPct, dtMs / 1000f));
-
-        if (consumedMah >= 0) {
             logInfo(String.format(Locale.US,
-                    "Measured drain: %.0f mAh (≈ %.0f mAh/hour).",
-                    consumedMah, mahPerHour));
-        } else {
-            logInfo(String.format(Locale.US,
-                    "Measured drain: ≈ %.1f%%/hour.",
-                    pctPerHour));
-        }
+                    "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
+                    fBiStart.level,
+                    fBiStart.status,
+                    fBiStart.temperature));
 
-        Map<String, Float> z1 = readThermalZones();
-        Float batt1 = pickZone(z1, "battery", "batt", "bat");
+            if (fFullMah > 0) {
+                logInfo("Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
+            } else {
+                logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
+            }
 
-        // ------------------------------------------------------------
-        // 5️⃣ LAB INTERPRETATION
-        // ------------------------------------------------------------
-        String decision;
-        if (fHealthPct > 0 && fHealthPct < 70) {
-            decision = "Weak";
-            logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
-        }
-        else if (mahPerHour > 0 && mahPerHour > 900) {
-            decision = "Weak";
-            logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
-        }
-        else if ((fHealthPct > 0 && fHealthPct < 80) ||
-                 (mahPerHour > 0 && mahPerHour > 650)) {
-            decision = "Normal";
-            logWarn("LAB conclusion: Battery shows wear but is still usable.");
-        }
-        else {
-            decision = "Strong";
-            logOk("LAB conclusion: Battery health is good. No replacement indicated.");
-        }
+            if (fHealthPct > 0) {
+                logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
+            }
 
-        // ------------------------------------------------------------
-        // 6️⃣ HEALTH MAP
-        // ------------------------------------------------------------
-        printHealthCheckboxMap(decision);
+            final long t0 = SystemClock.elapsedRealtime();
 
-        // ------------------------------------------------------------
-        // 7️⃣ ANALYTICS & CONFIDENCE (ALWAYS LAST)
-        // ------------------------------------------------------------
-        saveLab14DrainValue(mahPerHour);
-        saveLab14Run();
-        computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
-        computeAndLogConfidenceScore();
-        logLab14Confidence();
+            applyMaxBrightnessAndKeepOn();
+            startCpuBurn_C_Mode();
 
-        lab14Running = false;
+            // ------------------------------------------------------------
+            // 4️⃣ STOP STRESS
+            // ------------------------------------------------------------
+            ui.postDelayed(() -> {
 
-    }, durationSec * 1000L);
-});
+                if (!lab14Running) return;
+
+                try {
+                    stopCpuBurn();
+                    restoreBrightnessAndKeepOn();
+                } catch (Throwable ignore) {}
+
+                dismissLab14RunningDialog();
+
+                BatteryInfo biEnd = getBatteryInfo();
+                float endPct = getCurrentBatteryPercent();
+
+                if (endPct < 0f || biEnd == null || biEnd.level < 0) {
+                    logWarn("Unable to read final battery state.");
+                    lab14Running = false;
+                    return;
+                }
+
+                long t1 = SystemClock.elapsedRealtime();
+                long dtMs = Math.max(1, t1 - t0);
+
+                float deltaPct = fStartPct - endPct;
+                float pctPerHour = (deltaPct * 3600000f) / dtMs;
+
+                double consumedMah = -1;
+                double mahPerHour  = -1;
+
+                if (fFullMah > 0 && deltaPct > 0f) {
+                    consumedMah = (deltaPct / 100.0) * fFullMah;
+                    mahPerHour  = (consumedMah * 3600000.0) / dtMs;
+                }
+
+                logLine();
+                logInfo(String.format(Locale.US,
+                        "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
+                        fStartPct, endPct, deltaPct, dtMs / 1000f));
+
+                if (consumedMah >= 0) {
+                    logInfo(String.format(Locale.US,
+                            "Measured drain: %.0f mAh (≈ %.0f mAh/hour).",
+                            consumedMah, mahPerHour));
+                } else {
+                    logInfo(String.format(Locale.US,
+                            "Measured drain: ≈ %.1f%%/hour.",
+                            pctPerHour));
+                }
+
+                Map<String, Float> z1 = readThermalZones();
+                Float batt1 = pickZone(z1, "battery", "batt", "bat");
+
+                // ------------------------------------------------------------
+                // 5️⃣ LAB INTERPRETATION
+                // ------------------------------------------------------------
+                String decision;
+                if (fHealthPct > 0 && fHealthPct < 70) {
+                    decision = "Weak";
+                    logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
+                }
+                else if (mahPerHour > 0 && mahPerHour > 900) {
+                    decision = "Weak";
+                    logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
+                }
+                else if ((fHealthPct > 0 && fHealthPct < 80) ||
+                         (mahPerHour > 0 && mahPerHour > 650)) {
+                    decision = "Normal";
+                    logWarn("LAB conclusion: Battery shows wear but is still usable.");
+                }
+                else {
+                    decision = "Strong";
+                    logOk("LAB conclusion: Battery health is good. No replacement indicated.");
+                }
+
+                // ------------------------------------------------------------
+                // 6️⃣ HEALTH MAP
+                // ------------------------------------------------------------
+                printHealthCheckboxMap(decision);
+
+                // ------------------------------------------------------------
+                // 7️⃣ ANALYTICS
+                // ------------------------------------------------------------
+                saveLab14DrainValue(mahPerHour);
+                saveLab14Run();
+                computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
+                computeAndLogConfidenceScore();
+                logLab14Confidence();
+
+                // ------------------------------------------------------------
+                // 🧠 FINAL BATTERY HEALTH SCORE (NEW)
+                // ------------------------------------------------------------
+                logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
+
+                lab14Running = false;
+
+            }, durationSec * 1000L);
+        });
 
     } catch (Throwable t) {
-        // HARD FAILSAFE
         try { stopCpuBurn(); } catch (Throwable ignore) {}
         try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
         dismissLab14RunningDialog();
@@ -3190,6 +3231,11 @@ private BatteryInfo getBatteryInfo() {
 
     return bi;
 }
+
+
+
+
+
      
 //=============================================================
 // LAB 15 — Charging System Diagnostic (SMART AUTO ENGINE)

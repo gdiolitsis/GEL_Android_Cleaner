@@ -137,6 +137,11 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String lastScorePrivacy     = "N/A";
     private String lastFinalVerdict     = "N/A";
     
+    // ============================================================
+    // ROOT FLAG (used by Lab 16 / Thermal / Advanced Info)
+    // ============================================================
+    private boolean isRooted = false;
+    
 // ============================================================
 // LAB 15 — FLAGS (DO NOT MOVE)
 // ============================================================
@@ -1055,7 +1060,8 @@ private static class ThermalSummary {
         return m;
     }
 
-    private float max(float a, float b) {
+    // ✅ MUST be static (class is static)
+    private static float max(float a, float b) {
         if (Float.isNaN(a)) return b;
         if (Float.isNaN(b)) return a;
         return Math.max(a, b);
@@ -1149,8 +1155,6 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         for (File d : cds) {
             if (d == null || !d.isDirectory() || d.getName() == null) continue;
             if (!d.getName().startsWith("cooling_device")) continue;
-
-            out.coolingDeviceCount++;
 
             String type = readFirstLineSafe(new File(d, "type"));
             sb.append("• ")
@@ -2905,20 +2909,43 @@ private void lab14BatteryHealthStressTest() {
                 // ------------------------------------------------------------
                 // 🧠 FINAL BATTERY HEALTH SCORE (NEW)
                 // ------------------------------------------------------------
-                logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
+                private void logFinalBatteryHealthScore(
+        double mahPerHour,
+        int healthPct,
+        Float battTempEnd,
+        Float battTempStart
+) {
+    int score = 100;
 
-                lab14Running = false;
+    if (mahPerHour > 900) score -= 30;
+    else if (mahPerHour > 750) score -= 20;
+    else if (mahPerHour > 600) score -= 10;
 
-            }, durationSec * 1000L);
-        });
-
-    } catch (Throwable t) {
-        try { stopCpuBurn(); } catch (Throwable ignore) {}
-        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-        dismissLab14RunningDialog();
-        lab14Running = false;
-        logError("LAB 14 failed unexpectedly.");
+    if (healthPct > 0) {
+        if (healthPct < 60) score -= 25;
+        else if (healthPct < 70) score -= 15;
+        else if (healthPct < 80) score -= 8;
     }
+
+    if (battTempStart != null && battTempEnd != null) {
+        float dT = battTempEnd - battTempStart;
+        if (dT > 10) score -= 20;
+        else if (dT > 7) score -= 10;
+    }
+
+    score = Math.max(0, Math.min(100, score));
+
+    String category =
+            score >= 90 ? "Strong" :
+            score >= 75 ? "Very good" :
+            score >= 60 ? "Normal" : "Weak";
+
+    logLine();
+    logOk(String.format(
+            Locale.US,
+            "Final Battery Health Score: %d%% (%s)",
+            score, category
+    ));
 }
 
 // ===========================================================
@@ -3757,7 +3784,11 @@ if (isChargingNow()) {
     lab15BattTempEnd = lab15BattTempPeak;
 }
 
-logLab15ThermalCorrelation();
+logLab15ThermalCorrelation(
+        battTempStart,
+        lab15BattTempPeak,
+        battTempEnd
+);
 
                 lab15StatusText.setText("Charging system stable");
                 lab15StatusText.setTextColor(0xFF39FF14);
@@ -3970,25 +4001,37 @@ private String buildThermalInfo() {
     ThermalGroupReading modemMain    = new ThermalGroupReading();
     ThermalGroupReading modemAux     = new ThermalGroupReading();
 
+    // --- thermal scan (legacy-compatible) ---
     ThermalSummary summary = scanThermalHardware(
             batteryMain, batteryShell, pmic, charger, modemMain, modemAux
     );
 
+    if (summary == null) {
+        summary = new ThermalSummary(); // absolute safety
+    }
+
+    // --- apply safe fallbacks (no-op stub if nothing needed) ---
     applyThermalFallbacks(
             batteryMain, batteryShell, pmic, charger, modemMain, modemAux
     );
 
-    if (summary != null) {
-        sb.append(String.format(Locale.US,
-                "Thermal Zones     : %d\n", summary.zoneCount));
-        sb.append(String.format(Locale.US,
-                "Cooling Devices   : %d%s\n\n",
-                summary.coolingDeviceCount,
-                summary.coolingDeviceCount == 0
-                        ? " (passive cooling only)"
-                        : ""));
-    }
+    // --- summary header ---
+    sb.append(String.format(
+            Locale.US,
+            "Thermal Zones     : %d\n",
+            Math.max(0, summary.zoneCount)
+    ));
 
+    sb.append(String.format(
+            Locale.US,
+            "Cooling Devices   : %d%s\n\n",
+            Math.max(0, summary.coolingDeviceCount),
+            summary.coolingDeviceCount == 0
+                    ? " (passive cooling only)"
+                    : ""
+    ));
+
+    // --- thermal systems ---
     sb.append("Hardware Thermal Systems\n");
     sb.append("================================\n");
     sb.append(formatThermalLine("Main Modem", modemMain));
@@ -3999,6 +4042,7 @@ private String buildThermalInfo() {
     sb.append(formatThermalLine("PMIC Thermal", pmic));
     sb.append("\n");
 
+    // --- cooling systems ---
     sb.append("Hardware Cooling Systems\n");
     sb.append("================================\n");
     appendHardwareCoolingDevices(sb);

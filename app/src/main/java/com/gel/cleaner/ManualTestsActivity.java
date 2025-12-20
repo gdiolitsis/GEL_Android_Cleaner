@@ -144,13 +144,6 @@ private volatile boolean lab15FlapUnstable = false;
 private volatile boolean lab15OverTempDuringCharge = false;
 
 // ============================================================
-// LAB 14 — FLAGS / UI STATE
-// ============================================================
-private volatile boolean lab14Running = false;
-private TextView lab14DotsView;
-private Button lab14ExitBtn;
-
-// ============================================================
 // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
 // ============================================================
 private static class TelephonySnapshot {
@@ -563,6 +556,30 @@ private void abortLab14ByUser() {
     lab14Running = false;
 
     logInfo("Battery stress test was cancelled before completion.");
+}
+
+// ------------------------------------------------------------
+// Reliable charging detection (plugged-based)
+// ------------------------------------------------------------
+private boolean isDeviceCharging() {
+    try {
+        Intent i = registerReceiver(
+                null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        );
+        if (i == null) return false;
+
+        int plugged = i.getIntExtra(
+                BatteryManager.EXTRA_PLUGGED, 0
+        );
+
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+            || plugged == BatteryManager.BATTERY_PLUGGED_USB
+            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+
+    } catch (Throwable t) {
+        return false;
+    }
 }
 
 // ============================================================
@@ -2791,23 +2808,6 @@ private void startLab14DotsAnimation() {
             ui.postDelayed(this, 500);
         }
     });
-}
-
-// ------------------------------------------------------------
-// Call when LAB 14 fully ends
-// ------------------------------------------------------------
-private void dismissLab14RunningDialog() {
-    try {
-        if (lab14Dialog != null && lab14Dialog.isShowing()) {
-            lab14Dialog.dismiss();
-        }
-    } catch (Throwable ignore) {}
-    finally {
-        lab14Dialog = null;
-        lab14ProgressText = null;
-        lab14ProgressBar = null;
-        lab14DotsView = null;
-    }
 }
 
 // ===================================================================

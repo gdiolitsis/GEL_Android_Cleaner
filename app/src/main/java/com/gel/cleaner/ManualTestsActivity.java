@@ -22,8 +22,8 @@ package com.gel.cleaner;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -149,6 +149,10 @@ private TextView lab15StatusText;
 private LinearLayout lab15ProgressBar;
 private Button lab15ExitBtn;
 private TextView lab15CounterText;
+// LAB 15 — Thermal Correlation
+private float lab15BattTempStart = Float.NaN;
+private float lab15BattTempPeak  = Float.NaN;
+private float lab15BattTempEnd   = Float.NaN;
 
 private static final int LAB15_TOTAL_SECONDS = 180;
 
@@ -832,7 +836,7 @@ private void logLabelValue(String text) {
 
 private void logLine() {
     GELServiceLog.addLine("----------------------------------------");
-    appendHtml("<font color='#666666'>----------------------------------------</font>");
+    appendHtml("----------------------------------------");
 }
 
 private String escape(String s) {
@@ -874,7 +878,8 @@ private String formatUptime(long ms) {
 private String cleanSsid(String raw) {
     if (raw == null) return "Unknown";
     raw = raw.trim();
-    if (raw.equalsIgnoreCase("<unknown ssid>") || raw.equalsIgnoreCase("unknown ssid"))
+    if (raw.equalsIgnoreCase("<unknown ssid>") ||
+        raw.equalsIgnoreCase("unknown ssid"))
         return "Unknown";
     if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
         return raw.substring(1, raw.length() - 1);
@@ -889,17 +894,15 @@ private String ipToStr(int ip) {
 }
 
 // ============================================================
-// LAB 14 — REQUIRED SUPPORT METHODS
-// (DO NOT MODIFY — shared infra)
+// LAB 14 — REQUIRED SUPPORT METHODS (DO NOT MODIFY)
 // ============================================================
 
-// ------------------------------------------------------------
-// Battery percentage (stable & safe)
-// ------------------------------------------------------------
 private float getCurrentBatteryPercent() {
     try {
-        Intent i = registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Intent i = registerReceiver(
+                null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        );
         if (i == null) return -1f;
 
         int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
@@ -916,6 +919,7 @@ private float getCurrentBatteryPercent() {
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB stress)
 // ------------------------------------------------------------
+
 private int __oldBrightness = -1;
 
 private void applyMaxBrightnessAndKeepOn() {
@@ -932,7 +936,6 @@ private void applyMaxBrightnessAndKeepOn() {
 
         lp.screenBrightness = 1.0f;
         getWindow().setAttributes(lp);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     } catch (Throwable ignore) {}
@@ -955,6 +958,7 @@ private void restoreBrightnessAndKeepOn() {
 // ------------------------------------------------------------
 // CPU stress (controlled)
 // ------------------------------------------------------------
+
 private volatile boolean __cpuBurn = false;
 
 private void startCpuBurn_C_Mode() {
@@ -977,22 +981,148 @@ private void stopCpuBurn() {
 }
 
 // ------------------------------------------------------------
-// UI health map (fallback implementation)
+// UI health map (fallback)
 // ------------------------------------------------------------
-private void printHealthCheckboxMap(String decision) {
 
+private void printHealthCheckboxMap(String decision) {
     logLine();
 
     if ("Strong".equalsIgnoreCase(decision)) {
         logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
-    }
-    else if ("Normal".equalsIgnoreCase(decision)) {
+    } else if ("Normal".equalsIgnoreCase(decision)) {
         logWarn("Health Map: ⚠ Moderate wear detected");
-    }
-    else {
+    } else {
         logError("Health Map: ✖ Battery health critical");
     }
 }
+
+// ============================================================
+// LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
+// ============================================================
+
+private boolean isDeviceCharging() {
+    try {
+        Intent i = registerReceiver(
+                null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        );
+        if (i == null) return false;
+
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+                || plugged == BatteryManager.BATTERY_PLUGGED_USB
+                || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+// ------------------------------------------------------------
+// LAB 15 — Thermal Correlation Logger
+// ------------------------------------------------------------
+
+private void logLab15ThermalCorrelation(
+        float battTempStart,
+        float battTempPeak,
+        float battTempEnd
+) {
+
+    if (Float.isNaN(battTempStart) || Float.isNaN(battTempEnd)) {
+        logWarn("Thermal correlation: insufficient data.");
+        return;
+    }
+
+    // --------------------------------------------------------
+    // ΔT calculation (start → peak/end)
+    // --------------------------------------------------------
+    float rawDelta = !Float.isNaN(battTempPeak)
+            ? (battTempPeak - battTempStart)
+            : (battTempEnd - battTempStart);
+
+    float dPeak = Math.max(0f, rawDelta);
+
+    // --------------------------------------------------------
+    // VERDICT (LAB STYLE)
+    // --------------------------------------------------------
+    String verdict;
+    String note;
+
+    if (dPeak <= 4.0f) {
+        verdict = "OK";
+        note = "Normal thermal behavior during charging";
+    } else if (dPeak <= 7.0f) {
+        verdict = "Warm";
+        note = "Elevated thermal load during charging";
+    } else {
+        verdict = "Risk";
+        note = "Abnormal thermal rise detected";
+    }
+
+    // --------------------------------------------------------
+    // LOG OUTPUT
+    // --------------------------------------------------------
+    logLine();
+
+    logInfo(String.format(
+            Locale.US,
+            "Thermal correlation (charging): start %.1f°C → peak %.1f°C → end %.1f°C",
+            battTempStart,
+            (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+            battTempEnd
+    ));
+
+    logOk(String.format(
+            Locale.US,
+            "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
+            verdict,
+            dPeak,
+            note
+    ));
+}
+
+// ============================================================
+// CHARGING REQUIRED DIALOG — SAFE DISMISS
+// ============================================================
+protected void dismissChargingDialogSafe(
+        Context ctx,
+        AlertDialog dialog,
+        BroadcastReceiver receiver
+) {
+    try {
+        if (receiver != null) {
+            ctx.unregisterReceiver(receiver);
+        }
+    } catch (Throwable ignore) {}
+
+    try {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
+// DOTS ANIMATION HELPER (OPTIONAL)
+// ============================================================
+protected void advanceDots(TextView dotsView, int step) {
+    if (dotsView == null) return;
+    String[] frames = { "•", "• •", "• • •" };
+    dotsView.setText(frames[step % frames.length]);
+}
+
+// ============================================================
+// LOGGER STUBS (EXPECTED FROM HOST ACTIVITY)
+// ============================================================
+// These are expected to exist in ManualTestsActivity:
+//
+// void logLine()
+// void logInfo(String s)
+// void logOk(String s)
+// void logWarn(String s)
+//
+// ============================================================
+
 
 // ============================================================
 // LAB 15 — Charging Required Dialog (LIVE STATUS PANEL)
@@ -2609,6 +2739,129 @@ private void lab14BatteryHealthStressTest() {
                 Map<String, Float> z1 = readThermalZones();
                 Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
+// ============================================================
+// LAB 14 — FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
+// GEL EDITION — LOCKED / PRODUCTION
+// ============================================================
+//
+// INPUTS (ALREADY COMPUTED BY LAB 14 CORE):
+//  - baseScore        : int    (0–100)
+//  - mahPerHour       : double (discharge rate under stress)
+//  - healthPct        : int    (estimated capacity %)
+//  - battTempBefore   : Float  (°C, start)
+//  - battTempAfter    : Float  (°C, end)
+//  - battTempPeak     : Float  (°C, peak, optional)
+//
+// OUTPUT:
+//  - Final Battery Health Score
+//  - Category
+//  - Thermal Verdict line
+//
+// ============================================================
+
+private void logFinalBatteryHealthScore(
+        int baseScore,
+        double mahPerHour,
+        int healthPct,
+        Float battTempBefore,
+        Float battTempAfter,
+        Float battTempPeak
+) {
+
+    int score = baseScore;
+
+    // --------------------------------------------------------
+    // 1️⃣ DRAIN PENALTIES (STRESS BEHAVIOR)
+    // --------------------------------------------------------
+    if (mahPerHour > 900)       score -= 30;
+    else if (mahPerHour > 750)  score -= 20;
+    else if (mahPerHour > 600)  score -= 10;
+
+    // --------------------------------------------------------
+    // 2️⃣ CAPACITY PENALTIES
+    // --------------------------------------------------------
+    if (healthPct > 0) {
+        if (healthPct < 60)       score -= 25;
+        else if (healthPct < 70)  score -= 15;
+        else if (healthPct < 80)  score -= 8;
+    }
+
+    // --------------------------------------------------------
+    // 3️⃣ THERMAL ANALYSIS (VERDICT + WEIGHT)
+    // --------------------------------------------------------
+    float dT = 0f;
+    if (battTempBefore != null) {
+        float ref = battTempBefore;
+        float end = (battTempPeak != null)
+                ? battTempPeak
+                : (battTempAfter != null ? battTempAfter : ref);
+        dT = end - ref;
+    }
+
+    String thermalVerdict;
+    int thermalPenalty = 0;
+
+    if (dT <= 4f) {
+        thermalVerdict = "OK";
+        thermalPenalty = 0;
+    } else if (dT <= 7f) {
+        thermalVerdict = "Warm";
+        thermalPenalty = 5;
+    } else {
+        thermalVerdict = "Risk";
+        thermalPenalty = (dT > 10f ? 15 : 10);
+    }
+
+    score -= thermalPenalty;
+
+    // --------------------------------------------------------
+    // CLAMP
+    // --------------------------------------------------------
+    if (score < 0)   score = 0;
+    if (score > 100) score = 100;
+
+    // --------------------------------------------------------
+    // CATEGORY
+    // --------------------------------------------------------
+    String category;
+    if (score >= 90)       category = "Strong";
+    else if (score >= 80)  category = "Excellent";
+    else if (score >= 70)  category = "Very good";
+    else if (score >= 60)  category = "Normal";
+    else                   category = "Weak";
+
+    // --------------------------------------------------------
+    // LOG OUTPUT (LAB STYLE)
+    // --------------------------------------------------------
+    logLine();
+
+    logInfo(String.format(
+            Locale.US,
+            "Thermal Verdict: %s (ΔT +%.1f°C)",
+            thermalVerdict,
+            dT
+    ));
+
+    if (thermalPenalty > 0) {
+        logWarn(String.format(
+                Locale.US,
+                "Thermal Weight Applied: -%d%%",
+                thermalPenalty
+        ));
+    } else {
+        logOk("Thermal Weight Applied: none");
+    }
+
+    logLine();
+
+    logOk(String.format(
+            Locale.US,
+            "Final Battery Health Score: %d%% (%s)",
+            score,
+            category
+    ));
+}
+
                 // ------------------------------------------------------------
                 // 5️⃣ LAB INTERPRETATION
                 // ------------------------------------------------------------
@@ -2664,7 +2917,7 @@ private void lab14BatteryHealthStressTest() {
     }
 }
 
-// ============================================================
+// ===========================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
 // Visual progress + animated dots + segmented bar + EXIT
 // ============================================================
@@ -3402,6 +3655,9 @@ private void lab15ChargingSystemSmart() {
                 wasCharging[0] = true;
                 startTs[0] = nowTs;
                 startInfo[0] = getBatteryInfo();
+                
+                lab15BattTempStart = getBatteryTemperature();
+lab15BattTempPeak  = lab15BattTempStart;
 
                 lab15StatusText.setText("Charging connection detected");
                 lab15StatusText.setTextColor(0xFF39FF14);
@@ -3483,6 +3739,18 @@ private void lab15ChargingSystemSmart() {
                 ui.postDelayed(this, 1000);
             } else {
 
+// ----------------------------------------------------
+// END THERMAL SNAPSHOT (CHARGING CORRELATED)
+// ----------------------------------------------------
+if (isChargingNow()) {
+    lab15BattTempEnd = getBatteryTemperature();
+} else {
+    // fallback: last known peak is safer than idle temp
+    lab15BattTempEnd = lab15BattTempPeak;
+}
+
+logLab15ThermalCorrelation();
+
                 lab15StatusText.setText("Charging system stable");
                 lab15StatusText.setTextColor(0xFF39FF14);
 
@@ -3534,73 +3802,200 @@ private void lab15ChargingSystemSmart() {
 }
 
 // ============================================================
-// LAB 16 — Thermal Snapshot (GEL Universal Edition — SAFE)
+// LAB 16 — Thermal Snapshot
+// GEL Universal Edition — Internals + Peripherals + Root-Aware
+// READ-ONLY • SNAPSHOT • SAFE
 // ============================================================
 private void lab16ThermalSnapshot() {
-logLine();
-logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
 
-// 1) Read thermal zones (CPU/GPU/PMIC/Skin)  
-Map<String, Float> zones = readThermalZones();  
+    logLine();
+    logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
 
-// 2) Battery ALWAYS from BatteryManager  
-float batt = getBatteryTemperature();  
+    // ------------------------------------------------------------
+    // 1️⃣ Read generic thermal zones
+    // ------------------------------------------------------------
+    Map<String, Float> zones = readThermalZones();
 
-if (zones == null || zones.isEmpty()) {  
-    logWarn("Device exposes NO thermal zones. Printing battery only.");  
-    printZoneAscii("Battery", batt);  
-    logOk("Lab 16 finished.");  
-    return;  
-}  
+    // ------------------------------------------------------------
+    // 2️⃣ Battery ALWAYS from BatteryManager
+    // ------------------------------------------------------------
+    float batt = getBatteryTemperature();
 
-// Auto-detect CPU/GPU/SKIN/PMIC  
-Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");  
-Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");  
-Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");  
-Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");  
+    if (zones == null || zones.isEmpty()) {
+        logWarn("Device exposes NO thermal zones. Printing battery only.");
+        printZoneAscii("Battery", batt);
+        logOk("Lab 16 finished.");
+        return;
+    }
 
-logOk("Thermal Zones found: " + zones.size());  
+    // ------------------------------------------------------------
+    // 3️⃣ Auto-detect main zones
+    // ------------------------------------------------------------
+    Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
+    Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
+    Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
+    Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
 
-// Snapshot print  
-if (cpu  != null) printZoneAscii("CPU", cpu);  
-if (gpu  != null) printZoneAscii("GPU", gpu);  
+    logOk("Thermal Zones found: " + zones.size());
 
-// Battery ALWAYS printed  
-printZoneAscii("Battery", batt);  
+    // ------------------------------------------------------------
+    // 4️⃣ ASCII SNAPSHOT MAP
+    // ------------------------------------------------------------
+    if (cpu != null)  printZoneAscii("CPU", cpu);
+    if (gpu != null)  printZoneAscii("GPU", gpu);
 
-if (skin != null) printZoneAscii("Skin", skin);  
-if (pmic != null) printZoneAscii("PMIC", pmic);  
+    printZoneAscii("Battery", batt); // ALWAYS
 
-logOk("Lab 16 finished.");
+    if (skin != null) printZoneAscii("Skin", skin);
+    if (pmic != null) printZoneAscii("PMIC", pmic);
 
+    // ------------------------------------------------------------
+    // 5️⃣ HARDWARE SUMMARY (Internals + Peripherals)
+    // ------------------------------------------------------------
+    logLine();
+    appendHtml("<b>Hardware Thermal Summary</b>");
+    appendHtml("<small><tt>" + escape(buildThermalInfo()) + "</tt></small>");
+
+    // ------------------------------------------------------------
+    // 6️⃣ ROOT-ENHANCED INTERNAL VIEW (if available)
+    // ------------------------------------------------------------
+    if (isRooted) {
+        logLine();
+        appendHtml("<b>Advanced Thermal (Root)</b>");
+        appendHtml("<small><tt>" + escape(buildThermalInternalReport()) + "</tt></small>");
+    } else {
+        logInfo("Advanced Info: For detailed thermal and cooling information, requires root access.");
+    }
+
+    logOk("Lab 16 finished.");
 }
 
 // ============================================================
-// ASCII BAR (100 chars — 5sp monospace via HTML)
+// ASCII BAR (100 chars — monospace via HTML)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
-// Color icon  
-String color;  
-if (t < 45)        color = "🟩";  
-else if (t < 60)   color = "🟨";  
-else               color = "🟥";  
+    String color;
+    if (t < 45f)       color = "🟩";
+    else if (t < 60f)  color = "🟨";
+    else               color = "🟥";
 
-// Temperature scale → 0–100 chars  
-float maxT = 80f;  
-float pct = Math.min(1f, t / maxT);  
-int bars = (int)(pct * 100);  
+    float maxT = 80f;
+    float pct  = Math.min(1f, t / maxT);
+    int bars   = (int) (pct * 100);
 
-StringBuilder sb = new StringBuilder(100);  
-for (int i = 0; i < bars; i++) sb.append("█");  
-while (sb.length() < 100) sb.append(" ");  
+    StringBuilder sb = new StringBuilder(100);
+    for (int i = 0; i < bars; i++) sb.append("█");
+    while (sb.length() < 100) sb.append(" ");
 
-// Header line  
-logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));  
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
+}
 
-// BAR line (5sp monospace via <small><small><tt>>)  
-appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
+// ===================================================================
+// THERMAL SENSORS — INTERNAL (Human Readable, Root-Enhanced)
+// ===================================================================
+private String buildThermalInternalReport() {
 
+    StringBuilder sb = new StringBuilder();
+    sb.append("THERMAL SENSORS (INTERNAL)\n");
+    sb.append("──────────────────────────\n");
+
+    File thermalDir = new File("/sys/class/thermal");
+    if (!thermalDir.exists() || !thermalDir.isDirectory()) {
+        sb.append("Thermal sensors not available on this device.\n");
+        return sb.toString();
+    }
+
+    File[] zones = thermalDir.listFiles((d, n) -> n.startsWith("thermal_zone"));
+    if (zones == null || zones.length == 0) {
+        sb.append("No thermal zones detected.\n");
+        return sb.toString();
+    }
+
+    for (File z : zones) {
+        try {
+            String type = readFirstLineSafe(new File(z, "type"));
+            long milli  = readLongSafe(new File(z, "temp"));
+            if (type == null || milli == Long.MIN_VALUE) continue;
+
+            float c = milli / 1000f;
+            if (!isValidTemp(c)) continue;
+
+            sb.append(z.getName())
+              .append(" [").append(type).append("]\n")
+              .append("  Temp : ")
+              .append(String.format(Locale.US, "%.1f°C", c))
+              .append("\n");
+
+            // Trip points
+            for (int i = 0; i < 10; i++) {
+                String tp  = readFirstLineSafe(new File(z, "trip_point_" + i + "_temp"));
+                String tpt = readFirstLineSafe(new File(z, "trip_point_" + i + "_type"));
+                if (tp.isEmpty() || tpt.isEmpty()) break;
+
+                float tc = Float.parseFloat(tp) / 1000f;
+                sb.append("  Trip ").append(i)
+                  .append(" (").append(tpt).append(") : ")
+                  .append(String.format(Locale.US, "%.1f°C", tc))
+                  .append("\n");
+            }
+            sb.append("\n");
+
+        } catch (Throwable ignore) {}
+    }
+
+    return sb.toString();
+}
+
+// ===================================================================
+// FINAL HARDWARE SUMMARY (Internals + Peripherals)
+// ===================================================================
+private String buildThermalInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    ThermalGroupReading batteryMain  = new ThermalGroupReading();
+    ThermalGroupReading batteryShell = new ThermalGroupReading();
+    ThermalGroupReading pmic         = new ThermalGroupReading();
+    ThermalGroupReading charger      = new ThermalGroupReading();
+    ThermalGroupReading modemMain    = new ThermalGroupReading();
+    ThermalGroupReading modemAux     = new ThermalGroupReading();
+
+    ThermalSummary summary = scanThermalHardware(
+            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
+    );
+
+    applyThermalFallbacks(
+            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
+    );
+
+    if (summary != null) {
+        sb.append(String.format(Locale.US,
+                "Thermal Zones     : %d\n", summary.zoneCount));
+        sb.append(String.format(Locale.US,
+                "Cooling Devices   : %d%s\n\n",
+                summary.coolingDeviceCount,
+                summary.coolingDeviceCount == 0
+                        ? " (passive cooling only)"
+                        : ""));
+    }
+
+    sb.append("Hardware Thermal Systems\n");
+    sb.append("================================\n");
+    sb.append(formatThermalLine("Main Modem", modemMain));
+    sb.append(formatThermalLine("Secondary Modem", modemAux));
+    sb.append(formatThermalLine("Main Battery", batteryMain));
+    sb.append(formatThermalLine("Battery Shell", batteryShell));
+    sb.append(formatThermalLine("Charger Thermal", charger));
+    sb.append(formatThermalLine("PMIC Thermal", pmic));
+    sb.append("\n");
+
+    sb.append("Hardware Cooling Systems\n");
+    sb.append("================================\n");
+    appendHardwareCoolingDevices(sb);
+
+    return sb.toString();
 }
 
 // ============================================================
@@ -5464,13 +5859,33 @@ return clampScore(s);
 // ------------------------- UTIL ----------------------------
 
 private boolean isChargingNow() {
-try {
-Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-int status = i != null ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
-return (status == BatteryManager.BATTERY_STATUS_CHARGING ||
-status == BatteryManager.BATTERY_STATUS_FULL);
-} catch (Throwable ignored) {}
-return false;
+    try {
+        Intent i = registerReceiver(
+                null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        );
+        int status = (i != null)
+                ? i.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                : -1;
+
+        return status == BatteryManager.BATTERY_STATUS_CHARGING
+            || status == BatteryManager.BATTERY_STATUS_FULL;
+
+    } catch (Throwable ignored) {
+        return false;
+    }
+}
+
+// ----------------------------------------------------
+// PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
+// ----------------------------------------------------
+if (isChargingNow()) {
+    float tNow = getBatteryTemperature();
+    if (tNow > 0 && !Float.isNaN(tNow)) {
+        if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
+            lab15BattTempPeak = tNow;
+        }
+    }
 }
 
 private float maxOf(Float a, Float b, Float c, Float d, float e) {

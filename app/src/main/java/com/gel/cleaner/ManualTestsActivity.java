@@ -955,6 +955,23 @@ private void printHealthCheckboxMap(String decision) {
 }
 
 // ============================================================
+// LAB 15 — PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
+// ============================================================
+private void updateLab15PeakTemperature() {
+
+    if (!isChargingNow())
+        return;
+
+    float tNow = getBatteryTemperature();
+    if (tNow <= 0f || Float.isNaN(tNow))
+        return;
+
+    if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
+        lab15BattTempPeak = tNow;
+    }
+}
+
+// ============================================================
 // LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
 // ============================================================
 
@@ -5713,22 +5730,6 @@ private boolean isChargingNow() {
 
     } catch (Throwable ignored) {
         return false;
-    }
-}
-
-// ============================================================
-// LAB 15 — PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
-// ============================================================
-private void updateLab15PeakTemperature() {
-
-    if (!isChargingNow())
-        return;
-
-    float tNow = getBatteryTemperature();
-    if (tNow > 0 && !Float.isNaN(tNow)) {
-        if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
-            lab15BattTempPeak = tNow;
-        }
     }
 }
 

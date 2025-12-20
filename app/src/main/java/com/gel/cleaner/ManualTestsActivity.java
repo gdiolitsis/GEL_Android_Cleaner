@@ -962,9 +962,7 @@ private TextView chargingMsgView;
 private TextView chargingDotsView;
 private BroadcastReceiver chargingReceiver;
 
-private volatile boolean lab15Running = false;
 private volatile boolean chargingDetected = false;
-
 
 // ============================================================
 // SHOW DIALOG — WAIT FOR CHARGING (PHASE 1)

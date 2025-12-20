@@ -142,6 +142,14 @@ public class ManualTestsActivity extends AppCompatActivity {
 // ============================================================
 private volatile boolean lab15FlapUnstable = false;
 private volatile boolean lab15OverTempDuringCharge = false;
+private volatile boolean lab15Running = false;
+
+private AlertDialog lab15Dialog;
+private TextView lab15StatusText;
+private LinearLayout lab15ProgressBar;
+private Button lab15ExitBtn;
+
+private static final int LAB15_TOTAL_SECONDS = 180;
 
 // ============================================================
 // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
@@ -3176,74 +3184,290 @@ private BatteryInfo getBatteryInfo() {
      
 //=============================================================
 // LAB 15 — Charging System Diagnostic (SMART AUTO ENGINE)
-// GEL LAB EDITION — Clean / Replace / Board-Level Decision
+// GEL LAB EDITION — UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
 //=============================================================
 private void lab15ChargingSystemSmart() {
 
-    // HARD GUARD
     if (lab15Running) {
         logWarn("LAB 15 already running.");
         return;
     }
 
+    lab15Running = true;
+    lab15FlapUnstable = false;
+    lab15OverTempDuringCharge = false;
+
     // ------------------------------------------------------------
-    // 1️⃣ SHOW POPUP — WAIT FOR CHARGER
+    // DIALOG UI
     // ------------------------------------------------------------
-    showChargingRequiredDialogWithLiveStatus(() -> {
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
 
-        // --------------------------------------------------------
-        // CONFIRMED: CHARGER CONNECTED
-        // --------------------------------------------------------
-        lab15Running = true;
+    b.setTitle("LAB 15 — Charging System Diagnostic");
+    b.setCancelable(false);
 
-        // --------------------------------------------------------
-        // HEADER
-        // --------------------------------------------------------
-        logLine();
-        logInfo("LAB 15 — Charging System Diagnostic (Smart).");
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+    root.setBackgroundColor(0xFF101010);
 
-        // --------------------------------------------------------
-        // BASELINE INFO (NO DECISIONS HERE)
-        // --------------------------------------------------------
-        float battPct  = getCurrentBatteryPercent();
-        float battTemp = getBatteryTemperature();
+    // ------------------------------------------------------------
+    // STATUS TEXT (NOT TITLE)
+    // ------------------------------------------------------------
+    lab15StatusText = new TextView(this);
+    lab15StatusText.setText("Waiting for charging connection…");
+    lab15StatusText.setTextColor(0xFFAAAAAA);
+    lab15StatusText.setTextSize(15f);
+    lab15StatusText.setPadding(0, 0, 0, dp(14));
+    root.addView(lab15StatusText);
 
-        if (battPct >= 0) {
-            logInfo(String.format(Locale.US,
-                    "Battery level: %.1f%%", battPct));
-        } else {
-            logWarn("Unable to read battery percentage reliably.");
+    // ------------------------------------------------------------
+    // PROGRESS BAR (6 × 30s = 180s)
+    // ------------------------------------------------------------
+    lab15ProgressBar = new LinearLayout(this);
+    lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+    lab15ProgressBar.setGravity(Gravity.CENTER);
+
+    for (int i = 0; i < 6; i++) {
+        View seg = new View(this);
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(10), 1f);
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        seg.setLayoutParams(lp);
+        seg.setBackgroundColor(0xFF333333);
+        lab15ProgressBar.addView(seg);
+    }
+    root.addView(lab15ProgressBar);
+
+    // ------------------------------------------------------------
+    // EXIT BUTTON — RED / GOLD
+    // ------------------------------------------------------------
+    lab15ExitBtn = new Button(this);
+    lab15ExitBtn.setText("Exit test");
+    lab15ExitBtn.setAllCaps(false);
+    lab15ExitBtn.setTextColor(0xFFFFFFFF);
+    lab15ExitBtn.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    lab15ExitBtn.setBackground(exitBg);
+
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExit.setMargins(0, dp(16), 0, 0);
+    lab15ExitBtn.setLayoutParams(lpExit);
+
+    lab15ExitBtn.setOnClickListener(v -> {
+        logWarn("LAB 15 aborted by user.");
+        lab15Running = false;
+        if (lab15Dialog != null) lab15Dialog.dismiss();
+    });
+
+    root.addView(lab15ExitBtn);
+
+    b.setView(root);
+    lab15Dialog = b.create();
+    lab15Dialog.getWindow()
+            .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+    lab15Dialog.show();
+
+    // ------------------------------------------------------------
+    // LOG HEADER (ORDER LOCKED)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("LAB 15 — Charging System Diagnostic (Smart).");
+
+    // ------------------------------------------------------------
+    // WAIT FOR CHARGER + MONITOR
+    // ------------------------------------------------------------
+    final long[] startTs = { -1 };
+    final boolean[] wasCharging = { false };
+
+    // ✅ FIX: start snapshot for strength estimation (Peripherals logic)
+    final BatteryInfo[] startInfo = { null };
+
+    ui.post(new Runnable() {
+
+        int lastStep = -1;
+
+        @Override
+        public void run() {
+
+            if (!lab15Running) return;
+
+            boolean chargingNow = isDeviceCharging();
+
+            // ----------------------------------------------------
+            // FIRST CHARGER DETECTION
+            // ----------------------------------------------------
+            if (chargingNow && !wasCharging[0]) {
+                wasCharging[0] = true;
+                startTs[0] = SystemClock.elapsedRealtime();
+
+                // ✅ FIX: capture baseline battery info ONCE at start
+                startInfo[0] = getBatteryInfo();
+
+                lab15StatusText.setText("Charging connection detected");
+                lab15StatusText.setTextColor(0xFF39FF14);
+
+                float battPct = getCurrentBatteryPercent();
+                float battTemp = getBatteryTemperature();
+
+                if (battPct >= 0)
+                    logInfo(String.format(Locale.US,
+                            "Battery level: %.1f%%", battPct));
+                if (battTemp > 0)
+                    logInfo(String.format(Locale.US,
+                            "Battery temperature: %.1f°C", battTemp));
+
+                logOk("Charging state detected.");
+
+                logLine();
+                logInfo("Monitoring charging stability for 20 seconds...");
+                logInfo("Monitoring charging system for 180 seconds...");
+            }
+
+            // ----------------------------------------------------
+            // 🔴 UNPLUG DETECTED — HARD STOP
+            // ----------------------------------------------------
+            if (wasCharging[0] && !chargingNow) {
+
+                lab15StatusText.setText("Charging disconnected — test aborted");
+                lab15StatusText.setTextColor(0xFFFF5555);
+
+                logLine();
+                logError(
+                        "Charging instability detected. " +
+                        "Check or replace the charging cable. If the issue persists, charging port inspection is recommended."
+                );
+
+                lab15Running = false;
+                if (lab15Dialog != null) lab15Dialog.dismiss();
+                return;
+            }
+
+            // ----------------------------------------------------
+            // WAIT UNTIL CHARGER CONNECTED
+            // ----------------------------------------------------
+            if (startTs[0] < 0) {
+                ui.postDelayed(this, 500);
+                return;
+            }
+
+            // ----------------------------------------------------
+            // PROGRESS
+            // ----------------------------------------------------
+            int elapsedSec =
+                    (int) ((SystemClock.elapsedRealtime() - startTs[0]) / 1000);
+
+            int step = Math.min(
+                    elapsedSec / 30,
+                    lab15ProgressBar.getChildCount()
+            );
+
+            if (step != lastStep) {
+                lastStep = step;
+                for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
+                    View seg = lab15ProgressBar.getChildAt(i);
+                    if (seg != null) {
+                        seg.setBackgroundColor(
+                                i < step ? 0xFF39FF14 : 0xFF333333
+                        );
+                    }
+                }
+            }
+
+            if (elapsedSec < LAB15_TOTAL_SECONDS) {
+                ui.postDelayed(this, 1000);
+            } else {
+
+                lab15StatusText.setText("Charging system stable");
+                lab15StatusText.setTextColor(0xFF39FF14);
+
+                logLine();
+                logOk("Charging behavior appears normal. Temperature within safe limits.");
+                logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+
+                logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
+                logOk("LAB decision: Charging stability OK.");
+
+                // ----------------------------------------------------
+                // 🔋 CHARGING STRENGTH ESTIMATION (GEL SMART — NO mA)
+                // ----------------------------------------------------
+                logLine();
+
+                BatteryInfo endInfo = getBatteryInfo();
+
+                if (startInfo[0] != null &&
+                        endInfo != null &&
+                        startInfo[0].currentChargeMah > 0 &&
+                        endInfo.currentChargeMah > startInfo[0].currentChargeMah &&
+                        (endInfo.estimatedFullMah > 0 || startInfo[0].estimatedFullMah > 0)) {
+
+                    long startMah = startInfo[0].currentChargeMah;
+                    long endMah   = endInfo.currentChargeMah;
+
+                    long fullMah =
+                            endInfo.estimatedFullMah > 0
+                                    ? endInfo.estimatedFullMah
+                                    : startInfo[0].estimatedFullMah;
+
+                    float deltaPct =
+                            ((endMah - startMah) * 100f) / (float) fullMah;
+
+                    if (deltaPct >= 1.2f) {
+
+                        logOk(
+                                "Charging strength: STRONG — φορτίζει δυνατά\n" +
+                                "Fast / high-quality charging path detected."
+                        );
+
+                    } else if (deltaPct >= 0.6f) {
+
+                        logOk(
+                                "Charging strength: NORMAL — φορτίζει κανονικά\n" +
+                                "Typical charger and cable behavior."
+                        );
+
+                    } else if (deltaPct >= 0.3f) {
+
+                        logWarn(
+                                "Charging strength: MODERATE — φορτίζει αλλά όχι φουλ\n" +
+                                "USB, wireless, or aging cable possible."
+                        );
+
+                    } else {
+
+                        logError(
+                                "Charging strength: POOR — κάτι δεν πάει καλά\n" +
+                                "Very low effective charging detected."
+                        );
+                    }
+
+                } else {
+
+                    logWarn(
+                            "Charging strength: Unable to estimate accurately.\n" +
+                            "Charge counter or capacity data unavailable on this device."
+                    );
+                }
+
+                lab15Running = false;
+                if (lab15Dialog != null) lab15Dialog.dismiss();
+            }
         }
-
-        if (battTemp > 0) {
-            logInfo(String.format(Locale.US,
-                    "Battery temperature: %.1f°C", battTemp));
-        } else {
-            logWarn("Battery temperature unavailable.");
-        }
-
-        // --------------------------------------------------------
-        // CONFIRM CHARGING STATE
-        // --------------------------------------------------------
-        logOk("Charging state detected.");
-
-        // --------------------------------------------------------
-        // PRE-ANNOUNCE STABILITY CHECK
-        // --------------------------------------------------------
-        logLine();
-        logInfo("LAB 15 — Charging Instability Check");
-        logInfo("Monitoring charging stability for 20 seconds...");
-        logInfo("Monitoring charging system for 180 seconds...");
-
-        // --------------------------------------------------------
-        // 🚀 START CORE LAB 15 (180 sec)
-        // --------------------------------------------------------
-        runLab15Core();
     });
 }
 
 // ============================================================
-
 // LAB 16 — Thermal Snapshot (GEL Universal Edition — SAFE)
 // ============================================================
 private void lab16ThermalSnapshot() {

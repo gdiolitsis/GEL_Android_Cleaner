@@ -533,175 +533,6 @@ private float getBatteryTemperature() {
 }
 
 // ------------------------------------------------------------
-// Reliable charging detection (plugged-based)
-// ------------------------------------------------------------
-private boolean isDeviceCharging() {
-    try {
-        Intent i = registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (i == null) return false;
-
-        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
-            || plugged == BatteryManager.BATTERY_PLUGGED_USB
-            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
-    // ------------------------------------------------------------
-    // Info text
-    // ------------------------------------------------------------
-    TextView info = new TextView(this);
-    info.setText(
-            "Running controlled battery stress test.\n" +
-            "Duration locked to 5 minutes for reliable diagnostics.\n\n" +
-            "Please do NOT use the device."
-    );
-    info.setTextColor(Color.WHITE);
-    info.setPadding(0, 0, 0, 20);
-    root.addView(info);
-
-    // ------------------------------------------------------------
-    // Progress text (HUMAN, CONSISTENT)
-    // ------------------------------------------------------------
-    lab14ProgressText = new TextView(this);
-    lab14ProgressText.setText("Progress: 0.0 / 5.0 min");
-    lab14ProgressText.setTextColor(0xFF39FF14);
-    lab14ProgressText.setGravity(Gravity.CENTER);
-    lab14ProgressText.setPadding(0, 0, 0, 16);
-    root.addView(lab14ProgressText);
-
-    // ------------------------------------------------------------
-    // Segmented progress bar (10 × 30s)
-    // ------------------------------------------------------------
-    lab14ProgressBar = new LinearLayout(this);
-    lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-    lab14ProgressBar.setGravity(Gravity.CENTER);
-
-    for (int i = 0; i < 10; i++) {
-        View seg = new View(this);
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(0, dp(12), 1f);
-        lp.setMargins(dp(3), 0, dp(3), 0);
-        seg.setLayoutParams(lp);
-        seg.setBackgroundColor(0xFF333333);
-        lab14ProgressBar.addView(seg);
-    }
-
-    root.addView(lab14ProgressBar);
-
-// ------------------------------------------------------------
-// EXIT / CANCEL BUTTON — RED / GOLD (LAB 14 STYLE)
-// ------------------------------------------------------------
-Button btnExit = new Button(this);
-btnExit.setText("Exit test");
-btnExit.setAllCaps(false);
-btnExit.setTextSize(15f);
-btnExit.setTextColor(0xFFFFFFFF);
-btnExit.setTypeface(null, Typeface.BOLD);
-
-// 🔴 RED + GOLD BORDER
-GradientDrawable exitBg = new GradientDrawable();
-exitBg.setColor(0xFF8B0000);          // deep red
-exitBg.setCornerRadius(dp(14));
-exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
-btnExit.setBackground(exitBg);
-
-LinearLayout.LayoutParams lpExit =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpExit.setMargins(0, dp(14), 0, 0);
-btnExit.setLayoutParams(lpExit);
-
-btnExit.setOnClickListener(v -> abortLab14ByUser());
-
-root.addView(btnExit);
-
-// ------------------------------------------------------------
-// ΤΕΛΟΣ UI — ΜΕΤΑ ΑΠΟ ΑΥΤΟ ΔΕΝ ΠΡΟΣΘΕΤΟΥΜΕ VIEWS
-// ------------------------------------------------------------
-b.setView(root);
-
-lab14Dialog = b.create();
-lab14Dialog.getWindow()
-        .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
-lab14Dialog.show();
-
-// ------------------------------------------------------------
-// Progress updater (every 1 sec — visual step every 30 sec)
-// ------------------------------------------------------------
-final long startTs = SystemClock.elapsedRealtime();
-
-ui.post(new Runnable() {
-    int lastStep = -1;
-
-    @Override
-    public void run() {
-
-        // 🛑 GUARD — αν σταμάτησε το lab ή έκλεισε το panel
-        if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
-            lab14Running = false;   // ⬅️ ΚΡΙΣΙΜΟ
-            return;
-        }
-
-        long now = SystemClock.elapsedRealtime();
-        int elapsedSec = Math.min(
-                (int) ((now - startTs) / 1000),
-                LAB14_TOTAL_SECONDS
-        );
-
-        // 10 segments × 30 sec = 300 sec
-        int step = Math.min(elapsedSec / 30, lab14ProgressBar.getChildCount());
-
-        // ----------------------------------------------------
-        // Update progress bar segments
-        // ----------------------------------------------------
-        if (step != lastStep) {
-            lastStep = step;
-
-            for (int i = 0; i < lab14ProgressBar.getChildCount(); i++) {
-                View seg = lab14ProgressBar.getChildAt(i);
-                if (seg != null) {
-                    seg.setBackgroundColor(
-                            i < step ? 0xFF39FF14 : 0xFF333333
-                    );
-                }
-            }
-        }
-
-        // ----------------------------------------------------
-        // Update text — SECONDS
-        // ----------------------------------------------------
-        lab14ProgressText.setText(
-                "Progress: " + elapsedSec + " / " +
-                LAB14_TOTAL_SECONDS + " seconds"
-        );
-
-        // ----------------------------------------------------
-        // Continue or finish
-        // ----------------------------------------------------
-        if (elapsedSec < LAB14_TOTAL_SECONDS) {
-            ui.postDelayed(this, 1000);
-        } else {
-
-            // ✅ CLEAN STOP
-            lab14Running = false;
-
-            if (lab14ProgressText != null) {
-                lab14ProgressText.setText("Finalizing analysis…");
-            }
-        }
-    }
-});
-}
-
-// ------------------------------------------------------------
 // Call when LAB 14 fully ends
 // ------------------------------------------------------------
 private void dismissLab14RunningDialog() {
@@ -2760,7 +2591,7 @@ ui.post(() -> {
 
 // ============================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
-// Visual progress + animated dots + EXIT
+// Visual progress + animated dots + segmented bar + EXIT
 // ============================================================
 private void showLab14RunningDialog() {
 
@@ -2844,9 +2675,9 @@ private void showLab14RunningDialog() {
         btnExit.setTypeface(null, Typeface.BOLD);
 
         GradientDrawable exitBg = new GradientDrawable();
-        exitBg.setColor(0xFF8B0000);          // deep red
+        exitBg.setColor(0xFF8B0000);
         exitBg.setCornerRadius(dp(14));
-        exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
+        exitBg.setStroke(dp(3), 0xFFFFD700);
         btnExit.setBackground(exitBg);
 
         LinearLayout.LayoutParams lpExit =
@@ -2889,7 +2720,6 @@ private void showLab14RunningDialog() {
             @Override
             public void run() {
 
-                // 🛑 GUARD
                 if (!lab14Running ||
                         lab14ProgressBar == null ||
                         lab14ProgressText == null) {
@@ -2902,7 +2732,6 @@ private void showLab14RunningDialog() {
                         LAB14_TOTAL_SECONDS
                 );
 
-                // 10 segments × 30 sec
                 int step = Math.min(
                         elapsedSec / 30,
                         lab14ProgressBar.getChildCount()

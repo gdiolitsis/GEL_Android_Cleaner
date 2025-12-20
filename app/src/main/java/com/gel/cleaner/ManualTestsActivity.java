@@ -571,30 +571,6 @@ private void abortLab14ByUser() {
     logInfo("Battery stress test was cancelled before completion.");
 }
 
-// ------------------------------------------------------------
-// Reliable charging detection (plugged-based)
-// ------------------------------------------------------------
-private boolean isDeviceCharging() {
-    try {
-        Intent i = registerReceiver(
-                null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        );
-        if (i == null) return false;
-
-        int plugged = i.getIntExtra(
-                BatteryManager.EXTRA_PLUGGED, 0
-        );
-
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
-            || plugged == BatteryManager.BATTERY_PLUGGED_USB
-            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
 // ============================================================
 // LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
@@ -1038,21 +1014,56 @@ private static class ThermalGroupReading {
     float avgC() {
         return count > 0 ? (sumC / count) : Float.NaN;
     }
-}
 
-private static class ThermalSummary {
-    ThermalGroupReading battery = new ThermalGroupReading();
-    ThermalGroupReading cpu     = new ThermalGroupReading();
-    ThermalGroupReading skin    = new ThermalGroupReading();
-    ThermalGroupReading other   = new ThermalGroupReading();
-
-    float peakC() {
-        return maxOf(battery.maxC, cpu.maxC, skin.maxC, other.maxC, Float.NaN);
+    boolean has() {
+        return count > 0;
     }
 }
 
 // ------------------------------------------------------------
-// THERMAL SCAN — PRIMARY (NO ARGS)
+// THERMAL SUMMARY — LEGACY + NEW SAFE HYBRID
+// ------------------------------------------------------------
+private static class ThermalSummary {
+
+    // ✅ legacy-compatible fields (old code expects these)
+    ThermalGroupReading batteryMain  = new ThermalGroupReading();
+    ThermalGroupReading batteryShell = new ThermalGroupReading();
+    ThermalGroupReading pmic         = new ThermalGroupReading();
+    ThermalGroupReading charger      = new ThermalGroupReading();
+    ThermalGroupReading modemMain    = new ThermalGroupReading();
+    ThermalGroupReading modemAux     = new ThermalGroupReading();
+
+    // ✅ simplified buckets
+    ThermalGroupReading cpu   = new ThermalGroupReading();
+    ThermalGroupReading skin  = new ThermalGroupReading();
+    ThermalGroupReading other = new ThermalGroupReading();
+
+    int zoneCount = 0;
+    int coolingDeviceCount = 0;
+
+    float peakC() {
+        float m = Float.NaN;
+        m = max(m, batteryMain.maxC);
+        m = max(m, batteryShell.maxC);
+        m = max(m, pmic.maxC);
+        m = max(m, charger.maxC);
+        m = max(m, modemMain.maxC);
+        m = max(m, modemAux.maxC);
+        m = max(m, cpu.maxC);
+        m = max(m, skin.maxC);
+        m = max(m, other.maxC);
+        return m;
+    }
+
+    private float max(float a, float b) {
+        if (Float.isNaN(a)) return b;
+        if (Float.isNaN(b)) return a;
+        return Math.max(a, b);
+    }
+}
+
+// ------------------------------------------------------------
+// THERMAL SCAN — PRIMARY (NO ARGS, SAFE)
 // ------------------------------------------------------------
 private ThermalSummary scanThermalHardware() {
 
@@ -1063,13 +1074,11 @@ private ThermalSummary scanThermalHardware() {
         File[] zones = dir.listFiles();
         if (zones == null) return out;
 
-        int zoneCount = 0;
-
         for (File z : zones) {
             if (z == null || !z.isDirectory() || z.getName() == null) continue;
             if (!z.getName().startsWith("thermal_zone")) continue;
 
-            zoneCount++;
+            out.zoneCount++;
 
             float c = normalizeTempFromSys(readLongSafe(new File(z, "temp")));
             if (!isValidTemp(c)) continue;
@@ -1080,21 +1089,22 @@ private ThermalSummary scanThermalHardware() {
 
             if (t.contains("battery") || t.contains("batt")) {
                 out.batteryMain.add(label, c);
-            }
-            else if (t.contains("cpu") || t.contains("soc") || t.contains("ap")) {
-                out.cpu.add(label, c);
-            }
-            else if (t.contains("skin") || t.contains("shell")) {
+            } else if (t.contains("shell") || t.contains("skin")) {
                 out.skin.add(label, c);
                 out.batteryShell.add(label, c);
-            }
-            else {
+            } else if (t.contains("pmic") || t.contains("reg") || t.contains("vdd")) {
+                out.pmic.add(label, c);
+            } else if (t.contains("charger") || t.contains("usb")) {
+                out.charger.add(label, c);
+            } else if (t.contains("modem") || t.contains("mdm")) {
+                if (t.contains("aux") || t.contains("2")) out.modemAux.add(label, c);
+                else out.modemMain.add(label, c);
+            } else if (t.contains("cpu") || t.contains("soc") || t.contains("ap")) {
+                out.cpu.add(label, c);
+            } else {
                 out.other.add(label, c);
             }
         }
-
-        // stats (αν χρησιμοποιούνται στο report)
-        try { out.zoneCount = zoneCount; } catch (Throwable ignore) {}
 
     } catch (Throwable ignore) {}
 
@@ -1102,7 +1112,7 @@ private ThermalSummary scanThermalHardware() {
 }
 
 // ------------------------------------------------------------
-// THERMAL SCAN — OVERLOAD (OLD CALLS COMPATIBILITY)
+// THERMAL SCAN — OVERLOAD (LEGACY CALLS SAFE)
 // ------------------------------------------------------------
 private ThermalSummary scanThermalHardware(
         ThermalGroupReading batteryMain,
@@ -1112,15 +1122,14 @@ private ThermalSummary scanThermalHardware(
         ThermalGroupReading modemMain,
         ThermalGroupReading modemAux
 ) {
-
     ThermalSummary out = scanThermalHardware();
 
-    if (batteryMain  != null) batteryMain  = out.batteryMain;
-    if (batteryShell != null) batteryShell = out.batteryShell;
-    if (pmic         != null) pmic         = out.pmic;
-    if (charger      != null) charger      = out.charger;
-    if (modemMain    != null) modemMain    = out.modemMain;
-    if (modemAux     != null) modemAux     = out.modemAux;
+    if (batteryMain  != null) batteryMain.maxC  = out.batteryMain.maxC;
+    if (batteryShell != null) batteryShell.maxC = out.batteryShell.maxC;
+    if (pmic         != null) pmic.maxC         = out.pmic.maxC;
+    if (charger      != null) charger.maxC      = out.charger.maxC;
+    if (modemMain    != null) modemMain.maxC    = out.modemMain.maxC;
+    if (modemAux     != null) modemAux.maxC     = out.modemAux.maxC;
 
     return out;
 }
@@ -1135,34 +1144,21 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
     try {
         File dir = new File(SYS_THERMAL);
         File[] cds = dir.listFiles();
-        if (cds == null) {
-            sb.append("• Cooling devices: none\n");
-            return;
-        }
-
-        int count = 0;
+        if (cds == null) return;
 
         for (File d : cds) {
             if (d == null || !d.isDirectory() || d.getName() == null) continue;
             if (!d.getName().startsWith("cooling_device")) continue;
 
+            out.coolingDeviceCount++;
+
             String type = readFirstLineSafe(new File(d, "type"));
             sb.append("• ")
               .append(type != null ? type : d.getName())
               .append("\n");
-
-            count++;
         }
 
-        try { /* αν υπάρχει field */ } catch (Throwable ignore) {}
-
-        if (count == 0) {
-            sb.append("• Cooling devices: none\n");
-        }
-
-    } catch (Throwable ignore) {
-        sb.append("• Cooling devices: unavailable\n");
-    }
+    } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------
@@ -1192,19 +1188,6 @@ private boolean isDeviceCharging() {
     } catch (Throwable t) {
         return false;
     }
-}
-
-// ============================================================
-// LAB 15 — PEAK TEMPERATURE TRACKING (ONE & ONLY)
-// ============================================================
-private void updateLab15PeakTemperature() {
-    if (!isDeviceCharging()) return;
-
-    float t = getBatteryTemperature();
-    if (t <= 0f || Float.isNaN(t)) return;
-
-    if (Float.isNaN(lab15BattTempPeak) || t > lab15BattTempPeak)
-        lab15BattTempPeak = t;
 }
 
 // ============================================================

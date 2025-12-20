@@ -1006,24 +1006,36 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             chargingMsgView.setPadding(0, 0, 0, dp(12));
             root.addView(chargingMsgView);
 
-            // -------------------------
-            // ANIMATED DOTS
-            // -------------------------
-            chargingDotsView = new TextView(this);
-            chargingDotsView.setText("•");
-            chargingDotsView.setTextColor(0xFF39FF14);
-            chargingDotsView.setTextSize(22f);
-            root.addView(chargingDotsView);
+// -------------------------
+// ANIMATED DOTS
+// -------------------------
+chargingDotsView = new TextView(this);
+chargingDotsView.setText("•");
+chargingDotsView.setTextColor(0xFF39FF14);
+chargingDotsView.setTextSize(22f);
+chargingDotsView.setGravity(Gravity.CENTER);
+chargingDotsView.setPadding(0, 0, 0, dp(4));
+root.addView(chargingDotsView);
 
-            // -------------------------
-            // STATUS TEXT
-            // -------------------------
-            lab15StatusText = new TextView(this);
-            lab15StatusText.setText("Monitoring charging system… 0 / 180 sec");
-            lab15StatusText.setTextColor(0xFFDDDDDD);
-            lab15StatusText.setGravity(Gravity.CENTER);
-            lab15StatusText.setPadding(0, dp(8), 0, dp(8));
-            root.addView(lab15StatusText);
+// -------------------------
+// STATUS TEXT (NO COUNTER HERE)
+// -------------------------
+lab15StatusText = new TextView(this);
+lab15StatusText.setText("Monitoring charging system…");
+lab15StatusText.setTextColor(0xFFDDDDDD);
+lab15StatusText.setGravity(Gravity.CENTER);
+lab15StatusText.setPadding(0, dp(4), 0, dp(2));
+root.addView(lab15StatusText);
+
+// -------------------------
+// COUNTER TEXT (POPUP ONLY)
+// -------------------------
+lab15CounterText = new TextView(this);
+lab15CounterText.setText("0 / 180 sec");
+lab15CounterText.setTextColor(0xFFAAAAAA);
+lab15CounterText.setGravity(Gravity.CENTER);
+lab15CounterText.setPadding(0, 0, 0, dp(8));
+root.addView(lab15CounterText);
 
             // -------------------------
             // PROGRESS BAR (6 × 30s)
@@ -3380,45 +3392,51 @@ private void lab15ChargingSystemSmart() {
                 return;
             }
 
-            // ----------------------------------------------------
-            // PROGRESS + COUNTER
-            // ----------------------------------------------------
-            int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
+// ----------------------------------------------------  
+// PROGRESS
+// ----------------------------------------------------  
+int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);  
 
-            logInfo("Monitoring charging system: " +
-                    Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
-                    " / " + LAB15_TOTAL_SECONDS + " sec");
+// ----------------------------------------------------
+// COUNTER (POPUP ONLY)
+// ----------------------------------------------------
+if (lab15CounterText != null) {
+    lab15CounterText.setText(
+            Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
+            " / " + LAB15_TOTAL_SECONDS + " sec"
+    );
+}
 
-            int step = Math.min(
-                    elapsedSec / 30,
-                    lab15ProgressBar.getChildCount()
-            );
+int step = Math.min(  
+        elapsedSec / 30,  
+        lab15ProgressBar.getChildCount()  
+);  
 
-            if (step != lastStep) {
-                lastStep = step;
-                for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
-                    View seg = lab15ProgressBar.getChildAt(i);
-                    if (seg != null) {
-                        seg.setBackgroundColor(
-                                i < step ? 0xFF39FF14 : 0xFF333333
-                        );
-                    }
-                }
-            }
+if (step != lastStep) {  
+    lastStep = step;  
+    for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {  
+        View seg = lab15ProgressBar.getChildAt(i);  
+        if (seg != null) {  
+            seg.setBackgroundColor(  
+                    i < step ? 0xFF39FF14 : 0xFF333333  
+            );  
+        }  
+    }  
+}  
 
-            if (elapsedSec < LAB15_TOTAL_SECONDS) {
-                ui.postDelayed(this, 1000);
-            } else {
+if (elapsedSec < LAB15_TOTAL_SECONDS) {  
+    ui.postDelayed(this, 1000);  
+} else {  
 
-                lab15StatusText.setText("Charging system stable");
-                lab15StatusText.setTextColor(0xFF39FF14);
+    lab15StatusText.setText("Charging system stable");  
+    lab15StatusText.setTextColor(0xFF39FF14);  
 
-                logLine();
-                logOk("Charging behavior appears normal. Temperature within safe limits.");
-                logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+    logLine();  
+    logOk("Charging behavior appears normal. Temperature within safe limits.");  
+    logOk("LAB decision: Charging system OK. No cleaning or replacement required.");  
 
-                logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-                logOk("LAB decision: Charging stability OK.");
+    logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");  
+    logOk("LAB decision: Charging stability OK.");
 
                 // 🔋 CHARGING STRENGTH ESTIMATION — UNCHANGED
                 logLine();

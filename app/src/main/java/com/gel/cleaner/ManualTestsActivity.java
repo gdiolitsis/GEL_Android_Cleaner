@@ -2980,17 +2980,21 @@ private void showLab14RunningDialog() {
         lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
         lab14ProgressBar.setGravity(Gravity.CENTER);
 
-        for (int i = 0; i < 10; i++) {
-            View seg = new View(this);
-            LinearLayout.LayoutParams lp =
-                    new LinearLayout.LayoutParams(0, dp(12), 1f);
-            lp.setMargins(dp(3), 0, dp(3), 0);
-            seg.setLayoutParams(lp);
-            seg.setBackgroundColor(0xFF333333);
-            lab14ProgressBar.addView(seg);
-        }
+        for (int i = 0; i < 6; i++) {
 
-        root.addView(lab14ProgressBar);
+    View seg = new View(this);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(12), 1f);
+
+    lp.setMargins(dp(3), 0, dp(3), 0);
+    seg.setLayoutParams(lp);
+    seg.setBackgroundColor(0xFF333333);
+
+    lab14ProgressBar.addView(seg);
+}
+
+root.addView(lab14ProgressBar);
 
         // ------------------------------------------------------------
         // EXIT / CANCEL BUTTON — RED / GOLD

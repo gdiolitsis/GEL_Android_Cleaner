@@ -148,6 +148,7 @@ private volatile boolean lab15OverTempDuringCharge = false;
 // ============================================================
 private volatile boolean lab14Running = false;
 private TextView lab14DotsView;
+private Button lab14ExitBtn;
 
 // ============================================================
 // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
@@ -253,15 +254,15 @@ sec1.setGravity(Gravity.CENTER_HORIZONTAL);
 sec1.setPadding(0, dp(10), 0, dp(6));
 root.addView(sec1);
 
-// ============================================================
-// LAB 14 — DOTS (LIVE RUN INDICATOR)
-// ============================================================
+// ------------------------------------------------------------
+// DOTS (running indicator)
+// ------------------------------------------------------------
 lab14DotsView = new TextView(this);
 lab14DotsView.setText("•");
 lab14DotsView.setTextSize(22f);
-lab14DotsView.setTextColor(0xFF39FF14); // GEL green
-lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
+lab14DotsView.setTextColor(0xFF39FF14);
 lab14DotsView.setPadding(0, dp(6), 0, dp(10));
+lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
 root.addView(lab14DotsView);
 
     // ============================================================
@@ -621,7 +622,7 @@ private void showLab14RunningDialog() {
     lab14Dialog.show();
 
 // ------------------------------------------------------------
-// Progress updater (every 30 sec)
+// Progress updater (every 1 sec — visual step every 30 sec)
 // ------------------------------------------------------------
 final long startTs = SystemClock.elapsedRealtime();
 
@@ -631,37 +632,53 @@ ui.post(new Runnable() {
     @Override
     public void run() {
 
-        // 🛑 GUARD: αν το lab έχει τελειώσει / panel έκλεισε
+        // 🛑 GUARD — αν σταμάτησε το lab ή έκλεισε το panel
         if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
+            lab14Running = false;   // ⬅️ ΚΡΙΣΙΜΟ
             return;
         }
 
         long now = SystemClock.elapsedRealtime();
-        int elapsedSec = (int) ((now - startTs) / 1000);
+        int elapsedSec = Math.min(
+                (int) ((now - startTs) / 1000),
+                LAB14_TOTAL_SECONDS
+        );
 
-        int step = Math.min(elapsedSec / 30, 10);
+        // 10 segments × 30 sec = 300 sec
+        int step = Math.min(elapsedSec / 30, lab14ProgressBar.getChildCount());
 
-        if (step != lastStep && step <= 10) {
+        // ----------------------------------------------------
+        // Update progress bar segments
+        // ----------------------------------------------------
+        if (step != lastStep) {
             lastStep = step;
 
-            if (step > 0 && lab14ProgressBar.getChildCount() >= step) {
-                View seg = lab14ProgressBar.getChildAt(step - 1);
+            for (int i = 0; i < lab14ProgressBar.getChildCount(); i++) {
+                View seg = lab14ProgressBar.getChildAt(i);
                 if (seg != null) {
-                    seg.setBackgroundColor(0xFF39FF14);
+                    seg.setBackgroundColor(
+                            i < step ? 0xFF39FF14 : 0xFF333333
+                    );
                 }
             }
-
-            lab14ProgressText.setText(
-                    "Progress: " + elapsedSec + " / " +
-                    LAB14_TOTAL_SECONDS + " seconds"
-            );
         }
 
+        // ----------------------------------------------------
+        // Update text — SECONDS
+        // ----------------------------------------------------
+        lab14ProgressText.setText(
+                "Progress: " + elapsedSec + " / " +
+                LAB14_TOTAL_SECONDS + " seconds"
+        );
+
+        // ----------------------------------------------------
+        // Continue or finish
+        // ----------------------------------------------------
         if (elapsedSec < LAB14_TOTAL_SECONDS) {
             ui.postDelayed(this, 1000);
         } else {
 
-            // ✅ STOP RUNNER (χωρίς dismiss method)
+            // ✅ CLEAN STOP
             lab14Running = false;
 
             if (lab14ProgressText != null) {
@@ -670,8 +687,6 @@ ui.post(new Runnable() {
         }
     }
 });
-}
-
 // ------------------------------------------------------------
 // Call when LAB 14 fully ends
 // ------------------------------------------------------------

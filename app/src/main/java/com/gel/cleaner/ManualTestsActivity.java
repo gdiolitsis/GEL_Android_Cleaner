@@ -5716,10 +5716,14 @@ private boolean isChargingNow() {
     }
 }
 
-// ----------------------------------------------------
-// PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
-// ----------------------------------------------------
-if (isChargingNow()) {
+// ============================================================
+// LAB 15 — PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
+// ============================================================
+private void updateLab15PeakTemperature() {
+
+    if (!isChargingNow())
+        return;
+
     float tNow = getBatteryTemperature();
     if (tNow > 0 && !Float.isNaN(tNow)) {
         if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {

@@ -960,8 +960,6 @@ private AlertDialog chargingDialog;
 private TextView chargingTitleView;
 private TextView chargingMsgView;
 private TextView chargingDotsView;
-private TextView lab15StatusText;
-private LinearLayout lab15ProgressBar;
 private BroadcastReceiver chargingReceiver;
 
 private volatile boolean lab15Running = false;

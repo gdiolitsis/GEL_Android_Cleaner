@@ -651,7 +651,6 @@ ui.post(new Runnable() {
                 }
             }
 
-            // ✅ FIX: minutes → seconds (120 / 300 seconds)
             lab14ProgressText.setText(
                     "Progress: " + elapsedSec + " / " +
                     LAB14_TOTAL_SECONDS + " seconds"
@@ -662,9 +661,8 @@ ui.post(new Runnable() {
             ui.postDelayed(this, 1000);
         } else {
 
-            // ✅ ΚΡΙΣΙΜΟ FIX — STOP RUNNER & CLOSE PANEL
+            // ✅ STOP RUNNER (χωρίς dismiss method)
             lab14Running = false;
-            dismissLab14Dialog();
 
             if (lab14ProgressText != null) {
                 lab14ProgressText.setText("Finalizing analysis…");

@@ -3202,7 +3202,7 @@ private void lab15ChargingSystemSmart() {
                     android.R.style.Theme_Material_Dialog_NoActionBar
             );
 
-    b.setTitle("LAB 15 — Charging System Diagnostic");
+    b.setTitle("LAB 15 — Connect the charger to the device charging port");
     b.setCancelable(false);
 
     LinearLayout root = new LinearLayout(this);
@@ -3217,8 +3217,19 @@ private void lab15ChargingSystemSmart() {
     lab15StatusText.setText("Waiting for charging connection…");
     lab15StatusText.setTextColor(0xFFAAAAAA);
     lab15StatusText.setTextSize(15f);
-    lab15StatusText.setPadding(0, 0, 0, dp(14));
+    lab15StatusText.setPadding(0, 0, 0, dp(8));
     root.addView(lab15StatusText);
+
+    // ------------------------------------------------------------
+    // DOTS (ANIMATION)
+    // ------------------------------------------------------------
+    TextView dotsView = new TextView(this);
+    dotsView.setText("•");
+    dotsView.setTextColor(0xFF39FF14);
+    dotsView.setTextSize(22f);
+    dotsView.setGravity(Gravity.CENTER);
+    dotsView.setPadding(0, 0, 0, dp(10));
+    root.addView(dotsView);
 
     // ------------------------------------------------------------
     // PROGRESS BAR (6 × 30s = 180s)
@@ -3285,14 +3296,16 @@ private void lab15ChargingSystemSmart() {
     // WAIT FOR CHARGER + MONITOR
     // ------------------------------------------------------------
     final long[] startTs = { -1 };
+    final long[] lastChargeSeenTs = { -1 };
     final boolean[] wasCharging = { false };
-
-    // ✅ FIX: start snapshot for strength estimation (Peripherals logic)
     final BatteryInfo[] startInfo = { null };
+
+    final String[] dotFrames = { "•", "• •", "• • •" };
 
     ui.post(new Runnable() {
 
         int lastStep = -1;
+        int dotStep = 0;
 
         @Override
         public void run() {
@@ -3300,15 +3313,24 @@ private void lab15ChargingSystemSmart() {
             if (!lab15Running) return;
 
             boolean chargingNow = isDeviceCharging();
+            long nowTs = SystemClock.elapsedRealtime();
+
+            // ----------------------------------------------------
+            // DOTS ANIMATION
+            // ----------------------------------------------------
+            dotsView.setText(dotFrames[dotStep % dotFrames.length]);
+            dotStep++;
 
             // ----------------------------------------------------
             // FIRST CHARGER DETECTION
             // ----------------------------------------------------
+            if (chargingNow) {
+                lastChargeSeenTs[0] = nowTs;
+            }
+
             if (chargingNow && !wasCharging[0]) {
                 wasCharging[0] = true;
-                startTs[0] = SystemClock.elapsedRealtime();
-
-                // ✅ FIX: capture baseline battery info ONCE at start
+                startTs[0] = nowTs;
                 startInfo[0] = getBatteryInfo();
 
                 lab15StatusText.setText("Charging connection detected");
@@ -3325,44 +3347,47 @@ private void lab15ChargingSystemSmart() {
                             "Battery temperature: %.1f°C", battTemp));
 
                 logOk("Charging state detected.");
-
                 logLine();
                 logInfo("Monitoring charging stability for 20 seconds...");
                 logInfo("Monitoring charging system for 180 seconds...");
             }
 
             // ----------------------------------------------------
-            // 🔴 UNPLUG DETECTED — HARD STOP
+            // SMART UNPLUG DETECTION (5s GRACE)
             // ----------------------------------------------------
             if (wasCharging[0] && !chargingNow) {
+                if (lastChargeSeenTs[0] > 0 &&
+                        nowTs - lastChargeSeenTs[0] > 5000) {
 
-                lab15StatusText.setText("Charging disconnected — test aborted");
-                lab15StatusText.setTextColor(0xFFFF5555);
+                    lab15StatusText.setText("Charging disconnected — test aborted");
+                    lab15StatusText.setTextColor(0xFFFF5555);
 
-                logLine();
-                logError(
-                        "Charging instability detected. " +
-                        "Check or replace the charging cable. If the issue persists, charging port inspection is recommended."
-                );
+                    logLine();
+                    logError(
+                            "Charging instability detected. " +
+                            "Check or replace the charging cable. " +
+                            "If the issue persists, charging port inspection is recommended."
+                    );
 
-                lab15Running = false;
-                if (lab15Dialog != null) lab15Dialog.dismiss();
-                return;
+                    lab15Running = false;
+                    if (lab15Dialog != null) lab15Dialog.dismiss();
+                    return;
+                }
             }
 
-            // ----------------------------------------------------
-            // WAIT UNTIL CHARGER CONNECTED
-            // ----------------------------------------------------
             if (startTs[0] < 0) {
                 ui.postDelayed(this, 500);
                 return;
             }
 
             // ----------------------------------------------------
-            // PROGRESS
+            // PROGRESS + COUNTER
             // ----------------------------------------------------
-            int elapsedSec =
-                    (int) ((SystemClock.elapsedRealtime() - startTs[0]) / 1000);
+            int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
+
+            logInfo("Monitoring charging system: " +
+                    Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
+                    " / " + LAB15_TOTAL_SECONDS + " sec");
 
             int step = Math.min(
                     elapsedSec / 30,
@@ -3395,9 +3420,7 @@ private void lab15ChargingSystemSmart() {
                 logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
                 logOk("LAB decision: Charging stability OK.");
 
-                // ----------------------------------------------------
-                // 🔋 CHARGING STRENGTH ESTIMATION (GEL SMART — NO mA)
-                // ----------------------------------------------------
+                // 🔋 CHARGING STRENGTH ESTIMATION — UNCHANGED
                 logLine();
 
                 BatteryInfo endInfo = getBatteryInfo();
@@ -3405,13 +3428,11 @@ private void lab15ChargingSystemSmart() {
                 if (startInfo[0] != null &&
                         endInfo != null &&
                         startInfo[0].currentChargeMah > 0 &&
-                        endInfo.currentChargeMah > startInfo[0].currentChargeMah &&
-                        (endInfo.estimatedFullMah > 0 || startInfo[0].estimatedFullMah > 0)) {
+                        endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
 
                     long startMah = startInfo[0].currentChargeMah;
                     long endMah   = endInfo.currentChargeMah;
-
-                    long fullMah =
+                    long fullMah  =
                             endInfo.estimatedFullMah > 0
                                     ? endInfo.estimatedFullMah
                                     : startInfo[0].estimatedFullMah;
@@ -3419,41 +3440,17 @@ private void lab15ChargingSystemSmart() {
                     float deltaPct =
                             ((endMah - startMah) * 100f) / (float) fullMah;
 
-                    if (deltaPct >= 1.2f) {
-
-                        logOk(
-                                "Charging strength: STRONG — φορτίζει δυνατά\n" +
-                                "Fast / high-quality charging path detected."
-                        );
-
-                    } else if (deltaPct >= 0.6f) {
-
-                        logOk(
-                                "Charging strength: NORMAL — φορτίζει κανονικά\n" +
-                                "Typical charger and cable behavior."
-                        );
-
-                    } else if (deltaPct >= 0.3f) {
-
-                        logWarn(
-                                "Charging strength: MODERATE — φορτίζει αλλά όχι φουλ\n" +
-                                "USB, wireless, or aging cable possible."
-                        );
-
-                    } else {
-
-                        logError(
-                                "Charging strength: POOR — κάτι δεν πάει καλά\n" +
-                                "Very low effective charging detected."
-                        );
-                    }
+                    if (deltaPct >= 1.2f)
+                        logOk("Charging strength: STRONG");
+                    else if (deltaPct >= 0.6f)
+                        logOk("Charging strength: NORMAL");
+                    else if (deltaPct >= 0.3f)
+                        logWarn("Charging strength: MODERATE");
+                    else
+                        logError("Charging strength: POOR");
 
                 } else {
-
-                    logWarn(
-                            "Charging strength: Unable to estimate accurately.\n" +
-                            "Charge counter or capacity data unavailable on this device."
-                    );
+                    logWarn("Charging strength: Unable to estimate accurately.");
                 }
 
                 lab15Running = false;

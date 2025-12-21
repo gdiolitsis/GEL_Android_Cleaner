@@ -539,6 +539,129 @@ private float getBatteryTemperature() {
 }
 
 // ============================================================
+// LAB 14 — FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
+// GEL EDITION — LOCKED / PRODUCTION
+// ============================================================
+//
+// INPUTS (ALREADY COMPUTED BY LAB 14 CORE):
+//  - baseScore        : int    (0–100)
+//  - mahPerHour       : double (discharge rate under stress)
+//  - healthPct        : int    (estimated capacity %)
+//  - battTempBefore   : Float  (°C, start)
+//  - battTempAfter    : Float  (°C, end)
+//  - battTempPeak     : Float  (°C, peak, optional)
+//
+// OUTPUT:
+//  - Final Battery Health Score
+//  - Category
+//  - Thermal Verdict line
+//
+// ============================================================
+
+private void logFinalBatteryHealthScore(
+        int baseScore,
+        double mahPerHour,
+        int healthPct,
+        Float battTempBefore,
+        Float battTempAfter,
+        Float battTempPeak
+) {
+
+    int score = baseScore;
+
+    // --------------------------------------------------------
+    // 1️⃣ DRAIN PENALTIES (STRESS BEHAVIOR)
+    // --------------------------------------------------------
+    if (mahPerHour > 900)       score -= 30;
+    else if (mahPerHour > 750)  score -= 20;
+    else if (mahPerHour > 600)  score -= 10;
+
+    // --------------------------------------------------------
+    // 2️⃣ CAPACITY PENALTIES
+    // --------------------------------------------------------
+    if (healthPct > 0) {
+        if (healthPct < 60)       score -= 25;
+        else if (healthPct < 70)  score -= 15;
+        else if (healthPct < 80)  score -= 8;
+    }
+
+    // --------------------------------------------------------
+    // 3️⃣ THERMAL ANALYSIS (VERDICT + WEIGHT)
+    // --------------------------------------------------------
+    float dT = 0f;
+    if (battTempBefore != null) {
+        float ref = battTempBefore;
+        float end = (battTempPeak != null)
+                ? battTempPeak
+                : (battTempAfter != null ? battTempAfter : ref);
+        dT = end - ref;
+    }
+
+    String thermalVerdict;
+    int thermalPenalty = 0;
+
+    if (dT <= 4f) {
+        thermalVerdict = "OK";
+        thermalPenalty = 0;
+    } else if (dT <= 7f) {
+        thermalVerdict = "Warm";
+        thermalPenalty = 5;
+    } else {
+        thermalVerdict = "Risk";
+        thermalPenalty = (dT > 10f ? 15 : 10);
+    }
+
+    score -= thermalPenalty;
+
+    // --------------------------------------------------------
+    // CLAMP
+    // --------------------------------------------------------
+    if (score < 0)   score = 0;
+    if (score > 100) score = 100;
+
+    // --------------------------------------------------------
+    // CATEGORY
+    // --------------------------------------------------------
+    String category;
+    if (score >= 90)       category = "Strong";
+    else if (score >= 80)  category = "Excellent";
+    else if (score >= 70)  category = "Very good";
+    else if (score >= 60)  category = "Normal";
+    else                   category = "Weak";
+
+    // --------------------------------------------------------
+    // LOG OUTPUT (LAB STYLE)
+    // --------------------------------------------------------
+    logLine();
+
+    logInfo(String.format(
+            Locale.US,
+            "Thermal Verdict: %s (ΔT +%.1f°C)",
+            thermalVerdict,
+            dT
+    ));
+
+    if (thermalPenalty > 0) {
+        logWarn(String.format(
+                Locale.US,
+                "Thermal Weight Applied: -%d%%",
+                thermalPenalty
+        ));
+    } else {
+        logOk("Thermal Weight Applied: none");
+    }
+
+    logLine();
+
+    logOk(String.format(
+            Locale.US,
+            "Final Battery Health Score: %d%% (%s)",
+            score,
+            category
+    ));
+}
+
+// ============================================================
 // LAB 14 — FINAL BATTERY HEALTH SCORE (Judge Layer)
 // ============================================================
 private void logFinalBatteryHealthScore(
@@ -2739,128 +2862,7 @@ private void lab14BatteryHealthStressTest() {
                 Map<String, Float> z1 = readThermalZones();
                 Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
-// ============================================================
-// LAB 14 — FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
-// GEL EDITION — LOCKED / PRODUCTION
-// ============================================================
-//
-// INPUTS (ALREADY COMPUTED BY LAB 14 CORE):
-//  - baseScore        : int    (0–100)
-//  - mahPerHour       : double (discharge rate under stress)
-//  - healthPct        : int    (estimated capacity %)
-//  - battTempBefore   : Float  (°C, start)
-//  - battTempAfter    : Float  (°C, end)
-//  - battTempPeak     : Float  (°C, peak, optional)
-//
-// OUTPUT:
-//  - Final Battery Health Score
-//  - Category
-//  - Thermal Verdict line
-//
-// ============================================================
 
-private void logFinalBatteryHealthScore(
-        int baseScore,
-        double mahPerHour,
-        int healthPct,
-        Float battTempBefore,
-        Float battTempAfter,
-        Float battTempPeak
-) {
-
-    int score = baseScore;
-
-    // --------------------------------------------------------
-    // 1️⃣ DRAIN PENALTIES (STRESS BEHAVIOR)
-    // --------------------------------------------------------
-    if (mahPerHour > 900)       score -= 30;
-    else if (mahPerHour > 750)  score -= 20;
-    else if (mahPerHour > 600)  score -= 10;
-
-    // --------------------------------------------------------
-    // 2️⃣ CAPACITY PENALTIES
-    // --------------------------------------------------------
-    if (healthPct > 0) {
-        if (healthPct < 60)       score -= 25;
-        else if (healthPct < 70)  score -= 15;
-        else if (healthPct < 80)  score -= 8;
-    }
-
-    // --------------------------------------------------------
-    // 3️⃣ THERMAL ANALYSIS (VERDICT + WEIGHT)
-    // --------------------------------------------------------
-    float dT = 0f;
-    if (battTempBefore != null) {
-        float ref = battTempBefore;
-        float end = (battTempPeak != null)
-                ? battTempPeak
-                : (battTempAfter != null ? battTempAfter : ref);
-        dT = end - ref;
-    }
-
-    String thermalVerdict;
-    int thermalPenalty = 0;
-
-    if (dT <= 4f) {
-        thermalVerdict = "OK";
-        thermalPenalty = 0;
-    } else if (dT <= 7f) {
-        thermalVerdict = "Warm";
-        thermalPenalty = 5;
-    } else {
-        thermalVerdict = "Risk";
-        thermalPenalty = (dT > 10f ? 15 : 10);
-    }
-
-    score -= thermalPenalty;
-
-    // --------------------------------------------------------
-    // CLAMP
-    // --------------------------------------------------------
-    if (score < 0)   score = 0;
-    if (score > 100) score = 100;
-
-    // --------------------------------------------------------
-    // CATEGORY
-    // --------------------------------------------------------
-    String category;
-    if (score >= 90)       category = "Strong";
-    else if (score >= 80)  category = "Excellent";
-    else if (score >= 70)  category = "Very good";
-    else if (score >= 60)  category = "Normal";
-    else                   category = "Weak";
-
-    // --------------------------------------------------------
-    // LOG OUTPUT (LAB STYLE)
-    // --------------------------------------------------------
-    logLine();
-
-    logInfo(String.format(
-            Locale.US,
-            "Thermal Verdict: %s (ΔT +%.1f°C)",
-            thermalVerdict,
-            dT
-    ));
-
-    if (thermalPenalty > 0) {
-        logWarn(String.format(
-                Locale.US,
-                "Thermal Weight Applied: -%d%%",
-                thermalPenalty
-        ));
-    } else {
-        logOk("Thermal Weight Applied: none");
-    }
-
-    logLine();
-
-    logOk(String.format(
-            Locale.US,
-            "Final Battery Health Score: %d%% (%s)",
-            score,
-            category
-    ));
-}
 
                 // ------------------------------------------------------------
                 // 5️⃣ LAB INTERPRETATION

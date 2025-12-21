@@ -1135,6 +1135,80 @@ private void updateChargingPeakTemperature() {
 }
 
 // ============================================================
+// MISSING HELPERS — REQUIRED FOR THERMAL / LAB LOGIC
+// SAFE STUBS — PRODUCTION COMPATIBLE
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Temperature sanity check
+// ------------------------------------------------------------
+private boolean isValidTemp(float t) {
+    return !Float.isNaN(t) && t > -20f && t < 120f;
+}
+
+// ------------------------------------------------------------
+// 2) Safe file read (first line)
+// ------------------------------------------------------------
+private String readFirstLineSafe(File f) {
+    BufferedReader br = null;
+    try {
+        if (f == null || !f.exists()) return null;
+        br = new BufferedReader(new FileReader(f));
+        return br.readLine();
+    } catch (Throwable ignored) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignored) {}
+    }
+}
+
+// ------------------------------------------------------------
+// 3) Thermal group accumulator
+// ------------------------------------------------------------
+private static class ThermalGroupReading {
+    float max = Float.NaN;
+    float avg = Float.NaN;
+    int count = 0;
+
+    void add(float v) {
+        if (Float.isNaN(v)) return;
+        if (Float.isNaN(max) || v > max) max = v;
+        avg = Float.isNaN(avg) ? v : ((avg * count + v) / (count + 1));
+        count++;
+    }
+}
+
+// ------------------------------------------------------------
+// 4) Thermal summary container
+// ------------------------------------------------------------
+private static class ThermalSummary {
+    ThermalGroupReading batteryMain;
+    ThermalGroupReading batteryShell;
+    ThermalGroupReading pmic;
+    ThermalGroupReading charger;
+    ThermalGroupReading modemMain;
+    ThermalGroupReading modemAux;
+}
+
+// ------------------------------------------------------------
+// 5) Cooling devices enumeration
+// ------------------------------------------------------------
+private void appendHardwareCoolingDevices(StringBuilder sb) {
+    try {
+        File base = new File("/sys/class/thermal");
+        File[] files = base.listFiles();
+        if (files == null) return;
+
+        sb.append("\nCooling devices:\n");
+        for (File f : files) {
+            if (f != null && f.getName().startsWith("cooling_device")) {
+                sb.append("• ").append(f.getName()).append("\n");
+            }
+        }
+    } catch (Throwable ignored) {}
+}
+
+// ============================================================
 // LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
 // ============================================================
 

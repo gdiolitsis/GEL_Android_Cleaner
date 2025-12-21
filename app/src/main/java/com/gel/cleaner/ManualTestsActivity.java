@@ -2870,83 +2870,51 @@ private void lab14BatteryHealthStressTest() {
                 Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
 
-                // ------------------------------------------------------------
-                // 5️⃣ LAB INTERPRETATION
-                // ------------------------------------------------------------
-                String decision;
-                if (fHealthPct > 0 && fHealthPct < 70) {
-                    decision = "Weak";
-                    logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
-                }
-                else if (mahPerHour > 0 && mahPerHour > 900) {
-                    decision = "Weak";
-                    logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
-                }
-                else if ((fHealthPct > 0 && fHealthPct < 80) ||
-                         (mahPerHour > 0 && mahPerHour > 650)) {
-                    decision = "Normal";
-                    logWarn("LAB conclusion: Battery shows wear but is still usable.");
-                }
-                else {
-                    decision = "Strong";
-                    logOk("LAB conclusion: Battery health is good. No replacement indicated.");
-                }
-
-                // ------------------------------------------------------------
-                // 6️⃣ HEALTH MAP
-                // ------------------------------------------------------------
-                printHealthCheckboxMap(decision);
-
-                // ------------------------------------------------------------
-                // 7️⃣ ANALYTICS
-                // ------------------------------------------------------------
-                saveLab14DrainValue(mahPerHour);
-                saveLab14Run();
-                computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
-                computeAndLogConfidenceScore();
-                logLab14Confidence();
-
-                // ------------------------------------------------------------
-                // 🧠 FINAL BATTERY HEALTH SCORE (NEW)
-                // ------------------------------------------------------------
-                private void logFinalBatteryHealthScore(
-        double mahPerHour,
-        int healthPct,
-        Float battTempEnd,
-        Float battTempStart
-) {
-    int score = 100;
-
-    if (mahPerHour > 900) score -= 30;
-    else if (mahPerHour > 750) score -= 20;
-    else if (mahPerHour > 600) score -= 10;
-
-    if (healthPct > 0) {
-        if (healthPct < 60) score -= 25;
-        else if (healthPct < 70) score -= 15;
-        else if (healthPct < 80) score -= 8;
-    }
-
-    if (battTempStart != null && battTempEnd != null) {
-        float dT = battTempEnd - battTempStart;
-        if (dT > 10) score -= 20;
-        else if (dT > 7) score -= 10;
-    }
-
-    score = Math.max(0, Math.min(100, score));
-
-    String category =
-            score >= 90 ? "Strong" :
-            score >= 75 ? "Very good" :
-            score >= 60 ? "Normal" : "Weak";
-
-    logLine();
-    logOk(String.format(
-            Locale.US,
-            "Final Battery Health Score: %d%% (%s)",
-            score, category
-    ));
+// ------------------------------------------------------------
+// 5️⃣ LAB INTERPRETATION
+// ------------------------------------------------------------
+String decision;
+if (fHealthPct > 0 && fHealthPct < 70) {
+    decision = "Weak";
+    logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
 }
+else if (mahPerHour > 0 && mahPerHour > 900) {
+    decision = "Weak";
+    logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
+}
+else if ((fHealthPct > 0 && fHealthPct < 80) ||
+         (mahPerHour > 0 && mahPerHour > 650)) {
+    decision = "Normal";
+    logWarn("LAB conclusion: Battery shows wear but is still usable.");
+}
+else {
+    decision = "Strong";
+    logOk("LAB conclusion: Battery health is good. No replacement indicated.");
+}
+
+// ------------------------------------------------------------
+// 6️⃣ HEALTH MAP
+// ------------------------------------------------------------
+printHealthCheckboxMap(decision);
+
+// ------------------------------------------------------------
+// 7️⃣ ANALYTICS
+// ------------------------------------------------------------
+saveLab14DrainValue(mahPerHour);
+saveLab14Run();
+computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
+computeAndLogConfidenceScore();
+logLab14Confidence();
+
+// ------------------------------------------------------------
+// 🧠 FINAL BATTERY HEALTH SCORE (NEW)
+// ------------------------------------------------------------
+logFinalBatteryHealthScore(
+        mahPerHour,
+        fHealthPct,
+        batt1,
+        batt0
+);
 
 // ===========================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)

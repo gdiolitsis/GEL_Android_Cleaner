@@ -1834,12 +1834,12 @@ logOk("Fast / high-quality charging path detected.");
 } else {
 
     logWarn(
-            "Charging strength: Unable to estimate accurately.\n" +
-            "Charge counter or capacity data unavailable on this device."
-    );
-}
+        "Charging strength: Unable to estimate accurately.\n" +
+        "Charge counter or capacity data unavailable on this device."
+);
 
 dismissChargingStatusDialog();
+} 
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)

@@ -208,6 +208,14 @@ private static class PrivacySnapshot {
     int totalUserAppsChecked;
 }
 
+private static class BatteryInfo {
+    int level = -1;
+    float temperature = Float.NaN;
+    String status = "Unknown";
+    long estimatedFullMah = -1;
+    String source = "Unknown";
+}
+
     // ============================================================
     // CORE UI
     // ============================================================
@@ -1368,22 +1376,6 @@ private String readFirstLineSafe(File f) {
         return null;
     } finally {
         try { if (br != null) br.close(); } catch (Throwable ignored) {}
-    }
-}
-
-// ------------------------------------------------------------
-// 3) Thermal group accumulator
-// ------------------------------------------------------------
-private static class ThermalGroupReading {
-    float max = Float.NaN;
-    float avg = Float.NaN;
-    int count = 0;
-
-    void add(float v) {
-        if (Float.isNaN(v)) return;
-        if (Float.isNaN(max) || v > max) max = v;
-        avg = Float.isNaN(avg) ? v : ((avg * count + v) / (count + 1));
-        count++;
     }
 }
 
@@ -5798,10 +5790,6 @@ logOk("Lab 28 finished.");
 // ======= LAB 28 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
 // ============================================================
 
-private static class StorageSnapshot {
-long totalBytes, freeBytes, usedBytes;
-int pctFree;
-}
 
 private StorageSnapshot readStorageSnapshot() {
 StorageSnapshot s = new StorageSnapshot();
@@ -5813,10 +5801,6 @@ s.usedBytes  = s.totalBytes - s.freeBytes;
 s.pctFree = (s.totalBytes > 0) ? (int)((s.freeBytes * 100L) / s.totalBytes) : 0;
 } catch (Throwable ignored) {}
 return s;
-}
-
-private static class AppsSnapshot {
-int userApps, systemApps, totalApps;
 }
 
 private AppsSnapshot readAppsSnapshot() {
@@ -5835,11 +5819,6 @@ else a.userApps++;
 return a;
 }
 
-private static class RamSnapshot {
-long totalBytes, freeBytes;
-int pctFree;
-}
-
 private RamSnapshot readRamSnapshot() {
 RamSnapshot r = new RamSnapshot();
 try {
@@ -5853,16 +5832,6 @@ r.pctFree = (r.totalBytes > 0) ? (int)((r.freeBytes * 100L) / r.totalBytes) : 0;
 }
 } catch (Throwable ignored) {}
 return r;
-}
-
-private static class SecuritySnapshot {
-boolean lockSecure;
-boolean adbUsbOn;
-boolean adbWifiOn;
-boolean devOptionsOn;
-boolean rootSuspected;
-boolean testKeys;
-String securityPatch;
 }
 
 private SecuritySnapshot readSecuritySnapshot() {
@@ -5942,14 +5911,6 @@ for (String p : paths) if (new File(p).exists()) return true;
 } catch (Throwable ignored) {}  
 return false;
 
-}
-
-private static class PrivacySnapshot {
-int userAppsWithLocation;
-int userAppsWithMic;
-int userAppsWithCamera;
-int userAppsWithSms;
-int totalUserAppsChecked;
 }
 
 private PrivacySnapshot readPrivacySnapshot() {

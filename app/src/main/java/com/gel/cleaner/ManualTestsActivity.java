@@ -1786,9 +1786,7 @@ private void runLab15Core() {
                         "No abnormal connection, or thermal issues detected."
                 );
 
-                logOk("LAB decision:  Charging system OK.");
-                );
-            }
+                logOk("LAB decision: ✅ Charging system OK.");
 
             // ----------------------------------------------------
             // ðŸ”‹ CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
@@ -1806,8 +1804,9 @@ private void runLab15Core() {
                 if (deltaPct >= 1.2f) {
 
                     logOk("Charging strength: STRONG");
-                            "Fast / high-quality charging path detected."
-                    );
+                            logInfo("Charging path quality:");
+                  logInfo("Charging path quality:");
+                  logOk("Fast / high-quality charging path detected.");
 
                 } else if (deltaPct >= 0.6f) {
 

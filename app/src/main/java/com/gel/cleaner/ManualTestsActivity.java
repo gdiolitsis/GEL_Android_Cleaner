@@ -1786,7 +1786,7 @@ private void runLab15Core() {
                         "No abnormal connection, or thermal issues detected."
                 );
 
-                logOk("LAB decision: ✅ Charging system OK.");
+                logOk("LAB decision:  Charging system OK.");
 
             // ----------------------------------------------------
             // ðŸ”‹ CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
@@ -1806,42 +1806,40 @@ private void runLab15Core() {
                     logOk("Charging strength: STRONG");
                             logInfo("Charging path quality:");
                   logInfo("Charging path quality:");
-                  logOk("Fast / high-quality charging path detected.");
+logOk("Fast / high-quality charging path detected.");
 
-                } else if (deltaPct >= 0.6f) {
+} else if (deltaPct >= 0.6f) {
 
-                    logOk(
-                            "Charging strength: NORMAL \n" +
-                            "Typical charger and cable behavior."
-                    );
+    logOk(
+            "Charging strength: NORMAL\n" +
+            "Typical charger and cable behavior."
+    );
 
-                } else if (deltaPct >= 0.3f) {
+} else if (deltaPct >= 0.3f) {
 
-                    logWarn(
-        "Charging strength: MODERATE\n" +
-        "Possible causes: low-power charger, USB port limitations, wireless charging, or a degraded cable."
-);
+    logWarn(
+            "Charging strength: MODERATE\n" +
+            "Possible causes: low-power charger, USB port limitations, " +
+            "wireless charging, or a degraded cable."
+    );
 
-                } else {
+} else {
 
-                    logError(
-                            "Charging strength: POOR \n" +
-                            "Very low effective charging detected."
-                    );
-                }
-
-            } else {
-
-                logWarn(
-                        "Charging strength: Unable to estimate accurately.\n" +
-                        "Charge counter or capacity data unavailable on this device."
-                );
-            }
-
-            dismissChargingStatusDialog();
-        }
-    });
+    logError(
+            "Charging strength: POOR\n" +
+            "Very low effective charging detected."
+    );
 }
+
+} else {
+
+    logWarn(
+            "Charging strength: Unable to estimate accurately.\n" +
+            "Charge counter or capacity data unavailable on this device."
+    );
+}
+
+dismissChargingStatusDialog();
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)

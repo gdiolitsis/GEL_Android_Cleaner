@@ -2907,7 +2907,7 @@ computeAndLogConfidenceScore();
 logLab14Confidence();
 
 // ------------------------------------------------------------
-// 🧠 FINAL BATTERY HEALTH SCORE (NEW)
+// 🧠 FINAL BATTERY HEALTH SCORE
 // ------------------------------------------------------------
 logFinalBatteryHealthScore(
         mahPerHour,
@@ -2915,6 +2915,11 @@ logFinalBatteryHealthScore(
         batt1,
         batt0
 );
+
+// ------------------------------------------------------------
+// CLEAN FINISH
+// ------------------------------------------------------------
+lab14Running = false;
 
 // ===========================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
@@ -4073,119 +4078,101 @@ new Thread(() -> {
             logInfo("[███████████████████████░░░░] 85%");  
         });  
 
-        // ============================================================  
-        // 2. THERMAL ZONES (LAB 16 STYLE)  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("");  
-            logInfo("▶ Running Thermal Zones (Lab 16)...");  
-            logInfo("[██████████████████░░░░░░░░░░] 68%");  
-        });  
+        // ============================================================    
+// 2. THERMAL ZONES (LAB 16 STYLE)    
+// ============================================================    
+ui.post(() -> {    
+    logInfo("");    
+    logInfo("▶ Running Thermal Zones (Lab 16)...");    
+    logInfo("[██████████████████░░░░░░░░░░] 68%");    
+});    
 
-        Map<String,Float> z0 = readThermalZones();  
-        Thread.sleep(1500);  
-        Map<String,Float> z1 = readThermalZones();  
+Map<String,Float> z0 = readThermalZones();    
+try { Thread.sleep(1500); } catch (Throwable ignore) {}    
+Map<String,Float> z1 = readThermalZones();    
 
-        Float cpu0  = pickZone(z0,"cpu","soc","big","little");  
-        Float cpu1  = pickZone(z1,"cpu","soc","big","little");  
-        Float batt0 = pickZone(z0,"battery","batt","bat");  
-        Float batt1 = pickZone(z1,"battery","batt","bat");  
+Float cpu0  = pickZone(z0,"cpu","soc","big","little");    
+Float cpu1  = pickZone(z1,"cpu","soc","big","little");    
+Float batt0 = pickZone(z0,"battery","batt","bat");    
+Float batt1 = pickZone(z1,"battery","batt","bat");    
 
-        float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;  
-        float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;  
+float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;    
+float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;    
 
-        // ============================================================  
-        // 3. VOLTAGE STABILITY  
-        // ============================================================  
-        ui.post(() -> logInfo("▶ Calculating voltage stability..."));  
-        float v0 = getBatteryVoltage_mV();  
-        Thread.sleep(1500);  
-        float v1 = getBatteryVoltage_mV();  
-        float dv = Math.abs(v1 - v0);  
+// ============================================================    
+// 3. VOLTAGE STABILITY    
+// ============================================================    
+ui.post(() -> logInfo("▶ Calculating voltage stability..."));    
+float v0 = getBatteryVoltage_mV();    
+try { Thread.sleep(1500); } catch (Throwable ignore) {}    
+float v1 = getBatteryVoltage_mV();    
+float dv = Math.abs(v1 - v0);    
 
-        // ============================================================  
-        // 4. CAPACITY ESTIMATION + PMIC  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("▶ Calculating thermal rise...");  
-            logInfo("▶ Calculating PMIC behavior...");  
-            logInfo("▶ Calculating discharge curve...");  
-            logInfo("▶ Calculating estimated real capacity...");  
-            logInfo("▶ Getting device information...");  
-        });  
+// ============================================================    
+// 4. CAPACITY ESTIMATION + PMIC    
+// ============================================================    
+ui.post(() -> {    
+    logInfo("▶ Calculating thermal rise...");    
+    logInfo("▶ Calculating PMIC behavior...");    
+    logInfo("▶ Calculating discharge curve...");    
+    logInfo("▶ Calculating estimated real capacity...");    
+    logInfo("▶ Getting device information...");    
+});    
 
-        int factory = getFactoryCapacity_mAh();  
-        if (factory <= 0) factory = 5000;  
+int factory = getFactoryCapacity_mAh();    
+if (factory <= 0) factory = 5000;    
 
-        float estimatedCapacity_mAh =  
-                factory * (100f / (100f + perHour));  
-        if (estimatedCapacity_mAh > factory)  
-            estimatedCapacity_mAh = factory;  
+float estimatedCapacity_mAh =
+        factory * (100f / (100f + perHour));    
+if (estimatedCapacity_mAh > factory)
+    estimatedCapacity_mAh = factory;    
 
-        // ============================================================  
-        // 5. SCORING ENGINE  
-        // ============================================================  
-        int score = 100;  
+// ============================================================    
+// 5. SCORING ENGINE    
+// ============================================================    
+int score = 100;    
 
-        // drain penalty  
-        if (perHour > 20f)       score -= 30;  
-        else if (perHour > 15f)  score -= 20;  
-        else if (perHour > 10f)  score -= 10;  
+if (perHour > 20f)       score -= 30;    
+else if (perHour > 15f)  score -= 20;    
+else if (perHour > 10f)  score -= 10;    
 
-        // thermal penalty (CPU)  
-        if (dCPU > 25f)          score -= 25;  
-        else if (dCPU > 15f)     score -= 15;  
-        else if (dCPU > 10f)     score -= 8;  
+if (dCPU > 25f)          score -= 25;    
+else if (dCPU > 15f)     score -= 15;    
+else if (dCPU > 10f)     score -= 8;    
 
-        // thermal penalty (BATT)  
-        if (dBATT > 10f)         score -= 20;  
-        else if (dBATT > 5f)     score -= 10;  
+if (dBATT > 10f)         score -= 20;    
+else if (dBATT > 5f)     score -= 10;    
 
-        // voltage penalty  
-        if (dv > 45f)            score -= 20;  
-        else if (dv > 30f)       score -= 10;  
-        else if (dv > 20f)       score -= 5;  
+if (dv > 45f)            score -= 20;    
+else if (dv > 30f)       score -= 10;    
+else if (dv > 20f)       score -= 5;    
 
-        // capacity penalty  
-        float pctHealth = (estimatedCapacity_mAh / factory) * 100f;  
-        if (pctHealth < 60f)     score -= 25;  
-        else if (pctHealth < 70f)score -= 15;  
-        else if (pctHealth < 80f)score -= 8;  
+float pctHealth = (estimatedCapacity_mAh / factory) * 100f;    
+if (pctHealth < 60f)     score -= 25;    
+else if (pctHealth < 70f)score -= 15;    
+else if (pctHealth < 80f)score -= 8;    
 
-        if (score < 0)   score = 0;  
-        if (score > 100) score = 100;  
+if (score < 0)   score = 0;    
+if (score > 100) score = 100;    
 
-        // voltage label  
-        String voltageLabel;  
-        if (dv <= 15f)       voltageLabel = "Excellent";  
-        else if (dv <= 30f)  voltageLabel = "OK";  
-        else                 voltageLabel = "Unstable";  
+String voltageLabel =
+        dv <= 15f ? "Excellent" :
+        dv <= 30f ? "OK" : "Unstable";    
 
-        // thermal label  
-        String thermalLabel;  
-        if (dCPU <= 10f && dBATT <= 5f)  
-            thermalLabel = "OK";  
-        else if (dCPU <= 18f && dBATT <= 8f)  
-            thermalLabel = "Warm";  
-        else  
-            thermalLabel = "Hot";  
+String thermalLabel =
+        (dCPU <= 10f && dBATT <= 5f) ? "OK" :
+        (dCPU <= 18f && dBATT <= 8f) ? "Warm" : "Hot";    
 
-        // cycle behaviour  
-        String cycleLabel;  
-        if (perHour < 10f && dv < 20f)  
-            cycleLabel = "Strong (stable discharge curve)";  
-        else if (perHour < 15f)  
-            cycleLabel = "Normal (minor fluctuations)";  
-        else  
-            cycleLabel = "Stressed (irregular discharge curve)";  
+String cycleLabel =
+        (perHour < 10f && dv < 20f) ? "Strong (stable discharge curve)" :
+        (perHour < 15f) ? "Normal (minor fluctuations)" :
+        "Stressed (irregular discharge curve)";    
 
-        // category  
-        String category;  
-        if (score >= 90)      category = "Strong";  
-        else if (score >= 80) category = "Excellent";  
-        else if (score >= 70) category = "Very good";  
-        else if (score >= 60) category = "Normal";  
-        else                  category = "Weak";  
+String category =
+        score >= 90 ? "Strong" :
+        score >= 80 ? "Excellent" :
+        score >= 70 ? "Very good" :
+        score >= 60 ? "Normal" : "Weak";
 
         // ============================================================  
         // 6. FINAL UI OUTPUT  

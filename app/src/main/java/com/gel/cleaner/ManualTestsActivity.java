@@ -1746,7 +1746,7 @@ private void runLab15Core() {
                             ? endInfo.currentChargeMah
                             : -1;
 
-            // κρατάμε ΜΙΑ estimated full reference
+            //   estimated full reference
             final long estimatedFullMah =
                     (endInfo != null && endInfo.estimatedFullMah > 0)
                             ? endInfo.estimatedFullMah
@@ -1776,7 +1776,7 @@ private void runLab15Core() {
                 );
 
                 logError(
-                        "LAB decision: ❌ Battery replacement recommended."
+                        "LAB decision:  Battery replacement recommended."
                 );
 
             } else {
@@ -1786,8 +1786,7 @@ private void runLab15Core() {
                         "No abnormal connection, or thermal issues detected."
                 );
 
-                logOk(
-                        ""LAB decision: ✅ Charging system OK."
+                logOk("LAB decision:  Charging system OK.");
                 );
             }
 
@@ -1806,8 +1805,7 @@ private void runLab15Core() {
 
                 if (deltaPct >= 1.2f) {
 
-                    logOk(
-                            ""Charging strength: STRONG " +
+                    logOk("Charging strength: STRONG");
                             "Fast / high-quality charging path detected."
                     );
 

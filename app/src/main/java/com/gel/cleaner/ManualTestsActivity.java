@@ -1,6 +1,6 @@
 // ============================================================
 // ManualTestsActivity
-// GEL Manual Tests — Hospital Edition (30 Manual Labs)
+// GEL Manual Tests â€” Hospital Edition (30 Manual Labs)
 // Single-screen Accordion UI + detailed English service logs
 // NOTE (GEL RULE): Whole file ready for copy-paste.
 // IMPORTANT (Lab 11 SSID SAFE MODE):
@@ -17,7 +17,7 @@
 package com.gel.cleaner;
 
 // ============================================================
-// ANDROID — CORE
+// ANDROID â€” CORE
 // ============================================================
 import android.Manifest;
 import android.app.ActivityManager;
@@ -99,7 +99,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 // ============================================================
-// JAVA — IO / NET
+// JAVA â€” IO / NET
 // ============================================================
 import java.io.BufferedReader;
 import java.io.File;
@@ -113,7 +113,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 // ============================================================
-// JAVA — UTIL
+// JAVA â€” UTIL
 // ============================================================
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -138,7 +138,7 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String lastFinalVerdict     = "N/A";
     
 // ============================================================
-// LAB 15 — FLAGS (DO NOT MOVE)
+// LAB 15 â€” FLAGS (DO NOT MOVE)
 // ============================================================
 private volatile boolean lab15FlapUnstable = false;
 private volatile boolean lab15OverTempDuringCharge = false;
@@ -149,7 +149,7 @@ private TextView lab15StatusText;
 private LinearLayout lab15ProgressBar;
 private Button lab15ExitBtn;
 private TextView lab15CounterText;
-// LAB 15 — Thermal Correlation
+// LAB 15 â€” Thermal Correlation
 private float lab15BattTempStart = Float.NaN;
 private float lab15BattTempPeak  = Float.NaN;
 private float lab15BattTempEnd   = Float.NaN;
@@ -157,7 +157,7 @@ private float lab15BattTempEnd   = Float.NaN;
 private static final int LAB15_TOTAL_SECONDS = 180;
 
 // ============================================================
-// TELEPHONY SNAPSHOT — Passive system probe (no side effects)
+// TELEPHONY SNAPSHOT â€” Passive system probe (no side effects)
 // ============================================================
 private static class TelephonySnapshot {
 
@@ -213,7 +213,7 @@ private static class BatteryInfo {
     float temperature = Float.NaN;
     String status = "Unknown";
 
-    // 🔥 REQUIRED — used by LAB 14 / drain logic
+    // ðŸ”¥ REQUIRED â€” used by LAB 14 / drain logic
     long currentChargeMah = -1;
 
     // capacity estimation
@@ -311,7 +311,7 @@ root.addView(sec1);
 // DOTS (running indicator)
 // ------------------------------------------------------------
 lab14DotsView = new TextView(this);
-lab14DotsView.setText("•");
+lab14DotsView.setText("â€¢");
 lab14DotsView.setTextSize(22f);
 lab14DotsView.setTextColor(0xFF39FF14);
 lab14DotsView.setPadding(0, dp(6), 0, dp(10));
@@ -319,7 +319,7 @@ lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
 root.addView(lab14DotsView);
 
     // ============================================================
-    // SECTION 1: AUDIO & VIBRATION — LABS 1–5
+    // SECTION 1: AUDIO & VIBRATION â€” LABS 1â€“5
     // ============================================================
     LinearLayout body1 = makeSectionBody();
     Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);
@@ -333,7 +333,7 @@ root.addView(lab14DotsView);
     body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
 
     // ============================================================
-    // SECTION 2: DISPLAY & SENSORS — LABS 6–9
+    // SECTION 2: DISPLAY & SENSORS â€” LABS 6â€“9
     // ============================================================
     LinearLayout body2 = makeSectionBody();
     Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
@@ -346,7 +346,7 @@ root.addView(lab14DotsView);
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
 
     // ============================================================
-// SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
+// SECTION 3: WIRELESS & CONNECTIVITY â€” LABS 10â€“13
 // ============================================================
 LinearLayout body3 = makeSectionBody();
 Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
@@ -359,7 +359,7 @@ body3.addView(makeTestButton("12. Call Function Interpretation",this::lab12CallF
 body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13InternetQuickCheck));
 
     // ============================================================
-    // SECTION 4: BATTERY & THERMAL — LABS 14–17
+    // SECTION 4: BATTERY & THERMAL â€” LABS 14â€“17
     // ============================================================
     LinearLayout body4 = makeSectionBody();
     Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
@@ -372,7 +372,7 @@ body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13Intern
     body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
 
     // ============================================================
-    // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
+    // SECTION 5: STORAGE & PERFORMANCE â€” LABS 18â€“21
     // ============================================================
     LinearLayout body5 = makeSectionBody();
     Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
@@ -385,7 +385,7 @@ body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13Intern
     body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab21UptimeHints));
 
     // ============================================================
-    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
+    // SECTION 6: SECURITY & SYSTEM HEALTH â€” LABS 22â€“25
     // ============================================================
     LinearLayout body6 = makeSectionBody();
     Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
@@ -398,7 +398,7 @@ body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13Intern
     body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
 
     // ============================================================
-    // SECTION 7: ADVANCED / LOGS — LABS 26–29
+    // SECTION 7: ADVANCED / LOGS â€” LABS 26â€“29
     // ============================================================
     LinearLayout body7 = makeSectionBody();
     Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
@@ -579,24 +579,24 @@ private float getBatteryTemperature() {
         int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
         if (raw <= 0) return 0f;
 
-        return raw / 10f; // tenths of °C
+        return raw / 10f; // tenths of Â°C
     } catch (Exception e) {
         return 0f;
     }
 }
 
 // ============================================================
-// LAB 14 — FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
-// GEL EDITION — LOCKED / PRODUCTION
+// LAB 14 â€” FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
+// GEL EDITION â€” LOCKED / PRODUCTION
 // ============================================================
 //
 // INPUTS (ALREADY COMPUTED BY LAB 14 CORE):
-//  - baseScore        : int    (0–100)
+//  - baseScore        : int    (0â€“100)
 //  - mahPerHour       : double (discharge rate under stress)
 //  - healthPct        : int    (estimated capacity %)
-//  - battTempBefore   : Float  (°C, start)
-//  - battTempAfter    : Float  (°C, end)
-//  - battTempPeak     : Float  (°C, peak, optional)
+//  - battTempBefore   : Float  (Â°C, start)
+//  - battTempAfter    : Float  (Â°C, end)
+//  - battTempPeak     : Float  (Â°C, peak, optional)
 //
 // OUTPUT:
 //  - Final Battery Health Score
@@ -617,14 +617,14 @@ private void logFinalBatteryHealthScore(
     int score = baseScore;
 
     // --------------------------------------------------------
-    // 1️⃣ DRAIN PENALTIES (STRESS BEHAVIOR)
+    // 1ï¸âƒ£ DRAIN PENALTIES (STRESS BEHAVIOR)
     // --------------------------------------------------------
     if (mahPerHour > 900)       score -= 30;
     else if (mahPerHour > 750)  score -= 20;
     else if (mahPerHour > 600)  score -= 10;
 
     // --------------------------------------------------------
-    // 2️⃣ CAPACITY PENALTIES
+    // 2ï¸âƒ£ CAPACITY PENALTIES
     // --------------------------------------------------------
     if (healthPct > 0) {
         if (healthPct < 60)       score -= 25;
@@ -633,7 +633,7 @@ private void logFinalBatteryHealthScore(
     }
 
     // --------------------------------------------------------
-    // 3️⃣ THERMAL ANALYSIS (VERDICT + WEIGHT)
+    // 3ï¸âƒ£ THERMAL ANALYSIS (VERDICT + WEIGHT)
     // --------------------------------------------------------
     float dT = 0f;
     if (battTempBefore != null) {
@@ -683,7 +683,7 @@ private void logFinalBatteryHealthScore(
 
     logInfo(String.format(
             Locale.US,
-            "Thermal Verdict: %s (ΔT +%.1f°C)",
+            "Thermal Verdict: %s (Î”T +%.1fÂ°C)",
             thermalVerdict,
             dT
     ));
@@ -709,7 +709,7 @@ private void logFinalBatteryHealthScore(
 }
 
 // ============================================================
-// LAB 14 — FINAL BATTERY HEALTH SCORE (Judge Layer)
+// LAB 14 â€” FINAL BATTERY HEALTH SCORE (Judge Layer)
 // ============================================================
 private void logFinalBatteryHealthScore(
         double mahPerHour,
@@ -767,7 +767,7 @@ private void dismissLab14RunningDialog() {
 }
 
 // ------------------------------------------------------------
-// LAB 14 — USER ABORT (CANCEL / EXIT)
+// LAB 14 â€” USER ABORT (CANCEL / EXIT)
 // ------------------------------------------------------------
 private void abortLab14ByUser() {
 
@@ -808,7 +808,7 @@ private boolean isDeviceCharging() {
 }
 
 // ============================================================
-// LAB 3 — User Confirmation Dialog (Earpiece)
+// LAB 3 â€” User Confirmation Dialog (Earpiece)
 // ============================================================
 private void askUserEarpieceConfirmation() {
 
@@ -820,7 +820,7 @@ private void askUserEarpieceConfirmation() {
                             android.R.style.Theme_Material_Dialog_NoActionBar
                     );
 
-            b.setTitle("LAB 3 — Confirm");
+            b.setTitle("LAB 3 â€” Confirm");
             b.setMessage("Did you hear the sound clearly from the earpiece?");
             b.setCancelable(false);
 
@@ -837,7 +837,7 @@ private void askUserEarpieceConfirmation() {
             AlertDialog dialog = b.create();
             dialog.show();
 
-            // 🔥 GEL DARK STYLE (NO XML)
+            // ðŸ”¥ GEL DARK STYLE (NO XML)
             try {
                 dialog.getWindow().setBackgroundDrawable(
                         new ColorDrawable(0xFF101010)
@@ -958,22 +958,22 @@ private void appendHtml(String html) {
 
 private void logInfo(String msg) {
     GELServiceLog.info(msg);
-    appendHtml("ℹ️ " + escape(msg));
+    appendHtml("â„¹ï¸ " + escape(msg));
 }
 
 private void logOk(String msg) {
     GELServiceLog.ok(msg);
-    appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+    appendHtml("<font color='#88FF88'>âœ… " + escape(msg) + "</font>");
 }
 
 private void logWarn(String msg) {
     GELServiceLog.warn(msg);
-    appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+    appendHtml("<font color='#FFD966'>âš ï¸ " + escape(msg) + "</font>");
 }
 
 private void logError(String msg) {
     GELServiceLog.error(msg);
-    appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+    appendHtml("<font color='#FF5555'>âŒ " + escape(msg) + "</font>");
 }
 
 // ============================================================
@@ -1064,7 +1064,7 @@ private String ipToStr(int ip) {
 }
 
 // ============================================================
-// LAB 14 — REQUIRED SUPPORT METHODS (DO NOT MODIFY)
+// LAB 14 â€” REQUIRED SUPPORT METHODS (DO NOT MODIFY)
 // ============================================================
 
 private float getCurrentBatteryPercent() {
@@ -1158,11 +1158,11 @@ private void printHealthCheckboxMap(String decision) {
     logLine();
 
     if ("Strong".equalsIgnoreCase(decision)) {
-        logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
+        logOk("Health Map: âœ” Battery âœ” Thermal âœ” Drain");
     } else if ("Normal".equalsIgnoreCase(decision)) {
-        logWarn("Health Map: ⚠ Moderate wear detected");
+        logWarn("Health Map: âš  Moderate wear detected");
     } else {
-        logError("Health Map: ✖ Battery health critical");
+        logError("Health Map: âœ– Battery health critical");
     }
 }
 
@@ -1182,7 +1182,7 @@ private void updateChargingPeakTemperature() {
 }
 
 // ============================================================
-// THERMAL HELPERS — REQUIRED (SCAN + FALLBACK + FORMAT)
+// THERMAL HELPERS â€” REQUIRED (SCAN + FALLBACK + FORMAT)
 // ============================================================
 
 private boolean isRooted = false; // fix: missing symbol
@@ -1351,14 +1351,14 @@ private String formatThermalLine(String label, ThermalGroupReading g) {
 
     return String.format(
             Locale.US,
-            "%-18s : max %.1f°C | avg %.1f°C | n=%d\n",
+            "%-18s : max %.1fÂ°C | avg %.1fÂ°C | n=%d\n",
             label, mx, av, g.count
     );
 }
 
 // ============================================================
-// MISSING HELPERS — REQUIRED FOR THERMAL / LAB LOGIC
-// SAFE STUBS — PRODUCTION COMPATIBLE
+// MISSING HELPERS â€” REQUIRED FOR THERMAL / LAB LOGIC
+// SAFE STUBS â€” PRODUCTION COMPATIBLE
 // ============================================================
 
 // ------------------------------------------------------------
@@ -1396,7 +1396,7 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
         sb.append("\nCooling devices:\n");
         for (File f : files) {
             if (f != null && f.getName().startsWith("cooling_device")) {
-                sb.append("• ").append(f.getName()).append("\n");
+                sb.append("â€¢ ").append(f.getName()).append("\n");
             }
         }
     } catch (Throwable ignored) {}
@@ -1407,7 +1407,7 @@ private void logLab15ThermalCorrelation() {
 }
 
 // ------------------------------------------------------------
-// LAB 15 — Thermal Correlation Logger
+// LAB 15 â€” Thermal Correlation Logger
 // ------------------------------------------------------------
 
 private void logLab15ThermalCorrelation(
@@ -1422,7 +1422,7 @@ private void logLab15ThermalCorrelation(
     }
 
     // --------------------------------------------------------
-    // ΔT calculation (start → peak/end)
+    // Î”T calculation (start â†’ peak/end)
     // --------------------------------------------------------
     float rawDelta = !Float.isNaN(battTempPeak)
             ? (battTempPeak - battTempStart)
@@ -1454,7 +1454,7 @@ private void logLab15ThermalCorrelation(
 
     logInfo(String.format(
             Locale.US,
-            "Thermal correlation (charging): start %.1f°C → peak %.1f°C → end %.1f°C",
+            "Thermal correlation (charging): start %.1fÂ°C â†’ peak %.1fÂ°C â†’ end %.1fÂ°C",
             battTempStart,
             (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
             battTempEnd
@@ -1462,7 +1462,7 @@ private void logLab15ThermalCorrelation(
 
     logOk(String.format(
             Locale.US,
-            "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
+            "Thermal verdict (charging): %s (Î”T +%.1fÂ°C) â€” %s",
             verdict,
             dPeak,
             note
@@ -1470,7 +1470,7 @@ private void logLab15ThermalCorrelation(
 }
 
 // ============================================================
-// CHARGING REQUIRED DIALOG — SAFE DISMISS
+// CHARGING REQUIRED DIALOG â€” SAFE DISMISS
 // ============================================================
 protected void dismissChargingDialogSafe(
         Context ctx,
@@ -1495,7 +1495,7 @@ protected void dismissChargingDialogSafe(
 // ============================================================
 protected void advanceDots(TextView dotsView, int step) {
     if (dotsView == null) return;
-    String[] frames = { "•", "• •", "• • •" };
+    String[] frames = { "â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢" };
     dotsView.setText(frames[step % frames.length]);
 }
 
@@ -1513,8 +1513,8 @@ protected void advanceDots(TextView dotsView, int step) {
 
 
 // ============================================================
-// LAB 15 — Charging Required Dialog (LIVE STATUS PANEL)
-// GEL EDITION — Blocking + Animated + Color State
+// LAB 15 â€” Charging Required Dialog (LIVE STATUS PANEL)
+// GEL EDITION â€” Blocking + Animated + Color State
 // ============================================================
 
 private AlertDialog chargingDialog;
@@ -1526,7 +1526,7 @@ private BroadcastReceiver chargingReceiver;
 private volatile boolean chargingDetected = false;
 
 // ============================================================
-// SHOW DIALOG — WAIT FOR CHARGING (PHASE 1)
+// SHOW DIALOG â€” WAIT FOR CHARGING (PHASE 1)
 // ============================================================
 private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetected) {
 
@@ -1551,7 +1551,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             // TITLE
             // -------------------------
             chargingTitleView = new TextView(this);
-            chargingTitleView.setText("Lab 15 — Connect the charger to the device charging port");
+            chargingTitleView.setText("Lab 15 â€” Connect the charger to the device charging port");
             chargingTitleView.setTextColor(0xFFFFFFFF);
             chargingTitleView.setTextSize(18f);
             chargingTitleView.setPadding(0, 0, 0, dp(12));
@@ -1571,7 +1571,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
 // ANIMATED DOTS
 // -------------------------
 chargingDotsView = new TextView(this);
-chargingDotsView.setText("•");
+chargingDotsView.setText("â€¢");
 chargingDotsView.setTextColor(0xFF39FF14);
 chargingDotsView.setTextSize(22f);
 chargingDotsView.setGravity(Gravity.CENTER);
@@ -1582,7 +1582,7 @@ root.addView(chargingDotsView);
 // STATUS TEXT (NO COUNTER HERE)
 // -------------------------
 lab15StatusText = new TextView(this);
-lab15StatusText.setText("Monitoring charging system…");
+lab15StatusText.setText("Monitoring charging systemâ€¦");
 lab15StatusText.setTextColor(0xFFDDDDDD);
 lab15StatusText.setGravity(Gravity.CENTER);
 lab15StatusText.setPadding(0, dp(4), 0, dp(2));
@@ -1592,14 +1592,14 @@ root.addView(lab15StatusText);
 // COUNTER TEXT (POPUP ONLY)
 // -------------------------
 lab15CounterText = new TextView(this);
-lab15CounterText.setText("0 / 180 sec");
+lab15CounterText.setText("Progress: 0 / 180 sec");
 lab15CounterText.setTextColor(0xFFAAAAAA);
 lab15CounterText.setGravity(Gravity.CENTER);
 lab15CounterText.setPadding(0, 0, 0, dp(8));
 root.addView(lab15CounterText);
 
             // -------------------------
-            // PROGRESS BAR (6 × 30s)
+            // PROGRESS BAR (6 Ã— 30s)
             // -------------------------
             lab15ProgressBar = new LinearLayout(this);
             lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -1666,7 +1666,7 @@ private void startChargingDotsAnimation() {
     ui.post(new Runnable() {
 
         int step = 0;
-        final String[] frames = {"•", "• •", "• • •"};
+        final String[] frames = {"â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢"};
 
         @Override
         public void run() {
@@ -1679,7 +1679,7 @@ private void startChargingDotsAnimation() {
 }
 
 // ============================================================
-// LAB 15 — CORE RUNNER (180 sec)
+// LAB 15 â€” CORE RUNNER (180 sec)
 // Battery-based strength estimation (NO mA)
 // ============================================================
 private static final int LAB15_TOTAL_SEC = 180;
@@ -1689,7 +1689,7 @@ private void runLab15Core() {
 
     final long startTs = SystemClock.elapsedRealtime();
 
-    // reset flags κάθε run (HARD RESET)
+    // reset flags ÎºÎ¬Î¸Îµ run (HARD RESET)
     lab15OverTempDuringCharge = false;
     lab15FlapUnstable = false;
 
@@ -1782,17 +1782,17 @@ private void runLab15Core() {
             } else {
 
                 logOk(
-                        "Charging behavior stable for the full test duration.\n" +
-                        "No abnormal connection or thermal issues detected."
+                        "Charging behavior stable, for the full test duration.\n" +
+                        "No abnormal connection, or thermal issues detected."
                 );
 
                 logOk(
-                        "LAB decision: ✅ Charging system OK."
+                        ""LAB decision: ✅ Charging system OK."
                 );
             }
 
             // ----------------------------------------------------
-            // 🔋 CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
+            // ðŸ”‹ CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
             // ----------------------------------------------------
             logLine();
 
@@ -1807,28 +1807,28 @@ private void runLab15Core() {
                 if (deltaPct >= 1.2f) {
 
                     logOk(
-                            "Charging strength: STRONG — φορτίζει δυνατά\n" +
+                            ""Charging strength: STRONG " +
                             "Fast / high-quality charging path detected."
                     );
 
                 } else if (deltaPct >= 0.6f) {
 
                     logOk(
-                            "Charging strength: NORMAL — φορτίζει κανονικά\n" +
+                            "Charging strength: NORMAL \n" +
                             "Typical charger and cable behavior."
                     );
 
                 } else if (deltaPct >= 0.3f) {
 
                     logWarn(
-                            "Charging strength: MODERATE — φορτίζει αλλά όχι φουλ\n" +
-                            "USB, wireless, or aging cable possible."
-                    );
+        "Charging strength: MODERATE\n" +
+        "Possible causes: low-power charger, USB port limitations, wireless charging, or a degraded cable."
+);
 
                 } else {
 
                     logError(
-                            "Charging strength: POOR — κάτι δεν πάει καλά\n" +
+                            "Charging strength: POOR \n" +
                             "Very low effective charging detected."
                     );
                 }
@@ -1847,11 +1847,11 @@ private void runLab15Core() {
 }
 
 // ------------------------------------------------------------
-// LAB 15 — USER ABORT (CANCEL / EXIT)
+// LAB 15 - USER ABORT (CANCEL / EXIT)
 // ------------------------------------------------------------
 private void abortLab15ByUser() {
 
-    // GUARD — avoid double / early abort
+    // GUARD - avoid double / early abort
     if (!lab15Running && !chargingDetected) {
         return;
     }
@@ -1870,7 +1870,7 @@ private void abortLab15ByUser() {
     lab15Running = false;
     chargingDetected = false;
 
-    logInfo("Charging system diagnostic was cancelled before completion.");
+    logWarn("Charging system diagnostic was cancelled before completion.");
 }
 
 // ============================================================
@@ -1911,7 +1911,7 @@ private void startChargingFlapMonitor() {
 private void updateLab15Status(int sec) {
     if (lab15StatusText != null) {
         lab15StatusText.setText(
-                "Monitoring charging system… " + sec + " / 180 sec"
+                "Monitoring charging systemâ€¦ " + sec + " / 180 sec"
         );
     }
 }
@@ -1955,15 +1955,15 @@ private void dismissChargingStatusDialog() {
 }
 
 // ============================================================
-// LABS 1–5: AUDIO & VIBRATION
+// LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 
 // ============================================================
-// LAB 1 — Speaker Tone Test (AUTO)
+// LAB 1 - Speaker Tone Test (AUTO)
 // ============================================================
 private void lab1SpeakerTone() {
 
-    logSection("LAB 1 — Speaker Tone Test");
+    logSection("LAB 1 â€” Speaker Tone Test");
 
     new Thread(() -> {
 
@@ -1983,7 +1983,7 @@ private void lab1SpeakerTone() {
 
             logOk("Speaker output detected");
 
-            // 🔧 FIX: Explain LOW confidence explicitly
+            // ðŸ”§ FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -2011,11 +2011,11 @@ private void lab1SpeakerTone() {
 }
 
 // ============================================================
-// LAB 2 — Speaker Frequency Sweep
+// LAB 2 â€” Speaker Frequency Sweep
 // ============================================================
 private void lab2SpeakerSweep() {
 
-    logSection("LAB 2 — Speaker Frequency Sweep");
+    logSection("LAB 2 â€” Speaker Frequency Sweep");
 
     new Thread(() -> {
 
@@ -2045,7 +2045,7 @@ private void lab2SpeakerSweep() {
 
             logOk("Frequency sweep executed");
 
-            // 🔧 FIX: Explain LOW confidence explicitly
+            // ðŸ”§ FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -2073,11 +2073,11 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check
+   LAB 3 â€” Earpiece Audio Path Check
    ============================================================ */
 private void lab3EarpieceManual() {
 
-    logSection("LAB 3 — Earpiece Audio Path Check");
+    logSection("LAB 3 â€” Earpiece Audio Path Check");
 
     new Thread(() -> {
 
@@ -2136,11 +2136,11 @@ private void lab3EarpieceManual() {
 }
 
 /* ============================================================
-   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
+   LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)
    ============================================================ */
 private void lab4MicManual() {
 
-    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
+    logSection("LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)");
 
     new Thread(() -> {
 
@@ -2173,11 +2173,11 @@ private void lab4MicManual() {
 }
 
 /* ============================================================
-   LAB 5 — Vibration Motor Test (AUTO)
+   LAB 5 â€” Vibration Motor Test (AUTO)
    ============================================================ */
 private void lab5Vibration() {
 
-    logSection("LAB 5 — Vibration Motor Test");
+    logSection("LAB 5 â€” Vibration Motor Test");
 
     try {
         Vibrator v;
@@ -2211,16 +2211,16 @@ private void lab5Vibration() {
 }
 
 // ============================================================  
-// LABS 6–9: DISPLAY & SENSORS  
+// LABS 6â€“9: DISPLAY & SENSORS  
 // ============================================================  
 
 /* ============================================================
-   LAB 6 — Display / Touch Basic Inspection (manual)
+   LAB 6 â€” Display / Touch Basic Inspection (manual)
    ============================================================ */
 
 private void lab6DisplayTouch() {
 
-    logSection("LAB 6 — Display / Touch Basic Inspection");
+    logSection("LAB 6 â€” Display / Touch Basic Inspection");
 
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
@@ -2229,12 +2229,12 @@ private void lab6DisplayTouch() {
 }
 
 /* ============================================================
-   LAB 7 — Rotation / Auto-Rotate Check (manual)
+   LAB 7 â€” Rotation / Auto-Rotate Check (manual)
    ============================================================ */
 
 private void lab7RotationManual() {
 
-    logSection("LAB 7 — Rotation / Auto-Rotate Check");
+    logSection("LAB 7 â€” Rotation / Auto-Rotate Check");
 
     startActivityForResult(
             new Intent(this, RotationCheckActivity.class),
@@ -2243,12 +2243,12 @@ private void lab7RotationManual() {
 }
 
 /* ============================================================
-   LAB 8 — Proximity During Call (manual)
+   LAB 8 â€” Proximity During Call (manual)
    ============================================================ */
 
 private void lab8ProximityCall() {
 
-    logSection("LAB 8 — Proximity During Call");
+    logSection("LAB 8 â€” Proximity During Call");
 
     startActivityForResult(
             new Intent(this, ProximityCheckActivity.class),
@@ -2257,18 +2257,18 @@ private void lab8ProximityCall() {
 }
 
 /* ============================================================
-   LAB 9 — Sensors Check 
+   LAB 9 â€” Sensors Check 
    ============================================================ */
 
 private void lab9SensorsCheck() {
 
     logLine();
-    logInfo("LAB 9 — Sensors Presence & Full Analysis");
+    logInfo("LAB 9 â€” Sensors Presence & Full Analysis");
 
     try {
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sm == null) {
-            logError("SensorManager not available — framework issue.");
+            logError("SensorManager not available â€” framework issue.");
             return;
         }
 
@@ -2297,7 +2297,7 @@ private void lab9SensorsCheck() {
         // RAW SENSOR LIST (former LAB 10)
         // ------------------------------------------------------------
         for (Sensor s : sensors) {
-            String line = "• type=" + s.getType()
+            String line = "â€¢ type=" + s.getType()
                     + " | name=" + s.getName()
                     + " | vendor=" + s.getVendor();
             logInfo(line);
@@ -2349,24 +2349,24 @@ private void lab9SensorsCheck() {
         logInfo("Sensor Interpretation Summary:");
 
         if (hasVirtualGyro)
-            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
+            logOk("Detected Xiaomi Virtual Gyroscope â€” expected behavior (sensor fusion instead of hardware gyro).");
 
         if (hasDualALS)
-            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
+            logOk("Dual Ambient Light Sensors detected â€” OK. Device uses front + rear ALS for better auto-brightness.");
         else
-            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
+            logWarn("Only one Ambient Light Sensor detected â€” auto-brightness may be less accurate.");
 
         if (hasSAR)
-            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+            logOk("SAR Detectors detected â€” normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
 
         if (hasPickup)
-            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
+            logOk("Pickup Sensor detected â€” supports 'lift to wake' and motion awareness.");
 
         if (hasLargeTouch)
-            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
+            logOk("Large Area Touch Sensor detected â€” improved palm rejection and touch accuracy.");
 
         if (hasGameRotation)
-            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
+            logOk("Game Rotation Vector sensor detected â€” smoother gaming orientation response.");
 
         logOk("Sensor suite appears complete and healthy for this device.");
 
@@ -2376,22 +2376,22 @@ private void lab9SensorsCheck() {
 }
 
 /* ============================================================
-   Helper — Sensor Presence
+   Helper â€” Sensor Presence
    ============================================================ */
 private void checkSensor(SensorManager sm, int type, String name) {
     boolean ok = sm.getDefaultSensor(type) != null;
     if (ok)
         logOk(name + " is reported as available.");
     else
-        logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
+        logWarn(name + " is NOT reported â€” features depending on it may be limited or missing.");
 }
 
 // ============================================================  
-// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
+// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) â€” NO PASSWORD / NO QR  
 // ============================================================  
 private void lab10WifiSnapshot() {  
     logLine();  
-    logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
+    logInfo("LAB 10 â€” Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
 
     WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);  
     if (wm == null) {  
@@ -2400,7 +2400,7 @@ private void lab10WifiSnapshot() {
     }  
 
     if (!wm.isWifiEnabled()) {  
-        logWarn("Wi-Fi is OFF — please enable and retry.");  
+        logWarn("Wi-Fi is OFF â€” please enable and retry.");  
         return;  
     }  
 
@@ -2438,7 +2438,7 @@ private void lab10WifiSnapshot() {
 
             if (!gpsOn && !netOn) {  
                 logWarn("Location services are OFF. SSID may show UNKNOWN.");  
-                logWarn("Opening Location Settings… enable Location and come back.");  
+                logWarn("Opening Location Settingsâ€¦ enable Location and come back.");  
                 try {  
                     startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));  
                 } catch (Exception ignored) {}  
@@ -2484,7 +2484,7 @@ private void lab10WifiSnapshot() {
     else if (rssi > -80)  
         logWarn("Moderate Wi-Fi signal.");  
     else  
-        logError("Very weak Wi-Fi signal — expect drops.");  
+        logError("Very weak Wi-Fi signal â€” expect drops.");  
 
     // 4) DHCP / IP details  
     try {  
@@ -2531,7 +2531,7 @@ public void onRequestPermissionsResult(int requestCode, String[] perms, int[] gr
 }  
 
 // ============================================================  
-// LAB 10 — DEEPSCAN v3.0  
+// LAB 10 â€” DEEPSCAN v3.0  
 // ============================================================  
 private void runWifiDeepScan(WifiManager wm) {  
     new Thread(() -> {  
@@ -2621,13 +2621,13 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
 }  
 
 // ============================================================  
-// LAB 11 — Mobile Data Diagnostic
+// LAB 11 â€” Mobile Data Diagnostic
 // ============================================================  
 
 private void lab11MobileDataDiagnostic() {
 
     logLine();
-    logInfo("LAB 11 — Mobile Network Diagnostic (Laboratory)");
+    logInfo("LAB 11 â€” Mobile Network Diagnostic (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
@@ -2670,7 +2670,7 @@ private void lab11MobileDataDiagnostic() {
     logLabelValue("SIM State", "READY");
 
     // ------------------------------------------------------------
-    // Service state (legacy domain — informational)
+    // Service state (legacy domain â€” informational)
     // ------------------------------------------------------------
     logLabelValue(
             "Service State (legacy)",
@@ -2685,7 +2685,7 @@ private void lab11MobileDataDiagnostic() {
     }
 
     // ------------------------------------------------------------
-    // Data state (packet domain — informational)
+    // Data state (packet domain â€” informational)
     // ------------------------------------------------------------
     String dataStateLabel;
     switch (s.dataState) {
@@ -2720,13 +2720,13 @@ private void lab11MobileDataDiagnostic() {
 }
 
 // ============================================================
-// LAB 12 — Call Function Interpretation (Laboratory)
+// LAB 12 â€” Call Function Interpretation (Laboratory)
 // ============================================================
 
 private void lab12CallFunctionInterpretation() {
 
     logLine();
-    logInfo("LAB 12 — Call Function Interpretation (Laboratory)");
+    logInfo("LAB 12 â€” Call Function Interpretation (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
@@ -2803,12 +2803,12 @@ private void lab12CallFunctionInterpretation() {
 }
 
 // ============================================================
-// LAB 13 — Internet Quich Check
+// LAB 13 â€” Internet Quich Check
 // ============================================================
 
 private void lab13InternetQuickCheck() {  
     logLine();  
-    logInfo("LAB 13 — Internet Access Quick Check.");  
+    logInfo("LAB 13 â€” Internet Access Quick Check.");  
     try {  
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);  
         if (cm == null) {  
@@ -2849,7 +2849,7 @@ private void lab13InternetQuickCheck() {
 }  
 
 // ============================================================
-// GEL THERMAL ENGINE — UNIVERSAL AUTO-SCALE (FINAL)
+// GEL THERMAL ENGINE â€” UNIVERSAL AUTO-SCALE (FINAL)
 // Compatible with all Android devices (Pixel, Samsung, Xiaomi, POCO, Huawei,
 // OnePlus, Oppo, Vivo, Realme, Motorola, Infinix, Tecno, MTK, Snapdragon).
 // ============================================================
@@ -2892,7 +2892,7 @@ private Map<String, Float> readThermalZones() {
             if (v > 1000f)       v = v / 1000f;  // millidegree
             else if (v > 200f)  v = v / 100f;   // centidegree
             else if (v > 20f)   v = v / 10f;    // deci-degree
-            // else already °C
+            // else already Â°C
 
             out.put(type.toLowerCase(Locale.US), v);
 
@@ -2939,25 +2939,25 @@ private String readFirstLine(File file) {
 }
     
 // ============================================================
-// LAB 14 — Battery Health Stress Test (GEL Full Mode)
-// LABORATORY EDITION — Objective battery diagnostics
+// LAB 14 â€” Battery Health Stress Test (GEL Full Mode)
+// LABORATORY EDITION â€” Objective battery diagnostics
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 
 // ============================================================
-// LAB 14 — FLAGS / UI STATE
+// LAB 14 â€” FLAGS / UI STATE
 // ============================================================
 private volatile boolean lab14Running = false;
 private TextView lab14DotsView;
 private AlertDialog lab14Dialog;
 private TextView lab14ProgressText;
 private LinearLayout lab14ProgressBar;
-private final int LAB14_TOTAL_SECONDS = 5 * 60; // 🔒 300 sec hard lock
+private final int LAB14_TOTAL_SECONDS = 5 * 60; // ðŸ”’ 300 sec hard lock
 
 private int lastSelectedStressDurationSec = 60;
 
 // ============================================================
-// LAB 14 — Battery Health Stress Test (GEL Full Mode)
+// LAB 14 â€” Battery Health Stress Test (GEL Full Mode)
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
@@ -2971,7 +2971,7 @@ private void lab14BatteryHealthStressTest() {
     try {
 
         // ------------------------------------------------------------
-        // 0️⃣ BASIC SAFETY CHECKS
+        // 0ï¸âƒ£ BASIC SAFETY CHECKS
         // ------------------------------------------------------------
         final float fStartPct = getCurrentBatteryPercent();
         if (fStartPct < 0f) {
@@ -2988,7 +2988,7 @@ private void lab14BatteryHealthStressTest() {
         }
 
         // ------------------------------------------------------------
-        // 1️⃣ READ REAL BATTERY INFO
+        // 1ï¸âƒ£ READ REAL BATTERY INFO
         // ------------------------------------------------------------
         final BatteryInfo fBiStart = getBatteryInfo();
         if (fBiStart == null || fBiStart.level < 0) {
@@ -3028,18 +3028,18 @@ private void lab14BatteryHealthStressTest() {
         final int fHealthPct = tmpHealth;
 
         // ------------------------------------------------------------
-        // 2️⃣ FIXED DURATION — LAB MODE
+        // 2ï¸âƒ£ FIXED DURATION â€” LAB MODE
         // ------------------------------------------------------------
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
         // ------------------------------------------------------------
-        // 🔴 SHOW RUNNING DIALOG
+        // ðŸ”´ SHOW RUNNING DIALOG
         // ------------------------------------------------------------
         showLab14RunningDialog();
 
         // ------------------------------------------------------------
-        // 3️⃣ RUN STRESS (ASYNC)
+        // 3ï¸âƒ£ RUN STRESS (ASYNC)
         // ------------------------------------------------------------
         ui.post(() -> {
 
@@ -3047,12 +3047,12 @@ private void lab14BatteryHealthStressTest() {
             Float batt0 = pickZone(z0, "battery", "batt", "bat");
 
             logLine();
-            logInfo("LAB 14 — Battery Health Stress Test started.");
+            logInfo("LAB 14 â€” Battery Health Stress Test started.");
             logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
             logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
 
             logInfo(String.format(Locale.US,
-                    "Start conditions: level=%d%%, status=%s, temp=%.1f°C.",
+                    "Start conditions: level=%d%%, status=%s, temp=%.1fÂ°C.",
                     fBiStart.level,
                     fBiStart.status,
                     fBiStart.temperature));
@@ -3073,7 +3073,7 @@ private void lab14BatteryHealthStressTest() {
             startCpuBurn_C_Mode();
 
             // ------------------------------------------------------------
-            // 4️⃣ STOP STRESS
+            // 4ï¸âƒ£ STOP STRESS
             // ------------------------------------------------------------
             ui.postDelayed(() -> {
 
@@ -3116,11 +3116,11 @@ private void lab14BatteryHealthStressTest() {
 
                 if (consumedMah >= 0) {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: %.0f mAh (≈ %.0f mAh/hour).",
+                            "Measured drain: %.0f mAh (â‰ˆ %.0f mAh/hour).",
                             consumedMah, mahPerHour));
                 } else {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: ≈ %.1f%%/hour.",
+                            "Measured drain: â‰ˆ %.1f%%/hour.",
                             pctPerHour));
                 }
 
@@ -3130,7 +3130,7 @@ private void lab14BatteryHealthStressTest() {
 
 
                 // ------------------------------------------------------------
-                // 5️⃣ LAB INTERPRETATION
+                // 5ï¸âƒ£ LAB INTERPRETATION
                 // ------------------------------------------------------------
                 String decision;
                 if (fHealthPct > 0 && fHealthPct < 70) {
@@ -3152,12 +3152,12 @@ private void lab14BatteryHealthStressTest() {
                 }
 
                 // ------------------------------------------------------------
-                // 6️⃣ HEALTH MAP
+                // 6ï¸âƒ£ HEALTH MAP
                 // ------------------------------------------------------------
                 printHealthCheckboxMap(decision);
 
                 // ------------------------------------------------------------
-                // 7️⃣ ANALYTICS
+                // 7ï¸âƒ£ ANALYTICS
                 // ------------------------------------------------------------
                 saveLab14DrainValue(mahPerHour);
                 saveLab14Run();
@@ -3166,7 +3166,7 @@ private void lab14BatteryHealthStressTest() {
                 logLab14Confidence();
 
                 // ------------------------------------------------------------
-                // 🧠 FINAL BATTERY HEALTH SCORE (NEW)
+                // ðŸ§  FINAL BATTERY HEALTH SCORE (NEW)
                 // ------------------------------------------------------------
                 logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
 
@@ -3185,7 +3185,7 @@ private void lab14BatteryHealthStressTest() {
 }
 
 // ===========================================================
-// LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
+// LAB 14 â€” STRESS RUNNING DIALOG (LOCKED 300s)
 // Visual progress + animated dots + segmented bar + EXIT
 // ============================================================
 private void showLab14RunningDialog() {
@@ -3197,7 +3197,7 @@ private void showLab14RunningDialog() {
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
 
-        b.setTitle("LAB 14 — Battery Stress Test");
+        b.setTitle("LAB 14 â€” Battery Stress Test");
         b.setCancelable(false);
 
         LinearLayout root = new LinearLayout(this);
@@ -3233,7 +3233,7 @@ private void showLab14RunningDialog() {
         // Animated dots
         // ------------------------------------------------------------
         lab14DotsView = new TextView(this);
-        lab14DotsView.setText("•");
+        lab14DotsView.setText("â€¢");
         lab14DotsView.setTextColor(0xFF39FF14);
         lab14DotsView.setTextSize(22f);
         lab14DotsView.setGravity(Gravity.CENTER);
@@ -3241,7 +3241,7 @@ private void showLab14RunningDialog() {
         root.addView(lab14DotsView);
 
         // ------------------------------------------------------------
-        // Segmented progress bar (10 × 30s)
+        // Segmented progress bar (10 Ã— 30s)
         // ------------------------------------------------------------
         lab14ProgressBar = new LinearLayout(this);
         lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -3260,7 +3260,7 @@ private void showLab14RunningDialog() {
         root.addView(lab14ProgressBar);
 
         // ------------------------------------------------------------
-        // EXIT / CANCEL BUTTON — RED / GOLD
+        // EXIT / CANCEL BUTTON â€” RED / GOLD
         // ------------------------------------------------------------
         Button btnExit = new Button(this);
         btnExit.setText("Exit test");
@@ -3353,7 +3353,7 @@ private void showLab14RunningDialog() {
                     ui.postDelayed(this, 1000);
                 } else {
                     if (lab14ProgressText != null) {
-                        lab14ProgressText.setText("Finalizing analysis…");
+                        lab14ProgressText.setText("Finalizing analysisâ€¦");
                     }
                 }
             }
@@ -3365,14 +3365,14 @@ private void showLab14RunningDialog() {
 }
 
 // ============================================================
-// LAB 14 — DOTS ANIMATION ENGINE
+// LAB 14 â€” DOTS ANIMATION ENGINE
 // ============================================================
 private void startLab14DotsAnimation() {
 
     ui.post(new Runnable() {
 
         int step = 0;
-        final String[] frames = {"•", "• •", "• • •"};
+        final String[] frames = {"â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢"};
 
         @Override
         public void run() {
@@ -3389,7 +3389,7 @@ private void startLab14DotsAnimation() {
 }
 
 // ===================================================================
-// LAB 14 — AGING INDEX ENGINE
+// LAB 14 â€” AGING INDEX ENGINE
 // Objective trend-based battery aging indicator
 // ===================================================================
 private void computeAndLogAgingIndex(
@@ -3454,7 +3454,7 @@ private double clamp(double v, double min, double max) {
 }
 
 // ===================================================================
-// LAB 14 — CONFIDENCE SCORE (%)
+// LAB 14 â€” CONFIDENCE SCORE (%)
 // Variance-based reliability indicator
 // ===================================================================
 private static final String LAB14_PREFS = "lab14_prefs";
@@ -3645,7 +3645,7 @@ private void logLab14Confidence() {
 }
 
 // ===================================================================
-// BATTERY REAL CAPACITY ENGINE — needed by LAB 14
+// BATTERY REAL CAPACITY ENGINE â€” needed by LAB 14
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
@@ -3664,7 +3664,7 @@ private long getStoredModelCapacity() {
 }
 
 // ===================================================================
-// NORMALIZE mAh / μAh
+// NORMALIZE mAh / Î¼Ah
 // ===================================================================
 private long normalizeMah(long raw) {
     if (raw <= 0) return -1;
@@ -3673,7 +3673,7 @@ private long normalizeMah(long raw) {
 }
 
 // ===================================================================
-// UNIVERSAL BATTERY SCANNER — GEL v7.1
+// UNIVERSAL BATTERY SCANNER â€” GEL v7.1
 // ===================================================================
 private BatteryInfo getBatteryInfo() {
 
@@ -3744,8 +3744,8 @@ private BatteryInfo getBatteryInfo() {
 
      
 //=============================================================
-// LAB 15 — Charging System Diagnostic (SMART AUTO ENGINE)
-// GEL LAB EDITION — UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
+// LAB 15 â€” Charging System Diagnostic (SMART AUTO ENGINE)
+// GEL LAB EDITION â€” UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
 //=============================================================
 private void lab15ChargingSystemSmart() {
 
@@ -3767,7 +3767,7 @@ private void lab15ChargingSystemSmart() {
                     android.R.style.Theme_Material_Dialog_NoActionBar
             );
 
-    b.setTitle("LAB 15 — Connect the charger to the device charging port");
+    b.setTitle("LAB 15 â€” Connect the charger to the device charging port");
     b.setCancelable(false);
 
     LinearLayout root = new LinearLayout(this);
@@ -3779,7 +3779,7 @@ private void lab15ChargingSystemSmart() {
     // STATUS TEXT (NOT TITLE)
     // ------------------------------------------------------------
     lab15StatusText = new TextView(this);
-    lab15StatusText.setText("Waiting for charging connection…");
+    lab15StatusText.setText("Waiting for charging connectionâ€¦");
     lab15StatusText.setTextColor(0xFFAAAAAA);
     lab15StatusText.setTextSize(15f);
     lab15StatusText.setPadding(0, 0, 0, dp(8));
@@ -3789,7 +3789,7 @@ private void lab15ChargingSystemSmart() {
     // DOTS (ANIMATION)
     // ------------------------------------------------------------
     TextView dotsView = new TextView(this);
-    dotsView.setText("•");
+    dotsView.setText("â€¢");
     dotsView.setTextColor(0xFF39FF14);
     dotsView.setTextSize(22f);
     dotsView.setGravity(Gravity.CENTER);
@@ -3808,7 +3808,7 @@ private void lab15ChargingSystemSmart() {
     root.addView(lab15CounterText);
 
     // ------------------------------------------------------------
-    // PROGRESS BAR (6 × 30s = 180s)
+    // PROGRESS BAR (6 Ã— 30s = 180s)
     // ------------------------------------------------------------
     lab15ProgressBar = new LinearLayout(this);
     lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -3826,7 +3826,7 @@ private void lab15ChargingSystemSmart() {
     root.addView(lab15ProgressBar);
 
     // ------------------------------------------------------------
-    // EXIT BUTTON — RED / GOLD
+    // EXIT BUTTON â€” RED / GOLD
     // ------------------------------------------------------------
     lab15ExitBtn = new Button(this);
     lab15ExitBtn.setText("Exit test");
@@ -3866,7 +3866,7 @@ private void lab15ChargingSystemSmart() {
     // LOG HEADER (ORDER LOCKED)
     // ------------------------------------------------------------
     logLine();
-    logInfo("LAB 15 — Charging System Diagnostic (Smart).");
+    logInfo("LAB 15 - Charging System Diagnostic (Smart).");
 
     // ------------------------------------------------------------
     // WAIT FOR CHARGER + MONITOR
@@ -3876,7 +3876,7 @@ private void lab15ChargingSystemSmart() {
     final boolean[] wasCharging = { false };
     final BatteryInfo[] startInfo = { null };
 
-    final String[] dotFrames = { "•", "• •", "• • •" };
+    final String[] dotFrames = { "â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢" };
 
     ui.post(new Runnable() {
 
@@ -3910,7 +3910,7 @@ private void lab15ChargingSystemSmart() {
                 startInfo[0] = getBatteryInfo();
                 
                 lab15BattTempStart = getBatteryTemperature();
-lab15BattTempPeak  = lab15BattTempStart;
+                lab15BattTempPeak  = lab15BattTempStart;
 
                 lab15StatusText.setText("Charging connection detected");
                 lab15StatusText.setTextColor(0xFF39FF14);
@@ -3923,7 +3923,7 @@ lab15BattTempPeak  = lab15BattTempStart;
                             "Battery level: %.1f%%", battPct));
                 if (battTemp > 0)
                     logInfo(String.format(Locale.US,
-                            "Battery temperature: %.1f°C", battTemp));
+                            "Battery temperature: %.1fÂ°C", battTemp));
 
                 logOk("Charging state detected.");
                 logLine();
@@ -3938,7 +3938,7 @@ lab15BattTempPeak  = lab15BattTempStart;
                 if (lastChargeSeenTs[0] > 0 &&
                         nowTs - lastChargeSeenTs[0] > 5000) {
 
-                    lab15StatusText.setText("Charging disconnected — test aborted");
+                    lab15StatusText.setText("Charging disconnected â€” test aborted");
                     lab15StatusText.setTextColor(0xFFFF5555);
 
                     logLine();
@@ -4014,7 +4014,7 @@ logLab15ThermalCorrelation();
                 logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
                 logOk("LAB decision: Charging stability OK.");
 
-                // 🔋 CHARGING STRENGTH ESTIMATION — UNCHANGED
+                // ðŸ”‹ CHARGING STRENGTH ESTIMATION â€” UNCHANGED
                 logLine();
 
                 BatteryInfo endInfo = getBatteryInfo();
@@ -4055,22 +4055,22 @@ logLab15ThermalCorrelation();
 }
 
 // ============================================================
-// LAB 16 — Thermal Snapshot
-// GEL Universal Edition — Internals + Peripherals + Root-Aware
-// READ-ONLY • SNAPSHOT • SAFE
+// LAB 16 â€” Thermal Snapshot
+// GEL Universal Edition â€” Internals + Peripherals + Root-Aware
+// READ-ONLY â€¢ SNAPSHOT â€¢ SAFE
 // ============================================================
 private void lab16ThermalSnapshot() {
 
     logLine();
-    logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
+    logInfo("LAB 16 â€” Thermal Snapshot (ASCII thermal map)");
 
     // ------------------------------------------------------------
-    // 1️⃣ Read generic thermal zones
+    // 1ï¸âƒ£ Read generic thermal zones
     // ------------------------------------------------------------
     Map<String, Float> zones = readThermalZones();
 
     // ------------------------------------------------------------
-    // 2️⃣ Battery ALWAYS from BatteryManager
+    // 2ï¸âƒ£ Battery ALWAYS from BatteryManager
     // ------------------------------------------------------------
     float batt = getBatteryTemperature();
 
@@ -4082,7 +4082,7 @@ private void lab16ThermalSnapshot() {
     }
 
     // ------------------------------------------------------------
-    // 3️⃣ Auto-detect main zones
+    // 3ï¸âƒ£ Auto-detect main zones
     // ------------------------------------------------------------
     Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
     Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
@@ -4092,7 +4092,7 @@ private void lab16ThermalSnapshot() {
     logOk("Thermal Zones found: " + zones.size());
 
     // ------------------------------------------------------------
-    // 4️⃣ ASCII SNAPSHOT MAP
+    // 4ï¸âƒ£ ASCII SNAPSHOT MAP
     // ------------------------------------------------------------
     if (cpu != null)  printZoneAscii("CPU", cpu);
     if (gpu != null)  printZoneAscii("GPU", gpu);
@@ -4103,14 +4103,14 @@ private void lab16ThermalSnapshot() {
     if (pmic != null) printZoneAscii("PMIC", pmic);
 
     // ------------------------------------------------------------
-    // 5️⃣ HARDWARE SUMMARY (Internals + Peripherals)
+    // 5ï¸âƒ£ HARDWARE SUMMARY (Internals + Peripherals)
     // ------------------------------------------------------------
     logLine();
     appendHtml("<b>Hardware Thermal Summary</b>");
     appendHtml("<small><tt>" + escape(buildThermalInfo()) + "</tt></small>");
 
     // ------------------------------------------------------------
-    // 6️⃣ ROOT-ENHANCED INTERNAL VIEW (if available)
+    // 6ï¸âƒ£ ROOT-ENHANCED INTERNAL VIEW (if available)
     // ------------------------------------------------------------
     if (isRooted) {
         logLine();
@@ -4124,35 +4124,35 @@ private void lab16ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars — monospace via HTML)
+// ASCII BAR (100 chars â€” monospace via HTML)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
     String color;
-    if (t < 45f)       color = "🟩";
-    else if (t < 60f)  color = "🟨";
-    else               color = "🟥";
+    if (t < 45f)       color = "ðŸŸ©";
+    else if (t < 60f)  color = "ðŸŸ¨";
+    else               color = "ðŸŸ¥";
 
     float maxT = 80f;
     float pct  = Math.min(1f, t / maxT);
     int bars   = (int) (pct * 100);
 
     StringBuilder sb = new StringBuilder(100);
-    for (int i = 0; i < bars; i++) sb.append("█");
+    for (int i = 0; i < bars; i++) sb.append("â–ˆ");
     while (sb.length() < 100) sb.append(" ");
 
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1fÂ°C", t));
     appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
 }
 
 // ===================================================================
-// THERMAL SENSORS — INTERNAL (Human Readable, Root-Enhanced)
+// THERMAL SENSORS â€” INTERNAL (Human Readable, Root-Enhanced)
 // ===================================================================
 private String buildThermalInternalReport() {
 
     StringBuilder sb = new StringBuilder();
     sb.append("THERMAL SENSORS (INTERNAL)\n");
-    sb.append("──────────────────────────\n");
+    sb.append("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
 
     File thermalDir = new File("/sys/class/thermal");
     if (!thermalDir.exists() || !thermalDir.isDirectory()) {
@@ -4178,7 +4178,7 @@ private String buildThermalInternalReport() {
             sb.append(z.getName())
               .append(" [").append(type).append("]\n")
               .append("  Temp : ")
-              .append(String.format(Locale.US, "%.1f°C", c))
+              .append(String.format(Locale.US, "%.1fÂ°C", c))
               .append("\n");
 
             // Trip points
@@ -4190,7 +4190,7 @@ private String buildThermalInternalReport() {
                 float tc = Float.parseFloat(tp) / 1000f;
                 sb.append("  Trip ").append(i)
                   .append(" (").append(tpt).append(") : ")
-                  .append(String.format(Locale.US, "%.1f°C", tc))
+                  .append(String.format(Locale.US, "%.1fÂ°C", tc))
                   .append("\n");
             }
             sb.append("\n");
@@ -4252,7 +4252,7 @@ private String buildThermalInfo() {
 }
 
 // ============================================================
-// LAB 17 — GEL AUTO Battery Reliability Evaluation
+// LAB 17 â€” GEL AUTO Battery Reliability Evaluation
 // Premium Diagnostic Edition (FINAL FULL BLOCK)
 // ============================================================
 
@@ -4277,8 +4277,8 @@ new Thread(() -> {
         }  
 
         ui.post(() -> {  
-            logInfo("▶ Running Stress Test (Lab 15)...");  
-            logInfo("[██████████░░░░░░░░░░░░░░░░░░] 32%");  
+            logInfo("â–¶ Running Stress Test (Lab 15)...");  
+            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 32%");  
         });  
 
         float before = getCurrentBatteryPercent();  
@@ -4302,8 +4302,8 @@ new Thread(() -> {
         if (drain_mA < 0) drain_mA = 0;  
 
         ui.post(() -> {  
-            logInfo("▶ Calculating drain rate...");  
-            logInfo("[███████████████████████░░░░] 85%");  
+            logInfo("â–¶ Calculating drain rate...");  
+            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘] 85%");  
         });  
 
         // ============================================================  
@@ -4311,8 +4311,8 @@ new Thread(() -> {
         // ============================================================  
         ui.post(() -> {  
             logInfo("");  
-            logInfo("▶ Running Thermal Zones (Lab 16)...");  
-            logInfo("[██████████████████░░░░░░░░░░] 68%");  
+            logInfo("â–¶ Running Thermal Zones (Lab 16)...");  
+            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 68%");  
         });  
 
         Map<String,Float> z0 = readThermalZones();  
@@ -4330,7 +4330,7 @@ new Thread(() -> {
         // ============================================================  
         // 3. VOLTAGE STABILITY  
         // ============================================================  
-        ui.post(() -> logInfo("▶ Calculating voltage stability..."));  
+        ui.post(() -> logInfo("â–¶ Calculating voltage stability..."));  
         float v0 = getBatteryVoltage_mV();  
         Thread.sleep(1500);  
         float v1 = getBatteryVoltage_mV();  
@@ -4340,11 +4340,11 @@ new Thread(() -> {
         // 4. CAPACITY ESTIMATION + PMIC  
         // ============================================================  
         ui.post(() -> {  
-            logInfo("▶ Calculating thermal rise...");  
-            logInfo("▶ Calculating PMIC behavior...");  
-            logInfo("▶ Calculating discharge curve...");  
-            logInfo("▶ Calculating estimated real capacity...");  
-            logInfo("▶ Getting device information...");  
+            logInfo("â–¶ Calculating thermal rise...");  
+            logInfo("â–¶ Calculating PMIC behavior...");  
+            logInfo("â–¶ Calculating discharge curve...");  
+            logInfo("â–¶ Calculating estimated real capacity...");  
+            logInfo("â–¶ Getting device information...");  
         });  
 
         int factory = getFactoryCapacity_mAh();  
@@ -4445,7 +4445,7 @@ new Thread(() -> {
             logLine();  
 
             logInfo(String.format(Locale.US,  
-                    "Stress window: %.1f%% → %.1f%% (drop %.2f%%)",  
+                    "Stress window: %.1f%% â†’ %.1f%% (drop %.2f%%)",  
                     f_before, f_after, f_drop));  
 
             logInfo(String.format(Locale.US,  
@@ -4459,11 +4459,11 @@ new Thread(() -> {
                     f_cap, f_factory));  
 
             logInfo(String.format(Locale.US,  
-                    "3. Voltage Stability: %s (Δ %.1f mV)",  
+                    "3. Voltage Stability: %s (Î” %.1f mV)",  
                     f_voltLbl, f_dv));  
 
             logInfo(String.format(Locale.US,  
-                    "4. Thermal Rise: %s (CPU +%.1f°C, BATT +%.1f°C)",  
+                    "4. Thermal Rise: %s (CPU +%.1fÂ°C, BATT +%.1fÂ°C)",  
                     f_therm, f_dCPU, f_dBATT));  
 
             logInfo(String.format(Locale.US,  
@@ -4474,12 +4474,12 @@ new Thread(() -> {
                     "Final Battery Health Score: %d%% (%s)",  
                     f_score, f_cat));  
 
-            // Checkbox map with NEON ✔ and white labels  
-            appendHtml("✔ <font color='#39FF14'>Strong</font>");  
-            appendHtml("☐ <font color='#FFFFFF'>Excellent</font>");  
-            appendHtml("☐ <font color='#FFFFFF'>Very good</font>");  
-            appendHtml("☐ <font color='#FFFFFF'>Normal</font>");  
-            appendHtml("☐ <font color='#FFFFFF'>Weak</font>");  
+            // Checkbox map with NEON âœ” and white labels  
+            appendHtml("âœ” <font color='#39FF14'>Strong</font>");  
+            appendHtml("â˜ <font color='#FFFFFF'>Excellent</font>");  
+            appendHtml("â˜ <font color='#FFFFFF'>Very good</font>");  
+            appendHtml("â˜ <font color='#FFFFFF'>Normal</font>");  
+            appendHtml("â˜ <font color='#FFFFFF'>Weak</font>");  
         });  
 
     } catch (Exception e) {  
@@ -4511,11 +4511,11 @@ return 5000;
 }                       
     
 // ============================================================ // ============================================================
-// LABS 18–21: STORAGE & PERFORMANCE
+// LABS 18â€“21: STORAGE & PERFORMANCE
 // ============================================================
 private void lab18StorageSnapshot() {
 logLine();
-logInfo("LAB 18 — Internal Storage Snapshot.");
+logInfo("LAB 18 â€” Internal Storage Snapshot.");
 try {
 StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
 long total = s.getBlockCountLong() * s.getBlockSizeLong();
@@ -4527,9 +4527,9 @@ logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
                 + " (free " + humanBytes(free) + ", " + pctFree + "%).");  
 
         if (pctFree < 5)  
-            logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");  
+            logError("Free space below 5% â€” high risk of crashes, failed updates and slow UI.");  
         else if (pctFree < 10)  
-            logWarn("Free space below 10% — performance and update issues likely.");  
+            logWarn("Free space below 10% â€” performance and update issues likely.");  
         else  
             logOk("Internal storage level is acceptable for daily usage.");  
     } catch (Exception e) {  
@@ -4539,7 +4539,7 @@ logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
 
 private void lab19AppsFootprint() {  
     logLine();  
-    logInfo("LAB 19 — Installed Apps Footprint.");  
+    logInfo("LAB 19 â€” Installed Apps Footprint.");  
     try {  
         PackageManager pm = getPackageManager();  
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);  
@@ -4558,9 +4558,9 @@ private void lab19AppsFootprint() {
         logInfo("Total packages: " + apps.size());  
 
         if (userApps > 120)  
-            logError("Very high number of user apps — strong risk of background drain and lag.");  
+            logError("Very high number of user apps â€” strong risk of background drain and lag.");  
         else if (userApps > 80)  
-            logWarn("High number of user apps — possible performance impact.");  
+            logWarn("High number of user apps â€” possible performance impact.");  
         else  
             logOk("App footprint is within a normal range.");  
     } catch (Exception e) {  
@@ -4570,7 +4570,7 @@ private void lab19AppsFootprint() {
 
 private void lab20RamSnapshot() {  
     logLine();  
-    logInfo("LAB 20 — Live RAM Snapshot.");  
+    logInfo("LAB 20 â€” Live RAM Snapshot.");  
     try {  
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
         if (am == null) {  
@@ -4584,9 +4584,9 @@ private void lab20RamSnapshot() {
         int pct = (int) ((free * 100L) / total);  
         logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");  
         if (pct < 10)  
-            logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");  
+            logError("Very low free RAM (<10%) â€” expect heavy lag and aggressive app killing.");  
         else if (pct < 20)  
-            logWarn("Low free RAM (10–20%) — borderline under load.");  
+            logWarn("Low free RAM (10â€“20%) â€” borderline under load.");  
         else  
             logOk("RAM level is acceptable for normal usage at this moment.");  
     } catch (Exception e) {  
@@ -4596,29 +4596,29 @@ private void lab20RamSnapshot() {
 
 private void lab21UptimeHints() {  
     logLine();  
-    logInfo("LAB 21 — Uptime / Reboot History Hints.");  
+    logInfo("LAB 21 â€” Uptime / Reboot History Hints.");  
     long upMs = SystemClock.elapsedRealtime();  
     String upStr = formatUptime(upMs);  
     logInfo("System uptime: " + upStr);  
     if (upMs < 2 * 60 * 60 * 1000L) {  
-        logWarn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");  
+        logWarn("Device was rebooted recently (<2 hours) â€” some issues may already be masked by the reboot.");  
     } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {  
-        logWarn("Uptime above 7 days — recommend a reboot before deep diagnostics.");  
+        logWarn("Uptime above 7 days â€” recommend a reboot before deep diagnostics.");  
     } else {  
         logOk("Uptime is within a reasonable range for diagnostics.");  
     }  
 }  
 
 // ============================================================  
-// LABS 22–25: SECURITY & SYSTEM HEALTH  
+// LABS 22â€“25: SECURITY & SYSTEM HEALTH  
 // ============================================================  
 // ============================================================
 
-// LAB 22 — Screen Lock / Biometrics Checklist (auto-detect + manual)
+// LAB 22 â€” Screen Lock / Biometrics Checklist (auto-detect + manual)
 // ============================================================
 private void lab22ScreenLock() {
 logLine();
-logInfo("LAB 22 — Screen Lock / Biometrics Checklist");
+logInfo("LAB 22 â€” Screen Lock / Biometrics Checklist");
 
 try {  
     android.app.KeyguardManager km =  
@@ -4630,11 +4630,11 @@ try {
         if (secure) {  
             logOk("Device reports SECURE lock method (PIN / Pattern / Password).");  
         } else {  
-            logError("Device has NO secure lock method — phone is UNPROTECTED!");  
+            logError("Device has NO secure lock method â€” phone is UNPROTECTED!");  
             logWarn("Anyone can access data without authentication.");  
         }  
     } else {  
-        logWarn("KeyguardManager not available — cannot read lock status.");  
+        logWarn("KeyguardManager not available â€” cannot read lock status.");  
     }  
 } catch (Exception e) {  
     logWarn("Screen lock detection failed: " + e.getMessage());  
@@ -4642,18 +4642,18 @@ try {
 
 // Manual guidance (kept for technician)  
 logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");  
-logWarn("If the device is left with no lock at all — higher risk for data and account theft.");  
+logWarn("If the device is left with no lock at all â€” higher risk for data and account theft.");  
 logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
 
 }
 
 // ============================================================
 
-// LAB 23 — Security Patch & Play Protect (auto + manual)
+// LAB 23 â€” Security Patch & Play Protect (auto + manual)
 // ============================================================
 private void lab23SecurityPatchManual() {
 logLine();
-logInfo("LAB 23 — Security Patch & Play Protect Check");
+logInfo("LAB 23 â€” Security Patch & Play Protect Check");
 
 // ----------------------------  
 // 1) Security Patch Level  
@@ -4670,7 +4670,7 @@ try {
 }  
 
 // ----------------------------  
-// 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT  
+// 2) Play Protect Detection â€” BEST POSSIBLE WITHOUT ROOT  
 // ----------------------------  
 try {  
     PackageManager pm = getPackageManager();  
@@ -4683,7 +4683,7 @@ try {
     } catch (Exception ignored) {}  
 
     if (!gmsPresent) {  
-        logError("Google Play Services missing — Play Protect NOT available.");  
+        logError("Google Play Services missing â€” Play Protect NOT available.");  
     } else {  
         // Check Verify Apps setting (Google verifier)  
         int verify = -1;  
@@ -4700,7 +4700,7 @@ try {
         } else if (verify == 0) {  
             logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");  
         } else {  
-            // Fallback — detect if the activity exists  
+            // Fallback â€” detect if the activity exists  
             Intent protectIntent = new Intent();  
             protectIntent.setClassName(  
                     "com.google.android.gms",  
@@ -4710,7 +4710,7 @@ try {
             if (protectIntent.resolveActivity(pm) != null) {  
                 logOk("Play Protect module detected (activity present).");  
             } else {  
-                logWarn("Play Protect module not fully detected — OEM variant or restricted build.");  
+                logWarn("Play Protect module not fully detected â€” OEM variant or restricted build.");  
             }  
         }  
     }  
@@ -4719,20 +4719,20 @@ try {
 }  
 
 // MANUAL GUIDANCE (kept for technicians)  
-logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");  
-logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");  
-logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
+logInfo("1) Open Android Settings â†’ About phone â†’ Android version â†’ Security patch level.");  
+logWarn("If the patch level is very old compared to current date â€” increased vulnerability risk.");  
+logInfo("2) In Google Play Store â†’ Play Protect â†’ verify scanning is enabled and up to date.");
 
 }
 
 // ============================================================
 
-// LAB 24 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
+// LAB 24 â€” Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
 // GEL Security v3.1 (Realtime Snapshot)
 // ============================================================
 private void lab24DevOptions() {
 logLine();
-logInfo("LAB 24 — Developer Options / ADB Risk Note (Realtime).");
+logInfo("LAB 24 â€” Developer Options / ADB Risk Note (Realtime).");
 
 int risk = 0;  
 
@@ -4751,7 +4751,7 @@ try {
     logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
 
     if (usbDebug) {  
-        logWarn("USB Debugging ENABLED — physical access risk.");  
+        logWarn("USB Debugging ENABLED â€” physical access risk.");  
         risk += 30;  
     } else {  
         logOk("USB Debugging is OFF.");  
@@ -4789,31 +4789,31 @@ try {
 }  
 
 // ============================================================  
-// 3) ADB OVER WIFI (TCP/IP mode — port 5555)  
+// 3) ADB OVER WIFI (TCP/IP mode â€” port 5555)  
 // ============================================================  
 boolean adbWifi = isPortOpen(5555, 200);  
 
 logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
 
 if (adbWifi) {  
-    logError("ADB over Wi-Fi ACTIVE — remote debugging possible on same network.");  
+    logError("ADB over Wi-Fi ACTIVE â€” remote debugging possible on same network.");  
     risk += 40;  
 } else {  
     logOk("ADB over Wi-Fi is OFF.");  
 }  
 
 // ============================================================  
-// 4) ADB PAIRING MODE (Android 11–14 typical ports)  
+// 4) ADB PAIRING MODE (Android 11â€“14 typical ports)  
 // ============================================================  
 boolean adbPairing =  
         isPortOpen(3700, 200) ||   // some OEM pairing  
         isPortOpen(7460, 200) ||   // pairing service  
-        scanPairingPortRange();    // 7460–7490  
+        scanPairingPortRange();    // 7460â€“7490  
 
 logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
 
 if (adbPairing) {  
-    logError("ADB Pairing is ACTIVE — device discoverable for pairing.");  
+    logError("ADB Pairing is ACTIVE â€” device discoverable for pairing.");  
     risk += 25;  
 } else {  
     logOk("ADB Pairing is OFF.");  
@@ -4840,34 +4840,34 @@ logLine();
 logInfo("Recommended Actions:");  
 
 if (usbDebug || devOpts) {  
-    logWarn("• Disable Developer Options / USB Debugging:");  
-    logInfo("  Settings → System → Developer options → OFF");  
-    logInfo("  USB debugging → OFF");  
+    logWarn("â€¢ Disable Developer Options / USB Debugging:");  
+    logInfo("  Settings â†’ System â†’ Developer options â†’ OFF");  
+    logInfo("  USB debugging â†’ OFF");  
 } else {  
-    logOk("• Developer options & USB debugging look safe.");  
+    logOk("â€¢ Developer options & USB debugging look safe.");  
 }  
 
 if (adbWifi) {  
-    logError("• ADB over Wi-Fi must be disabled:");  
-    logInfo("  Developer options → Wireless debugging → OFF");  
+    logError("â€¢ ADB over Wi-Fi must be disabled:");  
+    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
     logInfo("  Or reboot to clear tcpip mode.");  
 } else {  
-    logOk("• Wireless debugging is not active.");  
+    logOk("â€¢ Wireless debugging is not active.");  
 }  
 
 if (adbPairing) {  
-    logError("• Turn OFF ADB Pairing / Wireless debugging:");  
-    logInfo("  Developer options → Wireless debugging → OFF");  
+    logError("â€¢ Turn OFF ADB Pairing / Wireless debugging:");  
+    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
 } else {  
-    logOk("• ADB Pairing is not active.");  
+    logOk("â€¢ ADB Pairing is not active.");  
 }  
 
 if (risk >= 60)  
-    logError("⚠ Very high risk — disable ADB features immediately!");  
+    logError("âš  Very high risk â€” disable ADB features immediately!");  
 else if (risk >= 30)  
-    logWarn("⚠ Partial exposure — review ADB settings.");  
+    logWarn("âš  Partial exposure â€” review ADB settings.");  
 else  
-    logOk("✔ Risk level acceptable.");
+    logOk("âœ” Risk level acceptable.");
 
 }
 
@@ -4875,18 +4875,18 @@ else
 // UI BUBBLES (GEL)
 // ============================================================
 private String bubble(boolean on) {
-return on ? "🔴" : "🟢";
+return on ? "ðŸ”´" : "ðŸŸ¢";
 }
 
 private String riskBubble(int risk) {
-if (risk <= 10) return "🟢";
-if (risk <= 30) return "🟡";
-if (risk <= 60) return "🟠";
-return "🔴";
+if (risk <= 10) return "ðŸŸ¢";
+if (risk <= 30) return "ðŸŸ¡";
+if (risk <= 60) return "ðŸŸ ";
+return "ðŸ”´";
 }
 
 // ============================================================
-// HELPERS — PORT CHECK (LOCALHOST)
+// HELPERS â€” PORT CHECK (LOCALHOST)
 // ============================================================
 private boolean isPortOpen(int port, int timeoutMs) {
 Socket s = null;
@@ -4901,7 +4901,7 @@ if (s != null) try { s.close(); } catch (Exception ignored) {}
 }
 }
 
-// Scan pairing port range 7460–7490 (best-effort)
+// Scan pairing port range 7460â€“7490 (best-effort)
 private boolean scanPairingPortRange() {
 for (int p = 7460; p <= 7490; p++) {
 if (isPortOpen(p, 80)) return true;
@@ -4911,12 +4911,12 @@ return false;
 
 // ============================================================
 
-// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
-// GEL Universal Edition — NO external libs
+// LAB 25 â€” Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// GEL Universal Edition â€” NO external libs
 // ============================================================
 private void lab25RootSuspicion() {
 logLine();
-logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
+logInfo("LAB 25 â€” Root / Bootloader Integrity Scan (AUTO).");
 
 // ---------------------------  
 // (1) ROOT DETECTION  
@@ -5078,7 +5078,7 @@ if (lab25_fileExists("/data/local/bootanimation.zip")) {
     animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
 }  
 
-// If system bootanimation missing → suspicious ROM  
+// If system bootanimation missing â†’ suspicious ROM  
 boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
                   lab25_fileExists("/product/media/bootanimation.zip") ||  
                   lab25_fileExists("/oem/media/bootanimation.zip") ||  
@@ -5101,7 +5101,7 @@ logInfo("Root Scan:");
 if (rootFindings.isEmpty()) {  
     logOk("No strong root traces detected.");  
 } else {  
-    for (String s : rootFindings) logWarn("• " + s);  
+    for (String s : rootFindings) logWarn("â€¢ " + s);  
 }  
 
 // Print BOOTLOADER section  
@@ -5110,7 +5110,7 @@ logInfo("Bootloader / Verified Boot:");
 if (blFindings.isEmpty()) {  
     logOk("No bootloader anomalies detected.");  
 } else {  
-    for (String s : blFindings) logWarn("• " + s);  
+    for (String s : blFindings) logWarn("â€¢ " + s);  
 }  
 
 // Print ANIMATION section  
@@ -5119,7 +5119,7 @@ logInfo("Boot Animation / Splash:");
 if (animFindings.isEmpty()) {  
     logOk("No custom animation traces detected.");  
 } else {  
-    for (String s : animFindings) logWarn("• " + s);  
+    for (String s : animFindings) logWarn("â€¢ " + s);  
 }  
 
 // Verdict  
@@ -5140,7 +5140,7 @@ logOk("Lab 25 finished.");
 }
 
 // ============================================================
-// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
+// LAB 25 â€” INTERNAL HELPERS (unique names to avoid conflicts)
 // ============================================================
 private boolean lab25_fileExists(String path) {
 try { return new File(path).exists(); } catch (Throwable t) { return false; }
@@ -5210,16 +5210,16 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 }
 }
 // ============================================================
-// LABS 26–29: ADVANCED / LOGS
+// LABS 26â€“29: ADVANCED / LOGS
 // ============================================================
 
 // ============================================================
-// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// LAB 26 â€” GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
 private void lab26CrashHistory() {
 
 logLine();  
-logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
+logInfo("LAB 26 â€” GEL Crash Intelligence (AUTO)");  
 
 int crashCount = 0;  
 int anrCount = 0;  
@@ -5229,7 +5229,7 @@ Map<String, Integer> appEvents = new HashMap<>(); // Group per app
 List<String> details = new ArrayList<>();  
 
 // ============================================================  
-// (A) Android 11+ — Process Exit Reasons  
+// (A) Android 11+ â€” Process Exit Reasons  
 // ============================================================  
 try {  
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {  
@@ -5244,11 +5244,11 @@ try {
 
                     if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {  
                         crashCount++;  
-                        details.add("CRASH: " + app + " — " + e.shortMsg);  
+                        details.add("CRASH: " + app + " â€” " + e.shortMsg);  
                     }   
                     else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {  
                         anrCount++;  
-                        details.add("ANR: " + app + " — " + e.shortMsg);  
+                        details.add("ANR: " + app + " â€” " + e.shortMsg);  
                     }  
                 }  
             }  
@@ -5257,7 +5257,7 @@ try {
 } catch (Exception ignored) {}  
 
 // ============================================================  
-// (B) DropBox crash logs — legacy Android sources  
+// (B) DropBox crash logs â€” legacy Android sources  
 // ============================================================  
 try {  
     DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
@@ -5306,9 +5306,9 @@ if (risk > 100) risk = 100;
 
 // COLOR INDICATOR  
 String riskColor =  
-        (risk <= 20) ? "🟩" :  
-        (risk <= 50) ? "🟨" :  
-        (risk <= 80) ? "🟧" : "🟥";  
+        (risk <= 20) ? "ðŸŸ©" :  
+        (risk <= 50) ? "ðŸŸ¨" :  
+        (risk <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
 
 logInfo("Crash events: " + crashCount);  
 logInfo("ANR events: " + anrCount);  
@@ -5328,11 +5328,11 @@ if (!appEvents.isEmpty()) {
             .sorted((a, b) -> b.getValue() - a.getValue())  
             .limit(5)  
             .forEach(e -> {  
-                String c = (e.getValue() >= 10) ? "🟥" :  
-                           (e.getValue() >= 5)  ? "🟧" :  
-                           (e.getValue() >= 2)  ? "🟨" :  
-                                                  "🟩";  
-                logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");  
+                String c = (e.getValue() >= 10) ? "ðŸŸ¥" :  
+                           (e.getValue() >= 5)  ? "ðŸŸ§" :  
+                           (e.getValue() >= 2)  ? "ðŸŸ¨" :  
+                                                  "ðŸŸ©";  
+                logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");  
             });  
 }  
 
@@ -5378,12 +5378,12 @@ BufferedReader br = new BufferedReader(new InputStreamReader(is));
 }
 
 // ============================================================
-// LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// LAB 27 â€” App Permissions & Privacy (FULL AUTO + RISK SCORE)
 // ============================================================
 private void lab27PermissionsPrivacy() {
 
 logLine();  
-logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
+logInfo("LAB 27 â€” App Permissions & Privacy (AUTO scan)");  
 
 PackageManager pm = getPackageManager();  
 if (pm == null) {  
@@ -5444,7 +5444,7 @@ try {
             if (granted) {  
                 appDangerCount++;  
                 appScore += weight;  
-                sb.append("• ").append(shortPerm(perm)).append(" (granted)\n");  
+                sb.append("â€¢ ").append(shortPerm(perm)).append(" (granted)\n");  
             }  
         }  
 
@@ -5461,12 +5461,12 @@ try {
 
                 String appLabel = safeLabel(pm, p.packageName);  
                 String color =  
-                        (appScore >= 60) ? "🟥" :  
-                        (appScore >= 30) ? "🟧" :  
-                        (appScore >= 15) ? "🟨" : "🟩";  
+                        (appScore >= 60) ? "ðŸŸ¥" :  
+                        (appScore >= 30) ? "ðŸŸ§" :  
+                        (appScore >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
 
                 details.add(color + " " + appLabel + " (" + p.packageName + ")"  
-                        + " — Risk=" + appScore + "\n" + sb.toString());  
+                        + " â€” Risk=" + appScore + "\n" + sb.toString());  
             }  
         }  
     }  
@@ -5483,9 +5483,9 @@ try {
 // ============================================================  
 int riskPct = Math.min(100, riskTotal); // cap  
 String riskColor =  
-        (riskPct <= 20) ? "🟩" :  
-        (riskPct <= 50) ? "🟨" :  
-        (riskPct <= 80) ? "🟧" : "🟥";  
+        (riskPct <= 20) ? "ðŸŸ©" :  
+        (riskPct <= 50) ? "ðŸŸ¨" :  
+        (riskPct <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
 
 logInfo("Apps scanned: " + totalApps);  
 logInfo("Dangerous permissions granted (total): " + dangTotal);  
@@ -5505,12 +5505,12 @@ if (!appRisk.isEmpty()) {
             .limit(8)  
             .forEach(e -> {  
                 String c =  
-                        (e.getValue() >= 60) ? "🟥" :  
-                        (e.getValue() >= 30) ? "🟧" :  
-                        (e.getValue() >= 15) ? "🟨" : "🟩";  
+                        (e.getValue() >= 60) ? "ðŸŸ¥" :  
+                        (e.getValue() >= 30) ? "ðŸŸ§" :  
+                        (e.getValue() >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
 
                 logInfo(" " + c + " " + safeLabel(pm, e.getKey())  
-                        + " — Risk " + e.getValue());  
+                        + " â€” Risk " + e.getValue());  
             });  
 }  
 
@@ -5594,14 +5594,14 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// LAB 28 â€” Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
 // Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
 // Security + Privacy + Root + Stability into final scores.
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab28CombineFindings() {
 logLine();
-logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
+logInfo("LAB 28 â€” Auto Final Diagnosis Summary (FULL AUTO)");
 
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  
@@ -5700,59 +5700,59 @@ logInfo("AUTO Breakdown:");
 // Thermals  
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
-    logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "%.1f°C", battTemp));  
+    logWarn("â€¢ No thermal zones readable. Using Battery temp only: " +  
+            String.format(Locale.US, "%.1fÂ°C", battTemp));  
 } else {  
-    logInfo("• Zones=" + zones.size() +  
-            " | max=" + fmt1(maxThermal) + "°C" +  
-            " | avg=" + fmt1(avgThermal) + "°C");  
-    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");  
-    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");  
-    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");  
-    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");  
-    logInfo("• Battery=" + fmt1(battTemp) + "°C");  
+    logInfo("â€¢ Zones=" + zones.size() +  
+            " | max=" + fmt1(maxThermal) + "Â°C" +  
+            " | avg=" + fmt1(avgThermal) + "Â°C");  
+    if (cpu != null)  logInfo("â€¢ CPU="  + fmt1(cpu)  + "Â°C");  
+    if (gpu != null)  logInfo("â€¢ GPU="  + fmt1(gpu)  + "Â°C");  
+    if (pmic != null) logInfo("â€¢ PMIC=" + fmt1(pmic) + "Â°C");  
+    if (skin != null) logInfo("â€¢ Skin=" + fmt1(skin) + "Â°C");  
+    logInfo("â€¢ Battery=" + fmt1(battTemp) + "Â°C");  
 }  
 
 // Battery  
 logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
-logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
-        " | Temp=" + fmt1(battTemp) + "°C | Charging=" + charging);  
+logInfo("â€¢ Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
+        " | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);  
 
 // Storage  
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
-logInfo("• Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
+logInfo("â€¢ Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
         " / " + humanBytes(st.totalBytes));  
 
 // Apps  
 logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");  
-logInfo("• User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
+logInfo("â€¢ User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
         " | Total=" + ap.totalApps);  
 
 // RAM  
 logInfo("RAM: " + ramFlag + " " + ramScore + "%");  
-logInfo("• Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
+logInfo("â€¢ Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
         humanBytes(rm.totalBytes) + ")");  
 
 // Stability  
 logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");  
-logInfo("• Uptime=" + formatUptime(upMs));  
+logInfo("â€¢ Uptime=" + formatUptime(upMs));  
 if (upMs < 2 * 60 * 60 * 1000L)  
-    logWarn("• Recent reboot detected (<2h) — possible instability masking.");  
+    logWarn("â€¢ Recent reboot detected (<2h) â€” possible instability masking.");  
 else if (upMs > 7L * 24L * 60L * 60L * 1000L)  
-    logWarn("• Long uptime (>7d) — recommend reboot before deep servicing.");  
+    logWarn("â€¢ Long uptime (>7d) â€” recommend reboot before deep servicing.");  
 
 // Security  
 logInfo("Security: " + securityFlag + " " + securityScore + "%");  
-logInfo("• Lock secure=" + sec.lockSecure);  
-logInfo("• Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
-logInfo("• ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
+logInfo("â€¢ Lock secure=" + sec.lockSecure);  
+logInfo("â€¢ Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
+logInfo("â€¢ ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
         " | DevOptions=" + sec.devOptionsOn);  
-if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");  
-if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");  
+if (sec.rootSuspected) logWarn("â€¢ Root suspicion flags detected.");  
+if (sec.testKeys) logWarn("â€¢ Build signed with test-keys (custom ROM risk).");  
 
 // Privacy  
 logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");  
-logInfo("• Dangerous perms on user apps: " +  
+logInfo("â€¢ Dangerous perms on user apps: " +  
         "Location=" + pr.userAppsWithLocation +  
         ", Mic=" + pr.userAppsWithMic +  
         ", Camera=" + pr.userAppsWithCamera +  
@@ -5769,8 +5769,8 @@ logInfo("Security Score:      " + securityScore + "% " + securityFlag);
 logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);  
 
 String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);  
-if (verdict.startsWith("🟩")) logOk(verdict);  
-else if (verdict.startsWith("🟨")) logWarn(verdict);  
+if (verdict.startsWith("ðŸŸ©")) logOk(verdict);  
+else if (verdict.startsWith("ðŸŸ¨")) logWarn(verdict);  
 else logError(verdict);  
 
 logOk("Lab 28 finished.");
@@ -6125,18 +6125,18 @@ return s;
 }
 
 private String colorFlagFromScore(int s) {
-if (s >= 80) return "🟩";
-if (s >= 55) return "🟨";
-return "🟥";
+if (s >= 80) return "ðŸŸ©";
+if (s >= 55) return "ðŸŸ¨";
+return "ðŸŸ¥";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
 int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
 if (worst >= 80)
-return "🟩 Device is healthy — no critical issues detected.";
+return "ðŸŸ© Device is healthy â€” no critical issues detected.";
 if (worst >= 55)
-return "🟨 Device has moderate risks — recommend service check.";
-return "🟥 Device is NOT healthy — immediate servicing recommended.";
+return "ðŸŸ¨ Device has moderate risks â€” recommend service check.";
+return "ðŸŸ¥ Device is NOT healthy â€” immediate servicing recommended.";
 }
 
 private String fmt1(float v) {
@@ -6144,14 +6144,14 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
-// Does NOT modify GELServiceLog — only reads it.
+// LAB 29 â€” FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// Does NOT modify GELServiceLog â€” only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
 private void lab29FinalSummary() {
 
     logLine();
-    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
+    logInfo("LAB 29 â€” Final Technician Summary (READ-ONLY)");
 
     // ------------------------------------------------------------
     // 1) READ FULL LOG (from all labs)
@@ -6172,10 +6172,10 @@ private void lab29FinalSummary() {
     for (String l : lines) {
         String low = l.toLowerCase(Locale.US);
 
-        if (low.contains("⚠") || low.contains("warning")) {
+        if (low.contains("âš ") || low.contains("warning")) {
             warnings.append(l).append("\n");
         }
-        if (low.contains("❌") || low.contains("error")) {
+        if (low.contains("âŒ") || low.contains("error")) {
             warnings.append(l).append("\n");
         }
     }
@@ -6204,7 +6204,7 @@ private void lab29FinalSummary() {
 }
 
 // ============================================================
-// ENABLE EXISTING EXPORT BUTTON — No duplicates!
+// ENABLE EXISTING EXPORT BUTTON â€” No duplicates!
 // ============================================================
 private void enableSingleExportButton() {
 
@@ -6230,7 +6230,7 @@ private void enableSingleExportButton() {
 }
 
 /* ============================================================
-   Earpiece test tone — 220Hz (CALL PATH SAFE)
+   Earpiece test tone â€” 220Hz (CALL PATH SAFE)
    ============================================================ */
 private void playEarpieceTestTone220Hz(int durationMs) {
     try {
@@ -6289,38 +6289,38 @@ private void playEarpieceTestTone220Hz(int durationMs) {
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode == 6006) { // LAB 6 — Touch Grid
+    if (requestCode == 6006) { // LAB 6 â€” Touch Grid
         if (resultCode == RESULT_OK)
-            logOk("LAB 6 — Touch grid passed (all zones responsive)");
+            logOk("LAB 6 â€” Touch grid passed (all zones responsive)");
         else
-            logError("LAB 6 — Touch grid failed (dead zone suspected)");
+            logError("LAB 6 â€” Touch grid failed (dead zone suspected)");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 7007) { // LAB 7 — Rotation
+    if (requestCode == 7007) { // LAB 7 â€” Rotation
         if (resultCode == RESULT_OK)
-            logOk("LAB 7 — Rotation detected via sensors");
+            logOk("LAB 7 â€” Rotation detected via sensors");
         else
-            logError("LAB 7 — No rotation detected");
+            logError("LAB 7 â€” No rotation detected");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 8008) { // LAB 8 — Proximity
+    if (requestCode == 8008) { // LAB 8 â€” Proximity
         if (resultCode == RESULT_OK)
-            logOk("LAB 8 — Proximity sensor responded correctly");
+            logOk("LAB 8 â€” Proximity sensor responded correctly");
         else
-            logError("LAB 8 — No proximity response detected");
+            logError("LAB 8 â€” No proximity response detected");
 
         enableSingleExportButton();
     }
 }
 
 // ============================================================
-// LAB 15 SAFETY CLEANUP — DO NOT REMOVE
+// LAB 15 SAFETY CLEANUP â€” DO NOT REMOVE
 // ============================================================
 @Override
 protected void onDestroy() {

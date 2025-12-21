@@ -212,6 +212,11 @@ private static class BatteryInfo {
     int level = -1;
     float temperature = Float.NaN;
     String status = "Unknown";
+
+    // 🔥 REQUIRED — used by LAB 14 / drain logic
+    long currentChargeMah = -1;
+
+    // capacity estimation
     long estimatedFullMah = -1;
     String source = "Unknown";
 }
@@ -3644,20 +3649,6 @@ private void logLab14Confidence() {
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
-
-// ===================================================================
-// BATTERY DATA STRUCT
-// ===================================================================
-private static class BatteryInfo {
-
-    int level = -1;
-    String status = "Unknown";
-    float temperature = 0f;
-
-    long currentChargeMah = -1;
-    long estimatedFullMah = -1;
-    String source = "Unknown";
-}
 
 // ===================================================================
 // MODEL CAPACITY HELPERS

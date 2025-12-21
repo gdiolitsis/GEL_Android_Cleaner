@@ -2921,6 +2921,12 @@ logFinalBatteryHealthScore(
 // ------------------------------------------------------------
 lab14Running = false;
 
+} catch (Throwable t) {
+    logError("LAB 14 failed: " + t.getMessage());
+    lab14Running = false;
+    dismissLab14RunningDialog();
+}
+
 // ===========================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
 // Visual progress + animated dots + segmented bar + EXIT

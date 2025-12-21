@@ -174,6 +174,40 @@ private static class TelephonySnapshot {
     boolean hasInternet = false;
 }
 
+// ================= SNAPSHOTS CONTAINERS =================
+
+private static class StorageSnapshot {
+    long totalBytes, freeBytes, usedBytes;
+    int pctFree;
+}
+
+private static class AppsSnapshot {
+    int userApps, systemApps, totalApps;
+}
+
+private static class RamSnapshot {
+    long totalBytes, freeBytes;
+    int pctFree;
+}
+
+private static class SecuritySnapshot {
+    boolean lockSecure;
+    boolean adbUsbOn;
+    boolean adbWifiOn;
+    boolean devOptionsOn;
+    boolean rootSuspected;
+    boolean testKeys;
+    String securityPatch;
+}
+
+private static class PrivacySnapshot {
+    int userAppsWithLocation;
+    int userAppsWithMic;
+    int userAppsWithCamera;
+    int userAppsWithSms;
+    int totalUserAppsChecked;
+}
+
     // ============================================================
     // CORE UI
     // ============================================================
@@ -1354,22 +1388,7 @@ private static class ThermalGroupReading {
 }
 
 // ------------------------------------------------------------
-// 4) Thermal summary container
-// ------------------------------------------------------------
-private static class ThermalSummary {
-    int zoneCount;
-    int coolingDeviceCount;
-
-    ThermalGroupReading batteryMain;
-    ThermalGroupReading batteryShell;
-    ThermalGroupReading pmic;
-    ThermalGroupReading charger;
-    ThermalGroupReading modemMain;
-    ThermalGroupReading modemAux;
-}
-
-// ------------------------------------------------------------
-// 5) Cooling devices enumeration
+// 4) Cooling devices enumeration
 // ------------------------------------------------------------
 private void appendHardwareCoolingDevices(StringBuilder sb) {
     try {

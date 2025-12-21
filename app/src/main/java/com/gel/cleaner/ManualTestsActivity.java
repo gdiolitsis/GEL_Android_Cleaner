@@ -1119,6 +1119,21 @@ private void printHealthCheckboxMap(String decision) {
     }
 }
 
+// ----------------------------------------------------
+// PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
+// ----------------------------------------------------
+private void updateChargingPeakTemperature() {
+
+    if (!isChargingNow()) return;
+
+    float tNow = getBatteryTemperature();
+    if (tNow > 0 && !Float.isNaN(tNow)) {
+        if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
+            lab15BattTempPeak = tNow;
+        }
+    }
+}
+
 // ============================================================
 // LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
 // ============================================================
@@ -5878,17 +5893,6 @@ private boolean isChargingNow() {
     }
 }
 
-// ----------------------------------------------------
-// PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
-// ----------------------------------------------------
-if (isChargingNow()) {
-    float tNow = getBatteryTemperature();
-    if (tNow > 0 && !Float.isNaN(tNow)) {
-        if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
-            lab15BattTempPeak = tNow;
-        }
-    }
-}
 
 private float maxOf(Float a, Float b, Float c, Float d, float e) {
 float m = e;

@@ -1135,6 +1135,181 @@ private void updateChargingPeakTemperature() {
 }
 
 // ============================================================
+// THERMAL HELPERS — REQUIRED (SCAN + FALLBACK + FORMAT)
+// ============================================================
+
+private boolean isRooted = false; // fix: missing symbol
+
+// ------------------------------------------------------------
+// Safe long read
+// ------------------------------------------------------------
+private long readLongSafe(File f) {
+    BufferedReader br = null;
+    try {
+        if (f == null || !f.exists()) return Long.MIN_VALUE;
+        br = new BufferedReader(new FileReader(f));
+        String line = br.readLine();
+        if (line == null) return Long.MIN_VALUE;
+        line = line.trim();
+        if (line.isEmpty()) return Long.MIN_VALUE;
+        return Long.parseLong(line);
+    } catch (Throwable ignored) {
+        return Long.MIN_VALUE;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignored) {}
+    }
+}
+
+// ------------------------------------------------------------
+// Thermal group accumulator
+// ------------------------------------------------------------
+private static class ThermalGroupReading {
+    float max = Float.NaN;
+    float avg = Float.NaN;
+    int count = 0;
+
+    void add(float v) {
+        if (Float.isNaN(v)) return;
+        if (Float.isNaN(max) || v > max) max = v;
+        avg = Float.isNaN(avg) ? v : ((avg * count + v) / (count + 1));
+        count++;
+    }
+}
+
+// ------------------------------------------------------------
+// Thermal summary container (fix: missing fields)
+// ------------------------------------------------------------
+private static class ThermalSummary {
+    int zoneCount = 0;
+    int coolingDeviceCount = 0;
+}
+
+// ------------------------------------------------------------
+// Scan thermal hardware (zones + cooling devices) and feed groups
+// ------------------------------------------------------------
+private ThermalSummary scanThermalHardware(
+        ThermalGroupReading batteryMain,
+        ThermalGroupReading batteryShell,
+        ThermalGroupReading pmic,
+        ThermalGroupReading charger,
+        ThermalGroupReading modemMain,
+        ThermalGroupReading modemAux
+) {
+    ThermalSummary s = new ThermalSummary();
+
+    try {
+        File base = new File("/sys/class/thermal");
+        File[] all = base.listFiles();
+        if (all == null) return s;
+
+        for (File z : all) {
+            if (z == null) continue;
+
+            String name = z.getName();
+            if (name == null) continue;
+
+            // cooling devices count
+            if (name.startsWith("cooling_device")) {
+                s.coolingDeviceCount++;
+                continue;
+            }
+
+            // zones
+            if (!name.startsWith("thermal_zone")) continue;
+
+            s.zoneCount++;
+
+            String type = null;
+            try {
+                type = readFirstLineSafe(new File(z, "type"));
+            } catch (Throwable ignored) {}
+
+            long milli = readLongSafe(new File(z, "temp"));
+            if (milli == Long.MIN_VALUE) continue;
+
+            float t = (float) milli;
+
+            // autoscale (milli/centi/deci)
+            if (t > 1000f) t /= 1000f;
+            else if (t > 200f) t /= 100f;
+            else if (t > 20f) t /= 10f;
+
+            if (!isValidTemp(t)) continue;
+
+            String key = (type != null ? type : name).toLowerCase(Locale.US);
+
+            // simple routing rules
+            if (key.contains("batt") || key.contains("battery"))
+                batteryMain.add(t);
+            else if (key.contains("skin") || key.contains("shell"))
+                batteryShell.add(t);
+            else if (key.contains("pmic") || key.contains("pmi"))
+                pmic.add(t);
+            else if (key.contains("chg") || key.contains("charger") || key.contains("usb"))
+                charger.add(t);
+            else if (key.contains("modem") || key.contains("mdm") || key.contains("baseband"))
+                modemMain.add(t);
+            else if (key.contains("rf") || key.contains("pa") || key.contains("qcom"))
+                modemAux.add(t);
+        }
+    } catch (Throwable ignored) {}
+
+    return s;
+}
+
+// ------------------------------------------------------------
+// Fallbacks (safe no-crash). Keeps compilation + avoids NaN chaos.
+// ------------------------------------------------------------
+private void applyThermalFallbacks(
+        ThermalGroupReading batteryMain,
+        ThermalGroupReading batteryShell,
+        ThermalGroupReading pmic,
+        ThermalGroupReading charger,
+        ThermalGroupReading modemMain,
+        ThermalGroupReading modemAux
+) {
+    // If main battery missing, try shell as proxy
+    if ((batteryMain == null || batteryMain.count == 0) && batteryShell != null && batteryShell.count > 0) {
+        if (batteryMain != null) {
+            batteryMain.max = batteryShell.max;
+            batteryMain.avg = batteryShell.avg;
+            batteryMain.count = batteryShell.count;
+        }
+    }
+
+    // If modemMain missing, try modemAux
+    if ((modemMain == null || modemMain.count == 0) && modemAux != null && modemAux.count > 0) {
+        if (modemMain != null) {
+            modemMain.max = modemAux.max;
+            modemMain.avg = modemAux.avg;
+            modemMain.count = modemAux.count;
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// Formatter
+// ------------------------------------------------------------
+private String formatThermalLine(String label, ThermalGroupReading g) {
+    if (g == null || g.count <= 0) {
+        return String.format(Locale.US, "%-18s : N/A\n", label);
+    }
+    float mx = g.max;
+    float av = g.avg;
+    if (Float.isNaN(mx) && Float.isNaN(av)) {
+        return String.format(Locale.US, "%-18s : N/A\n", label);
+    }
+    if (Float.isNaN(av)) av = mx;
+    if (Float.isNaN(mx)) mx = av;
+
+    return String.format(
+            Locale.US,
+            "%-18s : max %.1f°C | avg %.1f°C | n=%d\n",
+            label, mx, av, g.count
+    );
+}
+
+// ============================================================
 // MISSING HELPERS — REQUIRED FOR THERMAL / LAB LOGIC
 // SAFE STUBS — PRODUCTION COMPATIBLE
 // ============================================================
@@ -1182,6 +1357,9 @@ private static class ThermalGroupReading {
 // 4) Thermal summary container
 // ------------------------------------------------------------
 private static class ThermalSummary {
+    int zoneCount;
+    int coolingDeviceCount;
+
     ThermalGroupReading batteryMain;
     ThermalGroupReading batteryShell;
     ThermalGroupReading pmic;
@@ -1208,26 +1386,8 @@ private void appendHardwareCoolingDevices(StringBuilder sb) {
     } catch (Throwable ignored) {}
 }
 
-// ============================================================
-// LAB 15 — CHARGING + THERMAL HELPERS (LOCKED)
-// ============================================================
-
-private boolean isDeviceCharging() {
-    try {
-        Intent i = registerReceiver(
-                null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        );
-        if (i == null) return false;
-
-        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
-                || plugged == BatteryManager.BATTERY_PLUGGED_USB
-                || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-
-    } catch (Throwable t) {
-        return false;
-    }
+private void logLab15ThermalCorrelation() {
+    logLab15ThermalCorrelation(Float.NaN, Float.NaN, Float.NaN);
 }
 
 // ------------------------------------------------------------

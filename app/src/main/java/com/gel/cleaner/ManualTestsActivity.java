@@ -1450,24 +1450,22 @@ private void logLab15ThermalCorrelation(
     // --------------------------------------------------------
     // LOG OUTPUT
     // --------------------------------------------------------
-    logLine();
-
-    logInfo(String.format(
-            Locale.US,
-            "Thermal correlation (charging): start %.1fÂ°C â†’ peak %.1fÂ°C â†’ end %.1fÂ°C",
-            battTempStart,
-            (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
-            battTempEnd
-    ));
+ 
+   logInfo(String.format(
+        Locale.US,
+        "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
+        battTempStart,
+        (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+        battTempEnd
+));
 
     logOk(String.format(
-            Locale.US,
-            "Thermal verdict (charging): %s (Î”T +%.1fÂ°C) â€” %s",
-            verdict,
-            dPeak,
-            note
-    ));
-}
+        Locale.US,
+        "Thermal verdict (charging): %s (ΔT +%.1f°C) - %s",
+        verdict,
+        dPeak,
+        note
+));
 
 // ============================================================
 // CHARGING REQUIRED DIALOG â€” SAFE DISMISS

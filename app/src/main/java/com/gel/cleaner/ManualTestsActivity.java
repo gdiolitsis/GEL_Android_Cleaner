@@ -1698,32 +1698,47 @@ private void runLab15Core() {
     });
 }
 
-
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)
 // ------------------------------------------------------------
 private void abortLab15ByUser() {
 
-    // GUARD - avoid double / early abort
-    if (!lab15Running && !chargingDetected) return;
+    ui.post(() -> {
 
-    logWarn("LAB 15 aborted by user.");
+        // GUARD
+        if (!lab15Running && !chargingDetected) return;
 
-    try {
-        if (chargingReceiver != null) {
-            unregisterReceiver(chargingReceiver);
-            chargingReceiver = null;
-        }
-    } catch (Throwable ignore) {}
+        logWarn("LAB 15 aborted by user.");
 
-    lab15Running = false;
-    chargingDetected = false;
+        // STOP FLAGS
+        lab15Running = false;
+        chargingDetected = false;
 
-    dismissChargingStatusDialog();
+        // STOP RECEIVER
+        try {
+            if (chargingReceiver != null) {
+                unregisterReceiver(chargingReceiver);
+                chargingReceiver = null;
+            }
+        } catch (Throwable ignore) {}
 
-    logWarn("Charging system diagnostic was cancelled before completion.");
+        // STOP ALL HANDLER LOOPS
+        try {
+            ui.removeCallbacksAndMessages(null);
+        } catch (Throwable ignore) {}
+
+        // DISMISS DIALOG
+        try {
+            if (chargingDialog != null && chargingDialog.isShowing()) {
+                chargingDialog.dismiss();
+            }
+        } catch (Throwable ignore) {}
+
+        chargingDialog = null;
+
+        logWarn("Charging system diagnostic was cancelled before completion.");
+    });
 }
-
 
 // ============================================================
 // FLAPPING MONITOR (20 sec)

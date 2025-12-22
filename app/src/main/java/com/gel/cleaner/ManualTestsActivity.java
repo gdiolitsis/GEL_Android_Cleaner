@@ -2896,7 +2896,6 @@ private Map<String, Float> readThermalZones() {
     return out;
 }
 
-
 // ------------------------------
 // PICK the correct zone by keywords
 // ------------------------------
@@ -2915,7 +2914,6 @@ private Float pickZone(Map<String, Float> zones, String... keys) {
     }
     return null;
 }
-
 
 // ------------------------------
 // READ FIRST LINE
@@ -3041,7 +3039,7 @@ private void lab14BatteryHealthStressTest() {
             Float batt0 = pickZone(z0, "battery", "batt", "bat");
 
             logLine();
-            logInfo("LAB 14 â€” Battery Health Stress Test started.");
+            logInfo("LAB 14 - Battery Health Stress Test started.");
             logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
             logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
 
@@ -3396,7 +3394,8 @@ private void computeAndLogAgingIndex(
     int runs = getLab14RunCount();
     if (runs < 2) {
         logLine();
-        logInfo("Battery Aging Index: not available (requires at least 2 runs).");
+        logInfo("Battery Aging Index:");
+        logWarn("not available (requires at least 2 runs).");
         return;
     }
 
@@ -3434,10 +3433,11 @@ private void computeAndLogAgingIndex(
     else interpretation = "Heavy aging detected. Battery replacement should be considered.";
 
     logLine();
-    logInfo(String.format(Locale.US,
-            "Battery Aging Index: %.2f (based on %d runs).",
-            agingIndex, runs));
-    logInfo("Interpretation: " + interpretation);
+logInfo("Battery Aging Index:");
+logOk(String.format(Locale.US,
+        "%.2f (based on %d runs).",
+        agingIndex, runs));
+logInfo("Interpretation: " + interpretation);
 }
 
 // ------------------------------------------------------------
@@ -3515,7 +3515,8 @@ private void computeAndLogConfidenceScore() {
     int runs = getLab14RunCount();
     if (runs < 2) {
         logLine();
-        logInfo("Confidence Score: not available (requires multiple runs).");
+        logInfo("Confidence Score:");
+logWarn("not available (requires multiple runs).");
         return;
     }
 
@@ -3538,7 +3539,8 @@ private void computeAndLogConfidenceScore() {
         }
 
         if (n < 2) {
-            logInfo("Confidence Score: insufficient data.");
+            logInfo("Confidence Score:");
+            logWarn("insufficient data.");
             return;
         }
 
@@ -3562,12 +3564,13 @@ private void computeAndLogConfidenceScore() {
         else confidence = 60;
 
         logLine();
-        logInfo(String.format(Locale.US,
-                "Confidence Score: %d%% (based on %d runs).",
-                confidence, n));
+        logInfo("Confidence Score:");
+        logOk(String.format(Locale.US,
+        "%d%% (based on %d runs).",
+        confidence, n));
 
         if (confidence >= 90) logOk("Results are highly consistent.");
-        else if (confidence >= 80) logInfo("Results show good consistency.");
+        else if (confidence >= 80) logOk("Results show good consistency.");
         else logWarn("Results show noticeable variance. Additional runs may improve accuracy.");
 
     } catch (Throwable t) {
@@ -3600,7 +3603,7 @@ private void logLab14Confidence() {
         txtLog.append(sp);
         txtLog.append("\n");
 
-        logInfo("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES UNDER SIMILAR CONDITIONS.");
+        logWarn("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES ,ANY DAY, UNDER SIMILAR CONDITIONS.");
     }
     else if (runs == 2) {
 
@@ -3617,7 +3620,7 @@ private void logLab14Confidence() {
         txtLog.append(sp);
         txtLog.append("\n");
 
-        logInfo("ONE ADDITIONAL RUN IS RECOMMENDED TO CONFIRM BATTERY AGING TREND.");
+        logWarn("ONE ADDITIONAL RUN IS RECOMMENDED TO CONFIRM BATTERY AGING TREND.");
     }
     else {
 
@@ -3778,8 +3781,8 @@ private void lab15ChargingSystemSmart() {
     root.addView(dotsView);
 
     lab15CounterText = new TextView(this);
-    lab15CounterText.setText("0 / 180 sec");
-    lab15CounterText.setTextColor(0xFFAAAAAA);
+    lab15CounterText.setText("Progress: 0 / 180 sec");
+    lab15CounterText.setTextColor(0xFF39FF14);
     lab15CounterText.setGravity(Gravity.CENTER);
     root.addView(lab15CounterText);
 

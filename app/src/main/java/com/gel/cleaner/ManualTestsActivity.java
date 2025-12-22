@@ -1833,12 +1833,12 @@ if (startChargeMah > 0 &&
 } else {
 
     logWarn(
-            "Charging strength: Unable to estimate accurately.\n" +
-            "Charge counter or capacity data unavailable on this device."
-    );
-}
+        "Charging strength: Unable to estimate accurately.\n" +
+        "Charge counter or capacity data unavailable on this device."
+);
 
 dismissChargingStatusDialog();
+}   // κλείνει το προηγούμενο method
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)

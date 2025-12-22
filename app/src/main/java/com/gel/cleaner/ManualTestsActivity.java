@@ -4040,8 +4040,9 @@ private void lab15ChargingSystemSmart() {
     }
 
     lab15Running = false;
-    if (lab15Dialog != null) lab15Dialog.dismiss();
-}
+                    if (lab15Dialog != null) lab15Dialog.dismiss();
+                }
+            }
         }
     });
 }

@@ -1706,15 +1706,14 @@ private void abortLab15ByUser() {
     ui.post(() -> {
 
         // GUARD
-        if (!lab15Running && !chargingDetected) return;
+        if (!lab15Running) return;
 
         logWarn("LAB 15 aborted by user.");
 
         // STOP FLAGS
         lab15Running = false;
-        chargingDetected = false;
 
-        // STOP RECEIVER
+        // STOP RECEIVER (    phase)
         try {
             if (chargingReceiver != null) {
                 unregisterReceiver(chargingReceiver);
@@ -1722,21 +1721,21 @@ private void abortLab15ByUser() {
             }
         } catch (Throwable ignore) {}
 
-        // STOP ALL HANDLER LOOPS
+        // STOP HANDLER LOOPS (LAB 15)
         try {
             ui.removeCallbacksAndMessages(null);
         } catch (Throwable ignore) {}
 
-        // DISMISS DIALOG
+        //  DISMISS **LAB 15 DIALOG**
         try {
-            if (chargingDialog != null && chargingDialog.isShowing()) {
-                chargingDialog.dismiss();
+            if (lab15Dialog != null && lab15Dialog.isShowing()) {
+                lab15Dialog.dismiss();
             }
         } catch (Throwable ignore) {}
 
-        chargingDialog = null;
+        lab15Dialog = null;
 
-        logWarn("Charging system diagnostic was cancelled before completion.");
+        logWarn("LAB 15 cancelled by user.");
     });
 }
 

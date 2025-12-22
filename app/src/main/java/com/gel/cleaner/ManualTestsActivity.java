@@ -147,6 +147,8 @@ public class ManualTestsActivity extends AppCompatActivity {
     private LinearLayout lab14ProgressBar;
     private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock
 
+    private int lastSelectedStressDurationSec = 60;
+
     // ============================================================
     // LAB 15 — FLAGS (DO NOT MOVE)
     // ============================================================
@@ -219,7 +221,7 @@ public class ManualTestsActivity extends AppCompatActivity {
         float temperature = Float.NaN;
         String status = "Unknown";
 
-        // 🔥 REQUIRED — used by LAB 14 / drain logic
+        //  REQUIRED — used by LAB 14 / drain logic
         long currentChargeMah = -1;
 
         // capacity estimation
@@ -664,7 +666,7 @@ public class ManualTestsActivity extends AppCompatActivity {
 
         logInfo(String.format(
                 Locale.US,
-                "Thermal Verdict: %s (ΔT +%.1f°C)",
+                "Thermal Verdict: %s (T +%.1f°C)",
                 thermalVerdict,
                 dT
         ));
@@ -734,37 +736,6 @@ public class ManualTestsActivity extends AppCompatActivity {
     }
 
     // ------------------------------------------------------------
-    // Call when LAB 14 fully ends
-    // ------------------------------------------------------------
-    private void dismissLab14RunningDialog() {
-        try {
-            if (lab14Dialog != null && lab14Dialog.isShowing()) {
-                lab14Dialog.dismiss();
-            }
-        } catch (Throwable ignore) {
-        } finally {
-            lab14Dialog = null;
-            lab14ProgressText = null;
-            lab14ProgressBar = null;
-        }
-    }
-
-    // ------------------------------------------------------------
-    // LAB 14 — USER ABORT (CANCEL / EXIT)
-    // ------------------------------------------------------------
-    private void abortLab14ByUser() {
-        logWarn("LAB 14 aborted by user.");
-
-        try { stopCpuBurn(); } catch (Throwable ignore) {}
-        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-        dismissLab14RunningDialog();
-        lab14Running = false;
-
-        logInfo("Battery stress test was cancelled before completion.");
-    }
-
-    // ------------------------------------------------------------
     // Reliable charging detection (plugged-based)
     // ------------------------------------------------------------
     private boolean isDeviceCharging() {
@@ -784,11 +755,6 @@ public class ManualTestsActivity extends AppCompatActivity {
         } catch (Throwable t) {
             return false;
         }
-    }
-
-    // Alias used by your peak tracker (kept for compatibility)
-    private boolean isChargingNow() {
-        return isDeviceCharging();
     }
 
     // ============================================================
@@ -821,7 +787,7 @@ public class ManualTestsActivity extends AppCompatActivity {
                 AlertDialog dialog = b.create();
                 dialog.show();
 
-                // 🔥 GEL DARK STYLE (NO XML)
+                //  GEL DARK STYLE (NO XML)
                 try {
                     if (dialog.getWindow() != null) {
                         dialog.getWindow().setBackgroundDrawable(
@@ -932,22 +898,22 @@ public class ManualTestsActivity extends AppCompatActivity {
 
     private void logInfo(String msg) {
         GELServiceLog.info(msg);
-        appendHtml("ℹ️ " + escape(msg));
+        appendHtml(" " + escape(msg));
     }
 
     private void logOk(String msg) {
         GELServiceLog.ok(msg);
-        appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+        appendHtml("<font color='#88FF88'> " + escape(msg) + "</font>");
     }
 
     private void logWarn(String msg) {
         GELServiceLog.warn(msg);
-        appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+        appendHtml("<font color='#FFD966'> " + escape(msg) + "</font>");
     }
 
     private void logError(String msg) {
         GELServiceLog.error(msg);
-        appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+        appendHtml("<font color='#FF5555'> " + escape(msg) + "</font>");
     }
 
     // ============================================================
@@ -1125,11 +1091,11 @@ public class ManualTestsActivity extends AppCompatActivity {
         logLine();
 
         if ("Strong".equalsIgnoreCase(decision)) {
-            logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
+            logOk("Health Map:  Battery  Thermal  Drain");
         } else if ("Normal".equalsIgnoreCase(decision)) {
-            logWarn("Health Map: ⚠ Moderate wear detected");
+            logWarn("Health Map:  Moderate wear detected");
         } else {
-            logError("Health Map: ✖ Battery health critical");
+            logError("Health Map:  Battery health critical");
         }
     }
 
@@ -1379,7 +1345,7 @@ public class ManualTestsActivity extends AppCompatActivity {
 
         logOk(String.format(
                 Locale.US,
-                "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
+                "Thermal verdict (charging): %s (T +%.1f°C) — %s",
                 verdict,
                 dPeak,
                 note
@@ -2822,19 +2788,7 @@ private String readFirstLine(File file) {
         try { if (br != null) br.close(); } catch (Exception ignore) {}
     }
 }
-    
-// ============================================================
-// LAB 14 — FLAGS / UI STATE
-// ============================================================
-private volatile boolean lab14Running = false;
-private TextView lab14DotsView;
-private AlertDialog lab14Dialog;
-private TextView lab14ProgressText;
-private LinearLayout lab14ProgressBar;
-private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock
-
-private int lastSelectedStressDurationSec = 60;
-
+   
 
 // ============================================================
 // LAB 14 — Battery Health Stress Test (GEL Full Mode)
@@ -3288,8 +3242,6 @@ private void dismissLab14RunningDialog() {
     lab14ProgressText = null;
     lab14ProgressBar = null;
 }
-
-
 
 // ===================================================================
 // LAB 14 — AGING INDEX ENGINE

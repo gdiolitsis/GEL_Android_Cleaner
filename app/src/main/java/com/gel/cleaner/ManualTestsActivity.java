@@ -3941,27 +3941,6 @@ private void lab15ChargingSystemSmart() {
     });
 }
 
-// ------------------------------------------------------------
-// LAB 15 - USER ABORT (CANCEL / EXIT)
-// ------------------------------------------------------------
-private void abortLab15ByUser() {
-
-    if (!lab15Running) return;
-
-    logWarn("LAB 15 aborted by user.");
-
-    lab15Running = false;
-
-    try {
-        if (chargingReceiver != null) {
-            unregisterReceiver(chargingReceiver);
-            chargingReceiver = null;
-        }
-    } catch (Throwable ignore) {}
-
-    dismissChargingStatusDialog();
-}
-
 // ============================================================
 // LAB 16 - Thermal Snapshot
 // GEL Universal Edition â€” Internals + Peripherals + Root-Aware

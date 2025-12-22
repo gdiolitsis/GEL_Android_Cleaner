@@ -1789,7 +1789,7 @@ private void runLab15Core() {
                 logOk("LAB decision:  Charging system OK.");
 
 // ----------------------------------------------------
-// 🔋 CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
+//  CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
 // ----------------------------------------------------
 logLine();
 
@@ -3979,50 +3979,55 @@ private void lab15ChargingSystemSmart() {
 
             if (elapsedSec < LAB15_TOTAL_SECONDS) {
     ui.postDelayed(this, 1000);
+    return;
+}
+
+// ----------------------------------------------------
+// END THERMAL SNAPSHOT (CHARGING CORRELATED)
+// ----------------------------------------------------
+if (isDeviceCharging()) {
+    lab15BattTempEnd = getBatteryTemperature();
 } else {
+    lab15BattTempEnd = lab15BattTempPeak;
+}
 
-    // ----------------------------------------------------
-    // END THERMAL SNAPSHOT (CHARGING CORRELATED)
-    // ----------------------------------------------------
-    if (isChargingNow()) {
-        lab15BattTempEnd = getBatteryTemperature();
-    } else {
-        lab15BattTempEnd = lab15BattTempPeak;
-    }
+logLab15ThermalCorrelation(
+        lab15BattTempStart,
+        lab15BattTempPeak,
+        lab15BattTempEnd
+);
 
-    logLab15ThermalCorrelation(
-            lab15BattTempStart,
-            lab15BattTempPeak,
-            lab15BattTempEnd
-    );
+lab15StatusText.setText("Charging system stable");
+lab15StatusText.setTextColor(0xFF39FF14);
 
-    lab15StatusText.setText("Charging system stable");
-    lab15StatusText.setTextColor(0xFF39FF14);
+logLine();
+logOk("Charging behavior appears normal. Temperature within safe limits.");
+logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
 
-    logLine();
-    logOk("Charging behavior appears normal. Temperature within safe limits.");
-    logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+logLine();
+logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
+logOk("LAB decision: Charging stability OK.");
 
-    logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-    logOk("LAB decision: Charging stability OK.");
+// ----------------------------------------------------
+// CHARGING STRENGTH ESTIMATION
+// ----------------------------------------------------
+logLine();
 
-    // CHARGING STRENGTH ESTIMATION
-    logLine();
+BatteryInfo endInfo = getBatteryInfo();
 
-    BatteryInfo endInfo = getBatteryInfo();
+if (startInfo[0] != null &&
+        endInfo != null &&
+        startInfo[0].currentChargeMah > 0 &&
+        endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
 
-    if (startInfo[0] != null &&
-            endInfo != null &&
-            startInfo[0].currentChargeMah > 0 &&
-            endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
+    long startMah = startInfo[0].currentChargeMah;
+    long endMah   = endInfo.currentChargeMah;
+    long fullMah =
+            endInfo.estimatedFullMah > 0
+                    ? endInfo.estimatedFullMah
+                    : startInfo[0].estimatedFullMah;
 
-        long startMah = startInfo[0].currentChargeMah;
-        long endMah   = endInfo.currentChargeMah;
-        long fullMah  =
-                endInfo.estimatedFullMah > 0
-                        ? endInfo.estimatedFullMah
-                        : startInfo[0].estimatedFullMah;
-
+    if (fullMah > 0) {
         float deltaPct =
                 ((endMah - startMah) * 100f) / (float) fullMah;
 
@@ -4034,21 +4039,22 @@ private void lab15ChargingSystemSmart() {
             logWarn("Charging strength: MODERATE");
         else
             logError("Charging strength: POOR");
-
     } else {
         logWarn("Charging strength: Unable to estimate accurately.");
     }
+} else {
+    logWarn("Charging strength: Unable to estimate accurately.");
+}
 
-    lab15Running = false;
-                    if (lab15Dialog != null) lab15Dialog.dismiss();
-                }
-            }
-        }
+lab15Running = false;
+if (lab15Dialog != null) lab15Dialog.dismiss();
+return;
+}
     });
 }
 
 // ============================================================
-// LAB 16 â€” Thermal Snapshot
+// LAB 16 - Thermal Snapshot
 // GEL Universal Edition â€” Internals + Peripherals + Root-Aware
 // READ-ONLY â€¢ SNAPSHOT â€¢ SAFE
 // ============================================================
@@ -4058,12 +4064,12 @@ private void lab16ThermalSnapshot() {
     logInfo("LAB 16 â€” Thermal Snapshot (ASCII thermal map)");
 
     // ------------------------------------------------------------
-    // 1ï¸âƒ£ Read generic thermal zones
+    // 1. Read generic thermal zones
     // ------------------------------------------------------------
     Map<String, Float> zones = readThermalZones();
 
     // ------------------------------------------------------------
-    // 2ï¸âƒ£ Battery ALWAYS from BatteryManager
+    // 2. Battery ALWAYS from BatteryManager
     // ------------------------------------------------------------
     float batt = getBatteryTemperature();
 
@@ -4075,7 +4081,7 @@ private void lab16ThermalSnapshot() {
     }
 
     // ------------------------------------------------------------
-    // 3ï¸âƒ£ Auto-detect main zones
+    // 3. Auto-detect main zones
     // ------------------------------------------------------------
     Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
     Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
@@ -4085,7 +4091,7 @@ private void lab16ThermalSnapshot() {
     logOk("Thermal Zones found: " + zones.size());
 
     // ------------------------------------------------------------
-    // 4ï¸âƒ£ ASCII SNAPSHOT MAP
+    // 4. ASCII SNAPSHOT MAP
     // ------------------------------------------------------------
     if (cpu != null)  printZoneAscii("CPU", cpu);
     if (gpu != null)  printZoneAscii("GPU", gpu);
@@ -4096,14 +4102,14 @@ private void lab16ThermalSnapshot() {
     if (pmic != null) printZoneAscii("PMIC", pmic);
 
     // ------------------------------------------------------------
-    // 5ï¸âƒ£ HARDWARE SUMMARY (Internals + Peripherals)
+    // 5. HARDWARE SUMMARY (Internals + Peripherals)
     // ------------------------------------------------------------
     logLine();
     appendHtml("<b>Hardware Thermal Summary</b>");
     appendHtml("<small><tt>" + escape(buildThermalInfo()) + "</tt></small>");
 
     // ------------------------------------------------------------
-    // 6ï¸âƒ£ ROOT-ENHANCED INTERNAL VIEW (if available)
+    // 6. ROOT-ENHANCED INTERNAL VIEW (if available)
     // ------------------------------------------------------------
     if (isRooted) {
         logLine();

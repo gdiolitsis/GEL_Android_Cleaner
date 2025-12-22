@@ -3769,22 +3769,34 @@ private void lab15ChargingSystemSmart() {
             }
 
             // ---------------- FINAL ----------------
-            lab15BattTempEnd = getBatteryTemperature();
+            // ---------------- FINAL ----------------
 
-            logLab15ThermalCorrelation(
-                    lab15BattTempStart,
-                    lab15BattTempPeak,
-                    lab15BattTempEnd
-            );
+// ⛔ ΣΤΑΜΑΤΑ ΟΛΑ ΤΑ PENDING RUNNABLES ΠΡΩΤΑ
+ui.removeCallbacksAndMessages(null);
 
-            if (lab15OverTempDuringCharge)
-                logWarn("LAB note: High battery temperature observed.");
+// 🔒 STOP RUN FLAG
+lab15Running = false;
 
-            logOk("Charging system stable.");
-            logOk("LAB decision: Charging system OK.");
+// 🌡️ FINAL TEMP SNAPSHOT
+lab15BattTempEnd = getBatteryTemperature();
 
-            lab15Running = false;
-            dismissChargingStatusDialog();
+logLab15ThermalCorrelation(
+        lab15BattTempStart,
+        lab15BattTempPeak,
+        lab15BattTempEnd
+);
+
+if (lab15OverTempDuringCharge)
+    logWarn("LAB note: High battery temperature observed.");
+
+logOk("Charging system stable.");
+logOk("LAB decision: Charging system OK.");
+
+// 🧹 ΚΛΕΙΣΕ ΤΟ POPUP ΤΕΛΕΥΤΑΙΟ
+dismissChargingStatusDialog();
+
+// 🚪 ΒΓΑΙΝΕ ΟΡΙΣΤΙΚΑ ΑΠΟ ΤΟ RUNNABLE
+return;
         }
     });
 }

@@ -1676,7 +1676,7 @@ private void startChargingDotsAnimation() {
             ui.postDelayed(this, 500);
         }
     });
-
+}
 
 // ============================================================
 // LAB 15 â€” CORE RUNNER (180 sec)
@@ -1838,7 +1838,9 @@ if (startChargeMah > 0 &&
 );
 
 dismissChargingStatusDialog();
-}   //    method
+}
+
+}
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)

@@ -1,6 +1,6 @@
 // ============================================================
 // ManualTestsActivity
-// GEL Manual Tests â€” Hospital Edition (30 Manual Labs)
+// GEL Manual Tests — Hospital Edition (30 Manual Labs)
 // Single-screen Accordion UI + detailed English service logs
 // NOTE (GEL RULE): Whole file ready for copy-paste.
 // IMPORTANT (Lab 11 SSID SAFE MODE):
@@ -17,7 +17,7 @@
 package com.gel.cleaner;
 
 // ============================================================
-// ANDROID â€” CORE
+// ANDROID — CORE
 // ============================================================
 import android.Manifest;
 import android.app.ActivityManager;
@@ -99,7 +99,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 // ============================================================
-// JAVA â€” IO / NET
+// JAVA — IO / NET
 // ============================================================
 import java.io.BufferedReader;
 import java.io.File;
@@ -113,7 +113,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 // ============================================================
-// JAVA â€” UTIL
+// JAVA — UTIL
 // ============================================================
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -127,8 +127,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ManualTestsActivity extends AppCompatActivity {
-  
-   // ============================================================
+
+    // ============================================================
     // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
     // ============================================================
     private String lastScoreHealth      = "N/A";
@@ -136,90 +136,96 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String lastScoreSecurity    = "N/A";
     private String lastScorePrivacy     = "N/A";
     private String lastFinalVerdict     = "N/A";
-    
-// ============================================================
-// LAB 15 â€” FLAGS (DO NOT MOVE)
-// ============================================================
-private volatile boolean lab15FlapUnstable = false;
-private volatile boolean lab15OverTempDuringCharge = false;
-private volatile boolean lab15Running = false;
 
-private AlertDialog lab15Dialog;
-private TextView lab15StatusText;
-private LinearLayout lab15ProgressBar;
-private Button lab15ExitBtn;
-private TextView lab15CounterText;
-// LAB 15 â€” Thermal Correlation
-private float lab15BattTempStart = Float.NaN;
-private float lab15BattTempPeak  = Float.NaN;
-private float lab15BattTempEnd   = Float.NaN;
+    // ============================================================
+    // LAB 14 — FLAGS / UI STATE (REQUIRED)
+    // ============================================================
+    private volatile boolean lab14Running = false;
+    private TextView lab14DotsView;
+    private AlertDialog lab14Dialog;
+    private TextView lab14ProgressText;
+    private LinearLayout lab14ProgressBar;
+    private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock
 
-private static final int LAB15_TOTAL_SECONDS = 180;
+    // ============================================================
+    // LAB 15 — FLAGS (DO NOT MOVE)
+    // ============================================================
+    private volatile boolean lab15FlapUnstable = false;
+    private volatile boolean lab15OverTempDuringCharge = false;
+    private volatile boolean lab15Running = false;
 
-// ============================================================
-// TELEPHONY SNAPSHOT â€” Passive system probe (no side effects)
-// ============================================================
-private static class TelephonySnapshot {
+    private AlertDialog lab15Dialog;
+    private TextView lab15StatusText;
+    private LinearLayout lab15ProgressBar;
+    private Button lab15ExitBtn;
+    private TextView lab15CounterText;
 
-    boolean airplaneOn = false;
+    // LAB 15 — Thermal Correlation
+    private float lab15BattTempStart = Float.NaN;
+    private float lab15BattTempPeak  = Float.NaN;
+    private float lab15BattTempEnd   = Float.NaN;
 
-    int simState = TelephonyManager.SIM_STATE_UNKNOWN;
-    boolean simReady = false;
+    private static final int LAB15_TOTAL_SECONDS = 180;
 
-    int serviceState = ServiceState.STATE_OUT_OF_SERVICE;
-    boolean inService = false;
+    // ============================================================
+    // TELEPHONY SNAPSHOT — Passive system probe (no side effects)
+    // ============================================================
+    private static class TelephonySnapshot {
+        boolean airplaneOn = false;
+        int simState = TelephonyManager.SIM_STATE_UNKNOWN;
+        boolean simReady = false;
+        int serviceState = ServiceState.STATE_OUT_OF_SERVICE;
+        boolean inService = false;
+        int dataState = TelephonyManager.DATA_UNKNOWN;
+        boolean hasInternet = false;
+    }
 
-    int dataState = TelephonyManager.DATA_UNKNOWN;
+    // ================= SNAPSHOTS CONTAINERS =================
 
-    boolean hasInternet = false;
-}
+    private static class StorageSnapshot {
+        long totalBytes, freeBytes, usedBytes;
+        int pctFree;
+    }
 
-// ================= SNAPSHOTS CONTAINERS =================
+    private static class AppsSnapshot {
+        int userApps, systemApps, totalApps;
+    }
 
-private static class StorageSnapshot {
-    long totalBytes, freeBytes, usedBytes;
-    int pctFree;
-}
+    private static class RamSnapshot {
+        long totalBytes, freeBytes;
+        int pctFree;
+    }
 
-private static class AppsSnapshot {
-    int userApps, systemApps, totalApps;
-}
+    private static class SecuritySnapshot {
+        boolean lockSecure;
+        boolean adbUsbOn;
+        boolean adbWifiOn;
+        boolean devOptionsOn;
+        boolean rootSuspected;
+        boolean testKeys;
+        String securityPatch;
+    }
 
-private static class RamSnapshot {
-    long totalBytes, freeBytes;
-    int pctFree;
-}
+    private static class PrivacySnapshot {
+        int userAppsWithLocation;
+        int userAppsWithMic;
+        int userAppsWithCamera;
+        int userAppsWithSms;
+        int totalUserAppsChecked;
+    }
 
-private static class SecuritySnapshot {
-    boolean lockSecure;
-    boolean adbUsbOn;
-    boolean adbWifiOn;
-    boolean devOptionsOn;
-    boolean rootSuspected;
-    boolean testKeys;
-    String securityPatch;
-}
+    private static class BatteryInfo {
+        int level = -1;
+        float temperature = Float.NaN;
+        String status = "Unknown";
 
-private static class PrivacySnapshot {
-    int userAppsWithLocation;
-    int userAppsWithMic;
-    int userAppsWithCamera;
-    int userAppsWithSms;
-    int totalUserAppsChecked;
-}
+        // 🔥 REQUIRED — used by LAB 14 / drain logic
+        long currentChargeMah = -1;
 
-private static class BatteryInfo {
-    int level = -1;
-    float temperature = Float.NaN;
-    String status = "Unknown";
-
-    // ðŸ”¥ REQUIRED â€” used by LAB 14 / drain logic
-    long currentChargeMah = -1;
-
-    // capacity estimation
-    long estimatedFullMah = -1;
-    String source = "Unknown";
-}
+        // capacity estimation
+        long estimatedFullMah = -1;
+        String source = "Unknown";
+    }
 
     // ============================================================
     // CORE UI
@@ -256,1277 +262,1175 @@ private static class BatteryInfo {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-@Override
-protected void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    ui = new Handler(Looper.getMainLooper());
+        ui = new Handler(Looper.getMainLooper());
 
-// ============================================================
-// ROOT SCROLL + LAYOUT
-// ============================================================
-scroll = new ScrollView(this);
-scroll.setFillViewport(true);
+        // ============================================================
+        // ROOT SCROLL + LAYOUT
+        // ============================================================
+        scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
 
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-int pad = dp(16);
-root.setPadding(pad, pad, pad, pad);
-root.setBackgroundColor(0xFF101010); // GEL black
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(16);
+        root.setPadding(pad, pad, pad, pad);
+        root.setBackgroundColor(0xFF101010); // GEL black
 
-// ============================================================
-// TITLE
-// ============================================================
-TextView title = new TextView(this);
-title.setText(getString(R.string.manual_hospital_title));
-title.setTextSize(20f);
-title.setTextColor(0xFFFFD700);
-title.setGravity(Gravity.CENTER_HORIZONTAL);
-title.setPadding(0, 0, 0, dp(6));
-root.addView(title);
+        // ============================================================
+        // TITLE
+        // ============================================================
+        TextView title = new TextView(this);
+        title.setText(getString(R.string.manual_hospital_title));
+        title.setTextSize(20f);
+        title.setTextColor(0xFFFFD700);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        title.setPadding(0, 0, 0, dp(6));
+        root.addView(title);
 
-// ============================================================
-// SUBTITLE
-// ============================================================
-TextView sub = new TextView(this);
-sub.setText(getString(R.string.manual_hospital_sub));
-sub.setTextSize(13f);
-sub.setTextColor(0xFF39FF14);
-sub.setGravity(Gravity.CENTER_HORIZONTAL);
-sub.setPadding(0, 0, 0, dp(12));
-root.addView(sub);
+        // ============================================================
+        // SUBTITLE
+        // ============================================================
+        TextView sub = new TextView(this);
+        sub.setText(getString(R.string.manual_hospital_sub));
+        sub.setTextSize(13f);
+        sub.setTextColor(0xFF39FF14);
+        sub.setGravity(Gravity.CENTER_HORIZONTAL);
+        sub.setPadding(0, 0, 0, dp(12));
+        root.addView(sub);
 
-// ============================================================
-// SECTION TITLE
-// ============================================================
-TextView sec1 = new TextView(this);
-sec1.setText(getString(R.string.manual_section1));
-sec1.setTextSize(17f);
-sec1.setTextColor(0xFFFFD700);
-sec1.setGravity(Gravity.CENTER_HORIZONTAL);
-sec1.setPadding(0, dp(10), 0, dp(6));
-root.addView(sec1);
+        // ============================================================
+        // SECTION TITLE
+        // ============================================================
+        TextView sec1 = new TextView(this);
+        sec1.setText(getString(R.string.manual_section1));
+        sec1.setTextSize(17f);
+        sec1.setTextColor(0xFFFFD700);
+        sec1.setGravity(Gravity.CENTER_HORIZONTAL);
+        sec1.setPadding(0, dp(10), 0, dp(6));
+        root.addView(sec1);
 
-// ------------------------------------------------------------
-// DOTS (running indicator)
-// ------------------------------------------------------------
-lab14DotsView = new TextView(this);
-lab14DotsView.setText("â€¢");
-lab14DotsView.setTextSize(22f);
-lab14DotsView.setTextColor(0xFF39FF14);
-lab14DotsView.setPadding(0, dp(6), 0, dp(10));
-lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
-root.addView(lab14DotsView);
+        // ------------------------------------------------------------
+        // DOTS (running indicator) — UI ONLY (LAB 14 uses its own dialog dots)
+        // ------------------------------------------------------------
+        lab14DotsView = new TextView(this);
+        lab14DotsView.setText("•");
+        lab14DotsView.setTextSize(22f);
+        lab14DotsView.setTextColor(0xFF39FF14);
+        lab14DotsView.setPadding(0, dp(6), 0, dp(10));
+        lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.addView(lab14DotsView);
+
+        // ============================================================
+        // SECTION 1: AUDIO & VIBRATION — LABS 1–5
+        // ============================================================
+        LinearLayout body1 = makeSectionBody();
+        Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);
+        root.addView(header1);
+        root.addView(body1);
+
+        body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
+        body1.addView(makeTestButton("2. Speaker Frequency Sweep Test", this::lab2SpeakerSweep));
+        body1.addView(makeTestButton("3. Earpiece Call Check", this::lab3EarpieceManual));
+        body1.addView(makeTestButton("4. Microphone Recording Check", this::lab4MicManual));
+        body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
+
+        // ============================================================
+        // SECTION 2: DISPLAY & SENSORS — LABS 6–9
+        // ============================================================
+        LinearLayout body2 = makeSectionBody();
+        Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
+        root.addView(header2);
+        root.addView(body2);
+
+        body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
+        body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));
+        body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));
+        body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
+
+        // ============================================================
+        // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13
+        // ============================================================
+        LinearLayout body3 = makeSectionBody();
+        Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
+        root.addView(header3);
+        root.addView(body3);
+
+        body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab10WifiSnapshot));
+        body3.addView(makeTestButton("11. Mobile Network Diagnostic", this::lab11MobileDataDiagnostic));
+        body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));
+        body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab13InternetQuickCheck));
+
+        // ============================================================
+        // SECTION 4: BATTERY & THERMAL — LABS 14–17
+        // ============================================================
+        LinearLayout body4 = makeSectionBody();
+        Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
+        root.addView(header4);
+        root.addView(body4);
+
+        body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
+        body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));
+        body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
+        body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
+
+        // ============================================================
+        // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
+        // ============================================================
+        LinearLayout body5 = makeSectionBody();
+        Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
+        root.addView(header5);
+        root.addView(body5);
+
+        body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab18StorageSnapshot));
+        body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab19AppsFootprint));
+        body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab20RamSnapshot));
+        body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab21UptimeHints));
+
+        // ============================================================
+        // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
+        // ============================================================
+        LinearLayout body6 = makeSectionBody();
+        Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
+        root.addView(header6);
+        root.addView(body6);
+
+        body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab22ScreenLock));
+        body6.addView(makeTestButton("23. Security Patch Check", this::lab23SecurityPatchManual));
+        body6.addView(makeTestButton("24. Developer Options Risk", this::lab24DevOptions));
+        body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
+
+        // ============================================================
+        // SECTION 7: ADVANCED / LOGS — LABS 26–29
+        // ============================================================
+        LinearLayout body7 = makeSectionBody();
+        Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
+        root.addView(header7);
+        root.addView(body7);
+
+        body7.addView(makeTestButton("26. Crash / Freeze History", this::lab26CrashHistory));
+        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
+        body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
+        body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
+
+        // ============================================================
+        // LOG AREA
+        // ============================================================
+        txtLog = new TextView(this);
+        txtLog.setTextSize(13f);
+        txtLog.setTextColor(0xFFEEEEEE);
+        txtLog.setPadding(0, dp(16), 0, dp(8));
+        txtLog.setMovementMethod(new ScrollingMovementMethod());
+        txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
+        root.addView(txtLog);
+
+        // ============================================================
+        // EXPORT SERVICE REPORT BUTTON
+        // ============================================================
+        Button btnExport = new Button(this);
+        btnExport.setText(getString(R.string.export_report_title));
+        btnExport.setAllCaps(false);
+        btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        btnExport.setTextColor(0xFFFFFFFF);
+
+        LinearLayout.LayoutParams lpExp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
+        btnExport.setLayoutParams(lpExp);
+
+        btnExport.setOnClickListener(v -> {
+            Intent i = new Intent(this, ServiceReportActivity.class);
+            startActivity(i);
+        });
+
+        root.addView(btnExport);
+
+        // ============================================================
+        // FINAL BIND
+        // ============================================================
+        scroll.addView(root);
+        setContentView(scroll);
+
+        // First log entry
+        GELServiceLog.clear();
+        logInfo(getString(R.string.manual_log_desc));
+    }  // onCreate ends here
 
     // ============================================================
-    // SECTION 1: AUDIO & VIBRATION â€” LABS 1â€“5
+    // GEL legacy aliases (LOCKED)
     // ============================================================
-    LinearLayout body1 = makeSectionBody();
-    Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);
-    root.addView(header1);
-    root.addView(body1);
+    private void logYellow(String msg) { logWarn(msg); }
+    private void logGreen(String msg)  { logOk(msg); }
+    private void logRed(String msg)    { logError(msg); }
 
-    body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));
-    body1.addView(makeTestButton("2. Speaker Frequency Sweep Test", this::lab2SpeakerSweep));
-    body1.addView(makeTestButton("3. Earpiece Call Check", this::lab3EarpieceManual));
-    body1.addView(makeTestButton("4. Microphone Recording Check", this::lab4MicManual));
-    body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));
-
-    // ============================================================
-    // SECTION 2: DISPLAY & SENSORS â€” LABS 6â€“9
-    // ============================================================
-    LinearLayout body2 = makeSectionBody();
-    Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);
-    root.addView(header2);
-    root.addView(body2);
-
-    body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));
-    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));
-    body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));
-    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));
-
-    // ============================================================
-// SECTION 3: WIRELESS & CONNECTIVITY â€” LABS 10â€“13
-// ============================================================
-LinearLayout body3 = makeSectionBody();
-Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);
-root.addView(header3);
-root.addView(body3);
-
-body3.addView(makeTestButton("10. Wi-Fi Link Snapshot",this::lab10WifiSnapshot));
-body3.addView(makeTestButton("11. Mobile Network Diagnostic",this::lab11MobileDataDiagnostic));
-body3.addView(makeTestButton("12. Call Function Interpretation",this::lab12CallFunctionInterpretation));
-body3.addView(makeTestButton("13. Internet Access Quick Check",this::lab13InternetQuickCheck));
-
-    // ============================================================
-    // SECTION 4: BATTERY & THERMAL â€” LABS 14â€“17
-    // ============================================================
-    LinearLayout body4 = makeSectionBody();
-    Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);
-    root.addView(header4);
-    root.addView(body4);
-
-    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
-    body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));
-    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
-    body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
-
-    // ============================================================
-    // SECTION 5: STORAGE & PERFORMANCE â€” LABS 18â€“21
-    // ============================================================
-    LinearLayout body5 = makeSectionBody();
-    Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
-    root.addView(header5);
-    root.addView(body5);
-
-    body5.addView(makeTestButton("18. Internal Storage Snapshot", this::lab18StorageSnapshot));
-    body5.addView(makeTestButton("19. Installed Apps Footprint", this::lab19AppsFootprint));
-    body5.addView(makeTestButton("20. Live RAM Snapshot", this::lab20RamSnapshot));
-    body5.addView(makeTestButton("21. Uptime / Reboot Hints", this::lab21UptimeHints));
-
-    // ============================================================
-    // SECTION 6: SECURITY & SYSTEM HEALTH â€” LABS 22â€“25
-    // ============================================================
-    LinearLayout body6 = makeSectionBody();
-    Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
-    root.addView(header6);
-    root.addView(body6);
-
-    body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab22ScreenLock));
-    body6.addView(makeTestButton("23. Security Patch Check", this::lab23SecurityPatchManual));
-    body6.addView(makeTestButton("24. Developer Options Risk", this::lab24DevOptions));
-    body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
-
-    // ============================================================
-    // SECTION 7: ADVANCED / LOGS â€” LABS 26â€“29
-    // ============================================================
-    LinearLayout body7 = makeSectionBody();
-    Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
-    root.addView(header7);
-    root.addView(body7);
-
-    body7.addView(makeTestButton("26. Crash / Freeze History", this::lab26CrashHistory));
-    body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
-    body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
-    body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
-
-    // ============================================================
-    // LOG AREA
-    // ============================================================
-    txtLog = new TextView(this);
-    txtLog.setTextSize(13f);
-    txtLog.setTextColor(0xFFEEEEEE);
-    txtLog.setPadding(0, dp(16), 0, dp(8));
-    txtLog.setMovementMethod(new ScrollingMovementMethod());
-    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
-    root.addView(txtLog);
-
-// ============================================================
-// EXPORT SERVICE REPORT BUTTON
-// ============================================================
-
-Button btnExport = new Button(this);
-btnExport.setText(getString(R.string.export_report_title));
-btnExport.setAllCaps(false);
-btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-btnExport.setTextColor(0xFFFFFFFF);
-
-LinearLayout.LayoutParams lpExp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
-btnExport.setLayoutParams(lpExp);
-
-btnExport.setOnClickListener(v -> {
-    Intent i = new Intent(this, ServiceReportActivity.class);
-    startActivity(i);
-});
-
-root.addView(btnExport);
-
-// ============================================================
-// FINAL BIND
-// ============================================================
-
-scroll.addView(root);
-setContentView(scroll);
-
-// First log entry
-GELServiceLog.clear();
-logInfo(getString(R.string.manual_log_desc));
-}  // onCreate ends here
-
-// ============================================================
-// GEL legacy aliases (LOCKED)
-// ============================================================
-
-private void logYellow(String msg) { logWarn(msg); }
-private void logGreen(String msg)  { logOk(msg); }
-private void logRed(String msg)    { logError(msg); }
-
-private void logSection(String msg) {
-    logLine();
-    logInfo(msg);
-}
-
-// ============================================================
-// UI HELPERS (GEL LOCKED)
-// ============================================================
-
-private LinearLayout makeSectionBody() {
-    LinearLayout body = new LinearLayout(this);
-    body.setOrientation(LinearLayout.VERTICAL);
-    body.setVisibility(View.GONE);
-    body.setPadding(0, dp(4), 0, dp(4));
-
-    allSectionBodies.add(body);
-    return body;
-}
-
-private Button makeSectionHeader(String text, LinearLayout bodyToToggle) {
-
-    Button b = new Button(this);
-    allSectionHeaders.add(b);
-
-    b.setText(text);
-    b.setAllCaps(false);
-    b.setTextSize(15f);
-    b.setTextColor(0xFF39FF14); // neon green
-    b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-    lp.setMargins(0, dp(6), 0, dp(4));
-    b.setLayoutParams(lp);
-    b.setGravity(Gravity.CENTER);
-
-    b.setOnClickListener(v -> {
-
-        boolean willOpen = bodyToToggle.getVisibility() != View.VISIBLE;
-
-        // close ALL sections
-        for (LinearLayout body : allSectionBodies) {
-            body.setVisibility(View.GONE);
-        }
-
-        if (willOpen) {
-            bodyToToggle.setVisibility(View.VISIBLE);
-            scroll.post(() -> scroll.smoothScrollTo(0, b.getTop()));
-        }
-    });
-
-    return b;
-}
-
-private Button makeTestButton(String text, Runnable action) {
-    Button b = new Button(this);
-    b.setText(text);
-    b.setAllCaps(false);
-    b.setTextSize(14f);
-    b.setTextColor(0xFFFFFFFF);
-    b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(48));
-    lp.setMargins(0, dp(4), 0, dp(4));
-    b.setLayoutParams(lp);
-    b.setGravity(Gravity.CENTER);
-    b.setOnClickListener(v -> action.run());
-
-    return b;
-}
-
-private Button makeTestButtonRedGold(String text, Runnable action) {
-    Button b = new Button(this);
-    b.setText(text);
-    b.setAllCaps(false);
-    b.setTextSize(14f);
-    b.setTextColor(0xFFFFFFFF);
-    b.setTypeface(null, Typeface.BOLD);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF8B0000);
-    bg.setCornerRadius(dp(12));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    b.setBackground(bg);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52));
-    lp.setMargins(0, dp(6), 0, dp(6));
-    b.setLayoutParams(lp);
-    b.setGravity(Gravity.CENTER);
-    b.setOnClickListener(v -> action.run());
-
-    return b;
-}
-
-// ============================================================
-// GEL Battery Temperature Reader (Universal)
-// ============================================================
-private float getBatteryTemperature() {
-    try {
-        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (i == null) return 0f;
-
-        int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-        if (raw <= 0) return 0f;
-
-        return raw / 10f; // tenths of Â°C
-    } catch (Exception e) {
-        return 0f;
-    }
-}
-
-// ============================================================
-// LAB 14 â€” FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
-// GEL EDITION â€” LOCKED / PRODUCTION
-// ============================================================
-//
-// INPUTS (ALREADY COMPUTED BY LAB 14 CORE):
-//  - baseScore        : int    (0â€“100)
-//  - mahPerHour       : double (discharge rate under stress)
-//  - healthPct        : int    (estimated capacity %)
-//  - battTempBefore   : Float  (Â°C, start)
-//  - battTempAfter    : Float  (Â°C, end)
-//  - battTempPeak     : Float  (Â°C, peak, optional)
-//
-// OUTPUT:
-//  - Final Battery Health Score
-//  - Category
-//  - Thermal Verdict line
-//
-// ============================================================
-
-private void logFinalBatteryHealthScore(
-        int baseScore,
-        double mahPerHour,
-        int healthPct,
-        Float battTempBefore,
-        Float battTempAfter,
-        Float battTempPeak
-) {
-
-    int score = baseScore;
-
-    // --------------------------------------------------------
-    // 1ï¸âƒ£ DRAIN PENALTIES (STRESS BEHAVIOR)
-    // --------------------------------------------------------
-    if (mahPerHour > 900)       score -= 30;
-    else if (mahPerHour > 750)  score -= 20;
-    else if (mahPerHour > 600)  score -= 10;
-
-    // --------------------------------------------------------
-    // 2ï¸âƒ£ CAPACITY PENALTIES
-    // --------------------------------------------------------
-    if (healthPct > 0) {
-        if (healthPct < 60)       score -= 25;
-        else if (healthPct < 70)  score -= 15;
-        else if (healthPct < 80)  score -= 8;
+    private void logSection(String msg) {
+        logLine();
+        logInfo(msg);
     }
 
-    // --------------------------------------------------------
-    // 3ï¸âƒ£ THERMAL ANALYSIS (VERDICT + WEIGHT)
-    // --------------------------------------------------------
-    float dT = 0f;
-    if (battTempBefore != null) {
-        float ref = battTempBefore;
-        float end = (battTempPeak != null)
-                ? battTempPeak
-                : (battTempAfter != null ? battTempAfter : ref);
-        dT = end - ref;
+    // ============================================================
+    // UI HELPERS (GEL LOCKED)
+    // ============================================================
+    private LinearLayout makeSectionBody() {
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.VERTICAL);
+        body.setVisibility(View.GONE);
+        body.setPadding(0, dp(4), 0, dp(4));
+
+        allSectionBodies.add(body);
+        return body;
     }
 
-    String thermalVerdict;
-    int thermalPenalty = 0;
+    private Button makeSectionHeader(String text, LinearLayout bodyToToggle) {
+        Button b = new Button(this);
+        allSectionHeaders.add(b);
 
-    if (dT <= 4f) {
-        thermalVerdict = "OK";
-        thermalPenalty = 0;
-    } else if (dT <= 7f) {
-        thermalVerdict = "Warm";
-        thermalPenalty = 5;
-    } else {
-        thermalVerdict = "Risk";
-        thermalPenalty = (dT > 10f ? 15 : 10);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextSize(15f);
+        b.setTextColor(0xFF39FF14); // neon green
+        b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+        lp.setMargins(0, dp(6), 0, dp(4));
+        b.setLayoutParams(lp);
+        b.setGravity(Gravity.CENTER);
+
+        b.setOnClickListener(v -> {
+            boolean willOpen = bodyToToggle.getVisibility() != View.VISIBLE;
+
+            // close ALL sections
+            for (LinearLayout body : allSectionBodies) {
+                body.setVisibility(View.GONE);
+            }
+
+            if (willOpen) {
+                bodyToToggle.setVisibility(View.VISIBLE);
+                scroll.post(() -> scroll.smoothScrollTo(0, b.getTop()));
+            }
+        });
+
+        return b;
     }
 
-    score -= thermalPenalty;
+    private Button makeTestButton(String text, Runnable action) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextSize(14f);
+        b.setTextColor(0xFFFFFFFF);
+        b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-    // --------------------------------------------------------
-    // CLAMP
-    // --------------------------------------------------------
-    if (score < 0)   score = 0;
-    if (score > 100) score = 100;
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(48)
+                );
+        lp.setMargins(0, dp(4), 0, dp(4));
+        b.setLayoutParams(lp);
+        b.setGravity(Gravity.CENTER);
+        b.setOnClickListener(v -> action.run());
 
-    // --------------------------------------------------------
-    // CATEGORY
-    // --------------------------------------------------------
-    String category;
-    if (score >= 90)       category = "Strong";
-    else if (score >= 80)  category = "Excellent";
-    else if (score >= 70)  category = "Very good";
-    else if (score >= 60)  category = "Normal";
-    else                   category = "Weak";
-
-    // --------------------------------------------------------
-    // LOG OUTPUT (LAB STYLE)
-    // --------------------------------------------------------
-    logLine();
-
-    logInfo(String.format(
-            Locale.US,
-            "Thermal Verdict: %s (Î”T +%.1fÂ°C)",
-            thermalVerdict,
-            dT
-    ));
-
-    if (thermalPenalty > 0) {
-        logWarn(String.format(
-                Locale.US,
-                "Thermal Weight Applied: -%d%%",
-                thermalPenalty
-        ));
-    } else {
-        logOk("Thermal Weight Applied: none");
+        return b;
     }
 
-    logLine();
+    private Button makeTestButtonRedGold(String text, Runnable action) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextSize(14f);
+        b.setTextColor(0xFFFFFFFF);
+        b.setTypeface(null, Typeface.BOLD);
 
-    logOk(String.format(
-            Locale.US,
-            "Final Battery Health Score: %d%% (%s)",
-            score,
-            category
-    ));
-}
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF8B0000);
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        b.setBackground(bg);
 
-// ============================================================
-// LAB 14 â€” FINAL BATTERY HEALTH SCORE (Judge Layer)
-// ============================================================
-private void logFinalBatteryHealthScore(
-        double mahPerHour,
-        int healthPct,
-        Float battTempAfter,
-        Float battTempBefore
-) {
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lp.setMargins(0, dp(6), 0, dp(6));
+        b.setLayoutParams(lp);
+        b.setGravity(Gravity.CENTER);
+        b.setOnClickListener(v -> action.run());
 
-    int score = 100;
-
-    if (mahPerHour > 900)       score -= 30;
-    else if (mahPerHour > 750)  score -= 20;
-    else if (mahPerHour > 600)  score -= 10;
-
-    if (battTempAfter != null && battTempBefore != null) {
-        double dT = battTempAfter - battTempBefore;
-        if (dT > 10)       score -= 20;
-        else if (dT > 7)   score -= 10;
+        return b;
     }
 
-    if (healthPct > 0) {
-        if (healthPct < 60)       score -= 25;
-        else if (healthPct < 70)  score -= 15;
-        else if (healthPct < 80)  score -= 8;
-    }
-
-    score = Math.max(0, Math.min(100, score));
-
-    String category;
-    if (score >= 90)      category = "Strong";
-    else if (score >= 75) category = "Very good";
-    else if (score >= 60) category = "Normal";
-    else                  category = "Weak";
-
-    logLine();
-    logOk(String.format(Locale.US,
-            "Final Battery Health Score: %d%% (%s)",
-            score, category));
-}
-
-// ------------------------------------------------------------
-// Call when LAB 14 fully ends
-// ------------------------------------------------------------
-private void dismissLab14RunningDialog() {
-    try {
-        if (lab14Dialog != null && lab14Dialog.isShowing()) {
-            lab14Dialog.dismiss();
-        }
-    } catch (Throwable ignore) {}
-    finally {
-        lab14Dialog = null;
-        lab14ProgressText = null;
-        lab14ProgressBar = null;
-    }
-}
-
-// ------------------------------------------------------------
-// LAB 14 â€” USER ABORT (CANCEL / EXIT)
-// ------------------------------------------------------------
-private void abortLab14ByUser() {
-
-    logWarn("LAB 14 aborted by user.");
-
-    try { stopCpuBurn(); } catch (Throwable ignore) {}
-    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-    dismissLab14RunningDialog();
-
-    lab14Running = false;
-
-    logInfo("Battery stress test was cancelled before completion.");
-}
-
-// ------------------------------------------------------------
-// Reliable charging detection (plugged-based)
-// ------------------------------------------------------------
-private boolean isDeviceCharging() {
-    try {
-        Intent i = registerReceiver(
-                null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        );
-        if (i == null) return false;
-
-        int plugged = i.getIntExtra(
-                BatteryManager.EXTRA_PLUGGED, 0
-        );
-
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
-            || plugged == BatteryManager.BATTERY_PLUGGED_USB
-            || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
-// ============================================================
-// LAB 3 â€” User Confirmation Dialog (Earpiece)
-// ============================================================
-private void askUserEarpieceConfirmation() {
-
-    ui.post(() -> {
+    // ============================================================
+    // GEL Battery Temperature Reader (Universal)
+    // ============================================================
+    private float getBatteryTemperature() {
         try {
-            AlertDialog.Builder b =
-                    new AlertDialog.Builder(
-                            ManualTestsActivity.this,
-                            android.R.style.Theme_Material_Dialog_NoActionBar
-                    );
+            Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            if (i == null) return 0f;
 
-            b.setTitle("LAB 3 â€” Confirm");
-            b.setMessage("Did you hear the sound clearly from the earpiece?");
-            b.setCancelable(false);
+            int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            if (raw <= 0) return 0f;
 
-            b.setPositiveButton("YES", (d, w) -> {
-                logOk("User confirmed earpiece audio was audible");
-                enableSingleExportButton();
-            });
+            return raw / 10f; // tenths of °C
+        } catch (Exception e) {
+            return 0f;
+        }
+    }
 
-            b.setNegativeButton("NO", (d, w) -> {
-                logWarn("Earpiece signal detected but user did not hear sound clearly");
-                enableSingleExportButton();
-            });
+    // ============================================================
+    // LAB 14 — FINAL BATTERY HEALTH JUDGE (THERMAL WEIGHTED)
+    // GEL EDITION — LOCKED / PRODUCTION
+    // ============================================================
+    private void logFinalBatteryHealthScore(
+            int baseScore,
+            double mahPerHour,
+            int healthPct,
+            Float battTempBefore,
+            Float battTempAfter,
+            Float battTempPeak
+    ) {
 
-            AlertDialog dialog = b.create();
-            dialog.show();
+        int score = baseScore;
 
-            // ðŸ”¥ GEL DARK STYLE (NO XML)
-            try {
-                dialog.getWindow().setBackgroundDrawable(
-                        new ColorDrawable(0xFF101010)
-                );
+        // --------------------------------------------------------
+        // 1) DRAIN PENALTIES (STRESS BEHAVIOR)
+        // --------------------------------------------------------
+        if (mahPerHour > 900)       score -= 30;
+        else if (mahPerHour > 750)  score -= 20;
+        else if (mahPerHour > 600)  score -= 10;
 
-                TextView title = dialog.findViewById(
-                        getResources().getIdentifier(
-                                "alertTitle", "id", "android")
-                );
-                if (title != null)
-                    title.setTextColor(0xFFFFFFFF);
+        // --------------------------------------------------------
+        // 2) CAPACITY PENALTIES
+        // --------------------------------------------------------
+        if (healthPct > 0) {
+            if (healthPct < 60)       score -= 25;
+            else if (healthPct < 70)  score -= 15;
+            else if (healthPct < 80)  score -= 8;
+        }
 
-                TextView msg = dialog.findViewById(android.R.id.message);
-                if (msg != null)
-                    msg.setTextColor(0xFFEEEEEE);
+        // --------------------------------------------------------
+        // 3) THERMAL ANALYSIS (VERDICT + WEIGHT)
+        // --------------------------------------------------------
+        float dT = 0f;
+        if (battTempBefore != null) {
+            float ref = battTempBefore;
+            float end = (battTempPeak != null)
+                    ? battTempPeak
+                    : (battTempAfter != null ? battTempAfter : ref);
+            dT = end - ref;
+        }
 
-                Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+        String thermalVerdict;
+        int thermalPenalty;
 
-                if (yes != null) yes.setTextColor(0xFFFFD700);
-                if (no  != null) no.setTextColor(0xFFFFD700);
+        if (dT <= 4f) {
+            thermalVerdict = "OK";
+            thermalPenalty = 0;
+        } else if (dT <= 7f) {
+            thermalVerdict = "Warm";
+            thermalPenalty = 5;
+        } else {
+            thermalVerdict = "Risk";
+            thermalPenalty = (dT > 10f ? 15 : 10);
+        }
 
-            } catch (Throwable ignore) {}
+        score -= thermalPenalty;
+
+        // CLAMP
+        if (score < 0)   score = 0;
+        if (score > 100) score = 100;
+
+        // CATEGORY
+        String category;
+        if (score >= 90)       category = "Strong";
+        else if (score >= 80)  category = "Excellent";
+        else if (score >= 70)  category = "Very good";
+        else if (score >= 60)  category = "Normal";
+        else                   category = "Weak";
+
+        // LOG OUTPUT (LAB STYLE)
+        logLine();
+
+        logInfo(String.format(
+                Locale.US,
+                "Thermal Verdict: %s (ΔT +%.1f°C)",
+                thermalVerdict,
+                dT
+        ));
+
+        if (thermalPenalty > 0) {
+            logWarn(String.format(
+                    Locale.US,
+                    "Thermal Weight Applied: -%d%%",
+                    thermalPenalty
+            ));
+        } else {
+            logOk("Thermal Weight Applied: none");
+        }
+
+        logLine();
+
+        logOk(String.format(
+                Locale.US,
+                "Final Battery Health Score: %d%% (%s)",
+                score,
+                category
+        ));
+    }
+
+    // ============================================================
+    // LAB 14 — FINAL BATTERY HEALTH SCORE (Judge Layer)
+    // ============================================================
+    private void logFinalBatteryHealthScore(
+            double mahPerHour,
+            int healthPct,
+            Float battTempAfter,
+            Float battTempBefore
+    ) {
+
+        int score = 100;
+
+        if (mahPerHour > 900)       score -= 30;
+        else if (mahPerHour > 750)  score -= 20;
+        else if (mahPerHour > 600)  score -= 10;
+
+        if (battTempAfter != null && battTempBefore != null) {
+            double dT = battTempAfter - battTempBefore;
+            if (dT > 10)       score -= 20;
+            else if (dT > 7)   score -= 10;
+        }
+
+        if (healthPct > 0) {
+            if (healthPct < 60)       score -= 25;
+            else if (healthPct < 70)  score -= 15;
+            else if (healthPct < 80)  score -= 8;
+        }
+
+        score = Math.max(0, Math.min(100, score));
+
+        String category;
+        if (score >= 90)      category = "Strong";
+        else if (score >= 75) category = "Very good";
+        else if (score >= 60) category = "Normal";
+        else                  category = "Weak";
+
+        logLine();
+        logOk(String.format(
+                Locale.US,
+                "Final Battery Health Score: %d%% (%s)",
+                score, category
+        ));
+    }
+
+    // ------------------------------------------------------------
+    // Call when LAB 14 fully ends
+    // ------------------------------------------------------------
+    private void dismissLab14RunningDialog() {
+        try {
+            if (lab14Dialog != null && lab14Dialog.isShowing()) {
+                lab14Dialog.dismiss();
+            }
+        } catch (Throwable ignore) {
+        } finally {
+            lab14Dialog = null;
+            lab14ProgressText = null;
+            lab14ProgressBar = null;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // LAB 14 — USER ABORT (CANCEL / EXIT)
+    // ------------------------------------------------------------
+    private void abortLab14ByUser() {
+        logWarn("LAB 14 aborted by user.");
+
+        try { stopCpuBurn(); } catch (Throwable ignore) {}
+        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+
+        dismissLab14RunningDialog();
+        lab14Running = false;
+
+        logInfo("Battery stress test was cancelled before completion.");
+    }
+
+    // ------------------------------------------------------------
+    // Reliable charging detection (plugged-based)
+    // ------------------------------------------------------------
+    private boolean isDeviceCharging() {
+        try {
+            Intent i = registerReceiver(
+                    null,
+                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            );
+            if (i == null) return false;
+
+            int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+
+            return plugged == BatteryManager.BATTERY_PLUGGED_AC
+                    || plugged == BatteryManager.BATTERY_PLUGGED_USB
+                    || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
 
         } catch (Throwable t) {
-            enableSingleExportButton();
+            return false;
         }
-    });
-}
+    }
 
-private TelephonySnapshot getTelephonySnapshot() {
+    // Alias used by your peak tracker (kept for compatibility)
+    private boolean isChargingNow() {
+        return isDeviceCharging();
+    }
 
-    TelephonySnapshot s = new TelephonySnapshot();
+    // ============================================================
+    // LAB 3 — User Confirmation Dialog (Earpiece)
+    // ============================================================
+    private void askUserEarpieceConfirmation() {
 
-    // ------------------------------------------------------------
-    // Airplane mode
-    // ------------------------------------------------------------
-    try {
-        s.airplaneOn = Settings.Global.getInt(
-                getContentResolver(),
-                Settings.Global.AIRPLANE_MODE_ON, 0
-        ) == 1;
-    } catch (Exception ignored) {}
+        ui.post(() -> {
+            try {
+                AlertDialog.Builder b =
+                        new AlertDialog.Builder(
+                                ManualTestsActivity.this,
+                                android.R.style.Theme_Material_Dialog_NoActionBar
+                        );
 
-    TelephonyManager tm =
-            (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                b.setTitle("LAB 3 — Confirm");
+                b.setMessage("Did you hear the sound clearly from the earpiece?");
+                b.setCancelable(false);
 
-    if (tm != null) {
+                b.setPositiveButton("YES", (d, w) -> {
+                    logOk("User confirmed earpiece audio was audible");
+                    enableSingleExportButton();
+                });
 
-        // --------------------------------------------------------
-        // SIM state
-        // --------------------------------------------------------
-        try {
-            s.simState = tm.getSimState();
-            s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);
-        } catch (Exception ignored) {}
+                b.setNegativeButton("NO", (d, w) -> {
+                    logWarn("Earpiece signal detected but user did not hear sound clearly");
+                    enableSingleExportButton();
+                });
 
-        // --------------------------------------------------------
-        // Service state (SAFE DEFAULT FIRST)
-        // --------------------------------------------------------
-        s.serviceState = ServiceState.STATE_OUT_OF_SERVICE;
-        s.inService = false;
+                AlertDialog dialog = b.create();
+                dialog.show();
 
-        try {
-            ServiceState ss = tm.getServiceState();
-            if (ss != null) {
-                s.serviceState = ss.getState();
-                s.inService =
-                        (s.serviceState == ServiceState.STATE_IN_SERVICE);
+                // 🔥 GEL DARK STYLE (NO XML)
+                try {
+                    if (dialog.getWindow() != null) {
+                        dialog.getWindow().setBackgroundDrawable(
+                                new ColorDrawable(0xFF101010)
+                        );
+                    }
+
+                    TextView title = dialog.findViewById(
+                            getResources().getIdentifier(
+                                    "alertTitle", "id", "android"
+                            )
+                    );
+                    if (title != null)
+                        title.setTextColor(0xFFFFFFFF);
+
+                    TextView msg = dialog.findViewById(android.R.id.message);
+                    if (msg != null)
+                        msg.setTextColor(0xFFEEEEEE);
+
+                    Button yes = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    Button no  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                    if (yes != null) yes.setTextColor(0xFFFFD700);
+                    if (no  != null) no.setTextColor(0xFFFFD700);
+
+                } catch (Throwable ignore) {}
+
+            } catch (Throwable t) {
+                enableSingleExportButton();
             }
-        } catch (Exception ignored) {}
+        });
+    }
 
-        // --------------------------------------------------------
-        // Data state
-        // --------------------------------------------------------
+    private TelephonySnapshot getTelephonySnapshot() {
+
+        TelephonySnapshot s = new TelephonySnapshot();
+
+        // Airplane mode
         try {
-            s.dataState = tm.getDataState();
-        } catch (Exception ignored) {}
-    }
-
-    // ------------------------------------------------------------
-    // Internet context (best effort, informational only)
-    // ------------------------------------------------------------
-    ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-
-    if (cm != null) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Network n = cm.getActiveNetwork();
-                NetworkCapabilities caps =
-                        cm.getNetworkCapabilities(n);
-                s.hasInternet = caps != null &&
-                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-            } else {
-                @SuppressWarnings("deprecation")
-                NetworkInfo ni = cm.getActiveNetworkInfo();
-                s.hasInternet = ni != null && ni.isConnected();
-            }
-        } catch (Exception ignored) {}
-    }
-
-    return s;
-}
-
-// ============================================================
-// LOGGING (GEL CANONICAL)
-// ============================================================
-
-private void appendHtml(String html) {
-    ui.post(() -> {
-        CharSequence cur = txtLog.getText();
-        CharSequence add = Html.fromHtml(html + "<br>");
-        txtLog.setText(TextUtils.concat(cur, add));
-        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-    });
-}
-
-private void logInfo(String msg) {
-    GELServiceLog.info(msg);
-    appendHtml("â„¹ï¸ " + escape(msg));
-}
-
-private void logOk(String msg) {
-    GELServiceLog.ok(msg);
-    appendHtml("<font color='#88FF88'>âœ… " + escape(msg) + "</font>");
-}
-
-private void logWarn(String msg) {
-    GELServiceLog.warn(msg);
-    appendHtml("<font color='#FFD966'>âš ï¸ " + escape(msg) + "</font>");
-}
-
-private void logError(String msg) {
-    GELServiceLog.error(msg);
-    appendHtml("<font color='#FF5555'>âŒ " + escape(msg) + "</font>");
-}
-
-// ============================================================
-// LABEL : VALUE (WHITE LABEL / GREEN VALUE)
-// ============================================================
-
-private void logLabelValue(String label, String value) {
-    appendHtml(
-            escape(label) + ": "
-                    + "<font color='#39FF14'>" + escape(value) + "</font>"
-    );
-}
-
-private void logLabelValue(String text) {
-    int idx = text.indexOf(":");
-    if (idx <= 0 || idx >= text.length() - 1) {
-        logInfo(text);
-        return;
-    }
-
-    logLabelValue(
-            text.substring(0, idx).trim(),
-            text.substring(idx + 1).trim()
-    );
-}
-
-// ============================================================
-// CORE HELPERS (SINGLE SOURCE)
-// ============================================================
-
-private void logLine() {
-    GELServiceLog.addLine("----------------------------------------");
-    appendHtml("----------------------------------------");
-}
-
-private String escape(String s) {
-    if (s == null) return "";
-    return s.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;");
-}
-
-private int dp(int v) {
-    float d = getResources().getDisplayMetrics().density;
-    return (int) (v * d + 0.5f);
-}
-
-// ============================================================
-// SHARED FORMAT HELPERS
-// ============================================================
-
-private String humanBytes(long bytes) {
-    if (bytes <= 0) return "0 B";
-    float kb = bytes / 1024f;
-    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);
-    float mb = kb / 1024f;
-    if (mb < 1024) return String.format(Locale.US, "%.1f MB", mb);
-    float gb = mb / 1024f;
-    return String.format(Locale.US, "%.2f GB", gb);
-}
-
-private String formatUptime(long ms) {
-    long s = ms / 1000;
-    long d = s / (24 * 3600);
-    s %= (24 * 3600);
-    long h = s / 3600;
-    s %= 3600;
-    long m = s / 60;
-    return String.format(Locale.US, "%dd %dh %dm", d, h, m);
-}
-
-private String cleanSsid(String raw) {
-    if (raw == null) return "Unknown";
-    raw = raw.trim();
-    if (raw.equalsIgnoreCase("<unknown ssid>") ||
-        raw.equalsIgnoreCase("unknown ssid"))
-        return "Unknown";
-    if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
-        return raw.substring(1, raw.length() - 1);
-    return raw;
-}
-
-private String ipToStr(int ip) {
-    return (ip & 0xFF) + "." +
-           ((ip >> 8) & 0xFF) + "." +
-           ((ip >> 16) & 0xFF) + "." +
-           ((ip >> 24) & 0xFF);
-}
-
-// ============================================================
-// LAB 14 â€” REQUIRED SUPPORT METHODS (DO NOT MODIFY)
-// ============================================================
-
-private float getCurrentBatteryPercent() {
-    try {
-        Intent i = registerReceiver(
-                null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        );
-        if (i == null) return -1f;
-
-        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-
-        if (level < 0 || scale <= 0) return -1f;
-        return (level * 100f) / scale;
-
-    } catch (Throwable t) {
-        return -1f;
-    }
-}
-
-// ------------------------------------------------------------
-// Brightness + keep screen on (LAB stress)
-// ------------------------------------------------------------
-
-private int __oldBrightness = -1;
-
-private void applyMaxBrightnessAndKeepOn() {
-    try {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-
-        if (__oldBrightness < 0) {
-            __oldBrightness = Settings.System.getInt(
+            s.airplaneOn = Settings.Global.getInt(
                     getContentResolver(),
-                    Settings.System.SCREEN_BRIGHTNESS,
-                    128
-            );
+                    Settings.Global.AIRPLANE_MODE_ON, 0
+            ) == 1;
+        } catch (Exception ignored) {}
+
+        TelephonyManager tm =
+                (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+
+        if (tm != null) {
+
+            // SIM state
+            try {
+                s.simState = tm.getSimState();
+                s.simReady = (s.simState == TelephonyManager.SIM_STATE_READY);
+            } catch (Exception ignored) {}
+
+            // Service state (SAFE DEFAULT FIRST)
+            s.serviceState = ServiceState.STATE_OUT_OF_SERVICE;
+            s.inService = false;
+
+            try {
+                ServiceState ss = tm.getServiceState();
+                if (ss != null) {
+                    s.serviceState = ss.getState();
+                    s.inService = (s.serviceState == ServiceState.STATE_IN_SERVICE);
+                }
+            } catch (Exception ignored) {}
+
+            // Data state
+            try {
+                s.dataState = tm.getDataState();
+            } catch (Exception ignored) {}
         }
 
-        lp.screenBrightness = 1.0f;
-        getWindow().setAttributes(lp);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Internet context (best effort, informational only)
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
-    } catch (Throwable ignore) {}
-}
-
-private void restoreBrightnessAndKeepOn() {
-    try {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-
-        if (__oldBrightness >= 0) {
-            lp.screenBrightness = __oldBrightness / 255f;
-            getWindow().setAttributes(lp);
+        if (cm != null) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Network n = cm.getActiveNetwork();
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(n);
+                    s.hasInternet = caps != null &&
+                            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                } else {
+                    @SuppressWarnings("deprecation")
+                    NetworkInfo ni = cm.getActiveNetworkInfo();
+                    s.hasInternet = ni != null && ni.isConnected();
+                }
+            } catch (Exception ignored) {}
         }
 
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        return s;
+    }
 
-    } catch (Throwable ignore) {}
-}
+    // ============================================================
+    // LOGGING (GEL CANONICAL)
+    // ============================================================
+    private void appendHtml(String html) {
+        ui.post(() -> {
+            CharSequence cur = txtLog.getText();
+            CharSequence add = Html.fromHtml(html + "<br>");
+            txtLog.setText(TextUtils.concat(cur, add));
+            scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        });
+    }
 
-// ------------------------------------------------------------
-// CPU stress (controlled)
-// ------------------------------------------------------------
+    private void logInfo(String msg) {
+        GELServiceLog.info(msg);
+        appendHtml("ℹ️ " + escape(msg));
+    }
 
-private volatile boolean __cpuBurn = false;
+    private void logOk(String msg) {
+        GELServiceLog.ok(msg);
+        appendHtml("<font color='#88FF88'>✅ " + escape(msg) + "</font>");
+    }
 
-private void startCpuBurn_C_Mode() {
-    __cpuBurn = true;
+    private void logWarn(String msg) {
+        GELServiceLog.warn(msg);
+        appendHtml("<font color='#FFD966'>⚠️ " + escape(msg) + "</font>");
+    }
 
-    new Thread(() -> {
+    private void logError(String msg) {
+        GELServiceLog.error(msg);
+        appendHtml("<font color='#FF5555'>❌ " + escape(msg) + "</font>");
+    }
+
+    // ============================================================
+    // LABEL : VALUE (WHITE LABEL / GREEN VALUE)
+    // ============================================================
+    private void logLabelValue(String label, String value) {
+        appendHtml(
+                escape(label) + ": "
+                        + "<font color='#39FF14'>" + escape(value) + "</font>"
+        );
+    }
+
+    private void logLabelValue(String text) {
+        int idx = text.indexOf(":");
+        if (idx <= 0 || idx >= text.length() - 1) {
+            logInfo(text);
+            return;
+        }
+
+        logLabelValue(
+                text.substring(0, idx).trim(),
+                text.substring(idx + 1).trim()
+        );
+    }
+
+    // ============================================================
+    // CORE HELPERS (SINGLE SOURCE)
+    // ============================================================
+    private void logLine() {
+        GELServiceLog.addLine("----------------------------------------");
+        appendHtml("----------------------------------------");
+    }
+
+    private String escape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    private int dp(int v) {
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
+    }
+
+    // ============================================================
+    // SHARED FORMAT HELPERS
+    // ============================================================
+    private String humanBytes(long bytes) {
+        if (bytes <= 0) return "0 B";
+        float kb = bytes / 1024f;
+        if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);
+        float mb = kb / 1024f;
+        if (mb < 1024) return String.format(Locale.US, "%.1f MB", mb);
+        float gb = mb / 1024f;
+        return String.format(Locale.US, "%.2f GB", gb);
+    }
+
+    private String formatUptime(long ms) {
+        long s = ms / 1000;
+        long d = s / (24 * 3600);
+        s %= (24 * 3600);
+        long h = s / 3600;
+        s %= 3600;
+        long m = s / 60;
+        return String.format(Locale.US, "%dd %dh %dm", d, h, m);
+    }
+
+    private String cleanSsid(String raw) {
+        if (raw == null) return "Unknown";
+        raw = raw.trim();
+        if (raw.equalsIgnoreCase("<unknown ssid>") ||
+                raw.equalsIgnoreCase("unknown ssid"))
+            return "Unknown";
+        if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
+            return raw.substring(1, raw.length() - 1);
+        return raw;
+    }
+
+    private String ipToStr(int ip) {
+        return (ip & 0xFF) + "." +
+                ((ip >> 8) & 0xFF) + "." +
+                ((ip >> 16) & 0xFF) + "." +
+                ((ip >> 24) & 0xFF);
+    }
+
+    // ============================================================
+    // LAB 14 — REQUIRED SUPPORT METHODS (DO NOT MODIFY)
+    // ============================================================
+    private float getCurrentBatteryPercent() {
         try {
-            while (__cpuBurn) {
-                double x = 0;
-                for (int i = 0; i < 100_000; i++) {
-                    x += Math.sqrt(i);
+            Intent i = registerReceiver(
+                    null,
+                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            );
+            if (i == null) return -1f;
+
+            int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+            if (level < 0 || scale <= 0) return -1f;
+            return (level * 100f) / scale;
+
+        } catch (Throwable t) {
+            return -1f;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Brightness + keep screen on (LAB stress)
+    // ------------------------------------------------------------
+    private int __oldBrightness = -1;
+
+    private void applyMaxBrightnessAndKeepOn() {
+        try {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+            if (__oldBrightness < 0) {
+                __oldBrightness = Settings.System.getInt(
+                        getContentResolver(),
+                        Settings.System.SCREEN_BRIGHTNESS,
+                        128
+                );
+            }
+
+            lp.screenBrightness = 1.0f;
+            getWindow().setAttributes(lp);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        } catch (Throwable ignore) {}
+    }
+
+    private void restoreBrightnessAndKeepOn() {
+        try {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+            if (__oldBrightness >= 0) {
+                lp.screenBrightness = __oldBrightness / 255f;
+                getWindow().setAttributes(lp);
+            }
+
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        } catch (Throwable ignore) {}
+    }
+
+    // ------------------------------------------------------------
+    // CPU stress (controlled)
+    // ------------------------------------------------------------
+    private volatile boolean __cpuBurn = false;
+
+    private void startCpuBurn_C_Mode() {
+        __cpuBurn = true;
+
+        new Thread(() -> {
+            try {
+                while (__cpuBurn) {
+                    double x = 0;
+                    for (int i = 0; i < 100_000; i++) {
+                        x += Math.sqrt(i);
+                    }
+                }
+            } catch (Throwable ignore) {}
+        }, "LAB14-CPU-BURN").start();
+    }
+
+    private void stopCpuBurn() {
+        __cpuBurn = false;
+    }
+
+    // ------------------------------------------------------------
+    // UI health map (fallback)
+    // ------------------------------------------------------------
+    private void printHealthCheckboxMap(String decision) {
+        logLine();
+
+        if ("Strong".equalsIgnoreCase(decision)) {
+            logOk("Health Map: ✔ Battery ✔ Thermal ✔ Drain");
+        } else if ("Normal".equalsIgnoreCase(decision)) {
+            logWarn("Health Map: ⚠ Moderate wear detected");
+        } else {
+            logError("Health Map: ✖ Battery health critical");
+        }
+    }
+
+    // ----------------------------------------------------
+    // PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
+    // ----------------------------------------------------
+    private void updateChargingPeakTemperature() {
+
+        if (!isChargingNow()) return;
+
+        float tNow = getBatteryTemperature();
+        if (tNow > 0 && !Float.isNaN(tNow)) {
+            if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
+                lab15BattTempPeak = tNow;
+            }
+        }
+    }
+
+    // ============================================================
+    // THERMAL HELPERS — REQUIRED (SCAN + FALLBACK + FORMAT)
+    // ============================================================
+    private boolean isRooted = false; // kept
+
+    private long readLongSafe(File f) {
+        BufferedReader br = null;
+        try {
+            if (f == null || !f.exists()) return Long.MIN_VALUE;
+            br = new BufferedReader(new FileReader(f));
+            String line = br.readLine();
+            if (line == null) return Long.MIN_VALUE;
+            line = line.trim();
+            if (line.isEmpty()) return Long.MIN_VALUE;
+            return Long.parseLong(line);
+        } catch (Throwable ignored) {
+            return Long.MIN_VALUE;
+        } finally {
+            try { if (br != null) br.close(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private static class ThermalGroupReading {
+        float max = Float.NaN;
+        float avg = Float.NaN;
+        int count = 0;
+
+        void add(float v) {
+            if (Float.isNaN(v)) return;
+            if (Float.isNaN(max) || v > max) max = v;
+            avg = Float.isNaN(avg) ? v : ((avg * count + v) / (count + 1));
+            count++;
+        }
+    }
+
+    private static class ThermalSummary {
+        int zoneCount = 0;
+        int coolingDeviceCount = 0;
+    }
+
+    private ThermalSummary scanThermalHardware(
+            ThermalGroupReading batteryMain,
+            ThermalGroupReading batteryShell,
+            ThermalGroupReading pmic,
+            ThermalGroupReading charger,
+            ThermalGroupReading modemMain,
+            ThermalGroupReading modemAux
+    ) {
+        ThermalSummary s = new ThermalSummary();
+
+        try {
+            File base = new File("/sys/class/thermal");
+            File[] all = base.listFiles();
+            if (all == null) return s;
+
+            for (File z : all) {
+                if (z == null) continue;
+
+                String name = z.getName();
+                if (name == null) continue;
+
+                // cooling devices count
+                if (name.startsWith("cooling_device")) {
+                    s.coolingDeviceCount++;
+                    continue;
+                }
+
+                // zones
+                if (!name.startsWith("thermal_zone")) continue;
+                s.zoneCount++;
+
+                String type = null;
+                try {
+                    type = readFirstLineSafe(new File(z, "type"));
+                } catch (Throwable ignored) {}
+
+                long milli = readLongSafe(new File(z, "temp"));
+                if (milli == Long.MIN_VALUE) continue;
+
+                float t = (float) milli;
+
+                // autoscale (milli/centi/deci)
+                if (t > 1000f) t /= 1000f;
+                else if (t > 200f) t /= 100f;
+                else if (t > 20f) t /= 10f;
+
+                if (!isValidTemp(t)) continue;
+
+                String key = (type != null ? type : name).toLowerCase(Locale.US);
+
+                if (key.contains("batt") || key.contains("battery"))
+                    batteryMain.add(t);
+                else if (key.contains("skin") || key.contains("shell"))
+                    batteryShell.add(t);
+                else if (key.contains("pmic") || key.contains("pmi"))
+                    pmic.add(t);
+                else if (key.contains("chg") || key.contains("charger") || key.contains("usb"))
+                    charger.add(t);
+                else if (key.contains("modem") || key.contains("mdm") || key.contains("baseband"))
+                    modemMain.add(t);
+                else if (key.contains("rf") || key.contains("pa") || key.contains("qcom"))
+                    modemAux.add(t);
+            }
+        } catch (Throwable ignored) {}
+
+        return s;
+    }
+
+    private void applyThermalFallbacks(
+            ThermalGroupReading batteryMain,
+            ThermalGroupReading batteryShell,
+            ThermalGroupReading pmic,
+            ThermalGroupReading charger,
+            ThermalGroupReading modemMain,
+            ThermalGroupReading modemAux
+    ) {
+        if ((batteryMain == null || batteryMain.count == 0) &&
+                batteryShell != null && batteryShell.count > 0) {
+            if (batteryMain != null) {
+                batteryMain.max = batteryShell.max;
+                batteryMain.avg = batteryShell.avg;
+                batteryMain.count = batteryShell.count;
+            }
+        }
+
+        if ((modemMain == null || modemMain.count == 0) &&
+                modemAux != null && modemAux.count > 0) {
+            if (modemMain != null) {
+                modemMain.max = modemAux.max;
+                modemMain.avg = modemAux.avg;
+                modemMain.count = modemAux.count;
+            }
+        }
+    }
+
+    private String formatThermalLine(String label, ThermalGroupReading g) {
+        if (g == null || g.count <= 0) {
+            return String.format(Locale.US, "%-18s : N/A\n", label);
+        }
+        float mx = g.max;
+        float av = g.avg;
+        if (Float.isNaN(mx) && Float.isNaN(av)) {
+            return String.format(Locale.US, "%-18s : N/A\n", label);
+        }
+        if (Float.isNaN(av)) av = mx;
+        if (Float.isNaN(mx)) mx = av;
+
+        return String.format(
+                Locale.US,
+                "%-18s : max %.1f°C | avg %.1f°C | n=%d\n",
+                label, mx, av, g.count
+        );
+    }
+
+    private boolean isValidTemp(float t) {
+        return !Float.isNaN(t) && t > -20f && t < 120f;
+    }
+
+    private String readFirstLineSafe(File f) {
+        BufferedReader br = null;
+        try {
+            if (f == null || !f.exists()) return null;
+            br = new BufferedReader(new FileReader(f));
+            return br.readLine();
+        } catch (Throwable ignored) {
+            return null;
+        } finally {
+            try { if (br != null) br.close(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private void appendHardwareCoolingDevices(StringBuilder sb) {
+        try {
+            File base = new File("/sys/class/thermal");
+            File[] files = base.listFiles();
+            if (files == null) return;
+
+            sb.append("\nCooling devices:\n");
+            for (File f : files) {
+                if (f != null && f.getName().startsWith("cooling_device")) {
+                    sb.append("• ").append(f.getName()).append("\n");
                 }
             }
+        } catch (Throwable ignored) {}
+    }
+
+    private void logLab15ThermalCorrelation() {
+        logLab15ThermalCorrelation(Float.NaN, Float.NaN, Float.NaN);
+    }
+
+    private void logLab15ThermalCorrelation(
+            float battTempStart,
+            float battTempPeak,
+            float battTempEnd
+    ) {
+
+        if (Float.isNaN(battTempStart) || Float.isNaN(battTempEnd)) {
+            logWarn("Thermal correlation: insufficient data.");
+            return;
+        }
+
+        float rawDelta = !Float.isNaN(battTempPeak)
+                ? (battTempPeak - battTempStart)
+                : (battTempEnd - battTempStart);
+
+        float dPeak = Math.max(0f, rawDelta);
+
+        String verdict;
+        String note;
+
+        if (dPeak <= 4.0f) {
+            verdict = "OK";
+            note = "Normal thermal behavior during charging";
+        } else if (dPeak <= 7.0f) {
+            verdict = "Warm";
+            note = "Elevated thermal load during charging";
+        } else {
+            verdict = "Risk";
+            note = "Abnormal thermal rise detected";
+        }
+
+        logInfo(String.format(
+                Locale.US,
+                "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
+                battTempStart,
+                (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+                battTempEnd
+        ));
+
+        logOk(String.format(
+                Locale.US,
+                "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
+                verdict,
+                dPeak,
+                note
+        ));
+    }
+
+    // ============================================================
+    // CHARGING REQUIRED DIALOG — SAFE DISMISS
+    // ============================================================
+    protected void dismissChargingDialogSafe(
+            Context ctx,
+            AlertDialog dialog,
+            BroadcastReceiver receiver
+    ) {
+        try {
+            if (receiver != null) {
+                ctx.unregisterReceiver(receiver);
+            }
         } catch (Throwable ignore) {}
-    }, "LAB14-CPU-BURN").start();
-}
 
-private void stopCpuBurn() {
-    __cpuBurn = false;
-}
-
-// ------------------------------------------------------------
-// UI health map (fallback)
-// ------------------------------------------------------------
-
-private void printHealthCheckboxMap(String decision) {
-    logLine();
-
-    if ("Strong".equalsIgnoreCase(decision)) {
-        logOk("Health Map: âœ” Battery âœ” Thermal âœ” Drain");
-    } else if ("Normal".equalsIgnoreCase(decision)) {
-        logWarn("Health Map: âš  Moderate wear detected");
-    } else {
-        logError("Health Map: âœ– Battery health critical");
-    }
-}
-
-// ----------------------------------------------------
-// PEAK TEMPERATURE TRACKING (CHARGING-ONLY)
-// ----------------------------------------------------
-private void updateChargingPeakTemperature() {
-
-    if (!isChargingNow()) return;
-
-    float tNow = getBatteryTemperature();
-    if (tNow > 0 && !Float.isNaN(tNow)) {
-        if (Float.isNaN(lab15BattTempPeak) || tNow > lab15BattTempPeak) {
-            lab15BattTempPeak = tNow;
-        }
-    }
-}
-
-// ============================================================
-// THERMAL HELPERS â€” REQUIRED (SCAN + FALLBACK + FORMAT)
-// ============================================================
-
-private boolean isRooted = false; // fix: missing symbol
-
-// ------------------------------------------------------------
-// Safe long read
-// ------------------------------------------------------------
-private long readLongSafe(File f) {
-    BufferedReader br = null;
-    try {
-        if (f == null || !f.exists()) return Long.MIN_VALUE;
-        br = new BufferedReader(new FileReader(f));
-        String line = br.readLine();
-        if (line == null) return Long.MIN_VALUE;
-        line = line.trim();
-        if (line.isEmpty()) return Long.MIN_VALUE;
-        return Long.parseLong(line);
-    } catch (Throwable ignored) {
-        return Long.MIN_VALUE;
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignored) {}
-    }
-}
-
-// ------------------------------------------------------------
-// Thermal group accumulator
-// ------------------------------------------------------------
-private static class ThermalGroupReading {
-    float max = Float.NaN;
-    float avg = Float.NaN;
-    int count = 0;
-
-    void add(float v) {
-        if (Float.isNaN(v)) return;
-        if (Float.isNaN(max) || v > max) max = v;
-        avg = Float.isNaN(avg) ? v : ((avg * count + v) / (count + 1));
-        count++;
-    }
-}
-
-// ------------------------------------------------------------
-// Thermal summary container (fix: missing fields)
-// ------------------------------------------------------------
-private static class ThermalSummary {
-    int zoneCount = 0;
-    int coolingDeviceCount = 0;
-}
-
-// ------------------------------------------------------------
-// Scan thermal hardware (zones + cooling devices) and feed groups
-// ------------------------------------------------------------
-private ThermalSummary scanThermalHardware(
-        ThermalGroupReading batteryMain,
-        ThermalGroupReading batteryShell,
-        ThermalGroupReading pmic,
-        ThermalGroupReading charger,
-        ThermalGroupReading modemMain,
-        ThermalGroupReading modemAux
-) {
-    ThermalSummary s = new ThermalSummary();
-
-    try {
-        File base = new File("/sys/class/thermal");
-        File[] all = base.listFiles();
-        if (all == null) return s;
-
-        for (File z : all) {
-            if (z == null) continue;
-
-            String name = z.getName();
-            if (name == null) continue;
-
-            // cooling devices count
-            if (name.startsWith("cooling_device")) {
-                s.coolingDeviceCount++;
-                continue;
+        try {
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
             }
-
-            // zones
-            if (!name.startsWith("thermal_zone")) continue;
-
-            s.zoneCount++;
-
-            String type = null;
-            try {
-                type = readFirstLineSafe(new File(z, "type"));
-            } catch (Throwable ignored) {}
-
-            long milli = readLongSafe(new File(z, "temp"));
-            if (milli == Long.MIN_VALUE) continue;
-
-            float t = (float) milli;
-
-            // autoscale (milli/centi/deci)
-            if (t > 1000f) t /= 1000f;
-            else if (t > 200f) t /= 100f;
-            else if (t > 20f) t /= 10f;
-
-            if (!isValidTemp(t)) continue;
-
-            String key = (type != null ? type : name).toLowerCase(Locale.US);
-
-            // simple routing rules
-            if (key.contains("batt") || key.contains("battery"))
-                batteryMain.add(t);
-            else if (key.contains("skin") || key.contains("shell"))
-                batteryShell.add(t);
-            else if (key.contains("pmic") || key.contains("pmi"))
-                pmic.add(t);
-            else if (key.contains("chg") || key.contains("charger") || key.contains("usb"))
-                charger.add(t);
-            else if (key.contains("modem") || key.contains("mdm") || key.contains("baseband"))
-                modemMain.add(t);
-            else if (key.contains("rf") || key.contains("pa") || key.contains("qcom"))
-                modemAux.add(t);
-        }
-    } catch (Throwable ignored) {}
-
-    return s;
-}
-
-// ------------------------------------------------------------
-// Fallbacks (safe no-crash). Keeps compilation + avoids NaN chaos.
-// ------------------------------------------------------------
-private void applyThermalFallbacks(
-        ThermalGroupReading batteryMain,
-        ThermalGroupReading batteryShell,
-        ThermalGroupReading pmic,
-        ThermalGroupReading charger,
-        ThermalGroupReading modemMain,
-        ThermalGroupReading modemAux
-) {
-    // If main battery missing, try shell as proxy
-    if ((batteryMain == null || batteryMain.count == 0) && batteryShell != null && batteryShell.count > 0) {
-        if (batteryMain != null) {
-            batteryMain.max = batteryShell.max;
-            batteryMain.avg = batteryShell.avg;
-            batteryMain.count = batteryShell.count;
-        }
+        } catch (Throwable ignore) {}
     }
 
-    // If modemMain missing, try modemAux
-    if ((modemMain == null || modemMain.count == 0) && modemAux != null && modemAux.count > 0) {
-        if (modemMain != null) {
-            modemMain.max = modemAux.max;
-            modemMain.avg = modemAux.avg;
-            modemMain.count = modemAux.count;
-        }
-    }
-}
-
-// ------------------------------------------------------------
-// Formatter
-// ------------------------------------------------------------
-private String formatThermalLine(String label, ThermalGroupReading g) {
-    if (g == null || g.count <= 0) {
-        return String.format(Locale.US, "%-18s : N/A\n", label);
-    }
-    float mx = g.max;
-    float av = g.avg;
-    if (Float.isNaN(mx) && Float.isNaN(av)) {
-        return String.format(Locale.US, "%-18s : N/A\n", label);
-    }
-    if (Float.isNaN(av)) av = mx;
-    if (Float.isNaN(mx)) mx = av;
-
-    return String.format(
-            Locale.US,
-            "%-18s : max %.1fÂ°C | avg %.1fÂ°C | n=%d\n",
-            label, mx, av, g.count
-    );
-}
-
-// ============================================================
-// MISSING HELPERS â€” REQUIRED FOR THERMAL / LAB LOGIC
-// SAFE STUBS â€” PRODUCTION COMPATIBLE
-// ============================================================
-
-// ------------------------------------------------------------
-// 1) Temperature sanity check
-// ------------------------------------------------------------
-private boolean isValidTemp(float t) {
-    return !Float.isNaN(t) && t > -20f && t < 120f;
-}
-
-// ------------------------------------------------------------
-// 2) Safe file read (first line)
-// ------------------------------------------------------------
-private String readFirstLineSafe(File f) {
-    BufferedReader br = null;
-    try {
-        if (f == null || !f.exists()) return null;
-        br = new BufferedReader(new FileReader(f));
-        return br.readLine();
-    } catch (Throwable ignored) {
-        return null;
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignored) {}
-    }
-}
-
-// ------------------------------------------------------------
-// 4) Cooling devices enumeration
-// ------------------------------------------------------------
-private void appendHardwareCoolingDevices(StringBuilder sb) {
-    try {
-        File base = new File("/sys/class/thermal");
-        File[] files = base.listFiles();
-        if (files == null) return;
-
-        sb.append("\nCooling devices:\n");
-        for (File f : files) {
-            if (f != null && f.getName().startsWith("cooling_device")) {
-                sb.append("â€¢ ").append(f.getName()).append("\n");
-            }
-        }
-    } catch (Throwable ignored) {}
-}
-
-private void logLab15ThermalCorrelation() {
-    logLab15ThermalCorrelation(Float.NaN, Float.NaN, Float.NaN);
-}
-
-// ------------------------------------------------------------
-// LAB 15 â€” Thermal Correlation Logger
-// ------------------------------------------------------------
-
-private void logLab15ThermalCorrelation(
-        float battTempStart,
-        float battTempPeak,
-        float battTempEnd
-) {
-
-    if (Float.isNaN(battTempStart) || Float.isNaN(battTempEnd)) {
-        logWarn("Thermal correlation: insufficient data.");
-        return;
+    // ============================================================
+    // DOTS ANIMATION HELPER (OPTIONAL)
+    // ============================================================
+    protected void advanceDots(TextView dotsView, int step) {
+        if (dotsView == null) return;
+        String[] frames = { "•", "• •", "• • •" };
+        dotsView.setText(frames[step % frames.length]);
     }
 
-    // --------------------------------------------------------
-    // Î”T calculation (start â†’ peak/end)
-    // --------------------------------------------------------
-    float rawDelta = !Float.isNaN(battTempPeak)
-            ? (battTempPeak - battTempStart)
-            : (battTempEnd - battTempStart);
+    // ============================================================
+    // LAB 15 — Charging Required Dialog (LIVE STATUS PANEL)
+    // GEL EDITION — Blocking + Animated + Color State
+    // ============================================================
+    private AlertDialog chargingDialog;
+    private TextView chargingTitleView;
+    private TextView chargingMsgView;
+    private TextView chargingDotsView;
+    private BroadcastReceiver chargingReceiver;
 
-    float dPeak = Math.max(0f, rawDelta);
-
-    // --------------------------------------------------------
-    // VERDICT (LAB STYLE)
-    // --------------------------------------------------------
-    String verdict;
-    String note;
-
-    if (dPeak <= 4.0f) {
-        verdict = "OK";
-        note = "Normal thermal behavior during charging";
-    } else if (dPeak <= 7.0f) {
-        verdict = "Warm";
-        note = "Elevated thermal load during charging";
-    } else {
-        verdict = "Risk";
-        note = "Abnormal thermal rise detected";
-    }
-
-    // --------------------------------------------------------
-    // LOG OUTPUT
-    // --------------------------------------------------------
- 
-   logInfo(String.format(
-        Locale.US,
-        "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
-        battTempStart,
-        (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
-        battTempEnd
-));
-
-    logOk(String.format(
-        Locale.US,
-        "Thermal verdict (charging): %s , (T +%.1f°C) - %s",
-        verdict,
-        dPeak,
-        note
-));
-}
-
-// ============================================================
-// CHARGING REQUIRED DIALOG â€” SAFE DISMISS
-// ============================================================
-protected void dismissChargingDialogSafe(
-        Context ctx,
-        AlertDialog dialog,
-        BroadcastReceiver receiver
-) {
-    try {
-        if (receiver != null) {
-            ctx.unregisterReceiver(receiver);
-        }
-    } catch (Throwable ignore) {}
-
-    try {
-        if (dialog != null && dialog.isShowing()) {
-            dialog.dismiss();
-        }
-    } catch (Throwable ignore) {}
-}
-}
-
-// ============================================================
-// DOTS ANIMATION HELPER (OPTIONAL)
-// ============================================================
-protected void advanceDots(TextView dotsView, int step) {
-    if (dotsView == null) return;
-    String[] frames = { "â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢" };
-    dotsView.setText(frames[step % frames.length]);
-}
-
-// ============================================================
-// LOGGER STUBS (EXPECTED FROM HOST ACTIVITY)
-// ============================================================
-// These are expected to exist in ManualTestsActivity:
-//
-// void logLine()
-// void logInfo(String s)
-// void logOk(String s)
-// void logWarn(String s)
-//
-// ============================================================
+    private volatile boolean chargingDetected = false;
 
 
 // ============================================================
-// LAB 15 â€” Charging Required Dialog (LIVE STATUS PANEL)
-// GEL EDITION â€” Blocking + Animated + Color State
-// ============================================================
-
-private AlertDialog chargingDialog;
-private TextView chargingTitleView;
-private TextView chargingMsgView;
-private TextView chargingDotsView;
-private BroadcastReceiver chargingReceiver;
-
-private volatile boolean chargingDetected = false;
-
-// ============================================================
-// SHOW DIALOG â€” WAIT FOR CHARGING (PHASE 1)
+// SHOW DIALOG — WAIT FOR CHARGING (PHASE 1)
 // ============================================================
 private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetected) {
 
@@ -1551,7 +1455,7 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             // TITLE
             // -------------------------
             chargingTitleView = new TextView(this);
-            chargingTitleView.setText("Lab 15 â€” Connect the charger to the device charging port");
+            chargingTitleView.setText("LAB 15 — Connect the charger to the device charging port");
             chargingTitleView.setTextColor(0xFFFFFFFF);
             chargingTitleView.setTextSize(18f);
             chargingTitleView.setPadding(0, 0, 0, dp(12));
@@ -1567,39 +1471,39 @@ private void showChargingRequiredDialogWithLiveStatus(Runnable onChargingDetecte
             chargingMsgView.setPadding(0, 0, 0, dp(12));
             root.addView(chargingMsgView);
 
-// -------------------------
-// ANIMATED DOTS
-// -------------------------
-chargingDotsView = new TextView(this);
-chargingDotsView.setText("â€¢");
-chargingDotsView.setTextColor(0xFF39FF14);
-chargingDotsView.setTextSize(22f);
-chargingDotsView.setGravity(Gravity.CENTER);
-chargingDotsView.setPadding(0, 0, 0, dp(4));
-root.addView(chargingDotsView);
-
-// -------------------------
-// STATUS TEXT (NO COUNTER HERE)
-// -------------------------
-lab15StatusText = new TextView(this);
-lab15StatusText.setText("Monitoring charging systemâ€¦");
-lab15StatusText.setTextColor(0xFFDDDDDD);
-lab15StatusText.setGravity(Gravity.CENTER);
-lab15StatusText.setPadding(0, dp(4), 0, dp(2));
-root.addView(lab15StatusText);
-
-// -------------------------
-// COUNTER TEXT (POPUP ONLY)
-// -------------------------
-lab15CounterText = new TextView(this);
-lab15CounterText.setText("Progress: 0 / 180 sec");
-lab15CounterText.setTextColor(0xFFAAAAAA);
-lab15CounterText.setGravity(Gravity.CENTER);
-lab15CounterText.setPadding(0, 0, 0, dp(8));
-root.addView(lab15CounterText);
+            // -------------------------
+            // ANIMATED DOTS
+            // -------------------------
+            chargingDotsView = new TextView(this);
+            chargingDotsView.setText("•");
+            chargingDotsView.setTextColor(0xFF39FF14);
+            chargingDotsView.setTextSize(22f);
+            chargingDotsView.setGravity(Gravity.CENTER);
+            chargingDotsView.setPadding(0, 0, 0, dp(4));
+            root.addView(chargingDotsView);
 
             // -------------------------
-            // PROGRESS BAR (6 Ã— 30s)
+            // STATUS TEXT
+            // -------------------------
+            lab15StatusText = new TextView(this);
+            lab15StatusText.setText("Monitoring charging system…");
+            lab15StatusText.setTextColor(0xFFDDDDDD);
+            lab15StatusText.setGravity(Gravity.CENTER);
+            lab15StatusText.setPadding(0, dp(4), 0, dp(2));
+            root.addView(lab15StatusText);
+
+            // -------------------------
+            // COUNTER TEXT (POPUP ONLY)
+            // -------------------------
+            lab15CounterText = new TextView(this);
+            lab15CounterText.setText("Progress: 0 / 180 sec");
+            lab15CounterText.setTextColor(0xFFAAAAAA);
+            lab15CounterText.setGravity(Gravity.CENTER);
+            lab15CounterText.setPadding(0, 0, 0, dp(8));
+            root.addView(lab15CounterText);
+
+            // -------------------------
+            // PROGRESS BAR (6 × 30s)
             // -------------------------
             lab15ProgressBar = new LinearLayout(this);
             lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -1614,12 +1518,14 @@ root.addView(lab15CounterText);
                 seg.setBackgroundColor(0xFF333333);
                 lab15ProgressBar.addView(seg);
             }
-
             root.addView(lab15ProgressBar);
 
             b.setView(root);
 
             chargingDialog = b.create();
+            if (chargingDialog.getWindow() != null) {
+                chargingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            }
             chargingDialog.show();
 
             startChargingDotsAnimation();
@@ -1631,20 +1537,18 @@ root.addView(lab15CounterText);
                 @Override
                 public void onReceive(Context context, Intent intent) {
 
-                    if (chargingDetected || !isDeviceCharging())
-                        return;
+                    if (chargingDetected) return;
+                    if (!isDeviceCharging()) return;
 
                     chargingDetected = true;
                     lab15Running = true;
 
-                    chargingTitleView.setTextColor(0xFF39FF14);
-                    chargingMsgView.setText("Charging connection detected");
+                    if (chargingTitleView != null) chargingTitleView.setTextColor(0xFF39FF14);
+                    if (chargingMsgView != null) chargingMsgView.setText("Charging connection detected");
 
-                    try {
-                        unregisterReceiver(this);
-                    } catch (Throwable ignore) {}
-
+                    try { unregisterReceiver(this); } catch (Throwable ignore) {}
                     chargingReceiver = null;
+
                     ui.postDelayed(onChargingDetected, 300);
                 }
             };
@@ -1666,7 +1570,7 @@ private void startChargingDotsAnimation() {
     ui.post(new Runnable() {
 
         int step = 0;
-        final String[] frames = {"â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢"};
+        final String[] frames = {"•", "• •", "• • •"};
 
         @Override
         public void run() {
@@ -1678,8 +1582,9 @@ private void startChargingDotsAnimation() {
     });
 }
 
+
 // ============================================================
-// LAB 15 â€” CORE RUNNER (180 sec)
+// LAB 15 — CORE RUNNER (180 sec)
 // Battery-based strength estimation (NO mA)
 // ============================================================
 private static final int LAB15_TOTAL_SEC = 180;
@@ -1689,7 +1594,7 @@ private void runLab15Core() {
 
     final long startTs = SystemClock.elapsedRealtime();
 
-    // reset flags ÎºÎ¬Î¸Îµ run (HARD RESET)
+    // reset flags every run (HARD RESET)
     lab15OverTempDuringCharge = false;
     lab15FlapUnstable = false;
 
@@ -1697,7 +1602,7 @@ private void runLab15Core() {
     startChargingFlapMonitor();
 
     // ------------------------------------------------------------
-    // Capture BATTERY INFO at start (Peripherals logic)
+    // Capture BATTERY INFO at start
     // ------------------------------------------------------------
     final BatteryInfo startInfo = getBatteryInfo();
 
@@ -1715,8 +1620,9 @@ private void runLab15Core() {
         @Override
         public void run() {
 
-            int elapsed =
-                    (int) ((SystemClock.elapsedRealtime() - startTs) / 1000);
+            if (!lab15Running) return;
+
+            int elapsed = (int) ((SystemClock.elapsedRealtime() - startTs) / 1000);
 
             updateLab15Status(elapsed);
             updateLab15Progress(elapsed);
@@ -1736,9 +1642,7 @@ private void runLab15Core() {
             // =====================================================
             logLine();
 
-            // ----------------------------------------------------
             // Final battery snapshot
-            // ----------------------------------------------------
             BatteryInfo endInfo = getBatteryInfo();
 
             final long endChargeMah =
@@ -1746,7 +1650,7 @@ private void runLab15Core() {
                             ? endInfo.currentChargeMah
                             : -1;
 
-            //   estimated full reference
+            // estimated full reference
             final long estimatedFullMah =
                     (endInfo != null && endInfo.estimatedFullMah > 0)
                             ? endInfo.estimatedFullMah
@@ -1775,72 +1679,59 @@ private void runLab15Core() {
                         "or battery degradation."
                 );
 
-                logError(
-                        "LAB decision:  Battery replacement recommended."
-                );
+                logError("LAB decision: Battery replacement recommended.");
 
             } else {
 
                 logOk(
                         "Charging behavior stable, for the full test duration.\n" +
-                        "No abnormal connection, or thermal issues detected."
+                        "No abnormal connection or thermal issues detected."
                 );
 
-                logOk("LAB decision:  Charging system OK.");
+                logOk("LAB decision: Charging system OK.");
 
-// ----------------------------------------------------
-//  CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
-// ----------------------------------------------------
-logLine();
+                // ----------------------------------------------------
+                // CHARGING STRENGTH ESTIMATION (BATTERY-BASED)
+                // ----------------------------------------------------
+                logLine();
 
-if (startChargeMah > 0 &&
-    endChargeMah > startChargeMah &&
-    estimatedFullMah > 0) {
+                if (startChargeMah > 0 &&
+                        endChargeMah > startChargeMah &&
+                        estimatedFullMah > 0) {
 
-    long deltaMah = endChargeMah - startChargeMah;
-    float deltaPct =
-            (deltaMah * 100f) / (float) estimatedFullMah;
+                    long deltaMah = endChargeMah - startChargeMah;
+                    float deltaPct = (deltaMah * 100f) / (float) estimatedFullMah;
 
-    if (deltaPct >= 1.2f) {
+                    if (deltaPct >= 1.2f) {
+                        logOk("Charging strength: STRONG");
+                        logInfo("Charging path quality:");
+                        logOk("Fast / high-quality charging path detected.");
+                    } else if (deltaPct >= 0.6f) {
+                        logOk("Charging strength: NORMAL");
+                        logInfo("Typical charger and cable behavior.");
+                    } else if (deltaPct >= 0.3f) {
+                        logWarn("Charging strength: MODERATE");
+                        logWarn("Possible causes: low-power charger, USB port limitations, wireless charging, or a degraded cable.");
+                    } else {
+                        logError("Charging strength: POOR");
+                        logError("Very low effective charging detected.");
+                    }
 
-        logOk("Charging strength: STRONG");
-        logInfo("Charging path quality:");
-        logOk("Fast / high-quality charging path detected.");
+                } else {
+                    logWarn(
+                            "Charging strength: Unable to estimate accurately.\n" +
+                            "Charge counter or capacity data unavailable on this device."
+                    );
+                }
+            }
 
-    } else if (deltaPct >= 0.6f) {
-
-        logOk(
-                "Charging strength: NORMAL\n" +
-                "Typical charger and cable behavior."
-        );
-
-    } else if (deltaPct >= 0.3f) {
-
-        logWarn(
-                "Charging strength: MODERATE\n" +
-                "Possible causes: low-power charger, USB port limitations, " +
-                "wireless charging, or a degraded cable."
-        );
-
-    } else {
-
-        logError(
-                "Charging strength: POOR\n" +
-                "Very low effective charging detected."
-        );
-    }
-
-} else {
-
-    logWarn(
-        "Charging strength: Unable to estimate accurately.\n" +
-        "Charge counter or capacity data unavailable on this device."
-);
-
-dismissChargingStatusDialog();
+            lab15Running = false;
+            chargingDetected = false;
+            dismissChargingStatusDialog();
+        }
+    });
 }
 
-}
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)
@@ -1848,9 +1739,7 @@ dismissChargingStatusDialog();
 private void abortLab15ByUser() {
 
     // GUARD - avoid double / early abort
-    if (!lab15Running && !chargingDetected) {
-        return;
-    }
+    if (!lab15Running && !chargingDetected) return;
 
     logWarn("LAB 15 aborted by user.");
 
@@ -1861,13 +1750,14 @@ private void abortLab15ByUser() {
         }
     } catch (Throwable ignore) {}
 
-    dismissChargingStatusDialog();
-
     lab15Running = false;
     chargingDetected = false;
 
+    dismissChargingStatusDialog();
+
     logWarn("Charging system diagnostic was cancelled before completion.");
 }
+
 
 // ============================================================
 // FLAPPING MONITOR (20 sec)
@@ -1882,14 +1772,15 @@ private void startChargingFlapMonitor() {
         @Override
         public void run() {
 
+            if (!lab15Running) return;
+
             boolean now = isDeviceCharging();
             if (now != last[0]) {
                 toggles[0]++;
                 last[0] = now;
             }
 
-            int elapsed =
-                    (int) ((SystemClock.elapsedRealtime() - ts) / 1000);
+            int elapsed = (int) ((SystemClock.elapsedRealtime() - ts) / 1000);
 
             if (elapsed < LAB15_FLAP_WINDOW_SEC) {
                 ui.postDelayed(this, 1000);
@@ -3717,8 +3608,6 @@ private BatteryInfo getBatteryInfo() {
 
     return bi;
 }
-
-
 
 //=============================================================
 // LAB 15 - Charging System Diagnostic (SMART AUTO ENGINE)

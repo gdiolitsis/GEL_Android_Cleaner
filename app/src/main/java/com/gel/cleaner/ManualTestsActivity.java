@@ -2982,7 +2982,7 @@ private void lab14BatteryHealthStressTest() {
         }
 
         // ------------------------------------------------------------
-        // 1ï¸âƒ£ READ REAL BATTERY INFO
+        // 1. READ REAL BATTERY INFO
         // ------------------------------------------------------------
         final BatteryInfo fBiStart = getBatteryInfo();
         if (fBiStart == null || fBiStart.level < 0) {
@@ -3731,11 +3731,6 @@ private BatteryInfo getBatteryInfo() {
 
     return bi;
 }
-
-
-
-
-
      
 //=============================================================
 // LAB 15 â€” Charging System Diagnostic (SMART AUTO ENGINE)
@@ -3983,67 +3978,70 @@ private void lab15ChargingSystemSmart() {
             }
 
             if (elapsedSec < LAB15_TOTAL_SECONDS) {
-                ui.postDelayed(this, 1000);
-            } else {
-
-// ----------------------------------------------------
-// END THERMAL SNAPSHOT (CHARGING CORRELATED)
-// ----------------------------------------------------
-if (isChargingNow()) {
-    lab15BattTempEnd = getBatteryTemperature();
+    ui.postDelayed(this, 1000);
 } else {
-    // fallback: last known peak is safer than idle temp
-    lab15BattTempEnd = lab15BattTempPeak;
+
+    // ----------------------------------------------------
+    // END THERMAL SNAPSHOT (CHARGING CORRELATED)
+    // ----------------------------------------------------
+    if (isChargingNow()) {
+        lab15BattTempEnd = getBatteryTemperature();
+    } else {
+        lab15BattTempEnd = lab15BattTempPeak;
+    }
+
+    logLab15ThermalCorrelation(
+            lab15BattTempStart,
+            lab15BattTempPeak,
+            lab15BattTempEnd
+    );
+
+    lab15StatusText.setText("Charging system stable");
+    lab15StatusText.setTextColor(0xFF39FF14);
+
+    logLine();
+    logOk("Charging behavior appears normal. Temperature within safe limits.");
+    logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+
+    logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
+    logOk("LAB decision: Charging stability OK.");
+
+    // CHARGING STRENGTH ESTIMATION
+    logLine();
+
+    BatteryInfo endInfo = getBatteryInfo();
+
+    if (startInfo[0] != null &&
+            endInfo != null &&
+            startInfo[0].currentChargeMah > 0 &&
+            endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
+
+        long startMah = startInfo[0].currentChargeMah;
+        long endMah   = endInfo.currentChargeMah;
+        long fullMah  =
+                endInfo.estimatedFullMah > 0
+                        ? endInfo.estimatedFullMah
+                        : startInfo[0].estimatedFullMah;
+
+        float deltaPct =
+                ((endMah - startMah) * 100f) / (float) fullMah;
+
+        if (deltaPct >= 1.2f)
+            logOk("Charging strength: STRONG");
+        else if (deltaPct >= 0.6f)
+            logOk("Charging strength: NORMAL");
+        else if (deltaPct >= 0.3f)
+            logWarn("Charging strength: MODERATE");
+        else
+            logError("Charging strength: POOR");
+
+    } else {
+        logWarn("Charging strength: Unable to estimate accurately.");
+    }
+
+    lab15Running = false;
+    if (lab15Dialog != null) lab15Dialog.dismiss();
 }
-
-logLab15ThermalCorrelation();
-
-                lab15StatusText.setText("Charging system stable");
-                lab15StatusText.setTextColor(0xFF39FF14);
-
-                logLine();
-                logOk("Charging behavior appears normal. Temperature within safe limits.");
-                logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
-
-                logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-                logOk("LAB decision: Charging stability OK.");
-
-                // ðŸ”‹ CHARGING STRENGTH ESTIMATION â€” UNCHANGED
-                logLine();
-
-                BatteryInfo endInfo = getBatteryInfo();
-
-                if (startInfo[0] != null &&
-                        endInfo != null &&
-                        startInfo[0].currentChargeMah > 0 &&
-                        endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
-
-                    long startMah = startInfo[0].currentChargeMah;
-                    long endMah   = endInfo.currentChargeMah;
-                    long fullMah  =
-                            endInfo.estimatedFullMah > 0
-                                    ? endInfo.estimatedFullMah
-                                    : startInfo[0].estimatedFullMah;
-
-                    float deltaPct =
-                            ((endMah - startMah) * 100f) / (float) fullMah;
-
-                    if (deltaPct >= 1.2f)
-                        logOk("Charging strength: STRONG");
-                    else if (deltaPct >= 0.6f)
-                        logOk("Charging strength: NORMAL");
-                    else if (deltaPct >= 0.3f)
-                        logWarn("Charging strength: MODERATE");
-                    else
-                        logError("Charging strength: POOR");
-
-                } else {
-                    logWarn("Charging strength: Unable to estimate accurately.");
-                }
-
-                lab15Running = false;
-                if (lab15Dialog != null) lab15Dialog.dismiss();
-            }
         }
     });
 }

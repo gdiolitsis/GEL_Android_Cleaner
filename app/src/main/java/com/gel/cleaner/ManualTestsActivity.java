@@ -3626,11 +3626,32 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
 
-    Button exitBtn = new Button(this);
-    exitBtn.setText("Exit test");
-    exitBtn.setAllCaps(false);
-    exitBtn.setOnClickListener(v -> abortLab15ByUser());
-    root.addView(exitBtn);
+// ------------------------------------------------------------
+// EXIT / CANCEL BUTTON — RED / GOLD (LAB 15)
+// ------------------------------------------------------------
+Button exitBtn = new Button(this);
+exitBtn.setText("Exit test");
+exitBtn.setAllCaps(false);
+exitBtn.setTextSize(15f);
+exitBtn.setTextColor(0xFFFFFFFF);
+exitBtn.setTypeface(null, Typeface.BOLD);
+
+GradientDrawable exitBg = new GradientDrawable();
+exitBg.setColor(0xFF8B0000);          // deep red
+exitBg.setCornerRadius(dp(14));
+exitBg.setStroke(dp(3), 0xFFFFD700);  // gold
+exitBtn.setBackground(exitBg);
+
+LinearLayout.LayoutParams lpExit =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExit.setMargins(0, dp(14), 0, 0);
+exitBtn.setLayoutParams(lpExit);
+
+exitBtn.setOnClickListener(v -> abortLab15ByUser());
+root.addView(exitBtn);
 
     b.setView(root);
     lab15Dialog = b.create();

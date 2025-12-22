@@ -3633,7 +3633,8 @@ private void lab15ChargingSystemSmart() {
 
     for (int i = 0; i < 6; i++) {
         View seg = new View(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(10), 1f);
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(10), 1f);
         lp.setMargins(dp(3), 0, dp(3), 0);
         seg.setLayoutParams(lp);
         seg.setBackgroundColor(0xFF333333);
@@ -3641,37 +3642,37 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
 
-// ------------------------------------------------------------
-// EXIT / CANCEL BUTTON — RED / GOLD (LAB 15)
-// ------------------------------------------------------------
-Button exitBtn = new Button(this);
-exitBtn.setText("Exit test");
-exitBtn.setAllCaps(false);
-exitBtn.setTextSize(15f);
-exitBtn.setTextColor(0xFFFFFFFF);
-exitBtn.setTypeface(null, Typeface.BOLD);
+    // ------------------------------------------------------------
+    // EXIT BUTTON
+    // ------------------------------------------------------------
+    Button exitBtn = new Button(this);
+    exitBtn.setText("Exit test");
+    exitBtn.setAllCaps(false);
+    exitBtn.setTextColor(0xFFFFFFFF);
+    exitBtn.setTypeface(null, Typeface.BOLD);
 
-GradientDrawable exitBg = new GradientDrawable();
-exitBg.setColor(0xFF8B0000);          // deep red
-exitBg.setCornerRadius(dp(14));
-exitBg.setStroke(dp(3), 0xFFFFD700);  // gold
-exitBtn.setBackground(exitBg);
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exitBtn.setBackground(exitBg);
 
-LinearLayout.LayoutParams lpExit =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpExit.setMargins(0, dp(14), 0, 0);
-exitBtn.setLayoutParams(lpExit);
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExit.setMargins(0, dp(14), 0, 0);
+    exitBtn.setLayoutParams(lpExit);
 
-exitBtn.setOnClickListener(v -> abortLab15ByUser());
-root.addView(exitBtn);
+    exitBtn.setOnClickListener(v -> abortLab15ByUser());
+    root.addView(exitBtn);
 
     b.setView(root);
     lab15Dialog = b.create();
     if (lab15Dialog.getWindow() != null) {
-        lab15Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+        lab15Dialog.getWindow()
+                .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
     }
     lab15Dialog.show();
 
@@ -3708,35 +3709,30 @@ root.addView(exitBtn);
                 startInfo[0] = getBatteryInfo();
 
                 lab15BattTempStart = getBatteryTemperature();
-                lab15BattTempPeak = lab15BattTempStart;
+                lab15BattTempPeak  = lab15BattTempStart;
 
-                if (lab15StatusText != null) {
-                    lab15StatusText.setText("Charging connection detected");
-                    lab15StatusText.setTextColor(0xFF39FF14);
-                }
+                lab15StatusText.setText("Charging connection detected");
+                lab15StatusText.setTextColor(0xFF39FF14);
 
                 logOk("Charging state detected.");
             }
 
-            // Track peak temperature during charge
             if (wasCharging[0] && chargingNow) {
                 float t = getBatteryTemperature();
                 if (t > 0) {
-                    if (lab15BattTempPeak < 0) lab15BattTempPeak = t;
-                    else lab15BattTempPeak = Math.max(lab15BattTempPeak, t);
+                    lab15BattTempPeak = Math.max(lab15BattTempPeak, t);
                     if (t >= 45f) lab15OverTempDuringCharge = true;
                 }
             }
 
-            // Unplug instability detection (persist > 5s)
             if (wasCharging[0] && !chargingNow) {
-                if (lastChargeSeenTs[0] > 0 && (nowTs - lastChargeSeenTs[0]) > 5000) {
+                if (lastChargeSeenTs[0] > 0 &&
+                        (nowTs - lastChargeSeenTs[0]) > 5000) {
 
                     lab15FlapUnstable = true;
                     logError("Charging instability detected.");
 
-                    lab15Running = false;
-                    dismissChargingStatusDialog();
+                    abortLab15ByUser();
                     return;
                 }
             }
@@ -3749,22 +3745,22 @@ root.addView(exitBtn);
             int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
             int shownSec = Math.min(elapsedSec, LAB15_TOTAL_SECONDS);
 
-            if (lab15CounterText != null) {
-                lab15CounterText.setText("Progress: " + shownSec + " / " + LAB15_TOTAL_SECONDS + " sec");
-            }
+            lab15CounterText.setText(
+                    "Progress: " + shownSec + " / " + LAB15_TOTAL_SECONDS + " sec"
+            );
 
             int step = Math.min(
                     elapsedSec / 30,
-                    lab15ProgressBar != null ? lab15ProgressBar.getChildCount() : 0
+                    lab15ProgressBar.getChildCount()
             );
 
-            if (lab15ProgressBar != null && step != lastStep) {
+            if (step != lastStep) {
                 lastStep = step;
                 for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
                     View seg = lab15ProgressBar.getChildAt(i);
-                    if (seg != null) {
-                        seg.setBackgroundColor(i < step ? 0xFF39FF14 : 0xFF333333);
-                    }
+                    seg.setBackgroundColor(
+                            i < step ? 0xFF39FF14 : 0xFF333333
+                    );
                 }
             }
 
@@ -3773,7 +3769,7 @@ root.addView(exitBtn);
                 return;
             }
 
-            // -------- FINAL EVALUATION --------
+            // ---------------- FINAL ----------------
             lab15BattTempEnd = getBatteryTemperature();
 
             logLab15ThermalCorrelation(
@@ -3782,41 +3778,11 @@ root.addView(exitBtn);
                     lab15BattTempEnd
             );
 
-            if (lab15OverTempDuringCharge) {
-                logWarn("LAB note: High battery temperature observed during charging.");
-            }
+            if (lab15OverTempDuringCharge)
+                logWarn("LAB note: High battery temperature observed.");
 
             logOk("Charging system stable.");
             logOk("LAB decision: Charging system OK.");
-
-            BatteryInfo endInfo = getBatteryInfo();
-
-            if (startInfo[0] != null &&
-                    endInfo != null &&
-                    startInfo[0].currentChargeMah > 0 &&
-                    endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
-
-                long startMah = startInfo[0].currentChargeMah;
-                long endMah = endInfo.currentChargeMah;
-
-                long fullMah =
-                        (endInfo.estimatedFullMah > 0)
-                                ? endInfo.estimatedFullMah
-                                : startInfo[0].estimatedFullMah;
-
-                if (fullMah > 0) {
-                    float deltaPct = ((endMah - startMah) * 100f) / (float) fullMah;
-
-                    if (deltaPct >= 1.2f) logOk("Charging strength: STRONG");
-                    else if (deltaPct >= 0.6f) logOk("Charging strength: NORMAL");
-                    else if (deltaPct >= 0.3f) logWarn("Charging strength: MODERATE");
-                    else logError("Charging strength: POOR");
-                } else {
-                    logWarn("Charging strength: Unable to estimate accurately (no capacity baseline).");
-                }
-            } else {
-                logWarn("Charging strength: Unable to estimate accurately.");
-            }
 
             lab15Running = false;
             dismissChargingStatusDialog();

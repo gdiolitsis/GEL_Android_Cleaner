@@ -1838,7 +1838,7 @@ if (startChargeMah > 0 &&
 );
 
 dismissChargingStatusDialog();
-}   // κλείνει το προηγούμενο method
+}   //    method
 
 // ------------------------------------------------------------
 // LAB 15 - USER ABORT (CANCEL / EXIT)
@@ -3733,8 +3733,8 @@ private BatteryInfo getBatteryInfo() {
 }
      
 //=============================================================
-// LAB 15 â€” Charging System Diagnostic (SMART AUTO ENGINE)
-// GEL LAB EDITION â€” UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
+// LAB 15 - Charging System Diagnostic (SMART AUTO ENGINE)
+// GEL LAB EDITION - UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
 //=============================================================
 private void lab15ChargingSystemSmart() {
 
@@ -3756,7 +3756,7 @@ private void lab15ChargingSystemSmart() {
                     android.R.style.Theme_Material_Dialog_NoActionBar
             );
 
-    b.setTitle("LAB 15 â€” Connect the charger to the device charging port");
+    b.setTitle("LAB 15 - Connect the charger to the device charging port");
     b.setCancelable(false);
 
     LinearLayout root = new LinearLayout(this);
@@ -3764,41 +3764,25 @@ private void lab15ChargingSystemSmart() {
     root.setPadding(dp(24), dp(20), dp(24), dp(18));
     root.setBackgroundColor(0xFF101010);
 
-    // ------------------------------------------------------------
-    // STATUS TEXT (NOT TITLE)
-    // ------------------------------------------------------------
     lab15StatusText = new TextView(this);
-    lab15StatusText.setText("Waiting for charging connectionâ€¦");
+    lab15StatusText.setText("Waiting for charging connection...");
     lab15StatusText.setTextColor(0xFFAAAAAA);
     lab15StatusText.setTextSize(15f);
-    lab15StatusText.setPadding(0, 0, 0, dp(8));
     root.addView(lab15StatusText);
 
-    // ------------------------------------------------------------
-    // DOTS (ANIMATION)
-    // ------------------------------------------------------------
     TextView dotsView = new TextView(this);
-    dotsView.setText("â€¢");
+    dotsView.setText("•");
     dotsView.setTextColor(0xFF39FF14);
     dotsView.setTextSize(22f);
     dotsView.setGravity(Gravity.CENTER);
-    dotsView.setPadding(0, 0, 0, dp(6));
     root.addView(dotsView);
 
-    // ------------------------------------------------------------
-    // COUNTER TEXT (POPUP ONLY)
-    // ------------------------------------------------------------
     lab15CounterText = new TextView(this);
     lab15CounterText.setText("0 / 180 sec");
     lab15CounterText.setTextColor(0xFFAAAAAA);
-    lab15CounterText.setTextSize(13f);
     lab15CounterText.setGravity(Gravity.CENTER);
-    lab15CounterText.setPadding(0, 0, 0, dp(10));
     root.addView(lab15CounterText);
 
-    // ------------------------------------------------------------
-    // PROGRESS BAR (6 Ã— 30s = 180s)
-    // ------------------------------------------------------------
     lab15ProgressBar = new LinearLayout(this);
     lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
     lab15ProgressBar.setGravity(Gravity.CENTER);
@@ -3814,63 +3798,28 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
 
-    // ------------------------------------------------------------
-    // EXIT BUTTON â€” RED / GOLD
-    // ------------------------------------------------------------
-    lab15ExitBtn = new Button(this);
-    lab15ExitBtn.setText("Exit test");
-    lab15ExitBtn.setAllCaps(false);
-    lab15ExitBtn.setTextColor(0xFFFFFFFF);
-    lab15ExitBtn.setTypeface(null, Typeface.BOLD);
-
-    GradientDrawable exitBg = new GradientDrawable();
-    exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
-    exitBg.setStroke(dp(3), 0xFFFFD700);
-    lab15ExitBtn.setBackground(exitBg);
-
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lpExit.setMargins(0, dp(16), 0, 0);
-    lab15ExitBtn.setLayoutParams(lpExit);
-
-    lab15ExitBtn.setOnClickListener(v -> {
-        logWarn("LAB 15 aborted by user.");
-        lab15Running = false;
-        if (lab15Dialog != null) lab15Dialog.dismiss();
-    });
-
-    root.addView(lab15ExitBtn);
+    Button exitBtn = new Button(this);
+    exitBtn.setText("Exit test");
+    exitBtn.setOnClickListener(v -> abortLab15ByUser());
+    root.addView(exitBtn);
 
     b.setView(root);
     lab15Dialog = b.create();
-    lab15Dialog.getWindow()
-            .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
     lab15Dialog.show();
 
-    // ------------------------------------------------------------
-    // LOG HEADER (ORDER LOCKED)
-    // ------------------------------------------------------------
     logLine();
     logInfo("LAB 15 - Charging System Diagnostic (Smart).");
 
-    // ------------------------------------------------------------
-    // WAIT FOR CHARGER + MONITOR
-    // ------------------------------------------------------------
     final long[] startTs = { -1 };
     final long[] lastChargeSeenTs = { -1 };
     final boolean[] wasCharging = { false };
     final BatteryInfo[] startInfo = { null };
-
-    final String[] dotFrames = { "â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢" };
+    final String[] dotFrames = { "•", "• •", "• • •" };
 
     ui.post(new Runnable() {
 
-        int lastStep = -1;
         int dotStep = 0;
+        int lastStep = -1;
 
         @Override
         public void run() {
@@ -3880,65 +3829,32 @@ private void lab15ChargingSystemSmart() {
             boolean chargingNow = isDeviceCharging();
             long nowTs = SystemClock.elapsedRealtime();
 
-            // ----------------------------------------------------
-            // DOTS ANIMATION
-            // ----------------------------------------------------
             dotsView.setText(dotFrames[dotStep % dotFrames.length]);
             dotStep++;
 
-            // ----------------------------------------------------
-            // FIRST CHARGER DETECTION
-            // ----------------------------------------------------
-            if (chargingNow) {
-                lastChargeSeenTs[0] = nowTs;
-            }
+            if (chargingNow) lastChargeSeenTs[0] = nowTs;
 
             if (chargingNow && !wasCharging[0]) {
                 wasCharging[0] = true;
                 startTs[0] = nowTs;
                 startInfo[0] = getBatteryInfo();
-                
+
                 lab15BattTempStart = getBatteryTemperature();
-                lab15BattTempPeak  = lab15BattTempStart;
+                lab15BattTempPeak = lab15BattTempStart;
 
                 lab15StatusText.setText("Charging connection detected");
                 lab15StatusText.setTextColor(0xFF39FF14);
 
-                float battPct = getCurrentBatteryPercent();
-                float battTemp = getBatteryTemperature();
-
-                if (battPct >= 0)
-                    logInfo(String.format(Locale.US,
-                            "Battery level: %.1f%%", battPct));
-                if (battTemp > 0)
-                    logInfo(String.format(Locale.US,
-                            "Battery temperature: %.1fÂ°C", battTemp));
-
                 logOk("Charging state detected.");
-                logLine();
-                logInfo("Monitoring charging stability for 20 seconds...");
-                logInfo("Monitoring charging system for 180 seconds...");
             }
 
-            // ----------------------------------------------------
-            // SMART UNPLUG DETECTION (5s GRACE)
-            // ----------------------------------------------------
             if (wasCharging[0] && !chargingNow) {
                 if (lastChargeSeenTs[0] > 0 &&
                         nowTs - lastChargeSeenTs[0] > 5000) {
 
-                    lab15StatusText.setText("Charging disconnected â€” test aborted");
-                    lab15StatusText.setTextColor(0xFFFF5555);
-
-                    logLine();
-                    logError(
-                            "Charging instability detected. " +
-                            "Check or replace the charging cable. " +
-                            "If the issue persists, charging port inspection is recommended."
-                    );
-
+                    logError("Charging instability detected.");
                     lab15Running = false;
-                    if (lab15Dialog != null) lab15Dialog.dismiss();
+                    dismissChargingStatusDialog();
                     return;
                 }
             }
@@ -3948,17 +3864,12 @@ private void lab15ChargingSystemSmart() {
                 return;
             }
 
-            // ----------------------------------------------------
-            // PROGRESS + COUNTER (POPUP ONLY)
-            // ----------------------------------------------------
             int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
 
-            if (lab15CounterText != null) {
-                lab15CounterText.setText(
-                        Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
-                        " / " + LAB15_TOTAL_SECONDS + " sec"
-                );
-            }
+            lab15CounterText.setText(
+                    Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
+                            " / " + LAB15_TOTAL_SECONDS + " sec"
+            );
 
             int step = Math.min(
                     elapsedSec / 30,
@@ -3969,88 +3880,81 @@ private void lab15ChargingSystemSmart() {
                 lastStep = step;
                 for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
                     View seg = lab15ProgressBar.getChildAt(i);
-                    if (seg != null) {
-                        seg.setBackgroundColor(
-                                i < step ? 0xFF39FF14 : 0xFF333333
-                        );
-                    }
+                    seg.setBackgroundColor(
+                            i < step ? 0xFF39FF14 : 0xFF333333
+                    );
                 }
             }
 
             if (elapsedSec < LAB15_TOTAL_SECONDS) {
-    ui.postDelayed(this, 1000);
-    return;
-}
+                ui.postDelayed(this, 1000);
+                return;
+            }
 
-// ----------------------------------------------------
-// END THERMAL SNAPSHOT (CHARGING CORRELATED)
-// ----------------------------------------------------
-if (isDeviceCharging()) {
-    lab15BattTempEnd = getBatteryTemperature();
-} else {
-    lab15BattTempEnd = lab15BattTempPeak;
-}
+            // -------- FINAL EVALUATION --------
+            lab15BattTempEnd = getBatteryTemperature();
 
-logLab15ThermalCorrelation(
-        lab15BattTempStart,
-        lab15BattTempPeak,
-        lab15BattTempEnd
-);
+            logLab15ThermalCorrelation(
+                    lab15BattTempStart,
+                    lab15BattTempPeak,
+                    lab15BattTempEnd
+            );
 
-lab15StatusText.setText("Charging system stable");
-lab15StatusText.setTextColor(0xFF39FF14);
+            logOk("Charging system stable.");
+            logOk("LAB decision: Charging system OK.");
 
-logLine();
-logOk("Charging behavior appears normal. Temperature within safe limits.");
-logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+            BatteryInfo endInfo = getBatteryInfo();
 
-logLine();
-logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-logOk("LAB decision: Charging stability OK.");
+            if (startInfo[0] != null &&
+                    endInfo != null &&
+                    startInfo[0].currentChargeMah > 0 &&
+                    endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
 
-// ----------------------------------------------------
-// CHARGING STRENGTH ESTIMATION
-// ----------------------------------------------------
-logLine();
+                long startMah = startInfo[0].currentChargeMah;
+                long endMah = endInfo.currentChargeMah;
+                long fullMah =
+                        endInfo.estimatedFullMah > 0
+                                ? endInfo.estimatedFullMah
+                                : startInfo[0].estimatedFullMah;
 
-BatteryInfo endInfo = getBatteryInfo();
+                if (fullMah > 0) {
+                    float deltaPct =
+                            ((endMah - startMah) * 100f) / (float) fullMah;
 
-if (startInfo[0] != null &&
-        endInfo != null &&
-        startInfo[0].currentChargeMah > 0 &&
-        endInfo.currentChargeMah > startInfo[0].currentChargeMah) {
+                    if (deltaPct >= 1.2f) logOk("Charging strength: STRONG");
+                    else if (deltaPct >= 0.6f) logOk("Charging strength: NORMAL");
+                    else if (deltaPct >= 0.3f) logWarn("Charging strength: MODERATE");
+                    else logError("Charging strength: POOR");
+                }
+            } else {
+                logWarn("Charging strength: Unable to estimate accurately.");
+            }
 
-    long startMah = startInfo[0].currentChargeMah;
-    long endMah   = endInfo.currentChargeMah;
-    long fullMah =
-            endInfo.estimatedFullMah > 0
-                    ? endInfo.estimatedFullMah
-                    : startInfo[0].estimatedFullMah;
-
-    if (fullMah > 0) {
-        float deltaPct =
-                ((endMah - startMah) * 100f) / (float) fullMah;
-
-        if (deltaPct >= 1.2f)
-            logOk("Charging strength: STRONG");
-        else if (deltaPct >= 0.6f)
-            logOk("Charging strength: NORMAL");
-        else if (deltaPct >= 0.3f)
-            logWarn("Charging strength: MODERATE");
-        else
-            logError("Charging strength: POOR");
-    } else {
-        logWarn("Charging strength: Unable to estimate accurately.");
-    }
-} else {
-    logWarn("Charging strength: Unable to estimate accurately.");
-}
-
-lab15Running = false;
-if (lab15Dialog != null) lab15Dialog.dismiss();
-return;
-}
+            lab15Running = false;
+            dismissChargingStatusDialog();
+        }
     });
+}
+
+// ------------------------------------------------------------
+// LAB 15 - USER ABORT (CANCEL / EXIT)
+// ------------------------------------------------------------
+private void abortLab15ByUser() {
+
+    if (!lab15Running) return;
+
+    logWarn("LAB 15 aborted by user.");
+
+    lab15Running = false;
+
+    try {
+        if (chargingReceiver != null) {
+            unregisterReceiver(chargingReceiver);
+            chargingReceiver = null;
+        }
+    } catch (Throwable ignore) {}
+
+    dismissChargingStatusDialog();
 }
 
 // ============================================================

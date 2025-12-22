@@ -1461,7 +1461,7 @@ private void logLab15ThermalCorrelation(
 
     logOk(String.format(
         Locale.US,
-        "Thermal verdict (charging): %s , (ΔT +%.1f°C) - %s",
+        "Thermal verdict (charging): %s , (T +%.1f°C) - %s",
         verdict,
         dPeak,
         note
@@ -1487,6 +1487,7 @@ protected void dismissChargingDialogSafe(
             dialog.dismiss();
         }
     } catch (Throwable ignore) {}
+}
 }
 
 // ============================================================

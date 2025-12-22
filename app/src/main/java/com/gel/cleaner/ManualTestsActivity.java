@@ -3586,7 +3586,8 @@ private void lab15ChargingSystemSmart() {
         return;
     }
 
-    lab15Running = true;
+    lab15Running  = true;
+    lab15Finished = false;
     lab15FlapUnstable = false;
     lab15OverTempDuringCharge = false;
 
@@ -3692,7 +3693,10 @@ private void lab15ChargingSystemSmart() {
         @Override
         public void run() {
 
-            if (!lab15Running) return;
+            // ⛔ HARD STOP — ΚΑΝΟΝΑΣ ΖΩΗΣ
+            if (!lab15Running || lab15Finished) {
+                return;
+            }
 
             boolean chargingNow = isDeviceCharging();
             long nowTs = SystemClock.elapsedRealtime();
@@ -3730,7 +3734,6 @@ private void lab15ChargingSystemSmart() {
 
                     lab15FlapUnstable = true;
                     logError("Charging instability detected.");
-
                     abortLab15ByUser();
                     return;
                 }
@@ -3768,35 +3771,31 @@ private void lab15ChargingSystemSmart() {
                 return;
             }
 
-            // ---------------- FINAL ----------------
-            // ---------------- FINAL ----------------
+            // ================= FINAL =================
 
-// ⛔ ΣΤΑΜΑΤΑ ΟΛΑ ΤΑ PENDING RUNNABLES ΠΡΩΤΑ
-ui.removeCallbacksAndMessages(null);
+            lab15Finished = true;
+            lab15Running  = false;
 
-// 🔒 STOP RUN FLAG
-lab15Running = false;
+            lab15BattTempEnd = getBatteryTemperature();
 
-// 🌡️ FINAL TEMP SNAPSHOT
-lab15BattTempEnd = getBatteryTemperature();
+            logLab15ThermalCorrelation(
+                    lab15BattTempStart,
+                    lab15BattTempPeak,
+                    lab15BattTempEnd
+            );
 
-logLab15ThermalCorrelation(
-        lab15BattTempStart,
-        lab15BattTempPeak,
-        lab15BattTempEnd
-);
+            if (lab15OverTempDuringCharge)
+                logWarn("LAB note: High battery temperature observed.");
 
-if (lab15OverTempDuringCharge)
-    logWarn("LAB note: High battery temperature observed.");
+            logOk("Charging system stable.");
+            logOk("LAB decision: Charging system OK.");
 
-logOk("Charging system stable.");
-logOk("LAB decision: Charging system OK.");
-
-// 🧹 ΚΛΕΙΣΕ ΤΟ POPUP ΤΕΛΕΥΤΑΙΟ
-dismissChargingStatusDialog();
-
-// 🚪 ΒΓΑΙΝΕ ΟΡΙΣΤΙΚΑ ΑΠΟ ΤΟ RUNNABLE
-return;
+            ui.post(() -> {
+                if (lab15Dialog != null && lab15Dialog.isShowing()) {
+                    lab15Dialog.dismiss();
+                }
+                lab15Dialog = null;
+            });
         }
     });
 }

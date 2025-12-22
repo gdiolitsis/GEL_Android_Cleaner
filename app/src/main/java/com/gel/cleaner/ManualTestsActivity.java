@@ -149,25 +149,28 @@ public class ManualTestsActivity extends AppCompatActivity {
 
     private int lastSelectedStressDurationSec = 60;
 
-    // ============================================================
-    // LAB 15 — FLAGS (DO NOT MOVE)
-    // ============================================================
-    private volatile boolean lab15FlapUnstable = false;
-    private volatile boolean lab15OverTempDuringCharge = false;
-    private volatile boolean lab15Running = false;
+// ============================================================
+// LAB 15 — FLAGS (DO NOT MOVE)
+// ============================================================
 
-    private AlertDialog lab15Dialog;
-    private TextView lab15StatusText;
-    private LinearLayout lab15ProgressBar;
-    private Button lab15ExitBtn;
-    private TextView lab15CounterText;
+private volatile boolean lab15Running  = false;
+private volatile boolean lab15Finished = false;
 
-    // LAB 15 — Thermal Correlation
-    private float lab15BattTempStart = Float.NaN;
-    private float lab15BattTempPeak  = Float.NaN;
-    private float lab15BattTempEnd   = Float.NaN;
+private volatile boolean lab15FlapUnstable = false;
+private volatile boolean lab15OverTempDuringCharge = false;
 
-    private static final int LAB15_TOTAL_SECONDS = 180;
+private AlertDialog lab15Dialog;
+private TextView lab15StatusText;
+private LinearLayout lab15ProgressBar;
+private Button lab15ExitBtn;
+private TextView lab15CounterText;
+
+// LAB 15 — Thermal Correlation
+private float lab15BattTempStart = Float.NaN;
+private float lab15BattTempPeak  = Float.NaN;
+private float lab15BattTempEnd   = Float.NaN;
+
+private static final int LAB15_TOTAL_SECONDS = 180;
 
     // ============================================================
     // TELEPHONY SNAPSHOT — Passive system probe (no side effects)

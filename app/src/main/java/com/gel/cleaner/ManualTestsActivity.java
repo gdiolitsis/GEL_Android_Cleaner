@@ -2933,25 +2933,20 @@ private String readFirstLine(File file) {
 }
     
 // ============================================================
-// LAB 14 â€” Battery Health Stress Test (GEL Full Mode)
-// LABORATORY EDITION â€” Objective battery diagnostics
-// NOTE (GEL RULE): Whole block ready for copy-paste.
-// ============================================================
-
-// ============================================================
-// LAB 14 â€” FLAGS / UI STATE
+// LAB 14 — FLAGS / UI STATE
 // ============================================================
 private volatile boolean lab14Running = false;
 private TextView lab14DotsView;
 private AlertDialog lab14Dialog;
 private TextView lab14ProgressText;
 private LinearLayout lab14ProgressBar;
-private final int LAB14_TOTAL_SECONDS = 5 * 60; // ðŸ”’ 300 sec hard lock
+private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock
 
 private int lastSelectedStressDurationSec = 60;
 
+
 // ============================================================
-// LAB 14 â€” Battery Health Stress Test (GEL Full Mode)
+// LAB 14 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
@@ -2965,7 +2960,7 @@ private void lab14BatteryHealthStressTest() {
     try {
 
         // ------------------------------------------------------------
-        // 0ï¸âƒ£ BASIC SAFETY CHECKS
+        // 0) BASIC SAFETY CHECKS
         // ------------------------------------------------------------
         final float fStartPct = getCurrentBatteryPercent();
         if (fStartPct < 0f) {
@@ -2982,7 +2977,7 @@ private void lab14BatteryHealthStressTest() {
         }
 
         // ------------------------------------------------------------
-        // 1. READ REAL BATTERY INFO
+        // 1) READ REAL BATTERY INFO
         // ------------------------------------------------------------
         final BatteryInfo fBiStart = getBatteryInfo();
         if (fBiStart == null || fBiStart.level < 0) {
@@ -3004,7 +2999,9 @@ private void lab14BatteryHealthStressTest() {
 
         if (fBiStart.estimatedFullMah > 0) {
             tmpFullMah = fBiStart.estimatedFullMah;
-            tmpCapSource = fBiStart.source;
+            tmpCapSource = (fBiStart.source != null && !fBiStart.source.trim().isEmpty())
+                    ? fBiStart.source
+                    : "Charge Counter";
         } else if (modelCap > 0) {
             tmpFullMah = modelCap;
             tmpCapSource = "Model capacity";
@@ -3022,18 +3019,18 @@ private void lab14BatteryHealthStressTest() {
         final int fHealthPct = tmpHealth;
 
         // ------------------------------------------------------------
-        // 2ï¸âƒ£ FIXED DURATION â€” LAB MODE
+        // 2) FIXED DURATION — LAB MODE
         // ------------------------------------------------------------
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
         // ------------------------------------------------------------
-        // ðŸ”´ SHOW RUNNING DIALOG
+        // SHOW RUNNING DIALOG
         // ------------------------------------------------------------
         showLab14RunningDialog();
 
         // ------------------------------------------------------------
-        // 3ï¸âƒ£ RUN STRESS (ASYNC)
+        // 3) RUN STRESS (ASYNC)
         // ------------------------------------------------------------
         ui.post(() -> {
 
@@ -3046,9 +3043,9 @@ private void lab14BatteryHealthStressTest() {
             logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
 
             logInfo(String.format(Locale.US,
-                    "Start conditions: level=%d%%, status=%s, temp=%.1fÂ°C.",
+                    "Start conditions: level=%d%%, status=%s, temp=%.1f C.",
                     fBiStart.level,
-                    fBiStart.status,
+                    String.valueOf(fBiStart.status),
                     fBiStart.temperature));
 
             if (fFullMah > 0) {
@@ -3067,7 +3064,7 @@ private void lab14BatteryHealthStressTest() {
             startCpuBurn_C_Mode();
 
             // ------------------------------------------------------------
-            // 4ï¸âƒ£ STOP STRESS
+            // 4) STOP STRESS
             // ------------------------------------------------------------
             ui.postDelayed(() -> {
 
@@ -3110,23 +3107,22 @@ private void lab14BatteryHealthStressTest() {
 
                 if (consumedMah >= 0) {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: %.0f mAh (â‰ˆ %.0f mAh/hour).",
+                            "Measured drain: %.0f mAh (~ %.0f mAh/hour).",
                             consumedMah, mahPerHour));
                 } else {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: â‰ˆ %.1f%%/hour.",
+                            "Measured drain: ~ %.1f%%/hour.",
                             pctPerHour));
                 }
 
                 Map<String, Float> z1 = readThermalZones();
                 Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
-
-
                 // ------------------------------------------------------------
-                // 5ï¸âƒ£ LAB INTERPRETATION
+                // 5) LAB INTERPRETATION
                 // ------------------------------------------------------------
                 String decision;
+
                 if (fHealthPct > 0 && fHealthPct < 70) {
                     decision = "Weak";
                     logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
@@ -3146,12 +3142,12 @@ private void lab14BatteryHealthStressTest() {
                 }
 
                 // ------------------------------------------------------------
-                // 6ï¸âƒ£ HEALTH MAP
+                // 6) HEALTH MAP
                 // ------------------------------------------------------------
                 printHealthCheckboxMap(decision);
 
                 // ------------------------------------------------------------
-                // 7ï¸âƒ£ ANALYTICS
+                // 7) ANALYTICS
                 // ------------------------------------------------------------
                 saveLab14DrainValue(mahPerHour);
                 saveLab14Run();
@@ -3160,9 +3156,11 @@ private void lab14BatteryHealthStressTest() {
                 logLab14Confidence();
 
                 // ------------------------------------------------------------
-                // ðŸ§  FINAL BATTERY HEALTH SCORE (NEW)
+                // FINAL BATTERY HEALTH SCORE (if implemented)
                 // ------------------------------------------------------------
-                logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
+                try {
+                    logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
+                } catch (Throwable ignore) {}
 
                 lab14Running = false;
 
@@ -3178,8 +3176,9 @@ private void lab14BatteryHealthStressTest() {
     }
 }
 
+
 // ===========================================================
-// LAB 14 â€” STRESS RUNNING DIALOG (LOCKED 300s)
+// LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
 // Visual progress + animated dots + segmented bar + EXIT
 // ============================================================
 private void showLab14RunningDialog() {
@@ -3191,7 +3190,7 @@ private void showLab14RunningDialog() {
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
 
-        b.setTitle("LAB 14 â€” Battery Stress Test");
+        b.setTitle("LAB 14 - Battery Stress Test");
         b.setCancelable(false);
 
         LinearLayout root = new LinearLayout(this);
@@ -3227,7 +3226,7 @@ private void showLab14RunningDialog() {
         // Animated dots
         // ------------------------------------------------------------
         lab14DotsView = new TextView(this);
-        lab14DotsView.setText("â€¢");
+        lab14DotsView.setText("•");
         lab14DotsView.setTextColor(0xFF39FF14);
         lab14DotsView.setTextSize(22f);
         lab14DotsView.setGravity(Gravity.CENTER);
@@ -3235,7 +3234,7 @@ private void showLab14RunningDialog() {
         root.addView(lab14DotsView);
 
         // ------------------------------------------------------------
-        // Segmented progress bar (10 Ã— 30s)
+        // Segmented progress bar (10 × 30s)
         // ------------------------------------------------------------
         lab14ProgressBar = new LinearLayout(this);
         lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -3243,8 +3242,7 @@ private void showLab14RunningDialog() {
 
         for (int i = 0; i < 10; i++) {
             View seg = new View(this);
-            LinearLayout.LayoutParams lp =
-                    new LinearLayout.LayoutParams(0, dp(12), 1f);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(12), 1f);
             lp.setMargins(dp(3), 0, dp(3), 0);
             seg.setLayoutParams(lp);
             seg.setBackgroundColor(0xFF333333);
@@ -3254,7 +3252,7 @@ private void showLab14RunningDialog() {
         root.addView(lab14ProgressBar);
 
         // ------------------------------------------------------------
-        // EXIT / CANCEL BUTTON â€” RED / GOLD
+        // EXIT / CANCEL BUTTON — RED / GOLD
         // ------------------------------------------------------------
         Button btnExit = new Button(this);
         btnExit.setText("Exit test");
@@ -3287,19 +3285,14 @@ private void showLab14RunningDialog() {
 
         lab14Dialog = b.create();
         if (lab14Dialog.getWindow() != null) {
-            lab14Dialog.getWindow()
-                    .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            lab14Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
         }
         lab14Dialog.show();
 
-        // ------------------------------------------------------------
         // Start dots animation
-        // ------------------------------------------------------------
         startLab14DotsAnimation();
 
-        // ------------------------------------------------------------
         // Progress updater (every 1 sec)
-        // ------------------------------------------------------------
         final long startTs = SystemClock.elapsedRealtime();
 
         ui.post(new Runnable() {
@@ -3309,45 +3302,32 @@ private void showLab14RunningDialog() {
             @Override
             public void run() {
 
-                if (!lab14Running ||
-                        lab14ProgressBar == null ||
-                        lab14ProgressText == null) {
+                if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
                     return;
                 }
 
                 long now = SystemClock.elapsedRealtime();
-                int elapsedSec = Math.min(
-                        (int) ((now - startTs) / 1000),
-                        LAB14_TOTAL_SECONDS
-                );
+                int elapsedSec = Math.min((int) ((now - startTs) / 1000), LAB14_TOTAL_SECONDS);
 
-                int step = Math.min(
-                        elapsedSec / 30,
-                        lab14ProgressBar.getChildCount()
-                );
+                int step = Math.min(elapsedSec / 30, lab14ProgressBar.getChildCount());
 
                 if (step != lastStep) {
                     lastStep = step;
                     for (int i = 0; i < lab14ProgressBar.getChildCount(); i++) {
                         View seg = lab14ProgressBar.getChildAt(i);
                         if (seg != null) {
-                            seg.setBackgroundColor(
-                                    i < step ? 0xFF39FF14 : 0xFF333333
-                            );
+                            seg.setBackgroundColor(i < step ? 0xFF39FF14 : 0xFF333333);
                         }
                     }
                 }
 
-                lab14ProgressText.setText(
-                        "Progress: " + elapsedSec + " / " +
-                        LAB14_TOTAL_SECONDS + " seconds"
-                );
+                lab14ProgressText.setText("Progress: " + elapsedSec + " / " + LAB14_TOTAL_SECONDS + " seconds");
 
                 if (elapsedSec < LAB14_TOTAL_SECONDS) {
                     ui.postDelayed(this, 1000);
                 } else {
                     if (lab14ProgressText != null) {
-                        lab14ProgressText.setText("Finalizing analysisâ€¦");
+                        lab14ProgressText.setText("Finalizing analysis...");
                     }
                 }
             }
@@ -3358,21 +3338,21 @@ private void showLab14RunningDialog() {
     }
 }
 
+
 // ============================================================
-// LAB 14 â€” DOTS ANIMATION ENGINE
+// LAB 14 — DOTS ANIMATION ENGINE
 // ============================================================
 private void startLab14DotsAnimation() {
 
     ui.post(new Runnable() {
 
         int step = 0;
-        final String[] frames = {"â€¢", "â€¢ â€¢", "â€¢ â€¢ â€¢"};
+        final String[] frames = {"•", "• •", "• • •"};
 
         @Override
         public void run() {
 
-            if (!lab14Running || lab14DotsView == null)
-                return;
+            if (!lab14Running || lab14DotsView == null) return;
 
             lab14DotsView.setText(frames[step % frames.length]);
             step++;
@@ -3382,8 +3362,46 @@ private void startLab14DotsAnimation() {
     });
 }
 
+
+// ============================================================
+// LAB 14 - USER ABORT (CANCEL / EXIT)
+// ============================================================
+private void abortLab14ByUser() {
+
+    if (!lab14Running) return;
+
+    logWarn("LAB 14 aborted by user.");
+
+    try { stopCpuBurn(); } catch (Throwable ignore) {}
+    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+
+    dismissLab14RunningDialog();
+
+    lab14Running = false;
+
+    logWarn("Battery stress test was cancelled before completion.");
+}
+
+
+// ============================================================
+// LAB 14 - DISMISS DIALOG SAFE
+// ============================================================
+private void dismissLab14RunningDialog() {
+    try {
+        if (lab14Dialog != null) {
+            lab14Dialog.dismiss();
+            lab14Dialog = null;
+        }
+    } catch (Throwable ignore) {}
+    lab14DotsView = null;
+    lab14ProgressText = null;
+    lab14ProgressBar = null;
+}
+
+
+
 // ===================================================================
-// LAB 14 â€” AGING INDEX ENGINE
+// LAB 14 — AGING INDEX ENGINE
 // Objective trend-based battery aging indicator
 // ===================================================================
 private void computeAndLogAgingIndex(
@@ -3404,12 +3422,8 @@ private void computeAndLogAgingIndex(
     final double BASE_DRAIN_MAH_PER_HOUR = 600.0; // healthy stress drain
     final double BASE_THERMAL_DELTA_C    = 6.0;   // healthy thermal rise
 
-    double drainFactor;
-    if (mahPerHour > 0) drainFactor = mahPerHour / BASE_DRAIN_MAH_PER_HOUR;
-    else drainFactor = 1.0;
-
-    double capacityFactor = 1.0;
-    if (healthPct > 0) capacityFactor = 100.0 / Math.max(healthPct, 1);
+    double drainFactor = (mahPerHour > 0) ? (mahPerHour / BASE_DRAIN_MAH_PER_HOUR) : 1.0;
+    double capacityFactor = (healthPct > 0) ? (100.0 / Math.max(healthPct, 1)) : 1.0;
 
     double thermalFactor = 1.0;
     if (battTempAfter != null && battTempBefore != null) {
@@ -3435,22 +3449,20 @@ private void computeAndLogAgingIndex(
     else interpretation = "Heavy aging detected. Battery replacement should be considered.";
 
     logLine();
-logInfo("Battery Aging Index:");
-logOk(String.format(Locale.US,
-        "%.2f (based on %d runs).",
-        agingIndex, runs));
-logInfo("Interpretation: " + interpretation);
+    logInfo("Battery Aging Index:");
+    logOk(String.format(Locale.US, "%.2f (based on %d runs).", agingIndex, runs));
+    logInfo("Interpretation: " + interpretation);
 }
 
-// ------------------------------------------------------------
 // Utility clamp
-// ------------------------------------------------------------
 private double clamp(double v, double min, double max) {
     return Math.max(min, Math.min(max, v));
 }
 
+
+
 // ===================================================================
-// LAB 14 â€” CONFIDENCE SCORE (%)
+// LAB 14 — CONFIDENCE SCORE (%)
 // Variance-based reliability indicator
 // ===================================================================
 private static final String LAB14_PREFS = "lab14_prefs";
@@ -3460,9 +3472,7 @@ private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
 private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
 private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
 
-// ------------------------------------------------------------
 // Save last drain value (called from LAB 14 end)
-// ------------------------------------------------------------
 private void saveLab14DrainValue(double mahPerHour) {
 
     if (mahPerHour <= 0) return;
@@ -3486,9 +3496,7 @@ private void saveLab14DrainValue(double mahPerHour) {
     } catch (Throwable ignore) {}
 }
 
-// ------------------------------------------------------------
 // Save one LAB 14 run
-// ------------------------------------------------------------
 private void saveLab14Run() {
     try {
         SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
@@ -3497,9 +3505,7 @@ private void saveLab14Run() {
     } catch (Throwable ignore) {}
 }
 
-// ------------------------------------------------------------
 // Get number of completed LAB 14 runs
-// ------------------------------------------------------------
 private int getLab14RunCount() {
     try {
         SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
@@ -3509,16 +3515,14 @@ private int getLab14RunCount() {
     }
 }
 
-// ------------------------------------------------------------
 // Compute and log confidence score
-// ------------------------------------------------------------
 private void computeAndLogConfidenceScore() {
 
     int runs = getLab14RunCount();
     if (runs < 2) {
         logLine();
         logInfo("Confidence Score:");
-logWarn("not available (requires multiple runs).");
+        logWarn("not available (requires multiple runs).");
         return;
     }
 
@@ -3555,7 +3559,6 @@ logWarn("not available (requires multiple runs).");
         var /= n;
 
         double std = Math.sqrt(var);
-
         double relVar = std / mean;
 
         int confidence;
@@ -3567,9 +3570,7 @@ logWarn("not available (requires multiple runs).");
 
         logLine();
         logInfo("Confidence Score:");
-        logOk(String.format(Locale.US,
-        "%d%% (based on %d runs).",
-        confidence, n));
+        logOk(String.format(Locale.US, "%d%% (based on %d runs).", confidence, n));
 
         if (confidence >= 90) logOk("Results are highly consistent.");
         else if (confidence >= 80) logOk("Results show good consistency.");
@@ -3580,9 +3581,7 @@ logWarn("not available (requires multiple runs).");
     }
 }
 
-// ------------------------------------------------------------
 // Log confidence message based on run count (COLOR CODED)
-// ------------------------------------------------------------
 private void logLab14Confidence() {
 
     int runs = getLab14RunCount();
@@ -3592,9 +3591,7 @@ private void logLab14Confidence() {
 
     if (runs <= 1) {
 
-        SpannableString sp =
-                new SpannableString("Confidence: Preliminary (1 run)");
-
+        SpannableString sp = new SpannableString("Confidence: Preliminary (1 run)");
         sp.setSpan(
                 new ForegroundColorSpan(Color.RED),
                 "Confidence:".length(),
@@ -3605,13 +3602,11 @@ private void logLab14Confidence() {
         txtLog.append(sp);
         txtLog.append("\n");
 
-        logWarn("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES ,ANY DAY, UNDER SIMILAR CONDITIONS.");
+        logWarn("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES ANY DAY UNDER SIMILAR CONDITIONS.");
     }
     else if (runs == 2) {
 
-        SpannableString sp =
-                new SpannableString("Confidence: Medium (2 runs)");
-
+        SpannableString sp = new SpannableString("Confidence: Medium (2 runs)");
         sp.setSpan(
                 new ForegroundColorSpan(0xFFFFA500), // orange
                 "Confidence:".length(),
@@ -3626,9 +3621,7 @@ private void logLab14Confidence() {
     }
     else {
 
-        SpannableString sp =
-                new SpannableString("Confidence: High (3+ consistent runs)");
-
+        SpannableString sp = new SpannableString("Confidence: High (3+ consistent runs)");
         sp.setSpan(
                 new ForegroundColorSpan(0xFF39FF14), // GEL green
                 "Confidence:".length(),
@@ -3643,55 +3636,45 @@ private void logLab14Confidence() {
     }
 }
 
+
+
 // ===================================================================
-// BATTERY REAL CAPACITY ENGINE â€” needed by LAB 14
+// BATTERY REAL CAPACITY ENGINE — needed by LAB 14
 // ===================================================================
 private static final String PREFS_NAME_BATTERY = "gel_prefs";
 private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
 
-// ===================================================================
 // MODEL CAPACITY HELPERS
-// ===================================================================
 private long getStoredModelCapacity() {
     try {
-        SharedPreferences sp =
-                getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
         return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
     } catch (Throwable t) {
         return -1L;
     }
 }
 
-// ===================================================================
-// NORMALIZE mAh / Î¼Ah
-// ===================================================================
+// NORMALIZE mAh / uAh
 private long normalizeMah(long raw) {
     if (raw <= 0) return -1;
     if (raw > 200000) return raw / 1000;
     return raw;
 }
 
-// ===================================================================
-// UNIVERSAL BATTERY SCANNER â€” GEL v7.1
-// ===================================================================
+// UNIVERSAL BATTERY SCANNER — GEL v7.1
 private BatteryInfo getBatteryInfo() {
 
     BatteryInfo bi = new BatteryInfo();
 
     try {
-        Intent i = registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (i != null) {
 
-            bi.level = i.getIntExtra(
-                    BatteryManager.EXTRA_LEVEL, -1);
+            bi.level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
 
-            bi.temperature =
-                    i.getIntExtra(
-                            BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
+            bi.temperature = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
 
-            switch (i.getIntExtra(
-                    BatteryManager.EXTRA_STATUS, -1)) {
+            switch (i.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
 
                 case BatteryManager.BATTERY_STATUS_CHARGING:
                     bi.status = "Charging";
@@ -3717,18 +3700,16 @@ private BatteryInfo getBatteryInfo() {
     } catch (Throwable ignore) {}
 
     try {
-        BatteryManager bm =
-                (BatteryManager) getSystemService(BATTERY_SERVICE);
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
 
         if (bm != null) {
             long cc = normalizeMah(
-                    bm.getLongProperty(
-                            BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
+                    bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+            );
 
             if (cc > 0 && bi.level > 0) {
                 bi.currentChargeMah = cc;
-                bi.estimatedFullMah =
-                        (long) (cc / (bi.level / 100f));
+                bi.estimatedFullMah = (long) (cc / (bi.level / 100f));
                 bi.source = "Charge Counter";
             }
         }
@@ -3736,7 +3717,9 @@ private BatteryInfo getBatteryInfo() {
 
     return bi;
 }
-     
+
+
+
 //=============================================================
 // LAB 15 - Charging System Diagnostic (SMART AUTO ENGINE)
 // GEL LAB EDITION - UNPLUG SAFE + EXIT SAFE (FINAL / LOCKED)
@@ -3794,8 +3777,7 @@ private void lab15ChargingSystemSmart() {
 
     for (int i = 0; i < 6; i++) {
         View seg = new View(this);
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(0, dp(10), 1f);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(10), 1f);
         lp.setMargins(dp(3), 0, dp(3), 0);
         seg.setLayoutParams(lp);
         seg.setBackgroundColor(0xFF333333);
@@ -3805,11 +3787,15 @@ private void lab15ChargingSystemSmart() {
 
     Button exitBtn = new Button(this);
     exitBtn.setText("Exit test");
+    exitBtn.setAllCaps(false);
     exitBtn.setOnClickListener(v -> abortLab15ByUser());
     root.addView(exitBtn);
 
     b.setView(root);
     lab15Dialog = b.create();
+    if (lab15Dialog.getWindow() != null) {
+        lab15Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+    }
     lab15Dialog.show();
 
     logLine();
@@ -3847,17 +3833,31 @@ private void lab15ChargingSystemSmart() {
                 lab15BattTempStart = getBatteryTemperature();
                 lab15BattTempPeak = lab15BattTempStart;
 
-                lab15StatusText.setText("Charging connection detected");
-                lab15StatusText.setTextColor(0xFF39FF14);
+                if (lab15StatusText != null) {
+                    lab15StatusText.setText("Charging connection detected");
+                    lab15StatusText.setTextColor(0xFF39FF14);
+                }
 
                 logOk("Charging state detected.");
             }
 
-            if (wasCharging[0] && !chargingNow) {
-                if (lastChargeSeenTs[0] > 0 &&
-                        nowTs - lastChargeSeenTs[0] > 5000) {
+            // Track peak temperature during charge
+            if (wasCharging[0] && chargingNow) {
+                float t = getBatteryTemperature();
+                if (t > 0) {
+                    if (lab15BattTempPeak < 0) lab15BattTempPeak = t;
+                    else lab15BattTempPeak = Math.max(lab15BattTempPeak, t);
+                    if (t >= 45f) lab15OverTempDuringCharge = true;
+                }
+            }
 
+            // Unplug instability detection (persist > 5s)
+            if (wasCharging[0] && !chargingNow) {
+                if (lastChargeSeenTs[0] > 0 && (nowTs - lastChargeSeenTs[0]) > 5000) {
+
+                    lab15FlapUnstable = true;
                     logError("Charging instability detected.");
+
                     lab15Running = false;
                     dismissChargingStatusDialog();
                     return;
@@ -3870,24 +3870,24 @@ private void lab15ChargingSystemSmart() {
             }
 
             int elapsedSec = (int) ((nowTs - startTs[0]) / 1000);
+            int shownSec = Math.min(elapsedSec, LAB15_TOTAL_SECONDS);
 
-            lab15CounterText.setText(
-                    Math.min(elapsedSec, LAB15_TOTAL_SECONDS) +
-                            " / " + LAB15_TOTAL_SECONDS + " sec"
-            );
+            if (lab15CounterText != null) {
+                lab15CounterText.setText("Progress: " + shownSec + " / " + LAB15_TOTAL_SECONDS + " sec");
+            }
 
             int step = Math.min(
                     elapsedSec / 30,
-                    lab15ProgressBar.getChildCount()
+                    lab15ProgressBar != null ? lab15ProgressBar.getChildCount() : 0
             );
 
-            if (step != lastStep) {
+            if (lab15ProgressBar != null && step != lastStep) {
                 lastStep = step;
                 for (int i = 0; i < lab15ProgressBar.getChildCount(); i++) {
                     View seg = lab15ProgressBar.getChildAt(i);
-                    seg.setBackgroundColor(
-                            i < step ? 0xFF39FF14 : 0xFF333333
-                    );
+                    if (seg != null) {
+                        seg.setBackgroundColor(i < step ? 0xFF39FF14 : 0xFF333333);
+                    }
                 }
             }
 
@@ -3905,6 +3905,10 @@ private void lab15ChargingSystemSmart() {
                     lab15BattTempEnd
             );
 
+            if (lab15OverTempDuringCharge) {
+                logWarn("LAB note: High battery temperature observed during charging.");
+            }
+
             logOk("Charging system stable.");
             logOk("LAB decision: Charging system OK.");
 
@@ -3917,19 +3921,21 @@ private void lab15ChargingSystemSmart() {
 
                 long startMah = startInfo[0].currentChargeMah;
                 long endMah = endInfo.currentChargeMah;
+
                 long fullMah =
-                        endInfo.estimatedFullMah > 0
+                        (endInfo.estimatedFullMah > 0)
                                 ? endInfo.estimatedFullMah
                                 : startInfo[0].estimatedFullMah;
 
                 if (fullMah > 0) {
-                    float deltaPct =
-                            ((endMah - startMah) * 100f) / (float) fullMah;
+                    float deltaPct = ((endMah - startMah) * 100f) / (float) fullMah;
 
                     if (deltaPct >= 1.2f) logOk("Charging strength: STRONG");
                     else if (deltaPct >= 0.6f) logOk("Charging strength: NORMAL");
                     else if (deltaPct >= 0.3f) logWarn("Charging strength: MODERATE");
                     else logError("Charging strength: POOR");
+                } else {
+                    logWarn("Charging strength: Unable to estimate accurately (no capacity baseline).");
                 }
             } else {
                 logWarn("Charging strength: Unable to estimate accurately.");

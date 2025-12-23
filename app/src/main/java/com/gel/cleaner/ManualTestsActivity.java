@@ -1776,7 +1776,7 @@ private void startChargingFlapMonitor() {
 private void updateLab15Status(int sec) {
     if (lab15StatusText != null) {
         lab15StatusText.setText(
-                "Monitoring charging systemâ€¦ " + sec + " / 180 sec"
+                "Monitoring charging system… " + sec + " / 180 sec"
         );
     }
 }
@@ -1820,15 +1820,15 @@ private void dismissChargingStatusDialog() {
 }
 
 // ============================================================
-// LABS 1-5: AUDIO & VIBRATION
+// LABS 1–5: AUDIO & VIBRATION
 // ============================================================
 
 // ============================================================
-// LAB 1 - Speaker Tone Test (AUTO)
+// LAB 1 — Speaker Tone Test (AUTO)
 // ============================================================
 private void lab1SpeakerTone() {
 
-    logSection("LAB 1 â€” Speaker Tone Test");
+    logSection("LAB 1 — Speaker Tone Test");
 
     new Thread(() -> {
 
@@ -1848,7 +1848,6 @@ private void lab1SpeakerTone() {
 
             logOk("Speaker output detected");
 
-            // ðŸ”§ FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -1876,11 +1875,11 @@ private void lab1SpeakerTone() {
 }
 
 // ============================================================
-// LAB 2 â€” Speaker Frequency Sweep
+// LAB 2 — Speaker Frequency Sweep
 // ============================================================
 private void lab2SpeakerSweep() {
 
-    logSection("LAB 2 â€” Speaker Frequency Sweep");
+    logSection("LAB 2 — Speaker Frequency Sweep");
 
     new Thread(() -> {
 
@@ -1910,7 +1909,6 @@ private void lab2SpeakerSweep() {
 
             logOk("Frequency sweep executed");
 
-            // ðŸ”§ FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -1938,11 +1936,11 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 â€” Earpiece Audio Path Check
+   LAB 3 — Earpiece Audio Path Check
    ============================================================ */
 private void lab3EarpieceManual() {
 
-    logSection("LAB 3 â€” Earpiece Audio Path Check");
+    logSection("LAB 3 — Earpiece Audio Path Check");
 
     new Thread(() -> {
 
@@ -2001,11 +1999,11 @@ private void lab3EarpieceManual() {
 }
 
 /* ============================================================
-   LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)
+   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    ============================================================ */
 private void lab4MicManual() {
 
-    logSection("LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)");
+    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
 
     new Thread(() -> {
 
@@ -2038,11 +2036,11 @@ private void lab4MicManual() {
 }
 
 /* ============================================================
-   LAB 5 â€” Vibration Motor Test (AUTO)
+   LAB 5 — Vibration Motor Test (AUTO)
    ============================================================ */
 private void lab5Vibration() {
 
-    logSection("LAB 5 â€” Vibration Motor Test");
+    logSection("LAB 5 — Vibration Motor Test");
 
     try {
         Vibrator v;
@@ -2075,17 +2073,16 @@ private void lab5Vibration() {
     }
 }
 
-// ============================================================  
-// LABS 6â€“9: DISPLAY & SENSORS  
-// ============================================================  
+// ============================================================
+// LABS 6–9: DISPLAY & SENSORS
+// ============================================================
 
 /* ============================================================
-   LAB 6 â€” Display / Touch Basic Inspection (manual)
+   LAB 6 — Display / Touch Basic Inspection (manual)
    ============================================================ */
-
 private void lab6DisplayTouch() {
 
-    logSection("LAB 6 â€” Display / Touch Basic Inspection");
+    logSection("LAB 6 — Display / Touch Basic Inspection");
 
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
@@ -2094,12 +2091,11 @@ private void lab6DisplayTouch() {
 }
 
 /* ============================================================
-   LAB 7 â€” Rotation / Auto-Rotate Check (manual)
+   LAB 7 — Rotation / Auto-Rotate Check (manual)
    ============================================================ */
-
 private void lab7RotationManual() {
 
-    logSection("LAB 7 â€” Rotation / Auto-Rotate Check");
+    logSection("LAB 7 — Rotation / Auto-Rotate Check");
 
     startActivityForResult(
             new Intent(this, RotationCheckActivity.class),
@@ -2108,12 +2104,11 @@ private void lab7RotationManual() {
 }
 
 /* ============================================================
-   LAB 8 â€” Proximity During Call (manual)
+   LAB 8 — Proximity During Call (manual)
    ============================================================ */
-
 private void lab8ProximityCall() {
 
-    logSection("LAB 8 â€” Proximity During Call");
+    logSection("LAB 8 — Proximity During Call");
 
     startActivityForResult(
             new Intent(this, ProximityCheckActivity.class),
@@ -2122,18 +2117,17 @@ private void lab8ProximityCall() {
 }
 
 /* ============================================================
-   LAB 9 â€” Sensors Check 
+   LAB 9 — Sensors Check
    ============================================================ */
-
 private void lab9SensorsCheck() {
 
     logLine();
-    logInfo("LAB 9 â€” Sensors Presence & Full Analysis");
+    logInfo("LAB 9 — Sensors Presence & Full Analysis");
 
     try {
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sm == null) {
-            logError("SensorManager not available â€” framework issue.");
+            logError("SensorManager not available — framework issue.");
             return;
         }
 
@@ -2142,7 +2136,7 @@ private void lab9SensorsCheck() {
         logInfo("Total sensors reported: " + total);
 
         // ------------------------------------------------------------
-        // QUICK PRESENCE CHECK (former LAB 9)
+        // QUICK PRESENCE CHECK
         // ------------------------------------------------------------
         checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
         checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
@@ -2158,19 +2152,13 @@ private void lab9SensorsCheck() {
         logLine();
         logInfo("Full Sensor List:");
 
-        // ------------------------------------------------------------
-        // RAW SENSOR LIST (former LAB 10)
-        // ------------------------------------------------------------
         for (Sensor s : sensors) {
-            String line = "â€¢ type=" + s.getType()
+            String line = "• type=" + s.getType()
                     + " | name=" + s.getName()
                     + " | vendor=" + s.getVendor();
             logInfo(line);
         }
 
-        // ------------------------------------------------------------
-        // INTERPRETATION LOGIC
-        // ------------------------------------------------------------
         boolean hasVirtualGyro = false;
         boolean hasDualALS = false;
         int alsCount = 0;
@@ -2207,31 +2195,28 @@ private void lab9SensorsCheck() {
 
         if (alsCount >= 2) hasDualALS = true;
 
-        // ------------------------------------------------------------
-        // SUMMARY
-        // ------------------------------------------------------------
         logLine();
         logInfo("Sensor Interpretation Summary:");
 
         if (hasVirtualGyro)
-            logOk("Detected Xiaomi Virtual Gyroscope â€” expected behavior (sensor fusion instead of hardware gyro).");
+            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
 
         if (hasDualALS)
-            logOk("Dual Ambient Light Sensors detected â€” OK. Device uses front + rear ALS for better auto-brightness.");
+            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
         else
-            logWarn("Only one Ambient Light Sensor detected â€” auto-brightness may be less accurate.");
+            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
 
         if (hasSAR)
-            logOk("SAR Detectors detected â€” normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
 
         if (hasPickup)
-            logOk("Pickup Sensor detected â€” supports 'lift to wake' and motion awareness.");
+            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
 
         if (hasLargeTouch)
-            logOk("Large Area Touch Sensor detected â€” improved palm rejection and touch accuracy.");
+            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
 
         if (hasGameRotation)
-            logOk("Game Rotation Vector sensor detected â€” smoother gaming orientation response.");
+            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
 
         logOk("Sensor suite appears complete and healthy for this device.");
 
@@ -2241,159 +2226,15 @@ private void lab9SensorsCheck() {
 }
 
 /* ============================================================
-   Helper â€” Sensor Presence
+   Helper — Sensor Presence
    ============================================================ */
 private void checkSensor(SensorManager sm, int type, String name) {
     boolean ok = sm.getDefaultSensor(type) != null;
     if (ok)
         logOk(name + " is reported as available.");
     else
-        logWarn(name + " is NOT reported â€” features depending on it may be limited or missing.");
+        logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
 }
-
-// ============================================================  
-// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) â€” NO PASSWORD / NO QR  
-// ============================================================  
-private void lab10WifiSnapshot() {  
-    logLine();  
-    logInfo("LAB 10 â€” Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
-
-    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);  
-    if (wm == null) {  
-        logError("WifiManager not available.");  
-        return;  
-    }  
-
-    if (!wm.isWifiEnabled()) {  
-        logWarn("Wi-Fi is OFF â€” please enable and retry.");  
-        return;  
-    }  
-
-    // 1) Runtime Location Permission (required for SSID/BSSID on Android 8.1+/10+)  
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {  
-        boolean fineGranted =  
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)  
-                        == PackageManager.PERMISSION_GRANTED;  
-        boolean coarseGranted =  
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)  
-                        == PackageManager.PERMISSION_GRANTED;  
-
-        if (!fineGranted && !coarseGranted) {  
-            logWarn("Location permission required to read SSID/BSSID (Android policy).");  
-            pendingLab10AfterPermission = this::lab10WifiSnapshot;  
-
-            ActivityCompat.requestPermissions(  
-                    this,  
-                    new String[]{  
-                            Manifest.permission.ACCESS_FINE_LOCATION,  
-                            Manifest.permission.ACCESS_COARSE_LOCATION  
-                    },  
-                    REQ_LOCATION_LAB10  
-            );  
-
-            logInfo("Grant permission, then Lab 10 will auto-retry.");  
-            return;  
-        }  
-
-        // 2) Location services ON check  
-        try {  
-            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);  
-            boolean gpsOn = lm != null && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);  
-            boolean netOn = lm != null && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);  
-
-            if (!gpsOn && !netOn) {  
-                logWarn("Location services are OFF. SSID may show UNKNOWN.");  
-                logWarn("Opening Location Settingsâ€¦ enable Location and come back.");  
-                try {  
-                    startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));  
-                } catch (Exception ignored) {}  
-                return;  
-            }  
-        } catch (Exception e) {  
-            logWarn("Location services check failed: " + e.getMessage());  
-        }  
-    }  
-
-    // 3) Read basic WifiInfo  
-    WifiInfo info = wm.getConnectionInfo();  
-    if (info == null) {  
-        logError("Wi-Fi info not available.");  
-        return;  
-    }  
-
-    String ssid = cleanSsid(info.getSSID());  
-    String bssid = info.getBSSID();  
-    int rssi  = info.getRssi();  
-    int speed = info.getLinkSpeed();  
-    int freqMhz = 0;  
-    try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}  
-    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";  
-
-    logInfo("SSID: " + ssid);  
-    if (bssid != null) logInfo("BSSID: " + bssid);  
-    if (freqMhz > 0) logInfo("Band: " + band + " (" + freqMhz + " MHz)");  
-    else logInfo("Band: " + band);  
-
-    logInfo("Link speed: " + speed + " Mbps");  
-    logInfo("RSSI: " + rssi + " dBm");  
-
-    if ("Unknown".equalsIgnoreCase(ssid)) {  
-        logWarn("SSID is UNKNOWN due to Android privacy policy.");  
-        logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 11.");  
-    } else {  
-        logOk("SSID read OK.");  
-    }  
-
-    if (rssi > -65)  
-        logOk("Wi-Fi signal is strong.");  
-    else if (rssi > -80)  
-        logWarn("Moderate Wi-Fi signal.");  
-    else  
-        logError("Very weak Wi-Fi signal â€” expect drops.");  
-
-    // 4) DHCP / IP details  
-    try {  
-        DhcpInfo dh = wm.getDhcpInfo();  
-        if (dh != null) {  
-            logInfo("IP: " + ipToStr(dh.ipAddress));  
-            logInfo("Gateway: " + ipToStr(dh.gateway));  
-            logInfo("DNS1: " + ipToStr(dh.dns1));  
-            logInfo("DNS2: " + ipToStr(dh.dns2));  
-        } else {  
-            logWarn("DHCP info not available.");  
-        }  
-    } catch (Exception e) {  
-        logWarn("DHCP read failed: " + e.getMessage());  
-    }  
-
-    // 5) DeepScan  
-    runWifiDeepScan(wm);  
-}  
-
-@Override  
-public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {  
-    super.onRequestPermissionsResult(requestCode, perms, grantResults);  
-
-    if (requestCode == REQ_LOCATION_LAB10) {  
-        boolean granted = false;  
-        if (grantResults != null) {  
-            for (int r : grantResults) {  
-                if (r == PackageManager.PERMISSION_GRANTED) {  
-                    granted = true;  
-                    break;  
-                }  
-            }  
-        }  
-
-        if (granted) {  
-            logOk("Location permission granted.");  
-            if (pendingLab10AfterPermission != null) pendingLab10AfterPermission.run();  
-        } else {  
-            logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");  
-        }  
-        pendingLab10AfterPermission = null;  
-    }  
-}  
 
 // ============================================================  
 // LAB 10 â€” DEEPSCAN v3.0  
@@ -2712,6 +2553,325 @@ private void lab13InternetQuickCheck() {
         logError("Internet quick check error: " + e.getMessage());  
     }  
 }  
+
+// ============================================================
+// GEL THERMAL ENGINE — UNIVERSAL AUTO-SCALE (FINAL)
+// Compatible with all Android devices (Pixel, Samsung, Xiaomi, POCO, Huawei,
+// OnePlus, Oppo, Vivo, Realme, Motorola, Infinix, Tecno, MTK, Snapdragon).
+// ============================================================
+
+// ------------------------------
+// READ ALL THERMAL ZONES
+// ------------------------------
+private Map<String, Float> readThermalZones() {
+    Map<String, Float> out = new HashMap<>();
+    File base = new File("/sys/class/thermal");
+    File[] zones = base.listFiles();
+    if (zones == null) return out;
+
+    for (File f : zones) {
+        if (f == null) continue;
+        String name = f.getName();
+        if (!name.startsWith("thermal_zone")) continue;
+
+        File typeFile = new File(f, "type");
+        File tempFile = new File(f, "temp");
+        if (!tempFile.exists()) continue;
+
+        try {
+            // Read type
+            String type = name;
+            if (typeFile.exists()) {
+                String t = readFirstLine(typeFile);
+                if (t != null && !t.trim().isEmpty())
+                    type = t.trim();
+            }
+
+            // Read raw temperature
+            String tRaw = readFirstLine(tempFile);
+            if (tRaw == null) continue;
+            float v = Float.parseFloat(tRaw.trim());
+
+            // -------------------------------------------
+            // AUTO-SCALE (handles every Android variant)
+            // -------------------------------------------
+            if (v > 1000f)       v = v / 1000f;  // millidegree
+            else if (v > 200f)  v = v / 100f;   // centidegree
+            else if (v > 20f)   v = v / 10f;    // deci-degree
+            // else already °C
+
+            out.put(type.toLowerCase(Locale.US), v);
+
+        } catch (Throwable ignore) {}
+    }
+
+    return out;
+}
+
+// ------------------------------
+// PICK the correct zone by keywords
+// ------------------------------
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty()) return null;
+    if (keys == null || keys.length == 0) return null;
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String z = e.getKey().toLowerCase(Locale.US);
+        for (String k : keys) {
+            if (k == null) continue;
+            String kk = k.toLowerCase(Locale.US);
+            if (z.equals(kk) || z.contains(kk))
+                return e.getValue();
+        }
+    }
+    return null;
+}
+
+// ------------------------------
+// READ FIRST LINE
+// ------------------------------
+private String readFirstLine(File file) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(file));
+        return br.readLine();
+    } catch (Exception e) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Exception ignore) {}
+    }
+}
+   
+// ============================================================
+// LAB 14 — Battery Health Stress Test (GEL Full Mode)
+// ============================================================
+private void lab14BatteryHealthStressTest() {
+
+    // HARD GUARD
+    if (lab14Running) {
+        logWarn("LAB 14 already running.");
+        return;
+    }
+    lab14Running = true;
+
+    try {
+
+        // ------------------------------------------------------------
+        // 0) BASIC SAFETY CHECKS
+        // ------------------------------------------------------------
+        final float fStartPct = getCurrentBatteryPercent();
+        if (fStartPct < 0f) {
+            logError("Unable to read battery level.");
+            lab14Running = false;
+            return;
+        }
+
+        if (fStartPct < 50f) {
+            logLine();
+            logError("Battery level too low (<50%). Please charge the battery before running the stress test.");
+            lab14Running = false;
+            return;
+        }
+
+        // ------------------------------------------------------------
+        // 1) READ REAL BATTERY INFO
+        // ------------------------------------------------------------
+        final BatteryInfo fBiStart = getBatteryInfo();
+        if (fBiStart == null || fBiStart.level < 0) {
+            logError("Unable to read detailed battery information.");
+            lab14Running = false;
+            return;
+        }
+
+        if (isDeviceCharging()) {
+            logError("Stress test requires the device to be NOT charging.");
+            lab14Running = false;
+            return;
+        }
+
+        final long modelCap = getStoredModelCapacity();
+
+        long tmpFullMah = -1;
+        String tmpCapSource = "Unknown";
+
+        if (fBiStart.estimatedFullMah > 0) {
+            tmpFullMah = fBiStart.estimatedFullMah;
+            tmpCapSource = (fBiStart.source != null && !fBiStart.source.trim().isEmpty())
+                    ? fBiStart.source
+                    : "Charge Counter";
+        } else if (modelCap > 0) {
+            tmpFullMah = modelCap;
+            tmpCapSource = "Model capacity";
+        }
+
+        final long fFullMah = tmpFullMah;
+        final String fCapSource = tmpCapSource;
+
+        int tmpHealth = -1;
+        if (modelCap > 0 && fBiStart.estimatedFullMah > 0) {
+            tmpHealth = (int) Math.round(
+                    (fBiStart.estimatedFullMah * 100.0) / (double) modelCap
+            );
+        }
+        final int fHealthPct = tmpHealth;
+
+        // ------------------------------------------------------------
+        // 2) FIXED DURATION — LAB MODE
+        // ------------------------------------------------------------
+        final int durationSec = LAB14_TOTAL_SECONDS;
+        lastSelectedStressDurationSec = durationSec;
+
+        // ------------------------------------------------------------
+        // SHOW RUNNING DIALOG
+        // ------------------------------------------------------------
+        showLab14RunningDialog();
+
+        // ------------------------------------------------------------
+        // 3) RUN STRESS (ASYNC)
+        // ------------------------------------------------------------
+        ui.post(() -> {
+
+            Map<String, Float> z0 = readThermalZones();
+            Float batt0 = pickZone(z0, "battery", "batt", "bat");
+
+            logLine();
+            logInfo("LAB 14 - Battery Health Stress Test started.");
+            logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
+            logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
+
+            logInfo(String.format(Locale.US,
+                    "Start conditions: level=%d%%, status=%s, temp=%.1f C.",
+                    fBiStart.level,
+                    String.valueOf(fBiStart.status),
+                    fBiStart.temperature));
+
+            if (fFullMah > 0) {
+                logInfo("Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
+            } else {
+                logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
+            }
+
+            if (fHealthPct > 0) {
+                logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
+            }
+
+            final long t0 = SystemClock.elapsedRealtime();
+
+            applyMaxBrightnessAndKeepOn();
+            startCpuBurn_C_Mode();
+
+            // ------------------------------------------------------------
+            // 4) STOP STRESS
+            // ------------------------------------------------------------
+            ui.postDelayed(() -> {
+
+                if (!lab14Running) return;
+
+                try {
+                    stopCpuBurn();
+                    restoreBrightnessAndKeepOn();
+                } catch (Throwable ignore) {}
+
+                dismissLab14RunningDialog();
+
+                BatteryInfo biEnd = getBatteryInfo();
+                float endPct = getCurrentBatteryPercent();
+
+                if (endPct < 0f || biEnd == null || biEnd.level < 0) {
+                    logWarn("Unable to read final battery state.");
+                    lab14Running = false;
+                    return;
+                }
+
+                long t1 = SystemClock.elapsedRealtime();
+                long dtMs = Math.max(1, t1 - t0);
+
+                float deltaPct = fStartPct - endPct;
+                float pctPerHour = (deltaPct * 3600000f) / dtMs;
+
+                double consumedMah = -1;
+                double mahPerHour  = -1;
+
+                if (fFullMah > 0 && deltaPct > 0f) {
+                    consumedMah = (deltaPct / 100.0) * fFullMah;
+                    mahPerHour  = (consumedMah * 3600000.0) / dtMs;
+                }
+
+                logLine();
+                logInfo(String.format(Locale.US,
+                        "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
+                        fStartPct, endPct, deltaPct, dtMs / 1000f));
+
+                if (consumedMah >= 0) {
+                    logInfo(String.format(Locale.US,
+                            "Measured drain: %.0f mAh (~ %.0f mAh/hour).",
+                            consumedMah, mahPerHour));
+                } else {
+                    logInfo(String.format(Locale.US,
+                            "Measured drain: ~ %.1f%%/hour.",
+                            pctPerHour));
+                }
+
+                Map<String, Float> z1 = readThermalZones();
+                Float batt1 = pickZone(z1, "battery", "batt", "bat");
+
+                // ------------------------------------------------------------
+                // 5) LAB INTERPRETATION
+                // ------------------------------------------------------------
+                String decision;
+
+                if (fHealthPct > 0 && fHealthPct < 70) {
+                    decision = "Weak";
+                    logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
+                }
+                else if (mahPerHour > 0 && mahPerHour > 900) {
+                    decision = "Weak";
+                    logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
+                }
+                else if ((fHealthPct > 0 && fHealthPct < 80) ||
+                         (mahPerHour > 0 && mahPerHour > 650)) {
+                    decision = "Normal";
+                    logWarn("LAB conclusion: Battery shows wear but is still usable.");
+                }
+                else {
+                    decision = "Strong";
+                    logOk("LAB conclusion: Battery health is good. No replacement indicated.");
+                }
+
+                // ------------------------------------------------------------
+                // 6) HEALTH MAP
+                // ------------------------------------------------------------
+                printHealthCheckboxMap(decision);
+
+                // ------------------------------------------------------------
+                // 7) ANALYTICS
+                // ------------------------------------------------------------
+                saveLab14DrainValue(mahPerHour);
+                saveLab14Run();
+                computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
+                computeAndLogConfidenceScore();
+                logLab14Confidence();
+
+                // ------------------------------------------------------------
+                // FINAL BATTERY HEALTH SCORE (if implemented)
+                // ------------------------------------------------------------
+                try {
+                    logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
+                } catch (Throwable ignore) {}
+
+                lab14Running = false;
+
+            }, durationSec * 1000L);
+        });
+
+    } catch (Throwable t) {
+        try { stopCpuBurn(); } catch (Throwable ignore) {}
+        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+        dismissLab14RunningDialog();
+        lab14Running = false;
+        logError("LAB 14 failed unexpectedly.");
+    }
+}
 
 // ============================================================
 // GEL THERMAL ENGINE â€” UNIVERSAL AUTO-SCALE (FINAL)
@@ -3807,13 +3967,13 @@ private void lab15ChargingSystemSmart() {
 
 // ============================================================
 // LAB 16 - Thermal Snapshot
-// GEL Universal Edition â€” Internals + Peripherals + Root-Aware
-// READ-ONLY â€¢ SNAPSHOT â€¢ SAFE
+// GEL Universal Edition — Internals + Peripherals + Root-Aware
+// READ-ONLY • SNAPSHOT • SAFE
 // ============================================================
 private void lab16ThermalSnapshot() {
 
     logLine();
-    logInfo("LAB 16 â€” Thermal Snapshot (ASCII thermal map)");
+    logInfo("LAB 16 — Thermal Snapshot (ASCII thermal map)");
 
     // ------------------------------------------------------------
     // 1. Read generic thermal zones
@@ -3875,35 +4035,35 @@ private void lab16ThermalSnapshot() {
 }
 
 // ============================================================
-// ASCII BAR (100 chars â€” monospace via HTML)
+// ASCII BAR (100 chars — monospace via HTML)
 // ============================================================
 private void printZoneAscii(String label, float t) {
 
     String color;
-    if (t < 45f)       color = "ðŸŸ©";
-    else if (t < 60f)  color = "ðŸŸ¨";
-    else               color = "ðŸŸ¥";
+    if (t < 45f)       color = "GREEN";
+    else if (t < 60f)  color = "YELLOW";
+    else               color = "RED";
 
     float maxT = 80f;
     float pct  = Math.min(1f, t / maxT);
     int bars   = (int) (pct * 100);
 
     StringBuilder sb = new StringBuilder(100);
-    for (int i = 0; i < bars; i++) sb.append("â–ˆ");
+    for (int i = 0; i < bars; i++) sb.append("#");
     while (sb.length() < 100) sb.append(" ");
 
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1fÂ°C", t));
+    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1f°C", t));
     appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
 }
 
 // ===================================================================
-// THERMAL SENSORS â€” INTERNAL (Human Readable, Root-Enhanced)
+// THERMAL SENSORS — INTERNAL (Human Readable, Root-Enhanced)
 // ===================================================================
 private String buildThermalInternalReport() {
 
     StringBuilder sb = new StringBuilder();
     sb.append("THERMAL SENSORS (INTERNAL)\n");
-    sb.append("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
+    sb.append("============================================\n");
 
     File thermalDir = new File("/sys/class/thermal");
     if (!thermalDir.exists() || !thermalDir.isDirectory()) {
@@ -3929,10 +4089,9 @@ private String buildThermalInternalReport() {
             sb.append(z.getName())
               .append(" [").append(type).append("]\n")
               .append("  Temp : ")
-              .append(String.format(Locale.US, "%.1fÂ°C", c))
+              .append(String.format(Locale.US, "%.1f°C", c))
               .append("\n");
 
-            // Trip points
             for (int i = 0; i < 10; i++) {
                 String tp  = readFirstLineSafe(new File(z, "trip_point_" + i + "_temp"));
                 String tpt = readFirstLineSafe(new File(z, "trip_point_" + i + "_type"));
@@ -3941,7 +4100,7 @@ private String buildThermalInternalReport() {
                 float tc = Float.parseFloat(tp) / 1000f;
                 sb.append("  Trip ").append(i)
                   .append(" (").append(tpt).append(") : ")
-                  .append(String.format(Locale.US, "%.1fÂ°C", tc))
+                  .append(String.format(Locale.US, "%.1f°C", tc))
                   .append("\n");
             }
             sb.append("\n");
@@ -4003,242 +4162,207 @@ private String buildThermalInfo() {
 }
 
 // ============================================================
-// LAB 17 â€” GEL AUTO Battery Reliability Evaluation
+// LAB 17 - GEL AUTO Battery Reliability Evaluation
 // Premium Diagnostic Edition (FINAL FULL BLOCK)
 // ============================================================
 
 private void lab17RunAuto() {
 
-logLine();  
-logInfo("17. GEL Auto Battery Reliability Evaluation");  
-logInfo("GEL Battery Reliability Evaluation started.");  
-logLine();  
+    logLine();
+    logInfo("17. GEL Auto Battery Reliability Evaluation");
+    logInfo("GEL Battery Reliability Evaluation started.");
+    logLine();
 
-new Thread(() -> {  
+    new Thread(() -> {
 
-    try {  
+        try {
 
-        // ============================================================  
-        // 1. STRESS TEST (LAB 14 CORE)  
-        // ============================================================  
-        float startPct = getCurrentBatteryPercent();  
-        if (startPct < 50f) {  
-            ui.post(() -> logError("Battery <50%. Please charge to run automatic evaluation."));  
-            return;  
-        }  
+            // ============================================================
+            // 1. STRESS TEST (LAB 14 CORE)
+            // ============================================================
+            float startPct = getCurrentBatteryPercent();
+            if (startPct < 50f) {
+                ui.post(() -> logError("Battery <50%. Please charge to run automatic evaluation."));
+                return;
+            }
 
-        ui.post(() -> {  
-            logInfo("â–¶ Running Stress Test (Lab 15)...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 32%");  
-        });  
+            ui.post(() -> {
+                logInfo(">> Running Stress Test (Lab 15)...");
+                logInfo("[##########------------------] 32%");
+            });
 
-        float before = getCurrentBatteryPercent();  
-        long t0 = SystemClock.elapsedRealtime();  
+            float before = getCurrentBatteryPercent();
+            long t0 = SystemClock.elapsedRealtime();
 
-        ui.post(this::applyMaxBrightnessAndKeepOn);  
-        startCpuBurn_C_Mode();  
+            ui.post(this::applyMaxBrightnessAndKeepOn);
+            startCpuBurn_C_Mode();
 
-        Thread.sleep(60_000);   // Stress load on background thread  
+            Thread.sleep(60_000);   // Stress load
 
-        stopCpuBurn();  
-        ui.post(this::restoreBrightnessAndKeepOn);  
+            stopCpuBurn();
+            ui.post(this::restoreBrightnessAndKeepOn);
 
-        float after = getCurrentBatteryPercent();  
-        long t1 = SystemClock.elapsedRealtime();  
+            float after = getCurrentBatteryPercent();
+            long t1 = SystemClock.elapsedRealtime();
 
-        float drop   = before - after;  
-        float perHour = (drop * 3600000f) / (t1 - t0);  
-        if (perHour < 0f) perHour = 0f;  
-        int drain_mA = (int)(perHour * 50);  
-        if (drain_mA < 0) drain_mA = 0;  
+            float drop = before - after;
+            float perHour = (drop * 3600000f) / (t1 - t0);
+            if (perHour < 0f) perHour = 0f;
 
-        ui.post(() -> {  
-            logInfo("â–¶ Calculating drain rate...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘] 85%");  
-        });  
+            int drain_mA = (int) (perHour * 50);
+            if (drain_mA < 0) drain_mA = 0;
 
-        // ============================================================  
-        // 2. THERMAL ZONES (LAB 16 STYLE)  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("");  
-            logInfo("â–¶ Running Thermal Zones (Lab 16)...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 68%");  
-        });  
+            ui.post(() -> {
+                logInfo(">> Calculating drain rate...");
+                logInfo("[########################---] 85%");
+            });
 
-        Map<String,Float> z0 = readThermalZones();  
-        Thread.sleep(1500);  
-        Map<String,Float> z1 = readThermalZones();  
+            // ============================================================
+            // 2. THERMAL ZONES (LAB 16 STYLE)
+            // ============================================================
+            ui.post(() -> {
+                logInfo("");
+                logInfo(">> Running Thermal Zones (Lab 16)...");
+                logInfo("[##################----------] 68%");
+            });
 
-        Float cpu0  = pickZone(z0,"cpu","soc","big","little");  
-        Float cpu1  = pickZone(z1,"cpu","soc","big","little");  
-        Float batt0 = pickZone(z0,"battery","batt","bat");  
-        Float batt1 = pickZone(z1,"battery","batt","bat");  
+            Map<String, Float> z0 = readThermalZones();
+            Thread.sleep(1500);
+            Map<String, Float> z1 = readThermalZones();
 
-        float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;  
-        float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;  
+            Float cpu0  = pickZone(z0, "cpu", "soc", "big", "little");
+            Float cpu1  = pickZone(z1, "cpu", "soc", "big", "little");
+            Float batt0 = pickZone(z0, "battery", "batt", "bat");
+            Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
-        // ============================================================  
-        // 3. VOLTAGE STABILITY  
-        // ============================================================  
-        ui.post(() -> logInfo("â–¶ Calculating voltage stability..."));  
-        float v0 = getBatteryVoltage_mV();  
-        Thread.sleep(1500);  
-        float v1 = getBatteryVoltage_mV();  
-        float dv = Math.abs(v1 - v0);  
+            float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;
+            float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;
 
-        // ============================================================  
-        // 4. CAPACITY ESTIMATION + PMIC  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("â–¶ Calculating thermal rise...");  
-            logInfo("â–¶ Calculating PMIC behavior...");  
-            logInfo("â–¶ Calculating discharge curve...");  
-            logInfo("â–¶ Calculating estimated real capacity...");  
-            logInfo("â–¶ Getting device information...");  
-        });  
+            // ============================================================
+            // 3. VOLTAGE STABILITY
+            // ============================================================
+            ui.post(() -> logInfo(">> Calculating voltage stability..."));
+            float v0 = getBatteryVoltage_mV();
+            Thread.sleep(1500);
+            float v1 = getBatteryVoltage_mV();
+            float dv = Math.abs(v1 - v0);
 
-        int factory = getFactoryCapacity_mAh();  
-        if (factory <= 0) factory = 5000;  
+            // ============================================================
+            // 4. CAPACITY ESTIMATION
+            // ============================================================
+            ui.post(() -> {
+                logInfo(">> Calculating thermal rise...");
+                logInfo(">> Calculating PMIC behavior...");
+                logInfo(">> Calculating discharge curve...");
+                logInfo(">> Calculating estimated real capacity...");
+                logInfo(">> Getting device information...");
+            });
 
-        float estimatedCapacity_mAh =  
-                factory * (100f / (100f + perHour));  
-        if (estimatedCapacity_mAh > factory)  
-            estimatedCapacity_mAh = factory;  
+            int factory = getFactoryCapacity_mAh();
+            if (factory <= 0) factory = 5000;
 
-        // ============================================================  
-        // 5. SCORING ENGINE  
-        // ============================================================  
-        int score = 100;  
+            float estimatedCapacity_mAh =
+                    factory * (100f / (100f + perHour));
 
-        // drain penalty  
-        if (perHour > 20f)       score -= 30;  
-        else if (perHour > 15f)  score -= 20;  
-        else if (perHour > 10f)  score -= 10;  
+            if (estimatedCapacity_mAh > factory)
+                estimatedCapacity_mAh = factory;
 
-        // thermal penalty (CPU)  
-        if (dCPU > 25f)          score -= 25;  
-        else if (dCPU > 15f)     score -= 15;  
-        else if (dCPU > 10f)     score -= 8;  
+            // ============================================================
+            // 5. SCORING ENGINE
+            // ============================================================
+            int score = 100;
 
-        // thermal penalty (BATT)  
-        if (dBATT > 10f)         score -= 20;  
-        else if (dBATT > 5f)     score -= 10;  
+            if (perHour > 20f)       score -= 30;
+            else if (perHour > 15f)  score -= 20;
+            else if (perHour > 10f)  score -= 10;
 
-        // voltage penalty  
-        if (dv > 45f)            score -= 20;  
-        else if (dv > 30f)       score -= 10;  
-        else if (dv > 20f)       score -= 5;  
+            if (dCPU > 25f)          score -= 25;
+            else if (dCPU > 15f)     score -= 15;
+            else if (dCPU > 10f)     score -= 8;
 
-        // capacity penalty  
-        float pctHealth = (estimatedCapacity_mAh / factory) * 100f;  
-        if (pctHealth < 60f)     score -= 25;  
-        else if (pctHealth < 70f)score -= 15;  
-        else if (pctHealth < 80f)score -= 8;  
+            if (dBATT > 10f)         score -= 20;
+            else if (dBATT > 5f)     score -= 10;
 
-        if (score < 0)   score = 0;  
-        if (score > 100) score = 100;  
+            if (dv > 45f)            score -= 20;
+            else if (dv > 30f)       score -= 10;
+            else if (dv > 20f)       score -= 5;
 
-        // voltage label  
-        String voltageLabel;  
-        if (dv <= 15f)       voltageLabel = "Excellent";  
-        else if (dv <= 30f)  voltageLabel = "OK";  
-        else                 voltageLabel = "Unstable";  
+            float pctHealth = (estimatedCapacity_mAh / factory) * 100f;
+            if (pctHealth < 60f)      score -= 25;
+            else if (pctHealth < 70f) score -= 15;
+            else if (pctHealth < 80f) score -= 8;
 
-        // thermal label  
-        String thermalLabel;  
-        if (dCPU <= 10f && dBATT <= 5f)  
-            thermalLabel = "OK";  
-        else if (dCPU <= 18f && dBATT <= 8f)  
-            thermalLabel = "Warm";  
-        else  
-            thermalLabel = "Hot";  
+            if (score < 0)   score = 0;
+            if (score > 100) score = 100;
 
-        // cycle behaviour  
-        String cycleLabel;  
-        if (perHour < 10f && dv < 20f)  
-            cycleLabel = "Strong (stable discharge curve)";  
-        else if (perHour < 15f)  
-            cycleLabel = "Normal (minor fluctuations)";  
-        else  
-            cycleLabel = "Stressed (irregular discharge curve)";  
+            String voltageLabel =
+                    (dv <= 15f) ? "Excellent" :
+                    (dv <= 30f) ? "OK" : "Unstable";
 
-        // category  
-        String category;  
-        if (score >= 90)      category = "Strong";  
-        else if (score >= 80) category = "Excellent";  
-        else if (score >= 70) category = "Very good";  
-        else if (score >= 60) category = "Normal";  
-        else                  category = "Weak";  
+            String thermalLabel =
+                    (dCPU <= 10f && dBATT <= 5f) ? "OK" :
+                    (dCPU <= 18f && dBATT <= 8f) ? "Warm" : "Hot";
 
-        // ============================================================  
-        // 6. FINAL UI OUTPUT  
-        // ============================================================  
-        final float f_before   = before;  
-        final float f_after    = after;  
-        final float f_drop     = drop;  
-        final float f_perHour  = perHour;  
-        final int   f_drain    = drain_mA;  
-        final float f_dCPU     = dCPU;  
-        final float f_dBATT    = dBATT;  
-        final float f_dv       = dv;  
-        final float f_cap      = estimatedCapacity_mAh;  
-        final int   f_factory  = factory;  
-        final int   f_score    = score;  
-        final String f_voltLbl = voltageLabel;  
-        final String f_therm   = thermalLabel;  
-        final String f_cycle   = cycleLabel;  
-        final String f_cat     = category;  
+            String cycleLabel =
+                    (perHour < 10f && dv < 20f) ? "Strong (stable discharge curve)" :
+                    (perHour < 15f) ? "Normal (minor fluctuations)" :
+                    "Stressed (irregular discharge curve)";
 
-        ui.post(() -> {  
-            logLine();  
-            logInfo("GEL Battery Intelligence Evaluation");  
-            logLine();  
+            String category =
+                    (score >= 90) ? "Strong" :
+                    (score >= 80) ? "Excellent" :
+                    (score >= 70) ? "Very good" :
+                    (score >= 60) ? "Normal" : "Weak";
 
-            logInfo(String.format(Locale.US,  
-                    "Stress window: %.1f%% â†’ %.1f%% (drop %.2f%%)",  
-                    f_before, f_after, f_drop));  
+            // ============================================================
+            // 6. FINAL UI OUTPUT
+            // ============================================================
+            ui.post(() -> {
 
-            logInfo(String.format(Locale.US,  
-                    "Drain rate under load: %.1f %%/hour", f_perHour));  
+                logLine();
+                logInfo("GEL Battery Intelligence Evaluation");
+                logLine();
 
-            logInfo(String.format(Locale.US,  
-                    "1. Stress Drain Rate: %d mA", f_drain));  
+                logInfo(String.format(Locale.US,
+                        "Stress window: %.1f%% -> %.1f%% (drop %.2f%%)",
+                        before, after, drop));
 
-            logInfo(String.format(Locale.US,  
-                    "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",  
-                    f_cap, f_factory));  
+                logInfo(String.format(Locale.US,
+                        "Drain rate under load: %.1f %%/hour", perHour));
 
-            logInfo(String.format(Locale.US,  
-                    "3. Voltage Stability: %s (Î” %.1f mV)",  
-                    f_voltLbl, f_dv));  
+                logInfo("1. Stress Drain Rate: " + drain_mA + " mA");
 
-            logInfo(String.format(Locale.US,  
-                    "4. Thermal Rise: %s (CPU +%.1fÂ°C, BATT +%.1fÂ°C)",  
-                    f_therm, f_dCPU, f_dBATT));  
+                logInfo(String.format(Locale.US,
+                        "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",
+                        estimatedCapacity_mAh, factory));
 
-            logInfo(String.format(Locale.US,  
-                    "5. Cycle Behavior: %s", f_cycle));  
+                logInfo(String.format(Locale.US,
+                        "3. Voltage Stability: %s (delta %.1f mV)",
+                        voltageLabel, dv));
 
-            logLine();  
-            logOk(String.format(Locale.US,  
-                    "Final Battery Health Score: %d%% (%s)",  
-                    f_score, f_cat));  
+                logInfo(String.format(Locale.US,
+                        "4. Thermal Rise: %s (CPU +%.1f C, BATT +%.1f C)",
+                        thermalLabel, dCPU, dBATT));
 
-            // Checkbox map with NEON âœ” and white labels  
-            appendHtml("âœ” <font color='#39FF14'>Strong</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Excellent</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Very good</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Normal</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Weak</font>");  
-        });  
+                logInfo("5. Cycle Behavior: " + cycleLabel);
 
-    } catch (Exception e) {  
-        ui.post(() -> logError("Lab 17 error: " + e.getMessage()));  
-    }  
+                logLine();
+                logOk(String.format(Locale.US,
+                        "Final Battery Health Score: %d%% (%s)",
+                        score, category));
 
-}).start();
+                appendHtml("[X] <font color='#39FF14'>Strong</font>");
+                appendHtml("[ ] <font color='#FFFFFF'>Excellent</font>");
+                appendHtml("[ ] <font color='#FFFFFF'>Very good</font>");
+                appendHtml("[ ] <font color='#FFFFFF'>Normal</font>");
+                appendHtml("[ ] <font color='#FFFFFF'>Weak</font>");
+            });
 
+        } catch (Exception e) {
+            ui.post(() -> logError("Lab 17 error: " + e.getMessage()));
+        }
+
+    }).start();
 }
 
 // ============================================================
@@ -4246,857 +4370,847 @@ new Thread(() -> {
 // ============================================================
 
 private float getBatteryVoltage_mV() {
-try {
-IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-Intent i = registerReceiver(null, f);
-if (i == null) return 0f;
-return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-} catch (Exception e) {
-return 0f;
-}
+    try {
+        IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent i = registerReceiver(null, f);
+        if (i == null) return 0f;
+        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+    } catch (Exception e) {
+        return 0f;
+    }
 }
 
 private int getFactoryCapacity_mAh() {
-// Generic fallback. You can later replace with per-model DB.
-return 5000;
-}                       
-    
-// ============================================================ // ============================================================
-// LABS 18â€“21: STORAGE & PERFORMANCE
+    // Generic fallback. You can later replace with per-model DB.
+    return 5000;
+}
+
 // ============================================================
+// LABS 18–21: STORAGE & PERFORMANCE
+// ============================================================
+
 private void lab18StorageSnapshot() {
-logLine();
-logInfo("LAB 18 â€” Internal Storage Snapshot.");
-try {
-StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
-long total = s.getBlockCountLong() * s.getBlockSizeLong();
-long free = s.getAvailableBlocksLong() * s.getBlockSizeLong();
-long used = total - free;
-int pctFree = (int) ((free * 100L) / total);
+    logLine();
+    logInfo("LAB 18 - Internal Storage Snapshot.");
+    try {
+        StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+        long total = s.getBlockCountLong() * s.getBlockSizeLong();
+        long free  = s.getAvailableBlocksLong() * s.getBlockSizeLong();
+        long used  = total - free;
+        int pctFree = (int) ((free * 100L) / total);
 
-logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)  
-                + " (free " + humanBytes(free) + ", " + pctFree + "%).");  
+        logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
+                + " (free " + humanBytes(free) + ", " + pctFree + "%).");
 
-        if (pctFree < 5)  
-            logError("Free space below 5% â€” high risk of crashes, failed updates and slow UI.");  
-        else if (pctFree < 10)  
-            logWarn("Free space below 10% â€” performance and update issues likely.");  
-        else  
-            logOk("Internal storage level is acceptable for daily usage.");  
-    } catch (Exception e) {  
-        logError("Storage snapshot error: " + e.getMessage());  
-    }  
-}  
+        if (pctFree < 5)
+            logError("Free space below 5% - high risk of crashes, failed updates and slow UI.");
+        else if (pctFree < 10)
+            logWarn("Free space below 10% - performance and update issues likely.");
+        else
+            logOk("Internal storage level is acceptable for daily usage.");
 
-private void lab19AppsFootprint() {  
-    logLine();  
-    logInfo("LAB 19 â€” Installed Apps Footprint.");  
-    try {  
-        PackageManager pm = getPackageManager();  
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);  
-        if (apps == null) {  
-            logWarn("Cannot read installed applications list.");  
-            return;  
-        }  
-        int userApps = 0;  
-        int systemApps = 0;  
-        for (ApplicationInfo ai : apps) {  
-            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) systemApps++;  
-            else userApps++;  
-        }  
-        logInfo("User-installed apps: " + userApps);  
-        logInfo("System apps: " + systemApps);  
-        logInfo("Total packages: " + apps.size());  
+    } catch (Exception e) {
+        logError("Storage snapshot error: " + e.getMessage());
+    }
+}
 
-        if (userApps > 120)  
-            logError("Very high number of user apps â€” strong risk of background drain and lag.");  
-        else if (userApps > 80)  
-            logWarn("High number of user apps â€” possible performance impact.");  
-        else  
-            logOk("App footprint is within a normal range.");  
-    } catch (Exception e) {  
-        logError("Apps footprint error: " + e.getMessage());  
-    }  
-}  
+private void lab19AppsFootprint() {
+    logLine();
+    logInfo("LAB 19 - Installed Apps Footprint.");
+    try {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        if (apps == null) {
+            logWarn("Cannot read installed applications list.");
+            return;
+        }
 
-private void lab20RamSnapshot() {  
-    logLine();  
-    logInfo("LAB 20 â€” Live RAM Snapshot.");  
-    try {  
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
-        if (am == null) {  
-            logError("ActivityManager not available.");  
-            return;  
-        }  
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();  
-        am.getMemoryInfo(mi);  
-        long free = mi.availMem;  
-        long total = mi.totalMem;  
-        int pct = (int) ((free * 100L) / total);  
-        logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");  
-        if (pct < 10)  
-            logError("Very low free RAM (<10%) â€” expect heavy lag and aggressive app killing.");  
-        else if (pct < 20)  
-            logWarn("Low free RAM (10â€“20%) â€” borderline under load.");  
-        else  
-            logOk("RAM level is acceptable for normal usage at this moment.");  
-    } catch (Exception e) {  
-        logError("RAM snapshot error: " + e.getMessage());  
-    }  
-}  
+        int userApps = 0;
+        int systemApps = 0;
 
-private void lab21UptimeHints() {  
-    logLine();  
-    logInfo("LAB 21 â€” Uptime / Reboot History Hints.");  
-    long upMs = SystemClock.elapsedRealtime();  
-    String upStr = formatUptime(upMs);  
-    logInfo("System uptime: " + upStr);  
-    if (upMs < 2 * 60 * 60 * 1000L) {  
-        logWarn("Device was rebooted recently (<2 hours) â€” some issues may already be masked by the reboot.");  
-    } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {  
-        logWarn("Uptime above 7 days â€” recommend a reboot before deep diagnostics.");  
-    } else {  
-        logOk("Uptime is within a reasonable range for diagnostics.");  
-    }  
-}  
+        for (ApplicationInfo ai : apps) {
+            if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+                systemApps++;
+            else
+                userApps++;
+        }
 
-// ============================================================  
-// LABS 22â€“25: SECURITY & SYSTEM HEALTH  
-// ============================================================  
+        logInfo("User-installed apps: " + userApps);
+        logInfo("System apps: " + systemApps);
+        logInfo("Total packages: " + apps.size());
+
+        if (userApps > 120)
+            logError("Very high number of user apps - strong risk of background drain and lag.");
+        else if (userApps > 80)
+            logWarn("High number of user apps - possible performance impact.");
+        else
+            logOk("App footprint is within a normal range.");
+
+    } catch (Exception e) {
+        logError("Apps footprint error: " + e.getMessage());
+    }
+}
+
+private void lab20RamSnapshot() {
+    logLine();
+    logInfo("LAB 20 - Live RAM Snapshot.");
+    try {
+        ActivityManager am =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am == null) {
+            logError("ActivityManager not available.");
+            return;
+        }
+
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+
+        long free  = mi.availMem;
+        long total = mi.totalMem;
+        int pct = (int) ((free * 100L) / total);
+
+        logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");
+
+        if (pct < 10)
+            logError("Very low free RAM (<10%) - expect heavy lag and aggressive app killing.");
+        else if (pct < 20)
+            logWarn("Low free RAM (10-20%) - borderline under load.");
+        else
+            logOk("RAM level is acceptable for normal usage at this moment.");
+
+    } catch (Exception e) {
+        logError("RAM snapshot error: " + e.getMessage());
+    }
+}
+
+private void lab21UptimeHints() {
+    logLine();
+    logInfo("LAB 21 - Uptime / Reboot History Hints.");
+
+    long upMs = SystemClock.elapsedRealtime();
+    String upStr = formatUptime(upMs);
+
+    logInfo("System uptime: " + upStr);
+
+    if (upMs < 2 * 60 * 60 * 1000L) {
+        logWarn("Device was rebooted recently (<2 hours) - some issues may be masked.");
+    } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
+        logWarn("Uptime above 7 days - recommend a reboot before deep diagnostics.");
+    } else {
+        logOk("Uptime is within a reasonable range for diagnostics.");
+    }
+}
+
+// ============================================================
+// LABS 22–25: SECURITY & SYSTEM HEALTH
+// ============================================================
 
 
-// LAB 22 â€” Screen Lock / Biometrics Checklist (auto-detect + manual)
+// ============================================================
+// LAB 22 - Screen Lock / Biometrics Checklist (auto-detect + manual)
 // ============================================================
 private void lab22ScreenLock() {
-logLine();
-logInfo("LAB 22 â€” Screen Lock / Biometrics Checklist");
 
-try {  
-    android.app.KeyguardManager km =  
-            (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);  
+    logLine();
+    logInfo("LAB 22 - Screen Lock / Biometrics Checklist");
 
-    if (km != null) {  
-        boolean secure = km.isDeviceSecure();  
+    try {
+        android.app.KeyguardManager km =
+                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-        if (secure) {  
-            logOk("Device reports SECURE lock method (PIN / Pattern / Password).");  
-        } else {  
-            logError("Device has NO secure lock method â€” phone is UNPROTECTED!");  
-            logWarn("Anyone can access data without authentication.");  
-        }  
-    } else {  
-        logWarn("KeyguardManager not available â€” cannot read lock status.");  
-    }  
-} catch (Exception e) {  
-    logWarn("Screen lock detection failed: " + e.getMessage());  
-}  
+        if (km != null) {
+            boolean secure = km.isDeviceSecure();
 
-// Manual guidance (kept for technician)  
-logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");  
-logWarn("If the device is left with no lock at all â€” higher risk for data and account theft.");  
-logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
+            if (secure) {
+                logOk("Device reports SECURE lock method (PIN / Pattern / Password).");
+            } else {
+                logError("Device has NO secure lock method - phone is UNPROTECTED!");
+                logWarn("Anyone can access data without authentication.");
+            }
+        } else {
+            logWarn("KeyguardManager not available - cannot read lock status.");
+        }
+    } catch (Exception e) {
+        logWarn("Screen lock detection failed: " + e.getMessage());
+    }
 
+    // Manual guidance
+    logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");
+    logWarn("If the device is left with no lock at all - higher risk for data and account theft.");
+    logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
 }
 
-// ============================================================
 
-// LAB 23 â€” Security Patch & Play Protect (auto + manual)
+// ============================================================
+// LAB 23 - Security Patch & Play Protect (auto + manual)
 // ============================================================
 private void lab23SecurityPatchManual() {
-logLine();
-logInfo("LAB 23 â€” Security Patch & Play Protect Check");
 
-// ----------------------------  
-// 1) Security Patch Level  
-// ----------------------------  
-try {  
-    String patch = android.os.Build.VERSION.SECURITY_PATCH;  
-    if (patch != null && !patch.isEmpty()) {  
-        logInfo("Security Patch Level: " + patch);  
-    } else {  
-        logWarn("Security Patch Level not reported by system.");  
-    }  
-} catch (Exception e) {  
-    logWarn("Security patch read failed: " + e.getMessage());  
-}  
+    logLine();
+    logInfo("LAB 23 - Security Patch & Play Protect Check");
 
-// ----------------------------  
-// 2) Play Protect Detection â€” BEST POSSIBLE WITHOUT ROOT  
-// ----------------------------  
-try {  
-    PackageManager pm = getPackageManager();  
+    // 1) Security Patch Level
+    try {
+        String patch = android.os.Build.VERSION.SECURITY_PATCH;
+        if (patch != null && !patch.isEmpty()) {
+            logInfo("Security Patch Level: " + patch);
+        } else {
+            logWarn("Security Patch Level not reported by system.");
+        }
+    } catch (Exception e) {
+        logWarn("Security patch read failed: " + e.getMessage());
+    }
 
-    // Check Google Play Services exists  
-    boolean gmsPresent = false;  
-    try {  
-        pm.getPackageInfo("com.google.android.gms", 0);  
-        gmsPresent = true;  
-    } catch (Exception ignored) {}  
+    // 2) Play Protect Detection (best possible without root)
+    try {
+        PackageManager pm = getPackageManager();
 
-    if (!gmsPresent) {  
-        logError("Google Play Services missing â€” Play Protect NOT available.");  
-    } else {  
-        // Check Verify Apps setting (Google verifier)  
-        int verify = -1;  
-        try {  
-            verify = Settings.Global.getInt(  
-                    getContentResolver(),  
-                    "package_verifier_enable",  
-                    -1  
-            );  
-        } catch (Exception ignored) {}  
+        boolean gmsPresent = false;
+        try {
+            pm.getPackageInfo("com.google.android.gms", 0);
+            gmsPresent = true;
+        } catch (Exception ignored) {}
 
-        if (verify == 1) {  
-            logOk("Play Protect: ON (Google Verify Apps ENABLED).");  
-        } else if (verify == 0) {  
-            logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");  
-        } else {  
-            // Fallback â€” detect if the activity exists  
-            Intent protectIntent = new Intent();  
-            protectIntent.setClassName(  
-                    "com.google.android.gms",  
-                    "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"  
-            );  
+        if (!gmsPresent) {
+            logError("Google Play Services missing - Play Protect NOT available.");
+        } else {
 
-            if (protectIntent.resolveActivity(pm) != null) {  
-                logOk("Play Protect module detected (activity present).");  
-            } else {  
-                logWarn("Play Protect module not fully detected â€” OEM variant or restricted build.");  
-            }  
-        }  
-    }  
-} catch (Exception e) {  
-    logWarn("Play Protect detection error: " + e.getMessage());  
-}  
+            int verify = -1;
+            try {
+                verify = Settings.Global.getInt(
+                        getContentResolver(),
+                        "package_verifier_enable",
+                        -1
+                );
+            } catch (Exception ignored) {}
 
-// MANUAL GUIDANCE (kept for technicians)  
-logInfo("1) Open Android Settings â†’ About phone â†’ Android version â†’ Security patch level.");  
-logWarn("If the patch level is very old compared to current date â€” increased vulnerability risk.");  
-logInfo("2) In Google Play Store â†’ Play Protect â†’ verify scanning is enabled and up to date.");
+            if (verify == 1) {
+                logOk("Play Protect: ON (Google Verify Apps ENABLED).");
+            } else if (verify == 0) {
+                logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");
+            } else {
+                Intent protectIntent = new Intent();
+                protectIntent.setClassName(
+                        "com.google.android.gms",
+                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+                );
 
+                if (protectIntent.resolveActivity(pm) != null) {
+                    logOk("Play Protect module detected (activity present).");
+                } else {
+                    logWarn("Play Protect module not fully detected - OEM variant or restricted build.");
+                }
+            }
+        }
+    } catch (Exception e) {
+        logWarn("Play Protect detection error: " + e.getMessage());
+    }
+
+    logInfo("1) Open Android Settings -> About phone -> Android version -> Security patch level.");
+    logWarn("If the patch level is very old compared to current date - increased vulnerability risk.");
+    logInfo("2) In Google Play Store -> Play Protect -> verify scanning is enabled and up to date.");
 }
 
-// ============================================================
 
-// LAB 24 â€” Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
-// GEL Security v3.1 (Realtime Snapshot)
+// ============================================================
+// LAB 24 - Developer Options / ADB Risk Note
 // ============================================================
 private void lab24DevOptions() {
-logLine();
-logInfo("LAB 24 â€” Developer Options / ADB Risk Note (Realtime).");
 
-int risk = 0;  
+    logLine();
+    logInfo("LAB 24 - Developer Options / ADB Risk Note (Realtime).");
 
-// ============================================================  
-// 1) USB DEBUGGING FLAG (ADB_ENABLED)  
-// ============================================================  
-boolean usbDebug = false;  
-try {  
-    int adb = Settings.Global.getInt(  
-            getContentResolver(),  
-            Settings.Global.ADB_ENABLED,  
-            0  
-    );  
-    usbDebug = (adb == 1);  
+    int risk = 0;
 
-    logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
+    // USB DEBUGGING
+    boolean usbDebug = false;
+    try {
+        int adb = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.ADB_ENABLED,
+                0
+        );
+        usbDebug = (adb == 1);
 
-    if (usbDebug) {  
-        logWarn("USB Debugging ENABLED â€” physical access risk.");  
-        risk += 30;  
-    } else {  
-        logOk("USB Debugging is OFF.");  
-    }  
+        logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);
 
-} catch (Exception e) {  
-    logWarn("Could not read USB Debugging flag (OEM restriction).");  
-    risk += 5;  
-}  
+        if (usbDebug) {
+            logWarn("USB Debugging ENABLED - physical access risk.");
+            risk += 30;
+        } else {
+            logOk("USB Debugging is OFF.");
+        }
 
-// ============================================================  
-// 2) DEVELOPER OPTIONS FLAG  
-// ============================================================  
-boolean devOpts = false;  
-try {  
-    int dev = Settings.Global.getInt(  
-            getContentResolver(),  
-            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,  
-            0  
-    );  
-    devOpts = (dev == 1);  
+    } catch (Exception e) {
+        logWarn("Could not read USB Debugging flag (OEM restriction).");
+        risk += 5;
+    }
 
-    logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);  
+    // DEVELOPER OPTIONS
+    boolean devOpts = false;
+    try {
+        int dev = Settings.Global.getInt(
+                getContentResolver(),
+                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
+                0
+        );
+        devOpts = (dev == 1);
 
-    if (devOpts) {  
-        logWarn("Developer Options ENABLED.");  
-        risk += 20;  
-    } else {  
-        logOk("Developer Options are OFF.");  
-    }  
+        logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);
 
-} catch (Exception e) {  
-    logWarn("Could not read Developer Options flag.");  
-    risk += 5;  
-}  
+        if (devOpts) {
+            logWarn("Developer Options ENABLED.");
+            risk += 20;
+        } else {
+            logOk("Developer Options are OFF.");
+        }
 
-// ============================================================  
-// 3) ADB OVER WIFI (TCP/IP mode â€” port 5555)  
-// ============================================================  
-boolean adbWifi = isPortOpen(5555, 200);  
+    } catch (Exception e) {
+        logWarn("Could not read Developer Options flag.");
+        risk += 5;
+    }
 
-logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
+    // ADB OVER WIFI
+    boolean adbWifi = isPortOpen(5555, 200);
+    logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));
 
-if (adbWifi) {  
-    logError("ADB over Wi-Fi ACTIVE â€” remote debugging possible on same network.");  
-    risk += 40;  
-} else {  
-    logOk("ADB over Wi-Fi is OFF.");  
-}  
+    if (adbWifi) {
+        logError("ADB over Wi-Fi ACTIVE - remote debugging possible.");
+        risk += 40;
+    } else {
+        logOk("ADB over Wi-Fi is OFF.");
+    }
 
-// ============================================================  
-// 4) ADB PAIRING MODE (Android 11â€“14 typical ports)  
-// ============================================================  
-boolean adbPairing =  
-        isPortOpen(3700, 200) ||   // some OEM pairing  
-        isPortOpen(7460, 200) ||   // pairing service  
-        scanPairingPortRange();    // 7460â€“7490  
+    // ADB PAIRING
+    boolean adbPairing =
+            isPortOpen(3700, 200) ||
+            isPortOpen(7460, 200) ||
+            scanPairingPortRange();
 
-logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
+    logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));
 
-if (adbPairing) {  
-    logError("ADB Pairing is ACTIVE â€” device discoverable for pairing.");  
-    risk += 25;  
-} else {  
-    logOk("ADB Pairing is OFF.");  
-}  
+    if (adbPairing) {
+        logError("ADB Pairing is ACTIVE - device discoverable for pairing.");
+        risk += 25;
+    } else {
+        logOk("ADB Pairing is OFF.");
+    }
 
-// ============================================================  
-// 5) FINAL RISK SCORE  
-// ============================================================  
-if (risk > 100) risk = 100;  
+    if (risk > 100) risk = 100;
 
-String level;  
-if (risk <= 10)       level = "LOW";  
-else if (risk <= 30)  level = "MEDIUM";  
-else if (risk <= 60)  level = "HIGH";  
-else                  level = "CRITICAL";  
+    String level;
+    if (risk <= 10) level = "LOW";
+    else if (risk <= 30) level = "MEDIUM";
+    else if (risk <= 60) level = "HIGH";
+    else level = "CRITICAL";
 
-logLine();  
-logInfo("Security Risk Score: " + risk + "/100  (" + level + ") " + riskBubble(risk));  
+    logLine();
+    logInfo("Security Risk Score: " + risk + "/100 (" + level + ") " + riskBubble(risk));
 
-// ============================================================  
-// 6) AUTO-FIX / ACTION HINTS  
-// ============================================================  
-logLine();  
-logInfo("Recommended Actions:");  
+    logLine();
+    logInfo("Recommended Actions:");
 
-if (usbDebug || devOpts) {  
-    logWarn("â€¢ Disable Developer Options / USB Debugging:");  
-    logInfo("  Settings â†’ System â†’ Developer options â†’ OFF");  
-    logInfo("  USB debugging â†’ OFF");  
-} else {  
-    logOk("â€¢ Developer options & USB debugging look safe.");  
-}  
+    if (usbDebug || devOpts) {
+        logWarn("- Disable Developer Options / USB Debugging:");
+        logInfo("  Settings -> System -> Developer options -> OFF");
+    } else {
+        logOk("- Developer options & USB debugging look safe.");
+    }
 
-if (adbWifi) {  
-    logError("â€¢ ADB over Wi-Fi must be disabled:");  
-    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
-    logInfo("  Or reboot to clear tcpip mode.");  
-} else {  
-    logOk("â€¢ Wireless debugging is not active.");  
-}  
+    if (adbWifi) {
+        logError("- Disable Wireless debugging.");
+    } else {
+        logOk("- Wireless debugging is not active.");
+    }
 
-if (adbPairing) {  
-    logError("â€¢ Turn OFF ADB Pairing / Wireless debugging:");  
-    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
-} else {  
-    logOk("â€¢ ADB Pairing is not active.");  
-}  
-
-if (risk >= 60)  
-    logError("âš  Very high risk â€” disable ADB features immediately!");  
-else if (risk >= 30)  
-    logWarn("âš  Partial exposure â€” review ADB settings.");  
-else  
-    logOk("âœ” Risk level acceptable.");
-
+    if (risk >= 60)
+        logError("Very high risk - disable ADB features immediately!");
+    else if (risk >= 30)
+        logWarn("Partial exposure - review ADB settings.");
+    else
+        logOk("Risk level acceptable.");
 }
 
 // ============================================================
 // UI BUBBLES (GEL)
 // ============================================================
 private String bubble(boolean on) {
-return on ? "ðŸ”´" : "ðŸŸ¢";
+    return on ? "🔴" : "🟢";
 }
 
 private String riskBubble(int risk) {
-if (risk <= 10) return "ðŸŸ¢";
-if (risk <= 30) return "ðŸŸ¡";
-if (risk <= 60) return "ðŸŸ ";
-return "ðŸ”´";
+    if (risk <= 10) return "🟢";
+    if (risk <= 30) return "🟡";
+    if (risk <= 60) return "🟠";
+    return "🔴";
 }
 
 // ============================================================
-// HELPERS â€” PORT CHECK (LOCALHOST)
+// HELPERS - PORT CHECK (LOCALHOST)
 // ============================================================
 private boolean isPortOpen(int port, int timeoutMs) {
-Socket s = null;
-try {
-s = new Socket();
-s.connect(new InetSocketAddress("127.0.0.1", port), timeoutMs);
-return true;
-} catch (Exception e) {
-return false;
-} finally {
-if (s != null) try { s.close(); } catch (Exception ignored) {}
-}
+    Socket s = null;
+    try {
+        s = new Socket();
+        s.connect(new InetSocketAddress("127.0.0.1", port), timeoutMs);
+        return true;
+    } catch (Exception e) {
+        return false;
+    } finally {
+        if (s != null) try { s.close(); } catch (Exception ignored) {}
+    }
 }
 
-// Scan pairing port range 7460â€“7490 (best-effort)
+// Scan pairing port range 7460–7490 (best-effort)
 private boolean scanPairingPortRange() {
-for (int p = 7460; p <= 7490; p++) {
-if (isPortOpen(p, 80)) return true;
-}
-return false;
+    for (int p = 7460; p <= 7490; p++) {
+        if (isPortOpen(p, 80)) return true;
+    }
+    return false;
 }
 
 // ============================================================
 
-// LAB 25 â€” Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
-// GEL Universal Edition â€” NO external libs
+// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// GEL Universal Edition — NO external libs
 // ============================================================
 private void lab25RootSuspicion() {
-logLine();
-logInfo("LAB 25 â€” Root / Bootloader Integrity Scan (AUTO).");
+    logLine();
+    logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
 
-// ---------------------------  
-// (1) ROOT DETECTION  
-// ---------------------------  
-int rootScore = 0;  
-List<String> rootFindings = new ArrayList<>();  
+    // ---------------------------
+    // (1) ROOT DETECTION
+    // ---------------------------
+    int rootScore = 0;
+    List<String> rootFindings = new ArrayList<>();
 
-// su / busybox paths  
-String[] suPaths = {  
-        "/system/bin/su",  
-        "/system/xbin/su",  
-        "/sbin/su",  
-        "/su/bin/su",  
-        "/system/app/Superuser.apk",  
-        "/system/app/SuperSU.apk",  
-        "/system/app/Magisk.apk",  
-        "/system/bin/busybox",  
-        "/system/xbin/busybox",  
-        "/vendor/bin/su",  
-        "/odm/bin/su"  
-};  
+    // su / busybox paths
+    String[] suPaths = {
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/su/bin/su",
+            "/system/app/Superuser.apk",
+            "/system/app/SuperSU.apk",
+            "/system/app/Magisk.apk",
+            "/system/bin/busybox",
+            "/system/xbin/busybox",
+            "/vendor/bin/su",
+            "/odm/bin/su"
+    };
 
-boolean suFound = false;  
-for (String p : suPaths) {  
-    if (lab25_fileExists(p)) {  
-        suFound = true;  
-        rootScore += 18;  
-        rootFindings.add("su/busybox path found: " + p);  
-    }  
-}  
+    boolean suFound = false;
+    for (String p : suPaths) {
+        if (lab25_fileExists(p)) {
+            suFound = true;
+            rootScore += 18;
+            rootFindings.add("su/busybox path found: " + p);
+        }
+    }
 
-// which su  
-String whichSu = lab25_execFirstLine("which su");  
-if (whichSu != null && whichSu.contains("/")) {  
-    rootScore += 12;  
-    rootFindings.add("'which su' returned: " + whichSu);  
-    suFound = true;  
-}  
+    // which su
+    String whichSu = lab25_execFirstLine("which su");
+    if (whichSu != null && whichSu.contains("/")) {
+        rootScore += 12;
+        rootFindings.add("'which su' returned: " + whichSu);
+        suFound = true;
+    }
 
-// try exec su (best effort)  
-boolean suExec = lab25_canExecSu();  
-if (suExec) {  
-    rootScore += 25;  
-    rootFindings.add("su execution possible (shell granted).");  
-    suFound = true;  
-}  
+    // try exec su (best effort)
+    boolean suExec = lab25_canExecSu();
+    if (suExec) {
+        rootScore += 25;
+        rootFindings.add("su execution possible (shell granted).");
+        suFound = true;
+    }
 
-// known root packages  
-String[] rootPkgs = {  
-        "com.topjohnwu.magisk",  
-        "eu.chainfire.supersu",  
-        "com.koushikdutta.superuser",  
-        "com.noshufou.android.su",  
-        "com.kingroot.kinguser",  
-        "com.kingo.root",  
-        "com.saurik.substrate",  
-        "de.robv.android.xposed.installer",  
-        "com.zachspong.temprootremovejb",  
-        "com.ramdroid.appquarantine"  
-};  
+    // known root packages
+    String[] rootPkgs = {
+            "com.topjohnwu.magisk",
+            "eu.chainfire.supersu",
+            "com.koushikdutta.superuser",
+            "com.noshufou.android.su",
+            "com.kingroot.kinguser",
+            "com.kingo.root",
+            "com.saurik.substrate",
+            "de.robv.android.xposed.installer",
+            "com.zachspong.temprootremovejb",
+            "com.ramdroid.appquarantine"
+    };
 
-List<String> installed = lab25_getInstalledPackagesLower();  
-boolean pkgHit = false;  
-for (String rp : rootPkgs) {  
-    if (installed.contains(rp)) {  
-        pkgHit = true;  
-        rootScore += 20;  
-        rootFindings.add("root package installed: " + rp);  
-    }  
-}  
+    List<String> installed = lab25_getInstalledPackagesLower();
+    boolean pkgHit = false;
+    for (String rp : rootPkgs) {
+        if (installed.contains(rp)) {
+            pkgHit = true;
+            rootScore += 20;
+            rootFindings.add("root package installed: " + rp);
+        }
+    }
 
-// build tags  
-try {  
-    String tags = Build.TAGS;  
-    if (tags != null && tags.contains("test-keys")) {  
-        rootScore += 15;  
-        rootFindings.add("Build.TAGS contains test-keys.");  
-    }  
-} catch (Throwable ignore) {}  
+    // build tags
+    try {
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            rootScore += 15;
+            rootFindings.add("Build.TAGS contains test-keys.");
+        }
+    } catch (Throwable ignore) {}
 
-// suspicious props  
-String roSecure = lab25_getProp("ro.secure");  
-String roDebug  = lab25_getProp("ro.debuggable");  
-if ("0".equals(roSecure)) {  
-    rootScore += 18;  
-    rootFindings.add("ro.secure=0 (insecure build).");  
-}  
-if ("1".equals(roDebug)) {  
-    rootScore += 12;  
-    rootFindings.add("ro.debuggable=1 (debuggable build).");  
-}  
+    // suspicious props
+    String roSecure = lab25_getProp("ro.secure");
+    String roDebug  = lab25_getProp("ro.debuggable");
+    if ("0".equals(roSecure)) {
+        rootScore += 18;
+        rootFindings.add("ro.secure=0 (insecure build).");
+    }
+    if ("1".equals(roDebug)) {
+        rootScore += 12;
+        rootFindings.add("ro.debuggable=1 (debuggable build).");
+    }
 
-// ---------------------------  
-// (2) BOOTLOADER / VERIFIED BOOT  
-// ---------------------------  
-int blScore = 0;  
-List<String> blFindings = new ArrayList<>();  
+    // ---------------------------
+    // (2) BOOTLOADER / VERIFIED BOOT
+    // ---------------------------
+    int blScore = 0;
+    List<String> blFindings = new ArrayList<>();
 
-String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red  
-String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked  
-String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0  
-String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs  
+    String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
+    String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
+    String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0
+    String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs
 
-if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {  
-    blScore += 30;  
-    blFindings.add("VerifiedBootState=" + vbState);  
-} else if (vbState != null) {  
-    blFindings.add("VerifiedBootState=" + vbState);  
-}  
+    if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {
+        blScore += 30;
+        blFindings.add("VerifiedBootState=" + vbState);
+    } else if (vbState != null) {
+        blFindings.add("VerifiedBootState=" + vbState);
+    }
 
-if (vbmeta != null && vbmeta.contains("unlocked")) {  
-    blScore += 35;  
-    blFindings.add("vbmeta.device_state=unlocked");  
-} else if (vbmeta != null) {  
-    blFindings.add("vbmeta.device_state=" + vbmeta);  
-}  
+    if (vbmeta != null && vbmeta.contains("unlocked")) {
+        blScore += 35;
+        blFindings.add("vbmeta.device_state=unlocked");
+    } else if (vbmeta != null) {
+        blFindings.add("vbmeta.device_state=" + vbmeta);
+    }
 
-if ("0".equals(flashL)) {  
-    blScore += 25;  
-    blFindings.add("flash.locked=0 (bootloader unlocked).");  
-} else if (flashL != null) {  
-    blFindings.add("flash.locked=" + flashL);  
-}  
+    if ("0".equals(flashL)) {
+        blScore += 25;
+        blFindings.add("flash.locked=0 (bootloader unlocked).");
+    } else if (flashL != null) {
+        blFindings.add("flash.locked=" + flashL);
+    }
 
-if ("1".equals(wlBit)) {  
-    blScore += 15;  
-    blFindings.add("warranty_bit=1 (tamper flag).");  
-}  
+    if ("1".equals(wlBit)) {
+        blScore += 15;
+        blFindings.add("warranty_bit=1 (tamper flag).");
+    }
 
-// OEM unlock allowed flag (Android settings)  
-try {  
-    int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);  
-    if (oemAllowed == 1) {  
-        blScore += 10;  
-        blFindings.add("OEM unlock allowed=1 (developer enabled).");  
-    }  
-} catch (Throwable ignore) {}  
+    // OEM unlock allowed flag (Android settings)
+    try {
+        int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);
+        if (oemAllowed == 1) {
+            blScore += 10;
+            blFindings.add("OEM unlock allowed=1 (developer enabled).");
+        }
+    } catch (Throwable ignore) {}
 
-// /proc/cmdline hints  
-String cmdline = lab25_readOneLine("/proc/cmdline");  
-if (cmdline != null) {  
-    String c = cmdline.toLowerCase(Locale.US);  
-    if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||  
-        c.contains("vbmeta.device_state=unlocked") || c.contains("bootloader=unlocked")) {  
-        blScore += 20;  
-        blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");  
-    }  
-}  
+    // /proc/cmdline hints
+    String cmdline = lab25_readOneLine("/proc/cmdline");
+    if (cmdline != null) {
+        String c = cmdline.toLowerCase(Locale.US);
+        if (c.contains("verifiedbootstate=orange") ||
+            c.contains("verifiedbootstate=yellow") ||
+            c.contains("vbmeta.device_state=unlocked") ||
+            c.contains("bootloader=unlocked")) {
 
-// ---------------------------  
-// (3) BOOT ANIMATION / SPLASH MOD  
-// ---------------------------  
-int animScore = 0;  
-List<String> animFindings = new ArrayList<>();  
+            blScore += 20;
+            blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");
+        }
+    }
 
-// Strong indicator: custom bootanimation in /data/local  
-if (lab25_fileExists("/data/local/bootanimation.zip")) {  
-    animScore += 35;  
-    animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
-}  
+    // ---------------------------
+    // (3) BOOT ANIMATION / SPLASH MOD
+    // ---------------------------
+    int animScore = 0;
+    List<String> animFindings = new ArrayList<>();
 
-// If system bootanimation missing â†’ suspicious ROM  
-boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
-                  lab25_fileExists("/product/media/bootanimation.zip") ||  
-                  lab25_fileExists("/oem/media/bootanimation.zip") ||  
-                  lab25_fileExists("/vendor/media/bootanimation.zip");  
-if (!sysBoot) {  
-    animScore += 15;  
-    animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");  
-} else {  
-    animFindings.add("Stock bootanimation path exists.");  
-}  
+    // Strong indicator: custom bootanimation in /data/local
+    if (lab25_fileExists("/data/local/bootanimation.zip")) {
+        animScore += 35;
+        animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");
+    }
 
-// ---------------------------  
-// FINAL RISK SCORE  
-// ---------------------------  
-int risk = Math.min(100, rootScore + blScore + animScore);  
+    // If system bootanimation missing -> suspicious ROM
+    boolean sysBoot =
+            lab25_fileExists("/system/media/bootanimation.zip") ||
+            lab25_fileExists("/product/media/bootanimation.zip") ||
+            lab25_fileExists("/oem/media/bootanimation.zip") ||
+            lab25_fileExists("/vendor/media/bootanimation.zip");
 
-// Print ROOT section  
-logLine();  
-logInfo("Root Scan:");  
-if (rootFindings.isEmpty()) {  
-    logOk("No strong root traces detected.");  
-} else {  
-    for (String s : rootFindings) logWarn("â€¢ " + s);  
-}  
+    if (!sysBoot) {
+        animScore += 15;
+        animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");
+    } else {
+        animFindings.add("Stock bootanimation path exists.");
+    }
 
-// Print BOOTLOADER section  
-logLine();  
-logInfo("Bootloader / Verified Boot:");  
-if (blFindings.isEmpty()) {  
-    logOk("No bootloader anomalies detected.");  
-} else {  
-    for (String s : blFindings) logWarn("â€¢ " + s);  
-}  
+    // ---------------------------
+    // FINAL RISK SCORE
+    // ---------------------------
+    int risk = Math.min(100, rootScore + blScore + animScore);
 
-// Print ANIMATION section  
-logLine();  
-logInfo("Boot Animation / Splash:");  
-if (animFindings.isEmpty()) {  
-    logOk("No custom animation traces detected.");  
-} else {  
-    for (String s : animFindings) logWarn("â€¢ " + s);  
-}  
+    // Print ROOT section
+    logLine();
+    logInfo("Root Scan:");
+    if (rootFindings.isEmpty()) {
+        logOk("No strong root traces detected.");
+    } else {
+        for (String s : rootFindings) logWarn("• " + s);
+    }
 
-// Verdict  
-logLine();  
-logInfo("FINAL VERDICT:");  
-logInfo("RISK SCORE: " + risk + " / 100");  
+    // Print BOOTLOADER section
+    logLine();
+    logInfo("Bootloader / Verified Boot:");
+    if (blFindings.isEmpty()) {
+        logOk("No bootloader anomalies detected.");
+    } else {
+        for (String s : blFindings) logWarn("• " + s);
+    }
 
-if (risk >= 70 || suExec || pkgHit) {  
-    logError("STATUS: ROOTED / MODIFIED (high confidence).");  
-} else if (risk >= 35) {  
-    logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");  
-} else {  
-    logOk("STATUS: SAFE (no significant modification evidence).");  
-}  
+    // Print ANIMATION section
+    logLine();
+    logInfo("Boot Animation / Splash:");
+    if (animFindings.isEmpty()) {
+        logOk("No custom animation traces detected.");
+    } else {
+        for (String s : animFindings) logWarn("• " + s);
+    }
 
-logOk("Lab 25 finished.");
+    // Verdict
+    logLine();
+    logInfo("FINAL VERDICT:");
+    logInfo("RISK SCORE: " + risk + " / 100");
 
+    if (risk >= 70 || suExec || pkgHit) {
+        logError("STATUS: ROOTED / MODIFIED (high confidence).");
+    } else if (risk >= 35) {
+        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+    } else {
+        logOk("STATUS: SAFE (no significant modification evidence).");
+    }
+
+    logOk("Lab 25 finished.");
 }
 
 // ============================================================
-// LAB 25 â€” INTERNAL HELPERS (unique names to avoid conflicts)
+// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
 // ============================================================
 private boolean lab25_fileExists(String path) {
-try { return new File(path).exists(); } catch (Throwable t) { return false; }
+    try { return new File(path).exists(); } catch (Throwable t) { return false; }
 }
 
 private List<String> lab25_getInstalledPackagesLower() {
-List<String> out = new ArrayList<>();
-try {
-PackageManager pm = getPackageManager();
-List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-if (apps != null) {
-for (ApplicationInfo ai : apps) {
-String p = ai.packageName;
-if (p != null) out.add(p.toLowerCase(Locale.US));
-}
-}
-} catch (Throwable ignore) {}
-return out;
+    List<String> out = new ArrayList<>();
+    try {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        if (apps != null) {
+            for (ApplicationInfo ai : apps) {
+                String p = ai.packageName;
+                if (p != null) out.add(p.toLowerCase(Locale.US));
+            }
+        }
+    } catch (Throwable ignore) {}
+    return out;
 }
 
 private boolean lab25_canExecSu() {
-Process p = null;
-try {
-p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-String line = br.readLine();
-br.close();
-return line != null && line.toLowerCase(Locale.US).contains("uid=0");
-} catch (Throwable t) {
-return false;
-} finally {
-if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-}
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null && line.toLowerCase(Locale.US).contains("uid=0");
+    } catch (Throwable t) {
+        return false;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
 }
 
 private String lab25_execFirstLine(String cmd) {
-Process p = null;
-try {
-p = Runtime.getRuntime().exec(cmd);
-BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-String line = br.readLine();
-br.close();
-return line != null ? line.trim() : null;
-} catch (Throwable t) {
-return null;
-} finally {
-if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-}
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(cmd);
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line.trim() : null;
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
 }
 
 private String lab25_getProp(String key) {
-String v = lab25_execFirstLine("getprop " + key);
-if (v == null) return null;
-v = v.trim();
-return v.isEmpty() ? null : v.toLowerCase(Locale.US);
+    String v = lab25_execFirstLine("getprop " + key);
+    if (v == null) return null;
+    v = v.trim();
+    return v.isEmpty() ? null : v.toLowerCase(Locale.US);
 }
 
 private String lab25_readOneLine(String path) {
-BufferedReader br = null;
-try {
-br = new BufferedReader(new FileReader(new File(path)));
-return br.readLine();
-} catch (Throwable t) {
-return null;
-} finally {
-if (br != null) try { br.close(); } catch (Throwable ignore) {}
-}
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(new File(path)));
+        return br.readLine();
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (br != null) try { br.close(); } catch (Throwable ignore) {}
+    }
 }
 
 // ============================================================
-// LAB 26 â€” GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
 private void lab26CrashHistory() {
 
-logLine();  
-logInfo("LAB 26 â€” GEL Crash Intelligence (AUTO)");  
+    logLine();
+    logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");
 
-int crashCount = 0;  
-int anrCount = 0;  
-int systemCount = 0;  
+    int crashCount = 0;
+    int anrCount = 0;
+    int systemCount = 0;
 
-Map<String, Integer> appEvents = new HashMap<>(); // Group per app  
-List<String> details = new ArrayList<>();  
+    Map<String, Integer> appEvents = new HashMap<>(); // Group per app
+    List<String> details = new ArrayList<>();
 
-// ============================================================  
-// (A) Android 11+ â€” Process Exit Reasons  
-// ============================================================  
-try {  
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {  
-        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);  
-        if (am != null) {  
-            List<ActivityManager.ProcessErrorStateInfo> errs = am.getProcessesInErrorState();  
-            if (errs != null) {  
-                for (ActivityManager.ProcessErrorStateInfo e : errs) {  
+    // ============================================================
+    // (A) Android 11+ — Process Exit Reasons
+    // ============================================================
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                List<ActivityManager.ProcessErrorStateInfo> errs =
+                        am.getProcessesInErrorState();
+                if (errs != null) {
+                    for (ActivityManager.ProcessErrorStateInfo e : errs) {
 
-                    String app = e.processName;  
-                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);  
+                        String app = e.processName;
+                        appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
 
-                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {  
-                        crashCount++;  
-                        details.add("CRASH: " + app + " â€” " + e.shortMsg);  
-                    }   
-                    else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {  
-                        anrCount++;  
-                        details.add("ANR: " + app + " â€” " + e.shortMsg);  
-                    }  
-                }  
-            }  
-        }  
-    }  
-} catch (Exception ignored) {}  
+                        if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
+                            crashCount++;
+                            details.add("CRASH: " + app + " — " + e.shortMsg);
+                        }
+                        else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                            anrCount++;
+                            details.add("ANR: " + app + " — " + e.shortMsg);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (Exception ignored) {}
 
-// ============================================================  
-// (B) DropBox crash logs â€” legacy Android sources  
-// ============================================================  
-try {  
-    DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
+    // ============================================================
+    // (B) DropBox crash logs — legacy Android sources
+    // ============================================================
+    try {
+        DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
 
-    if (db != null) {  
-        String[] tags = {  
-                "system_app_crash", "data_app_crash",  
-                "system_app_anr", "data_app_anr",  
-                "system_server_crash", "system_server_wtf",  
-                "system_server_anr"  
-        };  
+        if (db != null) {
+            String[] tags = {
+                    "system_app_crash", "data_app_crash",
+                    "system_app_anr", "data_app_anr",
+                    "system_server_crash", "system_server_wtf",
+                    "system_server_anr"
+            };
 
-        for (String tag : tags) {  
-            DropBoxManager.Entry ent = db.getNextEntry(tag, 0);  
+            for (String tag : tags) {
+                DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
 
-            while (ent != null) {  
+                while (ent != null) {
 
-                if (tag.contains("crash")) crashCount++;  
-                if (tag.contains("anr")) anrCount++;  
-                if (tag.contains("server")) systemCount++;  
+                    if (tag.contains("crash")) crashCount++;
+                    if (tag.contains("anr")) anrCount++;
+                    if (tag.contains("server")) systemCount++;
 
-                String shortTxt = readDropBoxEntry(ent);  
+                    String shortTxt = readDropBoxEntry(ent);
 
-                String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
-                details.add(clean + ": " + shortTxt);  
+                    String clean = tag.toUpperCase(Locale.US).replace("_", " ");
+                    details.add(clean + ": " + shortTxt);
 
-                // grouping  
-                String key = clean;  
-                appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);  
+                    // grouping
+                    String key = clean;
+                    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
 
-                ent = db.getNextEntry(tag, ent.getTimeMillis());  
-            }  
-        }  
-    }  
+                    ent = db.getNextEntry(tag, ent.getTimeMillis());
+                }
+            }
+        }
 
-} catch (Exception ignored) {}  
+    } catch (Exception ignored) {}
 
-// ============================================================  
-// (C) SUMMARY + RISK SCORE  
-// ============================================================  
-int risk = 0;  
-risk += crashCount * 5;  
-risk += anrCount * 8;  
-risk += systemCount * 15;  
-if (risk > 100) risk = 100;  
+    // ============================================================
+    // (C) SUMMARY + RISK SCORE
+    // ============================================================
+    int risk = 0;
+    risk += crashCount * 5;
+    risk += anrCount * 8;
+    risk += systemCount * 15;
+    if (risk > 100) risk = 100;
 
-// COLOR INDICATOR  
-String riskColor =  
-        (risk <= 20) ? "ðŸŸ©" :  
-        (risk <= 50) ? "ðŸŸ¨" :  
-        (risk <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
+    // COLOR INDICATOR (ASCII SAFE)
+    String riskColor =
+            (risk <= 20) ? "[OK]" :
+            (risk <= 50) ? "[WARN]" :
+            (risk <= 80) ? "[HIGH]" : "[CRITICAL]";
 
-logInfo("Crash events: " + crashCount);  
-logInfo("ANR events: " + anrCount);  
-logInfo("System-level faults: " + systemCount);  
+    logInfo("Crash events: " + crashCount);
+    logInfo("ANR events: " + anrCount);
+    logInfo("System-level faults: " + systemCount);
 
-logInfo(riskColor + " Stability Risk Score: " + risk + "%");  
+    logInfo(riskColor + " Stability Risk Score: " + risk + "%");
 
-// ============================================================  
-// (D) HEATMAP (top offenders)  
-// ============================================================  
-if (!appEvents.isEmpty()) {  
-    logLine();  
-    logInfo("Top Offenders (Heatmap):");  
+    // ============================================================
+    // (D) HEATMAP (top offenders)
+    // ============================================================
+    if (!appEvents.isEmpty()) {
+        logLine();
+        logInfo("Top Offenders (Heatmap):");
 
-    appEvents.entrySet()  
-            .stream()  
-            .sorted((a, b) -> b.getValue() - a.getValue())  
-            .limit(5)  
-            .forEach(e -> {  
-                String c = (e.getValue() >= 10) ? "ðŸŸ¥" :  
-                           (e.getValue() >= 5)  ? "ðŸŸ§" :  
-                           (e.getValue() >= 2)  ? "ðŸŸ¨" :  
-                                                  "ðŸŸ©";  
-                logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");  
-            });  
-}  
+        appEvents.entrySet()
+                .stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(5)
+                .forEach(e -> {
+                    String c =
+                            (e.getValue() >= 10) ? "[CRITICAL]" :
+                            (e.getValue() >= 5)  ? "[HIGH]" :
+                            (e.getValue() >= 2)  ? "[WARN]" :
+                                                   "[OK]";
+                    logInfo(" " + c + " " + e.getKey() + " -> " + e.getValue() + " events");
+                });
+    }
 
-// ============================================================  
-// (E) FULL DETAILS  
-// ============================================================  
-if (!details.isEmpty()) {  
-    logLine();  
-    logInfo("Detailed Crash Records:");  
-    for (String d : details) logInfo(d);  
-} else {  
-    logOk("No crash history found.");  
-}  
+    // ============================================================
+    // (E) FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+        logLine();
+        logInfo("Detailed Crash Records:");
+        for (String d : details) logInfo(d);
+    } else {
+        logOk("No crash history found.");
+    }
 
-logOk("Lab 26 finished.");
-
+    logOk("Lab 26 finished.");
 }
 
 // ============================================================
@@ -5104,177 +5218,177 @@ logOk("Lab 26 finished.");
 // Reads first 10 lines of DropBox entry
 // ============================================================
 private String readDropBoxEntry(DropBoxManager.Entry ent) {
-try {
-if (ent == null) return "(no text)";
-InputStream is = ent.getInputStream();
-if (is == null) return "(no text)";
+    try {
+        if (ent == null) return "(no text)";
+        InputStream is = ent.getInputStream();
+        if (is == null) return "(no text)";
 
-BufferedReader br = new BufferedReader(new InputStreamReader(is));  
-    StringBuilder sb = new StringBuilder();  
-    String line;  
-    int count = 0;  
-    while ((line = br.readLine()) != null && count < 10) {  
-        sb.append(line).append(" ");  
-        count++;  
-    }  
-    br.close();  
-    return sb.toString().trim();  
-} catch (Exception e) {  
-    return "(read error)";  
-}
-
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        int count = 0;
+        while ((line = br.readLine()) != null && count < 10) {
+            sb.append(line).append(" ");
+            count++;
+        }
+        br.close();
+        return sb.toString().trim();
+    } catch (Exception e) {
+        return "(read error)";
+    }
 }
 
 // ============================================================
-// LAB 27 â€” App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
 // ============================================================
 private void lab27PermissionsPrivacy() {
 
-logLine();  
-logInfo("LAB 27 â€” App Permissions & Privacy (AUTO scan)");  
+    logLine();
+    logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");
 
-PackageManager pm = getPackageManager();  
-if (pm == null) {  
-    logError("PackageManager not available.");  
-    return;  
-}  
+    PackageManager pm = getPackageManager();
+    if (pm == null) {
+        logError("PackageManager not available.");
+        return;
+    }
 
-List<String> details = new ArrayList<>();  
-Map<String, Integer> appRisk = new HashMap<>();  
+    List<String> details = new ArrayList<>();
+    Map<String, Integer> appRisk = new HashMap<>();
 
-int totalApps = 0;  
-int flaggedApps = 0;  
+    int totalApps = 0;
+    int flaggedApps = 0;
 
-// Risk totals  
-int riskTotal = 0;  
-int dangTotal = 0;  
+    // Risk totals
+    int riskTotal = 0;
+    int dangTotal = 0;
 
-try {  
-    List<android.content.pm.PackageInfo> packs;  
+    try {
+        List<android.content.pm.PackageInfo> packs;
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {  
-        packs = pm.getInstalledPackages(  
-                PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));  
-    } else {  
-        //noinspection deprecation  
-        packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);  
-    }  
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packs = pm.getInstalledPackages(
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        } else {
+            //noinspection deprecation
+            packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+        }
 
-    if (packs == null) packs = new ArrayList<>();  
+        if (packs == null) packs = new ArrayList<>();
 
-    for (android.content.pm.PackageInfo p : packs) {  
-        if (p == null || p.packageName == null) continue;  
-        totalApps++;  
+        for (android.content.pm.PackageInfo p : packs) {
+            if (p == null || p.packageName == null) continue;
+            totalApps++;
 
-        // Skip system apps unless they have highly dangerous perms  
-        boolean isSystem = (p.applicationInfo != null) &&  
-                ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);  
+            // Skip system apps unless they have highly dangerous perms
+            boolean isSystem = (p.applicationInfo != null) &&
+                    ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
 
-        String[] req = p.requestedPermissions;  
-        int[] grant = p.requestedPermissionsFlags;  
+            String[] req = p.requestedPermissions;
+            int[] grant = p.requestedPermissionsFlags;
 
-        if (req == null || req.length == 0) continue;  
+            if (req == null || req.length == 0) continue;
 
-        int appScore = 0;  
-        int appDangerCount = 0;  
-        StringBuilder sb = new StringBuilder();  
+            int appScore = 0;
+            int appDangerCount = 0;
+            StringBuilder sb = new StringBuilder();
 
-        for (int i = 0; i < req.length; i++) {  
-            String perm = req[i];  
-            if (perm == null) continue;  
+            for (int i = 0; i < req.length; i++) {
+                String perm = req[i];
+                if (perm == null) continue;
 
-            boolean granted = isGrantedFlag(grant, i);  
+                boolean granted = isGrantedFlag(grant, i);
 
-            int weight = permissionWeight(perm);  
-            if (weight <= 0) continue; // ignore harmless  
+                int weight = permissionWeight(perm);
+                if (weight <= 0) continue; // ignore harmless
 
-            // count dangerous only if granted  
-            if (granted) {  
-                appDangerCount++;  
-                appScore += weight;  
-                sb.append("â€¢ ").append(shortPerm(perm)).append(" (granted)\n");  
-            }  
-        }  
+                // count dangerous only if granted
+                if (granted) {
+                    appDangerCount++;
+                    appScore += weight;
+                    sb.append("- ")
+                      .append(shortPerm(perm))
+                      .append(" (granted)\n");
+                }
+            }
 
-        if (appScore > 0) {  
-            dangTotal += appDangerCount;  
-            riskTotal += appScore;  
+            if (appScore > 0) {
+                dangTotal += appDangerCount;
+                riskTotal += appScore;
 
-            // system apps threshold higher  
-            int threshold = isSystem ? 25 : 10;  
+                // system apps threshold higher
+                int threshold = isSystem ? 25 : 10;
 
-            if (appScore >= threshold) {  
-                flaggedApps++;  
-                appRisk.put(p.packageName, appScore);  
+                if (appScore >= threshold) {
+                    flaggedApps++;
+                    appRisk.put(p.packageName, appScore);
 
-                String appLabel = safeLabel(pm, p.packageName);  
-                String color =  
-                        (appScore >= 60) ? "ðŸŸ¥" :  
-                        (appScore >= 30) ? "ðŸŸ§" :  
-                        (appScore >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
+                    String appLabel = safeLabel(pm, p.packageName);
+                    String level =
+                            (appScore >= 60) ? "[CRITICAL]" :
+                            (appScore >= 30) ? "[HIGH]" :
+                            (appScore >= 15) ? "[WARN]" : "[OK]";
 
-                details.add(color + " " + appLabel + " (" + p.packageName + ")"  
-                        + " â€” Risk=" + appScore + "\n" + sb.toString());  
-            }  
-        }  
-    }  
+                    details.add(level + " " + appLabel + " (" + p.packageName + ")"
+                            + " — Risk=" + appScore + "\n" + sb.toString());
+                }
+            }
+        }
 
-} catch (SecurityException se) {  
-    logWarn("Permissions scan limited by Android package visibility policy.");  
-    logWarn("Tip: add QUERY_ALL_PACKAGES if you want full scan on Android 11+.");  
-} catch (Exception e) {  
-    logError("Permissions scan error: " + e.getMessage());  
-}  
+    } catch (SecurityException se) {
+        logWarn("Permissions scan limited by Android package visibility policy.");
+        logWarn("Tip: add QUERY_ALL_PACKAGES if you want full scan on Android 11+.");
+    } catch (Exception e) {
+        logError("Permissions scan error: " + e.getMessage());
+    }
 
-// ============================================================  
-// SUMMARY + FINAL RISK SCORE  
-// ============================================================  
-int riskPct = Math.min(100, riskTotal); // cap  
-String riskColor =  
-        (riskPct <= 20) ? "ðŸŸ©" :  
-        (riskPct <= 50) ? "ðŸŸ¨" :  
-        (riskPct <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
+    // ============================================================
+    // SUMMARY + FINAL RISK SCORE
+    // ============================================================
+    int riskPct = Math.min(100, riskTotal); // cap
+    String riskLevel =
+            (riskPct <= 20) ? "[OK]" :
+            (riskPct <= 50) ? "[WARN]" :
+            (riskPct <= 80) ? "[HIGH]" : "[CRITICAL]";
 
-logInfo("Apps scanned: " + totalApps);  
-logInfo("Dangerous permissions granted (total): " + dangTotal);  
-logInfo("Flagged apps: " + flaggedApps);  
-logInfo(riskColor + " Privacy Risk Score: " + riskPct + "%");  
+    logInfo("Apps scanned: " + totalApps);
+    logInfo("Dangerous permissions granted (total): " + dangTotal);
+    logInfo("Flagged apps: " + flaggedApps);
+    logInfo(riskLevel + " Privacy Risk Score: " + riskPct + "%");
 
-// ============================================================  
-// TOP OFFENDERS  
-// ============================================================  
-if (!appRisk.isEmpty()) {  
-    logLine();  
-    logInfo("Top Privacy Offenders:");  
+    // ============================================================
+    // TOP OFFENDERS
+    // ============================================================
+    if (!appRisk.isEmpty()) {
+        logLine();
+        logInfo("Top Privacy Offenders:");
 
-    appRisk.entrySet()  
-            .stream()  
-            .sorted((a, b) -> b.getValue() - a.getValue())  
-            .limit(8)  
-            .forEach(e -> {  
-                String c =  
-                        (e.getValue() >= 60) ? "ðŸŸ¥" :  
-                        (e.getValue() >= 30) ? "ðŸŸ§" :  
-                        (e.getValue() >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
+        appRisk.entrySet()
+                .stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(8)
+                .forEach(e -> {
+                    String lvl =
+                            (e.getValue() >= 60) ? "[CRITICAL]" :
+                            (e.getValue() >= 30) ? "[HIGH]" :
+                            (e.getValue() >= 15) ? "[WARN]" : "[OK]";
 
-                logInfo(" " + c + " " + safeLabel(pm, e.getKey())  
-                        + " â€” Risk " + e.getValue());  
-            });  
-}  
+                    logInfo(" " + lvl + " " + safeLabel(pm, e.getKey())
+                            + " — Risk " + e.getValue());
+                });
+    }
 
-// ============================================================  
-// FULL DETAILS  
-// ============================================================  
-if (!details.isEmpty()) {  
-    logLine();  
-    logInfo("Permission Details (flagged apps):");  
-    for (String d : details) logInfo(d);  
-} else {  
-    logOk("No high-risk permission patterns detected.");  
-}  
+    // ============================================================
+    // FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+        logLine();
+        logInfo("Permission Details (flagged apps):");
+        for (String d : details) logInfo(d);
+    } else {
+        logOk("No high-risk permission patterns detected.");
+    }
 
-logOk("Lab 27 finished.");
-
+    logOk("Lab 27 finished.");
 }
 
 // ============================================================
@@ -5282,247 +5396,246 @@ logOk("Lab 27 finished.");
 // ============================================================
 
 private boolean isGrantedFlag(int[] flags, int i) {
-try {
-if (flags == null || i < 0 || i >= flags.length) return false;
-return (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
-} catch (Exception e) {
-return false;
-}
+    try {
+        if (flags == null || i < 0 || i >= flags.length) return false;
+        return (flags[i] & android.content.pm.PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
+    } catch (Exception e) {
+        return false;
+    }
 }
 
 private String safeLabel(PackageManager pm, String pkg) {
-try {
-ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
-CharSequence cs = pm.getApplicationLabel(ai);
-return cs != null ? cs.toString() : pkg;
-} catch (Exception e) {
-return pkg;
-}
+    try {
+        ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+        CharSequence cs = pm.getApplicationLabel(ai);
+        return cs != null ? cs.toString() : pkg;
+    } catch (Exception e) {
+        return pkg;
+    }
 }
 
 // Weight per dangerous/sensitive permission
 private int permissionWeight(String p) {
-if (p == null) return 0;
+    if (p == null) return 0;
 
-// VERY HIGH RISK  
-if (p.equals(Manifest.permission.READ_SMS)) return 25;  
-if (p.equals(Manifest.permission.RECEIVE_SMS)) return 20;  
-if (p.equals(Manifest.permission.SEND_SMS)) return 25;  
-if (p.equals(Manifest.permission.READ_CALL_LOG)) return 25;  
-if (p.equals(Manifest.permission.WRITE_CALL_LOG)) return 25;  
-if (p.equals(Manifest.permission.CALL_PHONE)) return 15;  
+    // VERY HIGH RISK
+    if (p.equals(Manifest.permission.READ_SMS)) return 25;
+    if (p.equals(Manifest.permission.RECEIVE_SMS)) return 20;
+    if (p.equals(Manifest.permission.SEND_SMS)) return 25;
+    if (p.equals(Manifest.permission.READ_CALL_LOG)) return 25;
+    if (p.equals(Manifest.permission.WRITE_CALL_LOG)) return 25;
+    if (p.equals(Manifest.permission.CALL_PHONE)) return 15;
 
-// HIGH RISK  
-if (p.equals(Manifest.permission.RECORD_AUDIO)) return 20;  
-if (p.equals(Manifest.permission.CAMERA)) return 18;  
-if (p.equals(Manifest.permission.ACCESS_FINE_LOCATION)) return 18;  
-if (p.equals(Manifest.permission.ACCESS_COARSE_LOCATION)) return 12;  
-if (p.equals(Manifest.permission.READ_CONTACTS)) return 15;  
-if (p.equals(Manifest.permission.WRITE_CONTACTS)) return 15;  
-if (p.equals(Manifest.permission.GET_ACCOUNTS)) return 10;  
+    // HIGH RISK
+    if (p.equals(Manifest.permission.RECORD_AUDIO)) return 20;
+    if (p.equals(Manifest.permission.CAMERA)) return 18;
+    if (p.equals(Manifest.permission.ACCESS_FINE_LOCATION)) return 18;
+    if (p.equals(Manifest.permission.ACCESS_COARSE_LOCATION)) return 12;
+    if (p.equals(Manifest.permission.READ_CONTACTS)) return 15;
+    if (p.equals(Manifest.permission.WRITE_CONTACTS)) return 15;
+    if (p.equals(Manifest.permission.GET_ACCOUNTS)) return 10;
 
-// STORAGE (legacy)  
-if (p.equals(Manifest.permission.READ_EXTERNAL_STORAGE)) return 10;  
-if (p.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) return 12;  
+    // STORAGE (legacy)
+    if (p.equals(Manifest.permission.READ_EXTERNAL_STORAGE)) return 10;
+    if (p.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) return 12;
 
-// BACKGROUND / SUSPICIOUS  
-if (p.equals(Manifest.permission.REQUEST_INSTALL_PACKAGES)) return 20;  
-if (p.equals(Manifest.permission.SYSTEM_ALERT_WINDOW)) return 15;  
-if (p.equals(Manifest.permission.PACKAGE_USAGE_STATS)) return 15;  
-if (p.equals(Manifest.permission.BIND_ACCESSIBILITY_SERVICE)) return 25;  
+    // BACKGROUND / SUSPICIOUS
+    if (p.equals(Manifest.permission.REQUEST_INSTALL_PACKAGES)) return 20;
+    if (p.equals(Manifest.permission.SYSTEM_ALERT_WINDOW)) return 15;
+    if (p.equals(Manifest.permission.PACKAGE_USAGE_STATS)) return 15;
+    if (p.equals(Manifest.permission.BIND_ACCESSIBILITY_SERVICE)) return 25;
 
-return 0;
-
+    return 0;
 }
 
 private String shortPerm(String p) {
-if (p == null) return "";
-int i = p.lastIndexOf('.');
-return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
+    if (p == null) return "";
+    int i = p.lastIndexOf('.');
+    return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 28 â€” Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
 // Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
 // Security + Privacy + Root + Stability into final scores.
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab28CombineFindings() {
-logLine();
-logInfo("LAB 28 â€” Auto Final Diagnosis Summary (FULL AUTO)");
+    logLine();
+    logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 
-// ------------------------------------------------------------  
-// 1) THERMALS (from zones + battery temp)  
-// ------------------------------------------------------------  
-Map<String, Float> zones = null;  
-try { zones = readThermalZones(); } catch (Throwable ignored) {}  
-float battTemp = getBatteryTemperature();  
+    // ------------------------------------------------------------
+    // 1) THERMALS (from zones + battery temp)
+    // ------------------------------------------------------------
+    Map<String, Float> zones = null;
+    try { zones = readThermalZones(); } catch (Throwable ignored) {}
+    float battTemp = getBatteryTemperature();
 
-Float cpu  = null, gpu = null, skin = null, pmic = null;  
-if (zones != null && !zones.isEmpty()) {  
-    cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");  
-    gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");  
-    skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");  
-    pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");  
-}  
+    Float cpu = null, gpu = null, skin = null, pmic = null;
+    if (zones != null && !zones.isEmpty()) {
+        cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
+        gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
+        skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
+        pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
+    }
 
-float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);  
-float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);  
+    float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);
+    float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);
 
-int thermalScore = scoreThermals(maxThermal, avgThermal);  
-String thermalFlag = colorFlagFromScore(thermalScore);  
+    int thermalScore = scoreThermals(maxThermal, avgThermal);
+    String thermalFlag = colorFlagFromScore(thermalScore);
 
-// ------------------------------------------------------------  
-// 2) BATTERY HEALTH (light auto inference)  
-// ------------------------------------------------------------  
-float battPct = getCurrentBatteryPercent();  
-boolean charging = isChargingNow();  
-int batteryScore = scoreBattery(battTemp, battPct, charging);  
-String batteryFlag = colorFlagFromScore(batteryScore);  
+    // ------------------------------------------------------------
+    // 2) BATTERY HEALTH (light auto inference)
+    // ------------------------------------------------------------
+    float battPct = getCurrentBatteryPercent();
+    boolean charging = isChargingNow();
+    int batteryScore = scoreBattery(battTemp, battPct, charging);
+    String batteryFlag = colorFlagFromScore(batteryScore);
 
-// ------------------------------------------------------------  
-// 3) STORAGE HEALTH  
-// ------------------------------------------------------------  
-StorageSnapshot st = readStorageSnapshot();  
-int storageScore = scoreStorage(st.pctFree, st.totalBytes);  
-String storageFlag = colorFlagFromScore(storageScore);  
+    // ------------------------------------------------------------
+    // 3) STORAGE HEALTH
+    // ------------------------------------------------------------
+    StorageSnapshot st = readStorageSnapshot();
+    int storageScore = scoreStorage(st.pctFree, st.totalBytes);
+    String storageFlag = colorFlagFromScore(storageScore);
 
-// ------------------------------------------------------------  
-// 4) APPS FOOTPRINT  
-// ------------------------------------------------------------  
-AppsSnapshot ap = readAppsSnapshot();  
-int appsScore = scoreApps(ap.userApps, ap.totalApps);  
-String appsFlag = colorFlagFromScore(appsScore);  
+    // ------------------------------------------------------------
+    // 4) APPS FOOTPRINT
+    // ------------------------------------------------------------
+    AppsSnapshot ap = readAppsSnapshot();
+    int appsScore = scoreApps(ap.userApps, ap.totalApps);
+    String appsFlag = colorFlagFromScore(appsScore);
 
-// ------------------------------------------------------------  
-// 5) RAM HEALTH  
-// ------------------------------------------------------------  
-RamSnapshot rm = readRamSnapshot();  
-int ramScore = scoreRam(rm.pctFree);  
-String ramFlag = colorFlagFromScore(ramScore);  
+    // ------------------------------------------------------------
+    // 5) RAM HEALTH
+    // ------------------------------------------------------------
+    RamSnapshot rm = readRamSnapshot();
+    int ramScore = scoreRam(rm.pctFree);
+    String ramFlag = colorFlagFromScore(ramScore);
 
-// ------------------------------------------------------------  
-// 6) UPTIME / STABILITY  
-// ------------------------------------------------------------  
-long upMs = SystemClock.elapsedRealtime();  
-int stabilityScore = scoreStability(upMs);  
-String stabilityFlag = colorFlagFromScore(stabilityScore);  
+    // ------------------------------------------------------------
+    // 6) UPTIME / STABILITY
+    // ------------------------------------------------------------
+    long upMs = SystemClock.elapsedRealtime();
+    int stabilityScore = scoreStability(upMs);
+    String stabilityFlag = colorFlagFromScore(stabilityScore);
 
-// ------------------------------------------------------------  
-// 7) SECURITY (lockscreen + patch + adb/dev + root)  
-// ------------------------------------------------------------  
-SecuritySnapshot sec = readSecuritySnapshot();  
-int securityScore = scoreSecurity(sec);  
-String securityFlag = colorFlagFromScore(securityScore);  
+    // ------------------------------------------------------------
+    // 7) SECURITY (lockscreen + patch + adb/dev + root)
+    // ------------------------------------------------------------
+    SecuritySnapshot sec = readSecuritySnapshot();
+    int securityScore = scoreSecurity(sec);
+    String securityFlag = colorFlagFromScore(securityScore);
 
-// ------------------------------------------------------------  
-// 8) PRIVACY (dangerous granted perms to user apps)  
-// ------------------------------------------------------------  
-PrivacySnapshot pr = readPrivacySnapshot();  
-int privacyScore = scorePrivacy(pr);  
-String privacyFlag = colorFlagFromScore(privacyScore);  
+    // ------------------------------------------------------------
+    // 8) PRIVACY (dangerous granted perms to user apps)
+    // ------------------------------------------------------------
+    PrivacySnapshot pr = readPrivacySnapshot();
+    int privacyScore = scorePrivacy(pr);
+    String privacyFlag = colorFlagFromScore(privacyScore);
 
-// ------------------------------------------------------------  
-// 9) FINAL SCORES  
-// ------------------------------------------------------------  
-int performanceScore = Math.round(  
-        (storageScore * 0.35f) +  
-        (ramScore     * 0.35f) +  
-        (appsScore    * 0.15f) +  
-        (thermalScore * 0.15f)  
-);  
+    // ------------------------------------------------------------
+    // 9) FINAL SCORES
+    // ------------------------------------------------------------
+    int performanceScore = Math.round(
+            (storageScore * 0.35f) +
+            (ramScore     * 0.35f) +
+            (appsScore    * 0.15f) +
+            (thermalScore * 0.15f)
+    );
 
-int deviceHealthScore = Math.round(  
-        (thermalScore   * 0.25f) +  
-        (batteryScore   * 0.25f) +  
-        (performanceScore * 0.30f) +  
-        (stabilityScore * 0.20f)  
-);  
+    int deviceHealthScore = Math.round(
+            (thermalScore      * 0.25f) +
+            (batteryScore      * 0.25f) +
+            (performanceScore  * 0.30f) +
+            (stabilityScore    * 0.20f)
+    );
 
-// ------------------------------------------------------------  
-// PRINT DETAILS  
-// ------------------------------------------------------------  
-logLine();  
-logInfo("AUTO Breakdown:");  
+    // ------------------------------------------------------------
+    // PRINT DETAILS
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("AUTO Breakdown:");
 
-// Thermals  
-logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
-if (zones == null || zones.isEmpty()) {  
-    logWarn("â€¢ No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "%.1fÂ°C", battTemp));  
-} else {  
-    logInfo("â€¢ Zones=" + zones.size() +  
-            " | max=" + fmt1(maxThermal) + "Â°C" +  
-            " | avg=" + fmt1(avgThermal) + "Â°C");  
-    if (cpu != null)  logInfo("â€¢ CPU="  + fmt1(cpu)  + "Â°C");  
-    if (gpu != null)  logInfo("â€¢ GPU="  + fmt1(gpu)  + "Â°C");  
-    if (pmic != null) logInfo("â€¢ PMIC=" + fmt1(pmic) + "Â°C");  
-    if (skin != null) logInfo("â€¢ Skin=" + fmt1(skin) + "Â°C");  
-    logInfo("â€¢ Battery=" + fmt1(battTemp) + "Â°C");  
-}  
+    // Thermals
+    logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");
+    if (zones == null || zones.isEmpty()) {
+        logWarn("- No thermal zones readable. Using Battery temp only: "
+                + String.format(Locale.US, "%.1f C", battTemp));
+    } else {
+        logInfo("- Zones=" + zones.size()
+                + " | max=" + fmt1(maxThermal) + " C"
+                + " | avg=" + fmt1(avgThermal) + " C");
+        if (cpu != null)  logInfo("- CPU="  + fmt1(cpu)  + " C");
+        if (gpu != null)  logInfo("- GPU="  + fmt1(gpu)  + " C");
+        if (pmic != null) logInfo("- PMIC=" + fmt1(pmic) + " C");
+        if (skin != null) logInfo("- Skin=" + fmt1(skin) + " C");
+        logInfo("- Battery=" + fmt1(battTemp) + " C");
+    }
 
-// Battery  
-logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
-logInfo("â€¢ Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
-        " | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);  
+    // Battery
+    logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
+    logInfo("- Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown")
+            + " | Temp=" + fmt1(battTemp) + " C | Charging=" + charging);
 
-// Storage  
-logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
-logInfo("â€¢ Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
-        " / " + humanBytes(st.totalBytes));  
+    // Storage
+    logInfo("Storage: " + storageFlag + " " + storageScore + "%");
+    logInfo("- Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes)
+            + " / " + humanBytes(st.totalBytes));
 
-// Apps  
-logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");  
-logInfo("â€¢ User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
-        " | Total=" + ap.totalApps);  
+    // Apps
+    logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");
+    logInfo("- User apps=" + ap.userApps + " | System apps=" + ap.systemApps
+            + " | Total=" + ap.totalApps);
 
-// RAM  
-logInfo("RAM: " + ramFlag + " " + ramScore + "%");  
-logInfo("â€¢ Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
-        humanBytes(rm.totalBytes) + ")");  
+    // RAM
+    logInfo("RAM: " + ramFlag + " " + ramScore + "%");
+    logInfo("- Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes)
+            + " / " + humanBytes(rm.totalBytes) + ")");
 
-// Stability  
-logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");  
-logInfo("â€¢ Uptime=" + formatUptime(upMs));  
-if (upMs < 2 * 60 * 60 * 1000L)  
-    logWarn("â€¢ Recent reboot detected (<2h) â€” possible instability masking.");  
-else if (upMs > 7L * 24L * 60L * 60L * 1000L)  
-    logWarn("â€¢ Long uptime (>7d) â€” recommend reboot before deep servicing.");  
+    // Stability
+    logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");
+    logInfo("- Uptime=" + formatUptime(upMs));
+    if (upMs < 2 * 60 * 60 * 1000L)
+        logWarn("- Recent reboot detected (<2h) - possible instability masking.");
+    else if (upMs > 7L * 24L * 60L * 60L * 1000L)
+        logWarn("- Long uptime (>7d) - recommend reboot before deep servicing.");
 
-// Security  
-logInfo("Security: " + securityFlag + " " + securityScore + "%");  
-logInfo("â€¢ Lock secure=" + sec.lockSecure);  
-logInfo("â€¢ Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
-logInfo("â€¢ ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
-        " | DevOptions=" + sec.devOptionsOn);  
-if (sec.rootSuspected) logWarn("â€¢ Root suspicion flags detected.");  
-if (sec.testKeys) logWarn("â€¢ Build signed with test-keys (custom ROM risk).");  
+    // Security
+    logInfo("Security: " + securityFlag + " " + securityScore + "%");
+    logInfo("- Lock secure=" + sec.lockSecure);
+    logInfo("- Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));
+    logInfo("- ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn
+            + " | DevOptions=" + sec.devOptionsOn);
+    if (sec.rootSuspected) logWarn("- Root suspicion flags detected.");
+    if (sec.testKeys) logWarn("- Build signed with test-keys (custom ROM risk).");
 
-// Privacy  
-logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");  
-logInfo("â€¢ Dangerous perms on user apps: " +  
-        "Location=" + pr.userAppsWithLocation +  
-        ", Mic=" + pr.userAppsWithMic +  
-        ", Camera=" + pr.userAppsWithCamera +  
-        ", SMS=" + pr.userAppsWithSms);  
+    // Privacy
+    logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");
+    logInfo("- Dangerous perms on user apps: "
+            + "Location=" + pr.userAppsWithLocation
+            + ", Mic=" + pr.userAppsWithMic
+            + ", Camera=" + pr.userAppsWithCamera
+            + ", SMS=" + pr.userAppsWithSms);
 
-// ------------------------------------------------------------  
-// FINAL VERDICT  
-// ------------------------------------------------------------  
-logLine();  
-logInfo("FINAL Scores:");  
-logInfo("Device Health Score: " + deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore));  
-logInfo("Performance Score:   " + performanceScore + "% " + colorFlagFromScore(performanceScore));  
-logInfo("Security Score:      " + securityScore + "% " + securityFlag);  
-logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);  
+    // ------------------------------------------------------------
+    // FINAL VERDICT
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("FINAL Scores:");
+    logInfo("Device Health Score: " + deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore));
+    logInfo("Performance Score:   " + performanceScore + "% " + colorFlagFromScore(performanceScore));
+    logInfo("Security Score:      " + securityScore + "% " + securityFlag);
+    logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);
 
-String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);  
-if (verdict.startsWith("ðŸŸ©")) logOk(verdict);  
-else if (verdict.startsWith("ðŸŸ¨")) logWarn(verdict);  
-else logError(verdict);  
+    String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);
+    if (verdict.startsWith("[OK]")) logOk(verdict);
+    else if (verdict.startsWith("[WARN]")) logWarn(verdict);
+    else logError(verdict);
 
-logOk("Lab 28 finished.");
-
+    logOk("Lab 28 finished.");
+}
 }
 
 // ============================================================
@@ -5873,33 +5986,36 @@ return s;
 }
 
 private String colorFlagFromScore(int s) {
-if (s >= 80) return "ðŸŸ©";
-if (s >= 55) return "ðŸŸ¨";
-return "ðŸŸ¥";
+    if (s >= 80) return "[OK]";
+    if (s >= 55) return "[WARN]";
+    return "[FAIL]";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
-int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
-if (worst >= 80)
-return "ðŸŸ© Device is healthy â€” no critical issues detected.";
-if (worst >= 55)
-return "ðŸŸ¨ Device has moderate risks â€” recommend service check.";
-return "ðŸŸ¥ Device is NOT healthy â€” immediate servicing recommended.";
+    int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
+
+    if (worst >= 80)
+        return "[OK] Device is healthy - no critical issues detected.";
+
+    if (worst >= 55)
+        return "[WARN] Device has moderate risks - recommend service check.";
+
+    return "[FAIL] Device is NOT healthy - immediate servicing recommended.";
 }
 
 private String fmt1(float v) {
-return String.format(Locale.US, "%.1f", v);
+    return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 29 â€” FINAL TECHNICIAN SUMMARY (READ-ONLY)
-// Does NOT modify GELServiceLog â€” only reads it.
+// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// Does NOT modify GELServiceLog — only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
 private void lab29FinalSummary() {
 
     logLine();
-    logInfo("LAB 29 â€” Final Technician Summary (READ-ONLY)");
+    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
 
     // ------------------------------------------------------------
     // 1) READ FULL LOG (from all labs)
@@ -5920,10 +6036,11 @@ private void lab29FinalSummary() {
     for (String l : lines) {
         String low = l.toLowerCase(Locale.US);
 
-        if (low.contains("âš ") || low.contains("warning")) {
+        // ASCII-safe detection (no symbols)
+        if (low.contains("warning")) {
             warnings.append(l).append("\n");
         }
-        if (low.contains("âŒ") || low.contains("error")) {
+        if (low.contains("error")) {
             warnings.append(l).append("\n");
         }
     }
@@ -6037,31 +6154,31 @@ private void playEarpieceTestTone220Hz(int durationMs) {
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode == 6006) { // LAB 6 â€” Touch Grid
+    if (requestCode == 6006) { // LAB 6 - Touch Grid
         if (resultCode == RESULT_OK)
-            logOk("LAB 6 â€” Touch grid passed (all zones responsive)");
+            logOk("LAB 6 - Touch grid passed (all zones responsive)");
         else
-            logError("LAB 6 â€” Touch grid failed (dead zone suspected)");
+            logError("LAB 6 - Touch grid failed (dead zone suspected)");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 7007) { // LAB 7 â€” Rotation
+    if (requestCode == 7007) { // LAB 7 - Rotation
         if (resultCode == RESULT_OK)
-            logOk("LAB 7 â€” Rotation detected via sensors");
+            logOk("LAB 7 - Rotation detected via sensors");
         else
-            logError("LAB 7 â€” No rotation detected");
+            logError("LAB 7 - No rotation detected");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 8008) { // LAB 8 â€” Proximity
+    if (requestCode == 8008) { // LAB 8 - Proximity
         if (resultCode == RESULT_OK)
-            logOk("LAB 8 â€” Proximity sensor responded correctly");
+            logOk("LAB 8 - Proximity sensor responded correctly");
         else
-            logError("LAB 8 â€” No proximity response detected");
+            logError("LAB 8 - No proximity response detected");
 
         enableSingleExportButton();
     }

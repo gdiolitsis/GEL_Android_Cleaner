@@ -5636,7 +5636,6 @@ private void lab28CombineFindings() {
 
     logOk("Lab 28 finished.");
 }
-}
 
 // ============================================================
 // ======= LAB 28 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====

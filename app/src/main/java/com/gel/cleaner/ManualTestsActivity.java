@@ -2802,7 +2802,9 @@ private String readFirstLine(File file) {
 }
    
 // ============================================================
-// LAB 14 — Battery Health Stress Test (GEL Full Mode)
+// LAB 14 — Battery Health Stress Test (GEL FINAL v4.3 LOCKED)
+// ChargeCounter-only • Root-aware • New battery detection
+// No % logic • Single confidence system • Anomaly guards
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
@@ -2816,103 +2818,58 @@ private void lab14BatteryHealthStressTest() {
     try {
 
         // ------------------------------------------------------------
-        // 0) BASIC SAFETY CHECKS
+        // 0) SAFETY CHECKS
         // ------------------------------------------------------------
-        final float fStartPct = getCurrentBatteryPercent();
-        if (fStartPct < 0f) {
-            logError("❌ Unable to read battery level.");
-            lab14Running = false;
-            return;
-        }
-
-        if (fStartPct < 50f) {
-            logLine();
-            logError("❌ Battery level too low (<50%). Please charge the battery before running the stress test.");
-            lab14Running = false;
-            return;
-        }
-
-        // ------------------------------------------------------------
-        // 1) READ REAL BATTERY INFO
-        // ------------------------------------------------------------
-        final BatteryInfo fBiStart = getBatteryInfo();
-        if (fBiStart == null || fBiStart.level < 0) {
-            logError("❌ Unable to read detailed battery information.");
-            lab14Running = false;
-            return;
-        }
-
         if (isDeviceCharging()) {
             logError("❌ Stress test requires the device to be NOT charging.");
             lab14Running = false;
             return;
         }
 
+        // ------------------------------------------------------------
+        // 1) READ START BATTERY INFO
+        // ------------------------------------------------------------
+        final BatteryInfo biStart = getBatteryInfo();
+        if (biStart == null || biStart.currentChargeMah <= 0) {
+            logError("❌ Charge Counter unavailable. LAB 14 requires real mAh data.");
+            lab14Running = false;
+            return;
+        }
+
+        final long startMah = biStart.currentChargeMah;
         final long modelCap = getStoredModelCapacity();
 
-        long tmpFullMah = -1;
-        String tmpCapSource = "Unknown";
+        final boolean rooted = isDeviceRooted();
+        final long cycleCount = rooted ? readBatteryCycleCountRoot() : -1;
 
-        if (fBiStart.estimatedFullMah > 0) {
-            tmpFullMah = fBiStart.estimatedFullMah;
-            tmpCapSource = (fBiStart.source != null && !fBiStart.source.trim().isEmpty())
-                    ? fBiStart.source
-                    : "Charge Counter";
-        } else if (modelCap > 0) {
-            tmpFullMah = modelCap;
-            tmpCapSource = "Model capacity";
-        }
+        logLine();
+        logInfo("ℹ️ LAB 14 - Battery Health Stress Test");
+        logInfo("ℹ️ Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
+        logInfo("ℹ️ Charge Counter start: " + startMah + " mAh");
 
-        final long fFullMah = tmpFullMah;
-        final String fCapSource = tmpCapSource;
+        if (cycleCount > 0)
+            logInfo("ℹ️ Cycle count: " + cycleCount);
+        else if (rooted)
+            logWarn("⚠️ Cycle count unavailable on this device.");
 
-        int tmpHealth = -1;
-        if (modelCap > 0 && fBiStart.estimatedFullMah > 0) {
-            tmpHealth = (int) Math.round(
-                    (fBiStart.estimatedFullMah * 100.0) / (double) modelCap
-            );
-        }
-        final int fHealthPct = tmpHealth;
+        if (modelCap > 0)
+            logInfo("ℹ️ Model capacity: " + modelCap + " mAh");
 
         // ------------------------------------------------------------
-        // 2) FIXED DURATION — LAB MODE
+        // 2) FIXED DURATION
         // ------------------------------------------------------------
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
-        // ------------------------------------------------------------
-        // SHOW RUNNING DIALOG
-        // ------------------------------------------------------------
         showLab14RunningDialog();
 
         // ------------------------------------------------------------
-        // 3) RUN STRESS (ASYNC)
+        // 3) RUN STRESS
         // ------------------------------------------------------------
         ui.post(() -> {
 
             Map<String, Float> z0 = readThermalZones();
             Float batt0 = pickZone(z0, "battery", "batt", "bat");
-
-            logLine();
-            logInfo("ℹ️ LAB 14 - Battery Health Stress Test started.");
-            logInfo("ℹ️ Mode: GEL Full Mode (CPU burn + MAX brightness).");
-            logInfo("ℹ️ Duration: " + durationSec + " seconds (laboratory mode).");
-
-            logInfo(String.format(Locale.US,
-                    "ℹ️ Start conditions: level=%d%%, status=%s, temp=%.1f C.",
-                    fBiStart.level,
-                    String.valueOf(fBiStart.status),
-                    fBiStart.temperature));
-
-            if (fFullMah > 0) {
-                logInfo("ℹ️ Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
-            } else {
-                logWarn("⚠️ Capacity baseline unavailable. Using percentage-only analysis.");
-            }
-
-            if (fHealthPct > 0) {
-                logInfo("ℹ️ Estimated battery health: ~" + fHealthPct + "% of model capacity.");
-            }
 
             final long t0 = SystemClock.elapsedRealtime();
 
@@ -2934,90 +2891,135 @@ private void lab14BatteryHealthStressTest() {
                 dismissLab14RunningDialog();
 
                 BatteryInfo biEnd = getBatteryInfo();
-                float endPct = getCurrentBatteryPercent();
-
-                if (endPct < 0f || biEnd == null || biEnd.level < 0) {
-                    logWarn("⚠️ Unable to read final battery state.");
+                if (biEnd == null || biEnd.currentChargeMah <= 0) {
+                    logWarn("⚠️ Unable to read final Charge Counter value.");
                     lab14Running = false;
                     return;
                 }
 
+                final long endMah = biEnd.currentChargeMah;
+
+                logInfo("ℹ️ Charge Counter end: " + endMah + " mAh");
+
+                // ------------------------------------------------------------
+                // 5) REAL DRAIN CALCULATION (ONLY CC)
+                // ------------------------------------------------------------
                 long t1 = SystemClock.elapsedRealtime();
                 long dtMs = Math.max(1, t1 - t0);
 
-                float deltaPct = fStartPct - endPct;
-                float pctPerHour = (deltaPct * 3600000f) / dtMs;
+                boolean validDrain = true;
+                double drainMah = startMah - endMah;
 
-                double consumedMah = -1;
-                double mahPerHour  = -1;
-
-                if (fFullMah > 0 && deltaPct > 0f) {
-                    consumedMah = (deltaPct / 100.0) * fFullMah;
-                    mahPerHour  = (consumedMah * 3600000.0) / dtMs;
+                // sanity checks
+                if (drainMah <= 0) validDrain = false;
+                if (modelCap > 0 && drainMah > modelCap * 0.30) {
+                    logWarn("⚠️ Charge Counter anomaly detected. Discarding this run.");
+                    validDrain = false;
                 }
+
+                double mahPerHour = validDrain
+                        ? (drainMah * 3600000.0) / dtMs
+                        : -1;
 
                 logLine();
-                logInfo(String.format(Locale.US,
-                        "ℹ️ Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
-                        fStartPct, endPct, deltaPct, dtMs / 1000f));
 
-                if (consumedMah >= 0) {
+                if (validDrain) {
                     logInfo(String.format(Locale.US,
-                            "ℹ️ Measured drain: %.0f mAh (~ %.0f mAh/hour).",
-                            consumedMah, mahPerHour));
+                            "ℹ️ Drain measured: %.0f mAh over %.1f sec.",
+                            drainMah, dtMs / 1000f));
+                    logInfo(String.format(Locale.US,
+                            "ℹ️ Drain rate: ~ %.0f mAh/hour.",
+                            mahPerHour));
                 } else {
-                    logInfo(String.format(Locale.US,
-                            "ℹ️ Measured drain: ~ %.1f%%/hour.",
-                            pctPerHour));
+                    logWarn("⚠️ Drain measurement invalid for this run.");
                 }
 
+                // ------------------------------------------------------------
+                // 6) SAVE HISTORY
+                // ------------------------------------------------------------
+                if (validDrain) saveLab14DrainValue(mahPerHour);
+                saveLab14Run();
+
+                // ------------------------------------------------------------
+                // 7) CONFIDENCE (SINGLE SYSTEM)
+                // ------------------------------------------------------------
+                ConfidenceResult conf = computeLab14Confidence();
+
+                logLine();
+                logInfo("Confidence Score:");
+                logInfo(String.format(Locale.US,
+                        "ℹ️ %d%% (%d valid runs).",
+                        conf.percent, conf.validRuns));
+
+                // ------------------------------------------------------------
+                // 8) BATTERY PROFILE
+                // ------------------------------------------------------------
+                BatteryProfile profile = detectBatteryProfile(
+                        biStart,
+                        modelCap,
+                        cycleCount,
+                        conf,
+                        mahPerHour
+                );
+
+                logLine();
+                logInfo("Battery profile:");
+                logInfo("ℹ️ " + profile.label);
+
+                // ------------------------------------------------------------
+                // 9) AGING INDEX
+                // ------------------------------------------------------------
                 Map<String, Float> z1 = readThermalZones();
                 Float batt1 = pickZone(z1, "battery", "batt", "bat");
 
+                AgingResult aging = computeLab14AgingIndex(
+                        mahPerHour,
+                        conf,
+                        cycleCount,
+                        batt1,
+                        batt0
+                );
+
+                logLine();
+                logInfo("Battery Aging Index:");
+                logInfo("ℹ️ " + aging.description);
+
                 // ------------------------------------------------------------
-                // 5) LAB INTERPRETATION
+                // 10) FINAL VERDICT
                 // ------------------------------------------------------------
                 String decision;
 
-                if (fHealthPct > 0 && fHealthPct < 70) {
-                    decision = "Weak";
-                    logError("❌ LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
+                if (!validDrain) {
+                    decision = "Informational";
+                    logWarn("⚠️ LAB conclusion: Insufficient data for verdict.");
                 }
-                else if (mahPerHour > 0 && mahPerHour > 900) {
-                    decision = "Weak";
-                    logWarn("⚠️ LAB conclusion: High drain under stress. Battery replacement should be considered.");
-                }
-                else if ((fHealthPct > 0 && fHealthPct < 80) ||
-                         (mahPerHour > 0 && mahPerHour > 650)) {
-                    decision = "Normal";
-                    logWarn("⚠️ LAB conclusion: Battery shows wear but is still usable.");
+                else if (profile.type == BatteryProfileType.NEW_EARLY_LIFE) {
+                    decision = "Strong";
+                    logOk("✅ New / early-life battery detected.");
+                    logOk("✅ No replacement indicated.");
                 }
                 else {
-                    decision = "Strong";
-                    logOk("✅ LAB conclusion: Battery health is good. No replacement indicated.");
+                    double warnThr = getLab14WarnThresholdMahPerHour(profile, rooted, cycleCount);
+                    double replThr = getLab14ReplaceThresholdMahPerHour(profile, rooted, cycleCount);
+
+                    boolean canReplace = rooted && conf.percent >= 85;
+                    boolean canWarn    = conf.percent >= 70;
+
+                    if (canReplace && aging.severe && mahPerHour >= replThr) {
+                        decision = "Weak";
+                        logError("❌ Battery degradation confirmed. Replacement recommended.");
+                    }
+                    else if (canWarn && mahPerHour >= warnThr) {
+                        decision = "Normal";
+                        logWarn("⚠️ Elevated drain detected. Additional runs advised.");
+                    }
+                    else {
+                        decision = "Strong";
+                        logOk("✅ Battery behavior within normal limits.");
+                    }
                 }
 
-                // ------------------------------------------------------------
-                // 6) HEALTH MAP
-                // ------------------------------------------------------------
                 printHealthCheckboxMap(decision);
-
-                // ------------------------------------------------------------
-                // 7) ANALYTICS
-                // ------------------------------------------------------------
-                saveLab14DrainValue(mahPerHour);
-                saveLab14Run();
-                computeAndLogAgingIndex(mahPerHour, fHealthPct, batt1, batt0);
-                computeAndLogConfidenceScore();
-                logLab14Confidence();
-
-                // ------------------------------------------------------------
-                // FINAL BATTERY HEALTH SCORE
-                // ------------------------------------------------------------
-                try {
-                    logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
-                } catch (Throwable ignore) {}
-
                 lab14Running = false;
 
             }, durationSec * 1000L);
@@ -3030,539 +3032,6 @@ private void lab14BatteryHealthStressTest() {
         lab14Running = false;
         logError("❌ LAB 14 failed unexpectedly.");
     }
-}
-
-// ===========================================================
-// LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
-// Visual progress + animated dots + segmented bar + EXIT
-// ============================================================
-private void showLab14RunningDialog() {
-
-    try {
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-
-        b.setTitle("LAB 14 - Battery Stress Test");
-        b.setCancelable(false);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
-        root.setBackgroundColor(0xFF101010);
-
-        // ------------------------------------------------------------
-        // Info text
-        // ------------------------------------------------------------
-        TextView info = new TextView(this);
-        info.setText(
-                "Running controlled battery stress test.\n" +
-                "Duration locked to 5 minutes for reliable diagnostics.\n\n" +
-                "Please do NOT use the device."
-        );
-        info.setTextColor(0xFFFFFFFF);
-        info.setTextSize(14f);
-        info.setPadding(0, 0, 0, dp(12));
-        root.addView(info);
-
-        // ------------------------------------------------------------
-        // Progress text (seconds)
-        // ------------------------------------------------------------
-        lab14ProgressText = new TextView(this);
-        lab14ProgressText.setText("Progress: 0 / 300 seconds");
-        lab14ProgressText.setTextColor(0xFF39FF14);
-        lab14ProgressText.setGravity(Gravity.CENTER);
-        lab14ProgressText.setPadding(0, 0, 0, dp(10));
-        root.addView(lab14ProgressText);
-
-        // ------------------------------------------------------------
-        // Animated dots
-        // ------------------------------------------------------------
-        lab14DotsView = new TextView(this);
-        lab14DotsView.setText("•");
-        lab14DotsView.setTextColor(0xFF39FF14);
-        lab14DotsView.setTextSize(22f);
-        lab14DotsView.setGravity(Gravity.CENTER);
-        lab14DotsView.setPadding(0, 0, 0, dp(10));
-        root.addView(lab14DotsView);
-
-        // ------------------------------------------------------------
-        // Segmented progress bar (10 × 30s)
-        // ------------------------------------------------------------
-        lab14ProgressBar = new LinearLayout(this);
-        lab14ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-        lab14ProgressBar.setGravity(Gravity.CENTER);
-
-        for (int i = 0; i < 10; i++) {
-            View seg = new View(this);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(12), 1f);
-            lp.setMargins(dp(3), 0, dp(3), 0);
-            seg.setLayoutParams(lp);
-            seg.setBackgroundColor(0xFF333333);
-            lab14ProgressBar.addView(seg);
-        }
-
-        root.addView(lab14ProgressBar);
-
-        // ------------------------------------------------------------
-        // EXIT / CANCEL BUTTON — RED / GOLD
-        // ------------------------------------------------------------
-        Button btnExit = new Button(this);
-        btnExit.setText("Exit test");
-        btnExit.setAllCaps(false);
-        btnExit.setTextSize(15f);
-        btnExit.setTextColor(0xFFFFFFFF);
-        btnExit.setTypeface(null, Typeface.BOLD);
-
-        GradientDrawable exitBg = new GradientDrawable();
-        exitBg.setColor(0xFF8B0000);
-        exitBg.setCornerRadius(dp(14));
-        exitBg.setStroke(dp(3), 0xFFFFD700);
-        btnExit.setBackground(exitBg);
-
-        LinearLayout.LayoutParams lpExit =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpExit.setMargins(0, dp(14), 0, 0);
-        btnExit.setLayoutParams(lpExit);
-
-        btnExit.setOnClickListener(v -> abortLab14ByUser());
-        root.addView(btnExit);
-
-        // ------------------------------------------------------------
-        // FINALIZE DIALOG
-        // ------------------------------------------------------------
-        b.setView(root);
-
-        lab14Dialog = b.create();
-        if (lab14Dialog.getWindow() != null) {
-            lab14Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
-        }
-        lab14Dialog.show();
-
-        // Start dots animation
-        startLab14DotsAnimation();
-
-        // Progress updater (every 1 sec)
-        final long startTs = SystemClock.elapsedRealtime();
-
-        ui.post(new Runnable() {
-
-            int lastStep = -1;
-
-            @Override
-            public void run() {
-
-                if (!lab14Running || lab14ProgressBar == null || lab14ProgressText == null) {
-                    return;
-                }
-
-                long now = SystemClock.elapsedRealtime();
-                int elapsedSec = Math.min((int) ((now - startTs) / 1000), LAB14_TOTAL_SECONDS);
-
-                int step = Math.min(elapsedSec / 30, lab14ProgressBar.getChildCount());
-
-                if (step != lastStep) {
-                    lastStep = step;
-                    for (int i = 0; i < lab14ProgressBar.getChildCount(); i++) {
-                        View seg = lab14ProgressBar.getChildAt(i);
-                        if (seg != null) {
-                            seg.setBackgroundColor(i < step ? 0xFF39FF14 : 0xFF333333);
-                        }
-                    }
-                }
-
-                lab14ProgressText.setText("Progress: " + elapsedSec + " / " + LAB14_TOTAL_SECONDS + " seconds");
-
-                if (elapsedSec < LAB14_TOTAL_SECONDS) {
-                    ui.postDelayed(this, 1000);
-                } else {
-                    if (lab14ProgressText != null) {
-                        lab14ProgressText.setText("Finalizing analysis...");
-                    }
-                }
-            }
-        });
-
-    } catch (Throwable t) {
-        dismissLab14RunningDialog();
-    }
-}
-
-
-// ============================================================
-// LAB 14 — DOTS ANIMATION ENGINE
-// ============================================================
-private void startLab14DotsAnimation() {
-
-    ui.post(new Runnable() {
-
-        int step = 0;
-        final String[] frames = {"•", "• •", "• • •"};
-
-        @Override
-        public void run() {
-
-            if (!lab14Running || lab14DotsView == null) return;
-
-            lab14DotsView.setText(frames[step % frames.length]);
-            step++;
-
-            ui.postDelayed(this, 500);
-        }
-    });
-}
-
-
-// ============================================================
-// LAB 14 - USER ABORT (CANCEL / EXIT)
-// ============================================================
-private void abortLab14ByUser() {
-
-    if (!lab14Running) return;
-
-    logWarn("LAB 14 aborted by user.");
-
-    try { stopCpuBurn(); } catch (Throwable ignore) {}
-    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-    dismissLab14RunningDialog();
-
-    lab14Running = false;
-
-    logWarn("Battery stress test was cancelled before completion.");
-}
-
-
-// ============================================================
-// LAB 14 - DISMISS DIALOG SAFE
-// ============================================================
-private void dismissLab14RunningDialog() {
-    try {
-        if (lab14Dialog != null) {
-            lab14Dialog.dismiss();
-            lab14Dialog = null;
-        }
-    } catch (Throwable ignore) {}
-    lab14DotsView = null;
-    lab14ProgressText = null;
-    lab14ProgressBar = null;
-}
-
-// ===================================================================
-// LAB 14 — AGING INDEX ENGINE
-// Objective trend-based battery aging indicator
-// ===================================================================
-private void computeAndLogAgingIndex(
-        double mahPerHour,
-        int healthPct,
-        Float battTempAfter,
-        Float battTempBefore
-) {
-
-    int runs = getLab14RunCount();
-    if (runs < 2) {
-        logLine();
-        logInfo("Battery Aging Index:");
-        logWarn("not available (requires at least 2 runs).");
-        return;
-    }
-
-    final double BASE_DRAIN_MAH_PER_HOUR = 600.0; // healthy stress drain
-    final double BASE_THERMAL_DELTA_C    = 6.0;   // healthy thermal rise
-
-    double drainFactor = (mahPerHour > 0) ? (mahPerHour / BASE_DRAIN_MAH_PER_HOUR) : 1.0;
-    double capacityFactor = (healthPct > 0) ? (100.0 / Math.max(healthPct, 1)) : 1.0;
-
-    double thermalFactor = 1.0;
-    if (battTempAfter != null && battTempBefore != null) {
-        double dT = battTempAfter - battTempBefore;
-        if (dT > 0) thermalFactor = dT / BASE_THERMAL_DELTA_C;
-    }
-
-    drainFactor    = clamp(drainFactor,    0.7, 1.4);
-    capacityFactor = clamp(capacityFactor, 0.7, 1.4);
-    thermalFactor  = clamp(thermalFactor,  0.7, 1.4);
-
-    double agingIndex =
-            0.5 * drainFactor +
-            0.3 * capacityFactor +
-            0.2 * thermalFactor;
-
-    agingIndex = clamp(agingIndex, 0.7, 1.3);
-
-    String interpretation;
-    if (agingIndex <= 0.85) interpretation = "Low aging (battery condition is strong).";
-    else if (agingIndex <= 1.00) interpretation = "Normal aging (expected wear).";
-    else if (agingIndex <= 1.15) interpretation = "Moderate wear detected.";
-    else interpretation = "Heavy aging detected. Battery replacement should be considered.";
-
-    logLine();
-    logInfo("Battery Aging Index:");
-    logOk(String.format(Locale.US, "%.2f (based on %d runs).", agingIndex, runs));
-    logInfo("Interpretation: " + interpretation);
-}
-
-// Utility clamp
-private double clamp(double v, double min, double max) {
-    return Math.max(min, Math.min(max, v));
-}
-
-
-
-// ===================================================================
-// LAB 14 — CONFIDENCE SCORE (%)
-// Variance-based reliability indicator
-// ===================================================================
-private static final String LAB14_PREFS = "lab14_prefs";
-private static final String KEY_LAB14_RUNS = "lab14_run_count";
-
-private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
-private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
-private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
-
-// Save last drain value (called from LAB 14 end)
-private void saveLab14DrainValue(double mahPerHour) {
-
-    if (mahPerHour <= 0) return;
-
-    try {
-        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
-
-        double d1 = Double.longBitsToDouble(
-                sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))
-        );
-        double d2 = Double.longBitsToDouble(
-                sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))
-        );
-
-        sp.edit()
-                .putLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(d2))
-                .putLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(d1))
-                .putLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(mahPerHour))
-                .apply();
-
-    } catch (Throwable ignore) {}
-}
-
-// Save one LAB 14 run
-private void saveLab14Run() {
-    try {
-        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
-        int runs = sp.getInt(KEY_LAB14_RUNS, 0);
-        sp.edit().putInt(KEY_LAB14_RUNS, runs + 1).apply();
-    } catch (Throwable ignore) {}
-}
-
-// Get number of completed LAB 14 runs
-private int getLab14RunCount() {
-    try {
-        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
-        return sp.getInt(KEY_LAB14_RUNS, 0);
-    } catch (Throwable ignore) {
-        return 0;
-    }
-}
-
-// Compute and log confidence score
-private void computeAndLogConfidenceScore() {
-
-    int runs = getLab14RunCount();
-    if (runs < 2) {
-        logLine();
-        logInfo("Confidence Score:");
-        logWarn("not available (requires multiple runs).");
-        return;
-    }
-
-    try {
-        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
-
-        double[] vals = new double[]{
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
-        };
-
-        double sum = 0;
-        int n = 0;
-        for (double v : vals) {
-            if (v > 0) {
-                sum += v;
-                n++;
-            }
-        }
-
-        double mean = sum / n;
-
-        double var = 0;
-        for (double v : vals) {
-            if (v > 0) var += (v - mean) * (v - mean);
-        }
-        var /= n;
-
-        double std = Math.sqrt(var);
-        double relVar = std / mean;
-
-        int confidence;
-        if (relVar < 0.05) confidence = 95;
-        else if (relVar < 0.08) confidence = 90;
-        else if (relVar < 0.12) confidence = 80;
-        else if (relVar < 0.18) confidence = 70;
-        else confidence = 60;
-
-        logLine();
-        logInfo("Confidence Score:");
-        logOk(String.format(Locale.US, "%d%% (based on %d runs).", confidence, n));
-
-        if (confidence >= 90) logOk("Results are highly consistent.");
-        else if (confidence >= 80) logOk("Results show good consistency.");
-        else logWarn("Results show noticeable variance. Additional runs may improve accuracy.");
-
-    } catch (Throwable t) {
-        logWarn("Confidence Score calculation failed.");
-    }
-}
-
-// Log confidence message based on run count (COLOR CODED)
-private void logLab14Confidence() {
-
-    int runs = getLab14RunCount();
-    logLine();
-
-    if (txtLog == null) return;
-
-    if (runs <= 1) {
-
-        SpannableString sp = new SpannableString("Confidence: Preliminary (1 run)");
-        sp.setSpan(
-                new ForegroundColorSpan(Color.RED),
-                "Confidence:".length(),
-                sp.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        txtLog.append(sp);
-        txtLog.append("\n");
-
-        logWarn("FOR HIGHER DIAGNOSTIC ACCURACY, RUN THIS TEST 2 MORE TIMES ANY DAY UNDER SIMILAR CONDITIONS.");
-    }
-    else if (runs == 2) {
-
-        SpannableString sp = new SpannableString("Confidence: Medium (2 runs)");
-        sp.setSpan(
-                new ForegroundColorSpan(0xFFFFA500), // orange
-                "Confidence:".length(),
-                sp.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        txtLog.append(sp);
-        txtLog.append("\n");
-
-        logWarn("ONE ADDITIONAL RUN IS RECOMMENDED TO CONFIRM BATTERY AGING TREND.");
-    }
-    else {
-
-        SpannableString sp = new SpannableString("Confidence: High (3+ consistent runs)");
-        sp.setSpan(
-                new ForegroundColorSpan(0xFF39FF14), // GEL green
-                "Confidence:".length(),
-                sp.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        txtLog.append(sp);
-        txtLog.append("\n");
-
-        logInfo("Battery diagnostic confidence is high.");
-    }
-}
-
-
-
-// ===================================================================
-// BATTERY REAL CAPACITY ENGINE — needed by LAB 14
-// ===================================================================
-private static final String PREFS_NAME_BATTERY = "gel_prefs";
-private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity";
-
-// MODEL CAPACITY HELPERS
-private long getStoredModelCapacity() {
-    try {
-        SharedPreferences sp = getSharedPreferences(PREFS_NAME_BATTERY, MODE_PRIVATE);
-        return sp.getLong(KEY_BATTERY_MODEL_CAPACITY, -1L);
-    } catch (Throwable t) {
-        return -1L;
-    }
-}
-
-// NORMALIZE mAh / uAh
-private long normalizeMah(long raw) {
-    if (raw <= 0) return -1;
-    if (raw > 200000) return raw / 1000;
-    return raw;
-}
-
-// UNIVERSAL BATTERY SCANNER — GEL v7.1
-private BatteryInfo getBatteryInfo() {
-
-    BatteryInfo bi = new BatteryInfo();
-
-    try {
-        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (i != null) {
-
-            bi.level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-
-            bi.temperature = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
-
-            switch (i.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
-
-                case BatteryManager.BATTERY_STATUS_CHARGING:
-                    bi.status = "Charging";
-                    break;
-
-                case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                    bi.status = "Discharging";
-                    break;
-
-                case BatteryManager.BATTERY_STATUS_FULL:
-                    bi.status = "Full";
-                    break;
-
-                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                    bi.status = "Not charging";
-                    break;
-
-                default:
-                    bi.status = "Unknown";
-                    break;
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    try {
-        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-
-        if (bm != null) {
-            long cc = normalizeMah(
-                    bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
-            );
-
-            if (cc > 0 && bi.level > 0) {
-                bi.currentChargeMah = cc;
-                bi.estimatedFullMah = (long) (cc / (bi.level / 100f));
-                bi.source = "Charge Counter";
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    return bi;
 }
 
 //=============================================================

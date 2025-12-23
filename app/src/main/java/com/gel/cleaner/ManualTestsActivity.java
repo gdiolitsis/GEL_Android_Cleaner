@@ -2801,7 +2801,6 @@ private String readFirstLine(File file) {
     }
 }
    
-
 // ============================================================
 // LAB 14 — Battery Health Stress Test (GEL Full Mode)
 // ============================================================
@@ -2809,7 +2808,7 @@ private void lab14BatteryHealthStressTest() {
 
     // HARD GUARD
     if (lab14Running) {
-        logWarn("LAB 14 already running.");
+        logWarn("⚠️ LAB 14 already running.");
         return;
     }
     lab14Running = true;
@@ -2821,14 +2820,14 @@ private void lab14BatteryHealthStressTest() {
         // ------------------------------------------------------------
         final float fStartPct = getCurrentBatteryPercent();
         if (fStartPct < 0f) {
-            logError("Unable to read battery level.");
+            logError("❌ Unable to read battery level.");
             lab14Running = false;
             return;
         }
 
         if (fStartPct < 50f) {
             logLine();
-            logError("Battery level too low (<50%). Please charge the battery before running the stress test.");
+            logError("❌ Battery level too low (<50%). Please charge the battery before running the stress test.");
             lab14Running = false;
             return;
         }
@@ -2838,13 +2837,13 @@ private void lab14BatteryHealthStressTest() {
         // ------------------------------------------------------------
         final BatteryInfo fBiStart = getBatteryInfo();
         if (fBiStart == null || fBiStart.level < 0) {
-            logError("Unable to read detailed battery information.");
+            logError("❌ Unable to read detailed battery information.");
             lab14Running = false;
             return;
         }
 
         if (isDeviceCharging()) {
-            logError("Stress test requires the device to be NOT charging.");
+            logError("❌ Stress test requires the device to be NOT charging.");
             lab14Running = false;
             return;
         }
@@ -2895,24 +2894,24 @@ private void lab14BatteryHealthStressTest() {
             Float batt0 = pickZone(z0, "battery", "batt", "bat");
 
             logLine();
-            logInfo("LAB 14 - Battery Health Stress Test started.");
-            logInfo("Mode: GEL Full Mode (CPU burn + MAX brightness).");
-            logInfo("Duration: " + durationSec + " seconds (laboratory mode).");
+            logInfo("ℹ️ LAB 14 - Battery Health Stress Test started.");
+            logInfo("ℹ️ Mode: GEL Full Mode (CPU burn + MAX brightness).");
+            logInfo("ℹ️ Duration: " + durationSec + " seconds (laboratory mode).");
 
             logInfo(String.format(Locale.US,
-                    "Start conditions: level=%d%%, status=%s, temp=%.1f C.",
+                    "ℹ️ Start conditions: level=%d%%, status=%s, temp=%.1f C.",
                     fBiStart.level,
                     String.valueOf(fBiStart.status),
                     fBiStart.temperature));
 
             if (fFullMah > 0) {
-                logInfo("Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
+                logInfo("ℹ️ Capacity baseline: " + fFullMah + " mAh (" + fCapSource + ").");
             } else {
-                logWarn("Capacity baseline unavailable. Using percentage-only analysis.");
+                logWarn("⚠️ Capacity baseline unavailable. Using percentage-only analysis.");
             }
 
             if (fHealthPct > 0) {
-                logInfo("Estimated battery health: ~" + fHealthPct + "% of model capacity.");
+                logInfo("ℹ️ Estimated battery health: ~" + fHealthPct + "% of model capacity.");
             }
 
             final long t0 = SystemClock.elapsedRealtime();
@@ -2938,7 +2937,7 @@ private void lab14BatteryHealthStressTest() {
                 float endPct = getCurrentBatteryPercent();
 
                 if (endPct < 0f || biEnd == null || biEnd.level < 0) {
-                    logWarn("Unable to read final battery state.");
+                    logWarn("⚠️ Unable to read final battery state.");
                     lab14Running = false;
                     return;
                 }
@@ -2959,16 +2958,16 @@ private void lab14BatteryHealthStressTest() {
 
                 logLine();
                 logInfo(String.format(Locale.US,
-                        "Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
+                        "ℹ️ Stress result: start=%.1f%%, end=%.1f%%, drop=%.2f%% over %.1f sec.",
                         fStartPct, endPct, deltaPct, dtMs / 1000f));
 
                 if (consumedMah >= 0) {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: %.0f mAh (~ %.0f mAh/hour).",
+                            "ℹ️ Measured drain: %.0f mAh (~ %.0f mAh/hour).",
                             consumedMah, mahPerHour));
                 } else {
                     logInfo(String.format(Locale.US,
-                            "Measured drain: ~ %.1f%%/hour.",
+                            "ℹ️ Measured drain: ~ %.1f%%/hour.",
                             pctPerHour));
                 }
 
@@ -2982,20 +2981,20 @@ private void lab14BatteryHealthStressTest() {
 
                 if (fHealthPct > 0 && fHealthPct < 70) {
                     decision = "Weak";
-                    logError("LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
+                    logError("❌ LAB conclusion: Battery is heavily degraded. Replacement is recommended.");
                 }
                 else if (mahPerHour > 0 && mahPerHour > 900) {
                     decision = "Weak";
-                    logWarn("LAB conclusion: High drain under stress. Battery replacement should be considered.");
+                    logWarn("⚠️ LAB conclusion: High drain under stress. Battery replacement should be considered.");
                 }
                 else if ((fHealthPct > 0 && fHealthPct < 80) ||
                          (mahPerHour > 0 && mahPerHour > 650)) {
                     decision = "Normal";
-                    logWarn("LAB conclusion: Battery shows wear but is still usable.");
+                    logWarn("⚠️ LAB conclusion: Battery shows wear but is still usable.");
                 }
                 else {
                     decision = "Strong";
-                    logOk("LAB conclusion: Battery health is good. No replacement indicated.");
+                    logOk("✅ LAB conclusion: Battery health is good. No replacement indicated.");
                 }
 
                 // ------------------------------------------------------------
@@ -3013,7 +3012,7 @@ private void lab14BatteryHealthStressTest() {
                 logLab14Confidence();
 
                 // ------------------------------------------------------------
-                // FINAL BATTERY HEALTH SCORE (if implemented)
+                // FINAL BATTERY HEALTH SCORE
                 // ------------------------------------------------------------
                 try {
                     logFinalBatteryHealthScore(mahPerHour, fHealthPct, batt1, batt0);
@@ -3029,10 +3028,9 @@ private void lab14BatteryHealthStressTest() {
         try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
         dismissLab14RunningDialog();
         lab14Running = false;
-        logError("LAB 14 failed unexpectedly.");
+        logError("❌ LAB 14 failed unexpectedly.");
     }
 }
-
 
 // ===========================================================
 // LAB 14 — STRESS RUNNING DIALOG (LOCKED 300s)
@@ -3574,7 +3572,7 @@ private BatteryInfo getBatteryInfo() {
 private void lab15ChargingSystemSmart() {
 
     if (lab15Running) {
-        logWarn("LAB 15 already running.");
+        logWarn("⚠️ LAB 15 already running.");
         return;
     }
 
@@ -3669,7 +3667,7 @@ private void lab15ChargingSystemSmart() {
     lab15Dialog.show();
 
     logLine();
-    logInfo("LAB 15 - Charging System Diagnostic (Smart).");
+    logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
 
     // ================= CORE LOOP =================
     final long startTs[] = { -1 };
@@ -3708,7 +3706,7 @@ private void lab15ChargingSystemSmart() {
 
                 lab15StatusText.setText("Charging state detected.");
                 lab15StatusText.setTextColor(0xFF39FF14);
-                logOk("Charging state detected.");
+                logOk("✅ Charging state detected.");
             }
 
             if (chargingNow) {
@@ -3753,11 +3751,11 @@ private void lab15ChargingSystemSmart() {
             lab15BattTempEnd = getBatteryTemperature();
 
             logLine();
-            logInfo("LAB 15 - Charging System Diagnostic (Smart).");
+            logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
 
-            logInfo("Battery level: " +
+            logInfo("ℹ️ Battery level: " +
                     String.format(Locale.US, "%.1f%%", getCurrentBatteryPercent()));
-            logInfo("Battery temperature: " +
+            logInfo("ℹ️ Battery temperature: " +
                     String.format(Locale.US, "%.1f°C", lab15BattTempEnd));
 
             logLab15ThermalCorrelation(
@@ -3766,10 +3764,10 @@ private void lab15ChargingSystemSmart() {
                     lab15BattTempEnd
             );
 
-            logOk("Charging behavior appears normal. Temperature within safe limits.");
-            logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
-            logOk("Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-            logOk("LAB decision: Charging stability OK.");
+            logOk("✅ Charging behavior appears normal. Temperature within safe limits.");
+            logOk("✅ LAB decision: Charging system OK. No cleaning or replacement required.");
+            logOk("✅ Charging connection appears stable. No abnormal plug/unplug behavior detected.");
+            logOk("✅ LAB decision: Charging stability OK.");
 
             logLine();
 
@@ -3779,15 +3777,15 @@ private void lab15ChargingSystemSmart() {
                         ((endInfo.currentChargeMah - startMah) * 100f) / (float) fullMah;
 
                 if (deltaPct >= 1.2f)
-                    logOk("Charging strength: STRONG");
+                    logOk("✅ Charging strength: STRONG");
                 else if (deltaPct >= 0.6f)
-                    logOk("Charging strength: NORMAL");
+                    logOk("✅ Charging strength: NORMAL");
                 else if (deltaPct >= 0.3f)
-                    logWarn("Charging strength: MODERATE");
+                    logWarn("⚠️ Charging strength: MODERATE");
                 else
-                    logError("Charging strength: POOR");
+                    logError("❌ Charging strength: POOR");
             } else {
-                logWarn("Charging strength: Unable to estimate accurately.");
+                logWarn("⚠️ Charging strength: Unable to estimate accurately.");
             }
 
             ui.post(() -> {

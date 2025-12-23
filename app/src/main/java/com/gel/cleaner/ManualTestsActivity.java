@@ -932,6 +932,175 @@ private void printHealthCheckboxMap(String decision) {
     else logInfo("Health Map: Informational");
 }
 
+// ============================================================
+// MISSING SYMBOLS PATCH — REQUIRED FOR LAB 14 + LAB 15
+// Put this block INSIDE ManualTestsActivity (helpers area)
+// ============================================================
+
+// ------------------------------------------------------------
+// logLabelValue (2-arg) — you already had it earlier, restore it
+// ------------------------------------------------------------
+private void logLabelValue(String label, String value) {
+    appendHtml(
+            escape(label) + ": "
+                    + "<font color='#39FF14'>" + escape(value) + "</font>"
+    );
+}
+
+// ------------------------------------------------------------
+// LAB 14 RUNNING DIALOG (minimal, safe)
+// ------------------------------------------------------------
+private AlertDialog lab14RunningDialog;
+
+private void showLab14RunningDialog() {
+    ui.post(() -> {
+        try {
+            if (lab14RunningDialog != null && lab14RunningDialog.isShowing())
+                return;
+
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+            b.setCancelable(false);
+
+            LinearLayout root = new LinearLayout(this);
+            root.setOrientation(LinearLayout.VERTICAL);
+            root.setPadding(dp(24), dp(20), dp(24), dp(18));
+            root.setBackgroundColor(0xFF101010);
+
+            TextView title = new TextView(this);
+            title.setText("LAB 14 — Running stress test...");
+            title.setTextColor(0xFFFFFFFF);
+            title.setTextSize(18f);
+            title.setPadding(0, 0, 0, dp(10));
+            root.addView(title);
+
+            TextView msg = new TextView(this);
+            msg.setText("Please keep the app open.\nDo not charge the device during this test.");
+            msg.setTextColor(0xFFDDDDDD);
+            msg.setTextSize(14f);
+            root.addView(msg);
+
+            b.setView(root);
+
+            lab14RunningDialog = b.create();
+            if (lab14RunningDialog.getWindow() != null) {
+                lab14RunningDialog.getWindow()
+                        .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            }
+            lab14RunningDialog.show();
+
+        } catch (Throwable ignore) {}
+    });
+}
+
+private void dismissLab14RunningDialog() {
+    ui.post(() -> {
+        try {
+            if (lab14RunningDialog != null && lab14RunningDialog.isShowing())
+                lab14RunningDialog.dismiss();
+        } catch (Throwable ignore) {}
+        lab14RunningDialog = null;
+    });
+}
+
+// ------------------------------------------------------------
+// Brightness + keep screen on (LAB stress)
+// ------------------------------------------------------------
+private int __oldBrightness = -1;
+
+private void applyMaxBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness < 0) {
+            __oldBrightness = Settings.System.getInt(
+                    getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    128
+            );
+        }
+
+        lp.screenBrightness = 1.0f;
+        getWindow().setAttributes(lp);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+private void restoreBrightnessAndKeepOn() {
+    try {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+
+        if (__oldBrightness >= 0) {
+            lp.screenBrightness = __oldBrightness / 255f;
+            getWindow().setAttributes(lp);
+        }
+
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// CPU stress (controlled) — used by LAB 14/17
+// ------------------------------------------------------------
+private volatile boolean __cpuBurn = false;
+
+private void startCpuBurn_C_Mode() {
+    __cpuBurn = true;
+
+    new Thread(() -> {
+        try {
+            while (__cpuBurn) {
+                double x = 0;
+                for (int i = 0; i < 100_000; i++) {
+                    x += Math.sqrt(i);
+                }
+            }
+        } catch (Throwable ignore) {}
+    }, "LAB-CPU-BURN").start();
+}
+
+private void stopCpuBurn() {
+    __cpuBurn = false;
+}
+
+// ------------------------------------------------------------
+// LAB 15 USER ABORT — required by Exit button
+// (safe: stops flags + dismisses dialog; does NOT nuke all handler callbacks)
+// ------------------------------------------------------------
+private void abortLab15ByUser() {
+
+    ui.post(() -> {
+
+        if (!lab15Running) {
+            try {
+                if (lab15Dialog != null && lab15Dialog.isShowing())
+                    lab15Dialog.dismiss();
+            } catch (Throwable ignore) {}
+            lab15Dialog = null;
+            return;
+        }
+
+        logWarn("LAB 15 aborted by user.");
+
+        lab15Running = false;
+        lab15Finished = true;
+
+        try {
+            if (lab15Dialog != null && lab15Dialog.isShowing())
+                lab15Dialog.dismiss();
+        } catch (Throwable ignore) {}
+
+        lab15Dialog = null;
+
+        logWarn("LAB 15 cancelled by user.");
+    });
+}
+
 // ------------------------------------------------------------
 // REMINDER: Always send me back full blocks ready for copy-paste.
 // ------------------------------------------------------------

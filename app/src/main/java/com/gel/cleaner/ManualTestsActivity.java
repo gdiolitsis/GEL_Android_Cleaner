@@ -582,6 +582,32 @@ private static final int LAB15_TOTAL_SECONDS = 180;
     }
 
 // ============================================================
+// WIFI / NETWORK HELPERS — REQUIRED
+// ============================================================
+
+private String cleanSsid(String raw) {
+    if (raw == null) return "Unknown";
+
+    raw = raw.trim();
+
+    if (raw.equalsIgnoreCase("<unknown ssid>") ||
+        raw.equalsIgnoreCase("unknown ssid"))
+        return "Unknown";
+
+    if (raw.startsWith("\"") && raw.endsWith("\"") && raw.length() > 1)
+        return raw.substring(1, raw.length() - 1);
+
+    return raw;
+}
+
+private String ipToStr(int ip) {
+    return (ip & 0xFF) + "." +
+           ((ip >> 8) & 0xFF) + "." +
+           ((ip >> 16) & 0xFF) + "." +
+           ((ip >> 24) & 0xFF);
+}
+
+// ============================================================
 // LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
 private void askUserEarpieceConfirmation() {

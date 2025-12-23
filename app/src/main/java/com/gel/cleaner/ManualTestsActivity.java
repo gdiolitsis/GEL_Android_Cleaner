@@ -744,6 +744,199 @@ private String formatUptime(long ms) {
 }
 
 // ============================================================
+// GEL BATTERY + LAB15 SUPPORT — REQUIRED (RESTORE MISSING SYMBOLS)
+// KEEP THIS BLOCK INSIDE ManualTestsActivity (helpers area)
+// ============================================================
+
+// ------------------------------------------------------------
+// Battery snapshot container (used by LAB 15 + others)
+// ------------------------------------------------------------
+private static class BatteryInfo {
+    long currentChargeMah;     // mAh (from CHARGE_COUNTER)
+    long estimatedFullMah;     // mAh (from CHARGE_FULL)
+    boolean charging;
+    String source;
+}
+
+// ------------------------------------------------------------
+// NORMALIZE mAh / μAh (shared)
+// ------------------------------------------------------------
+private long normalizeMah(long raw) {
+    if (raw <= 0) return -1;
+    if (raw > 200000) return raw / 1000; // μAh → mAh
+    return raw;                          // already mAh
+}
+
+// ------------------------------------------------------------
+// Battery temperature (°C) — SAFE
+// ------------------------------------------------------------
+private float getBatteryTemperature() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return 0f;
+
+        int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        if (raw <= 0) return 0f;
+
+        return raw / 10f; // tenths of °C
+    } catch (Throwable t) {
+        return 0f;
+    }
+}
+
+// ------------------------------------------------------------
+// Battery % — SAFE
+// ------------------------------------------------------------
+private float getCurrentBatteryPercent() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return -1f;
+
+        int level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        if (level < 0 || scale <= 0) return -1f;
+        return (level * 100f) / (float) scale;
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+// ------------------------------------------------------------
+// Charging detection — SAFE (plugged based)
+// ------------------------------------------------------------
+private boolean isDeviceCharging() {
+    try {
+        Intent i = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return false;
+
+        int plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+                || plugged == BatteryManager.BATTERY_PLUGGED_USB
+                || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+// ------------------------------------------------------------
+// BatteryInfo snapshot — SAFE (BatteryManager properties)
+// ------------------------------------------------------------
+private BatteryInfo getBatteryInfo() {
+
+    BatteryInfo bi = new BatteryInfo();
+    bi.charging = isDeviceCharging();
+    bi.source = "BatteryManager";
+
+    try {
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (bm == null) {
+            bi.currentChargeMah = -1;
+            bi.estimatedFullMah = -1;
+            bi.source = "BatteryManager:N/A";
+            return bi;
+        }
+
+        // Charge counter (uAh) on most devices
+        long cc_uAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+        bi.currentChargeMah = normalizeMah(cc_uAh);
+
+        // Full charge (uAh) on some devices
+        long full_uAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_FULL);
+        bi.estimatedFullMah = normalizeMah(full_uAh);
+
+        // If API returned weird zero values, normalize to -1
+        if (bi.currentChargeMah <= 0) bi.currentChargeMah = -1;
+        if (bi.estimatedFullMah <= 0) bi.estimatedFullMah = -1;
+
+    } catch (Throwable t) {
+        bi.currentChargeMah = -1;
+        bi.estimatedFullMah = -1;
+        bi.source = "BatteryManager:ERROR";
+    }
+
+    return bi;
+}
+
+// ------------------------------------------------------------
+// LAB 15 thermal correlation — REQUIRED
+// ------------------------------------------------------------
+private void logLab15ThermalCorrelation() {
+    logLab15ThermalCorrelation(Float.NaN, Float.NaN, Float.NaN);
+}
+
+private void logLab15ThermalCorrelation(
+        float battTempStart,
+        float battTempPeak,
+        float battTempEnd
+) {
+    float rawDelta = !Float.isNaN(battTempPeak)
+            ? (battTempPeak - battTempStart)
+            : (battTempEnd - battTempStart);
+
+    float dPeak = Math.max(0f, rawDelta);
+
+    String verdict;
+    String note;
+
+    if (dPeak <= 4.0f) {
+        verdict = "OK";
+        note = "Normal thermal behavior during charging";
+    } else if (dPeak <= 7.0f) {
+        verdict = "Warm";
+        note = "Elevated thermal load during charging";
+    } else {
+        verdict = "Risk";
+        note = "Abnormal thermal rise detected";
+    }
+
+    logInfo(String.format(
+            Locale.US,
+            "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
+            battTempStart,
+            (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+            battTempEnd
+    ));
+
+    logOk(String.format(
+            Locale.US,
+            "Thermal verdict (charging): %s (ΔT +%.1f°C) — %s",
+            verdict,
+            dPeak,
+            note
+    ));
+}
+
+// ------------------------------------------------------------
+// Health checkbox map — REQUIRED (LAB 14/17 use)
+// ------------------------------------------------------------
+private void printHealthCheckboxMap(String decision) {
+
+    String d = (decision == null) ? "" : decision.trim();
+
+    logLine();
+
+    boolean strong = "Strong".equalsIgnoreCase(d);
+    boolean normal = "Normal".equalsIgnoreCase(d);
+    boolean weak   = "Weak".equalsIgnoreCase(d);
+
+    appendHtml((strong ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Strong</font>");
+    appendHtml((normal ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Normal</font>");
+    appendHtml((weak   ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Weak</font>");
+
+    if (strong) logOk("Health Map: Strong");
+    else if (normal) logWarn("Health Map: Normal");
+    else if (weak) logError("Health Map: Weak");
+    else logInfo("Health Map: Informational");
+}
+
+// ------------------------------------------------------------
+// REMINDER: Always send me back full blocks ready for copy-paste.
+// ------------------------------------------------------------
+
+// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 

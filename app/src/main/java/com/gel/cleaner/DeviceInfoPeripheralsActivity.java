@@ -1149,7 +1149,7 @@ private static final String KEY_BATTERY_MODEL_CAPACITY = "battery_model_capacity
 private static final String KEY_BATTERY_DIALOG_SHOWN   = "battery_dialog_shown";
 
 // ===================================================================
-// BATTERY DATA STRUCT
+// BATTERY DATA STRUCT (ROOT-AWARE)
 // ===================================================================
 private static class BatteryInfo {
     int level = -1;
@@ -1158,9 +1158,14 @@ private static class BatteryInfo {
     String chargingSource = "Unknown";
     float temperature = 0f;
 
-    long currentChargeMah  = -1;   // Charge Counter / OEM / Derived
-    long estimatedFullMah  = -1;   // Estimated full (100%)
+    long currentChargeMah  = -1;   // Charge Counter / charge_now
+    long estimatedFullMah  = -1;   // charge_full / derived
+    long designFullMah     = -1;   // charge_full_design
+    long cycleCount        = -1;   // root only
+    long internalResistance= -1;   // root only (mΩ if available)
+
     String source          = "Unknown";
+    boolean rootedData     = false;
 }
 
 // ===================================================================
@@ -1192,7 +1197,30 @@ private long normalizeMah(long raw) {
 }
 
 // ===================================================================
-// UNIVERSAL BATTERY SCANNER — GEL v7.1
+// ROOT-AWARE SYSFS READ
+// ===================================================================
+private long readSysLongRootAware(String path) {
+    try {
+        long v = readSysLong(path);
+        if (v > 0) return v;
+    } catch (Throwable ignore) {}
+
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "cat " + path});
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        if (line != null) {
+            long v = Long.parseLong(line.replaceAll("[^0-9]", ""));
+            if (v > 0) return v;
+        }
+    } catch (Throwable ignore) {}
+
+    return -1;
+}
+
+// ===================================================================
+// UNIVERSAL BATTERY SCANNER — GEL v8.0 (ROOT UNLOCKED)
 // ===================================================================
 private BatteryInfo getBatteryInfo() {
 
@@ -1225,62 +1253,53 @@ private BatteryInfo getBatteryInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // ---------- 2) OEM CAPACITY ----------
-    long bestMah = -1;
-    String[] oemPaths = new String[]{
-            "/sys/class/power_supply/battery/charge_full_design",
-            "/sys/class/power_supply/battery/charge_full",
-            "/sys/class/power_supply/battery/charge_full_raw",
-            "/sys/class/power_supply/battery/fg_fullcapnom",
-            "/sys/class/power_supply/battery/fg_fullcaprep",
-            "/sys/class/power_supply/battery/bms/charge_full",
-            "/sys/class/power_supply/battery/bms/charge_full_design"
-    };
+    // ---------- 2) ROOT OEM / BMS DATA ----------
+    if (isDeviceRooted()) {
 
-    for (String p : oemPaths) {
+        bi.rootedData = true;
+
+        bi.designFullMah = normalizeMah(readSysLongRootAware(
+                "/sys/class/power_supply/battery/charge_full_design"));
+
+        bi.estimatedFullMah = normalizeMah(readSysLongRootAware(
+                "/sys/class/power_supply/battery/charge_full"));
+
+        bi.currentChargeMah = normalizeMah(readSysLongRootAware(
+                "/sys/class/power_supply/battery/charge_now"));
+
+        bi.cycleCount = readSysLongRootAware(
+                "/sys/class/power_supply/battery/cycle_count");
+
+        bi.internalResistance = readSysLongRootAware(
+                "/sys/class/power_supply/battery/resistance");
+
+        if (bi.estimatedFullMah > 0) bi.source = "OEM (root)";
+    }
+
+    // ---------- 3) CHARGE COUNTER FALLBACK ----------
+    if (bi.currentChargeMah <= 0) {
         try {
-            long v = normalizeMah(readSysLong(p));
-            if (v > 500 && v > bestMah) {
-                bestMah = v;
-                bi.source = "OEM";
+            BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+            if (bm != null) {
+                long cc = normalizeMah(
+                        bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
+                if (cc > 0) {
+                    bi.currentChargeMah = cc;
+                    bi.source = "Charge Counter";
+                    if (bi.level > 0) {
+                        long est = (long) (cc / (bi.level / 100f));
+                        if (est > 0) bi.estimatedFullMah = est;
+                    }
+                }
             }
         } catch (Throwable ignore) {}
     }
-
-    if (bestMah > 0) {
-        // Smooth OEM (e.g. 5000) vs odd OEM (e.g. 4138)
-        if (bi.level > 0 && (bestMah % 50 != 0)) {
-            float pct = bi.level / 100f;
-            long est = (long) (bestMah / pct);
-            bi.estimatedFullMah = (est > 0 ? est : bestMah);
-        } else {
-            bi.estimatedFullMah = bestMah;
-        }
-    }
-
-    // ---------- 3) CHARGE COUNTER ----------
-    try {
-        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-        if (bm != null) {
-            long cc = normalizeMah(bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
-            if (cc > 0) {
-                bi.currentChargeMah = cc;
-                bi.source = "Charge Counter";
-
-                if (bi.level > 0) {
-                    float pct = bi.level / 100f;
-                    long est = (long) (cc / pct);
-                    if (est > 0) bi.estimatedFullMah = est;
-                }
-            }
-        }
-    } catch (Throwable ignore) {}
 
     return bi;
 }
 
 // ===================================================================
-// BATTERY INFO BUILDER — GEL PREMIUM OUTPUT
+// BATTERY INFO BUILDER — GEL PREMIUM + ROOT PRO
 // ===================================================================
 private String buildBatteryInfo() {
 
@@ -1288,70 +1307,60 @@ private String buildBatteryInfo() {
     if (bi == null) bi = new BatteryInfo();
 
     long modelCap = getStoredModelCapacity();
-    boolean hasCC  = (bi.currentChargeMah > 0);
-    boolean hasEst = (bi.estimatedFullMah > 0);
-
-    float lvlFrac = (bi.level > 0 ? bi.level / 100f : -1f);
-
-    long displayCurrent   = -1;
-    long displayEstimated = -1;
-
-    // ---------- DETERMINE CURRENT ----------
-    if (hasCC) {
-        displayCurrent = bi.currentChargeMah;
-    } else if (hasEst && lvlFrac > 0) {
-        displayCurrent = (long) (bi.estimatedFullMah * lvlFrac);
-    } else if (modelCap > 0 && lvlFrac > 0) {
-        displayCurrent = (long) (modelCap * lvlFrac);
-    }
-
-    // ---------- DETERMINE ESTIMATED FULL ----------
-    if (hasEst) {
-        displayEstimated = bi.estimatedFullMah;
-    } else if (hasCC && lvlFrac > 0) {
-        displayEstimated = (long) (displayCurrent / lvlFrac);
-    }
 
     StringBuilder sb = new StringBuilder();
 
-    // ----- BASIC LINES -----
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"), bi.level >= 0 ? bi.level + "%" : "N/A"));
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Scale"), bi.scale > 0 ? bi.scale : "N/A"));
+    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Level"),
+            bi.level >= 0 ? bi.level + "%" : "N/A"));
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Status"), bi.status));
     sb.append(String.format(Locale.US, "%s : %s\n", padKey("Charging source"), bi.chargingSource));
     sb.append(String.format(Locale.US, "%s : %.1f°C\n\n", padKey("Temp"), bi.temperature));
 
-    // ----- CURRENT -----
-    if (displayCurrent > 0)
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Current charge"), displayCurrent));
-    else
-        sb.append(String.format(Locale.US, "%s : %s\n", padKey("Current charge"), "N/A"));
+    if (bi.currentChargeMah > 0)
+        sb.append(String.format(Locale.US, "%s : %d mAh\n",
+                padKey("Current charge"), bi.currentChargeMah));
 
-    // ----- SOURCE -----
-    String src;
-    if (hasCC) src = "Charge Counter";
-    else if (hasEst) src = "OEM";
-    else if (modelCap > 0) src = "Model capacity";
-    else src = "Unknown";
-    sb.append(String.format(Locale.US, "%s : %s\n", padKey("Source"), src));
+    if (bi.estimatedFullMah > 0)
+        sb.append(String.format(Locale.US, "%s : %d mAh\n",
+                padKey("Estimated full"), bi.estimatedFullMah));
 
-    // ----- ESTIMATED FULL -----
-    if (displayEstimated > 0) {
-        sb.append(String.format(Locale.US, "%s : %d mAh\n", padKey("Estimated full (100%)"), displayEstimated));
-    } else {
-        sb.append(String.format(Locale.US, "%s : %s\n",
-                padKey("Estimated full (100%)"), "N/A in this device"));
-        sb.append(indent("Requires charge counter chip for accurate data.", 26)).append("\n");
-        sb.append(indent("Using GEL Smart Model instead.", 26)).append("\n");
-    }
+    if (modelCap > 0)
+        sb.append(String.format(Locale.US, "%s : %d mAh\n",
+                padKey("Model capacity"), modelCap));
 
-    // ----- MODEL CAPACITY -----
     sb.append(String.format(Locale.US, "%s : %s\n",
-            padKey("Model capacity"), modelCap > 0 ? modelCap + " mAh" : "N/A"));
+            padKey("Source"), bi.source));
 
-    // ----- LIFECYCLE -----
-    sb.append(String.format(Locale.US, "%s : %s",
-            padKey("Lifecycle"), "Requires root access"));
+    // ---------- ROOT PRO SECTION ----------
+    if (bi.rootedData) {
+
+        sb.append("\n");
+        sb.append("=== ROOT BATTERY DATA ===\n");
+
+        if (bi.designFullMah > 0)
+            sb.append(String.format(Locale.US,
+                    "%s : %d mAh\n", padKey("Design capacity"), bi.designFullMah));
+
+        if (bi.designFullMah > 0 && bi.estimatedFullMah > 0) {
+            int soh = (int) Math.round(
+                    (bi.estimatedFullMah * 100.0) / bi.designFullMah);
+            sb.append(String.format(Locale.US,
+                    "%s : %d %%\n", padKey("SOH (raw)"), soh));
+        }
+
+        if (bi.cycleCount > 0)
+            sb.append(String.format(Locale.US,
+                    "%s : %d\n", padKey("Cycle count"), bi.cycleCount));
+
+        if (bi.internalResistance > 0)
+            sb.append(String.format(Locale.US,
+                    "%s : %d mΩ\n", padKey("Internal resistance"), bi.internalResistance));
+    }
+    else {
+        sb.append("\n");
+        sb.append(String.format(Locale.US,
+                "%s : %s\n", padKey("Lifecycle"), "Requires root access"));
+    }
 
     return sb.toString();
 }
@@ -1375,7 +1384,9 @@ private void refreshBatteryButton() {
     TextView btn = findViewById(R.id.txtBatteryModelCapacity);
     if (btn != null) {
         long cap = getStoredModelCapacity();
-        btn.setText(cap > 0 ? "Set model capacity (" + cap + " mAh)" : "Set model capacity");
+        btn.setText(cap > 0
+                ? "Set model capacity (" + cap + " mAh)"
+                : "Set model capacity");
     }
 }
 

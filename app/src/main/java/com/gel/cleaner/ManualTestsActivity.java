@@ -1731,7 +1731,6 @@ private String readFirstLine(File file) {
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
-    // HARD GUARD
     if (lab14Running) {
         logWarn("⚠️ LAB 14 already running.");
         return;
@@ -1769,22 +1768,13 @@ private void lab14BatteryHealthStressTest() {
         logInfo("ℹ️ Start charge: " + startMah + " mAh");
         logInfo("ℹ️ Data source: " + snapStart.source);
 
-        if (cycles > 0)
-            logInfo("ℹ️ Cycle count: " + cycles);
-        else
-            logInfo("ℹ️ Cycle count: N/A");
+        logInfo("ℹ️ Cycle count: " + (cycles > 0 ? cycles : "N/A"));
 
-        // ------------------------------------------------------------
-        // 2) DURATION (LOCKED)
-        // ------------------------------------------------------------
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
         showLab14RunningDialog();
 
-        // ------------------------------------------------------------
-        // 3) START STRESS
-        // ------------------------------------------------------------
         ui.post(() -> {
 
             final float tempBefore = snapStart.temperature;
@@ -1793,9 +1783,6 @@ private void lab14BatteryHealthStressTest() {
             applyMaxBrightnessAndKeepOn();
             startCpuBurn_C_Mode();
 
-            // --------------------------------------------------------
-            // 4) STOP STRESS
-            // --------------------------------------------------------
             ui.postDelayed(() -> {
 
                 if (!lab14Running) return;
@@ -1807,28 +1794,17 @@ private void lab14BatteryHealthStressTest() {
 
                 dismissLab14RunningDialog();
 
-                // ----------------------------------------------------
-                // 5) FINAL SNAPSHOT
-                // ----------------------------------------------------
-                Lab14Engine.GelBatterySnapshot snapEnd =
-                        engine.readSnapshot();
-
+                Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
                 if (snapEnd.chargeNowMah <= 0) {
                     logWarn("⚠️ Unable to read final charge counter.");
                     lab14Running = false;
                     return;
                 }
 
-                final long endMah = snapEnd.chargeNowMah;
-                final float tempAfter = snapEnd.temperature;
-
-                long t1 = SystemClock.elapsedRealtime();
-                long dtMs = Math.max(1, t1 - t0);
-
-                long drainMah = startMah - endMah;
+                long dtMs = Math.max(1, SystemClock.elapsedRealtime() - t0);
+                long drainMah = startMah - snapEnd.chargeNowMah;
                 boolean validDrain = drainMah > 0;
 
-                // sanity guard
                 if (snapStart.chargeFullMah > 0 &&
                         drainMah > snapStart.chargeFullMah * 0.30) {
                     logWarn("⚠️ Charge counter anomaly detected. Discarding run.");
@@ -1844,101 +1820,71 @@ private void lab14BatteryHealthStressTest() {
                 if (validDrain) {
                     logInfo(String.format(
                             Locale.US,
-                            "ℹ️ Drain: %.0f mAh over %.1f sec (≈ %.0f mAh/h)",
-                            (double) drainMah,
-                            dtMs / 1000.0,
-                            mahPerHour
+                            "ℹ️ Drain: %d mAh over %.1f sec (≈ %.0f mAh/h)",
+                            drainMah, dtMs / 1000.0, mahPerHour
                     ));
+                    engine.saveDrainValue(mahPerHour);
                 } else {
                     logWarn("⚠️ Drain data invalid for this run.");
                 }
 
-                // ----------------------------------------------------
-                // 6) SAVE HISTORY
-                // ----------------------------------------------------
-                if (validDrain) engine.saveDrainValue(mahPerHour);
                 engine.saveRun();
 
-                // ----------------------------------------------------
-                // 7) CONFIDENCE
-                // ----------------------------------------------------
-                Lab14Engine.ConfidenceResult conf =
-                        engine.computeConfidence();
-
+                Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
                 logLine();
-                logInfo(String.format(
-                        Locale.US,
-                        "Confidence: %d%% (%d valid runs)",
-                        conf.percent,
-                        conf.validRuns
-                ));
+                logInfo("Confidence: " + conf.percent + "% (" + conf.validRuns + " valid runs)");
 
-                // ----------------------------------------------------
-                // 8) BATTERY PROFILE
-                // ----------------------------------------------------
                 Lab14Engine.BatteryProfile profile =
                         engine.detectProfile(snapStart, conf);
-
                 logInfo("Battery profile: " + profile.label);
 
-                // ----------------------------------------------------
-                // 9) AGING INDEX
-                // ----------------------------------------------------
                 Lab14Engine.AgingResult aging =
                         engine.computeAging(
                                 mahPerHour,
                                 conf,
                                 cycles,
                                 tempBefore,
-                                tempAfter
+                                snapEnd.temperature
                         );
 
                 logInfo("Aging analysis: " + aging.description);
 
-                // ----------------------------------------------------
-                // 10) FINAL DECISION
-                // ----------------------------------------------------
                 String decision;
 
                 if (!validDrain) {
                     decision = "Informational";
                     logWarn("⚠️ Insufficient data for final verdict.");
-                }
-                else if (profile.type ==
+                } else if (profile.type ==
                         Lab14Engine.BatteryProfileType.NEW_EARLY_LIFE) {
 
                     decision = "Strong";
                     logOk("✅ New / early-life battery detected.");
-                }
-                else {
+
+                } else {
 
                     double warnThr =
                             engine.getWarnThreshold(profile, rooted, cycles);
                     double replThr =
                             engine.getReplaceThreshold(profile, rooted, cycles);
 
-                    boolean canWarn = conf.percent >= 70;
-                    boolean canReplace = rooted && conf.percent >= 85;
-
-                    if (canReplace && aging.severe &&
-                            mahPerHour >= replThr) {
+                    if (rooted && conf.percent >= 85 &&
+                            aging.severe && mahPerHour >= replThr) {
 
                         decision = "Weak";
                         logError("❌ Battery degradation confirmed. Replacement recommended.");
-                    }
-                    else if (canWarn && mahPerHour >= warnThr) {
+
+                    } else if (conf.percent >= 70 && mahPerHour >= warnThr) {
 
                         decision = "Normal";
                         logWarn("⚠️ Elevated drain detected. Monitor battery condition.");
-                    }
-                    else {
+
+                    } else {
                         decision = "Strong";
                         logOk("✅ Battery behavior within normal limits.");
                     }
                 }
 
                 printHealthCheckboxMap(decision);
-
                 lab14Running = false;
 
             }, durationSec * 1000L);
@@ -1953,10 +1899,11 @@ private void lab14BatteryHealthStressTest() {
     }
 }
 
-//=============================================================
-// LAB 15 - Charging System Diagnostic (SMART)
-// FINAL / LOCKED — NO PATCHES — NO SIDE EFFECTS
-//=============================================================
+
+// ============================================================
+// LAB 15 — Charging System Diagnostic (SMART)
+// FINAL / LOCKED — SNAPSHOT + LIVE THERMAL
+// ============================================================
 private void lab15ChargingSystemSmart() {
 
     if (lab15Running) {
@@ -1964,8 +1911,7 @@ private void lab15ChargingSystemSmart() {
         return;
     }
 
-    // ================= FLAGS RESET =================
-    lab15Running  = true;
+    lab15Running = true;
     lab15Finished = false;
     lab15FlapUnstable = false;
     lab15OverTempDuringCharge = false;
@@ -1974,7 +1920,6 @@ private void lab15ChargingSystemSmart() {
     lab15BattTempPeak  = Float.NaN;
     lab15BattTempEnd   = Float.NaN;
 
-    // ================= DIALOG =================
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     ManualTestsActivity.this,
@@ -2022,7 +1967,6 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
 
-    // EXIT BUTTON
     Button exitBtn = new Button(this);
     exitBtn.setText("Exit test");
     exitBtn.setAllCaps(false);
@@ -2042,7 +1986,6 @@ private void lab15ChargingSystemSmart() {
             );
     lpExit.setMargins(0, dp(14), 0, 0);
     exitBtn.setLayoutParams(lpExit);
-
     exitBtn.setOnClickListener(v -> abortLab15ByUser());
     root.addView(exitBtn);
 
@@ -2057,10 +2000,9 @@ private void lab15ChargingSystemSmart() {
     logLine();
     logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
 
-    // ================= CORE LOOP =================
-    final long startTs[] = { -1 };
-    final boolean wasCharging[] = { false };
-    final String[] dotFrames = { "•", "• •", "• • •" };
+    final long[] startTs = { -1 };
+    final boolean[] wasCharging = { false };
+    final String[] dots = { "•", "• •", "• • •" };
 
     final BatteryInfo startInfo = getBatteryInfo();
     final long startMah =
@@ -2083,7 +2025,7 @@ private void lab15ChargingSystemSmart() {
             boolean chargingNow = isDeviceCharging();
             long now = SystemClock.elapsedRealtime();
 
-            dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
+            dotsView.setText(dots[dotStep++ % dots.length]);
 
             if (chargingNow && !wasCharging[0]) {
                 wasCharging[0] = true;
@@ -2132,7 +2074,6 @@ private void lab15ChargingSystemSmart() {
                 return;
             }
 
-            // ================= FINAL =================
             lab15Finished = true;
             lab15Running  = false;
 
@@ -2152,15 +2093,15 @@ private void lab15ChargingSystemSmart() {
                     lab15BattTempEnd
             );
 
-            logOk("✅ Charging behavior appears normal. Temperature within safe limits.");
-            logOk("✅ LAB decision: Charging system OK. No cleaning or replacement required.");
-            logOk("✅ Charging connection appears stable. No abnormal plug/unplug behavior detected.");
-            logOk("✅ LAB decision: Charging stability OK.");
+            logOk("✅ Charging behavior appears normal.");
+            logOk("✅ LAB decision: Charging system OK.");
 
             logLine();
 
             BatteryInfo endInfo = getBatteryInfo();
-            if (startMah > 0 && endInfo != null && endInfo.currentChargeMah > startMah && fullMah > 0) {
+            if (startMah > 0 && endInfo != null &&
+                    endInfo.currentChargeMah > startMah && fullMah > 0) {
+
                 float deltaPct =
                         ((endInfo.currentChargeMah - startMah) * 100f) / (float) fullMah;
 

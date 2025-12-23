@@ -220,17 +220,22 @@ private static final int LAB15_TOTAL_SECONDS = 180;
     }
 
     private static class BatteryInfo {
-        int level = -1;
-        float temperature = Float.NaN;
-        String status = "Unknown";
 
-        //  REQUIRED — used by LAB 14 / drain logic
-        long currentChargeMah = -1;
+    int level = -1;
+    float temperature = Float.NaN;
+    String status = "Unknown";
 
-        // capacity estimation
-        long estimatedFullMah = -1;
-        String source = "Unknown";
-    }
+    // REQUIRED — used by LAB 14 / drain logic
+    long currentChargeMah = -1;
+
+    // capacity estimation
+    long estimatedFullMah = -1;
+
+    // charging state (CRITICAL for LAB 14 / 15)
+    boolean charging = false;
+
+    String source = "Unknown";
+}
 
     // ============================================================
     // CORE UI
@@ -749,16 +754,6 @@ private String formatUptime(long ms) {
 // ============================================================
 
 // ------------------------------------------------------------
-// Battery snapshot container (used by LAB 15 + others)
-// ------------------------------------------------------------
-private static class BatteryInfo {
-    long currentChargeMah;     // mAh (from CHARGE_COUNTER)
-    long estimatedFullMah;     // mAh (from CHARGE_FULL)
-    boolean charging;
-    String source;
-}
-
-// ------------------------------------------------------------
 // NORMALIZE mAh / μAh (shared)
 // ------------------------------------------------------------
 private long normalizeMah(long raw) {
@@ -831,7 +826,9 @@ private BatteryInfo getBatteryInfo() {
     bi.source = "BatteryManager";
 
     try {
-        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        BatteryManager bm =
+                (BatteryManager) getSystemService(BATTERY_SERVICE);
+
         if (bm == null) {
             bi.currentChargeMah = -1;
             bi.estimatedFullMah = -1;
@@ -839,17 +836,19 @@ private BatteryInfo getBatteryInfo() {
             return bi;
         }
 
-        // Charge counter (uAh) on most devices
-        long cc_uAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+        // Charge counter (μAh → mAh)
+        long cc_uAh =
+                bm.getLongProperty(
+                        BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER
+                );
+
         bi.currentChargeMah = normalizeMah(cc_uAh);
 
-        // Full charge (uAh) on some devices
-        long full_uAh = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_FULL);
-        bi.estimatedFullMah = normalizeMah(full_uAh);
+        // ❗ SAFE FULL CAPACITY — NOT via CHARGE_FULL (API trap)
+        bi.estimatedFullMah = -1; // handled elsewhere (LAB 14 engine / heuristics)
 
-        // If API returned weird zero values, normalize to -1
-        if (bi.currentChargeMah <= 0) bi.currentChargeMah = -1;
-        if (bi.estimatedFullMah <= 0) bi.estimatedFullMah = -1;
+        if (bi.currentChargeMah <= 0)
+            bi.currentChargeMah = -1;
 
     } catch (Throwable t) {
         bi.currentChargeMah = -1;

@@ -1070,6 +1070,25 @@ private void restoreBrightnessAndKeepOn() {
 }
 
 // ------------------------------------------------------------
+// CPU / GPU thermal helpers (SAFE, READ-ONLY)
+// ------------------------------------------------------------
+private Float readCpuTempSafe() {
+    try {
+        Map<String, Float> zones = readThermalZones();
+        return pickZone(zones, "cpu", "soc", "ap");
+    } catch (Throwable ignore) {}
+    return null;
+}
+
+private Float readGpuTempSafe() {
+    try {
+        Map<String, Float> zones = readThermalZones();
+        return pickZone(zones, "gpu", "gfx", "kgsl");
+    } catch (Throwable ignore) {}
+    return null;
+}
+
+// ------------------------------------------------------------
 // CPU stress (controlled) — used by LAB 14/17
 // ------------------------------------------------------------
 private volatile boolean __cpuBurn = false;
@@ -2368,6 +2387,12 @@ private void lab14BatteryHealthStressTest() {
         final long cycles     = snapStart.cycleCount;
         final float tempStart = snapStart.temperature;
 
+// ------------------------------------------------------------
+// CPU / GPU thermal snapshot (START)
+// ------------------------------------------------------------
+final Float cpuTempStart = readCpuTempSafe();
+final Float gpuTempStart = readGpuTempSafe();
+
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
 
@@ -2398,6 +2423,12 @@ private void lab14BatteryHealthStressTest() {
 
         logInfo("✅ Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
         logLine();
+
+if (cpuTempStart != null)
+    logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
+
+if (gpuTempStart != null)
+    logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
 
         // ------------------------------------------------------------
         // 3) DIALOG — SAME STYLE AS LAB 15 (EXIT BUTTON)
@@ -2562,6 +2593,12 @@ private void lab14BatteryHealthStressTest() {
                 final long endMah = snapEnd.chargeNowMah;
                 final float tempEnd = snapEnd.temperature;
 
+// ------------------------------------------------------------
+// CPU / GPU thermal snapshot (END)
+// ------------------------------------------------------------
+final Float cpuTempEnd = readCpuTempSafe();
+final Float gpuTempEnd = readGpuTempSafe();
+
                 final long dtMs = Math.max(1, SystemClock.elapsedRealtime() - t0);
                 final long drainMah = startMah - endMah;
 
@@ -2682,6 +2719,19 @@ private void lab14BatteryHealthStressTest() {
                     if (conf.percent < 70) finalScore -= 12;
                     else if (conf.percent < 80) finalScore -= 6;
 
+// ----------------------------------------------------
+// CPU / GPU thermal contribution (CAPPED, non-dominant)
+// ----------------------------------------------------
+if (cpuTempEnd != null) {
+    if (cpuTempEnd >= 85f) finalScore -= 8;
+    else if (cpuTempEnd >= 75f) finalScore -= 4;
+}
+
+if (gpuTempEnd != null) {
+    if (gpuTempEnd >= 80f) finalScore -= 6;
+    else if (gpuTempEnd >= 70f) finalScore -= 3;
+}
+
                     // Clamp
                     if (finalScore < 0) finalScore = 0;
                     if (finalScore > 100) finalScore = 100;
@@ -2707,10 +2757,12 @@ private void lab14BatteryHealthStressTest() {
                 ));
 
                 if (validDrain) {
-                    logInfo(String.format(
-                            Locale.US,
-                            "✅ Drain rate: %.0f mAh/hour (counter-based)",
-                            mahPerHour
+                    logInfo("✅ Drain rate:");
+logOk(String.format(
+        Locale.US,
+        "   %.0f mAh/hour (counter-based)",
+        mahPerHour
+));
                     ));
                 } else {
                     logWarn("⚠️ Drain data invalid (counter anomaly or no drop).");
@@ -2718,27 +2770,33 @@ private void lab14BatteryHealthStressTest() {
 
                 // Single confidence (HERE ONLY)
                 logLine();
-                logInfo(String.format(
-                        Locale.US,
-                        "✅ Confidence Score: %d%% (%d valid runs)",
-                        conf.percent,
-                        conf.validRuns
-                ));
+                logInfo("✅ Confidence Score:");
+logOk(String.format(
+        Locale.US,
+        "   %d%% (%d valid runs)",
+        conf.percent,
+        conf.validRuns
+));
 
                 logInfo("✅ Battery profile: " + profile.label);
 
                 // Aging index block (where insufficient data belongs)
                 logLine();
                 if (agingIndex >= 0) {
-                    logInfo("✅ Battery Aging Index: " + agingIndex + "/100");
-                    logInfo("✅ Interpretation: " + agingInterp);
-                } else {
+
+    logInfo("✅ Battery Aging Index:");
+    logOk("   " + agingIndex + "/100");
+
+    logInfo("✅ Interpretation:");
+    logOk("   " + agingInterp);
+
+} else {
                     logWarn("⚠️ Battery Aging Index: Insufficient data");
                     logWarn("⚠️ Interpretation: " + agingInterp);
                 }
 
-                // Engine aging text (kept, but now aligned with index)
-                logInfo("✅ Aging analysis: " + aging.description);
+                logInfo("✅ Aging analysis:");
+logOk("   " + aging.description);
 
                 // Final score block
                 logLine();
@@ -3128,7 +3186,7 @@ private void lab17RunAuto() {
             // ------------------------------------------------------------
             // 1) Battery snapshot
             // ------------------------------------------------------------
-            float pct = getCurrentBatteryPercent();
+            float pct  = getCurrentBatteryPercent();
             float temp = getBatteryTemperature();
             float volt = getBatteryVoltage_mV();
 
@@ -3143,7 +3201,8 @@ private void lab17RunAuto() {
             // ------------------------------------------------------------
             Map<String, Float> zones = readThermalZones();
 
-            Float cpu  = pickZone(zones, "cpu", "soc");
+            Float cpu = pickZone(zones, "cpu", "soc");
+            Float gpu = pickZone(zones, "gpu");   // ✅ ADD ONLY
             Float batt = temp;
 
             // ------------------------------------------------------------
@@ -3157,6 +3216,12 @@ private void lab17RunAuto() {
             if (cpu != null) {
                 if (cpu > 70f) score -= 15;
                 if (cpu > 85f) score -= 25;
+            }
+
+            // 🔧 ADD ONLY — GPU contribution (non-dominant, safe)
+            if (gpu != null) {
+                if (gpu > 70f) score -= 3;
+                if (gpu > 80f) score -= 6;
             }
 
             if (volt < 3600f) score -= 10;
@@ -3186,6 +3251,14 @@ private void lab17RunAuto() {
                             Locale.US,
                             "CPU temperature: %.1f°C",
                             cpu
+                    ));
+                }
+
+                if (gpu != null) {
+                    logInfo(String.format(
+                            Locale.US,
+                            "GPU temperature: %.1f°C",
+                            gpu
                     ));
                 }
 
@@ -3221,7 +3294,7 @@ private float getBatteryVoltage_mV() {
     } catch (Throwable t) {
         return 0f;
     }
-}     
+}
     
 // ============================================================ // ============================================================
 // LABS 18 - 21: STORAGE & PERFORMANCE

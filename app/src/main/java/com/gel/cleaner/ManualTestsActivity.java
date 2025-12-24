@@ -3083,16 +3083,28 @@ private void lab16ThermalSnapshot() {
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
 
-    // --- INTERNAL (like Phone Info Internal) ---
+    // ------------------------------------------------------------
+    // INTERNAL — Thermal Sensors (like Phone Info Internal)
+    // ------------------------------------------------------------
     String internal = buildThermalInternalReport();
     if (internal != null && !internal.trim().isEmpty()) {
-        logInfo(internal.trim());
+        for (String line : internal.split("\n")) {
+            if (!line.trim().isEmpty()) {
+                logInfo(line);
+            }
+        }
     }
 
-    // --- HARDWARE / PERIPHERALS (like Phone Info Peripherals) ---
+    // ------------------------------------------------------------
+    // HARDWARE / PERIPHERALS — Thermal Engine / Cooling
+    // ------------------------------------------------------------
     String hw = buildThermalInfo();
     if (hw != null && !hw.trim().isEmpty()) {
-        logInfo(hw.trim());
+        for (String line : hw.split("\n")) {
+            if (!line.trim().isEmpty()) {
+                logInfo(line);
+            }
+        }
     }
 
     logOk("Lab 16 finished.");

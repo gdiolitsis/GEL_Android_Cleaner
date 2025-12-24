@@ -1126,9 +1126,224 @@ private void abortLab15ByUser() {
     });
 }
 
-// ------------------------------------------------------------
-// REMINDER: Always send me back full blocks ready for copy-paste.
-// ------------------------------------------------------------
+// ===================================================================
+// HELPERS — LAB 16 THERMAL SNAPSHOT
+// Internal + Peripherals • Root Aware • GEL Edition
+// ===================================================================
+
+/* ---------------------------------------------------------------
+ * INTERNAL STATE
+ * --------------------------------------------------------------- */
+private boolean isRooted = false; // set once in onCreate()
+
+/* ---------------------------------------------------------------
+ * INTERNAL THERMAL REPORT
+ * --------------------------------------------------------------- */
+private String buildThermalInternalReport() {
+
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("THERMAL SENSORS (INTERNAL)\n");
+    sb.append("──────────────────────────\n");
+
+    File thermalDir = new File("/sys/class/thermal");
+    if (!thermalDir.exists()) {
+        sb.append("Thermal sensors not available.\n");
+        return sb.toString();
+    }
+
+    File[] zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+    if (zones == null || zones.length == 0) {
+        sb.append("No thermal zones detected.\n");
+        return sb.toString();
+    }
+
+    Map<String, Float> maxTemps = new HashMap<>();
+
+    for (File z : zones) {
+        try {
+            String type = readSys(z, "type");
+            String temp = readSys(z, "temp");
+            if (type == null || temp == null) continue;
+
+            float c = Float.parseFloat(temp.trim()) / 1000f;
+            if (c <= 0 || c > 120) continue;
+
+            String label = mapInternalType(type);
+            if (label == null) continue;
+
+            Float prev = maxTemps.get(label);
+            if (prev == null || c > prev) maxTemps.put(label, c);
+
+        } catch (Throwable ignore) {}
+    }
+
+    String[] order = {
+            "CPU Core",
+            "CPU Cluster 0",
+            "CPU Cluster 1",
+            "GPU",
+            "DDR Memory",
+            "Battery",
+            "Backlight"
+    };
+
+    for (String k : order) {
+        Float v = maxTemps.get(k);
+        if (v != null) {
+            sb.append(String.format(
+                    Locale.US,
+                    "%-18s : %5.1f°C  (%s)\n",
+                    k, v, thermalState(v)
+            ));
+        }
+    }
+
+    if (!isRooted) {
+        sb.append("\nAdvanced Info: For detailed thermal and cooling information, requires root access\n");
+        return sb.toString();
+    }
+
+    // ROOT DETAILS
+    sb.append("\nAdvanced Thermal (Root)\n");
+    sb.append("──────────────────────\n");
+
+    for (File z : zones) {
+        try {
+            String type = readSys(z, "type");
+            String temp = readSys(z, "temp");
+            if (type == null || temp == null) continue;
+
+            float c = Float.parseFloat(temp.trim()) / 1000f;
+
+            sb.append("\n")
+              .append(z.getName()).append(" [").append(type).append("]\n")
+              .append("  Current Temp : ")
+              .append(String.format(Locale.US, "%.1f°C\n", c));
+
+            for (int i = 0; i < 10; i++) {
+                String tp = readSys(z, "trip_point_" + i + "_temp");
+                String tt = readSys(z, "trip_point_" + i + "_type");
+                if (tp == null || tt == null) break;
+
+                float tc = Float.parseFloat(tp.trim()) / 1000f;
+                sb.append("  Trip ").append(i)
+                  .append(" (").append(tt).append(") : ")
+                  .append(String.format(Locale.US, "%.1f°C\n", tc));
+            }
+
+        } catch (Throwable ignore) {}
+    }
+
+    return sb.toString();
+}
+
+/* ---------------------------------------------------------------
+ * PERIPHERALS / HARDWARE THERMAL REPORT
+ * --------------------------------------------------------------- */
+private String buildThermalInfo() {
+
+    StringBuilder sb = new StringBuilder();
+
+    ThermalGroup batteryMain  = new ThermalGroup();
+    ThermalGroup batteryShell = new ThermalGroup();
+    ThermalGroup pmic         = new ThermalGroup();
+    ThermalGroup charger      = new ThermalGroup();
+    ThermalGroup modemMain    = new ThermalGroup();
+    ThermalGroup modemAux     = new ThermalGroup();
+
+    File[] zones = new File("/sys/class/thermal")
+            .listFiles(f -> f.getName().startsWith("thermal_zone"));
+
+    if (zones != null) {
+        for (File z : zones) {
+            try {
+                String type = readSys(z, "type");
+                String temp = readSys(z, "temp");
+                if (type == null || temp == null) continue;
+
+                float c = Float.parseFloat(temp.trim()) / 1000f;
+                if (c <= 0 || c > 120) continue;
+
+                String t = type.toLowerCase(Locale.US);
+
+                if (t.contains("battery")) batteryMain.update(type, c);
+                else if (t.contains("skin") || t.contains("shell")) batteryShell.update(type, c);
+                else if (t.contains("pmic") || t.contains("bcl")) pmic.update(type, c);
+                else if (t.contains("charger") || t.contains("usb")) charger.update(type, c);
+                else if (t.contains("modem")) modemMain.update(type, c);
+
+            } catch (Throwable ignore) {}
+        }
+    }
+
+    sb.append("Hardware Thermal Systems\n");
+    sb.append("================================\n\n");
+
+    sb.append(formatLine("Main Modem", modemMain));
+    sb.append(formatLine("Secondary Modem", modemAux));
+    sb.append(formatLine("Main Battery", batteryMain));
+    sb.append(formatLine("Battery Shell", batteryShell));
+    sb.append(formatLine("Charger Thermal", charger));
+    sb.append(formatLine("PMIC Thermal", pmic));
+
+    sb.append("\nHardware Cooling Systems\n");
+    sb.append("================================\n");
+    sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
+
+    return sb.toString();
+}
+
+/* ---------------------------------------------------------------
+ * SMALL HELPERS
+ * --------------------------------------------------------------- */
+private static class ThermalGroup {
+    float temp = Float.NaN;
+    boolean valid;
+
+    void update(String n, float c) {
+        if (!valid || c > temp) {
+            temp = c;
+            valid = true;
+        }
+    }
+}
+
+private String formatLine(String label, ThermalGroup g) {
+    if (g == null || !g.valid)
+        return String.format(Locale.US, "%-17s: N/A\n", label);
+
+    return String.format(
+            Locale.US,
+            "%-17s: %.1f°C (%s)\n",
+            label, g.temp, thermalState(g.temp)
+    );
+}
+
+private String thermalState(float c) {
+    if (c < 35) return "COOL";
+    if (c < 45) return "NORMAL";
+    if (c < 55) return "WARM";
+    return "HOT";
+}
+
+private String readSys(File dir, String name) {
+    try (BufferedReader br = new BufferedReader(new FileReader(new File(dir, name)))) {
+        return br.readLine();
+    } catch (Throwable ignore) {
+        return null;
+    }
+}
+
+private String mapInternalType(String t) {
+    t = t.toLowerCase(Locale.US);
+    if (t.contains("cpu")) return "CPU Core";
+    if (t.contains("gpu")) return "GPU";
+    if (t.contains("ddr")) return "DDR Memory";
+    if (t.contains("battery")) return "Battery";
+    if (t.contains("backlight")) return "Backlight";
+    return null;
+}
 
 // ============================================================
 // LABS 1-5: AUDIO & VIBRATION
@@ -2859,45 +3074,25 @@ private void lab15ChargingSystemSmart() {
 }
 
 // ============================================================
-// LAB 16 — Thermal Snapshot (FINAL)
-// MERGED: Internal + Peripherals
-// SOURCE OF TRUTH:
-//  - buildThermalInternalReport()
-//  - buildThermalInfo()
+// LAB 16 — Thermal Snapshot (REAL HARDWARE EDITION)
+// Source: Internal + Peripherals (merged)
+// Output: Screenshot-style report
 // ============================================================
 private void lab16ThermalSnapshot() {
 
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
 
-    // ------------------------------------------------------------
-    // INTERNAL THERMAL REPORT
-    // ------------------------------------------------------------
-    try {
-        String internal = buildThermalInternalReport();
-        if (internal != null && !internal.trim().isEmpty()) {
-            logLine();
-            for (String line : internal.split("\n")) {
-                logInfo(line);
-            }
-        }
-    } catch (Throwable t) {
-        logWarn("Internal thermal report unavailable.");
+    // --- INTERNAL (like Phone Info Internal) ---
+    String internal = buildThermalInternalReport();
+    if (internal != null && !internal.trim().isEmpty()) {
+        logInfo(internal.trim());
     }
 
-    // ------------------------------------------------------------
-    // PERIPHERALS / HARDWARE THERMAL REPORT
-    // ------------------------------------------------------------
-    try {
-        String hw = buildThermalInfo();
-        if (hw != null && !hw.trim().isEmpty()) {
-            logLine();
-            for (String line : hw.split("\n")) {
-                logInfo(line);
-            }
-        }
-    } catch (Throwable t) {
-        logWarn("Hardware thermal report unavailable.");
+    // --- HARDWARE / PERIPHERALS (like Phone Info Peripherals) ---
+    String hw = buildThermalInfo();
+    if (hw != null && !hw.trim().isEmpty()) {
+        logInfo(hw.trim());
     }
 
     logOk("Lab 16 finished.");

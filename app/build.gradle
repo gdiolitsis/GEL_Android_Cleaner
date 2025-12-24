@@ -58,12 +58,15 @@ android {
         }
     }
 
+    // -----------------------------------------------
+    // ✅ ABI SPLITS — FIXED (NO UNIVERSAL APK)
+    // -----------------------------------------------
     splits {
         abi {
             enable true
             reset()
-            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
-            universalApk true
+            include 'arm64-v8a', 'armeabi-v7a'
+            universalApk false
         }
     }
 

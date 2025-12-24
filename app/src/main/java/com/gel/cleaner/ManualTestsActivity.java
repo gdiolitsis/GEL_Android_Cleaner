@@ -2859,276 +2859,49 @@ private void lab15ChargingSystemSmart() {
 }
 
 // ============================================================
-// LAB 16 — Thermal Snapshot (MERGED: Internal + Peripherals + ROOT)
-// OUTPUT = PHOTO STYLE (like screenshot)
-// ROOT-AWARE: adds trip points + cooling devices if root
-// READY FOR COPY-PASTE — DO NOT SPLIT
+// LAB 16 — Thermal Snapshot (FINAL)
+// MERGED: Internal + Peripherals
+// SOURCE OF TRUTH:
+//  - buildThermalInternalReport()
+//  - buildThermalInfo()
 // ============================================================
 private void lab16ThermalSnapshot() {
 
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
 
-    final boolean rooted = isDeviceRooted();
-    logInfo("Mode: " + (rooted ? "Advanced (Root enabled)" : "Standard (No root)"));
-
     // ------------------------------------------------------------
-    // Battery temperature (system-safe)
+    // INTERNAL THERMAL REPORT
     // ------------------------------------------------------------
-    float battTemp = Float.NaN;
-    try { battTemp = getBatteryTemperature(); } catch (Throwable ignore) {}
-
-    if (!lab16ValidTemp(battTemp)) {
-        try {
-            BatteryInfo bi = getBatteryInfo();
-            if (bi != null && bi.batteryTempC > 0)
-                battTemp = bi.batteryTempC;
-        } catch (Throwable ignore) {}
+    try {
+        String internal = buildThermalInternalReport();
+        if (internal != null && !internal.trim().isEmpty()) {
+            logLine();
+            for (String line : internal.split("\n")) {
+                logInfo(line);
+            }
+        }
+    } catch (Throwable t) {
+        logWarn("Internal thermal report unavailable.");
     }
 
-    if (lab16ValidTemp(battTemp))
-        logInfo(String.format(Locale.US, "Battery temperature: %.1f°C", battTemp));
-    else
-        logWarn("Battery temperature: N/A");
-
     // ------------------------------------------------------------
-    // Scan /sys/class/thermal (merged best readings)
+    // PERIPHERALS / HARDWARE THERMAL REPORT
     // ------------------------------------------------------------
-    Lab16ThermalReading cpu  = new Lab16ThermalReading();
-    Lab16ThermalReading gpu  = new Lab16ThermalReading();
-    Lab16ThermalReading bat  = new Lab16ThermalReading();
-    Lab16ThermalReading pmic = new Lab16ThermalReading();
-
-    Lab16ThermalSummary sum = lab16ScanThermals(cpu, gpu, bat, pmic);
-
-    if (sum.zoneCount > 0)
-        logOk("Thermal zones detected: " + sum.zoneCount);
-    else
-        logWarn("Thermal zones detected: 0");
-
-    // ------------------------------------------------------------
-    // PHOTO STYLE LINES (MATCH SCREENSHOT)
-    // ------------------------------------------------------------
-    if (cpu.valid)
-        logInfo(String.format(Locale.US,
-                "CPU: %.1f°C %s",
-                cpu.tempC, lab16StateBracket(cpu.tempC)));
-
-    if (gpu.valid)
-        logInfo(String.format(Locale.US,
-                "GPU: %.1f°C %s",
-                gpu.tempC, lab16StateBracket(gpu.tempC)));
-
-    if (bat.valid)
-        logInfo(String.format(Locale.US,
-                "Battery: %.1f°C %s",
-                bat.tempC, lab16StateBracket(bat.tempC)));
-    else if (lab16ValidTemp(battTemp))
-        logInfo(String.format(Locale.US,
-                "Battery: %.1f°C %s",
-                battTemp, lab16StateBracket(battTemp)));
-
-    if (pmic.valid)
-        logInfo(String.format(Locale.US,
-                "PMIC: %.1f°C %s",
-                pmic.tempC, lab16StateBracket(pmic.tempC)));
-
-    // ------------------------------------------------------------
-    // ROOT-ONLY ADDITIONS (NO UI SPAM)
-    // ------------------------------------------------------------
-    if (rooted) {
-
-        int tripPoints = lab16CountTripPoints();
-        int cooling    = lab16CountCoolingDevices();
-
-        if (tripPoints > 0)
-            logInfo("Thermal trip points detected: " + tripPoints);
-
-        if (cooling > 0)
-            logInfo("Hardware cooling devices: " + cooling);
-        else
-            logInfo("Hardware cooling devices: 0 (passive cooling)");
+    try {
+        String hw = buildThermalInfo();
+        if (hw != null && !hw.trim().isEmpty()) {
+            logLine();
+            for (String line : hw.split("\n")) {
+                logInfo(line);
+            }
+        }
+    } catch (Throwable t) {
+        logWarn("Hardware thermal report unavailable.");
     }
 
     logOk("Lab 16 finished.");
-}
-
-// ===================================================================
-// LAB 16 — INTERNAL HELPERS (ROOT-SAFE, NO CONFLICTS)
-// ===================================================================
-private static final class Lab16ThermalReading {
-    float tempC = Float.NaN;
-    boolean valid = false;
-
-    void updateMax(float c) {
-        if (!lab16ValidTemp(c)) return;
-        if (!valid || c > tempC) {
-            valid = true;
-            tempC = c;
-        }
-    }
-}
-
-private static final class Lab16ThermalSummary {
-    int zoneCount = 0;
-}
-
-private Lab16ThermalSummary lab16ScanThermals(
-        Lab16ThermalReading cpu,
-        Lab16ThermalReading gpu,
-        Lab16ThermalReading battery,
-        Lab16ThermalReading pmic
-) {
-
-    Lab16ThermalSummary out = new Lab16ThermalSummary();
-
-    File thermalDir = new File("/sys/class/thermal");
-    File[] zones = null;
-
-    try {
-        if (thermalDir.exists() && thermalDir.isDirectory()) {
-            zones = thermalDir.listFiles(f ->
-                    f != null && f.getName().startsWith("thermal_zone"));
-        }
-    } catch (Throwable ignore) {}
-
-    if (zones == null || zones.length == 0) return out;
-
-    out.zoneCount = zones.length;
-
-    for (File z : zones) {
-        try {
-            String type = lab16ReadFirstLineSafe(new File(z, "type"));
-            float c     = lab16ReadTempC(new File(z, "temp"));
-
-            if (!lab16ValidTemp(c) || type == null) continue;
-
-            String t = type.toLowerCase(Locale.US);
-
-            if (t.contains("cpu") || t.contains("cluster") || t.contains("soc")
-                    || t.contains("ap") || t.contains("tsens"))
-                cpu.updateMax(c);
-            else if (t.contains("gpu") || t.contains("kgsl"))
-                gpu.updateMax(c);
-            else if (t.contains("battery") || t.contains("batt")
-                    || t.contains("bms") || t.contains("fuel"))
-                battery.updateMax(c);
-            else if (t.contains("pmic") || t.contains("bcl") || t.contains("ibat"))
-                pmic.updateMax(c);
-
-        } catch (Throwable ignore) {}
-    }
-
-    if (!battery.valid) {
-        float c = lab16FindTempByKeywords("battery", "batt", "bms");
-        if (lab16ValidTemp(c)) battery.updateMax(c);
-    }
-
-    if (!pmic.valid) {
-        float c = lab16FindTempByKeywords("pmic", "bcl", "ibat");
-        if (lab16ValidTemp(c)) pmic.updateMax(c);
-    }
-
-    return out;
-}
-
-// ------------------------------------------------------------
-private static boolean lab16ValidTemp(float c) {
-    return (c > -30f && c < 120f);
-}
-
-private static String lab16StateBracket(float c) {
-    if (c < 35f) return "[COOL]";
-    if (c < 45f) return "[NORMAL]";
-    if (c < 55f) return "[WARM]";
-    return "[HOT]";
-}
-
-private static String lab16ReadFirstLineSafe(File f) {
-    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-        String l = br.readLine();
-        return (l != null) ? l.trim() : "";
-    } catch (Throwable ignore) { return ""; }
-}
-
-private static float lab16ReadTempC(File f) {
-    try {
-        String s = lab16ReadFirstLineSafe(f);
-        if (s.isEmpty()) return Float.NaN;
-        long v = Long.parseLong(s.replaceAll("[^0-9-]", ""));
-        return (Math.abs(v) > 1000) ? v / 1000f : (float) v;
-    } catch (Throwable ignore) {
-        return Float.NaN;
-    }
-}
-
-private float lab16FindTempByKeywords(String... keys) {
-
-    File[] zones = new File("/sys/class/thermal")
-            .listFiles(f -> f != null && f.getName().startsWith("thermal_zone"));
-
-    if (zones == null) return Float.NaN;
-
-    float best = Float.NaN;
-
-    for (File z : zones) {
-        try {
-            String type = lab16ReadFirstLineSafe(new File(z, "type"));
-            if (type == null) continue;
-
-            String t = type.toLowerCase(Locale.US);
-            boolean match = false;
-
-            for (String k : keys)
-                if (t.contains(k)) { match = true; break; }
-
-            if (!match) continue;
-
-            float c = lab16ReadTempC(new File(z, "temp"));
-            if (lab16ValidTemp(c) && (Float.isNaN(best) || c > best))
-                best = c;
-
-        } catch (Throwable ignore) {}
-    }
-
-    return best;
-}
-
-// ------------------------------------------------------------
-// ROOT HELPERS
-// ------------------------------------------------------------
-private int lab16CountTripPoints() {
-
-    int count = 0;
-
-    File[] zones = new File("/sys/class/thermal")
-            .listFiles(f -> f != null && f.getName().startsWith("thermal_zone"));
-
-    if (zones == null) return 0;
-
-    for (File z : zones) {
-        for (int i = 0; i < 10; i++) {
-            File tp = new File(z, "trip_point_" + i + "_temp");
-            if (tp.exists()) count++;
-        }
-    }
-    return count;
-}
-
-private int lab16CountCoolingDevices() {
-
-    File[] cds = new File("/sys/class/thermal")
-            .listFiles(f -> f != null && f.getName().startsWith("cooling_device"));
-
-    if (cds == null) return 0;
-
-    int c = 0;
-    for (File d : cds) {
-        String type = lab16ReadFirstLineSafe(new File(d, "type")).toLowerCase();
-        if (type.contains("fan") || type.contains("blower") || type.contains("pump"))
-            c++;
-    }
-    return c;
+    logLine();
 }
 
 // ============================================================

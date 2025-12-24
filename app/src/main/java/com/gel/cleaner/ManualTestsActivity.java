@@ -3172,6 +3172,8 @@ private void lab16ThermalSnapshot() {
 // LAB 17 — GEL Auto Battery Reliability Evaluation
 // SNAPSHOT-BASED • SAFE • NO STRESS
 // ============================================================
+// NOTE (GEL RULE): Paste-ready cell / no manual edits.
+// ============================================================
 private void lab17RunAuto() {
 
     logLine();
@@ -3185,54 +3187,103 @@ private void lab17RunAuto() {
             // ------------------------------------------------------------
             // 1) Battery snapshot
             // ------------------------------------------------------------
-            float pct  = getCurrentBatteryPercent();
-            float temp = getBatteryTemperature();
-            float volt = getBatteryVoltage_mV();
+            final float pct  = getCurrentBatteryPercent();
+            final float temp = getBatteryTemperature();
+            final float volt = getBatteryVoltage_mV();
 
             if (pct < 20f) {
-                ui.post(() ->
-                        logError("Battery too low for evaluation (<20%)."));
+                ui.post(() -> logError("Battery too low for evaluation (<20%)."));
                 return;
             }
 
             // ------------------------------------------------------------
             // 2) Thermal snapshot
             // ------------------------------------------------------------
-            Map<String, Float> zones = readThermalZones();
+            final Map<String, Float> zones = readThermalZones();
 
-            Float cpu = pickZone(zones, "cpu", "soc");
-            Float gpu = pickZone(zones, "gpu");   // ✅ ADD ONLY
-            Float batt = temp;
+            final Float cpu = pickZone(zones, "cpu", "soc");
+            final Float gpu = pickZone(zones, "gpu");
 
             // ------------------------------------------------------------
-            // 3) Scoring (SAFE HEURISTICS)
+            // 3) Scoring (SAFE HEURISTICS) + Diagnostics
             // ------------------------------------------------------------
             int score = 100;
 
-            if (temp > 45f) score -= 15;
-            if (temp > 55f) score -= 25;
+            int pBattTemp = 0;
+            int pCpuTemp  = 0;
+            int pGpuTemp  = 0;
+            int pVolt     = 0;
 
+            // Battery temp penalties
+            if (temp > 55f)      pBattTemp = 25;
+            else if (temp > 45f) pBattTemp = 15;
+
+            // CPU temp penalties
             if (cpu != null) {
-                if (cpu > 70f) score -= 15;
-                if (cpu > 85f) score -= 25;
+                if (cpu > 85f)      pCpuTemp = 25;
+                else if (cpu > 70f) pCpuTemp = 15;
             }
 
-            // 🔧 ADD ONLY — GPU contribution (non-dominant, safe)
+            // GPU temp penalties (non-dominant, safe)
             if (gpu != null) {
-                if (gpu > 70f) score -= 3;
-                if (gpu > 80f) score -= 6;
+                if (gpu > 80f)      pGpuTemp = 6;
+                else if (gpu > 70f) pGpuTemp = 3;
             }
 
-            if (volt < 3600f) score -= 10;
-            if (volt < 3400f) score -= 20;
+            // Voltage penalties
+            if (volt > 0f) {
+                if (volt < 3400f)      pVolt = 20;
+                else if (volt < 3600f) pVolt = 10;
+            }
 
+            score -= (pBattTemp + pCpuTemp + pGpuTemp + pVolt);
             if (score < 0) score = 0;
 
             final int fScore = score;
             final String category =
-                    (score >= 85) ? "Strong" :
-                    (score >= 70) ? "Normal" :
+                    (fScore >= 85) ? "Strong" :
+                    (fScore >= 70) ? "Normal" :
                     "Weak";
+
+            // ------------------------------------------------------------
+            // 3b) Optional LAB14 context (if available)
+            // ------------------------------------------------------------
+            final float lab14Health = getLastLab14HealthScore();     // -1 if unknown
+            final int   agingIndex  = getLastLab14AgingIndex();      // -1 if unknown
+
+            // Build reasons (serious diagnostic tone)
+            final StringBuilder reasons = new StringBuilder();
+            if (pBattTemp > 0) reasons.append("• Battery temperature penalty: -").append(pBattTemp).append("%\n");
+            if (pCpuTemp  > 0) reasons.append("• CPU temperature penalty: -").append(pCpuTemp).append("%\n");
+            if (pGpuTemp  > 0) reasons.append("• GPU temperature penalty: -").append(pGpuTemp).append("%\n");
+            if (pVolt     > 0) reasons.append("• Voltage stability penalty: -").append(pVolt).append("%\n");
+
+            final boolean hasReasons = reasons.length() > 0;
+
+            // Explanation (health vs reliability symmetry)
+            final String explanation;
+            if (lab14Health > 0f) {
+
+                if (fScore >= Math.round(lab14Health)) {
+                    // Reliability >= Health
+                    explanation =
+                            "Explanation: Using LAB14 stress test data and aging indicators, " +
+                            "LAB17 confirms that your battery is currently fully reliable and operating in excellent condition " +
+                            "(100% reliability reflects real-time stability).";
+                } else {
+                    // Reliability < Health  (mandatory symmetric message)
+                    explanation =
+                            "Explanation: LAB14 indicates good long-term battery health, however LAB17 detected reduced real-time reliability " +
+                            "under current conditions. This points to a temporary performance/stability factor (thermal, voltage, or load-related) " +
+                            "rather than permanent aging.";
+                }
+
+            } else {
+                // No LAB14 context available
+                explanation =
+                        "Explanation: This score reflects current operational reliability based on a safe snapshot (temperature + voltage stability). " +
+                        "Run LAB14 for full health/aging correlation.";
+            }
 
             // ------------------------------------------------------------
             // 4) UI OUTPUT
@@ -3246,19 +3297,20 @@ private void lab17RunAuto() {
                 ));
 
                 if (cpu != null) {
-                    logInfo(String.format(
-                            Locale.US,
-                            "CPU temperature: %.1f°C",
-                            cpu
-                    ));
+                    logInfo(String.format(Locale.US, "CPU temperature: %.1f°C", cpu));
                 }
 
                 if (gpu != null) {
-                    logInfo(String.format(
-                            Locale.US,
-                            "GPU temperature: %.1f°C",
-                            gpu
-                    ));
+                    logInfo(String.format(Locale.US, "GPU temperature: %.1f°C", gpu));
+                }
+
+                // Optional LAB14 correlation display
+                if (lab14Health > 0f) {
+                    logLine();
+                    logInfo(String.format(Locale.US, "LAB14 Health Score (reference): %.0f%%", lab14Health));
+                    if (agingIndex >= 0) {
+                        logInfo(String.format(Locale.US, "LAB14 Aging Index (reference): %d/100", agingIndex));
+                    }
                 }
 
                 logLine();
@@ -3268,12 +3320,21 @@ private void lab17RunAuto() {
                         fScore, category
                 ));
 
+                logInfo(explanation);
+
+                if (hasReasons) {
+                    logLine();
+                    logInfo("Reliability deductions (diagnostic breakdown):");
+                    for (String line : reasons.toString().split("\n")) {
+                        if (line.trim().length() > 0) logInfo(line);
+                    }
+                }
+
                 printHealthCheckboxMap(category);
             });
 
         } catch (Throwable t) {
-            ui.post(() ->
-                    logError("LAB 17 failed: " + t.getMessage()));
+            ui.post(() -> logError("LAB 17 failed: " + t.getMessage()));
         }
 
     }).start();
@@ -3292,6 +3353,28 @@ private float getBatteryVoltage_mV() {
         return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
     } catch (Throwable t) {
         return 0f;
+    }
+}
+
+// ============================================================
+// OPTIONAL LAB14 CONTEXT (SAFE • NO HARD DEPENDENCY)
+// Store these from LAB14 if/when available.
+// ============================================================
+private float getLastLab14HealthScore() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getFloat("lab14_final_health_score", -1f); // expected 0..100
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+private int getLastLab14AgingIndex() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getInt("lab14_aging_index", -1); // expected 0..100
+    } catch (Throwable t) {
+        return -1;
     }
 }
     

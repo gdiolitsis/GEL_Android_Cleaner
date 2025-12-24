@@ -3904,460 +3904,239 @@ private void lab15ChargingSystemSmart() {
 }
 
 // ============================================================
-// LAB 16 - Thermal Snapshot
-// GEL Universal Edition â€” Internals + Peripherals + Root-Aware
-// READ-ONLY â€¢ SNAPSHOT â€¢ SAFE
+// LAB 16 — GEL Thermal Snapshot
+// Internal + Peripherals • Root Aware • Visual Clean
 // ============================================================
 private void lab16ThermalSnapshot() {
 
     logLine();
-    logInfo("LAB 16 â€” Thermal Snapshot (ASCII thermal map)");
+    logInfo("LAB 16 — Thermal Snapshot (GEL)");
 
     // ------------------------------------------------------------
-    // 1. Read generic thermal zones
+    // INTERNAL THERMAL
     // ------------------------------------------------------------
-    Map<String, Float> zones = readThermalZones();
+    String internal = buildThermalInternalReport();
+    printThermalBlockWithGreenValues(internal);
 
     // ------------------------------------------------------------
-    // 2. Battery ALWAYS from BatteryManager
+    // PERIPHERALS / HARDWARE THERMAL
     // ------------------------------------------------------------
-    float batt = getBatteryTemperature();
+    String peripherals = buildThermalInfo();
+    printThermalBlockWithGreenValues(peripherals);
 
-    if (zones == null || zones.isEmpty()) {
-        logWarn("Device exposes NO thermal zones. Printing battery only.");
-        printZoneAscii("Battery", batt);
-        logOk("Lab 16 finished.");
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // 3. Auto-detect main zones
-    // ------------------------------------------------------------
-    Float cpu  = pickZone(zones, "cpu", "cpu-therm", "big", "little", "tsens", "mtktscpu");
-    Float gpu  = pickZone(zones, "gpu", "gpu-therm", "gpuss", "mtkgpu");
-    Float skin = pickZone(zones, "skin", "xo-therm", "shell", "surface");
-    Float pmic = pickZone(zones, "pmic", "pmic-therm", "power-thermal", "charger", "chg");
-
-    logOk("Thermal Zones found: " + zones.size());
-
-    // ------------------------------------------------------------
-    // 4. ASCII SNAPSHOT MAP
-    // ------------------------------------------------------------
-    if (cpu != null)  printZoneAscii("CPU", cpu);
-    if (gpu != null)  printZoneAscii("GPU", gpu);
-
-    printZoneAscii("Battery", batt); // ALWAYS
-
-    if (skin != null) printZoneAscii("Skin", skin);
-    if (pmic != null) printZoneAscii("PMIC", pmic);
-
-    // ------------------------------------------------------------
-    // 5. HARDWARE SUMMARY (Internals + Peripherals)
-    // ------------------------------------------------------------
     logLine();
-    appendHtml("<b>Hardware Thermal Summary</b>");
-    appendHtml("<small><tt>" + escape(buildThermalInfo()) + "</tt></small>");
-
-    // ------------------------------------------------------------
-    // 6. ROOT-ENHANCED INTERNAL VIEW (if available)
-    // ------------------------------------------------------------
-    if (isRooted) {
-        logLine();
-        appendHtml("<b>Advanced Thermal (Root)</b>");
-        appendHtml("<small><tt>" + escape(buildThermalInternalReport()) + "</tt></small>");
-    } else {
-        logInfo("Advanced Info: For detailed thermal and cooling information, requires root access.");
-    }
-
-    logOk("Lab 16 finished.");
+    logOk("LAB 16 finished.");
 }
 
 // ============================================================
-// ASCII BAR (100 chars â€” monospace via HTML)
+// LAB 17 — GEL Auto Battery Reliability Evaluation
+// SNAPSHOT-BASED • SAFE • NO STRESS
 // ============================================================
-private void printZoneAscii(String label, float t) {
-
-    String color;
-    if (t < 45f)       color = "ðŸŸ©";
-    else if (t < 60f)  color = "ðŸŸ¨";
-    else               color = "ðŸŸ¥";
-
-    float maxT = 80f;
-    float pct  = Math.min(1f, t / maxT);
-    int bars   = (int) (pct * 100);
-
-    StringBuilder sb = new StringBuilder(100);
-    for (int i = 0; i < bars; i++) sb.append("â–ˆ");
-    while (sb.length() < 100) sb.append(" ");
-
-    logInfo(label + ": " + color + " " + String.format(Locale.US, "%.1fÂ°C", t));
-    appendHtml("<small><small><tt>" + escape(sb.toString()) + "</tt></small></small>");
-}
-
-// ===================================================================
-// THERMAL SENSORS â€” INTERNAL (Human Readable, Root-Enhanced)
-// ===================================================================
-private String buildThermalInternalReport() {
-
-    StringBuilder sb = new StringBuilder();
-    sb.append("THERMAL SENSORS (INTERNAL)\n");
-    sb.append("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
-
-    File thermalDir = new File("/sys/class/thermal");
-    if (!thermalDir.exists() || !thermalDir.isDirectory()) {
-        sb.append("Thermal sensors not available on this device.\n");
-        return sb.toString();
-    }
-
-    File[] zones = thermalDir.listFiles((d, n) -> n.startsWith("thermal_zone"));
-    if (zones == null || zones.length == 0) {
-        sb.append("No thermal zones detected.\n");
-        return sb.toString();
-    }
-
-    for (File z : zones) {
-        try {
-            String type = readFirstLineSafe(new File(z, "type"));
-            long milli  = readLongSafe(new File(z, "temp"));
-            if (type == null || milli == Long.MIN_VALUE) continue;
-
-            float c = milli / 1000f;
-            if (!isValidTemp(c)) continue;
-
-            sb.append(z.getName())
-              .append(" [").append(type).append("]\n")
-              .append("  Temp : ")
-              .append(String.format(Locale.US, "%.1fÂ°C", c))
-              .append("\n");
-
-            // Trip points
-            for (int i = 0; i < 10; i++) {
-                String tp  = readFirstLineSafe(new File(z, "trip_point_" + i + "_temp"));
-                String tpt = readFirstLineSafe(new File(z, "trip_point_" + i + "_type"));
-                if (tp.isEmpty() || tpt.isEmpty()) break;
-
-                float tc = Float.parseFloat(tp) / 1000f;
-                sb.append("  Trip ").append(i)
-                  .append(" (").append(tpt).append(") : ")
-                  .append(String.format(Locale.US, "%.1fÂ°C", tc))
-                  .append("\n");
-            }
-            sb.append("\n");
-
-        } catch (Throwable ignore) {}
-    }
-
-    return sb.toString();
-}
-
-// ===================================================================
-// FINAL HARDWARE SUMMARY (Internals + Peripherals)
-// ===================================================================
-private String buildThermalInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    ThermalGroupReading batteryMain  = new ThermalGroupReading();
-    ThermalGroupReading batteryShell = new ThermalGroupReading();
-    ThermalGroupReading pmic         = new ThermalGroupReading();
-    ThermalGroupReading charger      = new ThermalGroupReading();
-    ThermalGroupReading modemMain    = new ThermalGroupReading();
-    ThermalGroupReading modemAux     = new ThermalGroupReading();
-
-    ThermalSummary summary = scanThermalHardware(
-            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
-    );
-
-    applyThermalFallbacks(
-            batteryMain, batteryShell, pmic, charger, modemMain, modemAux
-    );
-
-    if (summary != null) {
-        sb.append(String.format(Locale.US,
-                "Thermal Zones     : %d\n", summary.zoneCount));
-        sb.append(String.format(Locale.US,
-                "Cooling Devices   : %d%s\n\n",
-                summary.coolingDeviceCount,
-                summary.coolingDeviceCount == 0
-                        ? " (passive cooling only)"
-                        : ""));
-    }
-
-    sb.append("Hardware Thermal Systems\n");
-    sb.append("================================\n");
-    sb.append(formatThermalLine("Main Modem", modemMain));
-    sb.append(formatThermalLine("Secondary Modem", modemAux));
-    sb.append(formatThermalLine("Main Battery", batteryMain));
-    sb.append(formatThermalLine("Battery Shell", batteryShell));
-    sb.append(formatThermalLine("Charger Thermal", charger));
-    sb.append(formatThermalLine("PMIC Thermal", pmic));
-    sb.append("\n");
-
-    sb.append("Hardware Cooling Systems\n");
-    sb.append("================================\n");
-    appendHardwareCoolingDevices(sb);
-
-    return sb.toString();
-}
-
+// NOTE (GEL RULE): Paste-ready cell / no manual edits.
 // ============================================================
-// LAB 17 â€” GEL AUTO Battery Reliability Evaluation
-// Premium Diagnostic Edition (FINAL FULL BLOCK)
-// ============================================================
-
 private void lab17RunAuto() {
 
-logLine();  
-logInfo("17. GEL Auto Battery Reliability Evaluation");  
-logInfo("GEL Battery Reliability Evaluation started.");  
-logLine();  
+    logLine();
+    logInfo("LAB 17 — GEL Auto Battery Reliability Evaluation");
+    logLine();
 
-new Thread(() -> {  
+    new Thread(() -> {
 
-    try {  
+        try {
 
-        // ============================================================  
-        // 1. STRESS TEST (LAB 14 CORE)  
-        // ============================================================  
-        float startPct = getCurrentBatteryPercent();  
-        if (startPct < 50f) {  
-            ui.post(() -> logError("Battery <50%. Please charge to run automatic evaluation."));  
-            return;  
-        }  
+            // ------------------------------------------------------------
+            // 1) Battery snapshot
+            // ------------------------------------------------------------
+            final float pct  = getCurrentBatteryPercent();
+            final float temp = getBatteryTemperature();
+            final float volt = getBatteryVoltage_mV();
 
-        ui.post(() -> {  
-            logInfo("â–¶ Running Stress Test (Lab 15)...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 32%");  
-        });  
+            if (pct < 20f) {
+                ui.post(() -> logError("Battery too low for evaluation (<20%)."));
+                return;
+            }
 
-        float before = getCurrentBatteryPercent();  
-        long t0 = SystemClock.elapsedRealtime();  
+            // ------------------------------------------------------------
+            // 2) Thermal snapshot
+            // ------------------------------------------------------------
+            final Map<String, Float> zones = readThermalZones();
 
-        ui.post(this::applyMaxBrightnessAndKeepOn);  
-        startCpuBurn_C_Mode();  
+            final Float cpu = pickZone(zones, "cpu", "soc");
+            final Float gpu = pickZone(zones, "gpu");
 
-        Thread.sleep(60_000);   // Stress load on background thread  
+            // ------------------------------------------------------------
+            // 3) Scoring (SAFE HEURISTICS) + Diagnostics
+            // ------------------------------------------------------------
+            int score = 100;
 
-        stopCpuBurn();  
-        ui.post(this::restoreBrightnessAndKeepOn);  
+            int pBattTemp = 0;
+            int pCpuTemp  = 0;
+            int pGpuTemp  = 0;
+            int pVolt     = 0;
 
-        float after = getCurrentBatteryPercent();  
-        long t1 = SystemClock.elapsedRealtime();  
+            // Battery temp penalties
+            if (temp > 55f)      pBattTemp = 25;
+            else if (temp > 45f) pBattTemp = 15;
 
-        float drop   = before - after;  
-        float perHour = (drop * 3600000f) / (t1 - t0);  
-        if (perHour < 0f) perHour = 0f;  
-        int drain_mA = (int)(perHour * 50);  
-        if (drain_mA < 0) drain_mA = 0;  
+            // CPU temp penalties
+            if (cpu != null) {
+                if (cpu > 85f)      pCpuTemp = 25;
+                else if (cpu > 70f) pCpuTemp = 15;
+            }
 
-        ui.post(() -> {  
-            logInfo("â–¶ Calculating drain rate...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘] 85%");  
-        });  
+            // GPU temp penalties (non-dominant, safe)
+            if (gpu != null) {
+                if (gpu > 80f)      pGpuTemp = 6;
+                else if (gpu > 70f) pGpuTemp = 3;
+            }
 
-        // ============================================================  
-        // 2. THERMAL ZONES (LAB 16 STYLE)  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("");  
-            logInfo("â–¶ Running Thermal Zones (Lab 16)...");  
-            logInfo("[â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘] 68%");  
-        });  
+            // Voltage penalties
+            if (volt > 0f) {
+                if (volt < 3400f)      pVolt = 20;
+                else if (volt < 3600f) pVolt = 10;
+            }
 
-        Map<String,Float> z0 = readThermalZones();  
-        Thread.sleep(1500);  
-        Map<String,Float> z1 = readThermalZones();  
+            score -= (pBattTemp + pCpuTemp + pGpuTemp + pVolt);
+            if (score < 0) score = 0;
 
-        Float cpu0  = pickZone(z0,"cpu","soc","big","little");  
-        Float cpu1  = pickZone(z1,"cpu","soc","big","little");  
-        Float batt0 = pickZone(z0,"battery","batt","bat");  
-        Float batt1 = pickZone(z1,"battery","batt","bat");  
+            final int fScore = score;
+            final String category =
+                    (fScore >= 85) ? "Strong" :
+                    (fScore >= 70) ? "Normal" :
+                    "Weak";
 
-        float dCPU  = (cpu0  != null && cpu1  != null) ? (cpu1  - cpu0)  : 0f;  
-        float dBATT = (batt0 != null && batt1 != null) ? (batt1 - batt0) : 0f;  
+            // ------------------------------------------------------------
+            // 3b) Optional LAB14 context (if available)
+            // ------------------------------------------------------------
+            final float lab14Health = getLastLab14HealthScore();     // -1 if unknown
+            final int   agingIndex  = getLastLab14AgingIndex();      // -1 if unknown
 
-        // ============================================================  
-        // 3. VOLTAGE STABILITY  
-        // ============================================================  
-        ui.post(() -> logInfo("â–¶ Calculating voltage stability..."));  
-        float v0 = getBatteryVoltage_mV();  
-        Thread.sleep(1500);  
-        float v1 = getBatteryVoltage_mV();  
-        float dv = Math.abs(v1 - v0);  
+            // Build reasons (serious diagnostic tone)
+            final StringBuilder reasons = new StringBuilder();
+            if (pBattTemp > 0) reasons.append("• Battery temperature penalty: -").append(pBattTemp).append("%\n");
+            if (pCpuTemp  > 0) reasons.append("• CPU temperature penalty: -").append(pCpuTemp).append("%\n");
+            if (pGpuTemp  > 0) reasons.append("• GPU temperature penalty: -").append(pGpuTemp).append("%\n");
+            if (pVolt     > 0) reasons.append("• Voltage stability penalty: -").append(pVolt).append("%\n");
 
-        // ============================================================  
-        // 4. CAPACITY ESTIMATION + PMIC  
-        // ============================================================  
-        ui.post(() -> {  
-            logInfo("â–¶ Calculating thermal rise...");  
-            logInfo("â–¶ Calculating PMIC behavior...");  
-            logInfo("â–¶ Calculating discharge curve...");  
-            logInfo("â–¶ Calculating estimated real capacity...");  
-            logInfo("â–¶ Getting device information...");  
-        });  
+            final boolean hasReasons = reasons.length() > 0;
 
-        int factory = getFactoryCapacity_mAh();  
-        if (factory <= 0) factory = 5000;  
+            // Explanation (health vs reliability symmetry)
+            final String explanation;
+            if (lab14Health > 0f) {
 
-        float estimatedCapacity_mAh =  
-                factory * (100f / (100f + perHour));  
-        if (estimatedCapacity_mAh > factory)  
-            estimatedCapacity_mAh = factory;  
+                if (fScore >= Math.round(lab14Health)) {
+                    // Reliability >= Health
+                    explanation =
+                            "Explanation: Using LAB14 stress test data and aging indicators, " +
+                            "LAB17 confirms that your battery is currently fully reliable and operating in excellent condition " +
+                            "(100% reliability reflects real-time stability).";
+                } else {
+                    // Reliability < Health  (mandatory symmetric message)
+                    explanation =
+                            "Explanation: LAB14 indicates good long-term battery health, however LAB17 detected reduced real-time reliability " +
+                            "under current conditions. This points to a temporary performance/stability factor (thermal, voltage, or load-related) " +
+                            "rather than permanent aging.";
+                }
 
-        // ============================================================  
-        // 5. SCORING ENGINE  
-        // ============================================================  
-        int score = 100;  
+            } else {
+                // No LAB14 context available
+                explanation =
+                        "Explanation: This score reflects current operational reliability based on a safe snapshot (temperature + voltage stability). " +
+                        "Run LAB14 for full health/aging correlation.";
+            }
 
-        // drain penalty  
-        if (perHour > 20f)       score -= 30;  
-        else if (perHour > 15f)  score -= 20;  
-        else if (perHour > 10f)  score -= 10;  
+            // ------------------------------------------------------------
+            // 4) UI OUTPUT
+            // ------------------------------------------------------------
+            ui.post(() -> {
 
-        // thermal penalty (CPU)  
-        if (dCPU > 25f)          score -= 25;  
-        else if (dCPU > 15f)     score -= 15;  
-        else if (dCPU > 10f)     score -= 8;  
+                logInfo(String.format(
+                        Locale.US,
+                        "Battery: %.1f%% | %.1f°C | %.0f mV",
+                        pct, temp, volt
+                ));
 
-        // thermal penalty (BATT)  
-        if (dBATT > 10f)         score -= 20;  
-        else if (dBATT > 5f)     score -= 10;  
+                if (cpu != null) {
+                    logInfo(String.format(Locale.US, "CPU temperature: %.1f°C", cpu));
+                }
 
-        // voltage penalty  
-        if (dv > 45f)            score -= 20;  
-        else if (dv > 30f)       score -= 10;  
-        else if (dv > 20f)       score -= 5;  
+                if (gpu != null) {
+                    logInfo(String.format(Locale.US, "GPU temperature: %.1f°C", gpu));
+                }
 
-        // capacity penalty  
-        float pctHealth = (estimatedCapacity_mAh / factory) * 100f;  
-        if (pctHealth < 60f)     score -= 25;  
-        else if (pctHealth < 70f)score -= 15;  
-        else if (pctHealth < 80f)score -= 8;  
+                // Optional LAB14 correlation display
+                if (lab14Health > 0f) {
+                    logLine();
+                    logInfo(String.format(Locale.US, "LAB14 Health Score (reference): %.0f%%", lab14Health));
+                    if (agingIndex >= 0) {
+                        logInfo(String.format(Locale.US, "LAB14 Aging Index (reference): %d/100", agingIndex));
+                    }
+                }
 
-        if (score < 0)   score = 0;  
-        if (score > 100) score = 100;  
+                logLine();
+                logOk(String.format(
+                        Locale.US,
+                        "Final Battery Reliability Score: %d%% (%s)",
+                        fScore, category
+                ));
 
-        // voltage label  
-        String voltageLabel;  
-        if (dv <= 15f)       voltageLabel = "Excellent";  
-        else if (dv <= 30f)  voltageLabel = "OK";  
-        else                 voltageLabel = "Unstable";  
+                logInfo(explanation);
 
-        // thermal label  
-        String thermalLabel;  
-        if (dCPU <= 10f && dBATT <= 5f)  
-            thermalLabel = "OK";  
-        else if (dCPU <= 18f && dBATT <= 8f)  
-            thermalLabel = "Warm";  
-        else  
-            thermalLabel = "Hot";  
+                if (hasReasons) {
+                    logLine();
+                    logInfo("Reliability deductions (diagnostic breakdown):");
+                    for (String line : reasons.toString().split("\n")) {
+                        if (line.trim().length() > 0) logInfo(line);
+                    }
+                }
 
-        // cycle behaviour  
-        String cycleLabel;  
-        if (perHour < 10f && dv < 20f)  
-            cycleLabel = "Strong (stable discharge curve)";  
-        else if (perHour < 15f)  
-            cycleLabel = "Normal (minor fluctuations)";  
-        else  
-            cycleLabel = "Stressed (irregular discharge curve)";  
+                printHealthCheckboxMap(category);
+            });
 
-        // category  
-        String category;  
-        if (score >= 90)      category = "Strong";  
-        else if (score >= 80) category = "Excellent";  
-        else if (score >= 70) category = "Very good";  
-        else if (score >= 60) category = "Normal";  
-        else                  category = "Weak";  
+        } catch (Throwable t) {
+            ui.post(() -> logError("LAB 17 failed: " + t.getMessage()));
+        }
 
-        // ============================================================  
-        // 6. FINAL UI OUTPUT  
-        // ============================================================  
-        final float f_before   = before;  
-        final float f_after    = after;  
-        final float f_drop     = drop;  
-        final float f_perHour  = perHour;  
-        final int   f_drain    = drain_mA;  
-        final float f_dCPU     = dCPU;  
-        final float f_dBATT    = dBATT;  
-        final float f_dv       = dv;  
-        final float f_cap      = estimatedCapacity_mAh;  
-        final int   f_factory  = factory;  
-        final int   f_score    = score;  
-        final String f_voltLbl = voltageLabel;  
-        final String f_therm   = thermalLabel;  
-        final String f_cycle   = cycleLabel;  
-        final String f_cat     = category;  
-
-        ui.post(() -> {  
-            logLine();  
-            logInfo("GEL Battery Intelligence Evaluation");  
-            logLine();  
-
-            logInfo(String.format(Locale.US,  
-                    "Stress window: %.1f%% â†’ %.1f%% (drop %.2f%%)",  
-                    f_before, f_after, f_drop));  
-
-            logInfo(String.format(Locale.US,  
-                    "Drain rate under load: %.1f %%/hour", f_perHour));  
-
-            logInfo(String.format(Locale.US,  
-                    "1. Stress Drain Rate: %d mA", f_drain));  
-
-            logInfo(String.format(Locale.US,  
-                    "2. Estimated Real Capacity: %.0f mAh (factory: %d mAh)",  
-                    f_cap, f_factory));  
-
-            logInfo(String.format(Locale.US,  
-                    "3. Voltage Stability: %s (Î” %.1f mV)",  
-                    f_voltLbl, f_dv));  
-
-            logInfo(String.format(Locale.US,  
-                    "4. Thermal Rise: %s (CPU +%.1fÂ°C, BATT +%.1fÂ°C)",  
-                    f_therm, f_dCPU, f_dBATT));  
-
-            logInfo(String.format(Locale.US,  
-                    "5. Cycle Behavior: %s", f_cycle));  
-
-            logLine();  
-            logOk(String.format(Locale.US,  
-                    "Final Battery Health Score: %d%% (%s)",  
-                    f_score, f_cat));  
-
-            // Checkbox map with NEON âœ” and white labels  
-            appendHtml("âœ” <font color='#39FF14'>Strong</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Excellent</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Very good</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Normal</font>");  
-            appendHtml("â˜ <font color='#FFFFFF'>Weak</font>");  
-        });  
-
-    } catch (Exception e) {  
-        ui.post(() -> logError("Lab 17 error: " + e.getMessage()));  
-    }  
-
-}).start();
-
+    }).start();
 }
 
 // ============================================================
-// SUPPORT FUNCTIONS FOR LAB 17 (HELPERS)
+// SUPPORT (SAFE)
 // ============================================================
-
 private float getBatteryVoltage_mV() {
-try {
-IntentFilter f = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-Intent i = registerReceiver(null, f);
-if (i == null) return 0f;
-return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-} catch (Exception e) {
-return 0f;
-}
+    try {
+        Intent i = registerReceiver(
+                null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        );
+        if (i == null) return 0f;
+        return i.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+    } catch (Throwable t) {
+        return 0f;
+    }
 }
 
-private int getFactoryCapacity_mAh() {
-// Generic fallback. You can later replace with per-model DB.
-return 5000;
-}                       
+// ============================================================
+// OPTIONAL LAB14 CONTEXT (SAFE • NO HARD DEPENDENCY)
+// Store these from LAB14 if/when available.
+// ============================================================
+private float getLastLab14HealthScore() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getFloat("lab14_final_health_score", -1f); // expected 0..100
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+private int getLastLab14AgingIndex() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getInt("lab14_aging_index", -1); // expected 0..100
+    } catch (Throwable t) {
+        return -1;
+    }
+}
     
 // ============================================================ // ============================================================
 // LABS 18â€“21: STORAGE & PERFORMANCE

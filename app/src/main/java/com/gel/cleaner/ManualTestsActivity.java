@@ -2757,16 +2757,15 @@ if (gpuTempEnd != null) {
                 ));
 
                 if (validDrain) {
-                    logInfo("✅ Drain rate:");
-logOk(String.format(
-        Locale.US,
-        "   %.0f mAh/hour (counter-based)",
-        mahPerHour
-));
-                    ));
-                } else {
-                    logWarn("⚠️ Drain data invalid (counter anomaly or no drop).");
-                }
+    logInfo("✅ Drain rate:");
+    logOk(String.format(
+            Locale.US,
+            "   %.0f mAh/hour (counter-based)",
+            mahPerHour
+    ));
+} else {
+    logWarn("⚠️ Drain data invalid (counter anomaly or no drop).");
+}
 
                 // Single confidence (HERE ONLY)
                 logLine();

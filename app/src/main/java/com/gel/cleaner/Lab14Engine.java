@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.Locale;
 
 /**
  * ============================================================
@@ -29,11 +28,13 @@ import java.util.Locale;
  *
  * Author: GDiolitsis Engine Lab (GEL)
  * ============================================================
+ *
+ * NOTE (GEL RULE): Ό,τι σου στέλνω είναι έτοιμο copy-paste — χωρίς “μπλα μπλα”.
  */
 public final class Lab14Engine {
 
     // ------------------------------------------------------------
-    // PREFS (shared with Activity, but isolated logic)
+    // PREFS (single storage for runs + last drains)
     // ------------------------------------------------------------
     private static final String LAB14_PREFS = "lab14_prefs";
     private static final String KEY_LAB14_RUNS = "lab14_run_count";
@@ -122,7 +123,7 @@ public final class Lab14Engine {
 
             s.cycleCount = readBatteryCycleCountRoot();
 
-            if (s.chargeFullMah > 0) {
+            if (s.chargeFullMah > 0 || s.chargeNowMah > 0 || s.chargeDesignMah > 0) {
                 s.source = "OEM (root)";
             }
         }
@@ -159,25 +160,44 @@ public final class Lab14Engine {
     }
 
     // ============================================================
-    // CONFIDENCE ENGINE (SINGLE SOURCE)
+    // CONFIDENCE ENGINE (RUNS-BASED, 1/2/3+)
     // ============================================================
-    public static final class ConfidenceResult {
-        public int percent;
-        public int validRuns;
+    public enum ConfidenceTier {
+        NONE,
+        PRELIMINARY, // 1 run
+        MEDIUM,      // 2 runs
+        HIGH         // 3+ runs (certainty)
     }
 
+    public static final class ConfidenceResult {
+        public int percent;       // kept for existing gating (e.g., >=70)
+        public int validRuns;     // number of stored valid drains used
+        public ConfidenceTier tier;
+        public double relVar;     // 0.. (only meaningful if validRuns>=2)
+    }
+
+    /**
+     * Confidence philosophy (LOCKED):
+     * 1 run  -> Preliminary (looks OK)
+     * 2 runs -> Medium (opinion forming)
+     * 3+     -> High (certainty) + variance refines %
+     */
     public ConfidenceResult computeConfidence() {
 
         ConfidenceResult r = new ConfidenceResult();
+        r.percent = 0;
+        r.validRuns = 0;
+        r.tier = ConfidenceTier.NONE;
+        r.relVar = -1;
 
         try {
             SharedPreferences sp =
                     ctx.getSharedPreferences(LAB14_PREFS, Context.MODE_PRIVATE);
 
             double[] v = new double[]{
-                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, 0)),
-                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, 0)),
-                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, 0))
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
             };
 
             double sum = 0;
@@ -191,12 +211,40 @@ public final class Lab14Engine {
 
             r.validRuns = n;
 
-            if (n < 2) {
-                r.percent = 50;
+            // ----------------------------------------------------
+            // Runs-based tiers (LOCKED)
+            // ----------------------------------------------------
+            if (n <= 0) {
+                r.tier = ConfidenceTier.NONE;
+                r.percent = 0;
                 return r;
             }
 
+            if (n == 1) {
+                r.tier = ConfidenceTier.PRELIMINARY;
+                r.percent = 50; // informational only
+                return r;
+            }
+
+            if (n == 2) {
+                r.tier = ConfidenceTier.MEDIUM;
+                r.percent = 70; // opinion-forming (meets aging gate)
+                // compute relVar too (for informational use)
+            } else {
+                r.tier = ConfidenceTier.HIGH;
+                r.percent = 90; // certainty baseline (variance may refine)
+            }
+
+            // ----------------------------------------------------
+            // Variance (consistency) — refines percent for 2+ runs
+            // ----------------------------------------------------
             double mean = sum / n;
+            if (mean <= 0) {
+                // keep tier-based % as-is
+                r.relVar = -1;
+                return r;
+            }
+
             double var = 0;
             for (double d : v) {
                 if (d > 0) var += (d - mean) * (d - mean);
@@ -204,19 +252,120 @@ public final class Lab14Engine {
             var /= n;
 
             double rel = Math.sqrt(var) / mean;
+            r.relVar = rel;
 
-            if (rel < 0.05) r.percent = 95;
-            else if (rel < 0.08) r.percent = 90;
-            else if (rel < 0.12) r.percent = 80;
-            else if (rel < 0.18) r.percent = 70;
-            else r.percent = 60;
+            // Variance refinement (LOCKED thresholds)
+            if (n == 2) {
+                // For 2 runs, keep MEDIUM tier, refine 70..80
+                if (rel < 0.08) r.percent = 80;
+                else if (rel < 0.15) r.percent = 75;
+                else r.percent = 70;
+            } else {
+                // 3+ runs, keep HIGH tier, refine 80..95
+                if (rel < 0.08) r.percent = 95;
+                else if (rel < 0.15) r.percent = 90;
+                else r.percent = 80; // still HIGH tier, but unstable conditions
+            }
 
         } catch (Throwable ignore) {
-            r.percent = 50;
+            r.percent = 0;
             r.validRuns = 0;
+            r.tier = ConfidenceTier.NONE;
+            r.relVar = -1;
         }
 
         return r;
+    }
+
+    // ============================================================
+    // VARIANCE CONSISTENCY (NO UI)
+    // ============================================================
+    public enum VarianceTier {
+        NONE,
+        CONSISTENT,
+        MINOR_VARIABILITY,
+        HIGH_VARIABILITY
+    }
+
+    public static final class VarianceResult {
+        public VarianceTier tier;
+        public int validRuns;
+        public double relVar;
+        public String message;
+    }
+
+    public VarianceResult computeVarianceConsistency() {
+
+        VarianceResult out = new VarianceResult();
+        out.tier = VarianceTier.NONE;
+        out.validRuns = 0;
+        out.relVar = -1;
+        out.message = "N/A";
+
+        try {
+            SharedPreferences sp =
+                    ctx.getSharedPreferences(LAB14_PREFS, Context.MODE_PRIVATE);
+
+            double[] vals = new double[]{
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                    Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
+            };
+
+            double sum = 0;
+            int n = 0;
+            for (double v : vals) {
+                if (v > 0) {
+                    sum += v;
+                    n++;
+                }
+            }
+
+            out.validRuns = n;
+
+            if (n < 2) {
+                out.tier = VarianceTier.NONE;
+                out.message = "Not available (requires at least 2 runs).";
+                return out;
+            }
+
+            double mean = sum / n;
+            if (mean <= 0) {
+                out.tier = VarianceTier.NONE;
+                out.message = "Not available (invalid mean).";
+                return out;
+            }
+
+            double var = 0;
+            for (double v : vals) {
+                if (v > 0) var += (v - mean) * (v - mean);
+            }
+            var /= n;
+
+            double std = Math.sqrt(var);
+            double relVar = std / mean;
+
+            out.relVar = relVar;
+
+            if (relVar < 0.08) {
+                out.tier = VarianceTier.CONSISTENT;
+                out.message = "Results are consistent across runs.";
+            } else if (relVar < 0.15) {
+                out.tier = VarianceTier.MINOR_VARIABILITY;
+                out.message = "Minor variability detected between runs.";
+            } else {
+                out.tier = VarianceTier.HIGH_VARIABILITY;
+                out.message = "High variability detected. Run tests under similar conditions for best accuracy.";
+            }
+
+        } catch (Throwable ignore) {
+            out.tier = VarianceTier.NONE;
+            out.validRuns = 0;
+            out.relVar = -1;
+            out.message = "N/A";
+        }
+
+        return out;
     }
 
     // ============================================================
@@ -244,6 +393,7 @@ public final class Lab14Engine {
 
         if (snap.cycleCount > 0
                 && snap.cycleCount <= 20
+                && conf != null
                 && conf.validRuns <= 3) {
 
             p.type = BatteryProfileType.NEW_EARLY_LIFE;
@@ -274,7 +424,7 @@ public final class Lab14Engine {
 
         AgingResult r = new AgingResult();
 
-        if (mahPerHour <= 0 || conf.percent < 70) {
+        if (mahPerHour <= 0 || conf == null || conf.percent < 70) {
             r.severe = false;
             r.description = "Insufficient data for aging evaluation.";
             return r;
@@ -305,7 +455,7 @@ public final class Lab14Engine {
             boolean rooted,
             long cycles
     ) {
-        if (profile.type == BatteryProfileType.NEW_EARLY_LIFE) return 900;
+        if (profile != null && profile.type == BatteryProfileType.NEW_EARLY_LIFE) return 900;
         if (rooted && cycles > 300) return 700;
         return 750;
     }
@@ -332,19 +482,16 @@ public final class Lab14Engine {
                     ctx.getSharedPreferences(LAB14_PREFS, Context.MODE_PRIVATE);
 
             double d1 = Double.longBitsToDouble(
-                    sp.getLong(KEY_LAB14_LAST_DRAIN_1, 0)
+                    sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))
             );
             double d2 = Double.longBitsToDouble(
-                    sp.getLong(KEY_LAB14_LAST_DRAIN_2, 0)
+                    sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))
             );
 
             sp.edit()
-                    .putLong(KEY_LAB14_LAST_DRAIN_3,
-                            Double.doubleToLongBits(d2))
-                    .putLong(KEY_LAB14_LAST_DRAIN_2,
-                            Double.doubleToLongBits(d1))
-                    .putLong(KEY_LAB14_LAST_DRAIN_1,
-                            Double.doubleToLongBits(mahPerHour))
+                    .putLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(d2))
+                    .putLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(d1))
+                    .putLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(mahPerHour))
                     .apply();
 
         } catch (Throwable ignore) {}
@@ -357,6 +504,16 @@ public final class Lab14Engine {
             int runs = sp.getInt(KEY_LAB14_RUNS, 0);
             sp.edit().putInt(KEY_LAB14_RUNS, runs + 1).apply();
         } catch (Throwable ignore) {}
+    }
+
+    public int getRunCount() {
+        try {
+            SharedPreferences sp =
+                    ctx.getSharedPreferences(LAB14_PREFS, Context.MODE_PRIVATE);
+            return sp.getInt(KEY_LAB14_RUNS, 0);
+        } catch (Throwable ignore) {
+            return 0;
+        }
     }
 
     // ============================================================

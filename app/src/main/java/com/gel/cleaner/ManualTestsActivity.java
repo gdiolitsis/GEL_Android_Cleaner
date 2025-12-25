@@ -1166,6 +1166,86 @@ private void restoreBrightnessAndKeepOn() {
     } catch (Throwable ignore) {}
 }
 
+// ===================================================================
+// LAB 14 — CONFIDENCE SCORE (%)
+// Variance-based reliability indicator
+// ===================================================================
+private static final String LAB14_PREFS = "lab14_prefs";
+private static final String KEY_LAB14_RUNS = "lab14_run_count";
+private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
+private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
+private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
+
+private void logLab14VarianceInfo() {
+    int runs = getLab14RunCount();
+    if (runs < 2) return;
+
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
+
+        double[] vals = new double[]{
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
+        };
+
+        double sum = 0;
+        int n = 0;
+        for (double v : vals) {
+            if (v > 0) { sum += v; n++; }
+        }
+        if (n < 2) return;
+
+        double mean = sum / n;
+        double var = 0;
+        for (double v : vals) {
+            if (v > 0) var += (v - mean) * (v - mean);
+        }
+        var /= n;
+
+        double relVar = Math.sqrt(var) / mean;
+
+        logLine();
+        logInfo("Measurement Consistency:");
+
+        if (relVar < 0.08)
+            logOk("Results are consistent across runs.");
+        else if (relVar < 0.15)
+            logWarn("Minor variability detected between runs.");
+        else
+            logWarn("High variability detected. Run tests under similar conditions for best accuracy.");
+
+    } catch (Throwable ignore) {}
+}
+
+private void logLab14Confidence() {
+
+    int runs = getLab14RunCount();
+    logLine();
+
+    if (runs <= 1) {
+        logWarn("Confidence: Preliminary (1 run)");
+        logWarn("For Higher Diagnostic Accuracy, Run This Test 2 More Times, Any Other Day, Under Similar Conditions.");
+    }
+    else if (runs == 2) {
+        logWarn("Confidence: Medium (2 runs)");
+        logWarn("One Additional Run Is Recommended, To Confirm Battery Aging Trend.");
+    }
+    else {
+        logOk("Confidence: High (3+ consistent runs)");
+        logInfo("Battery diagnostic confidence is high.");
+    }
+}
+
+private int getLab14RunCount() {
+    try {
+        return getSharedPreferences(LAB14_PREFS, MODE_PRIVATE)
+                .getInt(KEY_LAB14_RUNS, 0);
+    } catch (Throwable ignore) {
+        return 0;
+    }
+}
+
 // ------------------------------------------------------------
 // CPU / GPU thermal helpers (SAFE, READ-ONLY)
 // ------------------------------------------------------------

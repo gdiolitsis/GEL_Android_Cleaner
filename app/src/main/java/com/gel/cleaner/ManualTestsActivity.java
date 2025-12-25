@@ -382,7 +382,8 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         root.addView(header4);
         root.addView(body4);
 
-        body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test", this::lab14BatteryHealthStressTest));
+        body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test",
+        () -> showLab14PreTestAdvisory(this::lab14BatteryHealthStressTest)));  
         body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));
         body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
         body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
@@ -970,6 +971,102 @@ private void logLabelValue(String label, String value) {
             escape(label) + ": "
                     + "<font color='#39FF14'>" + escape(value) + "</font>"
     );
+}
+
+// ============================================================
+// LAB 14 — PRE-TEST ADVISORY POPUP (GEL NEON)
+// ============================================================
+private void showLab14PreTestAdvisory(Runnable onContinue) {
+
+    try {
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+
+        b.setCancelable(true);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+        // NEON GREEN BACKGROUND + GOLD BORDER
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF39FF14);        // NEON GREEN
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700); // GOLD
+        root.setBackground(bg);
+
+        // ------------------------------------------------------------
+        // TITLE
+        // ------------------------------------------------------------
+        TextView title = new TextView(this);
+        title.setText("Battery Stress Test — Pre-Test Check");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ------------------------------------------------------------
+        // MESSAGE
+        // ------------------------------------------------------------
+        TextView msg = new TextView(this);
+        msg.setText(
+                "For best diagnostic accuracy, it is recommended to run this test " +
+                "after a system restart and a short idle cooldown.\n\n" +
+                "You may continue without restarting, but recent heavy usage " +
+                "can affect the results."
+        );
+        msg.setTextColor(Color.WHITE);
+        msg.setTextSize(14.5f);
+        msg.setLineSpacing(0f, 1.2f);
+        root.addView(msg);
+
+        // ------------------------------------------------------------
+        // CONTINUE BUTTON
+        // ------------------------------------------------------------
+        Button btnContinue = new Button(this);
+        btnContinue.setText("Continue anyway");
+        btnContinue.setAllCaps(false);
+        btnContinue.setTextColor(Color.WHITE);
+        btnContinue.setTextSize(15f);
+        btnContinue.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setColor(0xFF0B5D1E);       // DARK GREEN
+        btnBg.setCornerRadius(dp(14));
+        btnBg.setStroke(dp(2), 0xFFFFD700); // GOLD
+        btnContinue.setBackground(btnBg);
+
+        LinearLayout.LayoutParams lpBtn =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpBtn.setMargins(0, dp(18), 0, 0);
+        btnContinue.setLayoutParams(lpBtn);
+
+        root.addView(btnContinue);
+
+        b.setView(root);
+
+        AlertDialog dlg = b.create();
+        if (dlg.getWindow() != null) {
+            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        btnContinue.setOnClickListener(v -> {
+            dlg.dismiss();
+            if (onContinue != null) onContinue.run();
+        });
+
+        dlg.show();
+
+    } catch (Throwable ignore) {
+        if (onContinue != null) onContinue.run();
+    }
 }
 
 // ------------------------------------------------------------
@@ -2352,6 +2449,8 @@ private String readFirstLine(File file) {
 // ✔ Confidence NOT in intro
 // ✔ Confidence calculated AFTER stress + shown with Aging + Final Score
 // ✔ One confidence only — no contradictions
+//
+// NOTE (GEL RULE): When you ask for full lab, I must return full lab copy-paste.
 // ============================================================
 private void lab14BatteryHealthStressTest() {
 
@@ -2387,11 +2486,11 @@ private void lab14BatteryHealthStressTest() {
         final long cycles     = snapStart.cycleCount;
         final float tempStart = snapStart.temperature;
 
-// ------------------------------------------------------------
-// CPU / GPU thermal snapshot (START)
-// ------------------------------------------------------------
-final Float cpuTempStart = readCpuTempSafe();
-final Float gpuTempStart = readGpuTempSafe();
+        // ------------------------------------------------------------
+        // CPU / GPU thermal snapshot (START)
+        // ------------------------------------------------------------
+        final Float cpuTempStart = readCpuTempSafe();
+        final Float gpuTempStart = readGpuTempSafe();
 
         final int durationSec = LAB14_TOTAL_SECONDS;
         lastSelectedStressDurationSec = durationSec;
@@ -2424,11 +2523,11 @@ final Float gpuTempStart = readGpuTempSafe();
         logInfo("✅ Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
         logLine();
 
-if (cpuTempStart != null)
-    logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
+        if (cpuTempStart != null)
+            logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
 
-if (gpuTempStart != null)
-    logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
+        if (gpuTempStart != null)
+            logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
 
         // ------------------------------------------------------------
         // 3) DIALOG — SAME STYLE AS LAB 15 (EXIT BUTTON)
@@ -2529,7 +2628,7 @@ if (gpuTempStart != null)
         // 4) START STRESS (CPU burn + max brightness)
         // ------------------------------------------------------------
         final long t0 = SystemClock.elapsedRealtime();
-        final String[] dotFrames = { "•", "• •", "• • •" };
+        final String[] dotFrames = {"•", "• •", "• • •"};
 
         applyMaxBrightnessAndKeepOn();
         startCpuBurn_C_Mode();
@@ -2593,24 +2692,24 @@ if (gpuTempStart != null)
                 final long endMah = snapEnd.chargeNowMah;
                 final float tempEnd = snapEnd.temperature;
 
-// ------------------------------------------------------------
-// CPU / GPU thermal snapshot (END)
-// ------------------------------------------------------------
-final Float cpuTempEnd = readCpuTempSafe();
-final Float gpuTempEnd = readGpuTempSafe();
+                // ------------------------------------------------------------
+                // CPU / GPU thermal snapshot (END)
+                // ------------------------------------------------------------
+                final Float cpuTempEnd = readCpuTempSafe();
+                final Float gpuTempEnd = readGpuTempSafe();
 
                 final long dtMs = Math.max(1, SystemClock.elapsedRealtime() - t0);
                 final long drainMah = startMah - endMah;
 
                 final boolean validDrain =
                         drainMah > 0 &&
-                        !(baselineFullMah > 0 && drainMah > (long)(baselineFullMah * 0.30));
+                        !(baselineFullMah > 0 && drainMah > (long) (baselineFullMah * 0.30));
 
                 final double mahPerHour =
                         validDrain ? (drainMah * 3600000.0) / dtMs : -1;
 
                 // ----------------------------------------------------
-                // 6) SAVE RUN + SINGLE CONFIDENCE
+                // 6) SAVE RUN (ENGINE = single source of truth)
                 // ----------------------------------------------------
                 if (validDrain) engine.saveDrainValue(mahPerHour);
                 engine.saveRun();
@@ -2640,7 +2739,7 @@ final Float gpuTempEnd = readGpuTempSafe();
 
                 if (validDrain && conf.percent >= 70 && !Float.isNaN(tempStart) && !Float.isNaN(tempEnd)) {
 
-                    double tempRise = Math.max(0.0, (double)tempEnd - (double)tempStart);
+                    double tempRise = Math.max(0.0, (double) tempEnd - (double) tempStart);
 
                     // index grows with: drain/h, thermal rise, high cycles, low confidence
                     double idx = 0;
@@ -2661,18 +2760,18 @@ final Float gpuTempEnd = readGpuTempSafe();
                         idx += Math.min(15.0, cy / 350.0 * 15.0);
                     }
 
-                    // confidence penalty (0..10)
+                    // consistency penalty (0..10) — NOT a second "confidence"
                     idx += Math.min(10.0, (100 - conf.percent) / 5.0);
 
-                    agingIndex = (int)Math.round(Math.max(0.0, Math.min(100.0, idx)));
+                    agingIndex = (int) Math.round(Math.max(0.0, Math.min(100.0, idx)));
 
                     if (agingIndex < 15) agingInterp = "Excellent (very low aging indicators)";
                     else if (agingIndex < 30) agingInterp = "Good (low aging indicators)";
                     else if (agingIndex < 50) agingInterp = "Moderate (watch trend)";
                     else if (agingIndex < 70) agingInterp = "High (aging signs detected)";
                     else agingInterp = "Severe (strong aging indicators)";
+
                 } else {
-                    // This is where "insufficient data" belongs:
                     agingIndex = -1;
                     agingInterp = "Insufficient data (need stable runs with confidence ≥70%)";
                 }
@@ -2715,22 +2814,18 @@ final Float gpuTempEnd = readGpuTempSafe();
                         else if (cycles >= 250) finalScore -= 6;
                     }
 
-                    // Confidence penalty (single)
-                    if (conf.percent < 70) finalScore -= 12;
-                    else if (conf.percent < 80) finalScore -= 6;
+                    // ----------------------------------------------------
+                    // CPU / GPU thermal contribution (CAPPED, non-dominant)
+                    // ----------------------------------------------------
+                    if (cpuTempEnd != null) {
+                        if (cpuTempEnd >= 85f) finalScore -= 8;
+                        else if (cpuTempEnd >= 75f) finalScore -= 4;
+                    }
 
-// ----------------------------------------------------
-// CPU / GPU thermal contribution (CAPPED, non-dominant)
-// ----------------------------------------------------
-if (cpuTempEnd != null) {
-    if (cpuTempEnd >= 85f) finalScore -= 8;
-    else if (cpuTempEnd >= 75f) finalScore -= 4;
-}
-
-if (gpuTempEnd != null) {
-    if (gpuTempEnd >= 80f) finalScore -= 6;
-    else if (gpuTempEnd >= 70f) finalScore -= 3;
-}
+                    if (gpuTempEnd != null) {
+                        if (gpuTempEnd >= 80f) finalScore -= 6;
+                        else if (gpuTempEnd >= 70f) finalScore -= 3;
+                    }
 
                     // Clamp
                     if (finalScore < 0) finalScore = 0;
@@ -2757,45 +2852,45 @@ if (gpuTempEnd != null) {
                 ));
 
                 if (validDrain) {
-    logInfo("✅ Drain rate:");
-    logOk(String.format(
-            Locale.US,
-            "   %.0f mAh/hour (counter-based)",
-            mahPerHour
-    ));
-} else {
-    logWarn("⚠️ Drain data invalid (counter anomaly or no drop).");
-}
+                    logInfo("✅ Drain rate:");
+                    logOk(String.format(
+                            Locale.US,
+                            "   %.0f mAh/hour (counter-based)",
+                            mahPerHour
+                    ));
+                } else {
+                    logWarn("⚠️ Drain data invalid (counter anomaly or no drop).");
+                }
 
-                // Single confidence (HERE ONLY)
+                // ---- Consistency score (engine) — NOT labeled as "confidence"
                 logLine();
-                logInfo("✅ Confidence Score:");
-logOk(String.format(
-        Locale.US,
-        "   %d%% (%d valid runs)",
-        conf.percent,
-        conf.validRuns
-));
+                logInfo("Measurement Consistency Score:");
+                logOk(String.format(
+                        Locale.US,
+                        "   %d%% (%d valid runs)",
+                        conf.percent,
+                        conf.validRuns
+                ));
 
                 logInfo("✅ Battery profile: " + profile.label);
 
-                // Aging index block (where insufficient data belongs)
+                // Aging index block
                 logLine();
                 if (agingIndex >= 0) {
 
-    logInfo("✅ Battery Aging Index:");
-    logOk("   " + agingIndex + "/100");
+                    logInfo("✅ Battery Aging Index:");
+                    logOk("   " + agingIndex + "/100");
 
-    logInfo("✅ Interpretation:");
-    logOk("   " + agingInterp);
+                    logInfo("✅ Interpretation:");
+                    logOk("   " + agingInterp);
 
-} else {
+                } else {
                     logWarn("⚠️ Battery Aging Index: Insufficient data");
                     logWarn("⚠️ Interpretation: " + agingInterp);
                 }
 
                 logInfo("✅ Aging analysis:");
-logOk("   " + aging.description);
+                logOk("   " + aging.description);
 
                 // Final score block
                 logLine();
@@ -2809,13 +2904,19 @@ logOk("   " + aging.description);
                 // Health checkbox map
                 printHealthCheckboxMap(finalLabel);
 
-                // Extra observation lines (emoji + old style vibes)
+                // Extra observation lines
                 logLine();
                 if (!Float.isNaN(tempEnd))
                     logInfo(String.format(Locale.US, "✅ End temperature: %.1f°C", tempEnd));
                 if (!Float.isNaN(tempStart) && !Float.isNaN(tempEnd))
                     logInfo(String.format(Locale.US, "✅ Thermal rise: +%.1f°C", Math.max(0f, tempEnd - tempStart)));
 
+                // ----------------------------------------------------
+                // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
+                // EXACT logs block you provided (2 more runs / any other day, etc)
+                // ----------------------------------------------------
+                logLab14VarianceInfo();
+                logLab14Confidence();
             }
         });
 

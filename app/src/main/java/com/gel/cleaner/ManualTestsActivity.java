@@ -991,7 +991,7 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+// BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF0E0E0E);          // DEEP BLACK (όχι γκρι)
 bg.setCornerRadius(dp(18));
@@ -1087,10 +1087,15 @@ private void showLab14RunningDialog() {
                     );
             b.setCancelable(false);
 
-            LinearLayout root = new LinearLayout(this);
-            root.setOrientation(LinearLayout.VERTICAL);
-            root.setPadding(dp(24), dp(20), dp(24), dp(18));
-            root.setBackgroundColor(0xFF101010);
+// ============================================================
+// GEL DARK + GOLD POPUP BACKGROUND (LAB 14)
+// ============================================================
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);          // GEL dark
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(3), 0xFFFFD700); // GOLD border
+
+root.setBackground(bg);
 
             TextView title = new TextView(this);
             title.setText("LAB 14 — Running stress test...");
@@ -2754,8 +2759,8 @@ logLine();
                                 " / " + durationSec + " sec"
                 );
 
-                int segSpan = Math.max(1, durationSec / 6);
-                int seg = Math.min(6, elapsed / segSpan);
+                int segSpan = Math.max(1, durationSec / 10);
+                int seg = Math.min(10, elapsed / segSpan);
 
                 if (seg != lastSeg) {
                     lastSeg = seg;
@@ -3092,10 +3097,15 @@ private void lab15ChargingSystemSmart() {
     b.setCancelable(false);
     b.setTitle("LAB 15 - Connect the charger to the device charging port");
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
-    root.setBackgroundColor(0xFF101010);
+    // ============================================================
+// GEL DARK + GOLD POPUP BACKGROUND
+// ============================================================
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);          // GEL dark black
+bg.setCornerRadius(dp(18));      // smooth premium corners
+bg.setStroke(dp(3), 0xFFFFD700); // GOLD border
+
+root.setBackground(bg);
 
     lab15StatusText = new TextView(this);
     lab15StatusText.setText("Waiting for charging connection...");

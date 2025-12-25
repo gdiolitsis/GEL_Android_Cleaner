@@ -991,12 +991,12 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        // NEON GREEN BACKGROUND + GOLD BORDER
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF39FF14);        // NEON GREEN
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700); // GOLD
-        root.setBackground(bg);
+        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF0E0E0E);          // DEEP BLACK (όχι γκρι)
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(3), 0xFFFFD700); // GOLD BORDER
+root.setBackground(bg);
 
         // ------------------------------------------------------------
         // TITLE
@@ -1015,7 +1015,7 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
         TextView msg = new TextView(this);
         msg.setText(
                 "For best diagnostic accuracy, it is recommended to run this test " +
-                "after a system restart and a short idle cooldown.\n\n" +
+                "after a system restart.\n\n" +
                 "You may continue without restarting, but recent heavy usage " +
                 "can affect the results."
         );
@@ -2580,34 +2580,56 @@ private void lab14BatteryHealthStressTest() {
                         ? snapStart.chargeFullMah
                         : -1;
 
-        // ------------------------------------------------------------
-        // 2) LOG HEADER (FULL INFO — LIKE OLD LAB) ✅
-        // ------------------------------------------------------------
-        logLine();
-        logInfo("✅ LAB 14 — Battery Health Stress Test");
-        logInfo("✅ Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
-        logInfo("✅ Duration: " + durationSec + " sec (laboratory mode)");
-        logInfo(String.format(
-                Locale.US,
-                "✅ Start conditions: charge=%d mAh, status=Discharging, temp=%.1f°C",
-                startMah,
-                (Float.isNaN(tempStart) ? 0f : tempStart)
-        ));
-        logInfo("✅ Data source: " + snapStart.source);
+// ------------------------------------------------------------
+// 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) ✅
+// ------------------------------------------------------------
+logLine();
+logInfo("✅ LAB 14 — Battery Health Stress Test");
+logInfo("✅ Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
+logInfo("✅ Duration: " + durationSec + " sec (laboratory mode)");
+logInfo("✅ Stress profile: GEL C Mode (aggressive CPU burn + brightness MAX)");
 
-        if (baselineFullMah > 0)
-            logInfo("✅ Battery capacity baseline (from counter): " + baselineFullMah + " mAh");
-        else
-            logInfo("✅ Battery capacity baseline (from counter): N/A");
+logInfo(String.format(
+        Locale.US,
+        "✅ Start conditions: charge=%d mAh, status=Discharging, temp=%.1f°C",
+        startMah,
+        (Float.isNaN(tempStart) ? 0f : tempStart)
+));
 
-        logInfo("✅ Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
-        logLine();
+logInfo("✅ Data source: " + snapStart.source);
 
-        if (cpuTempStart != null)
-            logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
+// Capacity baseline
+if (baselineFullMah > 0)
+    logInfo("✅ Battery capacity baseline (counter-based): " + baselineFullMah + " mAh");
+else
+    logInfo("✅ Battery capacity baseline (counter-based): N/A");
 
-        if (gpuTempStart != null)
-            logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
+// Cycles
+logInfo("✅ Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
+
+// Stress environment (explicit — όπως στο παλιό lab)
+logInfo("✅ Screen state: brightness forced to MAX, screen lock ON");
+logInfo("✅ CPU stress threads: " +
+        Runtime.getRuntime().availableProcessors() +
+        " (cores=" + Runtime.getRuntime().availableProcessors() + ")");
+
+logLine();
+
+// Thermal snapshot availability (START)
+if (cpuTempStart != null)
+    logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
+else
+    logWarn("⚠️ CPU temperature (start): N/A");
+
+if (gpuTempStart != null)
+    logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
+else
+    logWarn("⚠️ GPU temperature (start): N/A");
+
+// System thermal domains (informational, like old LAB)
+logOk("✅ Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
+
+logLine();
 
         // ------------------------------------------------------------
         // 3) DIALOG — SAME STYLE AS LAB 15 (EXIT BUTTON)
@@ -2965,8 +2987,33 @@ private void lab14BatteryHealthStressTest() {
                     logOk("   " + agingInterp);
 
                 } else {
-                    logWarn("⚠️ Battery Aging Index: Insufficient data");
-                    logWarn("⚠️ Interpretation: " + agingInterp);
+                    // Battery Aging Index: Insufficient data (label normal, value YELLOW)
+SpannableString sp1 =
+        new SpannableString("Battery Aging Index: Insufficient data");
+
+sp1.setSpan(
+        new ForegroundColorSpan(0xFFFFA500), // YELLOW / ORANGE
+        "Battery Aging Index: ".length(),
+        sp1.length(),
+        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+);
+
+txtLog.append(sp1);
+txtLog.append("\n");
+
+// Interpretation: <value> (label normal, value YELLOW)
+SpannableString sp2 =
+        new SpannableString("Interpretation: " + agingInterp);
+
+sp2.setSpan(
+        new ForegroundColorSpan(0xFFFFA500), // YELLOW / ORANGE
+        "Interpretation: ".length(),
+        sp2.length(),
+        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+);
+
+txtLog.append(sp2);
+txtLog.append("\n");
                 }
 
                 logInfo("✅ Aging analysis:");

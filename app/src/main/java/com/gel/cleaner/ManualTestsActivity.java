@@ -1090,11 +1090,15 @@ private void showLab14RunningDialog() {
 // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND (LAB 14)
 // ============================================================
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+// GEL dark + GOLD border
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);          // GEL dark
 bg.setCornerRadius(dp(18));
-bg.setStroke(dp(3), 0xFFFFD700); // GOLD border
-
+bg.setStroke(dp(3), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
             TextView title = new TextView(this);
@@ -3100,11 +3104,15 @@ private void lab15ChargingSystemSmart() {
     // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND
 // ============================================================
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+// GEL DARK + GOLD BORDER
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);          // GEL dark black
 bg.setCornerRadius(dp(18));      // smooth premium corners
 bg.setStroke(dp(3), 0xFFFFD700); // GOLD border
-
 root.setBackground(bg);
 
     lab15StatusText = new TextView(this);

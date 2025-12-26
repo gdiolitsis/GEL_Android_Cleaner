@@ -172,6 +172,10 @@ private float lab15BattTempEnd   = Float.NaN;
 // LAB 15 / LAB 16 thermal aliases (keep legacy names)
 private float startBatteryTemp = Float.NaN;
 private float endBatteryTemp   = Float.NaN;
+// LAB 15 — Charging strength state (MUST be fields)
+private boolean lab15_strengthKnown = false;
+private boolean lab15_strengthWeak  = false;
+private boolean lab15_systemLimited = false;
 
 private static final int LAB15_TOTAL_SECONDS = 180;
 
@@ -3216,9 +3220,10 @@ lab15BattTempStart = Float.NaN;
 lab15BattTempPeak  = Float.NaN;
 lab15BattTempEnd   = Float.NaN;
 
-boolean lab15_strengthKnown = false;
-boolean lab15_strengthWeak  = false;
-boolean lab15_systemLimited = false;
+// reset LAB 15 charging strength state (FIELDS)
+lab15_strengthKnown = false;
+lab15_strengthWeak  = false;
+lab15_systemLimited = false;
 
     // ================= DIALOG =================
 AlertDialog.Builder b =

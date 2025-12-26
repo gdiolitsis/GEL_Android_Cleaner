@@ -3109,17 +3109,10 @@ endBatteryTemp   = tempEnd;
 // 10) PRINT RESULTS (FULL LIKE OLD LAB) ✅
 // ----------------------------------------------------
 logInfo("LAB 14 - Stress result");
-logOk(String.format(
-        Locale.US,
-        "✅ Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
-        startMah,
-        endMah,
-        Math.max(0, drainMah),
-        dtMs / 1000.0
-));
 
 // ----------------------------------------------------
-// End temperature / Thermal rise (INLINE + DYNAMIC)
+// End temperature (LINE 1)
+// Thermal rise    (LINE 2)
 // ----------------------------------------------------
 
 float rise = endBatteryTemp - startBatteryTemp;
@@ -3130,7 +3123,7 @@ int color;
 // thresholds based on thermal rise (battery-centric)
 if (rise < 3.0f) {
     emoji = "✅";
-    color = 0xFF39FF14; // GEL green
+    color = 0xFF39FF14; // green
 } else if (rise < 7.0f) {
     emoji = "⚠️";
     color = 0xFFFFFF00; // yellow
@@ -3139,34 +3132,56 @@ if (rise < 3.0f) {
     color = 0xFFFF4444; // red
 }
 
-SpannableString spLine =
+// -------- Line 1: End temperature --------
+SpannableString spEndTemp =
         new SpannableString(String.format(
                 Locale.US,
-                "End temperature / Thermal rise: %s %.1f°C | +%.1f°C",
+                "End temperature: %.1f°C",
+                endBatteryTemp
+        ));
+
+spEndTemp.setSpan(
+        new ForegroundColorSpan(color),
+        "End temperature: ".length(),
+        spEndTemp.length(),
+        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+);
+
+// -------- Line 2: Thermal rise --------
+SpannableString spRise =
+        new SpannableString(String.format(
+                Locale.US,
+                "Thermal rise: %s +%.1f°C",
                 emoji,
-                endBatteryTemp,
                 rise
         ));
 
-spLine.setSpan(
+spRise.setSpan(
         new ForegroundColorSpan(color),
-        spLine.toString().indexOf(emoji),
-        spLine.length(),
+        "Thermal rise: ".length(),
+        spRise.length(),
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 );
 
 if (txtLog != null) {
-    txtLog.append(spLine);
-    txtLog.append("\n");
+    txtLog.append(spEndTemp).append("\n");
+    txtLog.append(spRise).append("\n");
 } else {
-    logOk(String.format(
-            Locale.US,
-            "End temperature / Thermal rise: %s %.1f°C | +%.1f°C",
-            emoji,
-            endBatteryTemp,
-            rise
-    ));
+    logOk(String.format(Locale.US, "End temperature: %.1f°C", endBatteryTemp));
+    logOk(String.format(Locale.US, "Thermal rise: %s +%.1f°C", emoji, rise));
 }
+
+// ----------------------------------------------------
+// Start / End / Drop / Time (AFTER thermal info)
+// ----------------------------------------------------
+logOk(String.format(
+        Locale.US,
+        "✅ Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
+        startMah,
+        endMah,
+        Math.max(0, drainMah),
+        dtMs / 1000.0
+));
 
 // ----------------------------------------------------
 // Drain rate

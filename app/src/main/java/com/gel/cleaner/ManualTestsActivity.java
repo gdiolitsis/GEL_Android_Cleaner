@@ -2968,7 +2968,7 @@ root.addView(title);
                 engine.saveRun();
 
                 final Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
-                final double relVar = conf.relativeVariance;
+                final double relVar = engine.getRelativeVariance();
 
                 // ----------------------------------------------------
                 // 7) PROFILE + AGING (Engine)

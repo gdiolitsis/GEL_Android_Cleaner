@@ -1208,27 +1208,34 @@ private void logLab14VarianceInfo() {
         double sum = 0;
         int n = 0;
         for (double v : vals) {
-            if (v > 0) { sum += v; n++; }
+            if (v > 0) {
+                sum += v;
+                n++;
+            }
         }
         if (n < 2) return;
 
         double mean = sum / n;
         double var = 0;
         for (double v : vals) {
-            if (v > 0) var += (v - mean) * (v - mean);
+            if (v > 0)
+                var += (v - mean) * (v - mean);
         }
         var /= n;
 
         double relVar = Math.sqrt(var) / mean;
 
-        logInfo("Measurement Consistency:");
+        logInfo("Measurement consistency:");
 
-        if (relVar < 0.08)
+        if (relVar < 0.08) {
             logOk("Results are consistent across runs.");
-        else if (relVar < 0.15)
-            logWarn("Minor variability detected between runs.");
-        else
-            logWarn("High variability detected. Run tests under similar conditions for best accuracy.");
+        }
+        else if (relVar < 0.15) {
+            logOk("Minor variability detected. Results are generally reliable.");
+        }
+        else {
+            logWarn("High variability detected. Repeat the test after a system restart to improve reliability.");
+        }
 
     } catch (Throwable ignore) {}
 }
@@ -3180,9 +3187,7 @@ if (validDrain) {
     logWarn("⚠️ Invalid (counter anomaly or no drop)");
 }
 
-// ----------------------------------------------------
-// Measurement Consistency (SCORE ONLY – NO DUPLICATES)
-// ----------------------------------------------------
+// SCORE (αριθμός + runs)
 logInfo("Measurement consistency score:");
 logOk(String.format(
         Locale.US,
@@ -3191,17 +3196,11 @@ logOk(String.format(
         conf.validRuns
 ));
 
-// ----------------------------------------------------
-// Measurement Consistency (VARIANCE DETAILS)
-// ----------------------------------------------------
-logInfo("Measurement Consistency:");
+// VARIANCE / INTERPRETATION
+logLab14VarianceInfo();
 
-if (relVar < 0.08)
-    logOk("Results are consistent across runs.");
-else if (relVar < 0.15)
-    logWarn("Minor variability detected between runs.");
-else
-    logWarn("High variability detected. Run tests under similar conditions for best accuracy.");
+// CONFIDENCE (based on run count)
+logLab14Confidence();
 
 // ----------------------------------------------------
 // Battery Aging Index + Interpretation

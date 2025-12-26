@@ -3129,8 +3129,12 @@ logOk(String.format(
         "✅ %d%% (%d valid runs)",
         conf.percent,
         conf.validRuns
-        logInfo("Diagnostic confidence:");
 ));
+
+// ----------------------------------------------------
+// Diagnostic confidence
+// ----------------------------------------------------
+logInfo("Diagnostic confidence:");
 
 // ----------------------------------------------------
 // Battery Aging Index + Interpretation

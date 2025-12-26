@@ -169,6 +169,9 @@ private TextView lab15CounterText;
 private float lab15BattTempStart = Float.NaN;
 private float lab15BattTempPeak  = Float.NaN;
 private float lab15BattTempEnd   = Float.NaN;
+// LAB 15 / LAB 16 thermal aliases (keep legacy names)
+private float startBatteryTemp = Float.NaN;
+private float endBatteryTemp   = Float.NaN;
 
 private static final int LAB15_TOTAL_SECONDS = 180;
 
@@ -3406,6 +3409,10 @@ lab15Finished = true;
 lab15Running  = false;
 
 lab15BattTempEnd = getBatteryTemperature();
+
+// propagate LAB15 temps to legacy / cross-lab names
+startBatteryTemp = lab15BattTempStart;
+endBatteryTemp   = lab15BattTempEnd;
 
 logLine();
 logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");

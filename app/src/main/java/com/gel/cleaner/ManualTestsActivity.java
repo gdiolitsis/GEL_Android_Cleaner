@@ -3131,6 +3131,7 @@ logOk(String.format(
         "✅ %d%% (%d valid runs)",
         conf.percent,
         conf.validRuns
+        logInfo("Diagnostic confidence:");
 ));
 
 // ----------------------------------------------------
@@ -3168,12 +3169,6 @@ logOk(String.format(
         finalScore,
         finalLabel
 ));
-
-// ----------------------------------------------------
-// FINAL RELIABILITY / CONFIDENCE (ONCE)
-// ----------------------------------------------------
-logInfo("Diagnostic confidence:");
-logOk("✅ High (3+ consistent runs)");
                
                 // ----------------------------------------------------
                 // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅

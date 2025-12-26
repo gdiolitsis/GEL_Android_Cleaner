@@ -2778,7 +2778,6 @@ AlertDialog.Builder b =
                 android.R.style.Theme_Material_Dialog_NoActionBar
         );
 b.setCancelable(false);
-// ❌ ΜΗΝ χρησιμοποιείς b.setTitle εδώ (φεύγει εκτός popup)
 
 // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND (LAB 14 — MAIN STRESS POPUP)
@@ -2797,7 +2796,7 @@ root.setBackground(bg);
 // 🔹 TITLE — INSIDE POPUP (LAB 14)
 // ============================================================
 TextView title = new TextView(this);
-title.setText("LAB 14 — Battery Health Stress Test");
+title.setText("LAB 14 — Connect the charger to the devices charging port");
 title.setTextColor(0xFFFFFFFF); 
 title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
@@ -3120,9 +3119,8 @@ logOk(String.format(
 ));
 
 // ----------------------------------------------------
-// End temperature / Thermal rise (COMBINED + DYNAMIC)
+// End temperature / Thermal rise (INLINE + DYNAMIC)
 // ----------------------------------------------------
-logInfo("End temperature / Thermal rise:");
 
 float rise = endBatteryTemp - startBatteryTemp;
 
@@ -3141,29 +3139,29 @@ if (rise < 3.0f) {
     color = 0xFFFF4444; // red
 }
 
-SpannableString spThermal =
+SpannableString spLine =
         new SpannableString(String.format(
                 Locale.US,
-                "%s %.1f°C | +%.1f°C",
+                "End temperature / Thermal rise: %s %.1f°C | +%.1f°C",
                 emoji,
                 endBatteryTemp,
                 rise
         ));
 
-spThermal.setSpan(
+spLine.setSpan(
         new ForegroundColorSpan(color),
-        0,
-        spThermal.length(),
+        spLine.toString().indexOf(emoji),
+        spLine.length(),
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 );
 
 if (txtLog != null) {
-    txtLog.append(spThermal);
+    txtLog.append(spLine);
     txtLog.append("\n");
 } else {
     logOk(String.format(
             Locale.US,
-            "%s %.1f°C | +%.1f°C",
+            "End temperature / Thermal rise: %s %.1f°C | +%.1f°C",
             emoji,
             endBatteryTemp,
             rise

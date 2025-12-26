@@ -1613,24 +1613,6 @@ private int getLastLab15ChargeScore() {
     }
 }
 
-private boolean isLab15ChargingPathSystemLimited() {
-    try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-        return p.getBoolean("lab15_system_limited", false);
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
-private String getLastLab15StrengthLabel() {
-    try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-        return p.getString("lab15_strength_label", null);
-    } catch (Throwable t) {
-        return null;
-    }
-}
-
 private boolean hasValidLab15() {
     return getLastLab15ChargeScore() >= 0;
 }

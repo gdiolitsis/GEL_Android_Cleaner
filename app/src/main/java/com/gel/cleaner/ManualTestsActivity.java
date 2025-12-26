@@ -2753,6 +2753,19 @@ AlertDialog.Builder b =
 b.setCancelable(false);
 b.setTitle("LAB 14 - Battery Health Stress Test");
 
+// ============================================================
+// GEL DARK + GOLD POPUP BACKGROUND (LAB 14 — MAIN STRESS POPUP)
+// ============================================================
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);           // GEL dark black
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
+root.setBackground(bg);
+
         final TextView statusText = new TextView(this);
         statusText.setText("Stress test running...");
         statusText.setTextColor(0xFF39FF14);
@@ -3769,13 +3782,23 @@ private void lab17RunAuto() {
         // OK BUTTON (INSIDE POPUP)
         // -----------------------------
         Button ok = new Button(this);
-        ok.setText("OK");
-        ok.setAllCaps(false);
-        ok.setTextColor(0xFF000000);
-        ok.setBackgroundColor(0xFFFFD700);
-        ok.setOnClickListener(v -> {
-            if (popupDialogHolder[0] != null) popupDialogHolder[0].dismiss();
-        });
+ok.setText("OK");
+ok.setAllCaps(true);
+ok.setTextSize(15f);
+ok.setTextColor(0xFF00FF6A); // GEL green
+
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF000000);          // Μαύρο
+okBg.setCornerRadius(dp(14));       // Premium καμπύλες
+okBg.setStroke(dp(3), 0xFFFFD700);  // Χρυσό περίβλημα
+
+ok.setBackground(okBg);
+ok.setPadding(dp(18), dp(10), dp(18), dp(10));
+
+ok.setOnClickListener(v -> {
+    if (popupDialogHolder[0] != null)
+        popupDialogHolder[0].dismiss();
+});
 
         box.addView(ok);
 

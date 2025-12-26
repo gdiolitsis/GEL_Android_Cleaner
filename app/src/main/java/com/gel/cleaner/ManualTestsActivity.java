@@ -3662,12 +3662,10 @@ private void lab16ThermalSnapshot() {
 // AGGREGATED • FINAL • NO SNAPSHOT
 //
 // ✔ Uses LAB14 + LAB15 + LAB16 saved results
-// ✔ Detects "system-limited charging path" (NOT battery fault)
-// ✔ Applies penalties correctly (battery vs system throttling)
+// ✔ Detects system-limited charging path (NOT battery fault)
+// ✔ Applies penalties correctly
 // ✔ Popup if prerequisites missing (GEL dark + gold)
 // ✔ No checkboxes
-//
-// NOTE (GEL RULE): Full lab block returned for copy-paste.
 // ============================================================
 private void lab17RunAuto() {
 
@@ -3691,7 +3689,6 @@ private void lab17RunAuto() {
         msg.setTextSize(15f);
         msg.setPadding(dp(24), dp(20), dp(24), dp(20));
 
-        // GEL dark + gold
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(16));
@@ -3702,11 +3699,10 @@ private void lab17RunAuto() {
         b.setPositiveButton("OK", null);
 
         AlertDialog d = b.create();
-        if (d.getWindow() != null) {
+        if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-        d.show();
 
+        d.show();
         return;
     }
 
@@ -3722,16 +3718,15 @@ private void lab17RunAuto() {
         try {
 
             // ------------------------------------------------------------
-            // 1) FETCH RESULTS FROM PREVIOUS LABS
+            // FETCH STORED RESULTS
             // ------------------------------------------------------------
-            final float lab14Health   = getLastLab14HealthScore();    // 0..100
-            final int   lab14Aging    = getLastLab14AgingIndex();     // 0..100 or -1
-            final int   lab15Charge   = getLastLab15ChargeScore();    // 0..100
-            final int   lab16Thermal  = getLastLab16ThermalScore();   // 0..100
+            float lab14Health  = getLastLab14HealthScore();     // 0..100
+            int   lab14Aging   = getLastLab14AgingIndex();      // 0..100 or -1
+            int   lab15Charge  = getLastLab15ChargeScore();     // 0..100
+            int   lab16Thermal = getLastLab16ThermalScore();    // 0..100
 
-            // extra LAB15 context (system vs battery)
-            final boolean lab15SystemLimited = isLab15ChargingPathSystemLimited(); // safe helper
-            final String  lab15StrengthLabel = getLastLab15StrengthLabel();        // e.g. STRONG/NORMAL/MODERATE/WEAK (safe helper)
+            boolean lab15SystemLimited = isLab15ChargingPathSystemLimited();
+            String  lab15StrengthLabel = getLastLab15StrengthLabel();
 
             if (lab14Health < 0 || lab15Charge < 0 || lab16Thermal < 0) {
                 ui.post(() -> logError("LAB 17 aborted: missing required lab data."));
@@ -3739,9 +3734,8 @@ private void lab17RunAuto() {
             }
 
             // ------------------------------------------------------------
-            // 2) BASE WEIGHTED SCORE (AGGREGATED)
+            // BASE WEIGHTED SCORE
             // ------------------------------------------------------------
-            // LAB14: 50%  | LAB15: 25% | LAB16: 25%
             int baseScore = Math.round(
                     (lab14Health * 0.50f) +
                     (lab15Charge  * 0.25f) +
@@ -3750,25 +3744,19 @@ private void lab17RunAuto() {
             baseScore = Math.max(0, Math.min(100, baseScore));
 
             // ------------------------------------------------------------
-            // 3) PENALTY LOGIC (SYSTEM-LIMITED VS BATTERY FAULT)
+            // PENALTIES
             // ------------------------------------------------------------
             int penaltyExtra = 0;
 
-            // If charging score is low BUT system-limited, do NOT punish "battery health".
-            // We still punish reliability a bit (device-level throttling), but lighter.
             if (lab15Charge < 60 && lab15SystemLimited) {
-                // Mild reliability penalty only
-                penaltyExtra += 6;
+                penaltyExtra += 6;   // system throttling → mild
             } else if (lab15Charge < 60) {
-                // Real charging weakness (not confirmed system-limited)
-                penaltyExtra += 12;
+                penaltyExtra += 12;  // real charging weakness
             }
 
-            // Thermal issues should always affect reliability
             if (lab16Thermal < 60) penaltyExtra += 10;
             else if (lab16Thermal < 75) penaltyExtra += 5;
 
-            // Aging can influence reliability but never dominate
             if (lab14Aging >= 0) {
                 if (lab14Aging >= 70) penaltyExtra += 10;
                 else if (lab14Aging >= 50) penaltyExtra += 6;
@@ -3778,39 +3766,38 @@ private void lab17RunAuto() {
             int finalScore = baseScore - penaltyExtra;
             finalScore = Math.max(0, Math.min(100, finalScore));
 
-            final String category =
+            String category =
                     (finalScore >= 85) ? "Strong" :
                     (finalScore >= 70) ? "Normal" :
                     "Weak";
 
             // ------------------------------------------------------------
-            // 4) EXPLANATION (AS REQUESTED)
+            // FREEZE VALUES FOR UI THREAD (CRITICAL)
             // ------------------------------------------------------------
+            final int    fFinalScore   = finalScore;
+            final int    fPenaltyExtra = penaltyExtra;
+            final String fCategory     = category;
+
             final String explanation =
                     "Explanation: This score reflects the results of the battery stress test, " +
                     "charging stability and thermal behaviour of the device.";
 
-            // system-limited message (extra log requested)
-            final String sysLimitMsg;
-            if (lab15SystemLimited) {
-                sysLimitMsg =
-                        "Charging limitation analysis: Charging path is restricted by system protection logic. " +
-                        "This behaviour is NOT attributed to battery health.";
-            } else {
-                sysLimitMsg = null;
-            }
+            final String sysLimitMsg =
+                    lab15SystemLimited
+                            ? "Charging limitation analysis: Charging path is restricted by system protection logic. " +
+                              "This behaviour is NOT attributed to battery health."
+                            : null;
 
             // ------------------------------------------------------------
-            // 5) UI OUTPUT (SINGLE THREAD SAFE)
+            // UI OUTPUT
             // ------------------------------------------------------------
             ui.post(() -> {
 
-                // summary lines
                 logInfo(String.format(
                         Locale.US,
                         "LAB14 — Battery health: %.0f%% | Aging index: %s",
                         lab14Health,
-                        (lab14Aging >= 0 ? (lab14Aging + "/100") : "N/A")
+                        (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
                 ));
 
                 logInfo(String.format(
@@ -3826,51 +3813,54 @@ private void lab17RunAuto() {
                         lab16Thermal
                 ));
 
-                // extra system-limited analysis
                 if (sysLimitMsg != null) {
                     logLine();
                     logWarn(sysLimitMsg);
                 }
 
-                // penalty breakdown (only if applied)
                 if (fPenaltyExtra > 0) {
                     logLine();
                     logInfo("Penalty breakdown:");
-                    if (lab15Charge < 60 && lab15SystemLimited) {
-                        logWarn("• Charging: system-limited throttling detected (minor reliability penalty).");
-                    } else if (lab15Charge < 60) {
-                        logWarn("• Charging: weak performance detected (stronger penalty).");
-                    }
-                    if (lab16Thermal < 60) logWarn("• Thermal: unstable / hot behaviour detected.");
-                    else if (lab16Thermal < 75) logWarn("• Thermal: moderate instability detected.");
 
-                    if (lab14Aging >= 70) logWarn("• Aging: severe aging indicators detected.");
-                    else if (lab14Aging >= 50) logWarn("• Aging: high aging indicators detected.");
-                    else if (lab14Aging >= 30) logWarn("• Aging: moderate aging indicators detected.");
+                    if (lab15Charge < 60 && lab15SystemLimited)
+                        logWarn("• Charging: system-limited throttling detected.");
+                    else if (lab15Charge < 60)
+                        logWarn("• Charging: weak charging performance detected.");
+
+                    if (lab16Thermal < 60)
+                        logWarn("• Thermal: unstable / hot behaviour detected.");
+                    else if (lab16Thermal < 75)
+                        logWarn("• Thermal: moderate instability detected.");
+
+                    if (lab14Aging >= 70)
+                        logWarn("• Aging: severe aging indicators detected.");
+                    else if (lab14Aging >= 50)
+                        logWarn("• Aging: high aging indicators detected.");
+                    else if (lab14Aging >= 30)
+                        logWarn("• Aging: moderate aging indicators detected.");
                 }
 
-                // final result
                 logLine();
                 logOk(String.format(
-        Locale.US,
-        "Final Battery Reliability Score: %d%% (%s)",
-        fFinalScore, fCategory
-));
+                        Locale.US,
+                        "Final Battery Reliability Score: %d%% (%s)",
+                        fFinalScore, fCategory
+                ));
 
                 logInfo(explanation);
                 logLine();
-                
-// ------------------------------------------------------------
-// STORE FINAL LAB 17 RESULT (FOR HISTORY / EXPORT / FUTURE LABS)
-// ------------------------------------------------------------
-try {
-    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-    p.edit()
-     .putInt("lab17_final_score", fFinalScore)
-     .putString("lab17_category", fCategory)
-     .apply();
-} catch (Throwable ignore) {}
-                
+
+                // ------------------------------------------------------------
+                // STORE FINAL RESULT
+                // ------------------------------------------------------------
+                try {
+                    SharedPreferences p =
+                            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+                    p.edit()
+                     .putInt("lab17_final_score", fFinalScore)
+                     .putString("lab17_category", fCategory)
+                     .apply();
+                } catch (Throwable ignore) {}
             });
 
         } catch (Throwable t) {

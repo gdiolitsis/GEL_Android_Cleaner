@@ -3207,14 +3207,18 @@ private void lab15ChargingSystemSmart() {
     }
 
     // ================= FLAGS RESET =================
-    lab15Running  = true;
-    lab15Finished = false;
-    lab15FlapUnstable = false;
-    lab15OverTempDuringCharge = false;
+lab15Running  = true;
+lab15Finished = false;
+lab15FlapUnstable = false;
+lab15OverTempDuringCharge = false;
 
-    lab15BattTempStart = Float.NaN;
-    lab15BattTempPeak  = Float.NaN;
-    lab15BattTempEnd   = Float.NaN;
+lab15BattTempStart = Float.NaN;
+lab15BattTempPeak  = Float.NaN;
+lab15BattTempEnd   = Float.NaN;
+
+boolean lab15_strengthKnown = false;
+boolean lab15_strengthWeak  = false;
+boolean lab15_systemLimited = false;
 
     // ================= DIALOG =================
 AlertDialog.Builder b =
@@ -3463,10 +3467,6 @@ logLine();
 // CHARGING INPUT & STRENGTH (mAh/min)
 // ------------------------------------------------------------
 BatteryInfo endInfo = getBatteryInfo();
-
-boolean lab15_strengthKnown = false;
-boolean lab15_strengthWeak  = false;
-boolean lab15_systemLimited = false;
 
 if (startMah > 0 && endInfo != null &&
     endInfo.currentChargeMah > startMah && startTs[0] > 0) {

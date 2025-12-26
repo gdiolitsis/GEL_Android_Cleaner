@@ -1221,7 +1221,6 @@ private void logLab14VarianceInfo() {
 
         double relVar = Math.sqrt(var) / mean;
 
-        logLine();
         logInfo("Measurement Consistency:");
 
         if (relVar < 0.08)
@@ -3076,9 +3075,15 @@ root.addView(title);
                 else finalLabel = "Weak";
 
 // ----------------------------------------------------
+// THERMAL SNAPSHOT FOR REPORT (LAB 14)
+// ----------------------------------------------------
+startBatteryTemp = tempStart;
+endBatteryTemp   = tempEnd;
+
+// ----------------------------------------------------
 // 10) PRINT RESULTS (FULL LIKE OLD LAB) ✅
 // ----------------------------------------------------
-logLine();
+
 logInfo("LAB 14 - Stress result");
 logOk(String.format(
         Locale.US,
@@ -3090,21 +3095,56 @@ logOk(String.format(
 ));
 
 // ----------------------------------------------------
-// End temperature / Thermal rise (SAME POSITION, WITH VALUES)
+// End temperature / Thermal rise (COMBINED + DYNAMIC)
 // ----------------------------------------------------
-logInfo("End temperature:");
-logOk(String.format(
-        Locale.US,
-        "✅ %.1f°C",
-        endBatteryTemp
-));
+logInfo("End temperature / Thermal rise:");
 
-logInfo("Thermal rise:");
-logOk(String.format(
-        Locale.US,
-        "✅ +%.1f°C",
-        (endBatteryTemp - startBatteryTemp)
-));
+float rise = endBatteryTemp - startBatteryTemp;
+
+String emoji;
+int color;
+
+// thresholds based on thermal rise (battery-centric)
+if (rise < 3.0f) {
+    emoji = "✅";
+    color = 0xFF39FF14; // GEL green
+} else if (rise < 7.0f) {
+    emoji = "⚠️";
+    color = 0xFFFFFF00; // yellow
+} else {
+    emoji = "❌";
+    color = 0xFFFF4444; // red
+}
+
+SpannableString spThermal =
+        new SpannableString(String.format(
+                Locale.US,
+                "%s %.1f°C  |  +%.1f°C",
+                emoji,
+                endBatteryTemp,
+                rise
+        ));
+
+spThermal.setSpan(
+        new ForegroundColorSpan(color),
+        0,
+        spThermal.length(),
+        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+);
+
+if (txtLog != null) {
+    txtLog.append(spThermal);
+    txtLog.append("\n");
+} else {
+    // fallback (should not happen)
+    logOk(String.format(
+            Locale.US,
+            "%s %.1f°C  |  +%.1f°C",
+            emoji,
+            endBatteryTemp,
+            rise
+    ));
+}
 
 // ----------------------------------------------------
 // Drain rate
@@ -3132,9 +3172,16 @@ logOk(String.format(
 ));
 
 // ----------------------------------------------------
-// Diagnostic confidence
+// Measurement Consistency (VARIANCE DETAILS)
 // ----------------------------------------------------
-logInfo("Diagnostic confidence:");
+logInfo("Measurement Consistency:");
+
+if (relVar < 0.08)
+    logOk("Results are consistent across runs.");
+else if (relVar < 0.15)
+    logWarn("Minor variability detected between runs.");
+else
+    logWarn("High variability detected. Run tests under similar conditions for best accuracy.");
 
 // ----------------------------------------------------
 // Battery Aging Index + Interpretation
@@ -3363,7 +3410,8 @@ root.addView(title);
                 lab15StatusText.setTextColor(0xFF39FF14);
                 logOk("✅ Charging state detected.");
             }
-
+            logLine();
+            
             if (chargingNow) {
                 float t = getBatteryTemperature();
                 if (t > 0) {
@@ -3399,7 +3447,7 @@ root.addView(title);
                 return;
             }
 
-            // ================= FINAL =================
+// ================= FINAL =================
 lab15Finished = true;
 lab15Running  = false;
 
@@ -3428,11 +3476,20 @@ logLab15ThermalCorrelation(
 // ------------------------------------------------------------
 // Thermal verdict
 // ------------------------------------------------------------
+float dtCharge = lab15BattTempEnd - lab15BattTempStart;
 logInfo("Thermal verdict (charging):");
 if (lab15OverTempDuringCharge) {
-    logError("❌ Elevated temperature detected.");
+    logError(String.format(
+            Locale.US,
+            "❌ HOT (ΔT +%.1f°C) — Elevated temperature detected.",
+            Math.max(0f, dtCharge)
+    ));
 } else {
-    logOk("✅ Normal thermal behavior during charging.");
+    logOk(String.format(
+            Locale.US,
+            "✅ OK (ΔT +%.1f°C) — Normal thermal behavior during charging.",
+            Math.max(0f, dtCharge)
+    ));
 }
 
 // ------------------------------------------------------------
@@ -3440,9 +3497,9 @@ if (lab15OverTempDuringCharge) {
 // ------------------------------------------------------------
 logInfo("Charging connection:");
 if (lab15FlapUnstable) {
-    logError("❌ Unstable (plug/unplug behavior).");
+    logError("❌ Unstable (plug/unplug behavior detected).");
 } else {
-    logOk("✅ Appears stable.");
+    logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
 }
 
 // ------------------------------------------------------------
@@ -3593,12 +3650,11 @@ lab15Dialog = null;
 
 // ============================================================
 // LAB 16 — Thermal Snapshot (REAL HARDWARE EDITION)
-// Source: Internal + Peripherals (merged)
-// Output: Screenshot-style report
+// Clean Output • No Duplicates • White Labels / Colored Values
 // ============================================================
 private void lab16ThermalSnapshot() {
 
-    final String SECTION_LINE = "================================";
+    final String SECTION = "================================";
 
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
@@ -3607,10 +3663,8 @@ private void lab16ThermalSnapshot() {
     // ============================================================
     // THERMAL SENSORS (INTERNAL)
     // ============================================================
-    logLine(); // ⬅️ κενή γραμμή πριν τον τίτλο
     logInfo("THERMAL SENSORS (INTERNAL)");
-    logInfo(SECTION_LINE);
-    logLine();
+    logInfo(SECTION);
 
     String internal = buildThermalInternalReport();
     if (internal != null && !internal.trim().isEmpty()) {
@@ -3618,19 +3672,23 @@ private void lab16ThermalSnapshot() {
         for (String line : internal.split("\n")) {
             if (line.trim().isEmpty()) continue;
 
-            // labels = λευκά | values = χρωματιστά via state
+            // ⛔️ φίλτρο για διπλούς τίτλους / σχόλια
+            if (line.contains("THERMAL") || line.contains("====")) continue;
+
             if (line.contains("(COOL)")) {
-                logOk(line);
+                logInfo(stripState(line));
+                logOk(extractState(line));
             } else if (line.contains("(NORMAL)")) {
-                logInfo(line);
+                logInfo(stripState(line));
+                logInfo(extractState(line));
             } else if (line.contains("(WARM)")) {
-                logWarn(line);
+                logInfo(stripState(line));
+                logWarn(extractState(line));
             } else if (line.contains("(HOT)") || line.contains("(CRITICAL)")) {
-                logError(line);
-            } else if (line.toLowerCase(Locale.US).contains("advanced info")) {
-                logWarn(line);
+                logInfo(stripState(line));
+                logError(extractState(line));
             } else {
-                logInfo(line); // καθαρό label
+                logInfo(line);
             }
         }
     }
@@ -3640,25 +3698,23 @@ private void lab16ThermalSnapshot() {
     // ============================================================
     logLine();
     logInfo("HARDWARE THERMAL SYSTEMS");
-    logInfo(SECTION_LINE);
-    logLine();
+    logInfo(SECTION);
 
-    String hwThermal = buildThermalInfo();
-    if (hwThermal != null && !hwThermal.trim().isEmpty()) {
+    String hw = buildThermalInfo();
+    if (hw != null && !hw.trim().isEmpty()) {
 
-        for (String line : hwThermal.split("\n")) {
+        for (String line : hw.split("\n")) {
             if (line.trim().isEmpty()) continue;
+            if (line.contains("====") || line.contains("THERMAL")) continue;
 
-            if (line.contains("(COOL)")) {
-                logOk(line);
-            } else if (line.contains("(NORMAL)")) {
-                logInfo(line);
+            if (line.contains("(NORMAL)")) {
+                logInfo(stripState(line));
+                logInfo(extractState(line));
             } else if (line.contains("(WARM)")) {
-                logWarn(line);
-            } else if (line.contains("(HOT)") || line.contains("(CRITICAL)")) {
-                logError(line);
+                logInfo(stripState(line));
+                logWarn(extractState(line));
             } else {
-                logInfo(line); // label
+                logInfo(line);
             }
         }
     }
@@ -3668,22 +3724,18 @@ private void lab16ThermalSnapshot() {
     // ============================================================
     logLine();
     logInfo("HARDWARE COOLING SYSTEMS");
-    logInfo(SECTION_LINE);
-    logLine();
+    logInfo(SECTION);
 
     if (!hasHardwareCoolingDevices()) {
-
+        logInfo("Hardware cooling devices:");
         logOk("No hardware cooling devices found.");
-        logOk("This device uses passive cooling only.");
-
+        logOk("Passive cooling only.");
     } else {
-
         String cooling = buildHardwareCoolingReport();
         if (cooling != null && !cooling.trim().isEmpty()) {
             for (String line : cooling.split("\n")) {
-                if (!line.trim().isEmpty()) {
+                if (!line.trim().isEmpty())
                     logInfo(line);
-                }
             }
         }
     }

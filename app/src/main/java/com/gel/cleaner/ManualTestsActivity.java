@@ -2742,21 +2742,16 @@ logOk("✅ Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
 
 logLine();
 
-        // ------------------------------------------------------------
-        // 3) DIALOG — SAME STYLE AS LAB 15 (EXIT BUTTON)
-        // ------------------------------------------------------------
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
-        b.setTitle("LAB 14 - Battery Health Stress Test");
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
-        root.setBackgroundColor(0xFF101010);
+// ------------------------------------------------------------
+// 3) DIALOG — SAME STYLE AS LAB 15 (EXIT BUTTON)
+// ------------------------------------------------------------
+AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                ManualTestsActivity.this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+b.setCancelable(false);
+b.setTitle("LAB 14 - Battery Health Stress Test");
 
         final TextView statusText = new TextView(this);
         statusText.setText("Stress test running...");

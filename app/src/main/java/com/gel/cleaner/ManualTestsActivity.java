@@ -3106,88 +3106,27 @@ startBatteryTemp = tempStart;
 endBatteryTemp   = tempEnd;
 
 // ----------------------------------------------------
-// 10) PRINT RESULTS (FULL LIKE OLD LAB) ✅
+// 10) PRINT RESULTS (FINAL ORDER — LOCKED)
 // ----------------------------------------------------
 logInfo("LAB 14 - Stress result");
 
-// ----------------------------------------------------
-// End temperature (LINE 1)
-// Thermal rise    (LINE 2)
-// ----------------------------------------------------
+logInfo(String.format(
+        Locale.US,
+        "End temperature: %.1f°C",
+        endBatteryTemp
+));
 
 float rise = endBatteryTemp - startBatteryTemp;
 
-String emoji;
-int color;
+logInfo(String.format(
+        Locale.US,
+        "Thermal rise: +%.1f°C",
+        rise
+));
 
-// thresholds based on thermal rise (battery-centric)
-if (rise < 3.0f) {
-    emoji = "✅";
-    color = 0xFF39FF14; // green
-} else if (rise < 7.0f) {
-    emoji = "⚠️";
-    color = 0xFFFFFF00; // yellow
-} else {
-    emoji = "❌";
-    color = 0xFFFF4444; // red
-}
-
-// -------- Line 1: End temperature --------
-SpannableString spEndTemp =
-        new SpannableString(String.format(
-                Locale.US,
-                "End temperature: %.1f°C",
-                endBatteryTemp
-        ));
-
-spEndTemp.setSpan(
-        new ForegroundColorSpan(color),
-        "End temperature: ".length(),
-        spEndTemp.length(),
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-);
-
-// -------- Line 2: Thermal rise --------
-SpannableString spRise =
-        new SpannableString(String.format(
-                Locale.US,
-                "Thermal rise: %s +%.1f°C",
-                emoji,
-                rise
-        ));
-
-spRise.setSpan(
-        new ForegroundColorSpan(color),
-        "Thermal rise: ".length(),
-        spRise.length(),
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-);
-
-if (txtLog != null) {
-    txtLog.append(spEndTemp);
-    txtLog.append("\n");
-    txtLog.append(spRise);
-    txtLog.append("\n");
-} else {
-    logOk(String.format(
-            Locale.US,
-            "End temperature: %.1f°C",
-            endBatteryTemp
-    ));
-    logOk(String.format(
-            Locale.US,
-            "Thermal rise: %s +%.1f°C",
-            emoji,
-            rise
-    ));
-}
-
-// ----------------------------------------------------
-// Start / End / Drop / Time (AFTER thermal info)
-// ----------------------------------------------------
 logOk(String.format(
         Locale.US,
-        "✅ Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
+        "Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
         startMah,
         endMah,
         Math.max(0, drainMah),

@@ -2728,8 +2728,6 @@ logInfo("✅ CPU stress threads: " +
         Runtime.getRuntime().availableProcessors() +
         " (cores=" + Runtime.getRuntime().availableProcessors() + ")");
 
-logLine();
-
 // Thermal snapshot availability (START)
 if (cpuTempStart != null)
     logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
@@ -3407,9 +3405,6 @@ lab15BattTempEnd = getBatteryTemperature();
 startBatteryTemp = lab15BattTempStart;
 endBatteryTemp   = lab15BattTempEnd;
 
-logLine();
-logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
-
 // ------------------------------------------------------------
 // Battery temperature + thermal correlation
 // ------------------------------------------------------------
@@ -3461,7 +3456,6 @@ if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
     logWarn("⚠️ Further inspection or repeat test recommended.");
 }
 
-logLine();
 
 // ------------------------------------------------------------
 // CHARGING INPUT & STRENGTH (mAh/min)
@@ -3516,7 +3510,6 @@ if (startMah > 0 && endInfo != null &&
     lab15_strengthWeak  = true;
 }
 
-logLine();
 
 // ------------------------------------------------------------
 // SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)

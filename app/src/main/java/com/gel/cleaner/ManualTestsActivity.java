@@ -3164,11 +3164,22 @@ spRise.setSpan(
 );
 
 if (txtLog != null) {
-    txtLog.append(spEndTemp).append("\n");
-    txtLog.append(spRise).append("\n");
+    txtLog.append(spEndTemp);
+    txtLog.append("\n");
+    txtLog.append(spRise);
+    txtLog.append("\n");
 } else {
-    logOk(String.format(Locale.US, "End temperature: %.1f°C", endBatteryTemp));
-    logOk(String.format(Locale.US, "Thermal rise: %s +%.1f°C", emoji, rise));
+    logOk(String.format(
+            Locale.US,
+            "End temperature: %.1f°C",
+            endBatteryTemp
+    ));
+    logOk(String.format(
+            Locale.US,
+            "Thermal rise: %s +%.1f°C",
+            emoji,
+            rise
+    ));
 }
 
 // ----------------------------------------------------

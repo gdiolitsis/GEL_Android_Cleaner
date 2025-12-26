@@ -1576,6 +1576,90 @@ private String getLastLab15StrengthLabel() {
 }
 
 // ============================================================
+// REQUIRED HELPERS — LAB 14 / 15 / 16 / 17
+// SAFE STUBS • SHARED PREF BASED • GEL EDITION
+// ============================================================
+
+// ---------------- LAB 14 ----------------
+private float getLastLab14HealthScore() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getFloat("lab14_final_health_score", -1f);
+    } catch (Throwable t) {
+        return -1f;
+    }
+}
+
+private int getLastLab14AgingIndex() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getInt("lab14_aging_index", -1);
+    } catch (Throwable t) {
+        return -1;
+    }
+}
+
+private boolean hasValidLab14() {
+    return getLastLab14HealthScore() >= 0;
+}
+
+// ---------------- LAB 15 ----------------
+private int getLastLab15ChargeScore() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getInt("lab15_charge_score", -1);
+    } catch (Throwable t) {
+        return -1;
+    }
+}
+
+private boolean isLab15ChargingPathSystemLimited() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getBoolean("lab15_system_limited", false);
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private String getLastLab15StrengthLabel() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getString("lab15_strength_label", null);
+    } catch (Throwable t) {
+        return null;
+    }
+}
+
+private boolean hasValidLab15() {
+    return getLastLab15ChargeScore() >= 0;
+}
+
+// ---------------- LAB 16 ----------------
+private int getLastLab16ThermalScore() {
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        return p.getInt("lab16_thermal_score", -1);
+    } catch (Throwable t) {
+        return -1;
+    }
+}
+
+private boolean hasValidLab16() {
+    return getLastLab16ThermalScore() >= 0;
+}
+
+// ---------------- COOLING (SAFE DEFAULTS) ----------------
+private boolean hasHardwareCoolingDevices() {
+    // Most phones are passive-cooled
+    return false;
+}
+
+private String buildHardwareCoolingReport() {
+    return "No hardware cooling devices found. This device uses passive cooling only.";
+}
+
+// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 

@@ -1345,6 +1345,25 @@ private String formatTemp(float temp) {
     return String.format(Locale.US, "%.1f°C", temp);
 }
 
+// ------------------------------------------------------------
+// LAB 16 helpers — split label / state for colored output
+// ------------------------------------------------------------
+private String stripState(String line) {
+    int idx = line.lastIndexOf("(");
+    if (idx > 0) {
+        return line.substring(0, idx).trim();
+    }
+    return line;
+}
+
+private String extractState(String line) {
+    int idx = line.lastIndexOf("(");
+    if (idx >= 0) {
+        return line.substring(idx).trim();
+    }
+    return "";
+}
+
 // ===================================================================
 // HELPERS — LAB 16 THERMAL SNAPSHOT
 // Internal + Peripherals • Root Aware • GEL Edition
@@ -2949,6 +2968,7 @@ root.addView(title);
                 engine.saveRun();
 
                 final Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
+                final double relVar = conf.relativeVariance;
 
                 // ----------------------------------------------------
                 // 7) PROFILE + AGING (Engine)

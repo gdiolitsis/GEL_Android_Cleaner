@@ -1334,6 +1334,14 @@ private void abortLab15ByUser() {
     });
 }
 
+// ------------------------------------------------------------
+// TEMP FORMATTER (USED BY LAB 15 / LAB 16 LOGS)
+// ------------------------------------------------------------
+private String formatTemp(float temp) {
+    if (Float.isNaN(temp)) return "N/A";
+    return String.format(Locale.US, "%.1f°C", temp);
+}
+
 // ===================================================================
 // HELPERS — LAB 16 THERMAL SNAPSHOT
 // Internal + Peripherals • Root Aware • GEL Edition

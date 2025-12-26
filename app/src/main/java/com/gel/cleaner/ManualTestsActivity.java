@@ -3109,7 +3109,6 @@ endBatteryTemp   = tempEnd;
 // ----------------------------------------------------
 // 10) PRINT RESULTS (FULL LIKE OLD LAB) ✅
 // ----------------------------------------------------
-
 logInfo("LAB 14 - Stress result");
 logOk(String.format(
         Locale.US,
@@ -3145,7 +3144,7 @@ if (rise < 3.0f) {
 SpannableString spThermal =
         new SpannableString(String.format(
                 Locale.US,
-                "%s %.1f°C  |  +%.1f°C",
+                "%s %.1f°C | +%.1f°C",
                 emoji,
                 endBatteryTemp,
                 rise
@@ -3162,10 +3161,9 @@ if (txtLog != null) {
     txtLog.append(spThermal);
     txtLog.append("\n");
 } else {
-    // fallback (should not happen)
     logOk(String.format(
             Locale.US,
-            "%s %.1f°C  |  +%.1f°C",
+            "%s %.1f°C | +%.1f°C",
             emoji,
             endBatteryTemp,
             rise
@@ -3197,9 +3195,6 @@ logOk(String.format(
 
 // VARIANCE / INTERPRETATION
 logLab14VarianceInfo();
-
-// CONFIDENCE (based on run count)
-logLab14Confidence();
 
 // ----------------------------------------------------
 // Battery Aging Index + Interpretation
@@ -3241,7 +3236,7 @@ logOk(String.format(
                 // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
                 // EXACT logs block you provided (2 more runs / any other day, etc)
                 // ----------------------------------------------------
-                logLab14VarianceInfo();
+               
                 logLab14Confidence();
             }
         });
@@ -3428,9 +3423,8 @@ root.addView(title);
                 lab15StatusText.setTextColor(0xFF39FF14);
                 logOk("✅ Charging state detected.");
             }
-            logLine();
-            
-            if (chargingNow) {
+           
+                        if (chargingNow) {
                 float t = getBatteryTemperature();
                 if (t > 0) {
                     if (Float.isNaN(lab15BattTempPeak) || t > lab15BattTempPeak)

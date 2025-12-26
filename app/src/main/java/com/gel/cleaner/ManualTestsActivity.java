@@ -1096,10 +1096,10 @@ root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
 // GEL dark + GOLD border
 GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);          // GEL dark
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(3), 0xFFFFD700);  // GOLD border
-root.setBackground(bg);
+    bg.setColor(0xFF101010);           // GEL dark black
+    bg.setCornerRadius(dp(18));       // smooth premium corners
+    bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border (thicker so it shows)
+    root.setBackground(bg);
 
             TextView title = new TextView(this);
             title.setText("LAB 14 — Running stress test...");
@@ -3053,6 +3053,16 @@ logInfo(String.format(
         startMah, endMah, Math.max(0, drainMah), dtMs / 1000.0
 ));
 
+// ----------------------------------------------------
+// End temperature / Thermal rise (BEFORE drain rate)
+// ----------------------------------------------------
+logInfo("End temperature: " + formatTemp(endBatteryTemp));
+logInfo("Thermal rise: +" + formatTemp(endBatteryTemp - startBatteryTemp));
+logLine();
+
+// ----------------------------------------------------
+// Drain rate
+// ----------------------------------------------------
 if (validDrain) {
     logInfo("Drain rate: " +
             String.format(
@@ -3066,7 +3076,7 @@ if (validDrain) {
 }
 
 // ----------------------------------------------------
-// Measurement Consistency
+// Measurement Consistency (SCORE + DETAILS TOGETHER)
 // ----------------------------------------------------
 logLine();
 logInfo("Measurement Consistency Score: " +
@@ -3082,7 +3092,51 @@ logInfo("Measurement Consistency Score: " +
 logLab14VarianceInfo();
 
 // ----------------------------------------------------
-// Battery Profile (white label, colored value)
+// Battery Aging Index
+// ----------------------------------------------------
+logLine();
+
+if (agingIndex >= 0) {
+
+    logInfo("Battery Aging Index: " + agingIndex + "/100");
+    logInfo("Interpretation: " + agingInterp);
+
+} else {
+
+    SpannableString spAging =
+            new SpannableString("Battery Aging Index: Insufficient data");
+
+    spAging.setSpan(
+            new ForegroundColorSpan(0xFFFFA500), // yellow
+            "Battery Aging Index: ".length(),
+            spAging.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
+
+    txtLog.append(spAging);
+    txtLog.append("\n");
+
+    SpannableString spInterp =
+            new SpannableString("Interpretation: " + agingInterp);
+
+    spInterp.setSpan(
+            new ForegroundColorSpan(0xFFFFA500), // yellow
+            "Interpretation: ".length(),
+            spInterp.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
+
+    txtLog.append(spInterp);
+    txtLog.append("\n");
+}
+
+// ----------------------------------------------------
+// Aging analysis
+// ----------------------------------------------------
+logInfo("Aging analysis: " + aging.description);
+
+// ----------------------------------------------------
+// Battery Profile (AFTER aging analysis)
 // ----------------------------------------------------
 int profileColor;
 
@@ -3122,51 +3176,6 @@ txtLog.append(spProfile);
 txtLog.append("\n");
 
 // ----------------------------------------------------
-// Battery Aging Index
-// ----------------------------------------------------
-logLine();
-
-if (agingIndex >= 0) {
-
-    logInfo("Battery Aging Index: " + agingIndex + "/100");
-
-    logInfo("Interpretation: " + agingInterp);
-
-} else {
-
-    SpannableString spAging =
-            new SpannableString("Battery Aging Index: Insufficient data");
-
-    spAging.setSpan(
-            new ForegroundColorSpan(0xFFFFA500), // yellow
-            "Battery Aging Index: ".length(),
-            spAging.length(),
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-    );
-
-    txtLog.append(spAging);
-    txtLog.append("\n");
-
-    SpannableString spInterp =
-            new SpannableString("Interpretation: " + agingInterp);
-
-    spInterp.setSpan(
-            new ForegroundColorSpan(0xFFFFA500), // yellow
-            "Interpretation: ".length(),
-            spInterp.length(),
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-    );
-
-    txtLog.append(spInterp);
-    txtLog.append("\n");
-}
-
-// ----------------------------------------------------
-// Aging analysis
-// ----------------------------------------------------
-logInfo("Aging analysis: " + aging.description);
-
-// ----------------------------------------------------
 // Final Score
 // ----------------------------------------------------
 logLine();
@@ -3178,7 +3187,7 @@ logInfo(String.format(
 ));
 
 // ----------------------------------------------------
-// RUN-BASED CONFIDENCE (THE ONLY CONFIDENCE) ✅
+// FINAL RELIABILITY / CONFIDENCE (ONCE)
 // ----------------------------------------------------
 logLab14Confidence();
                
@@ -3237,7 +3246,7 @@ private void lab15ChargingSystemSmart() {
     b.setTitle("LAB 15 - Connect the charger to the device charging port");
 
     // ============================================================
-    // GEL DARK + GOLD POPUP BACKGROUND
+    // GEL DARK + GOLD POPUP BACKGROUND LAB 15
     // ============================================================
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
@@ -3393,52 +3402,55 @@ private void lab15ChargingSystemSmart() {
             }
 
             // ================= FINAL =================
-            lab15Finished = true;
-            lab15Running  = false;
+lab15Finished = true;
+lab15Running  = false;
 
-            lab15BattTempEnd = getBatteryTemperature();
+lab15BattTempEnd = getBatteryTemperature();
 
-            logLine();
-            logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
+logLine();
+logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
 
-            logInfo("ℹ️ Battery temperature: " +
-                    String.format(Locale.US, "%.1f°C", lab15BattTempEnd));
-
-            logLab15ThermalCorrelation(
-                    lab15BattTempStart,
-                    lab15BattTempPeak,
-                    lab15BattTempEnd
-            );
-
-            if (lab15OverTempDuringCharge) {
-                logWarn("⚠️ Elevated temperature detected during charging.");
-            } else {
-                logOk("✅ Charging temperature within safe limits.");
-            }
-
-            if (lab15FlapUnstable) {
-                logError("❌ Charging instability detected (plug/unplug behavior).");
-            } else {
-                logOk("✅ Charging connection appears stable.");
-            }
-
-            logLine();
-
-            // ------------------------------------------------------------
-// CHARGING STRENGTH & SYSTEM PATH ASSESSMENT (FINAL)
-// mAh/min • NO % • CLEAR VERDICT
 // ------------------------------------------------------------
+// Battery temperature + thermal correlation
+// ------------------------------------------------------------
+logInfo("Battery temperature: " +
+        String.format(Locale.US, "%.1f°C", lab15BattTempEnd));
+
+logLab15ThermalCorrelation(
+        lab15BattTempStart,
+        lab15BattTempPeak,
+        lab15BattTempEnd
+);
+
+// ------------------------------------------------------------
+// Thermal verdict
+// ------------------------------------------------------------
+if (lab15OverTempDuringCharge) {
+    logWarn("Thermal verdict (charging): Elevated temperature detected.");
+} else {
+    logOk("Thermal verdict (charging): OK – Normal thermal behavior during charging.");
+}
+
+// ------------------------------------------------------------
+// Connection stability
+// ------------------------------------------------------------
+if (lab15FlapUnstable) {
+    logError("Charging connection appears unstable (plug/unplug behavior).");
+} else {
+    logOk("Charging connection appears stable.");
+}
+
 logLine();
 
+// ------------------------------------------------------------
+// CHARGING INPUT & STRENGTH (mAh/min)
+// ------------------------------------------------------------
 BatteryInfo endInfo = getBatteryInfo();
 
 boolean lab15_strengthKnown = false;
 boolean lab15_strengthWeak  = false;
 boolean lab15_systemLimited = false;
 
-// ------------------------------------------------------------
-// CHARGING STRENGTH — mAh/min (NO %)
-// ------------------------------------------------------------
 if (startMah > 0 && endInfo != null && endInfo.currentChargeMah > startMah && startTs[0] > 0) {
 
     lab15_strengthKnown = true;
@@ -3449,6 +3461,7 @@ if (startMah > 0 && endInfo != null && endInfo.currentChargeMah > startMah && st
 
     double mahPerMin = (minutes > 0) ? (deltaMah / minutes) : -1;
 
+    // Charging input (WHITE label, value normal)
     logInfo(String.format(
             Locale.US,
             "Charging input: +%d mAh in %.1f min (%.1f mAh/min)",
@@ -3457,6 +3470,7 @@ if (startMah > 0 && endInfo != null && endInfo.currentChargeMah > startMah && st
             mahPerMin
     ));
 
+    // Charging strength (colored verdict)
     if (mahPerMin >= 20.0) {
         logOk("Charging strength: STRONG");
         lab15_strengthWeak = false;
@@ -3475,12 +3489,35 @@ if (startMah > 0 && endInfo != null && endInfo.currentChargeMah > startMah && st
     }
 
 } else {
-    logWarn("Charging strength: Unable to estimate (no mAh delta)");
+    logWarn("Charging strength: Unable to estimate accurately.");
     lab15_strengthKnown = false;
     lab15_strengthWeak  = true;
 }
 
 logLine();
+
+// ------------------------------------------------------------
+// CHARGING PATH (SYSTEM-LEVEL)
+// ------------------------------------------------------------
+if (!lab15_systemLimited) {
+    logOk("Charging path: Operating normally (no system-level current throttling).");
+} else {
+    logWarn("Charging path: System-level current limitation detected.");
+}
+
+// ------------------------------------------------------------
+// FINAL LAB 15 DECISION (GREEN BLOCK LIKE OLD VERSION)
+// ------------------------------------------------------------
+if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+
+    logOk("LAB decision: Charging system OK. No cleaning or replacement required.");
+    logOk("LAB decision: Charging stability OK.");
+
+} else {
+
+    logWarn("LAB decision: Charging system shows potential issues.");
+    logWarn("LAB decision: Further inspection or repeat test recommended.");
+}
 
 // ------------------------------------------------------------
 // SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)
@@ -3565,6 +3602,8 @@ lab15Dialog = null;
 // ============================================================
 private void lab16ThermalSnapshot() {
 
+    final String SECTION_LINE = "================================";
+
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
     logLine();
@@ -3572,8 +3611,9 @@ private void lab16ThermalSnapshot() {
     // ============================================================
     // THERMAL SENSORS (INTERNAL)
     // ============================================================
+    logLine(); // ⬅️ κενή γραμμή πριν τον τίτλο
     logInfo("THERMAL SENSORS (INTERNAL)");
-    logInfo("================================");
+    logInfo(SECTION_LINE);
     logLine();
 
     String internal = buildThermalInternalReport();
@@ -3582,7 +3622,7 @@ private void lab16ThermalSnapshot() {
         for (String line : internal.split("\n")) {
             if (line.trim().isEmpty()) continue;
 
-            // ---- COLOR ROUTING BY STATE ----
+            // labels = λευκά | values = χρωματιστά via state
             if (line.contains("(COOL)")) {
                 logOk(line);
             } else if (line.contains("(NORMAL)")) {
@@ -3594,7 +3634,7 @@ private void lab16ThermalSnapshot() {
             } else if (line.toLowerCase(Locale.US).contains("advanced info")) {
                 logWarn(line);
             } else {
-                logInfo(line); // labels / neutral
+                logInfo(line); // καθαρό label
             }
         }
     }
@@ -3603,8 +3643,8 @@ private void lab16ThermalSnapshot() {
     // HARDWARE THERMAL SYSTEMS
     // ============================================================
     logLine();
-    logInfo("Hardware Thermal Systems");
-    logInfo("================================");
+    logInfo("HARDWARE THERMAL SYSTEMS");
+    logInfo(SECTION_LINE);
     logLine();
 
     String hwThermal = buildThermalInfo();
@@ -3622,7 +3662,7 @@ private void lab16ThermalSnapshot() {
             } else if (line.contains("(HOT)") || line.contains("(CRITICAL)")) {
                 logError(line);
             } else {
-                logInfo(line);
+                logInfo(line); // label
             }
         }
     }
@@ -3631,8 +3671,8 @@ private void lab16ThermalSnapshot() {
     // HARDWARE COOLING SYSTEMS
     // ============================================================
     logLine();
-    logInfo("Hardware Cooling Systems");
-    logInfo("================================");
+    logInfo("HARDWARE COOLING SYSTEMS");
+    logInfo(SECTION_LINE);
     logLine();
 
     if (!hasHardwareCoolingDevices()) {
@@ -3660,19 +3700,17 @@ private void lab16ThermalSnapshot() {
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation
 // AGGREGATED • FINAL • NO SNAPSHOT
-//
-// ✔ Uses LAB14 + LAB15 + LAB16 saved results
-// ✔ Detects system-limited charging path (NOT battery fault)
-// ✔ Applies penalties correctly
-// ✔ Popup if prerequisites missing (GEL dark + gold)
-// ✔ No checkboxes
 // ============================================================
 private void lab17RunAuto() {
 
     // ------------------------------------------------------------
-    // PRECHECK — REQUIRED LABS
+    // PRECHECK — REQUIRED STORED LAB RESULTS (NOT RUNTIME FLAGS)
     // ------------------------------------------------------------
-    if (!hasValidLab14() || !hasValidLab15() || !hasValidLab16()) {
+    float lab14Health  = getLastLab14HealthScore();
+    int   lab15Charge  = getLastLab15ChargeScore();
+    int   lab16Thermal = getLastLab16ThermalScore();
+
+    if (lab14Health < 0 || lab15Charge < 0 || lab16Thermal < 0) {
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -3681,33 +3719,71 @@ private void lab17RunAuto() {
                 );
 
         b.setCancelable(true);
-        b.setTitle("LAB 17 — Prerequisites Missing");
 
-        TextView msg = new TextView(this);
-        msg.setText("Run first labs 14, 15 and 16 for accurate final reliability score.");
-        msg.setTextColor(0xFFFFFFFF);
-        msg.setTextSize(15f);
-        msg.setPadding(dp(24), dp(20), dp(24), dp(20));
+        final AlertDialog[] popupDialogHolder = new AlertDialog[1];
+
+        // -----------------------------
+        // CONTAINER
+        // -----------------------------
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(20), dp(24), dp(20));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(16));
+        bg.setCornerRadius(dp(18));
         bg.setStroke(dp(3), 0xFFFFD700);
-        msg.setBackground(bg);
+        box.setBackground(bg);
 
-        b.setView(msg);
-        b.setPositiveButton("OK", null);
+        // -----------------------------
+        // TITLE
+        // -----------------------------
+        TextView title = new TextView(this);
+        title.setText("LAB 17 — Prerequisites Missing");
+        title.setTextColor(0xFFFFD700);
+        title.setTextSize(17f);
+        title.setPadding(0, 0, 0, dp(12));
+        box.addView(title);
 
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        // -----------------------------
+        // MESSAGE
+        // -----------------------------
+        TextView msg = new TextView(this);
+        msg.setText("Run labs 14, 15 and 16 first for accurate final reliability score.");
+        msg.setTextColor(0xFFFFFFFF);
+        msg.setTextSize(15f);
+        msg.setPadding(0, 0, 0, dp(18));
+        box.addView(msg);
 
-        d.show();
+        // -----------------------------
+        // OK BUTTON (INSIDE POPUP)
+        // -----------------------------
+        Button ok = new Button(this);
+        ok.setText("OK");
+        ok.setAllCaps(false);
+        ok.setTextColor(0xFF000000);
+        ok.setBackgroundColor(0xFFFFD700);
+        ok.setOnClickListener(v -> {
+            if (popupDialogHolder[0] != null) popupDialogHolder[0].dismiss();
+        });
+
+        box.addView(ok);
+
+        b.setView(box);
+
+        popupDialogHolder[0] = b.create();
+        AlertDialog popupDialog = popupDialogHolder[0];
+
+        if (popupDialog.getWindow() != null)
+            popupDialog.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
+
+        popupDialog.show();
         return;
     }
 
     // ------------------------------------------------------------
-    // START LAB 17
+    // START LAB 17 (UNCHANGED)
     // ------------------------------------------------------------
     logLine();
     logInfo("LAB 17 — GEL Auto Battery Reliability Evaluation");
@@ -3717,21 +3793,9 @@ private void lab17RunAuto() {
 
         try {
 
-            // ------------------------------------------------------------
-            // FETCH STORED RESULTS
-            // ------------------------------------------------------------
-            float lab14Health  = getLastLab14HealthScore();     // 0..100
-            int   lab14Aging   = getLastLab14AgingIndex();      // 0..100 or -1
-            int   lab15Charge  = getLastLab15ChargeScore();     // 0..100
-            int   lab16Thermal = getLastLab16ThermalScore();    // 0..100
-
+            int   lab14Aging   = getLastLab14AgingIndex();
             boolean lab15SystemLimited = isLab15ChargingPathSystemLimited();
             String  lab15StrengthLabel = getLastLab15StrengthLabel();
-
-            if (lab14Health < 0 || lab15Charge < 0 || lab16Thermal < 0) {
-                ui.post(() -> logError("LAB 17 aborted: missing required lab data."));
-                return;
-            }
 
             // ------------------------------------------------------------
             // BASE WEIGHTED SCORE
@@ -3748,11 +3812,8 @@ private void lab17RunAuto() {
             // ------------------------------------------------------------
             int penaltyExtra = 0;
 
-            if (lab15Charge < 60 && lab15SystemLimited) {
-                penaltyExtra += 6;   // system throttling → mild
-            } else if (lab15Charge < 60) {
-                penaltyExtra += 12;  // real charging weakness
-            }
+            if (lab15Charge < 60 && lab15SystemLimited) penaltyExtra += 6;
+            else if (lab15Charge < 60) penaltyExtra += 12;
 
             if (lab16Thermal < 60) penaltyExtra += 10;
             else if (lab16Thermal < 75) penaltyExtra += 5;
@@ -3763,8 +3824,7 @@ private void lab17RunAuto() {
                 else if (lab14Aging >= 30) penaltyExtra += 3;
             }
 
-            int finalScore = baseScore - penaltyExtra;
-            finalScore = Math.max(0, Math.min(100, finalScore));
+            int finalScore = Math.max(0, Math.min(100, baseScore - penaltyExtra));
 
             String category =
                     (finalScore >= 85) ? "Strong" :
@@ -3869,7 +3929,6 @@ private void lab17RunAuto() {
 
     }).start();
 }
-
 
 // ============================================================ // ============================================================
 // LABS 18 - 21: STORAGE & PERFORMANCE

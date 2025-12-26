@@ -3833,7 +3833,7 @@ private void lab17RunAuto() {
                 }
 
                 // penalty breakdown (only if applied)
-                if (penaltyExtra > 0) {
+                if (fPenaltyExtra > 0) {
                     logLine();
                     logInfo("Penalty breakdown:");
                     if (lab15Charge < 60 && lab15SystemLimited) {
@@ -3852,10 +3852,10 @@ private void lab17RunAuto() {
                 // final result
                 logLine();
                 logOk(String.format(
-                        Locale.US,
-                        "Final Battery Reliability Score: %d%% (%s)",
-                        finalScore, category
-                ));
+        Locale.US,
+        "Final Battery Reliability Score: %d%% (%s)",
+        fFinalScore, fCategory
+));
 
                 logInfo(explanation);
                 logLine();
@@ -3866,8 +3866,8 @@ private void lab17RunAuto() {
 try {
     SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
     p.edit()
-     .putInt("lab17_final_score", finalScore)
-     .putString("lab17_category", category)
+     .putInt("lab17_final_score", fFinalScore)
+     .putString("lab17_category", fCategory)
      .apply();
 } catch (Throwable ignore) {}
                 

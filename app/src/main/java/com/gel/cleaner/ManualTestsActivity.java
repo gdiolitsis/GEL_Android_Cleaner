@@ -19,6 +19,9 @@ package com.gel.cleaner;
 // ============================================================
 // ANDROID — CORE
 // ============================================================
+import android.graphics.drawable.StateListDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.content.res.ColorStateList;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
@@ -1655,6 +1658,15 @@ private Button makeTestButtonGreenGold(String text, Runnable action) {
     btn.setOnClickListener(v -> action.run());
 
     return btn;
+}
+
+private String readSys(File dir, String name) {
+    try (BufferedReader br =
+                 new BufferedReader(new FileReader(new File(dir, name)))) {
+        return br.readLine();
+    } catch (Throwable ignore) {
+        return null;
+    }
 }
 
 // ============================================================
@@ -3671,7 +3683,7 @@ private void lab16ThermalSnapshot() {
     List<ThermalEntry> peripherals = buildThermalPeripheralsCritical();
 
     float peakTemp = -1f;
-    String peakSrc = "N/A";
+    String peakSrc = "N/A"; 
 
     // ------------------------------------------------------------
     // BASIC + CRITICAL THERMALS (INLINE, HUMAN READABLE)
@@ -3734,7 +3746,6 @@ if (hiddenRisk) {
 // THERMAL SCORE (USED BY LAB 17)
 // ------------------------------------------------------------
 int thermalScore = 100;
-float peakTemp = -1f;
 String peakSource = "N/A";
 boolean thermalDanger = false;
 
@@ -5977,31 +5988,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
         enableSingleExportButton();
     }
-}
-
-// ============================================================
-// LAB 16 — THERMAL HELPERS (CLASS-LEVEL, NOT INSIDE METHODS)
-// ============================================================
-
-private List<ThermalEntry> buildThermalInternal() {
-
-    List<ThermalEntry> out = new ArrayList<>();
-
-    try {
-        float batt = getBatteryTemperature();
-        if (batt > 0) out.add(new ThermalEntry("Battery", batt));
-
-        Float cpu = readCpuTempSafe();
-        if (cpu != null && cpu > 0)
-            out.add(new ThermalEntry("CPU", cpu));
-
-        Float gpu = readGpuTempSafe();
-        if (gpu != null && gpu > 0)
-            out.add(new ThermalEntry("GPU", gpu));
-
-    } catch (Throwable ignore) {}
-
-    return out;
 }
 
 // ============================================================

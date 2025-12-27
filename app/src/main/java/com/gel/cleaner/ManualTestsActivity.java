@@ -3111,7 +3111,7 @@ if (delta > 0.5f) {
             delta
     ));
 } else if (delta < -0.5f) {
-    // πτώση θερμοκρασίας (cooling / PMIC)
+
     logOk(String.format(
             Locale.US,
             "%.1f°C",
@@ -3268,7 +3268,6 @@ AlertDialog.Builder b =
                 android.R.style.Theme_Material_Dialog_NoActionBar
         );
 b.setCancelable(false);
-// ❌ ΜΗΝ βάζεις b.setTitle εδώ – πάει εκτός popup
 
 // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND LAB 15
@@ -4151,7 +4150,7 @@ private void lab17_showPopup(String titleText, String msgText) {
         popup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
-    popup.show();η
+    popup.show();
 }
 
 // ============================================================

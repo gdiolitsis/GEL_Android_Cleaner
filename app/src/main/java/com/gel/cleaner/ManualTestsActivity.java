@@ -5824,16 +5824,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // LAB 16 — THERMAL HELPERS (CLASS-LEVEL, NOT INSIDE METHODS)
 // ============================================================
 
-private static class ThermalEntry {
-    final String label;
-    final float temp;
-
-    ThermalEntry(String label, float temp) {
-        this.label = label;
-        this.temp = temp;
-    }
-}
-
 private List<ThermalEntry> buildThermalInternal() {
 
     List<ThermalEntry> out = new ArrayList<>();
@@ -5850,35 +5840,6 @@ private List<ThermalEntry> buildThermalInternal() {
         if (gpu != null && gpu > 0)
             out.add(new ThermalEntry("GPU", gpu));
 
-    } catch (Throwable ignore) {}
-
-    return out;
-}
-
-private List<ThermalEntry> buildThermalHardware() {
-
-    List<ThermalEntry> out = new ArrayList<>();
-
-    try {
-        File dir = new File("/sys/class/thermal");
-        File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-        if (zones != null) {
-            for (File z : zones) {
-                try {
-                    String type = readSys(z, "type");
-                    String temp = readSys(z, "temp");
-
-                    if (type == null || temp == null) continue;
-
-                    float c = Float.parseFloat(temp.trim()) / 1000f;
-                    if (c <= 0 || c > 120) continue;
-
-                    out.add(new ThermalEntry(type, c));
-
-                } catch (Throwable ignore) {}
-            }
-        }
     } catch (Throwable ignore) {}
 
     return out;

@@ -1716,7 +1716,7 @@ private String buildHardwareCoolingReport() {
 // ============================================================
 private void lab1SpeakerTone() {
 
-    logSection("LAB 1 â€” Speaker Tone Test");
+    logSection("LAB 1 — Speaker Tone Test");
 
     new Thread(() -> {
 
@@ -1736,7 +1736,7 @@ private void lab1SpeakerTone() {
 
             logOk("Speaker output detected");
 
-            // ðŸ”§ FIX: Explain LOW confidence explicitly
+            // 🔧 FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -1764,11 +1764,11 @@ private void lab1SpeakerTone() {
 }
 
 // ============================================================
-// LAB 2 â€” Speaker Frequency Sweep
+// LAB 2 — Speaker Frequency Sweep
 // ============================================================
 private void lab2SpeakerSweep() {
 
-    logSection("LAB 2 â€” Speaker Frequency Sweep");
+    logSection("LAB 2 — Speaker Frequency Sweep");
 
     new Thread(() -> {
 
@@ -1798,7 +1798,7 @@ private void lab2SpeakerSweep() {
 
             logOk("Frequency sweep executed");
 
-            // ðŸ”§ FIX: Explain LOW confidence explicitly
+            // 🔧 FIX: Explain LOW confidence explicitly
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
@@ -1826,11 +1826,11 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 â€” Earpiece Audio Path Check
+   LAB 3 — Earpiece Audio Path Check
    ============================================================ */
 private void lab3EarpieceManual() {
 
-    logSection("LAB 3 â€” Earpiece Audio Path Check");
+    logSection("LAB 3 — Earpiece Audio Path Check");
 
     new Thread(() -> {
 
@@ -1889,11 +1889,11 @@ private void lab3EarpieceManual() {
 }
 
 /* ============================================================
-   LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)
+   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    ============================================================ */
 private void lab4MicManual() {
 
-    logSection("LAB 4 â€” Microphone Recording Check (BOTTOM + TOP)");
+    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
 
     new Thread(() -> {
 
@@ -1926,11 +1926,11 @@ private void lab4MicManual() {
 }
 
 /* ============================================================
-   LAB 5 â€” Vibration Motor Test (AUTO)
+   LAB 5 — Vibration Motor Test (AUTO)
    ============================================================ */
 private void lab5Vibration() {
 
-    logSection("LAB 5 â€” Vibration Motor Test");
+    logSection("LAB 5 — Vibration Motor Test");
 
     try {
         Vibrator v;
@@ -1964,16 +1964,16 @@ private void lab5Vibration() {
 }
 
 // ============================================================  
-// LABS 6â€“9: DISPLAY & SENSORS  
+// LABS 6 — 9: DISPLAY & SENSORS  
 // ============================================================  
 
 /* ============================================================
-   LAB 6 â€” Display / Touch Basic Inspection (manual)
+   LAB 6 — Display / Touch Basic Inspection (manual)
    ============================================================ */
 
 private void lab6DisplayTouch() {
 
-    logSection("LAB 6 â€” Display / Touch Basic Inspection");
+    logSection("LAB 6 — Display / Touch Basic Inspection");
 
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
@@ -1982,12 +1982,12 @@ private void lab6DisplayTouch() {
 }
 
 /* ============================================================
-   LAB 7 â€” Rotation / Auto-Rotate Check (manual)
+   LAB 7 — Rotation / Auto-Rotate Check (manual)
    ============================================================ */
 
 private void lab7RotationManual() {
 
-    logSection("LAB 7 â€” Rotation / Auto-Rotate Check");
+    logSection("LAB 7 — Rotation / Auto-Rotate Check");
 
     startActivityForResult(
             new Intent(this, RotationCheckActivity.class),
@@ -1996,12 +1996,12 @@ private void lab7RotationManual() {
 }
 
 /* ============================================================
-   LAB 8 â€” Proximity During Call (manual)
+   LAB 8 — Proximity During Call (manual)
    ============================================================ */
 
 private void lab8ProximityCall() {
 
-    logSection("LAB 8 â€” Proximity During Call");
+    logSection("LAB 8 — Proximity During Call");
 
     startActivityForResult(
             new Intent(this, ProximityCheckActivity.class),
@@ -2010,18 +2010,18 @@ private void lab8ProximityCall() {
 }
 
 /* ============================================================
-   LAB 9 â€” Sensors Check 
+   LAB 9 — Sensors Check 
    ============================================================ */
 
 private void lab9SensorsCheck() {
 
     logLine();
-    logInfo("LAB 9 â€” Sensors Presence & Full Analysis");
+    logInfo("LAB 9 — Sensors Presence & Full Analysis");
 
     try {
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sm == null) {
-            logError("SensorManager not available â€” framework issue.");
+            logError("SensorManager not available — framework issue.");
             return;
         }
 
@@ -2050,7 +2050,7 @@ private void lab9SensorsCheck() {
         // RAW SENSOR LIST (former LAB 10)
         // ------------------------------------------------------------
         for (Sensor s : sensors) {
-            String line = "â€¢ type=" + s.getType()
+            String line = "• type=" + s.getType()
                     + " | name=" + s.getName()
                     + " | vendor=" + s.getVendor();
             logInfo(line);
@@ -2102,24 +2102,24 @@ private void lab9SensorsCheck() {
         logInfo("Sensor Interpretation Summary:");
 
         if (hasVirtualGyro)
-            logOk("Detected Xiaomi Virtual Gyroscope â€” expected behavior (sensor fusion instead of hardware gyro).");
+            logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");
 
         if (hasDualALS)
-            logOk("Dual Ambient Light Sensors detected â€” OK. Device uses front + rear ALS for better auto-brightness.");
+            logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");
         else
-            logWarn("Only one Ambient Light Sensor detected â€” auto-brightness may be less accurate.");
+            logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");
 
         if (hasSAR)
-            logOk("SAR Detectors detected â€” normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
+            logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");
 
         if (hasPickup)
-            logOk("Pickup Sensor detected â€” supports 'lift to wake' and motion awareness.");
+            logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");
 
         if (hasLargeTouch)
-            logOk("Large Area Touch Sensor detected â€” improved palm rejection and touch accuracy.");
+            logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");
 
         if (hasGameRotation)
-            logOk("Game Rotation Vector sensor detected â€” smoother gaming orientation response.");
+            logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");
 
         logOk("Sensor suite appears complete and healthy for this device.");
 
@@ -2129,22 +2129,22 @@ private void lab9SensorsCheck() {
 }
 
 /* ============================================================
-   Helper â€” Sensor Presence
+   Helper — Sensor Presence
    ============================================================ */
 private void checkSensor(SensorManager sm, int type, String name) {
     boolean ok = sm.getDefaultSensor(type) != null;
     if (ok)
         logOk(name + " is reported as available.");
     else
-        logWarn(name + " is NOT reported â€” features depending on it may be limited or missing.");
+        logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
 }
 
 // ============================================================  
-// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) â€” NO PASSWORD / NO QR  
+// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
 // ============================================================  
 private void lab10WifiSnapshot() {  
     logLine();  
-    logInfo("LAB 10 â€” Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
+    logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
 
     WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);  
     if (wm == null) {  
@@ -2153,7 +2153,7 @@ private void lab10WifiSnapshot() {
     }  
 
     if (!wm.isWifiEnabled()) {  
-        logWarn("Wi-Fi is OFF â€” please enable and retry.");  
+        logWarn("Wi-Fi is OFF — please enable and retry.");  
         return;  
     }  
 
@@ -2237,7 +2237,7 @@ private void lab10WifiSnapshot() {
     else if (rssi > -80)  
         logWarn("Moderate Wi-Fi signal.");  
     else  
-        logError("Very weak Wi-Fi signal â€” expect drops.");  
+        logError("Very weak Wi-Fi signal — expect drops.");  
 
     // 4) DHCP / IP details  
     try {  
@@ -2284,7 +2284,7 @@ public void onRequestPermissionsResult(int requestCode, String[] perms, int[] gr
 }  
 
 // ============================================================  
-// LAB 10 â€” DEEPSCAN v3.0  
+// LAB 10 — DEEPSCAN v3.0  
 // ============================================================  
 private void runWifiDeepScan(WifiManager wm) {  
     new Thread(() -> {  
@@ -2374,13 +2374,13 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
 }  
 
 // ============================================================  
-// LAB 11 â€” Mobile Data Diagnostic
+// LAB 11 — Mobile Data Diagnostic
 // ============================================================  
 
 private void lab11MobileDataDiagnostic() {
 
     logLine();
-    logInfo("LAB 11 â€” Mobile Network Diagnostic (Laboratory)");
+    logInfo("LAB 11 — Mobile Network Diagnostic (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
@@ -2423,7 +2423,7 @@ private void lab11MobileDataDiagnostic() {
     logLabelValue("SIM State", "READY");
 
     // ------------------------------------------------------------
-    // Service state (legacy domain â€” informational)
+    // Service state (legacy domain — informational)
     // ------------------------------------------------------------
     logLabelValue(
             "Service State (legacy)",
@@ -2438,7 +2438,7 @@ private void lab11MobileDataDiagnostic() {
     }
 
     // ------------------------------------------------------------
-    // Data state (packet domain â€” informational)
+    // Data state (packet domain — informational)
     // ------------------------------------------------------------
     String dataStateLabel;
     switch (s.dataState) {
@@ -2473,13 +2473,13 @@ private void lab11MobileDataDiagnostic() {
 }
 
 // ============================================================
-// LAB 12 â€” Call Function Interpretation (Laboratory)
+// LAB 12 — Call Function Interpretation (Laboratory)
 // ============================================================
 
 private void lab12CallFunctionInterpretation() {
 
     logLine();
-    logInfo("LAB 12 â€” Call Function Interpretation (Laboratory)");
+    logInfo("LAB 12 — Call Function Interpretation (Laboratory)");
 
     TelephonySnapshot s = getTelephonySnapshot();
 
@@ -2556,12 +2556,12 @@ private void lab12CallFunctionInterpretation() {
 }
 
 // ============================================================
-// LAB 13 â€” Internet Quich Check
+// LAB 13 — Internet Quich Check
 // ============================================================
 
 private void lab13InternetQuickCheck() {  
     logLine();  
-    logInfo("LAB 13 â€” Internet Access Quick Check.");  
+    logInfo("LAB 13 — Internet Access Quick Check.");  
     try {  
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);  
         if (cm == null) {  
@@ -2602,7 +2602,7 @@ private void lab13InternetQuickCheck() {
 }  
 
 // ============================================================
-// GEL THERMAL ENGINE â€” UNIVERSAL AUTO-SCALE (FINAL)
+// GEL THERMAL ENGINE — UNIVERSAL AUTO-SCALE (FINAL)
 // Compatible with all Android devices (Pixel, Samsung, Xiaomi, POCO, Huawei,
 // OnePlus, Oppo, Vivo, Realme, Motorola, Infinix, Tecno, MTK, Snapdragon).
 // ============================================================
@@ -4016,7 +4016,7 @@ ok.setOnClickListener(v -> {
 // ============================================================
 private void lab18StorageSnapshot() {
 logLine();
-logInfo("LAB 18 â€” Internal Storage Snapshot.");
+logInfo("LAB 18 — Internal Storage Snapshot.");
 try {
 StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
 long total = s.getBlockCountLong() * s.getBlockSizeLong();
@@ -4028,9 +4028,9 @@ logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
                 + " (free " + humanBytes(free) + ", " + pctFree + "%).");  
 
         if (pctFree < 5)  
-            logError("Free space below 5% â€” high risk of crashes, failed updates and slow UI.");  
+            logError("Free space below 5% — high risk of crashes, failed updates and slow UI.");  
         else if (pctFree < 10)  
-            logWarn("Free space below 10% â€” performance and update issues likely.");  
+            logWarn("Free space below 10% — performance and update issues likely.");  
         else  
             logOk("Internal storage level is acceptable for daily usage.");  
     } catch (Exception e) {  
@@ -4040,7 +4040,7 @@ logInfo("Internal storage used: " + humanBytes(used) + " / " + humanBytes(total)
 
 private void lab19AppsFootprint() {  
     logLine();  
-    logInfo("LAB 19 â€” Installed Apps Footprint.");  
+    logInfo("LAB 19 — Installed Apps Footprint.");  
     try {  
         PackageManager pm = getPackageManager();  
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);  
@@ -4059,9 +4059,9 @@ private void lab19AppsFootprint() {
         logInfo("Total packages: " + apps.size());  
 
         if (userApps > 120)  
-            logError("Very high number of user apps â€” strong risk of background drain and lag.");  
+            logError("Very high number of user apps — strong risk of background drain and lag.");  
         else if (userApps > 80)  
-            logWarn("High number of user apps â€” possible performance impact.");  
+            logWarn("High number of user apps — possible performance impact.");  
         else  
             logOk("App footprint is within a normal range.");  
     } catch (Exception e) {  
@@ -4071,7 +4071,7 @@ private void lab19AppsFootprint() {
 
 private void lab20RamSnapshot() {  
     logLine();  
-    logInfo("LAB 20 â€” Live RAM Snapshot.");  
+    logInfo("LAB 20 — Live RAM Snapshot.");  
     try {  
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
         if (am == null) {  
@@ -4085,9 +4085,9 @@ private void lab20RamSnapshot() {
         int pct = (int) ((free * 100L) / total);  
         logInfo("RAM now: " + humanBytes(free) + " free (" + pct + "%).");  
         if (pct < 10)  
-            logError("Very low free RAM (<10%) â€” expect heavy lag and aggressive app killing.");  
+            logError("Very low free RAM (<10%) — expect heavy lag and aggressive app killing.");  
         else if (pct < 20)  
-            logWarn("Low free RAM (10â€“20%) â€” borderline under load.");  
+            logWarn("Low free RAM (10â€“20%) — borderline under load.");  
         else  
             logOk("RAM level is acceptable for normal usage at this moment.");  
     } catch (Exception e) {  
@@ -4097,29 +4097,29 @@ private void lab20RamSnapshot() {
 
 private void lab21UptimeHints() {  
     logLine();  
-    logInfo("LAB 21 â€” Uptime / Reboot History Hints.");  
+    logInfo("LAB 21 — Uptime / Reboot History Hints.");  
     long upMs = SystemClock.elapsedRealtime();  
     String upStr = formatUptime(upMs);  
     logInfo("System uptime: " + upStr);  
     if (upMs < 2 * 60 * 60 * 1000L) {  
-        logWarn("Device was rebooted recently (<2 hours) â€” some issues may already be masked by the reboot.");  
+        logWarn("Device was rebooted recently (<2 hours) — some issues may already be masked by the reboot.");  
     } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {  
-        logWarn("Uptime above 7 days â€” recommend a reboot before deep diagnostics.");  
+        logWarn("Uptime above 7 days — recommend a reboot before deep diagnostics.");  
     } else {  
         logOk("Uptime is within a reasonable range for diagnostics.");  
     }  
 }  
 
 // ============================================================  
-// LABS 22â€“25: SECURITY & SYSTEM HEALTH  
+// LABS 22 — 25: SECURITY & SYSTEM HEALTH  
 // ============================================================  
 // ============================================================
 
-// LAB 22 â€” Screen Lock / Biometrics Checklist (auto-detect + manual)
+// LAB 22 — Screen Lock / Biometrics Checklist (auto-detect + manual)
 // ============================================================
 private void lab22ScreenLock() {
 logLine();
-logInfo("LAB 22 â€” Screen Lock / Biometrics Checklist");
+logInfo("LAB 22 — Screen Lock / Biometrics Checklist");
 
 try {  
     android.app.KeyguardManager km =  
@@ -4131,11 +4131,11 @@ try {
         if (secure) {  
             logOk("Device reports SECURE lock method (PIN / Pattern / Password).");  
         } else {  
-            logError("Device has NO secure lock method â€” phone is UNPROTECTED!");  
+            logError("Device has NO secure lock method — phone is UNPROTECTED!");  
             logWarn("Anyone can access data without authentication.");  
         }  
     } else {  
-        logWarn("KeyguardManager not available â€” cannot read lock status.");  
+        logWarn("KeyguardManager not available — cannot read lock status.");  
     }  
 } catch (Exception e) {  
     logWarn("Screen lock detection failed: " + e.getMessage());  
@@ -4143,18 +4143,18 @@ try {
 
 // Manual guidance (kept for technician)  
 logInfo("1) Verify that the device has a secure lock method (PIN / pattern / password).");  
-logWarn("If the device is left with no lock at all â€” higher risk for data and account theft.");  
+logWarn("If the device is left with no lock at all — higher risk for data and account theft.");  
 logInfo("2) Test fingerprint / face unlock if configured to confirm sensor response.");
 
 }
 
 // ============================================================
 
-// LAB 23 â€” Security Patch & Play Protect (auto + manual)
+// LAB 23 — Security Patch & Play Protect (auto + manual)
 // ============================================================
 private void lab23SecurityPatchManual() {
 logLine();
-logInfo("LAB 23 â€” Security Patch & Play Protect Check");
+logInfo("LAB 23 — Security Patch & Play Protect Check");
 
 // ----------------------------  
 // 1) Security Patch Level  
@@ -4171,7 +4171,7 @@ try {
 }  
 
 // ----------------------------  
-// 2) Play Protect Detection â€” BEST POSSIBLE WITHOUT ROOT  
+// 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT  
 // ----------------------------  
 try {  
     PackageManager pm = getPackageManager();  
@@ -4184,7 +4184,7 @@ try {
     } catch (Exception ignored) {}  
 
     if (!gmsPresent) {  
-        logError("Google Play Services missing â€” Play Protect NOT available.");  
+        logError("Google Play Services missing — Play Protect NOT available.");  
     } else {  
         // Check Verify Apps setting (Google verifier)  
         int verify = -1;  
@@ -4201,7 +4201,7 @@ try {
         } else if (verify == 0) {  
             logWarn("Play Protect: OFF (Google Verify Apps DISABLED).");  
         } else {  
-            // Fallback â€” detect if the activity exists  
+            // Fallback — detect if the activity exists  
             Intent protectIntent = new Intent();  
             protectIntent.setClassName(  
                     "com.google.android.gms",  
@@ -4211,7 +4211,7 @@ try {
             if (protectIntent.resolveActivity(pm) != null) {  
                 logOk("Play Protect module detected (activity present).");  
             } else {  
-                logWarn("Play Protect module not fully detected â€” OEM variant or restricted build.");  
+                logWarn("Play Protect module not fully detected — OEM variant or restricted build.");  
             }  
         }  
     }  
@@ -4220,20 +4220,20 @@ try {
 }  
 
 // MANUAL GUIDANCE (kept for technicians)  
-logInfo("1) Open Android Settings â†’ About phone â†’ Android version â†’ Security patch level.");  
-logWarn("If the patch level is very old compared to current date â€” increased vulnerability risk.");  
-logInfo("2) In Google Play Store â†’ Play Protect â†’ verify scanning is enabled and up to date.");
+logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");  
+logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");  
+logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
 
 }
 
 // ============================================================
 
-// LAB 24 â€” Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
+// LAB 24 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
 // GEL Security v3.1 (Realtime Snapshot)
 // ============================================================
 private void lab24DevOptions() {
 logLine();
-logInfo("LAB 24 â€” Developer Options / ADB Risk Note (Realtime).");
+logInfo("LAB 24 — Developer Options / ADB Risk Note (Realtime).");
 
 int risk = 0;  
 
@@ -4252,7 +4252,7 @@ try {
     logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
 
     if (usbDebug) {  
-        logWarn("USB Debugging ENABLED â€” physical access risk.");  
+        logWarn("USB Debugging ENABLED — physical access risk.");  
         risk += 30;  
     } else {  
         logOk("USB Debugging is OFF.");  
@@ -4290,14 +4290,14 @@ try {
 }  
 
 // ============================================================  
-// 3) ADB OVER WIFI (TCP/IP mode â€” port 5555)  
+// 3) ADB OVER WIFI (TCP/IP mode — port 5555)  
 // ============================================================  
 boolean adbWifi = isPortOpen(5555, 200);  
 
 logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
 
 if (adbWifi) {  
-    logError("ADB over Wi-Fi ACTIVE â€” remote debugging possible on same network.");  
+    logError("ADB over Wi-Fi ACTIVE — remote debugging possible on same network.");  
     risk += 40;  
 } else {  
     logOk("ADB over Wi-Fi is OFF.");  
@@ -4314,7 +4314,7 @@ boolean adbPairing =
 logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
 
 if (adbPairing) {  
-    logError("ADB Pairing is ACTIVE â€” device discoverable for pairing.");  
+    logError("ADB Pairing is ACTIVE — device discoverable for pairing.");  
     risk += 25;  
 } else {  
     logOk("ADB Pairing is OFF.");  
@@ -4341,34 +4341,34 @@ logLine();
 logInfo("Recommended Actions:");  
 
 if (usbDebug || devOpts) {  
-    logWarn("â€¢ Disable Developer Options / USB Debugging:");  
-    logInfo("  Settings â†’ System â†’ Developer options â†’ OFF");  
-    logInfo("  USB debugging â†’ OFF");  
+    logWarn("• Disable Developer Options / USB Debugging:");  
+    logInfo("  Settings → System → Developer options → OFF");  
+    logInfo("  USB debugging → OFF");  
 } else {  
-    logOk("â€¢ Developer options & USB debugging look safe.");  
+    logOk("• Developer options & USB debugging look safe.");  
 }  
 
 if (adbWifi) {  
-    logError("â€¢ ADB over Wi-Fi must be disabled:");  
-    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
+    logError("• ADB over Wi-Fi must be disabled:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
     logInfo("  Or reboot to clear tcpip mode.");  
 } else {  
-    logOk("â€¢ Wireless debugging is not active.");  
+    logOk("• Wireless debugging is not active.");  
 }  
 
 if (adbPairing) {  
-    logError("â€¢ Turn OFF ADB Pairing / Wireless debugging:");  
-    logInfo("  Developer options â†’ Wireless debugging â†’ OFF");  
+    logError("• Turn OFF ADB Pairing / Wireless debugging:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
 } else {  
-    logOk("â€¢ ADB Pairing is not active.");  
+    logOk("• ADB Pairing is not active.");  
 }  
 
 if (risk >= 60)  
-    logError("âš  Very high risk â€” disable ADB features immediately!");  
+    logError("⚠️  Very high risk — disable ADB features immediately!");  
 else if (risk >= 30)  
-    logWarn("âš  Partial exposure â€” review ADB settings.");  
+    logWarn("⚠️  Partial exposure — review ADB settings.");  
 else  
-    logOk("âœ” Risk level acceptable.");
+    logOk("✔️” Risk level acceptable.");
 
 }
 
@@ -4376,18 +4376,18 @@ else
 // UI BUBBLES (GEL)
 // ============================================================
 private String bubble(boolean on) {
-return on ? "ðŸ”´" : "ðŸŸ¢";
+return on ? "🔴" : "🟢";
 }
 
 private String riskBubble(int risk) {
-if (risk <= 10) return "ðŸŸ¢";
-if (risk <= 30) return "ðŸŸ¡";
-if (risk <= 60) return "ðŸŸ ";
-return "ðŸ”´";
+if (risk <= 10) return "🟢";
+if (risk <= 30) return "🟡";
+if (risk <= 60) return "🟠";
+return "🔴";
 }
 
 // ============================================================
-// HELPERS â€” PORT CHECK (LOCALHOST)
+// HELPERS — PORT CHECK (LOCALHOST)
 // ============================================================
 private boolean isPortOpen(int port, int timeoutMs) {
 Socket s = null;
@@ -4412,12 +4412,12 @@ return false;
 
 // ============================================================
 
-// LAB 25 â€” Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
-// GEL Universal Edition â€” NO external libs
+// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// GEL Universal Edition — NO external libs
 // ============================================================
 private void lab25RootSuspicion() {
 logLine();
-logInfo("LAB 25 â€” Root / Bootloader Integrity Scan (AUTO).");
+logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
 
 // ---------------------------  
 // (1) ROOT DETECTION  
@@ -4579,7 +4579,7 @@ if (lab25_fileExists("/data/local/bootanimation.zip")) {
     animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
 }  
 
-// If system bootanimation missing â†’ suspicious ROM  
+// If system bootanimation missing → suspicious ROM  
 boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
                   lab25_fileExists("/product/media/bootanimation.zip") ||  
                   lab25_fileExists("/oem/media/bootanimation.zip") ||  
@@ -4602,7 +4602,7 @@ logInfo("Root Scan:");
 if (rootFindings.isEmpty()) {  
     logOk("No strong root traces detected.");  
 } else {  
-    for (String s : rootFindings) logWarn("â€¢ " + s);  
+    for (String s : rootFindings) logWarn("• " + s);  
 }  
 
 // Print BOOTLOADER section  
@@ -4611,7 +4611,7 @@ logInfo("Bootloader / Verified Boot:");
 if (blFindings.isEmpty()) {  
     logOk("No bootloader anomalies detected.");  
 } else {  
-    for (String s : blFindings) logWarn("â€¢ " + s);  
+    for (String s : blFindings) logWarn("• " + s);  
 }  
 
 // Print ANIMATION section  
@@ -4620,7 +4620,7 @@ logInfo("Boot Animation / Splash:");
 if (animFindings.isEmpty()) {  
     logOk("No custom animation traces detected.");  
 } else {  
-    for (String s : animFindings) logWarn("â€¢ " + s);  
+    for (String s : animFindings) logWarn("• " + s);  
 }  
 
 // Verdict  
@@ -4641,7 +4641,7 @@ logOk("Lab 25 finished.");
 }
 
 // ============================================================
-// LAB 25 â€” INTERNAL HELPERS (unique names to avoid conflicts)
+// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
 // ============================================================
 private boolean lab25_fileExists(String path) {
 try { return new File(path).exists(); } catch (Throwable t) { return false; }
@@ -4711,16 +4711,16 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 }
 }
 // ============================================================
-// LABS 26â€“29: ADVANCED / LOGS
+// LABS 26 — 29: ADVANCED / LOGS
 // ============================================================
 
 // ============================================================
-// LAB 26 â€” GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
 private void lab26CrashHistory() {
 
 logLine();  
-logInfo("LAB 26 â€” GEL Crash Intelligence (AUTO)");  
+logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
 
 int crashCount = 0;  
 int anrCount = 0;  
@@ -4730,7 +4730,7 @@ Map<String, Integer> appEvents = new HashMap<>(); // Group per app
 List<String> details = new ArrayList<>();  
 
 // ============================================================  
-// (A) Android 11+ â€” Process Exit Reasons  
+// (A) Android 11+ — Process Exit Reasons  
 // ============================================================  
 try {  
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {  
@@ -4745,11 +4745,11 @@ try {
 
                     if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {  
                         crashCount++;  
-                        details.add("CRASH: " + app + " â€” " + e.shortMsg);  
+                        details.add("CRASH: " + app + " — " + e.shortMsg);  
                     }   
                     else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {  
                         anrCount++;  
-                        details.add("ANR: " + app + " â€” " + e.shortMsg);  
+                        details.add("ANR: " + app + " — " + e.shortMsg);  
                     }  
                 }  
             }  
@@ -4758,7 +4758,7 @@ try {
 } catch (Exception ignored) {}  
 
 // ============================================================  
-// (B) DropBox crash logs â€” legacy Android sources  
+// (B) DropBox crash logs — legacy Android sources  
 // ============================================================  
 try {  
     DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
@@ -4807,9 +4807,9 @@ if (risk > 100) risk = 100;
 
 // COLOR INDICATOR  
 String riskColor =  
-        (risk <= 20) ? "ðŸŸ©" :  
-        (risk <= 50) ? "ðŸŸ¨" :  
-        (risk <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
+        (risk <= 20) ? "🟩" :  
+        (risk <= 50) ? "🟨" :  
+        (risk <= 80) ? "🟧" : "🟥";  
 
 logInfo("Crash events: " + crashCount);  
 logInfo("ANR events: " + anrCount);  
@@ -4829,11 +4829,11 @@ if (!appEvents.isEmpty()) {
             .sorted((a, b) -> b.getValue() - a.getValue())  
             .limit(5)  
             .forEach(e -> {  
-                String c = (e.getValue() >= 10) ? "ðŸŸ¥" :  
-                           (e.getValue() >= 5)  ? "ðŸŸ§" :  
-                           (e.getValue() >= 2)  ? "ðŸŸ¨" :  
-                                                  "ðŸŸ©";  
-                logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");  
+                String c = (e.getValue() >= 10) ? "🟥" :  
+                           (e.getValue() >= 5)  ? "🟧" :  
+                           (e.getValue() >= 2)  ? "🟨" :  
+                                                  "🟩";  
+                logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");  
             });  
 }  
 
@@ -4879,12 +4879,12 @@ BufferedReader br = new BufferedReader(new InputStreamReader(is));
 }
 
 // ============================================================
-// LAB 27 â€” App Permissions & Privacy (FULL AUTO + RISK SCORE)
+// LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
 // ============================================================
 private void lab27PermissionsPrivacy() {
 
 logLine();  
-logInfo("LAB 27 â€” App Permissions & Privacy (AUTO scan)");  
+logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
 
 PackageManager pm = getPackageManager();  
 if (pm == null) {  
@@ -4945,7 +4945,7 @@ try {
             if (granted) {  
                 appDangerCount++;  
                 appScore += weight;  
-                sb.append("â€¢ ").append(shortPerm(perm)).append(" (granted)\n");  
+                sb.append("• ").append(shortPerm(perm)).append(" (granted)\n");  
             }  
         }  
 
@@ -4962,12 +4962,12 @@ try {
 
                 String appLabel = safeLabel(pm, p.packageName);  
                 String color =  
-                        (appScore >= 60) ? "ðŸŸ¥" :  
-                        (appScore >= 30) ? "ðŸŸ§" :  
-                        (appScore >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
+                        (appScore >= 60) ? "🟥" :  
+                        (appScore >= 30) ? "🟧" :  
+                        (appScore >= 15) ? "🟨" : "🟩";  
 
                 details.add(color + " " + appLabel + " (" + p.packageName + ")"  
-                        + " â€” Risk=" + appScore + "\n" + sb.toString());  
+                        + " — Risk=" + appScore + "\n" + sb.toString());  
             }  
         }  
     }  
@@ -4984,9 +4984,9 @@ try {
 // ============================================================  
 int riskPct = Math.min(100, riskTotal); // cap  
 String riskColor =  
-        (riskPct <= 20) ? "ðŸŸ©" :  
-        (riskPct <= 50) ? "ðŸŸ¨" :  
-        (riskPct <= 80) ? "ðŸŸ§" : "ðŸŸ¥";  
+        (riskPct <= 20) ? "🟩" :  
+        (riskPct <= 50) ? "🟨" :  
+        (riskPct <= 80) ? "🟧" : "🟥";  
 
 logInfo("Apps scanned: " + totalApps);  
 logInfo("Dangerous permissions granted (total): " + dangTotal);  
@@ -5006,12 +5006,12 @@ if (!appRisk.isEmpty()) {
             .limit(8)  
             .forEach(e -> {  
                 String c =  
-                        (e.getValue() >= 60) ? "ðŸŸ¥" :  
-                        (e.getValue() >= 30) ? "ðŸŸ§" :  
-                        (e.getValue() >= 15) ? "ðŸŸ¨" : "ðŸŸ©";  
+                        (e.getValue() >= 60) ? "🟥" :  
+                        (e.getValue() >= 30) ? "🟧" :  
+                        (e.getValue() >= 15) ? "🟨" : "🟩";  
 
                 logInfo(" " + c + " " + safeLabel(pm, e.getKey())  
-                        + " â€” Risk " + e.getValue());  
+                        + " — Risk " + e.getValue());  
             });  
 }  
 
@@ -5095,14 +5095,14 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 28 â€” Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
 // Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
 // Security + Privacy + Root + Stability into final scores.
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab28CombineFindings() {
 logLine();
-logInfo("LAB 28 â€” Auto Final Diagnosis Summary (FULL AUTO)");
+logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  
@@ -5201,59 +5201,59 @@ logInfo("AUTO Breakdown:");
 // Thermals  
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
-    logWarn("â€¢ No thermal zones readable. Using Battery temp only: " +  
+    logWarn("• No thermal zones readable. Using Battery temp only: " +  
             String.format(Locale.US, "%.1fÂ°C", battTemp));  
 } else {  
-    logInfo("â€¢ Zones=" + zones.size() +  
+    logInfo("• Zones=" + zones.size() +  
             " | max=" + fmt1(maxThermal) + "Â°C" +  
             " | avg=" + fmt1(avgThermal) + "Â°C");  
-    if (cpu != null)  logInfo("â€¢ CPU="  + fmt1(cpu)  + "Â°C");  
-    if (gpu != null)  logInfo("â€¢ GPU="  + fmt1(gpu)  + "Â°C");  
-    if (pmic != null) logInfo("â€¢ PMIC=" + fmt1(pmic) + "Â°C");  
-    if (skin != null) logInfo("â€¢ Skin=" + fmt1(skin) + "Â°C");  
-    logInfo("â€¢ Battery=" + fmt1(battTemp) + "Â°C");  
+    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "Â°C");  
+    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "Â°C");  
+    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "Â°C");  
+    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "Â°C");  
+    logInfo("• Battery=" + fmt1(battTemp) + "Â°C");  
 }  
 
 // Battery  
 logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
-logInfo("â€¢ Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
+logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
         " | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);  
 
 // Storage  
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
-logInfo("â€¢ Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
+logInfo("• Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +  
         " / " + humanBytes(st.totalBytes));  
 
 // Apps  
 logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");  
-logInfo("â€¢ User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
+logInfo("• User apps=" + ap.userApps + " | System apps=" + ap.systemApps +  
         " | Total=" + ap.totalApps);  
 
 // RAM  
 logInfo("RAM: " + ramFlag + " " + ramScore + "%");  
-logInfo("â€¢ Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
+logInfo("• Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +  
         humanBytes(rm.totalBytes) + ")");  
 
 // Stability  
 logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");  
-logInfo("â€¢ Uptime=" + formatUptime(upMs));  
+logInfo("• Uptime=" + formatUptime(upMs));  
 if (upMs < 2 * 60 * 60 * 1000L)  
-    logWarn("â€¢ Recent reboot detected (<2h) â€” possible instability masking.");  
+    logWarn("• Recent reboot detected (<2h) — possible instability masking.");  
 else if (upMs > 7L * 24L * 60L * 60L * 1000L)  
-    logWarn("â€¢ Long uptime (>7d) â€” recommend reboot before deep servicing.");  
+    logWarn("• Long uptime (>7d) — recommend reboot before deep servicing.");  
 
 // Security  
 logInfo("Security: " + securityFlag + " " + securityScore + "%");  
-logInfo("â€¢ Lock secure=" + sec.lockSecure);  
-logInfo("â€¢ Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
-logInfo("â€¢ ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
+logInfo("• Lock secure=" + sec.lockSecure);  
+logInfo("• Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));  
+logInfo("• ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +  
         " | DevOptions=" + sec.devOptionsOn);  
-if (sec.rootSuspected) logWarn("â€¢ Root suspicion flags detected.");  
-if (sec.testKeys) logWarn("â€¢ Build signed with test-keys (custom ROM risk).");  
+if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");  
+if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");  
 
 // Privacy  
 logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");  
-logInfo("â€¢ Dangerous perms on user apps: " +  
+logInfo("• Dangerous perms on user apps: " +  
         "Location=" + pr.userAppsWithLocation +  
         ", Mic=" + pr.userAppsWithMic +  
         ", Camera=" + pr.userAppsWithCamera +  
@@ -5270,8 +5270,8 @@ logInfo("Security Score:      " + securityScore + "% " + securityFlag);
 logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);  
 
 String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);  
-if (verdict.startsWith("ðŸŸ©")) logOk(verdict);  
-else if (verdict.startsWith("ðŸŸ¨")) logWarn(verdict);  
+if (verdict.startsWith("🟩")) logOk(verdict);  
+else if (verdict.startsWith("🟨")) logWarn(verdict);  
 else logError(verdict);  
 
 logOk("Lab 28 finished.");
@@ -5626,18 +5626,18 @@ return s;
 }
 
 private String colorFlagFromScore(int s) {
-if (s >= 80) return "ðŸŸ©";
-if (s >= 55) return "ðŸŸ¨";
-return "ðŸŸ¥";
+if (s >= 80) return "🟩";
+if (s >= 55) return "🟨";
+return "🟥";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
 int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
 if (worst >= 80)
-return "ðŸŸ© Device is healthy â€” no critical issues detected.";
+return "🟩 Device is healthy — no critical issues detected.";
 if (worst >= 55)
-return "ðŸŸ¨ Device has moderate risks â€” recommend service check.";
-return "ðŸŸ¥ Device is NOT healthy â€” immediate servicing recommended.";
+return "🟨 Device has moderate risks — recommend service check.";
+return "🟥 Device is NOT healthy — immediate servicing recommended.";
 }
 
 private String fmt1(float v) {
@@ -5645,14 +5645,14 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 29 â€” FINAL TECHNICIAN SUMMARY (READ-ONLY)
-// Does NOT modify GELServiceLog â€” only reads it.
+// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// Does NOT modify GELServiceLog — only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
 private void lab29FinalSummary() {
 
     logLine();
-    logInfo("LAB 29 â€” Final Technician Summary (READ-ONLY)");
+    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
 
     // ------------------------------------------------------------
     // 1) READ FULL LOG (from all labs)
@@ -5673,10 +5673,10 @@ private void lab29FinalSummary() {
     for (String l : lines) {
         String low = l.toLowerCase(Locale.US);
 
-        if (low.contains("âš ") || low.contains("warning")) {
+        if (low.contains("⚠️ ") || low.contains("warning")) {
             warnings.append(l).append("\n");
         }
-        if (low.contains("âŒ") || low.contains("error")) {
+        if (low.contains("❌") || low.contains("error")) {
             warnings.append(l).append("\n");
         }
     }
@@ -5705,7 +5705,7 @@ private void lab29FinalSummary() {
 }
 
 // ============================================================
-// ENABLE EXISTING EXPORT BUTTON â€” No duplicates!
+// ENABLE EXISTING EXPORT BUTTON — No duplicates!
 // ============================================================
 private void enableSingleExportButton() {
 
@@ -5731,7 +5731,7 @@ private void enableSingleExportButton() {
 }
 
 /* ============================================================
-   Earpiece test tone â€” 220Hz (CALL PATH SAFE)
+   Earpiece test tone — 220Hz (CALL PATH SAFE)
    ============================================================ */
 private void playEarpieceTestTone220Hz(int durationMs) {
     try {
@@ -5790,34 +5790,98 @@ private void playEarpieceTestTone220Hz(int durationMs) {
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode == 6006) { // LAB 6 â€” Touch Grid
+    if (requestCode == 6006) { // LAB 6 — Touch Grid
         if (resultCode == RESULT_OK)
-            logOk("LAB 6 â€” Touch grid passed (all zones responsive)");
+            logOk("LAB 6 — Touch grid passed (all zones responsive)");
         else
-            logError("LAB 6 â€” Touch grid failed (dead zone suspected)");
+            logError("LAB 6 — Touch grid failed (dead zone suspected)");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 7007) { // LAB 7 â€” Rotation
+    if (requestCode == 7007) { // LAB 7 — Rotation
         if (resultCode == RESULT_OK)
-            logOk("LAB 7 â€” Rotation detected via sensors");
+            logOk("LAB 7 — Rotation detected via sensors");
         else
-            logError("LAB 7 â€” No rotation detected");
+            logError("LAB 7 — No rotation detected");
 
         enableSingleExportButton();
         return;
     }
 
-    if (requestCode == 8008) { // LAB 8 â€” Proximity
+    if (requestCode == 8008) { // LAB 8 — Proximity
         if (resultCode == RESULT_OK)
-            logOk("LAB 8 â€” Proximity sensor responded correctly");
+            logOk("LAB 8 — Proximity sensor responded correctly");
         else
-            logError("LAB 8 â€” No proximity response detected");
+            logError("LAB 8 —  No proximity response detected");
 
         enableSingleExportButton();
     }
+}
+
+// ============================================================
+// LAB 16 — THERMAL HELPERS (CLASS-LEVEL, NOT INSIDE METHODS)
+// ============================================================
+
+private static class ThermalEntry {
+    final String label;
+    final float temp;
+
+    ThermalEntry(String label, float temp) {
+        this.label = label;
+        this.temp = temp;
+    }
+}
+
+private List<ThermalEntry> buildThermalInternal() {
+
+    List<ThermalEntry> out = new ArrayList<>();
+
+    try {
+        float batt = getBatteryTemperature();
+        if (batt > 0) out.add(new ThermalEntry("Battery", batt));
+
+        Float cpu = readCpuTempSafe();
+        if (cpu != null && cpu > 0)
+            out.add(new ThermalEntry("CPU", cpu));
+
+        Float gpu = readGpuTempSafe();
+        if (gpu != null && gpu > 0)
+            out.add(new ThermalEntry("GPU", gpu));
+
+    } catch (Throwable ignore) {}
+
+    return out;
+}
+
+private List<ThermalEntry> buildThermalHardware() {
+
+    List<ThermalEntry> out = new ArrayList<>();
+
+    try {
+        File dir = new File("/sys/class/thermal");
+        File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+
+        if (zones != null) {
+            for (File z : zones) {
+                try {
+                    String type = readSys(z, "type");
+                    String temp = readSys(z, "temp");
+
+                    if (type == null || temp == null) continue;
+
+                    float c = Float.parseFloat(temp.trim()) / 1000f;
+                    if (c <= 0 || c > 120) continue;
+
+                    out.add(new ThermalEntry(type, c));
+
+                } catch (Throwable ignore) {}
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    return out;
 }
 
 // ============================================================

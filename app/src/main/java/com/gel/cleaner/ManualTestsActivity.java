@@ -393,7 +393,7 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         () -> showLab14PreTestAdvisory(this::lab14BatteryHealthStressTest)));  
         body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));
         body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));
-        body4.addView(makeTestButton("17. AUTO Battery Reliability", this::lab17RunAuto));
+        body4.addView(makeTestButtonGreenGold("17. Intelligent System Health Analysis",this::lab17RunAuto));
 
         // ============================================================
         // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
@@ -1358,175 +1358,63 @@ private String formatTemp(float temp) {
     return String.format(Locale.US, "%.1f°C", temp);
 }
 
-// ===================================================================
-// HELPERS — LAB 16 THERMAL SNAPSHOT
-// Internal + Peripherals • Root Aware • GEL Edition
-// ===================================================================
+// ============================================================
+// LAB 16 — INTERNAL + PERIPHERALS THERMAL HELPERS
+// GEL LOCKED • HUMAN-READABLE • COMPACT MODE
+// ============================================================
 
+// ------------------------------------------------------------
+// DATA MODEL
+// ------------------------------------------------------------
 private static class ThermalEntry {
     final String label;
     final float temp;
 
     ThermalEntry(String label, float temp) {
         this.label = label;
-        this.temp = temp;
+        this.temp  = temp;
     }
 }
 
-private List<ThermalEntry> buildThermalHardware() {
+// ------------------------------------------------------------
+// INTERNAL THERMALS (CORE CHIPS ONLY)
+// What user actually understands & cares about
+// ------------------------------------------------------------
+private List<ThermalEntry> buildThermalInternal() {
+
+    List<ThermalEntry> out = new ArrayList<>();
+
+    try {
+        float batt = getBatteryTemperature();
+        if (batt > 0)
+            out.add(new ThermalEntry("Battery", batt));
+
+        Float cpu = readCpuTempSafe();
+        if (cpu != null && cpu > 0)
+            out.add(new ThermalEntry("CPU", cpu));
+
+        Float gpu = readGpuTempSafe();
+        if (gpu != null && gpu > 0)
+            out.add(new ThermalEntry("GPU", gpu));
+
+    } catch (Throwable ignore) {}
+
+    return out;
+}
+
+// ------------------------------------------------------------
+// PERIPHERALS — CRITICAL ONLY (NOT EVERYTHING)
+// System-protection relevant sensors
+// ------------------------------------------------------------
+private List<ThermalEntry> buildThermalPeripheralsCritical() {
 
     List<ThermalEntry> out = new ArrayList<>();
 
     try {
         File dir = new File("/sys/class/thermal");
         File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+        if (zones == null) return out;
 
-        if (zones != null) {
-            for (File z : zones) {
-                try {
-                    String type = readSys(z, "type");
-                    String temp = readSys(z, "temp");
-
-                    if (type == null || temp == null) continue;
-
-                    float c = Float.parseFloat(temp.trim()) / 1000f;
-                    if (c <= 0 || c > 120) continue;
-
-                    out.add(new ThermalEntry(type, c));
-
-                } catch (Throwable ignore) {}
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    return out;
-}
-
-
-/* ---------------------------------------------------------------
- * INTERNAL STATE
- * --------------------------------------------------------------- */
-private boolean isRooted = false; // set once in onCreate()
-
-/* ---------------------------------------------------------------
- * INTERNAL THERMAL REPORT
- * --------------------------------------------------------------- */
-private String buildThermalInternalReport() {
-
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("THERMAL SENSORS (INTERNAL)\n");
-    sb.append("──────────────────────────\n");
-
-    File thermalDir = new File("/sys/class/thermal");
-    if (!thermalDir.exists()) {
-        sb.append("Thermal sensors not available.\n");
-        return sb.toString();
-    }
-
-    File[] zones = thermalDir.listFiles(f -> f.getName().startsWith("thermal_zone"));
-    if (zones == null || zones.length == 0) {
-        sb.append("No thermal zones detected.\n");
-        return sb.toString();
-    }
-
-    Map<String, Float> maxTemps = new HashMap<>();
-
-    for (File z : zones) {
-        try {
-            String type = readSys(z, "type");
-            String temp = readSys(z, "temp");
-            if (type == null || temp == null) continue;
-
-            float c = Float.parseFloat(temp.trim()) / 1000f;
-            if (c <= 0 || c > 120) continue;
-
-            String label = mapInternalType(type);
-            if (label == null) continue;
-
-            Float prev = maxTemps.get(label);
-            if (prev == null || c > prev) maxTemps.put(label, c);
-
-        } catch (Throwable ignore) {}
-    }
-
-    String[] order = {
-            "CPU Core",
-            "CPU Cluster 0",
-            "CPU Cluster 1",
-            "GPU",
-            "DDR Memory",
-            "Battery",
-            "Backlight"
-    };
-
-    for (String k : order) {
-        Float v = maxTemps.get(k);
-        if (v != null) {
-            sb.append(String.format(
-                    Locale.US,
-                    "%-18s : %5.1f°C  (%s)\n",
-                    k, v, thermalState(v)
-            ));
-        }
-    }
-
-    if (!isRooted) {
-        sb.append("\nAdvanced Info: For detailed thermal and cooling information, requires root access\n");
-        return sb.toString();
-    }
-
-    sb.append("\nAdvanced Thermal (Root)\n");
-    sb.append("──────────────────────\n");
-
-    for (File z : zones) {
-        try {
-            String type = readSys(z, "type");
-            String temp = readSys(z, "temp");
-            if (type == null || temp == null) continue;
-
-            float c = Float.parseFloat(temp.trim()) / 1000f;
-
-            sb.append("\n")
-              .append(z.getName()).append(" [").append(type).append("]\n")
-              .append("  Current Temp : ")
-              .append(String.format(Locale.US, "%.1f°C\n", c));
-
-            for (int i = 0; i < 10; i++) {
-                String tp = readSys(z, "trip_point_" + i + "_temp");
-                String tt = readSys(z, "trip_point_" + i + "_type");
-                if (tp == null || tt == null) break;
-
-                float tc = Float.parseFloat(tp.trim()) / 1000f;
-                sb.append("  Trip ").append(i)
-                  .append(" (").append(tt).append(") : ")
-                  .append(String.format(Locale.US, "%.1f°C\n", tc));
-            }
-
-        } catch (Throwable ignore) {}
-    }
-
-    return sb.toString();
-}
-
-/* ---------------------------------------------------------------
- * PERIPHERALS / HARDWARE THERMAL REPORT
- * --------------------------------------------------------------- */
-private String buildThermalInfo() {
-
-    StringBuilder sb = new StringBuilder();
-
-    ThermalGroup batteryMain  = new ThermalGroup();
-    ThermalGroup batteryShell = new ThermalGroup();
-    ThermalGroup pmic         = new ThermalGroup();
-    ThermalGroup charger      = new ThermalGroup();
-    ThermalGroup modemMain    = new ThermalGroup();
-    ThermalGroup modemAux     = new ThermalGroup();
-
-    File[] zones = new File("/sys/class/thermal")
-            .listFiles(f -> f.getName().startsWith("thermal_zone"));
-
-    if (zones != null) {
         for (File z : zones) {
             try {
                 String type = readSys(z, "type");
@@ -1538,82 +1426,78 @@ private String buildThermalInfo() {
 
                 String t = type.toLowerCase(Locale.US);
 
-                if (t.contains("battery")) batteryMain.update(type, c);
-                else if (t.contains("skin") || t.contains("shell")) batteryShell.update(type, c);
-                else if (t.contains("pmic") || t.contains("bcl")) pmic.update(type, c);
-                else if (t.contains("charger") || t.contains("usb")) charger.update(type, c);
-                else if (t.contains("modem")) modemMain.update(type, c);
+                if (t.contains("pmic"))
+                    out.add(new ThermalEntry("PMIC", c));
+                else if (t.contains("charger") || t.contains("usb"))
+                    out.add(new ThermalEntry("Charger", c));
+                else if (t.contains("skin") || t.contains("shell"))
+                    out.add(new ThermalEntry("Device surface", c));
 
             } catch (Throwable ignore) {}
         }
-    }
+    } catch (Throwable ignore) {}
 
-    sb.append("Hardware Thermal Systems\n");
-    sb.append("================================\n\n");
-
-    sb.append(formatLine("Main Modem", modemMain));
-    sb.append(formatLine("Secondary Modem", modemAux));
-    sb.append(formatLine("Main Battery", batteryMain));
-    sb.append(formatLine("Battery Shell", batteryShell));
-    sb.append(formatLine("Charger Thermal", charger));
-    sb.append(formatLine("PMIC Thermal", pmic));
-
-    sb.append("\nHardware Cooling Systems\n");
-    sb.append("================================\n");
-    sb.append("• (no hardware cooling devices found) (this device uses passive cooling only)\n");
-
-    return sb.toString();
+    return out;
 }
 
-/* ---------------------------------------------------------------
- * SMALL HELPERS
- * --------------------------------------------------------------- */
-private static class ThermalGroup {
-    float temp = Float.NaN;
-    boolean valid;
+// ------------------------------------------------------------
+// GEL STYLE OUTPUT — ONE LINE PER SENSOR
+// Label = white (log channel)
+// Value = colored by severity
+// ------------------------------------------------------------
+private void logTempInline(String label, float c) {
 
-    void update(String n, float c) {
-        if (!valid || c > temp) {
-            temp = c;
-            valid = true;
+    String line = String.format(Locale.US, "%s: %.1f°C", label, c);
+
+    if (c < 35f) {
+        logOk(line + " (COOL)");
+    } else if (c < 45f) {
+        logInfo(line + " (NORMAL)");
+    } else if (c < 55f) {
+        logWarn(line + " (WARM)");
+    } else {
+        logError(line + " (HOT)");
+    }
+}
+
+// ------------------------------------------------------------
+// LAB 16 — Hidden / Non-displayed thermal safety check
+// ------------------------------------------------------------
+private boolean detectHiddenThermalAnomaly(float thresholdC) {
+
+    try {
+        File dir = new File("/sys/class/thermal");
+        File[] zones = dir.listFiles(f -> f.getName().startsWith("thermal_zone"));
+        if (zones == null) return false;
+
+        for (File z : zones) {
+            try {
+                String type = readSys(z, "type");
+                String temp = readSys(z, "temp");
+                if (type == null || temp == null) continue;
+
+                float c = Float.parseFloat(temp.trim()) / 1000f;
+                if (c <= 0 || c > 120) continue;
+
+                String t = type.toLowerCase(Locale.US);
+
+                // ⛔ skip sensors we already display
+                if (t.contains("battery") ||
+                    t.contains("cpu") ||
+                    t.contains("gpu")) {
+                    continue;
+                }
+
+                // ⚠️ hidden / system sensor exceeded threshold
+                if (c >= thresholdC) {
+                    return true;
+                }
+
+            } catch (Throwable ignore) {}
         }
-    }
-}
+    } catch (Throwable ignore) {}
 
-private String formatLine(String label, ThermalGroup g) {
-    if (g == null || !g.valid)
-        return String.format(Locale.US, "%-17s: N/A\n", label);
-
-    return String.format(
-            Locale.US,
-            "%-17s: %.1f°C (%s)\n",
-            label, g.temp, thermalState(g.temp)
-    );
-}
-
-private String thermalState(float c) {
-    if (c < 35) return "COOL";
-    if (c < 45) return "NORMAL";
-    if (c < 55) return "WARM";
-    return "HOT";
-}
-
-private String readSys(File dir, String name) {
-    try (BufferedReader br = new BufferedReader(new FileReader(new File(dir, name)))) {
-        return br.readLine();
-    } catch (Throwable ignore) {
-        return null;
-    }
-}
-
-private String mapInternalType(String t) {
-    t = t.toLowerCase(Locale.US);
-    if (t.contains("cpu")) return "CPU Core";
-    if (t.contains("gpu")) return "GPU";
-    if (t.contains("ddr")) return "DDR Memory";
-    if (t.contains("battery")) return "Battery";
-    if (t.contains("backlight")) return "Backlight";
-    return null;
+    return false;
 }
 
 // ============================================================
@@ -1705,6 +1589,72 @@ private boolean hasHardwareCoolingDevices() {
 
 private String buildHardwareCoolingReport() {
     return "No hardware cooling devices found. This device uses passive cooling only.";
+}
+
+// ============================================================
+// LAB 17: Premium Green-Gold Button (LOCKED)
+// ============================================================
+private Button makeTestButtonGreenGold(String text, Runnable action) {
+
+    Button btn = new Button(this);
+    btn.setText(text);
+    btn.setAllCaps(false);
+    btn.setTextColor(0xFFFFFFFF); // white text
+    btn.setTextSize(15f);
+    btn.setTypeface(null, Typeface.BOLD);
+    btn.setElevation(dp(3)); // premium shadow
+
+    // -------------------------------
+    // NORMAL STATE
+    // -------------------------------
+    GradientDrawable normalBg = new GradientDrawable();
+    normalBg.setColor(0xFF00FF6A);          // GREEN NEON
+    normalBg.setCornerRadius(dp(18));
+    normalBg.setStroke(dp(3), 0xFFFFD700);  // GOLD BORDER
+
+    // -------------------------------
+    // PRESSED STATE
+    // -------------------------------
+    GradientDrawable pressedBg = new GradientDrawable();
+    pressedBg.setColor(0xFF00CC55);          // darker green (pressed)
+    pressedBg.setCornerRadius(dp(18));
+    pressedBg.setStroke(dp(3), 0xFFFFD700);
+
+    // -------------------------------
+    // DISABLED STATE
+    // -------------------------------
+    GradientDrawable disabledBg = new GradientDrawable();
+    disabledBg.setColor(0xFF1E3A2A);          // muted green
+    disabledBg.setCornerRadius(dp(18));
+    disabledBg.setStroke(dp(2), 0xFFBFAE60);  // faded gold
+
+    StateListDrawable states = new StateListDrawable();
+    states.addState(new int[]{-android.R.attr.state_enabled}, disabledBg);
+    states.addState(new int[]{android.R.attr.state_pressed}, pressedBg);
+    states.addState(new int[]{}, normalBg);
+
+    // -------------------------------
+    // RIPPLE (Modern Android Feel)
+    // -------------------------------
+    RippleDrawable ripple = new RippleDrawable(
+            ColorStateList.valueOf(0x40FFFFFF), // soft white ripple
+            states,
+            null
+    );
+
+    btn.setBackground(ripple);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(54)
+            );
+    lp.setMargins(0, dp(8), 0, dp(8));
+    btn.setLayoutParams(lp);
+
+    btn.setOnClickListener(v -> action.run());
+
+    return btn;
 }
 
 // ============================================================
@@ -3136,19 +3086,45 @@ endBatteryTemp   = tempEnd;
 // ----------------------------------------------------
 logInfo("LAB 14 - Stress result");
 
+// ----------------------------------------------------
+// End temperature
+// ----------------------------------------------------
+logInfo("End temperature:");
 logOk(String.format(
         Locale.US,
-        "End temperature: %.1f°C",
+        "%.1f°C",
         endBatteryTemp
 ));
 
-float rise = endBatteryTemp - startBatteryTemp;
+// ----------------------------------------------------
+// Thermal change (rise / drop)
+// ----------------------------------------------------
+float delta = endBatteryTemp - startBatteryTemp;
 
-logOk(String.format(
-        Locale.US,
-        "Thermal rise: +%.1f°C",
-        rise
-));
+logInfo("Thermal change:");
+
+if (delta > 0.5f) {
+    // πραγματική άνοδος
+    logWarn(String.format(
+            Locale.US,
+            "+%.1f°C",
+            delta
+    ));
+} else if (delta < -0.5f) {
+    // πτώση θερμοκρασίας (cooling / PMIC)
+    logOk(String.format(
+            Locale.US,
+            "%.1f°C",
+            delta
+    ));
+} else {
+    // πρακτικά σταθερό
+    logInfo(String.format(
+            Locale.US,
+            "%.1f°C",
+            delta
+    ));
+}
 
 logInfo("Battery behaviour:");
 logOk(String.format(
@@ -3172,6 +3148,7 @@ if (validDrain) {
     ));
 } else {
     logWarn("⚠️ Invalid (counter anomaly or no drop)");
+    logWarn("⚠️ Counter anomaly detected (PMIC / system-level behavior). Repeat test after system reboot");
 }
 
 // SCORE (αριθμός + runs)
@@ -3223,13 +3200,14 @@ logOk(String.format(
 ));
 
 // ------------------------------------------------------------
-// STORE RESULT FOR LAB 17
+// STORE RESULT FOR LAB 17 (LAB 14 OUTPUT)
 // ------------------------------------------------------------
 try {
     SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
     p.edit()
      .putFloat("lab14_health_score", finalScore)
      .putInt("lab14_aging_index", agingIndex)
+     .putLong("lab14_last_ts", System.currentTimeMillis())
      .apply();
 } catch (Throwable ignore) {}
                
@@ -3641,7 +3619,7 @@ try {
 logLine();
 
 // ------------------------------------------------------------
-// STORE RESULT FOR LAB 17
+// STORE RESULT FOR LAB 17 (LAB 15 OUTPUT)
 // ------------------------------------------------------------
 try {
     int chargeScore = 100;
@@ -3656,8 +3634,12 @@ try {
     p.edit()
      .putInt("lab15_charge_score", chargeScore)
      .putBoolean("lab15_system_limited", lab15_systemLimited)
-     .putString("lab15_strength_label",
-            lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG")
+     .putBoolean("lab15_overtemp", lab15OverTempDuringCharge)
+     .putString(
+         "lab15_strength_label",
+         lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG"
+     )
+     .putLong("lab15_last_ts", System.currentTimeMillis())
      .apply();
 
 } catch (Throwable ignore) {}
@@ -3678,7 +3660,7 @@ lab15Dialog = null;
 
 // ============================================================
 // LAB 16 — Thermal Snapshot
-// FINAL — CLEAN — NO DUPLICATES
+// FINAL — COMPACT — GEL LOCKED
 // ============================================================
 private void lab16ThermalSnapshot() {
 
@@ -3686,55 +3668,103 @@ private void lab16ThermalSnapshot() {
     logInfo("LAB 16 — Thermal Snapshot");
     logLine();
 
-    // ============================================================
-    // INTERNAL THERMAL SENSORS
-    // ============================================================
-    logInfo("THERMAL SENSORS (INTERNAL)");
-    logLine();
+    List<ThermalEntry> internal    = buildThermalInternal();
+    List<ThermalEntry> peripherals = buildThermalPeripheralsCritical();
 
-    for (ThermalEntry t : buildThermalInternal()) {
-        logInfo(t.label + ":");
-        logByTemp(t.temp);
+    float peakTemp = -1f;
+    String peakSrc = "N/A";
+
+    // ------------------------------------------------------------
+    // BASIC + CRITICAL THERMALS (INLINE, HUMAN READABLE)
+    // ------------------------------------------------------------
+    logInfo("Thermal sensors:");
+
+    for (ThermalEntry t : internal) {
+        logTempInline(t.label, t.temp);
+        if (t.temp > peakTemp) {
+            peakTemp = t.temp;
+            peakSrc  = t.label;
+        }
     }
 
-    // ============================================================
-    // HARDWARE THERMAL SYSTEMS
-    // ============================================================
-    logLine();
-    logInfo("HARDWARE THERMAL SYSTEMS");
-    logLine();
-
-    for (ThermalEntry t : buildThermalHardware()) {
-        logInfo(t.label + ":");
-        logByTemp(t.temp);
+    for (ThermalEntry t : peripherals) {
+        logTempInline(t.label, t.temp);
+        if (t.temp > peakTemp) {
+            peakTemp = t.temp;
+            peakSrc  = t.label;
+        }
     }
 
-    // ============================================================
-    // HARDWARE COOLING SYSTEMS
-    // ============================================================
-    logLine();
-    logInfo("HARDWARE COOLING SYSTEMS");
     logLine();
 
-    logInfo("Hardware cooling devices:");
-    logOk("No hardware cooling devices found.");
-    logOk("Passive cooling only.");
+    // ------------------------------------------------------------
+    // SUMMARY (HUMAN LANGUAGE)
+    // ------------------------------------------------------------
+    boolean danger = peakTemp >= 55f;
 
-    logLine();
-    logOk("Lab 16 finished.");
-    logLine();
-    
+    logInfo("Thermal summary:");
+    if (danger) {
+        logWarn("Elevated temperature detected in critical components.");
+        logWarn("System may apply thermal protection.");
+    } else {
+        logOk("Device operating at safe temperatures.");
+        logOk("Internal chips and critical peripherals were monitored.");
+    }
+
+    if (peakTemp > 0) {
+        logInfo(String.format(
+                Locale.US,
+                "Peak temperature observed: %.1f°C at %s",
+                peakTemp, peakSrc
+        ));
+    }
+
 // ------------------------------------------------------------
-// CALCULATE & STORE LAB 16 THERMAL SCORE (0..100)
+// HIDDEN THERMAL SAFETY CHECK (NON-DISPLAYED SENSORS)
+// ------------------------------------------------------------
+boolean hiddenRisk = detectHiddenThermalAnomaly(55f);
+
+if (hiddenRisk) {
+    logWarn("⚠️ Elevated temperature detected in non-displayed system components.");
+    logWarn("⚠️ Thermal protection mechanisms may activate.");
+} else {
+    logInfo("All critical thermal sensors were monitored during this test.");
+}
+
+// ------------------------------------------------------------
+// THERMAL SCORE (USED BY LAB 17)
 // ------------------------------------------------------------
 int thermalScore = 100;
+float peakTemp = -1f;
+String peakSource = "N/A";
+boolean thermalDanger = false;
 
-// ⬅️ ΧΡΗΣΙΜΟΠΟΙΟΥΜΕ ΤΟ ΙΔΙΟ SNAPSHOT
-List<ThermalEntry> thermalEntries = buildThermalInternal();
+for (ThermalEntry t : internal) {
+    if (t.temp >= 55f) {
+        thermalScore -= 25;
+        thermalDanger = true;
+    } else if (t.temp >= 45f) {
+        thermalScore -= 10;
+    }
 
-for (ThermalEntry t : thermalEntries) {
-    if (t.temp >= 55f) thermalScore -= 25;
-    else if (t.temp >= 45f) thermalScore -= 10;
+    if (t.temp > peakTemp) {
+        peakTemp = t.temp;
+        peakSource = t.label;
+    }
+}
+
+for (ThermalEntry t : peripherals) {
+    if (t.temp >= 55f) {
+        thermalScore -= 25;
+        thermalDanger = true;
+    } else if (t.temp >= 45f) {
+        thermalScore -= 10;
+    }
+
+    if (t.temp > peakTemp) {
+        peakTemp = t.temp;
+        peakSource = t.label;
+    }
 }
 
 thermalScore = Math.max(0, Math.min(100, thermalScore));
@@ -3743,128 +3773,129 @@ try {
     SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
     p.edit()
      .putInt("lab16_thermal_score", thermalScore)
+     .putBoolean("lab16_thermal_danger", thermalDanger)
+     .putFloat("lab16_peak_temp", peakTemp)
+     .putString("lab16_peak_source", peakSource)
+     .putLong("lab16_last_ts", System.currentTimeMillis())
      .apply();
 } catch (Throwable ignore) {}
 
+logLine();
 logInfo("Thermal behaviour score:");
-logInfo("Thermal behaviour score:");
-logOk(String.format(Locale.US, "✅ %d%%", thermalScore));
+logOk(String.format(Locale.US, "%d%%", thermalScore));
+
+if (thermalDanger) {
+    logWarn("Elevated temperature detected in critical components.");
+    logWarn("System thermal protection may engage.");
+} else {
+    logOk("Device operating at safe temperatures.");
+    logInfo("Internal chips and critical peripherals were monitored.");
+}
+
+if (peakTemp > 0) {
+    logInfo(String.format(
+            Locale.US,
+            "Peak temperature observed: %.1f°C at %s",
+            peakTemp, peakSource
+    ));
+}
 
 logLine();
-}
-
-// ------------------------------------------------------------
-// COLOR LOGIC (VALUES ONLY)
-// ------------------------------------------------------------
-private void logByTemp(float c) {
-    if (c < 35f) {
-        logOk(String.format(Locale.US, "%.1f°C (COOL)", c));
-    } else if (c < 45f) {
-        logInfo(String.format(Locale.US, "%.1f°C (NORMAL)", c));
-    } else if (c < 55f) {
-        logWarn(String.format(Locale.US, "%.1f°C (WARM)", c));
-    } else {
-        logError(String.format(Locale.US, "%.1f°C (HOT)", c));
-    }
-}
+logOk("Lab 16 finished.");
+logLine();
 
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation
-// AGGREGATED • FINAL • NO SNAPSHOT
+// INTELLIGENCE EDITION • STRICT FRESHNESS (≤ 2 HOURS)
+// ✔ Blocks result if labs missing / stale
+// ✔ Smart popup: tells user exactly what to run next
+// ✔ Adds tech-guidance when thermal/system issues detected
 // ============================================================
 private void lab17RunAuto() {
 
+    final String PREF = "GEL_DIAG";
+
+    // STRICT WINDOW: 2 hours
+    final long WINDOW_MS = 2L * 60L * 60L * 1000L;
+    final long now = System.currentTimeMillis();
+
     // ------------------------------------------------------------
-    // PRECHECK — REQUIRED STORED LAB RESULTS (NOT RUNTIME FLAGS)
+    // READ STORED RESULTS + TIMESTAMPS (STRICT)
     // ------------------------------------------------------------
-    float lab14Health  = getLastLab14HealthScore();
-    int   lab15Charge  = getLastLab15ChargeScore();
-    int   lab16Thermal = getLastLab16ThermalScore();
+    SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
 
-    if (lab14Health < 0 || lab15Charge < 0 || lab16Thermal < 0) {
+    final float lab14Health  = p.getFloat("lab14_health_score", -1f);
+    final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
+    final long  ts14         = p.getLong("lab14_ts", 0L);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+    final int   lab15Charge  = p.getInt("lab15_charge_score", -1);
+    final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
+    final String  lab15StrengthLabel = p.getString("lab15_strength_label", null);
+    final long  ts15         = p.getLong("lab15_ts", 0L);
 
-        b.setCancelable(true);
+    final int   lab16Thermal = p.getInt("lab16_thermal_score", -1);
+    final long  ts16         = p.getLong("lab16_ts", 0L);
 
-        final AlertDialog[] popupDialogHolder = new AlertDialog[1];
+    final boolean has14 = (lab14Health >= 0f && ts14 > 0L);
+    final boolean has15 = (lab15Charge >= 0  && ts15 > 0L);
+    final boolean has16 = (lab16Thermal >= 0 && ts16 > 0L);
 
-        // -----------------------------
-        // CONTAINER
-        // -----------------------------
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(20), dp(24), dp(20));
+    final boolean fresh14 = has14 && (now - ts14) <= WINDOW_MS;
+    final boolean fresh15 = has15 && (now - ts15) <= WINDOW_MS;
+    final boolean fresh16 = has16 && (now - ts16) <= WINDOW_MS;
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        box.setBackground(bg);
+    // ------------------------------------------------------------
+    // PRECHECK — SMART POPUP (STRICT)
+    // ------------------------------------------------------------
+    if (!(fresh14 && fresh15 && fresh16)) {
 
-        // -----------------------------
-        // TITLE
-        // -----------------------------
-        TextView title = new TextView(this);
-        title.setText("LAB 17 — Prerequisites Missing");
-        title.setTextColor(0xFFFFD700);
-        title.setTextSize(17f);
-        title.setPadding(0, 0, 0, dp(12));
-        box.addView(title);
+        StringBuilder msg = new StringBuilder();
 
-        // -----------------------------
-        // MESSAGE
-        // -----------------------------
-        TextView msg = new TextView(this);
-        msg.setText("Run labs 14, 15 and 16 first for accurate final reliability score.");
-        msg.setTextColor(0xFFFFFFFF);
-        msg.setTextSize(15f);
-        msg.setPadding(0, 0, 0, dp(18));
-        box.addView(msg);
+        // status lines
+        msg.append("Status (required within last 2 hours):\n\n");
 
-        // -----------------------------
-        // OK BUTTON (INSIDE POPUP)
-        // -----------------------------
-        Button ok = new Button(this);
-ok.setText("OK");
-ok.setAllCaps(true);
-ok.setTextSize(15f);
-ok.setTextColor(0xFF00FF6A); // GEL green
+        msg.append("• LAB 14: ");
+        if (!has14) msg.append("Missing\n");
+        else if (!fresh14) msg.append("Expired (").append(lab17_age(now - ts14)).append(")\n");
+        else msg.append("OK (").append(lab17_age(now - ts14)).append(")\n");
 
-GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF000000);          // Μαύρο
-okBg.setCornerRadius(dp(14));       // Premium καμπύλες
-okBg.setStroke(dp(3), 0xFFFFD700);  // Χρυσό περίβλημα
+        msg.append("• LAB 15: ");
+        if (!has15) msg.append("Missing\n");
+        else if (!fresh15) msg.append("Expired (").append(lab17_age(now - ts15)).append(")\n");
+        else msg.append("OK (").append(lab17_age(now - ts15)).append(")\n");
 
-ok.setBackground(okBg);
-ok.setPadding(dp(18), dp(10), dp(18), dp(10));
+        msg.append("• LAB 16: ");
+        if (!has16) msg.append("Missing\n");
+        else if (!fresh16) msg.append("Expired (").append(lab17_age(now - ts16)).append(")\n");
+        else msg.append("OK (").append(lab17_age(now - ts16)).append(")\n");
 
-ok.setOnClickListener(v -> {
-    if (popupDialogHolder[0] != null)
-        popupDialogHolder[0].dismiss();
-});
+        msg.append("\n");
 
-        box.addView(ok);
+        // decision
+        if ((fresh14 && fresh15) && (!fresh16)) {
+            msg.append("I detected you already ran LAB 14 + LAB 15.\n");
+            msg.append("Run ONLY LAB 16 now to complete the set.\n");
+        } else if ((fresh14 && fresh16) && (!fresh15)) {
+            msg.append("I detected you already ran LAB 14 + LAB 16.\n");
+            msg.append("Run ONLY LAB 15 now to complete the set.\n");
+        } else if ((fresh15 && fresh16) && (!fresh14)) {
+            msg.append("I detected you already ran LAB 15 + LAB 16.\n");
+            msg.append("Run ONLY LAB 14 now to complete the set.\n");
+        } else {
+            // if any expired OR multiple missing -> rerun all together
+            msg.append("To generate a valid result, run LAB 14 + LAB 15 + LAB 16 together.\n");
+            msg.append("Reason: missing and/or expired results.\n");
+        }
 
-        b.setView(box);
-
-        popupDialogHolder[0] = b.create();
-        AlertDialog popupDialog = popupDialogHolder[0];
-
-        if (popupDialog.getWindow() != null)
-            popupDialog.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-
-        popupDialog.show();
+        lab17_showPopup(
+                "LAB 17 — Prerequisites Check",
+                msg.toString()
+        );
         return;
     }
 
     // ------------------------------------------------------------
-    // START LAB 17 (UNCHANGED)
+    // START LAB 17
     // ------------------------------------------------------------
     logLine();
     logInfo("LAB 17 — GEL Auto Battery Reliability Evaluation");
@@ -3874,22 +3905,18 @@ ok.setOnClickListener(v -> {
 
         try {
 
-            int   lab14Aging   = getLastLab14AgingIndex();
-            boolean lab15SystemLimited = isLab15ChargingPathSystemLimited();
-            String  lab15StrengthLabel = getLastLab15StrengthLabel();
-
             // ------------------------------------------------------------
             // BASE WEIGHTED SCORE
             // ------------------------------------------------------------
             int baseScore = Math.round(
                     (lab14Health * 0.50f) +
-                    (lab15Charge  * 0.25f) +
+                    (lab15Charge * 0.25f) +
                     (lab16Thermal * 0.25f)
             );
             baseScore = Math.max(0, Math.min(100, baseScore));
 
             // ------------------------------------------------------------
-            // PENALTIES
+            // PENALTIES (LOCKED)
             // ------------------------------------------------------------
             int penaltyExtra = 0;
 
@@ -3913,27 +3940,33 @@ ok.setOnClickListener(v -> {
                     "Weak";
 
             // ------------------------------------------------------------
-            // FREEZE VALUES FOR UI THREAD (CRITICAL)
+            // FREEZE VALUES FOR UI THREAD
             // ------------------------------------------------------------
             final int    fFinalScore   = finalScore;
             final int    fPenaltyExtra = penaltyExtra;
             final String fCategory     = category;
 
-            final String explanation =
-                    "Explanation: This score reflects the results of the battery stress test, " +
-                    "charging stability and thermal behaviour of the device.";
+            final boolean thermalDanger =
+                    (lab16Thermal < 60); // lab16 already aggregates internal+peripherals
 
-            final String sysLimitMsg =
-                    lab15SystemLimited
-                            ? "Charging limitation analysis: Charging path is restricted by system protection logic. " +
-                              "This behaviour is NOT attributed to battery health."
-                            : null;
+            final boolean chargingWeakOrThrottled =
+                    (lab15Charge < 60) || lab15SystemLimited;
+
+            final boolean batteryLooksFineButThermalBad =
+                    (lab14Health >= 80f) && thermalDanger;
+
+            final boolean batteryBadButThermalOk =
+                    (lab14Health < 70f) && (lab16Thermal >= 75);
+
+            final boolean overallDeviceConcern =
+                    thermalDanger || chargingWeakOrThrottled || (lab14Health < 70f);
 
             // ------------------------------------------------------------
             // UI OUTPUT
             // ------------------------------------------------------------
             ui.post(() -> {
 
+                // SUMMARY (compact, human)
                 logInfo(String.format(
                         Locale.US,
                         "LAB14 — Battery health: %.0f%% | Aging index: %s",
@@ -3954,9 +3987,10 @@ ok.setOnClickListener(v -> {
                         lab16Thermal
                 ));
 
-                if (sysLimitMsg != null) {
+                if (lab15SystemLimited) {
                     logLine();
-                    logWarn(sysLimitMsg);
+                    logWarn("Charging limitation analysis: System-limited throttling detected (PMIC/thermal protection).");
+                    logWarn("This behaviour is NOT attributed to battery health alone.");
                 }
 
                 if (fPenaltyExtra > 0) {
@@ -3987,28 +4021,153 @@ ok.setOnClickListener(v -> {
                         "Final Battery Reliability Score: %d%% (%s)",
                         fFinalScore, fCategory
                 ));
-
-                logInfo(explanation);
                 logLine();
 
                 // ------------------------------------------------------------
-                // STORE FINAL RESULT
+                // INTELLIGENCE (device-level guidance)
+                // ------------------------------------------------------------
+                logInfo("Diagnosis:");
+
+                if (!overallDeviceConcern) {
+                    logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
+                    logInfo("Note: Internal chips and critical peripherals were monitored (not only the values shown).");
+                } else {
+
+                    if (batteryLooksFineButThermalBad) {
+                        logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
+                        logWarn("Recommendation: Visit a technician to inspect cooling path and thermal interfaces.");
+                        logWarn("Show this report to help them target the root cause (CPU/GPU load, cooling, PMIC, board).");
+                    }
+
+                    if (chargingWeakOrThrottled) {
+                        if (lab15SystemLimited) {
+                            logWarn("⚠️ Charging appears system-limited (protection logic).");
+                            logWarn("Possible causes: overheating, PMIC limiting current, poor cable/adapter, port issues.");
+                        } else if (lab15Charge < 60) {
+                            logWarn("⚠️ Charging performance is weak.");
+                            logWarn("Possible causes: cable/adapter quality, charging port wear, debris, battery impedance.");
+                        }
+                    }
+
+                    if (batteryBadButThermalOk) {
+                        logWarn("⚠️ Battery health is weak while thermals are OK.");
+                        logWarn("Likely cause: aging / capacity loss. Consider battery replacement if symptoms match.");
+                    }
+
+                    if (lab14Health < 70f && thermalDanger) {
+                        logError("❌ Combined risk detected (battery + thermal). Technician inspection is strongly recommended.");
+                    }
+                }
+
+                // ------------------------------------------------------------
+                // STORE FINAL RESULT (+ timestamp)
                 // ------------------------------------------------------------
                 try {
-                    SharedPreferences p =
-                            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-                    p.edit()
-                     .putInt("lab17_final_score", fFinalScore)
-                     .putString("lab17_category", fCategory)
-                     .apply();
+                    SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
+                    pp.edit()
+                      .putInt("lab17_final_score", fFinalScore)
+                      .putString("lab17_category", fCategory)
+                      .putLong("lab17_ts", System.currentTimeMillis())
+                      .apply();
                 } catch (Throwable ignore) {}
+
             });
 
         } catch (Throwable t) {
-            ui.post(() -> logError("LAB 17 failed: " + t.getMessage()));
+            ui.post(() -> logError("LAB 17 failed: " + (t.getMessage() != null ? t.getMessage() : "unknown error")));
         }
 
     }).start();
+}
+
+// ============================================================
+// LAB 17 — POPUP (GEL DARK + GOLD)
+// ============================================================
+private void lab17_showPopup(String titleText, String msgText) {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    b.setCancelable(true);
+
+    final AlertDialog[] holder = new AlertDialog[1];
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(20));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(titleText);
+    title.setTextColor(0xFFFFD700);
+    title.setTextSize(17f);
+    title.setPadding(0, 0, 0, dp(12));
+    box.addView(title);
+
+    TextView msg = new TextView(this);
+    msg.setText(msgText);
+    msg.setTextColor(0xFFFFFFFF);
+    msg.setTextSize(14.5f);
+    msg.setPadding(0, 0, 0, dp(18));
+    box.addView(msg);
+
+    Button ok = new Button(this);
+    ok.setText("OK");
+    ok.setAllCaps(true);
+    ok.setTextSize(15f);
+    ok.setTextColor(0xFF00FF6A);
+
+    GradientDrawable okBg = new GradientDrawable();
+    okBg.setColor(0xFF000000);
+    okBg.setCornerRadius(dp(14));
+    okBg.setStroke(dp(3), 0xFFFFD700);
+
+    ok.setBackground(okBg);
+    ok.setPadding(dp(18), dp(10), dp(18), dp(10));
+
+    ok.setOnClickListener(v -> {
+        try {
+            if (holder[0] != null) holder[0].dismiss();
+        } catch (Throwable ignore) {}
+    });
+
+    box.addView(ok);
+
+    b.setView(box);
+
+    holder[0] = b.create();
+    AlertDialog popup = holder[0];
+
+    if (popup.getWindow() != null) {
+        popup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    popup.show();η
+}
+
+// ============================================================
+// LAB 17 — AGE FORMATTER
+// ============================================================
+private String lab17_age(long deltaMs) {
+    if (deltaMs < 0) deltaMs = 0;
+    long sec = deltaMs / 1000L;
+    long min = sec / 60L;
+    long hr  = min / 60L;
+
+    if (hr > 0) {
+        long rm = min % 60L;
+        return hr + "h " + rm + "m ago";
+    }
+    if (min > 0) return min + "m ago";
+    return Math.max(0, sec) + "s ago";
 }
 
 // ============================================================ // ============================================================

@@ -3803,6 +3803,7 @@ if (peakTemp > 0) {
 logLine();
 logOk("Lab 16 finished.");
 logLine();
+}
 
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation

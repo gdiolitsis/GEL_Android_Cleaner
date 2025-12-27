@@ -3707,7 +3707,11 @@ try {
 } catch (Throwable ignore) {}
 
 logInfo("Thermal behaviour score:");
+logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "✅ %d%%", thermalScore));
+
+logLine();
+}
 
 // ------------------------------------------------------------
 // COLOR LOGIC (VALUES ONLY)

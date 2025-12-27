@@ -2796,7 +2796,7 @@ root.setBackground(bg);
 // 🔹 TITLE — INSIDE POPUP (LAB 14)
 // ============================================================
 TextView title = new TextView(this);
-title.setText("LAB 14 — Connect the charger to the devices charging port");
+title.setText("LAB 14 — Battery's health stress test");
 title.setTextColor(0xFFFFFFFF); 
 title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
@@ -3124,6 +3124,7 @@ logInfo(String.format(
         rise
 ));
 
+logInfo("Battery behaviour");
 logOk(String.format(
         Locale.US,
         "Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
@@ -3148,8 +3149,8 @@ if (validDrain) {
 }
 
 // SCORE (αριθμός + runs)
-logInfo("Measurement consistency score:");
-logOk(String.format(
+    logInfo("Measurement consistency score:");
+    logOk(String.format(
         Locale.US,
         "✅ %d%% (%d valid runs)",
         conf.percent,
@@ -3268,10 +3269,10 @@ bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
 // ============================================================
-// 🔹 TITLE — INSIDE POPUP (GOLD)
+// 🔹 TITLE — INSIDE POPUP (LAB 15)
 // ============================================================
 TextView title = new TextView(this);
-title.setText("LAB 15 — Charging System Diagnostic");
+title.setText("LAB 15 — Connect the charger to the device's charging port");
 title.setTextColor(0xFFFFFFFF); 
 title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);

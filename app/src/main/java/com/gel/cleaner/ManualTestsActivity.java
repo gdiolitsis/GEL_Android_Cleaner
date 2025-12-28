@@ -3219,89 +3219,20 @@ logOk(String.format(
 ));
 
 // ------------------------------------------------------------
-// STORE RESULT FOR LAB 17 (LAB 14 OUTPUT)
+// STORE RESULT FOR LAB 17 (LAB 14 OUTPUT) — FINAL & LOCKED
 // ------------------------------------------------------------
-try {
-
-    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-
-    // ⛔ 1) Counter anomaly → NEVER store
-    if (!validDrain) {
-
-        logWarn("⚠️ Result NOT stored due to counter anomaly.");
-        // do nothing
-        return;
-    }
-
-    // ============================================================
-// LAB 14 — HIGH VARIABILITY HANDLING (FINAL • LOCKED)
-// ============================================================
 SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-long now = System.currentTimeMillis();
 
-long hvFirstTs = p.getLong("lab14_hv_first_ts", -1L);
-boolean hvPending = p.getBoolean("lab14_hv_pending", false);
+p.edit()
+ .putFloat("lab14_health_score", finalScore)
+ .putInt("lab14_aging_index", agingIndex)
+ .putLong("lab14_last_ts", System.currentTimeMillis())
+ .apply();
 
-if (variabilityDetected) {
+logOk("✅ LAB 14 result stored successfully.");
 
-    // 1️⃣ First detection → mark pending, DO NOT store
-    if (!hvPending) {
-
-        p.edit()
-         .putBoolean("lab14_hv_pending", true)
-         .putLong("lab14_hv_first_ts", now)
-         .apply();
-
-        logWarn("⚠️ Measurement variability detected.");
-        logWarn("Result NOT stored.");
-        logInfo("Repeat the test within 2 hours to confirm instability.");
-
-        return; // ⛔ STOP — no store
-    }
-
-    // 2️⃣ Second detection → confirm if within window
-    long dt = now - hvFirstTs;
-
-    if (dt <= 2L * 60L * 60L * 1000L) {
-
-        p.edit()
-         .putBoolean("lab14_unstable_measurement", true)
-         .apply();
-
-        logWarn("⚠️ Measurement instability CONFIRMED.");
-        logInfo("This suggests PMIC / fuel-gauge instability.");
-
-        // ✔ continue → allow store
-
-    } else {
-
-        // expired window → reset & require re-confirmation
-        p.edit()
-         .putBoolean("lab14_hv_pending", true)
-         .putLong("lab14_hv_first_ts", now)
-         .apply();
-
-        logWarn("⚠️ Variability detected outside validation window.");
-        logWarn("Result NOT stored. Repeat test within 2 hours.");
-
-        return; // ⛔ STOP
-    }
-
-} else {
-
-    // Stable → clear pending
-    p.edit()
-     .remove("lab14_hv_pending")
-     .remove("lab14_hv_first_ts")
-     .apply();
-}
-               
-                // ----------------------------------------------------
-                // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
-                // EXACT logs block you provided (2 more runs / any other day, etc)
-                // ----------------------------------------------------
-               
-                logLab14Confidence();
+// 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
+logLab14Confidence();
             }
         });
 

@@ -2962,6 +2962,13 @@ root.addView(title);
                 engine.saveRun();
 
                 final Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
+                
+                // ============================================================
+// LAB 14 — VARIABILITY DETECTION (SINGLE SOURCE)
+// ============================================================
+boolean variabilityDetected =
+        !validDrain ||           // counter anomaly
+        conf.percent < 60;       // unstable repeated runs
     
                 // ----------------------------------------------------
                 // 7) PROFILE + AGING (Engine)
@@ -3226,24 +3233,68 @@ try {
         return;
     }
 
-    // ⏱️ timestamps for high-variability handling
-    long lastHvTs   = p.getLong("lab14_hv_pending_ts", -1);
-    boolean hvPending = p.getBoolean("lab14_hv_pending", false);
-    
-    // ✅ 3) STORE — allowed cases only
-    p.edit()
-     .putFloat("lab14_health_score", finalScore)
-     .putInt("lab14_aging_index", agingIndex)
-     .putLong("lab14_last_ts", now)
-     .apply();
+    // ============================================================
+// LAB 14 — HIGH VARIABILITY HANDLING (FINAL • LOCKED)
+// ============================================================
+SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+long now = System.currentTimeMillis();
 
-    if (hvConfirmed) {
-        p.edit().putBoolean("lab14_hv_confirmed", true).apply();
+long hvFirstTs = p.getLong("lab14_hv_first_ts", -1L);
+boolean hvPending = p.getBoolean("lab14_hv_pending", false);
+
+if (variabilityDetected) {
+
+    // 1️⃣ First detection → mark pending, DO NOT store
+    if (!hvPending) {
+
+        p.edit()
+         .putBoolean("lab14_hv_pending", true)
+         .putLong("lab14_hv_first_ts", now)
+         .apply();
+
+        logWarn("⚠️ Measurement variability detected.");
+        logWarn("Result NOT stored.");
+        logInfo("Repeat the test within 2 hours to confirm instability.");
+
+        return; // ⛔ STOP — no store
     }
 
-    logOk("✅ LAB 14 result stored successfully.");
+    // 2️⃣ Second detection → confirm if within window
+    long dt = now - hvFirstTs;
 
-} catch (Throwable ignore) {}
+    if (dt <= 2L * 60L * 60L * 1000L) {
+
+        p.edit()
+         .putBoolean("lab14_unstable_measurement", true)
+         .apply();
+
+        logWarn("⚠️ Measurement instability CONFIRMED.");
+        logInfo("This suggests PMIC / fuel-gauge instability.");
+
+        // ✔ continue → allow store
+
+    } else {
+
+        // expired window → reset & require re-confirmation
+        p.edit()
+         .putBoolean("lab14_hv_pending", true)
+         .putLong("lab14_hv_first_ts", now)
+         .apply();
+
+        logWarn("⚠️ Variability detected outside validation window.");
+        logWarn("Result NOT stored. Repeat test within 2 hours.");
+
+        return; // ⛔ STOP
+    }
+
+} else {
+
+    // Stable → clear pending
+    p.edit()
+     .remove("lab14_hv_pending")
+     .remove("lab14_hv_first_ts")
+     .apply();
+}
                
                 // ----------------------------------------------------
                 // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
@@ -3838,9 +3889,14 @@ private void lab17RunAuto() {
     // ------------------------------------------------------------
     SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
 
-    final float lab14Health  = p.getFloat("lab14_health_score", -1f);
-    final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
-    final long  ts14         = p.getLong("lab14_last_ts", 0L);
+    // LAB 14 results
+final float lab14Health  = p.getFloat("lab14_health_score", -1f);
+final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
+final long  ts14         = p.getLong("lab14_last_ts", 0L);
+
+// LAB 14 reliability flag (future-safe)
+final boolean lab14Unstable =
+        p.getBoolean("lab14_unstable_measurement", false);
 
     final int   lab15Charge  = p.getInt("lab15_charge_score", -1);
     final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
@@ -3850,6 +3906,8 @@ private void lab17RunAuto() {
     final int   lab16Thermal = p.getInt("lab16_thermal_score", -1);
     final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
     final long  ts16         = p.getLong("lab16_last_ts", 0L);
+    final boolean lab14Unstable =
+        p.getBoolean("lab14_unstable_measurement", false);
 
     // ------------------------------------------------------------
     // PRESENCE + FRESHNESS CHECK
@@ -3865,15 +3923,15 @@ private void lab17RunAuto() {
 // ------------------------------------------------------------
 // HIGH VARIABILITY CONFIRMATION (LAB 14 INTELLIGENCE)
 // ------------------------------------------------------------
-final long hvFirstTs = p.getLong("lab14_hv_first_ts", -1L);
-final long hvLastTs  = p.getLong("lab14_hv_last_ts", -1L);
+final long hvFirstTs    = p.getLong("lab14_hv_first_ts", -1L);
+final long hvLastTs     = p.getLong("lab14_hv_last_ts", -1L);
 final boolean hvPending = p.getBoolean("lab14_hv_pending", false);
 
-// Confirmed ONLY if variability repeated within strict window
+// confirmed ONLY if repeated within strict window
 final boolean hvConfirmed =
         hvPending &&
         hvFirstTs > 0L &&
-        hvLastTs  > hvFirstTs &&
+        hvLastTs > hvFirstTs &&
         (hvLastTs - hvFirstTs) <= WINDOW_MS;
 
     // ------------------------------------------------------------
@@ -4057,45 +4115,52 @@ final boolean hvConfirmed =
 // ------------------------------------------------------------
 logInfo("Diagnosis:");
 
-if (hvConfirmed) {
+// ------------------------------------------------------------
+// MEASUREMENT RELIABILITY (FROM LAB 14)
+// ------------------------------------------------------------
+if (lab14Unstable) {
     logLine();
     logWarn("⚠️ Measurement reliability warning:");
-    logWarn("Repeated high variability detected across recent tests.");
+    logWarn("Battery measurements show instability.");
     logInfo("This suggests unstable power measurement (PMIC / fuel gauge),");
-    logInfo("not a direct battery failure.");
-    logInfo("Recommendation: technician-level inspection advised.");
+    logInfo("not a confirmed battery failure.");
 }
 
-                if (!overallDeviceConcern) {
-                    logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
-                    logInfo("Note: Internal chips and critical peripherals were monitored (not only the values shown).");
-                } else {
+// ------------------------------------------------------------
+// DEVICE-LEVEL DIAGNOSIS
+// ------------------------------------------------------------
+if (!overallDeviceConcern) {
 
-                    if (batteryLooksFineButThermalBad) {
-                        logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
-                        logWarn("Recommendation: Visit a technician to inspect cooling path and thermal interfaces.");
-                        logWarn("Show this report to help them target the root cause (CPU/GPU load, cooling, PMIC, board).");
-                    }
+    logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
+    logInfo("Note: Internal chips and critical peripherals were monitored.");
 
-                    if (chargingWeakOrThrottled) {
-                        if (lab15SystemLimited) {
-                            logWarn("⚠️ Charging appears system-limited (protection logic).");
-                            logWarn("Possible causes: overheating, PMIC limiting current, poor cable/adapter, port issues.");
-                        } else if (lab15Charge < 60) {
-                            logWarn("⚠️ Charging performance is weak.");
-                            logWarn("Possible causes: cable/adapter quality, charging port wear, debris, battery impedance.");
-                        }
-                    }
+} else {
 
-                    if (batteryBadButThermalOk) {
-                        logWarn("⚠️ Battery health is weak while thermals are OK.");
-                        logWarn("Likely cause: aging / capacity loss. Consider battery replacement if symptoms match.");
-                    }
+    if (batteryLooksFineButThermalBad) {
+        logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
+        logWarn("Recommendation: Inspect cooling path and thermal interfaces.");
+        logWarn("Possible causes: CPU/GPU load, thermal pads, heatsink contact.");
+    }
 
-                    if (lab14Health < 70f && thermalDanger) {
-                        logError("❌ Combined risk detected (battery + thermal). Technician inspection is strongly recommended.");
-                    }
-                }
+    if (chargingWeakOrThrottled) {
+        if (lab15SystemLimited) {
+            logWarn("⚠️ Charging appears system-limited (protection logic).");
+            logWarn("Possible causes: overheating, PMIC limiting current.");
+        } else if (lab15Charge < 60) {
+            logWarn("⚠️ Charging performance is weak.");
+            logWarn("Possible causes: cable/adapter quality, port wear, battery impedance.");
+        }
+    }
+
+    if (batteryBadButThermalOk) {
+        logWarn("⚠️ Battery health is weak while thermals are OK.");
+        logWarn("Likely cause: battery aging / capacity loss.");
+    }
+
+    if (lab14Health < 70f && thermalDanger) {
+        logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
+    }
+}
 
                 // ------------------------------------------------------------
                 // STORE FINAL RESULT (+ timestamp)

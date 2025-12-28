@@ -3870,9 +3870,6 @@ logLine();
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation
 // INTELLIGENCE EDITION • STRICT FRESHNESS (≤ 2 HOURS)
-// ✔ Blocks result if labs missing / stale
-// ✔ Smart popup: tells user exactly what to run next
-// ✔ Adds tech-guidance when thermal/system issues detected
 // ============================================================
 private void lab17RunAuto() {
 
@@ -3889,18 +3886,20 @@ private void lab17RunAuto() {
 
     final float lab14Health  = p.getFloat("lab14_health_score", -1f);
     final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
-    final long ts14 = p.getLong("lab14_last_ts", 0L);
-
-
+    final long  ts14         = p.getLong("lab14_last_ts", 0L);
 
     final int   lab15Charge  = p.getInt("lab15_charge_score", -1);
     final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
     final String  lab15StrengthLabel = p.getString("lab15_strength_label", null);
-    final long  ts15         = p.getLong("lab15_last_ts", 0L);
+    final long  ts15         = p.getLong("lab15_ts", 0L);
 
     final int   lab16Thermal = p.getInt("lab16_thermal_score", -1);
+    final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
     final long  ts16         = p.getLong("lab16_last_ts", 0L);
 
+    // ------------------------------------------------------------
+    // PRESENCE + FRESHNESS CHECK
+    // ------------------------------------------------------------
     final boolean has14 = (lab14Health >= 0f && ts14 > 0L);
     final boolean has15 = (lab15Charge >= 0  && ts15 > 0L);
     final boolean has16 = (lab16Thermal >= 0 && ts16 > 0L);
@@ -3908,6 +3907,18 @@ private void lab17RunAuto() {
     final boolean fresh14 = has14 && (now - ts14) <= WINDOW_MS;
     final boolean fresh15 = has15 && (now - ts15) <= WINDOW_MS;
     final boolean fresh16 = has16 && (now - ts16) <= WINDOW_MS;
+
+// ------------------------------------------------------------
+// HIGH VARIABILITY CONFIRMATION (READ-ONLY FROM LAB 14)
+// ------------------------------------------------------------
+final long lastHvTs   = p.getLong("lab14_hv_pending_ts", -1L);
+final boolean hvPending = p.getBoolean("lab14_hv_pending", false);
+
+// confirmed only if repeated within strict window
+final boolean hvConfirmed =
+        hvPending &&
+        lastHvTs > 0L &&
+        (now - lastHvTs) <= WINDOW_MS;
 
     // ------------------------------------------------------------
     // PRECHECK — SMART POPUP (STRICT)
@@ -4011,8 +4022,7 @@ private void lab17RunAuto() {
             final int    fPenaltyExtra = penaltyExtra;
             final String fCategory     = category;
 
-            final boolean thermalDanger =
-                    (lab16Thermal < 60); // lab16 already aggregates internal+peripherals
+            final boolean thermalDanger = lab16ThermalDanger; // lab16 already aggregates internal+peripherals
 
             final boolean chargingWeakOrThrottled =
                     (lab15Charge < 60) || lab15SystemLimited;
@@ -4067,11 +4077,6 @@ private void lab17RunAuto() {
                     else if (lab15Charge < 60)
                         logWarn("• Charging: weak charging performance detected.");
 
-                    if (lab16Thermal < 60)
-                        logWarn("• Thermal: unstable / hot behaviour detected.");
-                    else if (lab16Thermal < 75)
-                        logWarn("• Thermal: moderate instability detected.");
-
                     if (lab14Aging >= 70)
                         logWarn("• Aging: severe aging indicators detected.");
                     else if (lab14Aging >= 50)
@@ -4088,10 +4093,19 @@ private void lab17RunAuto() {
                 ));
                 logLine();
 
-                // ------------------------------------------------------------
-                // INTELLIGENCE (device-level guidance)
-                // ------------------------------------------------------------
-                logInfo("Diagnosis:");
+// ------------------------------------------------------------
+// INTELLIGENCE (device-level guidance)
+// ------------------------------------------------------------
+logInfo("Diagnosis:");
+
+if (hvConfirmed) {
+    logLine();
+    logWarn("⚠️ Measurement reliability warning:");
+    logWarn("Repeated high variability detected across recent tests.");
+    logInfo("This suggests unstable power measurement (PMIC / fuel gauge),");
+    logInfo("not a direct battery failure.");
+    logInfo("Recommendation: technician-level inspection advised.");
+}
 
                 if (!overallDeviceConcern) {
                     logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");

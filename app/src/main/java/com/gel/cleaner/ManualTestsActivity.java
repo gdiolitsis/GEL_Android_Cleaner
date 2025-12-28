@@ -3978,7 +3978,8 @@ final boolean hvConfirmed =
             final int    fPenaltyExtra = penaltyExtra;
             final String fCategory     = category;
 
-            final boolean thermalDanger = lab16ThermalDanger; // lab16 already aggregates internal+peripherals
+            final boolean thermalDanger =
+        lab16ThermalDanger || (lab16Thermal < 60); // lab16 already aggregates internal+peripherals
 
             final boolean chargingWeakOrThrottled =
                     (lab15Charge < 60) || lab15SystemLimited;
@@ -3990,7 +3991,9 @@ final boolean hvConfirmed =
                     (lab14Health < 70f) && (lab16Thermal >= 75);
 
             final boolean overallDeviceConcern =
-                    thermalDanger || chargingWeakOrThrottled || (lab14Health < 70f);
+        thermalDanger ||
+        chargingWeakOrThrottled ||
+        (lab14Health < 70f);
 
             // ------------------------------------------------------------
             // UI OUTPUT

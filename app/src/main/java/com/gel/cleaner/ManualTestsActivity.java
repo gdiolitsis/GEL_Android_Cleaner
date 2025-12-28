@@ -3229,53 +3229,7 @@ try {
     // ⏱️ timestamps for high-variability handling
     long lastHvTs   = p.getLong("lab14_hv_pending_ts", -1);
     boolean hvPending = p.getBoolean("lab14_hv_pending", false);
-
-    long now = System.currentTimeMillis();
-    boolean hvConfirmed = false;
-
-    // ⚠️ 2) High variability logic
-    if (highVariabilityDetected) {
-
-        // first time → mark pending
-        if (!hvPending) {
-
-            p.edit()
-             .putBoolean("lab14_hv_pending", true)
-             .putLong("lab14_hv_pending_ts", now)
-             .apply();
-
-            logWarn("⚠️ High variability detected. Result NOT stored.");
-            logWarn("ℹ️ Repeat test within 2 hours to confirm instability.");
-            return;
-
-        } else {
-            // pending already exists → check time window
-            long dt = now - lastHvTs;
-
-            if (dt <= 2 * 60 * 60 * 1000L) {
-                // confirmed instability
-                hvConfirmed = true;
-                logWarn("⚠️ High variability CONFIRMED (within 2 hours).");
-            } else {
-                // expired window → reset pending, treat as first again
-                p.edit()
-                 .putBoolean("lab14_hv_pending", true)
-                 .putLong("lab14_hv_pending_ts", now)
-                 .apply();
-
-                logWarn("⚠️ High variability detected outside validation window.");
-                logWarn("ℹ️ Result NOT stored. Repeat test within 2 hours.");
-                return;
-            }
-        }
-    } else {
-        // no variability → clear pending state
-        p.edit()
-         .remove("lab14_hv_pending")
-         .remove("lab14_hv_pending_ts")
-         .apply();
-    }
-
+    
     // ✅ 3) STORE — allowed cases only
     p.edit()
      .putFloat("lab14_health_score", finalScore)
@@ -3909,16 +3863,18 @@ private void lab17RunAuto() {
     final boolean fresh16 = has16 && (now - ts16) <= WINDOW_MS;
 
 // ------------------------------------------------------------
-// HIGH VARIABILITY CONFIRMATION (READ-ONLY FROM LAB 14)
+// HIGH VARIABILITY CONFIRMATION (LAB 14 INTELLIGENCE)
 // ------------------------------------------------------------
-final long lastHvTs   = p.getLong("lab14_hv_pending_ts", -1L);
+final long hvFirstTs = p.getLong("lab14_hv_first_ts", -1L);
+final long hvLastTs  = p.getLong("lab14_hv_last_ts", -1L);
 final boolean hvPending = p.getBoolean("lab14_hv_pending", false);
 
-// confirmed only if repeated within strict window
+// Confirmed ONLY if variability repeated within strict window
 final boolean hvConfirmed =
         hvPending &&
-        lastHvTs > 0L &&
-        (now - lastHvTs) <= WINDOW_MS;
+        hvFirstTs > 0L &&
+        hvLastTs  > hvFirstTs &&
+        (hvLastTs - hvFirstTs) <= WINDOW_MS;
 
     // ------------------------------------------------------------
     // PRECHECK — SMART POPUP (STRICT)

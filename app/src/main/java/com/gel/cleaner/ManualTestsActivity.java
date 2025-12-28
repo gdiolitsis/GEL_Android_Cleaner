@@ -3820,7 +3820,7 @@ private void lab17RunAuto() {
     // ------------------------------------------------------------
     SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
 
-    // LAB 14 results
+// LAB 14 results
 final float lab14Health  = p.getFloat("lab14_health_score", -1f);
 final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
 final long  ts14         = p.getLong("lab14_last_ts", 0L);
@@ -3829,17 +3829,15 @@ final long  ts14         = p.getLong("lab14_last_ts", 0L);
 final boolean lab14Unstable =
         p.getBoolean("lab14_unstable_measurement", false);
 
-    final int   lab15Charge  = p.getInt("lab15_charge_score", -1);
-    final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
-    final String  lab15StrengthLabel = p.getString("lab15_strength_label", null);
-    final long  ts15         = p.getLong("lab15_ts", 0L);
+final int lab15Charge = p.getInt("lab15_charge_score", -1);
+final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
+final String lab15StrengthLabel = p.getString("lab15_strength_label", null);
+final long ts15 = p.getLong("lab15_ts", 0L);
 
-    final int   lab16Thermal = p.getInt("lab16_thermal_score", -1);
-    final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
-    final long  ts16         = p.getLong("lab16_last_ts", 0L);
-    final boolean lab14Unstable =
-        p.getBoolean("lab14_unstable_measurement", false);
-
+final int lab16Thermal = p.getInt("lab16_thermal_score", -1);
+final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
+final long ts16 = p.getLong("lab16_last_ts", 0L);
+    
     // ------------------------------------------------------------
     // PRESENCE + FRESHNESS CHECK
     // ------------------------------------------------------------

@@ -3646,16 +3646,16 @@ try {
     chargeScore = Math.max(0, Math.min(100, chargeScore));
 
     SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-    p.edit()
-     .putInt("lab15_charge_score", chargeScore)
-     .putBoolean("lab15_system_limited", lab15_systemLimited)
-     .putBoolean("lab15_overtemp", lab15OverTempDuringCharge)
-     .putString(
-         "lab15_strength_label",
-         lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG"
-     )
-     .putLong("lab15_last_ts", System.currentTimeMillis())
-     .apply();
+p.edit()
+ .putInt("lab15_charge_score", chargeScore)
+ .putBoolean("lab15_system_limited", lab15_systemLimited)
+ .putBoolean("lab15_overtemp", lab15OverTempDuringCharge)
+ .putString(
+     "lab15_strength_label",
+     lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG"
+ )
+ .putLong("lab15_ts", System.currentTimeMillis()) 
+ .apply();
 
 } catch (Throwable ignore) {}
 

@@ -1602,7 +1602,7 @@ private Button makeTestButtonGreenGold(String text, Runnable action) {
     Button btn = new Button(this);
     btn.setText(text);
     btn.setAllCaps(false);
-    btn.setTextColor(0xFFFFFFFF); // white text
+    btn.setTextColor(0xFF8B0000); // Red text
     btn.setTextSize(15f);
     btn.setTypeface(null, Typeface.BOLD);
     btn.setElevation(dp(3)); // premium shadow
@@ -3215,12 +3215,80 @@ logOk(String.format(
 // STORE RESULT FOR LAB 17 (LAB 14 OUTPUT)
 // ------------------------------------------------------------
 try {
+
     SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+    // ⛔ 1) Counter anomaly → NEVER store
+    if (!validDrain) {
+
+        logWarn("⚠️ Result NOT stored due to counter anomaly.");
+        // do nothing
+        return;
+    }
+
+    // ⏱️ timestamps for high-variability handling
+    long lastHvTs   = p.getLong("lab14_hv_pending_ts", -1);
+    boolean hvPending = p.getBoolean("lab14_hv_pending", false);
+
+    long now = System.currentTimeMillis();
+    boolean hvConfirmed = false;
+
+    // ⚠️ 2) High variability logic
+    if (highVariabilityDetected) {
+
+        // first time → mark pending
+        if (!hvPending) {
+
+            p.edit()
+             .putBoolean("lab14_hv_pending", true)
+             .putLong("lab14_hv_pending_ts", now)
+             .apply();
+
+            logWarn("⚠️ High variability detected. Result NOT stored.");
+            logWarn("ℹ️ Repeat test within 2 hours to confirm instability.");
+            return;
+
+        } else {
+            // pending already exists → check time window
+            long dt = now - lastHvTs;
+
+            if (dt <= 2 * 60 * 60 * 1000L) {
+                // confirmed instability
+                hvConfirmed = true;
+                logWarn("⚠️ High variability CONFIRMED (within 2 hours).");
+            } else {
+                // expired window → reset pending, treat as first again
+                p.edit()
+                 .putBoolean("lab14_hv_pending", true)
+                 .putLong("lab14_hv_pending_ts", now)
+                 .apply();
+
+                logWarn("⚠️ High variability detected outside validation window.");
+                logWarn("ℹ️ Result NOT stored. Repeat test within 2 hours.");
+                return;
+            }
+        }
+    } else {
+        // no variability → clear pending state
+        p.edit()
+         .remove("lab14_hv_pending")
+         .remove("lab14_hv_pending_ts")
+         .apply();
+    }
+
+    // ✅ 3) STORE — allowed cases only
     p.edit()
      .putFloat("lab14_health_score", finalScore)
      .putInt("lab14_aging_index", agingIndex)
-     .putLong("lab14_last_ts", System.currentTimeMillis())
+     .putLong("lab14_last_ts", now)
      .apply();
+
+    if (hvConfirmed) {
+        p.edit().putBoolean("lab14_hv_confirmed", true).apply();
+    }
+
+    logOk("✅ LAB 14 result stored successfully.");
+
 } catch (Throwable ignore) {}
                
                 // ----------------------------------------------------
@@ -3794,22 +3862,6 @@ logLine();
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
-if (thermalDanger) {
-    logWarn("Elevated temperature detected in critical components.");
-    logWarn("System thermal protection may engage.");
-} else {
-    logOk("Device operating at safe temperatures.");
-    logInfo("Internal chips and critical peripherals were monitored.");
-}
-
-if (peakTemp > 0) {
-    logInfo(String.format(
-            Locale.US,
-            "Peak temperature observed: %.1f°C at %s",
-            peakTemp, peakSource
-    ));
-}
-
 logLine();
 logOk("Lab 16 finished.");
 logLine();
@@ -3837,15 +3889,17 @@ private void lab17RunAuto() {
 
     final float lab14Health  = p.getFloat("lab14_health_score", -1f);
     final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
-    final long  ts14         = p.getLong("lab14_ts", 0L);
+    final long ts14 = p.getLong("lab14_last_ts", 0L);
+
+
 
     final int   lab15Charge  = p.getInt("lab15_charge_score", -1);
     final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
     final String  lab15StrengthLabel = p.getString("lab15_strength_label", null);
-    final long  ts15         = p.getLong("lab15_ts", 0L);
+    final long  ts15         = p.getLong("lab15_last_ts", 0L);
 
     final int   lab16Thermal = p.getInt("lab16_thermal_score", -1);
-    final long  ts16         = p.getLong("lab16_ts", 0L);
+    final long  ts16         = p.getLong("lab16_last_ts", 0L);
 
     final boolean has14 = (lab14Health >= 0f && ts14 > 0L);
     final boolean has15 = (lab15Charge >= 0  && ts15 > 0L);

@@ -4128,8 +4128,7 @@ new Thread(() -> {
             // STORE FINAL RESULT (+ timestamp)
             // ------------------------------------------------------------
             try {
-                SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
-                pp.edit()
+                p.edit()
                   .putInt("lab17_final_score", fFinalScore)
                   .putString("lab17_category", fCategory)
                   .putLong("lab17_ts", System.currentTimeMillis())

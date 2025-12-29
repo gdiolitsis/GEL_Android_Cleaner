@@ -3798,24 +3798,24 @@ private void lab16ThermalSnapshot() {
 
     thermalScore = Math.max(0, Math.min(100, thermalScore));
 
-    try {
-        p.edit()
-         .putInt("lab16_thermal_score", thermalScore)
-         .putBoolean("lab16_thermal_danger", thermalDanger)
-         .putFloat("lab16_peak_temp", peakTemp)
-         .putString("lab16_peak_source", peakSrc)
-         .putLong("lab16_last_ts", System.currentTimeMillis())
-         .apply();
-    } catch (Throwable ignore) {}
+try {
+    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+    p.edit()
+     .putInt("lab16_thermal_score", thermalScore)
+     .putBoolean("lab16_thermal_danger", thermalDanger)
+     .putFloat("lab16_peak_temp", peakTemp)
+     .putString("lab16_peak_source", peakSrc)
+     .putLong("lab16_last_ts", System.currentTimeMillis())
+     .apply();
+} catch (Throwable ignore) {}
 
-    logLine();
-    logInfo("Thermal behaviour score:");
-    logOk(String.format(Locale.US, "%d%%", thermalScore));
+logLine();
+logInfo("Thermal behaviour score:");
+logOk(String.format(Locale.US, "%d%%", thermalScore));
 
-    logLine();
-    logOk("Lab 16 finished.");
-    logLine();
-}
+logLine();
+logOk("Lab 16 finished.");
+logLine();
 
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation

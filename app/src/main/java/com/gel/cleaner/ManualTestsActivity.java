@@ -3123,20 +3123,30 @@ float delta = endBatteryTemp - startBatteryTemp;
 
 logInfo("Thermal change:");
 
-if (delta > 0.5f) {
-    // πραγματική άνοδος
+if (delta >= 3.0f) {
+    // ουσιαστική θερμική άνοδος
     logWarn(String.format(
             Locale.US,
             "+%.1f°C",
             delta
     ));
-} else if (delta < -0.5f) {
 
+} else if (delta >= 0.5f) {
+    // φυσιολογική άνοδος από stress
+    logInfo(String.format(
+            Locale.US,
+            "+%.1f°C",
+            delta
+    ));
+
+} else if (delta <= -0.5f) {
+    // πτώση θερμοκρασίας (καλό)
     logOk(String.format(
             Locale.US,
             "%.1f°C",
             delta
     ));
+
 } else {
     // πρακτικά σταθερό
     logInfo(String.format(

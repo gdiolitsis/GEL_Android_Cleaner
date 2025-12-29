@@ -4766,6 +4766,7 @@ private void lab19AppsFootprint() {
     logInfo("System load indicators (capability-based):");
     logOk("Background-capable user apps: " + bgCapable + " (" + pctBg + "%)");
     logOk("Permission-heavy user apps: " + permHeavy + " (" + pctPerm + "%)");
+    logInfo("(Percentages above 100% mean multiple capabilities per app — this is normal.)");
 
     logInfo("Capability map (user apps):");
     logOk("Boot-aware: " + bootAware +
@@ -4832,6 +4833,7 @@ private void lab19AppsFootprint() {
         logInfo("What this means (simple terms):");
         logWarn("Your phone is carrying too many “always-on capable” apps at once.");
         logOk("Recommendation: keep only what you really use, and reduce duplicates.");
+        logOk("This is common on power-user devices — not a defect.");
 
     } else if (riskPoints >= 5) {
         logWarn("⚠️ Moderate app pressure detected.");
@@ -5163,7 +5165,6 @@ private void lab21UptimeHints() {
 // ============================================================  
 // LABS 22 — 25: SECURITY & SYSTEM HEALTH  
 // ============================================================  
-// ============================================================
 
 // LAB 22 — Screen Lock / Biometrics Checklist (auto-detect + manual)
 // ============================================================

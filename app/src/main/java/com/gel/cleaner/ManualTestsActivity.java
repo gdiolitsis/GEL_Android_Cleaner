@@ -3800,7 +3800,6 @@ private void lab16ThermalSnapshot() {
     thermalScore = Math.max(0, Math.min(100, thermalScore));
 
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
         p.edit()
          .putInt("lab16_thermal_score", thermalScore)
          .putBoolean("lab16_thermal_danger", thermalDanger)

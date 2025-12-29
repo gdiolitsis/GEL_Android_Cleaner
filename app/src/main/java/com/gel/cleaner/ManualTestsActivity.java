@@ -3133,7 +3133,7 @@ if (delta >= 3.0f) {
 
 } else if (delta >= 0.5f) {
     // φυσιολογική άνοδος από stress
-    logInfo(String.format(
+    logOk(String.format(
             Locale.US,
             "+%.1f°C",
             delta
@@ -3149,7 +3149,7 @@ if (delta >= 3.0f) {
 
 } else {
     // πρακτικά σταθερό
-    logInfo(String.format(
+    logOk(String.format(
             Locale.US,
             "%.1f°C",
             delta

@@ -3930,233 +3930,220 @@ final boolean hvConfirmed =
     }
 
     // ------------------------------------------------------------
-    // START LAB 17
-    // ------------------------------------------------------------
-    logLine();
-    logInfo("LAB 17 — GEL Intelligent System Health Analysis");
-    logLine();
+// START LAB 17
+// ------------------------------------------------------------
+logLine();
+logInfo("LAB 17 — GEL Intelligent System Health Analysis");
+logLine();
 
-    new Thread(() -> {
+new Thread(() -> {
 
-        try {
+    try {
 
-            // ------------------------------------------------------------
-            // BASE WEIGHTED SCORE
-            // ------------------------------------------------------------
-            int baseScore = Math.round(
-                    (lab14Health * 0.50f) +
-                    (lab15Charge * 0.25f) +
-                    (lab16Thermal * 0.25f)
-            );
-            baseScore = Math.max(0, Math.min(100, baseScore));
+        // ------------------------------------------------------------
+        // BASE WEIGHTED SCORE
+        // ------------------------------------------------------------
+        int baseScore = Math.round(
+                (lab14Health * 0.50f) +
+                (lab15Charge * 0.25f) +
+                (lab16Thermal * 0.25f)
+        );
+        baseScore = Math.max(0, Math.min(100, baseScore));
 
-            // ------------------------------------------------------------
-            // PENALTIES (LOCKED)
-            // ------------------------------------------------------------
-            int penaltyExtra = 0;
+        // ------------------------------------------------------------
+        // PENALTIES (LOCKED)
+        // ------------------------------------------------------------
+        int penaltyExtra = 0;
 
-            if (lab15Charge < 60 && lab15SystemLimited) penaltyExtra += 6;
-            else if (lab15Charge < 60) penaltyExtra += 12;
+        if (lab15Charge < 60 && lab15SystemLimited) penaltyExtra += 6;
+        else if (lab15Charge < 60) penaltyExtra += 12;
 
-            if (lab16Thermal < 60) penaltyExtra += 10;
-            else if (lab16Thermal < 75) penaltyExtra += 5;
+        if (lab16Thermal < 60) penaltyExtra += 10;
+        else if (lab16Thermal < 75) penaltyExtra += 5;
 
-            if (lab14Aging >= 0) {
-                if (lab14Aging >= 70) penaltyExtra += 10;
-                else if (lab14Aging >= 50) penaltyExtra += 6;
-                else if (lab14Aging >= 30) penaltyExtra += 3;
+        if (lab14Aging >= 0) {
+            if (lab14Aging >= 70) penaltyExtra += 10;
+            else if (lab14Aging >= 50) penaltyExtra += 6;
+            else if (lab14Aging >= 30) penaltyExtra += 3;
+        }
+
+        int finalScore = Math.max(0, Math.min(100, baseScore - penaltyExtra));
+
+        String category =
+                (finalScore >= 85) ? "Strong" :
+                (finalScore >= 70) ? "Normal" :
+                "Weak";
+
+        // ------------------------------------------------------------
+        // FREEZE VALUES FOR UI THREAD
+        // ------------------------------------------------------------
+        final int    fFinalScore   = finalScore;
+        final int    fPenaltyExtra = penaltyExtra;
+        final String fCategory     = category;
+
+        final boolean thermalDanger =
+                lab16ThermalDanger || (lab16Thermal < 60);
+
+        final boolean chargingWeakOrThrottled =
+                (lab15Charge < 60) || lab15SystemLimited;
+
+        final boolean batteryLooksFineButThermalBad =
+                (lab14Health >= 80f) && thermalDanger;
+
+        final boolean batteryBadButThermalOk =
+                (lab14Health < 70f) && (lab16Thermal >= 75);
+
+        final boolean overallDeviceConcern =
+                thermalDanger ||
+                chargingWeakOrThrottled ||
+                (lab14Health < 70f);
+
+        // ------------------------------------------------------------
+        // UI OUTPUT
+        // ------------------------------------------------------------
+        ui.post(() -> {
+
+            // ================= SUMMARY =================
+            logInfo("LAB14 — Battery health:");
+            logOk(String.format(
+                    Locale.US,
+                    "%.0f%% | Aging index: %s",
+                    lab14Health,
+                    (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
+            ));
+
+            logInfo("LAB15 — Charging:");
+            if (lab15Charge >= 70) {
+                logOk(String.format(
+                        Locale.US,
+                        "%d%% | Strength: %s",
+                        lab15Charge,
+                        (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
+                ));
+            } else {
+                logWarn(String.format(
+                        Locale.US,
+                        "%d%% | Strength: %s",
+                        lab15Charge,
+                        (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
+                ));
             }
 
-            int finalScore = Math.max(0, Math.min(100, baseScore - penaltyExtra));
+            logInfo("LAB16 — Thermal behaviour:");
+            if (lab16Thermal >= 75) {
+                logOk(String.format(Locale.US, "%d%%", lab16Thermal));
+            } else if (lab16Thermal >= 60) {
+                logWarn(String.format(Locale.US, "%d%%", lab16Thermal));
+            } else {
+                logError(String.format(Locale.US, "%d%%", lab16Thermal));
+            }
 
-            String category =
-                    (finalScore >= 85) ? "Strong" :
-                    (finalScore >= 70) ? "Normal" :
-                    "Weak";
+            // ================= ANALYSIS =================
+            if (lab15SystemLimited) {
+                logLine();
+                logWarn("Charging limitation analysis:");
+                logWarn("System-limited throttling detected (PMIC / thermal protection).");
+                logWarn("This behaviour is NOT attributed to battery health alone.");
+            }
+
+            if (fPenaltyExtra > 0) {
+                logLine();
+                logInfo("Penalty breakdown:");
+
+                if (lab15Charge < 60 && lab15SystemLimited)
+                    logWarn("• Charging: system-limited throttling detected.");
+                else if (lab15Charge < 60)
+                    logWarn("• Charging: weak charging performance detected.");
+
+                if (lab14Aging >= 70)
+                    logError("• Aging: severe aging indicators detected.");
+                else if (lab14Aging >= 50)
+                    logWarn("• Aging: high aging indicators detected.");
+                else if (lab14Aging >= 30)
+                    logWarn("• Aging: moderate aging indicators detected.");
+            }
+
+            // ================= FINAL SCORE =================
+            logLine();
+            logInfo("Final Battery Reliability Score:");
+            if (fFinalScore >= 80) {
+                logOk(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+            } else if (fFinalScore >= 60) {
+                logWarn(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+            } else {
+                logError(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+            }
+            logLine();
+
+            // ================= DIAGNOSIS =================
+            logInfo("Diagnosis:");
+
+            if (lab14Unstable) {
+                logLine();
+                logWarn("⚠️ Measurement reliability warning:");
+                logWarn("Battery measurements show instability.");
+                logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");
+                logOk("not a confirmed battery failure.");
+            }
+
+            if (!overallDeviceConcern) {
+
+                logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
+                logInfo("Note:");
+                logOk("Internal chips and critical peripherals were monitored.");
+
+            } else {
+
+                if (batteryLooksFineButThermalBad) {
+                    logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
+                    logInfo("Recommendation:");
+                    logWarn("Inspect cooling path and thermal interfaces.");
+                    logInfo("Possible causes:");
+                    logWarn("CPU/GPU load, thermal pads, heatsink contact.");
+                }
+
+                if (chargingWeakOrThrottled) {
+                    if (lab15SystemLimited) {
+                        logWarn("⚠️ Charging appears system-limited (protection logic).");
+                        logInfo("Possible causes:");
+                        logWarn("Overheating, PMIC limiting current.");
+                    } else if (lab15Charge < 60) {
+                        logWarn("⚠️ Charging performance is weak.");
+                        logInfo("Possible causes:");
+                        logWarn("Cable / adapter quality, charging port wear, battery impedance.");
+                    }
+                }
+
+                if (batteryBadButThermalOk) {
+                    logWarn("⚠️ Battery health is weak while thermals are OK.");
+                    logInfo("Likely cause:");
+                    logWarn("Battery aging / capacity loss.");
+                }
+
+                if (lab14Health < 70f && thermalDanger) {
+                    logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
+                }
+            }
 
             // ------------------------------------------------------------
-            // FREEZE VALUES FOR UI THREAD
+            // STORE FINAL RESULT (+ timestamp)
             // ------------------------------------------------------------
-            final int    fFinalScore   = finalScore;
-            final int    fPenaltyExtra = penaltyExtra;
-            final String fCategory     = category;
+            try {
+                SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
+                pp.edit()
+                  .putInt("lab17_final_score", fFinalScore)
+                  .putString("lab17_category", fCategory)
+                  .putLong("lab17_ts", System.currentTimeMillis())
+                  .apply();
+            } catch (Throwable ignore) {}
 
-            final boolean thermalDanger =
-        lab16ThermalDanger || (lab16Thermal < 60); // lab16 already aggregates internal+peripherals
+        }); // <-- ui.post
 
-            final boolean chargingWeakOrThrottled =
-                    (lab15Charge < 60) || lab15SystemLimited;
-
-            final boolean batteryLooksFineButThermalBad =
-                    (lab14Health >= 80f) && thermalDanger;
-
-            final boolean batteryBadButThermalOk =
-                    (lab14Health < 70f) && (lab16Thermal >= 75);
-
-            final boolean overallDeviceConcern =
-        thermalDanger ||
-        chargingWeakOrThrottled ||
-        (lab14Health < 70f);
-
-// ------------------------------------------------------------
-// UI OUTPUT
-// ------------------------------------------------------------
-ui.post(() -> {
-
-    // ================= SUMMARY =================
-    logInfo("LAB14 — Battery health:");
-    logOk(String.format(
-            Locale.US,
-            "%.0f%% | Aging index: %s",
-            lab14Health,
-            (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
-    ));
-
-    logInfo("LAB15 — Charging:");
-    if (lab15Charge >= 70) {
-        logOk(String.format(
-                Locale.US,
-                "%d%% | Strength: %s",
-                lab15Charge,
-                (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
-        ));
-    } else {
-        logWarn(String.format(
-                Locale.US,
-                "%d%% | Strength: %s",
-                lab15Charge,
-                (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
-        ));
+    } catch (Throwable ignore) {
+        // silent
     }
 
-    logInfo("LAB16 — Thermal behaviour:");
-    if (lab16Thermal >= 75) {
-        logOk(String.format(Locale.US, "%d%%", lab16Thermal));
-    } else if (lab16Thermal >= 60) {
-        logWarn(String.format(Locale.US, "%d%%", lab16Thermal));
-    } else {
-        logError(String.format(Locale.US, "%d%%", lab16Thermal));
-    }
-
-    // ================= ANALYSIS =================
-    if (lab15SystemLimited) {
-        logLine();
-        logWarn("Charging limitation analysis:");
-        logWarn("System-limited throttling detected (PMIC / thermal protection).");
-        logWarn("This behaviour is NOT attributed to battery health alone.");
-    }
-
-    if (fPenaltyExtra > 0) {
-        logLine();
-        logInfo("Penalty breakdown:");
-
-        if (lab15Charge < 60 && lab15SystemLimited)
-            logWarn("• Charging: system-limited throttling detected.");
-        else if (lab15Charge < 60)
-            logWarn("• Charging: weak charging performance detected.");
-
-        if (lab14Aging >= 70)
-            logError("• Aging: severe aging indicators detected.");
-        else if (lab14Aging >= 50)
-            logWarn("• Aging: high aging indicators detected.");
-        else if (lab14Aging >= 30)
-            logWarn("• Aging: moderate aging indicators detected.");
-    }
-
-// ================= FINAL SCORE =================
-logLine();
-logInfo("Final Battery Reliability Score:");
-if (fFinalScore >= 80) {
-    logOk(String.format(
-            Locale.US,
-            "%d%% (%s)",
-            fFinalScore, fCategory
-    ));
-} else if (fFinalScore >= 60) {
-    logWarn(String.format(
-            Locale.US,
-            "%d%% (%s)",
-            fFinalScore, fCategory
-    ));
-} else {
-    logError(String.format(
-            Locale.US,
-            "%d%% (%s)",
-            fFinalScore, fCategory
-    ));
-}
-logLine();
-
-// ------------------------------------------------------------
-// INTELLIGENCE (device-level guidance)
-// ------------------------------------------------------------
-logInfo("Diagnosis:");
-
-// ------------------------------------------------------------
-// MEASUREMENT RELIABILITY (FROM LAB 14)
-// ------------------------------------------------------------
-if (lab14Unstable) {
-    logLine();
-    logWarn("⚠️ Measurement reliability warning:");
-    logWarn("Battery measurements show instability.");
-    logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");
-    logOk("not a confirmed battery failure.");
-}
-
-// ------------------------------------------------------------
-// DEVICE-LEVEL DIAGNOSIS
-// ------------------------------------------------------------
-if (!overallDeviceConcern) {
-
-    logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
-    logInfo("Note:");
-    logOk("Internal chips and critical peripherals were monitored.");
-
-} else {
-
-    if (batteryLooksFineButThermalBad) {
-        logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
-        logInfo("Recommendation:");
-        logWarn("Inspect cooling path and thermal interfaces.");
-        logInfo("Possible causes:");
-        logWarn("CPU/GPU load, thermal pads, heatsink contact.");
-    }
-
-    if (chargingWeakOrThrottled) {
-        if (lab15SystemLimited) {
-            logWarn("⚠️ Charging appears system-limited (protection logic).");
-            logInfo("Possible causes:");
-            logWarn("Overheating, PMIC limiting current.");
-        } else if (lab15Charge < 60) {
-            logWarn("⚠️ Charging performance is weak.");
-            logInfo("Possible causes:");
-            logWarn("Cable / adapter quality, charging port wear, battery impedance.");
-        }
-    }
-
-    if (batteryBadButThermalOk) {
-        logWarn("⚠️ Battery health is weak while thermals are OK.");
-        logInfo("Likely cause:");
-        logWarn("Battery aging / capacity loss.");
-    }
-
-    if (lab14Health < 70f && thermalDanger) {
-        logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
-    }
-}
-
-// ------------------------------------------------------------
-// STORE FINAL RESULT (+ timestamp)
-// ------------------------------------------------------------
-try {
-    SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
-    pp.edit()
-      .putInt("lab17_final_score", fFinalScore)
-      .putString("lab17_category", fCategory)
-      .putLong("lab17_ts", System.currentTimeMillis())
-      .apply();
-} catch (Throwable ignore) {}
-});
+}).start();
 
 // ============================================================
 // LAB 17 — POPUP (GEL DARK + GOLD)

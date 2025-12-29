@@ -1540,7 +1540,7 @@ private String getLastLab15StrengthLabel() {
 private float getLastLab14HealthScore() {
     try {
         SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-        return p.getFloat("lab14_final_health_score", -1f);
+        return p.getFloat("lab14_health_score", -1f);
     } catch (Throwable t) {
         return -1f;
     }
@@ -2966,7 +2966,7 @@ root.addView(title);
 
                 final Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
                 
-                // ============================================================
+// ============================================================
 // LAB 14 — VARIABILITY DETECTION (SINGLE SOURCE)
 // ============================================================
 boolean variabilityDetected =
@@ -2976,9 +2976,7 @@ boolean variabilityDetected =
                 // ----------------------------------------------------
                 // 7) PROFILE + AGING (Engine)
                 // ----------------------------------------------------
-                final Lab14Engine.BatteryProfile profile =
-                        engine.detectProfile(snapStart, conf);
-
+                
                 final Lab14Engine.AgingResult aging =
                         engine.computeAging(
                                 mahPerHour,
@@ -3220,6 +3218,15 @@ logOk(String.format(
         finalScore,
         finalLabel
 ));
+
+// ----------------------------------------------------
+// Measurement reliability (LAB 14)
+// ----------------------------------------------------
+SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+p.edit()
+ .putBoolean("lab14_unstable_measurement", variabilityDetected)
+ .apply();
 
 // ------------------------------------------------------------
 // STORE RESULT FOR LAB 17 (LAB 14 OUTPUT) — FINAL & LOCKED
@@ -3686,11 +3693,11 @@ private void lab16ThermalSnapshot() {
     logInfo("LAB 16 — Thermal Snapshot");
     logLine();
 
-    List<ThermalEntry> internal    = buildThermalInternal();
+    List<ThermalEntry> internal     = buildThermalInternal();
     List<ThermalEntry> peripherals = buildThermalPeripheralsCritical();
 
-    float peakTemp = -1f;
-    String peakSrc = "N/A"; 
+    float  peakTemp = -1f;
+    String peakSrc  = "N/A";
 
     // ------------------------------------------------------------
     // BASIC + CRITICAL THERMALS (INLINE, HUMAN READABLE)
@@ -3731,96 +3738,85 @@ private void lab16ThermalSnapshot() {
 
     if (peakTemp > 0) {
 
-    logInfo("Peak temperature observed:");
+        logInfo("Peak temperature observed:");
 
-    if (peakTemp >= 55f) {
-        logWarn(String.format(
-                Locale.US,
-                "%.1f°C at %s",
-                peakTemp, peakSrc
-        ));
-    } else if (peakTemp >= 45f) {
-        logInfo(String.format(
-                Locale.US,
-                "%.1f°C at %s",
-                peakTemp, peakSrc
-        ));
+        if (peakTemp >= 55f) {
+            logWarn(String.format(
+                    Locale.US,
+                    "%.1f°C at %s",
+                    peakTemp, peakSrc
+            ));
+        } else if (peakTemp >= 45f) {
+            logInfo(String.format(
+                    Locale.US,
+                    "%.1f°C at %s",
+                    peakTemp, peakSrc
+            ));
+        } else {
+            logOk(String.format(
+                    Locale.US,
+                    "%.1f°C at %s",
+                    peakTemp, peakSrc
+            ));
+        }
+    }
+
+    // ------------------------------------------------------------
+    // HIDDEN THERMAL SAFETY CHECK (NON-DISPLAYED SENSORS)
+    // ------------------------------------------------------------
+    boolean hiddenRisk = detectHiddenThermalAnomaly(55f);
+
+    if (hiddenRisk) {
+        logWarn("⚠️ Elevated temperature detected in non-displayed system components.");
+        logWarn("⚠️ Thermal protection mechanisms may activate.");
     } else {
-        logOk(String.format(
-                Locale.US,
-                "%.1f°C at %s",
-                peakTemp, peakSrc
-        ));
-    }
-}
-
-// ------------------------------------------------------------
-// HIDDEN THERMAL SAFETY CHECK (NON-DISPLAYED SENSORS)
-// ------------------------------------------------------------
-boolean hiddenRisk = detectHiddenThermalAnomaly(55f);
-
-if (hiddenRisk) {
-    logWarn("⚠️ Elevated temperature detected in non-displayed system components.");
-    logWarn("⚠️ Thermal protection mechanisms may activate.");
-} else {
-    logOk("All critical thermal sensors were monitored during this test.");
-}
-
-// ------------------------------------------------------------
-// THERMAL SCORE (USED BY LAB 17)
-// ------------------------------------------------------------
-int thermalScore = 100;
-String peakSource = "N/A";
-boolean thermalDanger = false;
-
-for (ThermalEntry t : internal) {
-    if (t.temp >= 55f) {
-        thermalScore -= 25;
-        thermalDanger = true;
-    } else if (t.temp >= 45f) {
-        thermalScore -= 10;
+        logOk("All critical thermal sensors were monitored during this test.");
     }
 
-    if (t.temp > peakTemp) {
-        peakTemp = t.temp;
-        peakSource = t.label;
+    // ------------------------------------------------------------
+    // THERMAL SCORE (USED BY LAB 17)
+    // ------------------------------------------------------------
+    int thermalScore = 100;
+    boolean thermalDanger = false;
+
+    for (ThermalEntry t : internal) {
+        if (t.temp >= 55f) {
+            thermalScore -= 25;
+            thermalDanger = true;
+        } else if (t.temp >= 45f) {
+            thermalScore -= 10;
+        }
     }
-}
 
-for (ThermalEntry t : peripherals) {
-    if (t.temp >= 55f) {
-        thermalScore -= 25;
-        thermalDanger = true;
-    } else if (t.temp >= 45f) {
-        thermalScore -= 10;
+    for (ThermalEntry t : peripherals) {
+        if (t.temp >= 55f) {
+            thermalScore -= 25;
+            thermalDanger = true;
+        } else if (t.temp >= 45f) {
+            thermalScore -= 10;
+        }
     }
 
-    if (t.temp > peakTemp) {
-        peakTemp = t.temp;
-        peakSource = t.label;
-    }
-}
+    thermalScore = Math.max(0, Math.min(100, thermalScore));
 
-thermalScore = Math.max(0, Math.min(100, thermalScore));
+    try {
+        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        p.edit()
+         .putInt("lab16_thermal_score", thermalScore)
+         .putBoolean("lab16_thermal_danger", thermalDanger)
+         .putFloat("lab16_peak_temp", peakTemp)
+         .putString("lab16_peak_source", peakSrc)
+         .putLong("lab16_last_ts", System.currentTimeMillis())
+         .apply();
+    } catch (Throwable ignore) {}
 
-try {
-    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-    p.edit()
-     .putInt("lab16_thermal_score", thermalScore)
-     .putBoolean("lab16_thermal_danger", thermalDanger)
-     .putFloat("lab16_peak_temp", peakTemp)
-     .putString("lab16_peak_source", peakSource)
-     .putLong("lab16_last_ts", System.currentTimeMillis())
-     .apply();
-} catch (Throwable ignore) {}
+    logLine();
+    logInfo("Thermal behaviour score:");
+    logOk(String.format(Locale.US, "%d%%", thermalScore));
 
-logLine();
-logInfo("Thermal behaviour score:");
-logOk(String.format(Locale.US, "%d%%", thermalScore));
-
-logLine();
-logOk("Lab 16 finished.");
-logLine();
+    logLine();
+    logOk("Lab 16 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -4067,30 +4063,29 @@ ui.post(() -> {
             logWarn("• Aging: moderate aging indicators detected.");
     }
 
-    // ================= FINAL SCORE =================
-    logLine();
-    logInfo("Final Battery Reliability Score:");
-    if (fFinalScore >= 80) {
-        logOk(String.format(
-                Locale.US,
-                "%d%% (%s)",
-                fFinalScore, fCategory
-        ));
-    } else if (fFinalScore >= 60) {
-        logWarn(String.format(
-                Locale.US,
-                "%d%% (%s)",
-                fFinalScore, fCategory
-        ));
-    } else {
-        logError(String.format(
-                Locale.US,
-                "%d%% (%s)",
-                fFinalScore, fCategory
-        ));
-    }
-    logLine();
-});
+// ================= FINAL SCORE =================
+logLine();
+logInfo("Final Battery Reliability Score:");
+if (fFinalScore >= 80) {
+    logOk(String.format(
+            Locale.US,
+            "%d%% (%s)",
+            fFinalScore, fCategory
+    ));
+} else if (fFinalScore >= 60) {
+    logWarn(String.format(
+            Locale.US,
+            "%d%% (%s)",
+            fFinalScore, fCategory
+    ));
+} else {
+    logError(String.format(
+            Locale.US,
+            "%d%% (%s)",
+            fFinalScore, fCategory
+    ));
+}
+logLine();
 
 // ------------------------------------------------------------
 // INTELLIGENCE (device-level guidance)
@@ -4115,34 +4110,34 @@ if (!overallDeviceConcern) {
 
     logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
     logInfo("Note:");
-logOk("Internal chips and critical peripherals were monitored.");
+    logOk("Internal chips and critical peripherals were monitored.");
 
 } else {
 
     if (batteryLooksFineButThermalBad) {
         logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
         logInfo("Recommendation:");
-logWarn("Inspect cooling path and thermal interfaces.");
+        logWarn("Inspect cooling path and thermal interfaces.");
         logInfo("Possible causes:");
-logWarn("CPU/GPU load, thermal pads, heatsink contact.");
+        logWarn("CPU/GPU load, thermal pads, heatsink contact.");
     }
 
     if (chargingWeakOrThrottled) {
         if (lab15SystemLimited) {
             logWarn("⚠️ Charging appears system-limited (protection logic).");
             logInfo("Possible causes:");
-logWarn("Overheating, PMIC limiting current.");
+            logWarn("Overheating, PMIC limiting current.");
         } else if (lab15Charge < 60) {
             logWarn("⚠️ Charging performance is weak.");
             logInfo("Possible causes:");
-logWarn("Cable / adapter quality, charging port wear, battery impedance.");
+            logWarn("Cable / adapter quality, charging port wear, battery impedance.");
         }
     }
 
     if (batteryBadButThermalOk) {
         logWarn("⚠️ Battery health is weak while thermals are OK.");
         logInfo("Likely cause:");
-logWarn("Battery aging / capacity loss.");
+        logWarn("Battery aging / capacity loss.");
     }
 
     if (lab14Health < 70f && thermalDanger) {
@@ -4150,26 +4145,17 @@ logWarn("Battery aging / capacity loss.");
     }
 }
 
-                // ------------------------------------------------------------
-                // STORE FINAL RESULT (+ timestamp)
-                // ------------------------------------------------------------
-                try {
-                    SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
-                    pp.edit()
-                      .putInt("lab17_final_score", fFinalScore)
-                      .putString("lab17_category", fCategory)
-                      .putLong("lab17_ts", System.currentTimeMillis())
-                      .apply();
-                } catch (Throwable ignore) {}
-
-            });
-
-        } catch (Throwable t) {
-            ui.post(() -> logError("LAB 17 failed: " + (t.getMessage() != null ? t.getMessage() : "unknown error")));
-        }
-
-    }).start();
-}
+// ------------------------------------------------------------
+// STORE FINAL RESULT (+ timestamp)
+// ------------------------------------------------------------
+try {
+    SharedPreferences pp = getSharedPreferences(PREF, MODE_PRIVATE);
+    pp.edit()
+      .putInt("lab17_final_score", fFinalScore)
+      .putString("lab17_category", fCategory)
+      .putLong("lab17_ts", System.currentTimeMillis())
+      .apply();
+} catch (Throwable ignore) {}
 
 // ============================================================
 // LAB 17 — POPUP (GEL DARK + GOLD)

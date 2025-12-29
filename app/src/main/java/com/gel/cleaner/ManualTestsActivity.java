@@ -3816,6 +3816,7 @@ logOk(String.format(Locale.US, "%d%%", thermalScore));
 logLine();
 logOk("Lab 16 finished.");
 logLine();
+}
 
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation

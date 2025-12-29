@@ -407,7 +407,7 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         root.addView(body5);
 
         body5.addView(makeTestButton("18. Storage Health Inspection", this::lab18StorageSnapshot));
-        body5.addView(makeTestButton("19. Installed Applications Impact Analysis" this::lab19AppsFootprint));
+        body5.addView(makeTestButton("19. Installed Applications Impact Analysis", this::lab19AppsFootprint)
         body5.addView(makeTestButton("20. Memory Pressure & Stability Analysis", this::lab20RamSnapshot));
         body5.addView(makeTestButton("21. Uptime & Reboot Pattern Analysis", this::lab21UptimeHints));
 

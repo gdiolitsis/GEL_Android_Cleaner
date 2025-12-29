@@ -29,6 +29,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -1668,6 +1669,140 @@ private String readSys(File dir, String name) {
         return br.readLine();
     } catch (Throwable ignore) {
         return null;
+    }
+}
+
+// ============================================================
+// GEL — HELPERS FOR LAB 18 / 19 / 20 / 21
+// PRODUCTION • ROOT-AWARE • HUMAN-ORIENTED
+// ============================================================
+
+// ------------------------------------------------------------
+// ROOT DETECTION (SAFE, NO LIES)
+// ------------------------------------------------------------
+private boolean isDeviceRooted() {
+    try {
+        String[] paths = {
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/sbin/su",
+                "/system/su",
+                "/vendor/bin/su"
+        };
+        for (String p : paths) {
+            if (new File(p).exists()) return true;
+        }
+    } catch (Throwable ignore) {}
+    return false;
+}
+
+// ============================================================
+// LAB 18 — STORAGE HEALTH HELPERS
+// ============================================================
+
+// Heuristic ONLY — real NAND wear is not exposed on consumer devices
+private boolean detectStorageWearSignals() {
+    try {
+        StatFs s = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+        long total = s.getBlockCountLong();
+        long free  = s.getAvailableBlocksLong();
+        if (total <= 0) return false;
+
+        int pctFree = (int) ((free * 100L) / total);
+
+        // Extreme pressure → fragmentation & GC stress indicator
+        return pctFree < 5;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+// ============================================================
+// LAB 19 — APPS IMPACT HELPERS
+// ============================================================
+
+private boolean isSystemApp(ApplicationInfo ai) {
+    return (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+}
+
+private long getAppInstalledSizeSafe(String pkg) {
+    try {
+        PackageManager pm = getPackageManager();
+        ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+        File apk = new File(ai.sourceDir);
+        return apk.exists() ? apk.length() : -1;
+    } catch (Throwable t) {
+        return -1;
+    }
+}
+
+// ============================================================
+// LAB 20 — RAM / MEMORY HELPERS (ROOT AWARE)
+// ============================================================
+
+private boolean isZramActiveSafe() {
+    try {
+        return new File("/sys/block/zram0").exists();
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private boolean isSwapActiveSafe() {
+    try {
+        BufferedReader br = new BufferedReader(new FileReader("/proc/swaps"));
+        int lines = 0;
+        while (br.readLine() != null) lines++;
+        br.close();
+        return lines > 1; // header + entries
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private long readCachedMemoryKbSafe() {
+    try {
+        BufferedReader br = new BufferedReader(new FileReader("/proc/meminfo"));
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("Cached:")) {
+                br.close();
+                return Long.parseLong(line.replaceAll("\\D+", ""));
+            }
+        }
+        br.close();
+    } catch (Throwable ignore) {}
+    return -1;
+}
+
+// ============================================================
+// LAB 21 — UPTIME / REBOOT / PRESSURE HELPERS
+// ============================================================
+
+// Reads kernel OOM kill counter (heuristic pressure signal)
+private int readLowMemoryKillCountSafe() {
+    try {
+        BufferedReader br = new BufferedReader(new FileReader("/proc/vmstat"));
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("oom_kill")) {
+                br.close();
+                return Integer.parseInt(line.replaceAll("\\D+", ""));
+            }
+        }
+        br.close();
+    } catch (Throwable ignore) {}
+    return -1;
+}
+
+// Frequent reboot hint (human-level inference)
+private boolean detectFrequentRebootsHint() {
+    try {
+        long uptimeMs = SystemClock.elapsedRealtime();
+        // Reboot within last 6 hours
+        return uptimeMs < (6L * 60L * 60L * 1000L);
+    } catch (Throwable t) {
+        return false;
     }
 }
 

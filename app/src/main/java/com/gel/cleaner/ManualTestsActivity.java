@@ -4156,6 +4156,7 @@ try {
       .putLong("lab17_ts", System.currentTimeMillis())
       .apply();
 } catch (Throwable ignore) {}
+});
 
 // ============================================================
 // LAB 17 — POPUP (GEL DARK + GOLD)

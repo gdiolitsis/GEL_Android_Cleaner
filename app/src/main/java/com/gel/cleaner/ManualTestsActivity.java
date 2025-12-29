@@ -3231,7 +3231,6 @@ p.edit()
 // ------------------------------------------------------------
 // STORE RESULT FOR LAB 17 (LAB 14 OUTPUT) — FINAL & LOCKED
 // ------------------------------------------------------------
-SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
 p.edit()
  .putFloat("lab14_health_score", finalScore)

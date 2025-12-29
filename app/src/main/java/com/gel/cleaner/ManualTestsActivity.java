@@ -1450,16 +1450,19 @@ private List<ThermalEntry> buildThermalPeripheralsCritical() {
 // ------------------------------------------------------------
 private void logTempInline(String label, float c) {
 
-    String line = String.format(Locale.US, "%s: %.1f°C", label, c);
+    String base = String.format(Locale.US, "%s: %.1f°C", label, c);
 
-    if (c < 35f) {
-        logOk(line + " (COOL)");
-    } else if (c < 45f) {
-        logInfo(line + " (NORMAL)");
-    } else if (c < 55f) {
-        logWarn(line + " (WARM)");
-    } else {
-        logError(line + " (HOT)");
+    // COOL + NORMAL → ΠΡΑΣΙΝΟ
+    if (c < 45f) {
+        logOk(base + " (NORMAL)");
+    }
+    // WARM → ΚΙΤΡΙΝΟ
+    else if (c < 55f) {
+        logWarn(base + " (WARM)");
+    }
+    // HOT → ΚΟΚΚΙΝΟ
+    else {
+        logError(base + " (HOT)");
     }
 }
 
@@ -3727,12 +3730,29 @@ private void lab16ThermalSnapshot() {
     }
 
     if (peakTemp > 0) {
+
+    logInfo("Peak temperature observed:");
+
+    if (peakTemp >= 55f) {
+        logWarn(String.format(
+                Locale.US,
+                "%.1f°C at %s",
+                peakTemp, peakSrc
+        ));
+    } else if (peakTemp >= 45f) {
         logInfo(String.format(
                 Locale.US,
-                "Peak temperature observed: %.1f°C at %s",
+                "%.1f°C at %s",
+                peakTemp, peakSrc
+        ));
+    } else {
+        logOk(String.format(
+                Locale.US,
+                "%.1f°C at %s",
                 peakTemp, peakSrc
         ));
     }
+}
 
 // ------------------------------------------------------------
 // HIDDEN THERMAL SAFETY CHECK (NON-DISPLAYED SENSORS)
@@ -3743,7 +3763,7 @@ if (hiddenRisk) {
     logWarn("⚠️ Elevated temperature detected in non-displayed system components.");
     logWarn("⚠️ Thermal protection mechanisms may activate.");
 } else {
-    logInfo("All critical thermal sensors were monitored during this test.");
+    logOk("All critical thermal sensors were monitored during this test.");
 }
 
 // ------------------------------------------------------------
@@ -3917,7 +3937,7 @@ final boolean hvConfirmed =
     // START LAB 17
     // ------------------------------------------------------------
     logLine();
-    logInfo("LAB 17 — GEL Auto Battery Reliability Evaluation");
+    logInfo("LAB 17 — GEL Intelligent System Health Analysis");
     logLine();
 
     new Thread(() -> {
@@ -3982,62 +4002,95 @@ final boolean hvConfirmed =
         chargingWeakOrThrottled ||
         (lab14Health < 70f);
 
-            // ------------------------------------------------------------
-            // UI OUTPUT
-            // ------------------------------------------------------------
-            ui.post(() -> {
+// ------------------------------------------------------------
+// UI OUTPUT
+// ------------------------------------------------------------
+ui.post(() -> {
 
-                // SUMMARY (compact, human)
-                logInfo(String.format(
-                        Locale.US,
-                        "LAB14 — Battery health: %.0f%% | Aging index: %s",
-                        lab14Health,
-                        (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
-                ));
+    // ================= SUMMARY =================
+    logInfo("LAB14 — Battery health:");
+    logOk(String.format(
+            Locale.US,
+            "%.0f%% | Aging index: %s",
+            lab14Health,
+            (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
+    ));
 
-                logInfo(String.format(
-                        Locale.US,
-                        "LAB15 — Charging score: %d%% | Strength: %s",
-                        lab15Charge,
-                        (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
-                ));
+    logInfo("LAB15 — Charging:");
+    if (lab15Charge >= 70) {
+        logOk(String.format(
+                Locale.US,
+                "%d%% | Strength: %s",
+                lab15Charge,
+                (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
+        ));
+    } else {
+        logWarn(String.format(
+                Locale.US,
+                "%d%% | Strength: %s",
+                lab15Charge,
+                (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
+        ));
+    }
 
-                logInfo(String.format(
-                        Locale.US,
-                        "LAB16 — Thermal behaviour score: %d%%",
-                        lab16Thermal
-                ));
+    logInfo("LAB16 — Thermal behaviour:");
+    if (lab16Thermal >= 75) {
+        logOk(String.format(Locale.US, "%d%%", lab16Thermal));
+    } else if (lab16Thermal >= 60) {
+        logWarn(String.format(Locale.US, "%d%%", lab16Thermal));
+    } else {
+        logError(String.format(Locale.US, "%d%%", lab16Thermal));
+    }
 
-                if (lab15SystemLimited) {
-                    logLine();
-                    logWarn("Charging limitation analysis: System-limited throttling detected (PMIC/thermal protection).");
-                    logWarn("This behaviour is NOT attributed to battery health alone.");
-                }
+    // ================= ANALYSIS =================
+    if (lab15SystemLimited) {
+        logLine();
+        logWarn("Charging limitation analysis:");
+        logWarn("System-limited throttling detected (PMIC / thermal protection).");
+        logWarn("This behaviour is NOT attributed to battery health alone.");
+    }
 
-                if (fPenaltyExtra > 0) {
-                    logLine();
-                    logInfo("Penalty breakdown:");
+    if (fPenaltyExtra > 0) {
+        logLine();
+        logInfo("Penalty breakdown:");
 
-                    if (lab15Charge < 60 && lab15SystemLimited)
-                        logWarn("• Charging: system-limited throttling detected.");
-                    else if (lab15Charge < 60)
-                        logWarn("• Charging: weak charging performance detected.");
+        if (lab15Charge < 60 && lab15SystemLimited)
+            logWarn("• Charging: system-limited throttling detected.");
+        else if (lab15Charge < 60)
+            logWarn("• Charging: weak charging performance detected.");
 
-                    if (lab14Aging >= 70)
-                        logWarn("• Aging: severe aging indicators detected.");
-                    else if (lab14Aging >= 50)
-                        logWarn("• Aging: high aging indicators detected.");
-                    else if (lab14Aging >= 30)
-                        logWarn("• Aging: moderate aging indicators detected.");
-                }
+        if (lab14Aging >= 70)
+            logError("• Aging: severe aging indicators detected.");
+        else if (lab14Aging >= 50)
+            logWarn("• Aging: high aging indicators detected.");
+        else if (lab14Aging >= 30)
+            logWarn("• Aging: moderate aging indicators detected.");
+    }
 
-                logLine();
-                logOk(String.format(
-                        Locale.US,
-                        "Final Battery Reliability Score: %d%% (%s)",
-                        fFinalScore, fCategory
-                ));
-                logLine();
+    // ================= FINAL SCORE =================
+    logLine();
+    logInfo("Final Battery Reliability Score:");
+    if (fFinalScore >= 80) {
+        logOk(String.format(
+                Locale.US,
+                "%d%% (%s)",
+                fFinalScore, fCategory
+        ));
+    } else if (fFinalScore >= 60) {
+        logWarn(String.format(
+                Locale.US,
+                "%d%% (%s)",
+                fFinalScore, fCategory
+        ));
+    } else {
+        logError(String.format(
+                Locale.US,
+                "%d%% (%s)",
+                fFinalScore, fCategory
+        ));
+    }
+    logLine();
+});
 
 // ------------------------------------------------------------
 // INTELLIGENCE (device-level guidance)
@@ -4051,8 +4104,8 @@ if (lab14Unstable) {
     logLine();
     logWarn("⚠️ Measurement reliability warning:");
     logWarn("Battery measurements show instability.");
-    logInfo("This suggests unstable power measurement (PMIC / fuel gauge),");
-    logInfo("not a confirmed battery failure.");
+    logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");
+    logOk("not a confirmed battery failure.");
 }
 
 // ------------------------------------------------------------
@@ -4061,29 +4114,35 @@ if (lab14Unstable) {
 if (!overallDeviceConcern) {
 
     logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
-    logInfo("Note: Internal chips and critical peripherals were monitored.");
+    logInfo("Note:");
+logOk("Internal chips and critical peripherals were monitored.");
 
 } else {
 
     if (batteryLooksFineButThermalBad) {
         logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
-        logWarn("Recommendation: Inspect cooling path and thermal interfaces.");
-        logWarn("Possible causes: CPU/GPU load, thermal pads, heatsink contact.");
+        logInfo("Recommendation:");
+logWarn("Inspect cooling path and thermal interfaces.");
+        logInfo("Possible causes:");
+logWarn("CPU/GPU load, thermal pads, heatsink contact.");
     }
 
     if (chargingWeakOrThrottled) {
         if (lab15SystemLimited) {
             logWarn("⚠️ Charging appears system-limited (protection logic).");
-            logWarn("Possible causes: overheating, PMIC limiting current.");
+            logInfo("Possible causes:");
+logWarn("Overheating, PMIC limiting current.");
         } else if (lab15Charge < 60) {
             logWarn("⚠️ Charging performance is weak.");
-            logWarn("Possible causes: cable/adapter quality, port wear, battery impedance.");
+            logInfo("Possible causes:");
+logWarn("Cable / adapter quality, charging port wear, battery impedance.");
         }
     }
 
     if (batteryBadButThermalOk) {
         logWarn("⚠️ Battery health is weak while thermals are OK.");
-        logWarn("Likely cause: battery aging / capacity loss.");
+        logInfo("Likely cause:");
+logWarn("Battery aging / capacity loss.");
     }
 
     if (lab14Health < 70f && thermalDanger) {

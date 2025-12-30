@@ -6310,6 +6310,11 @@ try {
     appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
 
 } catch (Exception ignored) {}
+ent = db.getNextEntry(tag, ent.getTimeMillis());
+            }   // END while
+        }       // END for
+    }           // END if (db != null)
+} catch (Exception ignored) {}   // END DropBox try
 
 // ============================================================  
 // (C) SUMMARY + RISK SCORE  

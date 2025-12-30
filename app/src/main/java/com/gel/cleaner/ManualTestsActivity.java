@@ -5501,81 +5501,128 @@ private String runSu(String command) {
 }
 
 // ============================================================
-// LAB 23 — Security Patch & Play Protect (auto + manual)
+// LAB 23 — Security Patch & Play Protect (AUTO + MANUAL)
 // ============================================================
 private void lab23SecurityPatchManual() {
-logLine();
-logInfo("LAB 23 — Security Patch & Play Protect Check");
-logLine();
 
-// ----------------------------  
-// 1) Security Patch Level  
-// ----------------------------  
-try {  
-    String patch = android.os.Build.VERSION.SECURITY_PATCH;  
-    if (patch != null && !patch.isEmpty()) {  
-        logInfo("Security Patch Level: " + patch);  
-    } else {  
-        logWarn("Security Patch Level not reported by system.");  
-    }  
-} catch (Exception e) {  
-    logWarn("Security patch read failed: " + e.getMessage());  
-}  
+    logLine();
+    logInfo("LAB 23 — Security Patch & Play Protect Check");
+    logLine();
 
-// ------------------------------------------------------------
-// PATCH FRESHNESS INTELLIGENCE (AGE + RISK)
-// ------------------------------------------------------------
-try {
-    String patch = android.os.Build.VERSION.SECURITY_PATCH;
-
-    if (patch != null && !patch.isEmpty()) {
-
-        java.text.SimpleDateFormat sdf =
-                new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
-        sdf.setLenient(false);
-
-        long patchTime = sdf.parse(patch).getTime();
-        long now = System.currentTimeMillis();
-
-        long diffMs = now - patchTime;
-        long diffDays = diffMs / (1000L * 60 * 60 * 24);
-        long diffMonths = diffDays / 30;
-
-        logInfo("Security patch age: ~" + diffMonths + " months old.");
-
-        if (diffMonths <= 3) {
-            logOk("Patch currency status: RECENT (low known exploit exposure).");
-        } else if (diffMonths <= 6) {
-            logWarn("Patch currency status: MODERATELY OUTDATED.");
+    // ------------------------------------------------------------
+    // 1) Security Patch Level (raw)
+    // ------------------------------------------------------------
+    String patch = null;
+    try {
+        patch = android.os.Build.VERSION.SECURITY_PATCH;
+        if (patch != null && !patch.isEmpty()) {
+            logInfo("Security Patch Level: " + patch);
         } else {
-            logError("Patch currency status: OUTDATED — device missing recent security fixes.");
+            logWarn("Security Patch Level not reported by system.");
+        }
+    } catch (Throwable e) {
+        logWarn("Security patch read failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 2) Patch Freshness Intelligence (AGE + RISK)
+    // ------------------------------------------------------------
+    try {
+        if (patch != null && !patch.isEmpty()) {
+
+            java.text.SimpleDateFormat sdf =
+                    new java.text.SimpleDateFormat(
+                            "yyyy-MM-dd", java.util.Locale.US);
+            sdf.setLenient(false);
+
+            long patchTime = sdf.parse(patch).getTime();
+            long now = System.currentTimeMillis();
+
+            long diffMs = now - patchTime;
+            long diffDays = diffMs / (1000L * 60 * 60 * 24);
+            long diffMonths = diffDays / 30;
+
+            logInfo("Security patch age: ~" + diffMonths + " months.");
+
+            if (diffMonths <= 3) {
+                logOk("Patch currency status: RECENT (low known exploit exposure).");
+            } else if (diffMonths <= 6) {
+                logWarn("Patch currency status: MODERATELY OUTDATED.");
+            } else {
+                logError("Patch currency status: OUTDATED — missing recent security fixes.");
+            }
+        }
+    } catch (Throwable e) {
+        logWarn("Security patch age evaluation failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 3) Play Protect Detection (best effort, no root)
+    // ------------------------------------------------------------
+    try {
+        PackageManager pm = getPackageManager();
+
+        boolean gmsPresent = false;
+        try {
+            pm.getPackageInfo("com.google.android.gms", 0);
+            gmsPresent = true;
+        } catch (Exception ignore) {}
+
+        if (!gmsPresent) {
+            logError("Google Play Services NOT present — Play Protect unavailable.");
+        } else {
+
+            int verify = -1;
+            try {
+                verify = Settings.Global.getInt(
+                        getContentResolver(),
+                        "package_verifier_enable",
+                        -1
+                );
+            } catch (Exception ignore) {}
+
+            if (verify == 1) {
+                logOk("Play Protect: ENABLED (Google Verify Apps ON).");
+            } else if (verify == 0) {
+                logWarn("Play Protect: DISABLED (Verify Apps OFF).");
+            } else {
+                // Fallback detection (activity presence)
+                Intent i = new Intent();
+                i.setClassName(
+                        "com.google.android.gms",
+                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+                );
+
+                if (i.resolveActivity(pm) != null) {
+                    logOk("Play Protect module detected (settings activity present).");
+                } else {
+                    logWarn("Play Protect status unclear (OEM or restricted build).");
+                }
+            }
         }
 
+    } catch (Throwable e) {
+        logWarn("Play Protect detection error: " + e.getMessage());
     }
-} catch (Throwable e) {
-    logWarn("Security patch age evaluation failed: " + e.getMessage());
-}
 
-// ----------------------------  
-// 2) Play Protect Detection — BEST POSSIBLE WITHOUT ROOT  
-// ----------------------------  
-try {
-    ...
-} catch (Exception e) {
-    logWarn("Play Protect detection error: " + e.getMessage());
-}
+    // ------------------------------------------------------------
+    // 4) Trust Boundary Clarification
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Play Protect scope: malware scanning & app verification.");
+    logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");
 
-// ------------------------------------------------------------
-// PLAY PROTECT — TRUST BOUNDARY CLARIFICATION
-// ------------------------------------------------------------
-logInfo("Play Protect scope: malware scanning & app verification.");
-logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");
+    // ------------------------------------------------------------
+    // 5) Manual Guidance (Technician)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Manual checks:");
+    logInfo("1) Settings → About phone → Android version → Security patch level.");
+    logWarn("   Very old patch levels increase exploit exposure.");
+    logInfo("2) Google Play Store → Play Protect → verify scanning is enabled.");
 
-// MANUAL GUIDANCE (kept for technicians)
-logInfo("1) Open Android Settings → About phone → Android version → Security patch level.");
-logWarn("If the patch level is very old compared to current date — increased vulnerability risk.");
-logInfo("2) In Google Play Store → Play Protect → verify scanning is enabled and up to date.");
-
+    logOk("Lab 23 finished.");
+    logLine();
 }
 
 // ============================================================

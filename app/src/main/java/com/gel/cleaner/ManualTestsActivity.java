@@ -2683,6 +2683,9 @@ private void lab13InternetQuickCheck() {
     logInfo("LAB 13 — Internet Access Quick Check.");
     logLine();
 
+    // ------------------------------------------------------------
+    // PART A — Internet availability (OS-level)
+    // ------------------------------------------------------------
     try {
         ConnectivityManager cm =
                 (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
@@ -2699,12 +2702,12 @@ private void lab13InternetQuickCheck() {
             Network n = cm.getActiveNetwork();
             NetworkCapabilities caps = cm.getNetworkCapabilities(n);
             if (caps != null) {
-                hasInternet = caps.hasCapability(
-                        NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                hasInternet =
+                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+
                 if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
                     transport = "Wi-Fi";
-                else if (caps.hasTransport(
-                        NetworkCapabilities.TRANSPORT_CELLULAR))
+                else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
                     transport = "Cellular";
             }
         } else {
@@ -2725,9 +2728,9 @@ private void lab13InternetQuickCheck() {
         logError("Internet quick check error: " + e.getMessage());
     }
 
-    // ============================================================
-    // NETWORK / PRIVACY EXPOSURE SNAPSHOT (ADVANCED)
-    // ============================================================
+    // ------------------------------------------------------------
+    // PART B — Network / Privacy Exposure Snapshot
+    // ------------------------------------------------------------
     try {
         logLine();
         logInfo("Network Exposure Snapshot (no traffic inspection).");
@@ -2735,6 +2738,7 @@ private void lab13InternetQuickCheck() {
         PackageManager pm2 = getPackageManager();
         ApplicationInfo ai = getApplicationInfo();
 
+        // INTERNET permission
         boolean hasInternetPerm =
                 pm2.checkPermission(
                         Manifest.permission.INTERNET,
@@ -2746,9 +2750,40 @@ private void lab13InternetQuickCheck() {
         else
             logOk("No INTERNET permission detected.");
 
+        // Cleartext traffic policy
         boolean cleartextAllowed = true;
         try {
-            if (Build.VERSION.SDK_INT >=
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                cleartextAllowed =
+                        android.security.NetworkSecurityPolicy
+                                .getInstance()
+                                .isCleartextTrafficPermitted();
+            }
+        } catch (Throwable ignore) {}
+
+        if (cleartextAllowed)
+            logWarn("Cleartext traffic ALLOWED — unencrypted data possible.");
+        else
+            logOk("Cleartext traffic NOT allowed (HTTPS enforced).");
+
+        // Background network capability
+        boolean bgPossible =
+                pm2.checkPermission(
+                        Manifest.permission.RECEIVE_BOOT_COMPLETED,
+                        ai.packageName
+                ) == PackageManager.PERMISSION_GRANTED;
+
+        if (bgPossible)
+            logWarn("App may access network shortly after boot (background capable).");
+        else
+            logOk("No boot-time background network trigger detected.");
+
+        logInfo("Network exposure assessment completed.");
+
+    } catch (Throwable e) {
+        logWarn("Network exposure snapshot unavailable: " + e.getMessage());
+    }
+}
    
 // ============================================================
 // LAB 14 — Battery Health Stress Test

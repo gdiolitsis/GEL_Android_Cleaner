@@ -5454,7 +5454,7 @@ logOk("Place finger / face for biometric authentication NOW.");
                         public void onAuthenticationSucceeded(
                                 android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
                             logOk("LIVE BIOMETRIC TEST: PASS — biometric sensor and authentication pipeline verified functional.");
-risk = Math.max(0, risk - 10);
+
                             lab22Running = false;
                         }
 

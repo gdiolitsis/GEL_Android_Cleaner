@@ -61,6 +61,7 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CancellationSignal;
 import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -122,6 +123,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.Executor;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -895,6 +897,96 @@ private BatteryInfo getBatteryInfo() {
     }
 
     return bi;
+}
+
+// ============================================================
+// THERMAL HELPERS — System thermal zones (no libs, best-effort)
+// Used by CPU/GPU/Skin/PMIC temp readers
+// ============================================================
+private Map<String, Float> readThermalZones() {
+
+    Map<String, Float> out = new HashMap<>();
+
+    try {
+        File base = new File("/sys/class/thermal");
+        File[] zones = base.listFiles(new FileFilter() {
+            @Override public boolean accept(File f) {
+                return f != null && f.isDirectory() && f.getName().startsWith("thermal_zone");
+            }
+        });
+
+        if (zones == null) return out;
+
+        for (File z : zones) {
+            try {
+                String type = safeReadOneLine(new File(z, "type"));
+                String temp = safeReadOneLine(new File(z, "temp"));
+
+                if (type == null || temp == null) continue;
+
+                type = type.trim().toLowerCase(Locale.US);
+                temp = temp.trim();
+
+                // temp is usually in millidegrees (e.g. 42000), sometimes in degrees (42)
+                float t;
+                try {
+                    long v = Long.parseLong(temp.replaceAll("[^0-9\\-]", ""));
+                    t = (Math.abs(v) >= 1000) ? (v / 1000f) : (float) v;
+                } catch (Throwable ignore) {
+                    continue;
+                }
+
+                // keep best (highest) reading if duplicate type keys appear
+                if (!out.containsKey(type) || out.get(type) < t) out.put(type, t);
+
+            } catch (Throwable ignore) {}
+        }
+
+    } catch (Throwable ignore) {}
+
+    return out;
+}
+
+private Float pickZone(Map<String, Float> zones, String... keys) {
+    if (zones == null || zones.isEmpty() || keys == null || keys.length == 0) return null;
+
+    // normalize search keys
+    List<String> k = new ArrayList<>();
+    for (String s : keys) {
+        if (s != null && !s.trim().isEmpty()) k.add(s.trim().toLowerCase(Locale.US));
+    }
+    if (k.isEmpty()) return null;
+
+    // best match strategy: first key hit in type string
+    Float best = null;
+
+    for (Map.Entry<String, Float> e : zones.entrySet()) {
+        String type = e.getKey();
+        Float val = e.getValue();
+        if (type == null || val == null) continue;
+
+        for (String kk : k) {
+            if (type.contains(kk)) {
+                // prefer higher temp (more indicative of active hotspot)
+                if (best == null || val > best) best = val;
+                break;
+            }
+        }
+    }
+
+    return best;
+}
+
+private String safeReadOneLine(File f) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(f));
+        return br.readLine();
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
 }
 
 // ------------------------------------------------------------
@@ -5243,7 +5335,7 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
                             | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
             );
 
-            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+            if (biometricSupported) {
                 biometricSupported = true;
                 logOk("Biometrics supported by system.");
             } else {
@@ -5263,17 +5355,21 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
     // ------------------------------------------------------------
     // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
     // ------------------------------------------------------------
+    
+    boolean hasLockDb = false;
+    boolean hasGatekeeper = false;
+    boolean hasKeystore = false;
     boolean root = isRootAvailable();
     if (root) {
 
         logInfo("Root mode: AVAILABLE (extra infrastructure checks enabled).");
 
         // Gatekeeper / Locksettings signals (inference, not a claim)
-        boolean hasLockDb     = rootPathExists("/data/system/locksettings.db");
-        boolean hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
+        hasLockDb     = rootPathExists("/data/system/locksettings.db");
+        hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
                                 rootPathExists("/data/system/gatekeeper.pattern.key") ||
                                 rootGlobExists("/data/system/gatekeeper*");
-        boolean hasKeystore   = rootPathExists("/data/misc/keystore") ||
+        hasKeystore   = rootPathExists("/data/misc/keystore") ||
                                 rootPathExists("/data/misc/keystore/");
 
         if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
@@ -5348,9 +5444,7 @@ if (root) {
     // If secure lock exists but biometrics are unavailable, small penalty (not a failure)
     // (Only when we have a clear negative reason)
     if (secure) {
-        if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) risk += 5;
-        if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE)  risk += 5;
-        if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE) risk += 8;
+        if (secure && !biometricSupported) risk += 5;
     }
 
     if (risk >= 70) {

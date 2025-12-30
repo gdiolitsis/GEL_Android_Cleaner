@@ -5319,37 +5319,33 @@ private void lab22ScreenLock() {
     // ------------------------------------------------------------
     // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
     // ------------------------------------------------------------
-    boolean biometricSupported = false;
+boolean biometricSupported = false;
 
-    if (android.os.Build.VERSION.SDK_INT >= 29) {
-        try {
-            android.hardware.biometrics.BiometricManager bm =
-                    getSystemService(android.hardware.biometrics.BiometricManager.class);
+if (android.os.Build.VERSION.SDK_INT >= 29) {
+    try {
+        android.hardware.biometrics.BiometricManager bm =
+                getSystemService(android.hardware.biometrics.BiometricManager.class);
 
-            if (bm != null) {
-                int result = bm.canAuthenticate(
-                        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                                | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                );
+        if (bm != null) {
+            int result = bm.canAuthenticate(
+                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+            );
 
-                biometricSupported = (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS);
-
-                if (biometricSupported) {
-                    logOk("Biometrics supported by system (ready).");
-                } else {
-                    logInfo("Biometrics not ready/available (may require enrollment or permission).");
-                }
-
+            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+                biometricSupported = true;
+                logOk("Biometric hardware PRESENT (system reports available).");
             } else {
-                logInfo("BiometricManager not available (device/framework limitation).");
+                logWarn("Biometric hardware PRESENT but NOT ready / not usable.");
             }
-
-        } catch (Throwable e) {
-            logInfo("Biometric capability check not available: " + e.getMessage());
+        } else {
+            logWarn("BiometricManager unavailable.");
         }
-    } else {
-        logInfo("Biometric framework not available for capability check (Android < 10).");
+    } catch (Throwable e) {
+        logWarn("Biometric capability check failed: " + e.getMessage());
     }
+} else {
+    logWarn("Biometric framework not supported on this Android version.");
+}
 
     // ------------------------------------------------------------
     // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
@@ -5361,7 +5357,8 @@ private void lab22ScreenLock() {
     boolean root = isRootAvailable();
     if (root) {
 
-        logInfo("Root mode: AVAILABLE (extra infrastructure checks enabled).");
+        logInfo("Root mode:");
+        logOk("AVAILABLE (extra infrastructure checks enabled).");
 
         hasLockDb     = rootPathExists("/data/system/locksettings.db");
         hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
@@ -5380,7 +5377,8 @@ private void lab22ScreenLock() {
         else logWarn("Keystore path not detected (vendor / Android version variation possible).");
 
     } else {
-        logInfo("Root mode: not available (standard checks only).");
+        logInfo("Root mode:");
+        logOk("not available (standard checks only).");
     }
 
     // ============================================================
@@ -5396,7 +5394,8 @@ private void lab22ScreenLock() {
     else logWarn("Primary security layer: NONE (no credential configured).");
 
     if (biometricSupported) logInfo("Convenience layer: biometrics available (user-facing).");
-    else logInfo("Convenience layer: biometrics not available or not ready (non-critical).");
+    else logInfo("Convenience layer:");
+    logOk("biometrics not available or not ready (non-critical).");
 
     if (secure && !lockedNow) {
         logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
@@ -5431,7 +5430,8 @@ private void lab22ScreenLock() {
 
     if (!biometricSupported) {
         logInfo("Live biometric test not started: biometrics not ready/available.");
-        logInfo("Action: enroll biometrics in Settings, then re-run LAB 22.");
+        logInfo("Action:");
+        logOk("enroll biometrics in Settings, then re-run LAB 22.");
         lab22Running = false;
         return;
     }
@@ -5439,7 +5439,8 @@ private void lab22ScreenLock() {
     if (android.os.Build.VERSION.SDK_INT >= 28) {
         try {
             logLine();
-            logInfo("LIVE SENSOR TEST: Place finger / face for biometric authentication NOW.");
+            logInfo("LIVE SENSOR TEST:");
+logOk("Place finger / face for biometric authentication NOW.");
             logInfo("Result will be recorded as PASS/FAIL (real hardware interaction).");
             logLine();
 
@@ -5452,32 +5453,32 @@ private void lab22ScreenLock() {
                         @Override
                         public void onAuthenticationSucceeded(
                                 android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-                            logOk("LIVE BIOMETRIC TEST: PASS (sensor + pipeline OK).");
+                            logOk("LIVE BIOMETRIC TEST: PASS — biometric sensor and authentication pipeline verified functional.");
+risk = Math.max(0, risk - 10);
                             lab22Running = false;
                         }
 
                         @Override
-                        public void onAuthenticationFailed() {
-                            logWarn("LIVE BIOMETRIC TEST: FAIL (not recognized). Try again.");
-                        }
+public void onAuthenticationFailed() {
+    logError("LIVE BIOMETRIC TEST: FAIL — biometric hardware did NOT authenticate during real sensor test.");
+}
 
-                        @Override
-                        public void onAuthenticationError(int errorCode, CharSequence errString) {
-                            logWarn("LIVE BIOMETRIC TEST: STOP (" + errorCode + "): " + errString);
-                            lab22Running = false;
-                        }
+@Override
+public void onAuthenticationError(int errorCode, CharSequence errString) {
+    logWarn("System fallback to device credential detected — biometric sensor not confirmed functional.");
+    lab22Running = false;
+}
                     };
 
             android.hardware.biometrics.BiometricPrompt prompt =
-                    new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                            .setTitle("LAB 22 — Live Biometric Sensor Test")
-                            .setSubtitle("Place finger / face to verify sensor works")
-                            .setDescription("This is a REAL hardware test (no simulation).")
-                            .setAllowedAuthenticators(
-                                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                            )
-                            .build();
+        new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                .setTitle("LAB 22 — Live Biometric Sensor Test")
+                .setSubtitle("Place finger / face to verify sensor works")
+                .setDescription("This is a REAL hardware test (no simulation).")
+                .setAllowedAuthenticators(
+                        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                )
+                .build();
 
             logInfo("Starting LIVE biometric prompt...");
             prompt.authenticate(cancel, executor, cb);
@@ -5487,10 +5488,18 @@ private void lab22ScreenLock() {
             lab22Running = false;
         }
     } else {
-        logInfo("Live biometric prompt not supported on this Android version.");
-        logInfo("Action: test biometrics via system lock screen settings, then re-run LAB 22.");
-        lab22Running = false;
-    }
+    logInfo("Live biometric prompt not supported on this Android version.");
+    logInfo("Action required:");
+logOk("→ Test biometrics via system lock screen settings, then re-run LAB 22.");
+
+    logInfo("Note:");
+logOk("device may support multiple biometric sensors; each LAB 22 run, verifies ONE sensor path.");
+
+logInfo("Action:");
+logOk("disable the active biometric in Settings, to test another sensor, then re-run LAB 22.");
+
+    lab22Running = false;
+}
 }
 
 // ============================================================

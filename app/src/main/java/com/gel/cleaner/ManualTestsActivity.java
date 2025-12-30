@@ -5228,54 +5228,44 @@ private void lab22ScreenLock() {
     }
 
     // ------------------------------------------------------------
-    // PART B — BIOMETRIC CAPABILITY (TRUTHFUL, NO SENSOR CLAIMS)
-    // ------------------------------------------------------------
-    int canBio = -999;
+// PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
+// ------------------------------------------------------------
+int canBio = -999;
+boolean biometricSupported = false;
+
+if (android.os.Build.VERSION.SDK_INT >= 29) {
     try {
-        androidx.biometric.BiometricManager bm =
-                androidx.biometric.BiometricManager.from(this);
+        android.hardware.biometrics.BiometricManager bm =
+                getSystemService(android.hardware.biometrics.BiometricManager.class);
 
-        // Prefer STRONG; fallback to WEAK if needed
-        int authStrong =
-                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG;
-        int authWeak =
-                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK;
-        int authDevCred =
-                androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+        if (bm != null) {
+            canBio = bm.canAuthenticate(
+                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            );
 
-        canBio = bm.canAuthenticate(authStrong | authDevCred);
-
-        if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
-            logOk("Biometrics available (STRONG) + Device Credential fallback supported.");
-        } else {
-            // try WEAK
-            int canWeak = bm.canAuthenticate(authWeak | authDevCred);
-            if (canWeak == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
-                logOk("Biometrics available (WEAK) + Device Credential fallback supported.");
-                canBio = canWeak;
+            if (canBio == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+                biometricSupported = true;
+                logOk("Biometrics available (STRONG) + Device Credential supported.");
+            } else if (canBio ==
+                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+                logWarn("Biometric hardware present, but NO biometrics enrolled.");
+            } else if (canBio ==
+                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
+                logWarn("No biometric hardware reported by system.");
+            } else if (canBio ==
+                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE) {
+                logWarn("Biometric hardware currently unavailable.");
             } else {
-                // report best-known reason from STRONG call
-                if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
-                    logWarn("Biometric hardware present, but NO biometrics enrolled.");
-                } else if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
-                    logWarn("No biometric hardware reported by system.");
-                } else if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE) {
-                    logWarn("Biometric hardware currently UNAVAILABLE (busy / locked / error).");
-                } else if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED) {
-                    logWarn("Biometric blocked: security update required.");
-                } else if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED) {
-                    logWarn("Biometric authentication unsupported on this device.");
-                } else if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_STATUS_UNKNOWN) {
-                    logWarn("Biometric status unknown (device-specific limitation).");
-                } else {
-                    logWarn("Biometric capability check returned code: " + canBio);
-                }
+                logWarn("Biometric capability check returned code: " + canBio);
             }
         }
-
     } catch (Throwable e) {
         logWarn("Biometric capability check failed: " + e.getMessage());
     }
+} else {
+    logWarn("Biometric framework not available (Android < 10).");
+}
 
     // ------------------------------------------------------------
     // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
@@ -5378,73 +5368,68 @@ if (root) {
         logOk("Security impact: LOW (" + risk + "/100)");
     }
 
-    // ------------------------------------------------------------
-    // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL RESULT)
-    // NOTE: Running this lab IS explicit user action.
-    // ------------------------------------------------------------
-    if (!secure) {
-        logWarn("Live biometric test skipped: secure lock is required for biometrics.");
-        lab22Running = false;
-        return;
-    }
+// ------------------------------------------------------------
+// PART E — LIVE BIOMETRIC AUTH TEST (FRAMEWORK)
+// ------------------------------------------------------------
+if (!secure) {
+    logWarn("Live biometric test skipped: secure lock required.");
+    lab22Running = false;
+    return;
+}
 
-    // Only attempt prompt if system reports biometrics possible
-    if (canBio != androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
-        logWarn("Live biometric test not started: system reports biometrics not ready.");
-        lab22Running = false;
-        return;
-    }
+if (!biometricSupported) {
+    logWarn("Live biometric test not started: biometrics not available.");
+    lab22Running = false;
+    return;
+}
 
+if (android.os.Build.VERSION.SDK_INT >= 28) {
     try {
-        final java.util.concurrent.Executor exec =
-                androidx.core.content.ContextCompat.getMainExecutor(this);
+        Executor executor = getMainExecutor();
 
-        androidx.biometric.BiometricPrompt.AuthenticationCallback cb =
-                new androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+        android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
 
                     @Override
                     public void onAuthenticationSucceeded(
-                            androidx.biometric.BiometricPrompt.AuthenticationResult result) {
-                        logOk("LIVE BIOMETRIC TEST: SUCCESS (authentication completed).");
+                            android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
+                        logOk("LIVE BIOMETRIC TEST: SUCCESS.");
                         lab22Running = false;
                     }
 
                     @Override
                     public void onAuthenticationFailed() {
-                        logWarn("LIVE BIOMETRIC TEST: FAILED (not recognized). Try again.");
-                        // keep running until user cancels or succeeds
+                        logWarn("LIVE BIOMETRIC TEST: FAILED.");
                     }
 
                     @Override
                     public void onAuthenticationError(int errorCode, CharSequence errString) {
-                        logWarn("LIVE BIOMETRIC TEST: ERROR (" + errorCode + "): " + errString);
+                        logWarn("LIVE BIOMETRIC TEST ERROR (" + errorCode + "): " + errString);
                         lab22Running = false;
                     }
                 };
 
-        final androidx.biometric.BiometricPrompt prompt =
-                new androidx.biometric.BiometricPrompt(this, exec, cb);
-
-        int authStrong =
-                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG;
-        int authDevCred =
-                androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL;
-
-        androidx.biometric.BiometricPrompt.PromptInfo info =
-                new androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+        android.hardware.biometrics.BiometricPrompt prompt =
+                new android.hardware.biometrics.BiometricPrompt.Builder(this)
                         .setTitle("LAB 22 — Live Biometric Test")
-                        .setSubtitle("Authenticate using fingerprint or face unlock")
-                        .setDescription("This is a REAL authentication attempt (no simulation).")
-                        .setAllowedAuthenticators(authStrong | authDevCred)
+                        .setSubtitle("Authenticate using device biometrics")
+                        .setDescription("REAL authentication (no simulation).")
+                        .setAllowedAuthenticators(
+                                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                                        | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                        )
                         .build();
 
         logInfo("Starting LIVE biometric authentication prompt...");
-        prompt.authenticate(info);
+        prompt.authenticate(new CancellationSignal(), executor, cb);
 
     } catch (Throwable e) {
         logWarn("Live biometric prompt failed: " + e.getMessage());
         lab22Running = false;
     }
+} else {
+    logWarn("Live biometric prompt not supported on this Android version.");
+    lab22Running = false;
 }
 
 // ============================================================
@@ -6119,6 +6104,7 @@ private String lab25_readOneLine(String path) {
         if (br != null) try { br.close(); } catch (Throwable ignore) {}
     }
 }
+
 // ============================================================
 // LABS 26 — 29: ADVANCED / LOGS
 // ============================================================

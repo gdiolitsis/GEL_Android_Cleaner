@@ -6288,28 +6288,28 @@ try {
                 String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
                 details.add(clean + ": " + shortTxt);  
 
-                // grouping                  
-if (shortTxt != null && shortTxt.length() > 0) {
-    String t = shortTxt.toLowerCase(Locale.US);
-    int pi = t.indexOf("package:");
-    if (pi >= 0) {
-        String rest = t.substring(pi + 8).trim();
-        String[] parts = rest.split("[\\s\\n\\r\\t]+");
-        key = (parts.length > 0 && parts[0].contains(".")) ? parts[0] : clean;
+                // grouping     
+             try {
+
+    String key;
+
+    if (shortTxt != null && shortTxt.length() > 0) {
+        String t = shortTxt.toLowerCase(Locale.US);
+        int pi = t.indexOf("package:");
+        if (pi >= 0) {
+            String rest = t.substring(pi + 8).trim();
+            String[] parts = rest.split("[\\s\\n\\r\\t]+");
+            key = (parts.length > 0 && parts[0].contains(".")) ? parts[0] : clean;
+        } else {
+            key = clean;
+        }
     } else {
         key = clean;
     }
-} else {
-    key = clean;
-}
-appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
 
-                ent = db.getNextEntry(tag, ent.getTimeMillis());  
-            }  
-        }  
-    }  
+    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
 
-} catch (Exception ignored) {}  
+} catch (Exception ignored) {}
 
 // ============================================================  
 // (C) SUMMARY + RISK SCORE  

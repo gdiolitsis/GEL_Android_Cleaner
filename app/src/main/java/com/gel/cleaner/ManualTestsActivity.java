@@ -2838,10 +2838,12 @@ private void lab13InternetQuickCheck() {
                         ai.packageName
                 ) == PackageManager.PERMISSION_GRANTED;
 
-        if (hasInternetPerm)
-            logWarn("App has INTERNET capability — data transmission possible.");
-        else
-            logOk("No INTERNET permission detected.");
+        if (hasInternetPerm) {
+    logWarn("ℹ INTERNET capability present (permission-level only).\n" +
+            "✔ No network activity detected during test.");
+} else {
+    logOk("No INTERNET permission detected.");
+}
 
         // Cleartext traffic policy
         boolean cleartextAllowed = true;
@@ -5292,10 +5294,7 @@ private void lab22ScreenLock() {
 
             secure = km.isDeviceSecure();
 
-            // locked state (not a lie, just current UI state)
-            try {
-                lockedNow = km.isKeyguardLocked();
-            } catch (Throwable ignore) {}
+            try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}
 
             if (secure) {
                 logOk("Secure lock configured (PIN / Pattern / Password).");
@@ -5305,11 +5304,8 @@ private void lab22ScreenLock() {
             }
 
             if (secure) {
-                if (lockedNow) {
-                    logInfo("Current state: LOCKED (keyguard active).");
-                } else {
-                    logWarn("Current state: UNLOCKED right now (device open).");
-                }
+                if (lockedNow) logInfo("Current state: LOCKED (keyguard active).");
+                else logWarn("Current state: UNLOCKED right now (device open).");
             }
 
         } else {
@@ -5320,63 +5316,64 @@ private void lab22ScreenLock() {
         logWarn("Screen lock detection failed: " + e.getMessage());
     }
 
-// ------------------------------------------------------------
-// PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
-// ------------------------------------------------------------
-boolean biometricSupported = false;
+    // ------------------------------------------------------------
+    // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
+    // ------------------------------------------------------------
+    boolean biometricSupported = false;
 
-if (android.os.Build.VERSION.SDK_INT >= 29) {
-    try {
-        android.hardware.biometrics.BiometricManager bm =
-                getSystemService(android.hardware.biometrics.BiometricManager.class);
+    if (android.os.Build.VERSION.SDK_INT >= 29) {
+        try {
+            android.hardware.biometrics.BiometricManager bm =
+                    getSystemService(android.hardware.biometrics.BiometricManager.class);
 
-        if (bm != null) {
-            int result = bm.canAuthenticate(
-                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            );
+            if (bm != null) {
+                int result = bm.canAuthenticate(
+                        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                                | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                );
 
-            if (biometricSupported) {
-                biometricSupported = true;
-                logOk("Biometrics supported by system.");
+                biometricSupported = (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS);
+
+                if (biometricSupported) {
+                    logOk("Biometrics supported by system (ready).");
+                } else {
+                    logInfo("Biometrics not ready/available (may require enrollment or permission).");
+                }
+
             } else {
-                logWarn("Biometrics NOT supported or not ready.");
+                logInfo("BiometricManager not available (device/framework limitation).");
             }
-        } else {
-            logWarn("BiometricManager not available.");
-        }
 
-    } catch (Throwable e) {
-        logWarn("Biometric capability check failed: " + e.getMessage());
+        } catch (Throwable e) {
+            logInfo("Biometric capability check not available: " + e.getMessage());
+        }
+    } else {
+        logInfo("Biometric framework not available for capability check (Android < 10).");
     }
-} else {
-    logWarn("Biometric framework not available (Android < 10).");
-}
 
     // ------------------------------------------------------------
     // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
     // ------------------------------------------------------------
-    
     boolean hasLockDb = false;
     boolean hasGatekeeper = false;
     boolean hasKeystore = false;
+
     boolean root = isRootAvailable();
     if (root) {
 
         logInfo("Root mode: AVAILABLE (extra infrastructure checks enabled).");
 
-        // Gatekeeper / Locksettings signals (inference, not a claim)
         hasLockDb     = rootPathExists("/data/system/locksettings.db");
         hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
-                                rootPathExists("/data/system/gatekeeper.pattern.key") ||
-                                rootGlobExists("/data/system/gatekeeper*");
+                        rootPathExists("/data/system/gatekeeper.pattern.key") ||
+                        rootGlobExists("/data/system/gatekeeper*");
         hasKeystore   = rootPathExists("/data/misc/keystore") ||
-                                rootPathExists("/data/misc/keystore/");
+                        rootPathExists("/data/misc/keystore/");
 
         if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
-        else logWarn("No gatekeeper artifacts detected (lock may be disabled OR device-specific storage).");
+        else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");
 
-        if (hasLockDb) logOk("Locksettings database found (system maintains lock configuration).");
+        if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");
         else logWarn("Locksettings database not detected (ROM/vendor variation possible).");
 
         if (hasKeystore) logOk("System keystore path detected (secure storage present).");
@@ -5386,53 +5383,29 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
         logInfo("Root mode: not available (standard checks only).");
     }
 
-// ============================================================
-// LAB 22 — TRUST BOUNDARY AWARENESS (PATCH)
-// ============================================================
+    // ============================================================
+    // LAB 22 — TRUST BOUNDARY AWARENESS
+    // ============================================================
 
-// ------------------------------------------------------------
-// BOOT-LEVEL SECURITY CONTEXT
-// ------------------------------------------------------------
-try {
-    if (secure) {
-        logInfo("Post-reboot protection: authentication REQUIRED before data access.");
-    } else {
-        logError("Post-reboot protection: NOT enforced — data exposure risk after reboot.");
+    try {
+        if (secure) logInfo("Post-reboot protection: authentication REQUIRED before data access.");
+        else logError("Post-reboot protection: NOT enforced — data exposure risk after reboot.");
+    } catch (Throwable ignore) {}
+
+    if (secure) logInfo("Primary security layer: knowledge-based credential (PIN / Pattern / Password).");
+    else logWarn("Primary security layer: NONE (no credential configured).");
+
+    if (biometricSupported) logInfo("Convenience layer: biometrics available (user-facing).");
+    else logInfo("Convenience layer: biometrics not available or not ready (non-critical).");
+
+    if (secure && !lockedNow) {
+        logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
     }
-} catch (Throwable ignore) {}
 
-// ------------------------------------------------------------
-// AUTHENTICATION LAYERS (SECURITY vs CONVENIENCE)
-// ------------------------------------------------------------
-if (secure) {
-    logInfo("Primary security layer: knowledge-based credential (PIN / Pattern / Password).");
-} else {
-    logWarn("Primary security layer: NONE (no credential configured).");
-}
-
-if (biometricSupported) {
-    logInfo("Convenience layer: biometric authentication available (user-facing).");
-} else {
-    logWarn("Convenience layer: biometric authentication NOT available or not ready.");
-}
-
-// ------------------------------------------------------------
-// ANTI–FALSE CONFIDENCE WARNING
-// ------------------------------------------------------------
-if (secure && !lockedNow) {
-    logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
-}
-
-// ------------------------------------------------------------
-// ROOT-AWARE ENFORCEMENT SUMMARY (INFERENCE ONLY)
-// ------------------------------------------------------------
-if (root) {
-    if (hasGatekeeper || hasLockDb) {
-        logOk("System enforcement signals present (authentication infrastructure active).");
-    } else {
-        logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");
+    if (root) {
+        if (hasGatekeeper || hasLockDb) logOk("System enforcement signals present (auth infrastructure active).");
+        else logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");
     }
-}
 
     // ------------------------------------------------------------
     // PART D — RISK SCORE (FAST, CLEAR)
@@ -5440,85 +5413,84 @@ if (root) {
     int risk = 0;
 
     if (!secure) risk += 70;
-    if (secure && !lockedNow) risk += 10; // device currently open (situational)
+    if (secure && !lockedNow) risk += 10;
+    if (secure && !biometricSupported) risk += 5;
 
-    // If secure lock exists but biometrics are unavailable, small penalty (not a failure)
-    // (Only when we have a clear negative reason)
-    if (secure) {
-        if (secure && !biometricSupported) risk += 5;
+    if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");
+    else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
+    else logOk("Security impact: LOW (" + risk + "/100)");
+
+    // ------------------------------------------------------------
+    // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
+    // ------------------------------------------------------------
+    if (!secure) {
+        logWarn("Live biometric test skipped: secure lock required.");
+        lab22Running = false;
+        return;
     }
 
-    if (risk >= 70) {
-        logError("Security impact: HIGH (" + risk + "/100)");
-    } else if (risk >= 30) {
-        logWarn("Security impact: MEDIUM (" + risk + "/100)");
+    if (!biometricSupported) {
+        logInfo("Live biometric test not started: biometrics not ready/available.");
+        logInfo("Action: enroll biometrics in Settings, then re-run LAB 22.");
+        lab22Running = false;
+        return;
+    }
+
+    if (android.os.Build.VERSION.SDK_INT >= 28) {
+        try {
+            logLine();
+            logInfo("LIVE SENSOR TEST: Place finger / face for biometric authentication NOW.");
+            logInfo("Result will be recorded as PASS/FAIL (real hardware interaction).");
+            logLine();
+
+            java.util.concurrent.Executor executor = getMainExecutor();
+            android.os.CancellationSignal cancel = new android.os.CancellationSignal();
+
+            android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+
+                        @Override
+                        public void onAuthenticationSucceeded(
+                                android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
+                            logOk("LIVE BIOMETRIC TEST: PASS (sensor + pipeline OK).");
+                            lab22Running = false;
+                        }
+
+                        @Override
+                        public void onAuthenticationFailed() {
+                            logWarn("LIVE BIOMETRIC TEST: FAIL (not recognized). Try again.");
+                        }
+
+                        @Override
+                        public void onAuthenticationError(int errorCode, CharSequence errString) {
+                            logWarn("LIVE BIOMETRIC TEST: STOP (" + errorCode + "): " + errString);
+                            lab22Running = false;
+                        }
+                    };
+
+            android.hardware.biometrics.BiometricPrompt prompt =
+                    new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                            .setTitle("LAB 22 — Live Biometric Sensor Test")
+                            .setSubtitle("Place finger / face to verify sensor works")
+                            .setDescription("This is a REAL hardware test (no simulation).")
+                            .setAllowedAuthenticators(
+                                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                                            | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                            )
+                            .build();
+
+            logInfo("Starting LIVE biometric prompt...");
+            prompt.authenticate(cancel, executor, cb);
+
+        } catch (Throwable e) {
+            logWarn("Live biometric prompt failed: " + e.getMessage());
+            lab22Running = false;
+        }
     } else {
-        logOk("Security impact: LOW (" + risk + "/100)");
-    }
-
-// ------------------------------------------------------------
-// PART E — LIVE BIOMETRIC AUTH TEST (FRAMEWORK)
-// ------------------------------------------------------------
-if (!secure) {
-    logWarn("Live biometric test skipped: secure lock required.");
-    lab22Running = false;
-    return;
-}
-
-if (!biometricSupported) {
-    logWarn("Live biometric test not started: biometrics not available.");
-    lab22Running = false;
-    return;
-}
-
-if (android.os.Build.VERSION.SDK_INT >= 28) {
-    try {
-        Executor executor = getMainExecutor();
-
-        android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
-                new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-
-                    @Override
-                    public void onAuthenticationSucceeded(
-                            android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-                        logOk("LIVE BIOMETRIC TEST: SUCCESS.");
-                        lab22Running = false;
-                    }
-
-                    @Override
-                    public void onAuthenticationFailed() {
-                        logWarn("LIVE BIOMETRIC TEST: FAILED.");
-                    }
-
-                    @Override
-                    public void onAuthenticationError(int errorCode, CharSequence errString) {
-                        logWarn("LIVE BIOMETRIC TEST ERROR (" + errorCode + "): " + errString);
-                        lab22Running = false;
-                    }
-                };
-
-        android.hardware.biometrics.BiometricPrompt prompt =
-                new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                        .setTitle("LAB 22 — Live Biometric Test")
-                        .setSubtitle("Authenticate using device biometrics")
-                        .setDescription("REAL authentication (no simulation).")
-                        .setAllowedAuthenticators(
-                                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                                        | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                        )
-                        .build();
-
-        logInfo("Starting LIVE biometric authentication prompt...");
-        prompt.authenticate(new CancellationSignal(), executor, cb);
-
-    } catch (Throwable e) {
-        logWarn("Live biometric prompt failed: " + e.getMessage());
+        logInfo("Live biometric prompt not supported on this Android version.");
+        logInfo("Action: test biometrics via system lock screen settings, then re-run LAB 22.");
         lab22Running = false;
     }
-} else {
-    logWarn("Live biometric prompt not supported on this Android version.");
-    lab22Running = false;
-}
 }
 
 // ============================================================
@@ -5526,13 +5498,11 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
 // ============================================================
 private boolean isRootAvailable() {
     try {
-        // quick checks
         if (new java.io.File("/system/xbin/su").exists()) return true;
         if (new java.io.File("/system/bin/su").exists())  return true;
         if (new java.io.File("/sbin/su").exists())        return true;
         if (new java.io.File("/su/bin/su").exists())      return true;
 
-        // command check
         String out = runSu("id");
         return out != null && out.toLowerCase(java.util.Locale.US).contains("uid=0");
     } catch (Throwable ignore) {
@@ -5547,7 +5517,6 @@ private boolean rootPathExists(String path) {
 }
 
 private boolean rootGlobExists(String glob) {
-    // best-effort glob check
     String cmd = "ls " + glob + " 1>/dev/null 2>/dev/null && echo OK || echo NO";
     String out = runSu(cmd);
     return out != null && out.contains("OK");

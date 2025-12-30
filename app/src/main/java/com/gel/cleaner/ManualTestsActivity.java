@@ -5801,7 +5801,7 @@ if (s != null) try { s.close(); } catch (Exception ignored) {}
 }
 }
 
-// Scan pairing port range 7460â€“7490 (best-effort)
+// Scan pairing port range 7460-7490 (best-effort)
 private boolean scanPairingPortRange() {
 for (int p = 7460; p <= 7490; p++) {
 if (isPortOpen(p, 80)) return true;
@@ -5810,310 +5810,314 @@ return false;
 }
 
 // ============================================================
-
 // LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
 // GEL Universal Edition — NO external libs
 // ============================================================
 private void lab25RootSuspicion() {
-	
-logLine();
-logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
-logLine();
 
-// ---------------------------  
-// (1) ROOT DETECTION  
-// ---------------------------  
-int rootScore = 0;  
-List<String> rootFindings = new ArrayList<>();  
+    logLine();
+    logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
+    logLine();
 
-// su / busybox paths  
-String[] suPaths = {  
-        "/system/bin/su",  
-        "/system/xbin/su",  
-        "/sbin/su",  
-        "/su/bin/su",  
-        "/system/app/Superuser.apk",  
-        "/system/app/SuperSU.apk",  
-        "/system/app/Magisk.apk",  
-        "/system/bin/busybox",  
-        "/system/xbin/busybox",  
-        "/vendor/bin/su",  
-        "/odm/bin/su"  
-};  
+    // ---------------------------
+    // (1) ROOT DETECTION
+    // ---------------------------
+    int rootScore = 0;
+    List<String> rootFindings = new ArrayList<>();
 
-boolean suFound = false;  
-for (String p : suPaths) {  
-    if (lab25_fileExists(p)) {  
-        suFound = true;  
-        rootScore += 18;  
-        rootFindings.add("su/busybox path found: " + p);  
-    }  
-}  
+    // su / busybox paths
+    String[] suPaths = {
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/su/bin/su",
+            "/system/bin/busybox",
+            "/system/xbin/busybox",
+            "/vendor/bin/su",
+            "/odm/bin/su"
+    };
 
-// which su  
-if (whichSu != null && whichSu.contains("/su")) {
-    rootScore += 12;
-    rootFindings.add("'which su' returned: " + whichSu);
-    suFound = true;
-}
-if (whichSu != null && whichSu.contains("/")) {  
-    rootScore += 12;  
-    rootFindings.add("'which su' returned: " + whichSu);  
-    suFound = true;  
-}  
+    boolean suFound = false;
 
-// try exec su (best effort)  
-boolean suExec = lab25_canExecSu();  
-if (suExec) {  
-    rootScore += 25;  
-    rootFindings.add("su execution possible (shell granted).");  
-    suFound = true;  
-}  
+    for (String p : suPaths) {
+        if (lab25_fileExists(p)) {
+            suFound = true;
+            rootScore += 18;
+            rootFindings.add("su/busybox path found: " + p);
+        }
+    }
 
-// known root packages  
-String[] rootPkgs = {  
-        "com.topjohnwu.magisk",  
-        "eu.chainfire.supersu",  
-        "com.koushikdutta.superuser",  
-        "com.noshufou.android.su",  
-        "com.kingroot.kinguser",  
-        "com.kingo.root",  
-        "com.saurik.substrate",  
-        "de.robv.android.xposed.installer",  
-        "com.zachspong.temprootremovejb",  
-        "com.ramdroid.appquarantine"  
-};  
+    // which su (best-effort, avoid false positives)
+    String whichSu = lab25_execFirstLine("which su");
+    if (whichSu != null && whichSu.contains("/su")) {
+        rootScore += 12;
+        rootFindings.add("'which su' returned: " + whichSu);
+        suFound = true;
+    }
 
-List<String> installed = lab25_getInstalledPackagesLower();  
-boolean pkgHit = false;  
-for (String rp : rootPkgs) {  
-    if (installed.contains(rp)) {  
-        pkgHit = true;  
-        rootScore += 20;  
-        rootFindings.add("root package installed: " + rp);  
-    }  
-}  
+    // try exec su (strong indicator)
+    boolean suExec = lab25_canExecSu();
+    if (suExec) {
+        rootScore += 25;
+        rootFindings.add("su execution possible (shell granted).");
+        suFound = true;
+    }
 
-// build tags  
-try {  
-    String tags = Build.TAGS;  
-    if (tags != null && tags.contains("test-keys")) {  
-        rootScore += 15;  
-        rootFindings.add("Build.TAGS contains test-keys.");  
-    }  
-} catch (Throwable ignore) {}  
+    // known root packages
+    String[] rootPkgs = {
+            "com.topjohnwu.magisk",
+            "eu.chainfire.supersu",
+            "com.koushikdutta.superuser",
+            "com.noshufou.android.su",
+            "com.kingroot.kinguser",
+            "com.kingo.root",
+            "com.saurik.substrate",
+            "de.robv.android.xposed.installer"
+    };
 
-// suspicious props  
-String roSecure = lab25_getProp("ro.secure");  
-String roDebug  = lab25_getProp("ro.debuggable");  
-if ("0".equals(roSecure)) {  
-    rootScore += 18;  
-    rootFindings.add("ro.secure=0 (insecure build).");  
-}  
-if ("1".equals(roDebug)) {  
-    rootScore += 12;  
-    rootFindings.add("ro.debuggable=1 (debuggable build).");  
-}  
+    List<String> installed = lab25_getInstalledPackagesLower();
+    boolean pkgHit = false;
 
-// ---------------------------  
-// (2) BOOTLOADER / VERIFIED BOOT  
-// ---------------------------  
-int blScore = 0;  
-List<String> blFindings = new ArrayList<>();  
+    for (String rp : rootPkgs) {
+        if (installed.contains(rp)) {
+            pkgHit = true;
+            rootScore += 20;
+            rootFindings.add("root package installed: " + rp);
+        }
+    }
 
-String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red  
-String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked  
-String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0  
-String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 on some OEMs  
+    // build tags
+    try {
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            rootScore += 15;
+            rootFindings.add("Build.TAGS contains test-keys.");
+        }
+    } catch (Throwable ignore) {}
 
-if (vbState != null && (vbState.contains("orange") || vbState.contains("yellow") || vbState.contains("red"))) {  
-    blScore += 30;  
-    blFindings.add("VerifiedBootState=" + vbState);  
-} else if (vbState != null) {  
-    blFindings.add("VerifiedBootState=" + vbState);  
-}  
+    // suspicious system properties
+    String roSecure = lab25_getProp("ro.secure");
+    String roDebug  = lab25_getProp("ro.debuggable");
 
-if (vbmeta != null && vbmeta.contains("unlocked")) {  
-    blScore += 35;  
-    blFindings.add("vbmeta.device_state=unlocked");  
-} else if (vbmeta != null) {  
-    blFindings.add("vbmeta.device_state=" + vbmeta);  
-}  
+    if ("0".equals(roSecure)) {
+        rootScore += 18;
+        rootFindings.add("ro.secure=0 (insecure build).");
+    }
+    if ("1".equals(roDebug)) {
+        rootScore += 12;
+        rootFindings.add("ro.debuggable=1 (debuggable build).");
+    }
 
-if ("0".equals(flashL)) {  
-    blScore += 25;  
-    blFindings.add("flash.locked=0 (bootloader unlocked).");  
-} else if (flashL != null) {  
-    blFindings.add("flash.locked=" + flashL);  
-}  
+    // ---------------------------
+    // (2) BOOTLOADER / VERIFIED BOOT
+    // ---------------------------
+    int blScore = 0;
+    List<String> blFindings = new ArrayList<>();
 
-if ("1".equals(wlBit)) {  
-    blScore += 15;  
-    blFindings.add("warranty_bit=1 (tamper flag).");  
-}  
+    String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
+    String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
+    String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0
+    String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 (OEM)
 
-// OEM unlock allowed flag (Android settings)  
-try {  
-    int oemAllowed = Settings.Global.getInt(getContentResolver(), "oem_unlock_allowed", 0);  
-    if (oemAllowed == 1) {  
-        blScore += 10;  
-        blFindings.add("OEM unlock allowed=1 (developer enabled).");  
-    }  
-} catch (Throwable ignore) {}  
+    if (vbState != null &&
+            (vbState.contains("orange") ||
+             vbState.contains("yellow") ||
+             vbState.contains("red"))) {
+        blScore += 30;
+        blFindings.add("VerifiedBootState=" + vbState);
+    } else if (vbState != null) {
+        blFindings.add("VerifiedBootState=" + vbState);
+    }
 
-// /proc/cmdline hints  
-String cmdline = lab25_readOneLine("/proc/cmdline");  
-if (cmdline != null) {  
-    String c = cmdline.toLowerCase(Locale.US);  
-    if (c.contains("verifiedbootstate=orange") || c.contains("verifiedbootstate=yellow") ||  
-        c.contains("vbmeta.device_state=unlocked") || c.contains("bootloader=unlocked")) {  
-        blScore += 20;  
-        blFindings.add("/proc/cmdline reports unlocked/weak verified boot.");  
-    }  
-}  
+    if (vbmeta != null && vbmeta.contains("unlocked")) {
+        blScore += 35;
+        blFindings.add("vbmeta.device_state=unlocked");
+    } else if (vbmeta != null) {
+        blFindings.add("vbmeta.device_state=" + vbmeta);
+    }
 
-// ---------------------------  
-// (3) BOOT ANIMATION / SPLASH MOD  
-// ---------------------------  
-int animScore = 0;  
-List<String> animFindings = new ArrayList<>();  
+    if ("0".equals(flashL)) {
+        blScore += 25;
+        blFindings.add("flash.locked=0 (bootloader unlocked).");
+    } else if (flashL != null) {
+        blFindings.add("flash.locked=" + flashL);
+    }
 
-// Strong indicator: custom bootanimation in /data/local  
-if (lab25_fileExists("/data/local/bootanimation.zip")) {  
-    animScore += 35;  
-    animFindings.add("Custom bootanimation detected: /data/local/bootanimation.zip");  
-}  
+    if ("1".equals(wlBit)) {
+        blScore += 15;
+        blFindings.add("warranty_bit=1 (tamper flag).");
+    }
 
-// If system bootanimation missing → suspicious ROM  
-boolean sysBoot = lab25_fileExists("/system/media/bootanimation.zip") ||  
-                  lab25_fileExists("/product/media/bootanimation.zip") ||  
-                  lab25_fileExists("/oem/media/bootanimation.zip") ||  
-                  lab25_fileExists("/vendor/media/bootanimation.zip");  
-if (!sysBoot) {  
-    animScore += 15;  
-    animFindings.add("No stock bootanimation found in system partitions (non-stock ROM?).");  
-} else {  
-    animFindings.add("Stock bootanimation path exists.");  
-}  
+    // OEM unlock allowed (settings)
+    try {
+        int oemAllowed =
+                Settings.Global.getInt(
+                        getContentResolver(),
+                        "oem_unlock_allowed",
+                        0
+                );
+        if (oemAllowed == 1) {
+            blScore += 10;
+            blFindings.add("OEM unlock allowed=1 (developer enabled).");
+        }
+    } catch (Throwable ignore) {}
 
-// ---------------------------  
-// FINAL RISK SCORE  
-// ---------------------------  
-int risk = Math.min(100, rootScore + blScore + animScore);  
+    // /proc/cmdline hints
+    String cmdline = lab25_readOneLine("/proc/cmdline");
+    if (cmdline != null) {
+        String c = cmdline.toLowerCase(Locale.US);
+        if (c.contains("verifiedbootstate=orange") ||
+            c.contains("verifiedbootstate=yellow") ||
+            c.contains("vbmeta.device_state=unlocked") ||
+            c.contains("bootloader=unlocked")) {
+            blScore += 20;
+            blFindings.add("/proc/cmdline reports unlocked / weak verified boot.");
+        }
+    }
 
-// Print ROOT section  
-logLine();  
-logInfo("Root Scan:");  
-if (rootFindings.isEmpty()) {  
-    logOk("No strong root traces detected.");  
-} else {  
-    for (String s : rootFindings) logWarn("• " + s);  
-}  
+    // ---------------------------
+    // (3) BOOT ANIMATION / SPLASH MOD
+    // ---------------------------
+    int animScore = 0;
+    List<String> animFindings = new ArrayList<>();
 
-// Print BOOTLOADER section  
-logLine();  
-logInfo("Bootloader / Verified Boot:");  
-if (blFindings.isEmpty()) {  
-    logOk("No bootloader anomalies detected.");  
-} else {  
-    for (String s : blFindings) logWarn("• " + s);  
-}  
+    if (lab25_fileExists("/data/local/bootanimation.zip")) {
+        animScore += 35;
+        animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");
+    }
 
-// Print ANIMATION section  
-logLine();  
-logInfo("Boot Animation / Splash:");  
-if (animFindings.isEmpty()) {  
-    logOk("No custom animation traces detected.");  
-} else {  
-    for (String s : animFindings) logWarn("• " + s);  
-}  
+    boolean sysBoot =
+            lab25_fileExists("/system/media/bootanimation.zip") ||
+            lab25_fileExists("/product/media/bootanimation.zip") ||
+            lab25_fileExists("/oem/media/bootanimation.zip") ||
+            lab25_fileExists("/vendor/media/bootanimation.zip");
 
-// Verdict  
-logLine();  
-logInfo("FINAL VERDICT:");  
-logInfo("RISK SCORE: " + risk + " / 100");  
+    if (!sysBoot) {
+        animScore += 15;
+        animFindings.add("No stock bootanimation found (possible custom ROM).");
+    } else {
+        animFindings.add("Stock bootanimation path exists.");
+    }
 
-if (risk >= 70 || suExec || pkgHit) {  
-    logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
-} else if (risk >= 35) {  
-    logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");  
-} else {  
-    logOk("STATUS: SAFE (no significant modification evidence).");  
-}  
+    // ---------------------------
+    // FINAL RISK SCORE
+    // ---------------------------
+    int risk = Math.min(100, rootScore + blScore + animScore);
 
-logOk("Lab 25 finished.");
+    logLine();
+    logInfo("Root Scan:");
+    if (rootFindings.isEmpty()) {
+        logOk("No strong root traces detected.");
+    } else {
+        for (String s : rootFindings) logWarn("• " + s);
+    }
 
+    logLine();
+    logInfo("Bootloader / Verified Boot:");
+    if (blFindings.isEmpty()) {
+        logOk("No bootloader anomalies detected.");
+    } else {
+        for (String s : blFindings) logWarn("• " + s);
+    }
+
+    logLine();
+    logInfo("Boot Animation / Splash:");
+    if (animFindings.isEmpty()) {
+        logOk("No custom animation traces detected.");
+    } else {
+        for (String s : animFindings) logWarn("• " + s);
+    }
+
+    logLine();
+    logInfo("FINAL VERDICT:");
+    logInfo("RISK SCORE: " + risk + " / 100");
+
+    if (risk >= 70 || suExec || pkgHit) {
+        logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
+    } else if (risk >= 35) {
+        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+    } else {
+        logOk("STATUS: SAFE (no significant modification evidence).");
+    }
+
+    logOk("Lab 25 finished.");
 }
 
 // ============================================================
-// LAB 25 — INTERNAL HELPERS (unique names to avoid conflicts)
+// LAB 25 — INTERNAL HELPERS
 // ============================================================
 private boolean lab25_fileExists(String path) {
-try { return new File(path).exists(); } catch (Throwable t) { return false; }
+    try { return new File(path).exists(); }
+    catch (Throwable t) { return false; }
 }
 
 private List<String> lab25_getInstalledPackagesLower() {
-List<String> out = new ArrayList<>();
-try {
-PackageManager pm = getPackageManager();
-List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-if (apps != null) {
-for (ApplicationInfo ai : apps) {
-String p = ai.packageName;
-if (p != null) out.add(p.toLowerCase(Locale.US));
-}
-}
-} catch (Throwable ignore) {}
-return out;
+    List<String> out = new ArrayList<>();
+    try {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        if (apps != null) {
+            for (ApplicationInfo ai : apps) {
+                String p = ai.packageName;
+                if (p != null) out.add(p.toLowerCase(Locale.US));
+            }
+        }
+    } catch (Throwable ignore) {}
+    return out;
 }
 
 private boolean lab25_canExecSu() {
-Process p = null;
-try {
-p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-String line = br.readLine();
-br.close();
-return line != null && line.toLowerCase(Locale.US).contains("uid=0");
-} catch (Throwable t) {
-return false;
-} finally {
-if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-}
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+        BufferedReader br =
+                new BufferedReader(
+                        new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null &&
+               line.toLowerCase(Locale.US).contains("uid=0");
+    } catch (Throwable t) {
+        return false;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
 }
 
 private String lab25_execFirstLine(String cmd) {
-Process p = null;
-try {
-p = Runtime.getRuntime().exec(cmd);
-BufferedReader br = new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-String line = br.readLine();
-br.close();
-return line != null ? line.trim() : null;
-} catch (Throwable t) {
-return null;
-} finally {
-if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-}
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(cmd);
+        BufferedReader br =
+                new BufferedReader(
+                        new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line.trim() : null;
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
 }
 
 private String lab25_getProp(String key) {
-String v = lab25_execFirstLine("getprop " + key);
-if (v == null) return null;
-v = v.trim();
-return v.isEmpty() ? null : v.toLowerCase(Locale.US);
+    String v = lab25_execFirstLine("getprop " + key);
+    if (v == null) return null;
+    v = v.trim();
+    return v.isEmpty() ? null : v.toLowerCase(Locale.US);
 }
 
 private String lab25_readOneLine(String path) {
-BufferedReader br = null;
-try {
-br = new BufferedReader(new FileReader(new File(path)));
-return br.readLine();
-} catch (Throwable t) {
-return null;
-} finally {
-if (br != null) try { br.close(); } catch (Throwable ignore) {}
-}
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(new File(path)));
+        return br.readLine();
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (br != null) try { br.close(); } catch (Throwable ignore) {}
+    }
 }
 // ============================================================
 // LABS 26 — 29: ADVANCED / LOGS

@@ -5227,10 +5227,9 @@ private void lab22ScreenLock() {
         logWarn("Screen lock detection failed: " + e.getMessage());
     }
 
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
 // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
 // ------------------------------------------------------------
-int canBio = -999;
 boolean biometricSupported = false;
 
 if (android.os.Build.VERSION.SDK_INT >= 29) {
@@ -5239,27 +5238,21 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
                 getSystemService(android.hardware.biometrics.BiometricManager.class);
 
         if (bm != null) {
-            canBio = bm.canAuthenticate(
+            int result = bm.canAuthenticate(
                     android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
                             | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
             );
 
-            if (canBio == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
                 biometricSupported = true;
-                logOk("Biometrics available (STRONG) + Device Credential supported.");
-            } else if (canBio ==
-                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
-                logWarn("Biometric hardware present, but NO biometrics enrolled.");
-            } else if (canBio ==
-                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
-                logWarn("No biometric hardware reported by system.");
-            } else if (canBio ==
-                    android.hardware.biometrics.BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE) {
-                logWarn("Biometric hardware currently unavailable.");
+                logOk("Biometrics supported by system.");
             } else {
-                logWarn("Biometric capability check returned code: " + canBio);
+                logWarn("Biometrics NOT supported or not ready.");
             }
+        } else {
+            logWarn("BiometricManager not available.");
         }
+
     } catch (Throwable e) {
         logWarn("Biometric capability check failed: " + e.getMessage());
     }
@@ -5320,7 +5313,7 @@ if (secure) {
     logWarn("Primary security layer: NONE (no credential configured).");
 }
 
-if (canBio == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
+if (biometricSupported) {
     logInfo("Convenience layer: biometric authentication available (user-facing).");
 } else {
     logWarn("Convenience layer: biometric authentication NOT available or not ready.");
@@ -5430,6 +5423,7 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
 } else {
     logWarn("Live biometric prompt not supported on this Android version.");
     lab22Running = false;
+}
 }
 
 // ============================================================

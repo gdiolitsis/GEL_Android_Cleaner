@@ -108,6 +108,7 @@ import androidx.core.content.FileProvider;
 // ============================================================
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -6287,9 +6288,7 @@ try {
                 String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
                 details.add(clean + ": " + shortTxt);  
 
-                // grouping  
-                String key = clean;  
-                String key;
+                // grouping                  
 if (shortTxt != null && shortTxt.length() > 0) {
     String t = shortTxt.toLowerCase(Locale.US);
     int pi = t.indexOf("package:");

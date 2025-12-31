@@ -1779,6 +1779,15 @@ private String readSys(File dir, String name) {
     }
 }
 
+private String fmt1(float v) {
+    return String.format(Locale.US, "%.1f", v);
+}
+
+private String fmt1(Float v) {
+    if (v == null) return "N/A";
+    return String.format(Locale.US, "%.1f", v);
+}
+
 // ============================================================
 // GEL — HELPERS FOR LAB 18 / 19 / 20 / 21
 // PRODUCTION • ROOT-AWARE • HUMAN-ORIENTED
@@ -7674,7 +7683,6 @@ private boolean isChargingNow() {
     }
 }
 
-
 private float maxOf(Float a, Float b, Float c, Float d, float e) {
 float m = e;
 if (a != null && a > m) m = a;
@@ -7692,12 +7700,6 @@ if (b != null) { sum += b; n++; }
 if (c != null) { sum += c; n++; }
 if (d != null) { sum += d; n++; }
 return sum / n;
-}
-
-private int clampScore(int s) {
-if (s < 0) return 0;
-if (s > 100) return 100;
-return s;
 }
 
 private String colorFlagFromScore(int s) {
@@ -7783,12 +7785,20 @@ private void lab29FinalSummary() {
     for (String l : lines) {
         String low = l.toLowerCase(Locale.US);
 
-        if (low.contains("⚠️ ") || low.contains("warning")) {
-            warnings.append(l).append("\n");
-        }
-        if (low.contains("❌") || low.contains("error")) {
-            warnings.append(l).append("\n");
-        }
+        // ignore privacy advisory lines (not technician faults)
+if (low.contains("privacy") &&
+    (low.contains("healthy") ||
+     low.contains("no hardware") ||
+     low.contains("no hardware service"))) {
+    continue;
+}
+
+// real warnings
+if (low.contains("❌") || low.contains("error")) {
+    warnings.append(l).append("\n");
+} else if (low.contains("⚠️") || low.contains("warning")) {
+    warnings.append(l).append("\n");
+}
     }
 
     // ------------------------------------------------------------

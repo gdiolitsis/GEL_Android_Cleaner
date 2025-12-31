@@ -6823,20 +6823,13 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab28CombineFindings() {
-logLine();
-logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
-logLine();
 
-try {
-    SharedPreferences sp = gelStressPrefs();
+    logLine();
+    logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
+    logLine();
 
-    if (sp.contains("lab16_avg_sustain_temp"))
-        lab16_avgSustainTemp = sp.getFloat("lab16_avg_sustain_temp", -1f);
-
-} catch (Throwable ignore) {}
-
-// ============================================================
-    // LAB 28 — READ STRESS CACHE (LAB 14–17)
+    // ============================================================
+    // LAB 28 — STRESS CACHE VARIABLES (DECLARE ONCE)
     // ============================================================
     Float   lab14_peakBattTemp        = null;
     Boolean lab15_systemLimited       = null;
@@ -6847,13 +6840,16 @@ try {
         SharedPreferences sp = gelStressPrefs();
 
         if (sp.contains("lab14_peak_batt_temp"))
-            lab14_peakBattTemp = sp.getFloat("lab14_peak_batt_temp", -1f);
+            lab14_peakBattTemp =
+                    sp.getFloat("lab14_peak_batt_temp", -1f);
 
         if (sp.contains("lab15_system_limited"))
-            lab15_systemLimited = sp.getBoolean("lab15_system_limited", false);
+            lab15_systemLimited =
+                    sp.getBoolean("lab15_system_limited", false);
 
         if (sp.contains("lab16_avg_sustain_temp"))
-            lab16_avgSustainTemp = sp.getFloat("lab16_avg_sustain_temp", -1f);
+            lab16_avgSustainTemp =
+                    sp.getFloat("lab16_avg_sustain_temp", -1f);
 
         if (sp.contains("lab17_system_limited_charge"))
             lab17_systemLimitedCharge =

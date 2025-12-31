@@ -6827,26 +6827,41 @@ logLine();
 logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 logLine();
 
-// ============================================================
-// LAB 28 — READ STRESS CACHE (LAB 14–17)
-// ============================================================
-Float lab14_peakBattTemp = null;
-Boolean lab15_systemLimited = null;
-Boolean lab17_systemLimitedCharge = null;
+Float lab16_avgSustainTemp = null;
 
 try {
     SharedPreferences sp = gelStressPrefs();
 
-    if (sp.contains("lab14_peak_batt_temp"))
-        lab14_peakBattTemp = sp.getFloat("lab14_peak_batt_temp", -1f);
-
-    if (sp.contains("lab15_system_limited"))
-        lab15_systemLimited = sp.getBoolean("lab15_system_limited", false);
-
-    if (sp.contains("lab17_system_limited_charge"))
-        lab17_systemLimitedCharge = sp.getBoolean("lab17_system_limited_charge", false);
+    if (sp.contains("lab16_avg_sustain_temp"))
+        lab16_avgSustainTemp = sp.getFloat("lab16_avg_sustain_temp", -1f);
 
 } catch (Throwable ignore) {}
+
+// ============================================================
+    // LAB 28 — READ STRESS CACHE (LAB 14–17)
+    // ============================================================
+    Float   lab14_peakBattTemp        = null;
+    Boolean lab15_systemLimited       = null;
+    Float   lab16_avgSustainTemp      = null;
+    Boolean lab17_systemLimitedCharge = null;
+
+    try {
+        SharedPreferences sp = gelStressPrefs();
+
+        if (sp.contains("lab14_peak_batt_temp"))
+            lab14_peakBattTemp = sp.getFloat("lab14_peak_batt_temp", -1f);
+
+        if (sp.contains("lab15_system_limited"))
+            lab15_systemLimited = sp.getBoolean("lab15_system_limited", false);
+
+        if (sp.contains("lab16_avg_sustain_temp"))
+            lab16_avgSustainTemp = sp.getFloat("lab16_avg_sustain_temp", -1f);
+
+        if (sp.contains("lab17_system_limited_charge"))
+            lab17_systemLimitedCharge =
+                    sp.getBoolean("lab17_system_limited_charge", false);
+
+    } catch (Throwable ignore) {}
 
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  
@@ -6882,8 +6897,9 @@ if (lab14_peakBattTemp != null && lab14_peakBattTemp > 0f) {
 if (lab16_avgSustainTemp != null && lab16_avgSustainTemp > 0f) {
     avgThermal = Math.max(avgThermal, lab16_avgSustainTemp);
     logInfo("Stress override:");
-    logOk("Using LAB 16 sustained thermal average (" +
-            String.format(Locale.US, "%.1f°C", lab16_avgSustainTemp) + ").");
+logOk("Using LAB 16 sustained thermal average (" +
+        String.format(Locale.US, "%.1f°C", lab16_avgSustainTemp) + 
+        " instead of snapshot avg).");
 }
 
 int thermalScore = scoreThermals(maxThermal, avgThermal);  

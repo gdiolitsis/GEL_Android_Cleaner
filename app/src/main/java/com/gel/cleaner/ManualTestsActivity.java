@@ -6827,8 +6827,6 @@ logLine();
 logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 logLine();
 
-Float lab16_avgSustainTemp = null;
-
 try {
     SharedPreferences sp = gelStressPrefs();
 

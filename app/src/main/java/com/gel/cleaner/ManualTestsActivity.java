@@ -5912,6 +5912,7 @@ if (hardMod || risk >= 70) {
 
 logOk("Lab 24 finished.");
 logLine();
+}
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS

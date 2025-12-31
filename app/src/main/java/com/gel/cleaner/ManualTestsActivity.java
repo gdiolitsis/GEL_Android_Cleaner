@@ -5304,10 +5304,13 @@ private void lab22ScreenLock() {
             }
 
             if (secure) {
-                if (lockedNow) logInfo("Current state:");
-                logOk("LOCKED (keyguard active).");
-                else logWarn("Current state: UNLOCKED right now (device open).");
-            }
+    logInfo("Current state:");
+    if (lockedNow) {
+        logOk("LOCKED (keyguard active).");
+    } else {
+        logWarn("UNLOCKED right now (device open).");
+    }
+}
 
         } else {
             logWarn("KeyguardManager not available — cannot read lock status.");
@@ -5387,20 +5390,30 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
     // ============================================================
 
     try {
-        if (secure) logInfo("Post-reboot protection:");
-        logOk("authentication REQUIRED before data access.");
-        else logInfo("Post-reboot protection:");
-        logError("NOT enforced — data exposure risk after reboot.");
+        if (secure) {
+    logInfo("Post-reboot protection:");
+    logOk("authentication REQUIRED before data access.");
+} else {
+    logInfo("Post-reboot protection:");
+    logError("NOT enforced — data exposure risk after reboot.");
+}
     } catch (Throwable ignore) {}
 
-    if (secure) logInfo("Primary security layer:");
+    if (secure) {
+    logInfo("Primary security layer:");
     logOk("knowledge-based credential (PIN / Pattern / Password).");
-    else logInfo("Primary security layer:");
+} else {
+    logInfo("Primary security layer:");
     logWarn("NONE (no credential configured).");
+}
 
-    if (biometricSupported) logInfo("Convenience layer: biometrics available (user-facing).");
-    else logInfo("Convenience layer:");
-    logOk("biometrics not available or not ready (non-critical).");
+if (biometricSupported) {
+    logInfo("Convenience layer:");
+    logOk("biometrics available (user-facing).");
+} else {
+    logInfo("Convenience layer:");
+    logWarn("biometrics not available or not ready (non-critical).");
+}
 
     if (secure && !lockedNow) {
         logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
@@ -5469,6 +5482,7 @@ if (android.os.Build.VERSION.SDK_INT >= 29) {
 public void onAuthenticationFailed() {
     logInfo("LIVE BIOMETRIC TEST:");
     logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
+    lab22Running = false;
 }
 
 @Override
@@ -5492,7 +5506,7 @@ public void onAuthenticationError(int errorCode, CharSequence errString) {
                         }
                 )
                 .setAllowedAuthenticators(
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
+        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
                 )
                 .build();
 

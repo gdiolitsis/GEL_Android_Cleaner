@@ -1179,6 +1179,13 @@ root.setBackground(bg);
     }
 }
 
+// ============================================================
+// GEL — Shared Stress Cache (LAB 14–17 → LAB 28)
+// ============================================================
+private SharedPreferences gelStressPrefs() {
+    return getSharedPreferences("GEL_STRESS_CACHE", MODE_PRIVATE);
+}
+
 // ------------------------------------------------------------
 // LAB 14 RUNNING DIALOG (minimal, safe)
 // ------------------------------------------------------------
@@ -3365,6 +3372,21 @@ boolean variabilityDetected =
 startBatteryTemp = tempStart;
 endBatteryTemp   = tempEnd;
 
+// ============================================================
+// LAB 14 — STORE PEAK BATTERY TEMP (for LAB 28)
+// ============================================================
+try {
+    gelStressPrefs()
+            .edit()
+            .putFloat("lab14_peak_batt_temp", endBatteryTemp)
+            .apply();
+
+    logInfo("Stress cache:");
+    logOk("LAB 14 peak battery temperature stored (" +
+            String.format(Locale.US, "%.1f°C", endBatteryTemp) + ").");
+
+} catch (Throwable ignore) {}
+
 // ----------------------------------------------------
 // 10) PRINT RESULTS (FINAL ORDER — LOCKED)
 // ----------------------------------------------------
@@ -3916,6 +3938,21 @@ try {
         logOk("✅ Operating normally (no system-level current throttling).");
     }
 
+    // ============================================================
+    // LAB 15 — STORE SYSTEM-LIMIT FLAG (for LAB 28)
+    // ============================================================
+    try {
+        gelStressPrefs()
+                .edit()
+                .putBoolean("lab15_system_limited", lab15SystemLimited)
+                .apply();
+
+        logInfo("Stress cache:");
+        logOk("LAB 15 system-limited flag stored (" +
+                (lab15SystemLimited ? "YES" : "NO") + ").");
+
+    } catch (Throwable ignore) {}
+
 } catch (Throwable ignore) {}
 
 logOk("LAB 15 finished.");
@@ -4091,6 +4128,21 @@ try {
 logLine();
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
+
+// ============================================================
+// LAB 16 — STORE AVERAGE SUSTAINED TEMP (for LAB 28)
+// ============================================================
+try {
+    gelStressPrefs()
+            .edit()
+            .putFloat("lab16_avg_sustain_temp", avgSustainTemp)
+            .apply();
+
+    logInfo("Stress cache:");
+    logOk("LAB 16 average sustained temperature stored (" +
+            String.format(Locale.US, "%.1f°C", avgSustainTemp) + ").");
+
+} catch (Throwable ignore) {}
 
 logOk("Lab 16 finished.");
 logLine();
@@ -4415,8 +4467,28 @@ new Thread(() -> {
 
         }); // <-- ui.post
 
-        logOk("LAB 17 finished.");
-        logLine();
+// ============================================================
+// LAB 17 — STORE FINAL SYSTEM-LIMIT VERDICT (for LAB 28)
+// ============================================================
+try {
+
+    // τελικό verdict: system / PMIC limited charging
+    boolean systemLimitedFinal =
+            lab15SystemLimited || batteryLooksFineButThermalBad;
+
+    gelStressPrefs()
+            .edit()
+            .putBoolean("lab17_system_limited_charge", systemLimitedFinal)
+            .apply();
+
+    logInfo("Stress cache:");
+    logOk("LAB 17 final system-limited verdict stored (" +
+            (systemLimitedFinal ? "YES" : "NO") + ").");
+
+} catch (Throwable ignore) {}
+
+logOk("LAB 17 finished.");
+logLine();
 
     } catch (Throwable ignore) {
         // silent
@@ -6745,6 +6817,27 @@ logLine();
 logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 logLine();
 
+// ============================================================
+// LAB 28 — READ STRESS CACHE (LAB 14–17)
+// ============================================================
+Float lab14_peakBattTemp = null;
+Boolean lab15_systemLimited = null;
+Boolean lab17_systemLimitedCharge = null;
+
+try {
+    SharedPreferences sp = gelStressPrefs();
+
+    if (sp.contains("lab14_peak_batt_temp"))
+        lab14_peakBattTemp = sp.getFloat("lab14_peak_batt_temp", -1f);
+
+    if (sp.contains("lab15_system_limited"))
+        lab15_systemLimited = sp.getBoolean("lab15_system_limited", false);
+
+    if (sp.contains("lab17_system_limited_charge"))
+        lab17_systemLimitedCharge = sp.getBoolean("lab17_system_limited_charge", false);
+
+} catch (Throwable ignore) {}
+
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  
 // ------------------------------------------------------------  
@@ -6763,13 +6856,24 @@ if (zones != null && !zones.isEmpty()) {
 float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);  
 float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);  
 
-// STRESS-AWARE OVERRIDE (LAB 14 / LAB 16)
-if (lab14_peakBattTemp != null) {
+// ============================================================
+// LAB 28 — STRESS-AWARE THERMAL OVERRIDES (SOFT, NO LIES)
+// ============================================================
+
+// LAB 14 — peak battery temperature override
+if (lab14_peakBattTemp != null && lab14_peakBattTemp > 0f) {
     maxThermal = Math.max(maxThermal, lab14_peakBattTemp);
+    logInfo("Stress override:");
+    logOk("Using LAB 14 peak battery temperature (" +
+            String.format(Locale.US, "%.1f°C", lab14_peakBattTemp) + ").");
 }
 
-if (lab16_avgSustainTemp != null) {
+// LAB 16 — sustained average thermal (if you stored it later)
+if (lab16_avgSustainTemp != null && lab16_avgSustainTemp > 0f) {
     avgThermal = Math.max(avgThermal, lab16_avgSustainTemp);
+    logInfo("Stress override:");
+    logOk("Using LAB 16 sustained thermal average (" +
+            String.format(Locale.US, "%.1f°C", lab16_avgSustainTemp) + ").");
 }
 
 int thermalScore = scoreThermals(maxThermal, avgThermal);  
@@ -6781,10 +6885,17 @@ String thermalFlag = colorFlagFromScore(thermalScore);
 float battPct = getCurrentBatteryPercent();  
 boolean charging = isChargingNow();  
 int batteryScore = scoreBattery(battTemp, battPct, charging);  
-// SYSTEM-LIMITED CHARGING PENALTY (LAB 17)
-if (lab17_systemLimitedCharge != null && lab17_systemLimitedCharge) {
-    batteryScore -= 20; // protection logic, not battery fault
+
+// LAB 15 / 17 — system-limited charging penalty (stress-aware)
+if ((lab15_systemLimited != null && lab15_systemLimited) ||
+    (lab17_systemLimitedCharge != null && lab17_systemLimitedCharge)) {
+
+    batteryScore = Math.max(0, batteryScore - 15);
+
+    logInfo("Stress-aware battery adjustment:");
+    logWarn("System-limited charging detected during stress — battery score penalized.");
 }
+
 String batteryFlag = colorFlagFromScore(batteryScore);  
 
 // ------------------------------------------------------------  

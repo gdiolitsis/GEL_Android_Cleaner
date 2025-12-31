@@ -436,7 +436,7 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         root.addView(body7);
 
         body7.addView(makeTestButton("25. Crash / Freeze History", this::lab25CrashHistory));
-        body5.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
+        body7.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
         body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
         body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
         body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
@@ -7465,3 +7465,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
+

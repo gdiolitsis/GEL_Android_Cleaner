@@ -5883,7 +5883,7 @@ private void lab24RootSuspicion() {
     if (hardMod) {
         logError("Device is MODIFIED — factory integrity lost.");
     } else if (hasWarnings) {
-        logWarn("Device appears STOCK, but with elevated configuration warnings.");
+        logWarn("logWarn("Device appears STOCK, with non-default developer configuration enabled.");");
     } else {
         logOk("Device appears to be in FACTORY / STOCK condition.");
     }
@@ -5892,20 +5892,26 @@ private void lab24RootSuspicion() {
     // FINAL VERDICT
     // ---------------------------
     logLine();
-    logInfo("FINAL VERDICT:");
-    logInfo("RISK SCORE: " + risk + " / 100");
+logInfo("FINAL VERDICT:");
 
-    if (hardMod || risk >= 70) {
-        logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
-    } else if (risk >= 35 || hasWarnings) {
-        logWarn("STATUS: SUSPICIOUS / CAUTION (review recommended).");
-    } else {
-        logOk("STATUS: SAFE (no significant modification evidence).");
-    }
-
-    logOk("Lab 24 finished.");
-    logLine();
+if (risk >= 70) {
+    logError("RISK SCORE: 🟥 " + risk + " / 100");
+} else if (risk >= 35) {
+    logWarn("RISK SCORE: 🟨 " + risk + " / 100");
+} else {
+    logOk("RISK SCORE: 🟩 " + risk + " / 100");
 }
+
+if (hardMod || risk >= 70) {
+    logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
+} else if (risk >= 35 || hasWarnings) {
+    logWarn("STATUS: SUSPICIOUS / CAUTION (review recommended).");
+} else {
+    logOk("STATUS: SAFE (no significant modification evidence).");
+}
+
+logOk("Lab 24 finished.");
+logLin
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS
@@ -7154,12 +7160,158 @@ if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");
 if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");  
 
 // Privacy  
-logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");  
-logInfo("• Dangerous perms on user apps: " +  
-        "Location=" + pr.userAppsWithLocation +  
-        ", Mic=" + pr.userAppsWithMic +  
-        ", Camera=" + pr.userAppsWithCamera +  
-        ", SMS=" + pr.userAppsWithSms);  
+String privacyLevel = privacyRiskLevel(privacyScore);
+String privacyFlag2 = privacyRiskFlag(privacyLevel);
+
+if ("LOW".equals(privacyLevel)) {
+
+    logOk("Privacy: " + privacyFlag + " " + privacyScore + "%");
+    logOk("Privacy Risk Level: " + privacyFlag2 + " " + privacyLevel);
+
+    logOk("• Dangerous perms on user apps: " +
+            "Location=" + pr.userAppsWithLocation +
+            ", Mic=" + pr.userAppsWithMic +
+            ", Camera=" + pr.userAppsWithCamera +
+            ", SMS=" + pr.userAppsWithSms);
+
+    logOk("Privacy status acceptable for normal usage.");
+
+} else if ("MED".equals(privacyLevel)) {
+
+    logWarn("Privacy: " + privacyFlag + " " + privacyScore + "%");
+    logWarn("Privacy Risk Level: " + privacyFlag2 + " " + privacyLevel);
+
+    logWarn("• Dangerous perms on user apps: " +
+            "Location=" + pr.userAppsWithLocation +
+            ", Mic=" + pr.userAppsWithMic +
+            ", Camera=" + pr.userAppsWithCamera +
+            ", SMS=" + pr.userAppsWithSms);
+
+    logWarn("Review app permissions to reduce privacy exposure.");
+
+} else { // HIGH
+
+    logError("Privacy: " + privacyFlag + " " + privacyScore + "%");
+    logError("Privacy Risk Level: " + privacyFlag2 + " " + privacyLevel);
+
+    logError("• Dangerous perms on user apps: " +
+            "Location=" + pr.userAppsWithLocation +
+            ", Mic=" + pr.userAppsWithMic +
+            ", Camera=" + pr.userAppsWithCamera +
+            ", SMS=" + pr.userAppsWithSms);
+
+    logError("High privacy exposure detected — audit installed apps.");
+}
+
+// ============================================================
+// PRIVACY — TOP 5 RISKY USER APPS (NO SYSTEM / UPDATED SYSTEM)
+// ============================================================
+
+class PrivacyHit {
+    String pkg;
+    int score;
+    boolean loc, mic, cam, sms;
+}
+
+List<PrivacyHit> hits = new ArrayList<>();
+
+PackageManager pm = getPackageManager();
+List<PackageInfo> packs =
+        pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+
+for (PackageInfo pi : packs) {
+
+    if (pi == null || pi.applicationInfo == null) continue;
+    ApplicationInfo ai = pi.applicationInfo;
+
+    // ⛔ skip system + updated system apps
+    if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||
+        (ai.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+        continue;
+    }
+
+    String[] req = pi.requestedPermissions;
+    int[] flags = pi.requestedPermissionsFlags;
+    if (req == null || flags == null) continue;
+
+    PrivacyHit h = new PrivacyHit();
+    h.pkg = pi.packageName;
+
+    for (int i = 0; i < req.length; i++) {
+        boolean granted =
+                (flags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0;
+        if (!granted) continue;
+
+        String p = req[i];
+        if (p == null) continue;
+
+        if (p.contains("ACCESS_FINE_LOCATION") ||
+            p.contains("ACCESS_COARSE_LOCATION")) {
+            h.loc = true; h.score += 2;
+        }
+        if (p.contains("RECORD_AUDIO")) {
+            h.mic = true; h.score += 3;
+        }
+        if (p.contains("CAMERA")) {
+            h.cam = true; h.score += 3;
+        }
+        if (p.contains("READ_SMS") ||
+            p.contains("RECEIVE_SMS") ||
+            p.contains("SEND_SMS")) {
+            h.sms = true; h.score += 4;
+        }
+    }
+
+    if (h.score > 0) hits.add(h);
+}
+
+// sort DESC by score
+Collections.sort(hits, (a, b) -> b.score - a.score);
+
+// ---------------------------
+// LOG TOP 5 PRIVACY-RISK APPS
+// ---------------------------
+
+if (hits.isEmpty()) {
+
+    logInfo("Top Privacy-Risk Apps:");
+    logOk("No high-risk permission patterns detected in user apps.");
+
+} else {
+
+    logInfo("Top Privacy-Risk Apps (user-installed):");
+
+    int limit = Math.min(5, hits.size());
+    for (int i = 0; i < limit; i++) {
+
+        PrivacyHit h = hits.get(i);
+
+        String line = String.format(
+                Locale.US,
+                "%d) %s — score %d [%s%s%s%s]",
+                i + 1,
+                h.pkg,
+                h.score,
+                h.loc ? "Location " : "",
+                h.mic ? "Mic " : "",
+                h.cam ? "Camera " : "",
+                h.sms ? "SMS " : ""
+        );
+
+        // 🔒 χρώμα ανάλογα με privacy level
+        if ("LOW".equals(privacyLevel)) {
+            logOk(line);
+        } else if ("MED".equals(privacyLevel)) {
+            logWarn(line);
+        } else { // HIGH
+            logError(line);
+        }
+    }
+}
+
+if (hits.isEmpty()) {
+    logOk("No high-risk permission patterns detected in user apps.");
+}
 
 // ------------------------------------------------------------  
 // FINAL VERDICT  
@@ -7184,6 +7336,23 @@ logOk("Lab 28 finished.");
 // ======= LAB 28 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
 // ============================================================
 
+private int clampScore(int s) {
+    if (s < 0) return 0;
+    if (s > 100) return 100;
+    return s;
+}
+
+private int privacyToSecurityPenalty(int privacyScore){
+    if (privacyScore >= 60) return 0;
+    if (privacyScore >= 40) return 5;
+    return 10;
+}
+
+private int privacyToHealthPenalty(int privacyScore){
+    if (privacyScore >= 60) return 0;
+    if (privacyScore >= 40) return 4;
+    return 8;
+}
 
 private StorageSnapshot readStorageSnapshot() {
 StorageSnapshot s = new StorageSnapshot();
@@ -7320,8 +7489,11 @@ if (packs == null) return p;
         if (pi == null || pi.applicationInfo == null) continue;  
         ApplicationInfo ai = pi.applicationInfo;  
 
-        // skip system apps  
-        if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;  
+// skip system + updated system apps (Chrome, YouTube, Google etc.)
+if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||
+    (ai.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+    continue;
+}
 
         p.totalUserAppsChecked++;  
 
@@ -7533,17 +7705,52 @@ if (s >= 55) return "🟨";
 return "🟥";
 }
 
-private String finalVerdict(int health, int sec, int priv, int perf) {
-int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
-if (worst >= 80)
-return "🟩 Device is healthy — no critical issues detected.";
-if (worst >= 55)
-return "🟨 Device has moderate risks — recommend service check.";
-return "🟥 Device is NOT healthy — immediate servicing recommended.";
+private String finalVerdict(
+        int health,
+        int sec,
+        int priv,
+        int perf
+) {
+
+    // 1) πραγματικό core risk
+    int worstCore = Math.min(
+            Math.min(health, perf),
+            sec
+    );
+
+    // 🟥 ΜΟΝΟ αν υπάρχει σοβαρό πρόβλημα
+    if (worstCore < 55) {
+        return "🟥 Device is NOT healthy — immediate servicing recommended.";
+    }
+
+    // 🟨 Υγιές αλλά privacy θέμα
+    if (health >= 80 && perf >= 80 && sec >= 70 && priv < 55) {
+        return "🟨 Device is healthy, but privacy risk detected.\n"
+             + "Some user applications have elevated permissions.\n"
+             + "Review app permissions — no hardware service required.";
+    }
+
+    // 🟩 Όλα καλά
+    if (health >= 80 && perf >= 80 && sec >= 70) {
+        return "🟩 Device is healthy — no critical issues detected.";
+    }
+
+    // 🟨 Γενική μέτρια κατάσταση
+    return "🟨 Device has moderate risks — review recommended.";
 }
 
-private String fmt1(float v) {
-return String.format(Locale.US, "%.1f", v);
+private String privacyRiskLevel(int privacyScore) {
+    if (privacyScore >= 70) return "LOW";
+    if (privacyScore >= 45) return "MED";
+    return "HIGH";
+}
+
+private String privacyRiskFlag(String level) {
+    switch (level) {
+        case "LOW": return "🟩";
+        case "MED": return "🟨";
+        default:    return "🟥";
+    }
 }
 
 // ============================================================

@@ -5516,7 +5516,7 @@ private void lab24RootSuspicion() {
     boolean suFound = false;
 
     for (String p : suPaths) {
-        if (lab25_fileExists(p)) {
+        if (lab24_fileExists(p)) {
             suFound = true;
             rootScore += 18;
             rootFindings.add("su/busybox path found: " + p);
@@ -6836,7 +6836,7 @@ int deviceHealthScore = Math.round(
 // ------------------------------------------------------------  
 // PRINT DETAILS  
 // ------------------------------------------------------------  
-logLine();  
+
 logInfo("AUTO Breakdown:");  
 
 // Thermals  

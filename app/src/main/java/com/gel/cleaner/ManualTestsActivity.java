@@ -6763,6 +6763,15 @@ if (zones != null && !zones.isEmpty()) {
 float maxThermal = maxOf(cpu, gpu, skin, pmic, battTemp);  
 float avgThermal = avgOf(cpu, gpu, skin, pmic, battTemp);  
 
+// STRESS-AWARE OVERRIDE (LAB 14 / LAB 16)
+if (lab14_peakBattTemp != null) {
+    maxThermal = Math.max(maxThermal, lab14_peakBattTemp);
+}
+
+if (lab16_avgSustainTemp != null) {
+    avgThermal = Math.max(avgThermal, lab16_avgSustainTemp);
+}
+
 int thermalScore = scoreThermals(maxThermal, avgThermal);  
 String thermalFlag = colorFlagFromScore(thermalScore);  
 
@@ -6772,6 +6781,10 @@ String thermalFlag = colorFlagFromScore(thermalScore);
 float battPct = getCurrentBatteryPercent();  
 boolean charging = isChargingNow();  
 int batteryScore = scoreBattery(battTemp, battPct, charging);  
+// SYSTEM-LIMITED CHARGING PENALTY (LAB 17)
+if (lab17_systemLimitedCharge != null && lab17_systemLimitedCharge) {
+    batteryScore -= 20; // protection logic, not battery fault
+}
 String batteryFlag = colorFlagFromScore(batteryScore);  
 
 // ------------------------------------------------------------  
@@ -6839,26 +6852,34 @@ int deviceHealthScore = Math.round(
 
 logInfo("AUTO Breakdown:");  
 
+if (lab14_peakBattTemp != null || lab16_avgSustainTemp != null || lab17_systemLimitedCharge != null) {
+    logInfo("• Stress-aware data applied (LAB 14–17).");
+} else {
+    logInfo("• Snapshot-only analysis (no stress labs available).");
+}
+
 // Thermals  
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
-    logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "%.1fÂ°C", battTemp));  
+    logWarn("• No thermal zones readable. Using Battery temp only: " +
+            String.format(Locale.US, "%.1f°C", battTemp));  
 } else {  
-    logInfo("• Zones=" + zones.size() +  
-            " | max=" + fmt1(maxThermal) + "Â°C" +  
-            " | avg=" + fmt1(avgThermal) + "Â°C");  
-    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "Â°C");  
-    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "Â°C");  
-    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "Â°C");  
-    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "Â°C");  
-    logInfo("• Battery=" + fmt1(battTemp) + "Â°C");  
+    logInfo("• Zones=" + zones.size() +
+            " | max=" + fmt1(maxThermal) + "°C" +
+            " | avg=" + fmt1(avgThermal) + "°C");  
+
+    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");  
+    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");  
+    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");  
+    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");  
+
+    logInfo("• Battery=" + fmt1(battTemp) + "°C");  
 }  
 
 // Battery  
 logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
-logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
-        " | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);  
+logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
+        " | Temp=" + fmt1(battTemp) + "°C | Charging=" + charging);
 
 // Storage  
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
@@ -7465,4 +7486,3 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
-

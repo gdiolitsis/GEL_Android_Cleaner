@@ -1186,6 +1186,13 @@ private SharedPreferences gelStressPrefs() {
     return getSharedPreferences("GEL_STRESS_CACHE", MODE_PRIVATE);
 }
 
+// ============================================================
+// GEL — Stress State (LAB 14–17)
+// ============================================================
+
+private boolean lab15SystemLimited = false;   // LAB 15
+private float avgSustainTemp = -1f;           // LAB 16
+
 // ------------------------------------------------------------
 // LAB 14 RUNNING DIALOG (minimal, safe)
 // ------------------------------------------------------------
@@ -4144,6 +4151,9 @@ try {
 
 } catch (Throwable ignore) {}
 
+// ------------------------------------------------------------
+// FINAL LOGS
+// ------------------------------------------------------------
 logOk("Lab 16 finished.");
 logLine();
 }

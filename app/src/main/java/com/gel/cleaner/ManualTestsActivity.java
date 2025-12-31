@@ -5470,13 +5470,18 @@ if (biometricSupported) {
                     new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
 
                         @Override
-                        public void onAuthenticationSucceeded(
-                                android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-                            logInfo("LIVE BIOMETRIC TEST:");
-                            logOk("PASS — biometric sensor and authentication pipeline verified functional.");
+public void onAuthenticationSucceeded(
+        android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
 
-                            lab22Running = false;
-                        }
+    logInfo("LIVE BIOMETRIC TEST:");
+    logOk("PASS — biometric sensor and authentication pipeline verified functional.");
+
+    logInfo("Multi-biometric devices:");
+    logOk("If the device supports multiple biometrics, Android tests ONE sensor per run.");
+    logOk("Disable the current biometric in Settings and re-run LAB 22 to test another sensor.");
+
+    lab22Running = false;
+}
 
                         @Override
 public void onAuthenticationFailed() {

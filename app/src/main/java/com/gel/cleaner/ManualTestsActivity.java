@@ -5477,8 +5477,11 @@ public void onAuthenticationSucceeded(
     logOk("PASS — biometric sensor and authentication pipeline verified functional.");
 
     logInfo("Multi-biometric devices:");
-    logOk("If the device supports multiple biometrics, Android tests ONE sensor per run.");
+    logWarn("If the device supports multiple biometrics, Android tests ONE sensor per run.");
     logOk("Disable the current biometric in Settings and re-run LAB 22 to test another sensor.");
+    logInfo("Biometric selection note:");
+    logWarn("Android selects the biometric sensor automatically (OEM priority).");
+    logWarn("Disabling a biometric in Settings may NOT change the sensor used.");
 
     lab22Running = false;
 }

@@ -1949,15 +1949,16 @@ private void lab1SpeakerTone() {
             }
 
         } catch (Throwable t) {
-        logError("Speaker tone test failed");
-    } finally {
-        if (tg != null) tg.release();
-    }
+            logError("Speaker tone test failed");
+        } finally {
+            if (tg != null) tg.release();
+        }
+
+    }).start();
 
     logOk("Lab 1 finished.");
     logLine();
-
-}).start();
+}
 
 // ============================================================
 // LAB 2 — Speaker Frequency Sweep
@@ -2015,15 +2016,16 @@ private void lab2SpeakerSweep() {
             }
 
         } catch (Throwable t) {
-        logError("Speaker frequency sweep failed");
-    } finally {
-        if (tg != null) tg.release();
-    }
+            logError("Speaker frequency sweep failed");
+        } finally {
+            if (tg != null) tg.release();
+        }
+
+    }).start();
 
     logOk("Lab 2 finished.");
     logLine();
-
-}).start();
+}
 
 /* ============================================================
    LAB 3 — Earpiece Audio Path Check
@@ -2083,14 +2085,15 @@ private void lab3EarpieceManual() {
                     am.setMode(oldMode);
                     am.setSpeakerphoneOn(oldSpeaker);
                 }
-            } catch (Throwable ignore) {
+            } catch (Throwable ignore) {}
+        }
+
+    }).start();
+
+    logOk("Lab 3 finished.");
+    logLine();
+    enableSingleExportButton();
 }
-
-logOk("Lab 3 finished.");
-logLine();
-enableSingleExportButton();
-
-}).start();
 
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -2119,18 +2122,18 @@ private void lab4MicManual() {
 
         logOk("Microphone recording path executed");
 
-        logLabelValue(
-                "Note",
-                (bottom.silenceDetected && top.silenceDetected)
-                        ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."
-                        : "Microphone signal detected successfully."
-        );
-
-        logOk("Lab 4 finished.");
-logLine();
-enableSingleExportButton();
+logLabelValue(
+        "Note",
+        (bottom.silenceDetected && top.silenceDetected)
+                ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."
+                : "Microphone signal detected successfully."
+);
 
 }).start();
+
+logOk("Lab 4 finished.");
+logLine();
+enableSingleExportButton();
 }
 
 /* ============================================================

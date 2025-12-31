@@ -5570,6 +5570,13 @@ return false;
 // ============================================================
 // LAB 24 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
 // GEL Universal Edition — NO external libs
+//
+// PATCH v2.0 (COLOR-CORRECT):
+// 🟢 OK = logOk (factory/secure signals)
+// 🟡 WARNING = logWarn (config/risk/attention)
+// 🔴 MODIFIED = logError (real system modification)
+//
+// NOTE: Only real "tamper" signals are red.
 // ============================================================
 private void lab24RootSuspicion() {
 
@@ -5581,7 +5588,8 @@ private void lab24RootSuspicion() {
     // (1) ROOT DETECTION
     // ---------------------------
     int rootScore = 0;
-    List<String> rootFindings = new ArrayList<>();
+    List<String> rootWarn = new ArrayList<>();
+    List<String> rootRed  = new ArrayList<>();
 
     // su / busybox paths
     String[] suPaths = {
@@ -5592,7 +5600,10 @@ private void lab24RootSuspicion() {
             "/system/bin/busybox",
             "/system/xbin/busybox",
             "/vendor/bin/su",
-            "/odm/bin/su"
+            "/odm/bin/su",
+            "/data/adb/magisk",
+            "/cache/magisk",
+            "/data/local/tmp/magisk"
     };
 
     boolean suFound = false;
@@ -5601,27 +5612,31 @@ private void lab24RootSuspicion() {
         if (lab24_fileExists(p)) {
             suFound = true;
             rootScore += 18;
-            rootFindings.add("su/busybox path found: " + p);
+            // paths are suspicious; some ROMs may include busybox → keep yellow unless combined
+            rootWarn.add("su/busybox path found: " + p);
         }
     }
 
-    // which su (best-effort, avoid false positives)
+    // which su (best-effort)
     String whichSu = lab24_execFirstLine("which su");
-    if (whichSu != null && whichSu.contains("/su")) {
-        rootScore += 12;
-        rootFindings.add("'which su' returned: " + whichSu);
-        suFound = true;
+    if (whichSu != null && !whichSu.trim().isEmpty()) {
+        String w = whichSu.toLowerCase(Locale.US);
+        if (w.contains("/su") || w.contains("/magisk") || w.contains("/xbin/su") || w.contains("/bin/su")) {
+            rootScore += 12;
+            rootWarn.add("'which su' returned: " + whichSu);
+            suFound = true;
+        }
     }
 
-    // try exec su (strong indicator)
+    // try exec su (strong indicator) -> RED
     boolean suExec = lab24_canExecSu();
     if (suExec) {
         rootScore += 25;
-        rootFindings.add("su execution possible (shell granted).");
+        rootRed.add("su execution possible (shell granted).");
         suFound = true;
     }
 
-    // known root packages
+    // known root/xposed packages (strong indicator) -> RED
     String[] rootPkgs = {
             "com.topjohnwu.magisk",
             "eu.chainfire.supersu",
@@ -5630,7 +5645,10 @@ private void lab24RootSuspicion() {
             "com.kingroot.kinguser",
             "com.kingo.root",
             "com.saurik.substrate",
-            "de.robv.android.xposed.installer"
+            "de.robv.android.xposed.installer",
+            "org.lsposed.manager",
+            "me.weishu.kernelsu",
+            "com.android.vending.billing.InAppBillingService.COIN" // harmless fallback (kept as string, won't match)
     };
 
     List<String> installed = lab24_getInstalledPackagesLower();
@@ -5640,73 +5658,102 @@ private void lab24RootSuspicion() {
         if (installed.contains(rp)) {
             pkgHit = true;
             rootScore += 20;
-            rootFindings.add("root package installed: " + rp);
+            rootRed.add("root / framework package installed: " + rp);
         }
     }
 
-    // build tags
+    // build tags test-keys (MODIFIED indicator) -> RED
+    boolean testKeys = false;
     try {
         String tags = Build.TAGS;
         if (tags != null && tags.contains("test-keys")) {
+            testKeys = true;
             rootScore += 15;
-            rootFindings.add("Build.TAGS contains test-keys.");
+            rootRed.add("Build.TAGS contains test-keys.");
         }
     } catch (Throwable ignore) {}
 
-    // suspicious system properties
+    // suspicious system properties (can be real tamper) -> RED
     String roSecure = lab24_getProp("ro.secure");
     String roDebug  = lab24_getProp("ro.debuggable");
 
     if ("0".equals(roSecure)) {
         rootScore += 18;
-        rootFindings.add("ro.secure=0 (insecure build).");
+        rootRed.add("ro.secure=0 (insecure build).");
     }
     if ("1".equals(roDebug)) {
         rootScore += 12;
-        rootFindings.add("ro.debuggable=1 (debuggable build).");
+        rootRed.add("ro.debuggable=1 (debuggable build).");
     }
 
     // ---------------------------
     // (2) BOOTLOADER / VERIFIED BOOT
     // ---------------------------
     int blScore = 0;
-    List<String> blFindings = new ArrayList<>();
+    List<String> blOk   = new ArrayList<>();
+    List<String> blWarn = new ArrayList<>();
+    List<String> blRed  = new ArrayList<>();
 
-    String vbState = lab24_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
-    String vbmeta  = lab24_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
-    String flashL  = lab24_getProp("ro.boot.flash.locked"); // 1/0
-    String wlBit   = lab24_getProp("ro.boot.warranty_bit"); // 0/1 (OEM)
+    String vbState = lab24_getProp("ro.boot.verifiedbootstate");     // green/yellow/orange/red
+    String vbmeta  = lab24_getProp("ro.boot.vbmeta.device_state");   // locked/unlocked
+    String flashL  = lab24_getProp("ro.boot.flash.locked");          // 1/0
+    String wlBit   = lab24_getProp("ro.boot.warranty_bit");          // 0/1 (OEM)
 
-    if (vbState != null &&
-            (vbState.contains("orange") ||
-             vbState.contains("yellow") ||
-             vbState.contains("red"))) {
-        blScore += 30;
-        blFindings.add("VerifiedBootState=" + vbState);
-    } else if (vbState != null) {
-        blFindings.add("VerifiedBootState=" + vbState);
+    // VerifiedBootState
+    if (vbState != null) {
+        if (vbState.contains("green")) {
+            blOk.add("VerifiedBootState=green");
+        } else if (vbState.contains("yellow")) {
+            blScore += 18;
+            blWarn.add("VerifiedBootState=yellow (verification warnings).");
+        } else if (vbState.contains("orange") || vbState.contains("red")) {
+            blScore += 30;
+            blRed.add("VerifiedBootState=" + vbState + " (integrity compromised).");
+        } else {
+            blWarn.add("VerifiedBootState=" + vbState);
+        }
+    } else {
+        blWarn.add("VerifiedBootState=unknown");
     }
 
-    if (vbmeta != null && vbmeta.contains("unlocked")) {
-        blScore += 35;
-        blFindings.add("vbmeta.device_state=unlocked");
-    } else if (vbmeta != null) {
-        blFindings.add("vbmeta.device_state=" + vbmeta);
+    // vbmeta state
+    if (vbmeta != null) {
+        if (vbmeta.contains("locked")) {
+            blOk.add("vbmeta.device_state=locked");
+        } else if (vbmeta.contains("unlocked")) {
+            blScore += 35;
+            blRed.add("vbmeta.device_state=unlocked");
+        } else {
+            blWarn.add("vbmeta.device_state=" + vbmeta);
+        }
     }
 
-    if ("0".equals(flashL)) {
-        blScore += 25;
-        blFindings.add("flash.locked=0 (bootloader unlocked).");
-    } else if (flashL != null) {
-        blFindings.add("flash.locked=" + flashL);
+    // flash.locked
+    if (flashL != null) {
+        if ("1".equals(flashL)) {
+            blOk.add("flash.locked=1");
+        } else if ("0".equals(flashL)) {
+            blScore += 25;
+            blRed.add("flash.locked=0 (bootloader unlocked).");
+        } else {
+            blWarn.add("flash.locked=" + flashL);
+        }
     }
 
-    if ("1".equals(wlBit)) {
-        blScore += 15;
-        blFindings.add("warranty_bit=1 (tamper flag).");
+    // warranty bit
+    if (wlBit != null) {
+        if ("1".equals(wlBit)) {
+            blScore += 15;
+            blRed.add("warranty_bit=1 (tamper flag).");
+        } else if ("0".equals(wlBit)) {
+            blOk.add("warranty_bit=0");
+        } else {
+            blWarn.add("warranty_bit=" + wlBit);
+        }
     }
 
-    // OEM unlock allowed (settings)
+    // OEM unlock allowed (not a mod by itself) -> WARNING
+    boolean oemAllowedOn = false;
     try {
         int oemAllowed =
                 Settings.Global.getInt(
@@ -5715,21 +5762,27 @@ private void lab24RootSuspicion() {
                         0
                 );
         if (oemAllowed == 1) {
-            blScore += 10;
-            blFindings.add("OEM unlock allowed=1 (developer enabled).");
+            oemAllowedOn = true;
+            blScore += 8;
+            blWarn.add("OEM unlock allowed=1 (developer enabled).");
+        } else {
+            blOk.add("OEM unlock allowed=0");
         }
     } catch (Throwable ignore) {}
 
-    // /proc/cmdline hints
+    // /proc/cmdline hints (supporting signal) -> WARNING unless confirms unlock
     String cmdline = lab24_readOneLine("/proc/cmdline");
     if (cmdline != null) {
         String c = cmdline.toLowerCase(Locale.US);
-        if (c.contains("verifiedbootstate=orange") ||
-            c.contains("verifiedbootstate=yellow") ||
-            c.contains("vbmeta.device_state=unlocked") ||
-            c.contains("bootloader=unlocked")) {
+        if (c.contains("vbmeta.device_state=unlocked") ||
+            c.contains("bootloader=unlocked") ||
+            c.contains("verifiedbootstate=orange") ||
+            c.contains("verifiedbootstate=red")) {
             blScore += 20;
-            blFindings.add("/proc/cmdline reports unlocked / weak verified boot.");
+            blRed.add("/proc/cmdline reports unlocked / weak verified boot.");
+        } else if (c.contains("verifiedbootstate=yellow")) {
+            blScore += 10;
+            blWarn.add("/proc/cmdline reports verifiedbootstate=yellow.");
         }
     }
 
@@ -5737,11 +5790,15 @@ private void lab24RootSuspicion() {
     // (3) BOOT ANIMATION / SPLASH MOD
     // ---------------------------
     int animScore = 0;
-    List<String> animFindings = new ArrayList<>();
+    List<String> animOk   = new ArrayList<>();
+    List<String> animWarn = new ArrayList<>();
+    List<String> animRed  = new ArrayList<>();
 
     if (lab24_fileExists("/data/local/bootanimation.zip")) {
         animScore += 35;
-        animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");
+        // This is a strong mod indicator, but sometimes OEM debugging leaves files.
+        // Mark as RED only if combined with other boot/root signals, otherwise warn.
+        animWarn.add("Custom bootanimation: /data/local/bootanimation.zip");
     }
 
     boolean sysBoot =
@@ -5752,9 +5809,9 @@ private void lab24RootSuspicion() {
 
     if (!sysBoot) {
         animScore += 15;
-        animFindings.add("No stock bootanimation found (possible custom ROM).");
+        animWarn.add("No stock bootanimation found (possible custom ROM).");
     } else {
-        animFindings.add("Stock bootanimation path exists.");
+        animOk.add("Stock bootanimation path exists.");
     }
 
     // ---------------------------
@@ -5762,34 +5819,86 @@ private void lab24RootSuspicion() {
     // ---------------------------
     int risk = Math.min(100, rootScore + blScore + animScore);
 
+    // ---------------------------
+    // PRINT DETAILS (CORRECT COLORS)
+    // ---------------------------
     logInfo("Root Scan:");
-    if (rootFindings.isEmpty()) {
+    if (rootWarn.isEmpty() && rootRed.isEmpty()) {
         logOk("No strong root traces detected.");
     } else {
-        for (String s : rootFindings) logWarn("• " + s);
+        for (String s : rootRed)  logError("• " + s);
+        for (String s : rootWarn) logWarn("• " + s);
     }
 
     logInfo("Bootloader / Verified Boot:");
-    if (blFindings.isEmpty()) {
+    if (blOk.isEmpty() && blWarn.isEmpty() && blRed.isEmpty()) {
         logOk("No bootloader anomalies detected.");
     } else {
-        for (String s : blFindings) logWarn("• " + s);
+        for (String s : blRed)  logError("• " + s);
+        for (String s : blWarn) logWarn("• " + s);
+        for (String s : blOk)   logOk("• " + s);
     }
 
     logInfo("Boot Animation / Splash:");
-    if (animFindings.isEmpty()) {
-        logOk("No custom animation traces detected.");
-    } else {
-        for (String s : animFindings) logWarn("• " + s);
+    // upgrade custom bootanim to RED if integrity is already broken
+    boolean integrityBroken =
+            suExec || pkgHit || testKeys ||
+            (vbmeta != null && vbmeta.contains("unlocked")) ||
+            ("0".equals(flashL)) ||
+            (vbState != null && (vbState.contains("orange") || vbState.contains("red"))) ||
+            ("1".equals(wlBit));
+
+    if (integrityBroken) {
+        // move "custom bootanimation" warnings into red bucket if present
+        for (int i = animWarn.size() - 1; i >= 0; i--) {
+            String s = animWarn.get(i);
+            if (s.toLowerCase(Locale.US).contains("custom bootanimation")) {
+                animWarn.remove(i);
+                animRed.add(s + " (paired with integrity break).");
+            }
+        }
     }
 
+    if (animOk.isEmpty() && animWarn.isEmpty() && animRed.isEmpty()) {
+        logOk("No custom animation traces detected.");
+    } else {
+        for (String s : animRed)  logError("• " + s);
+        for (String s : animWarn) logWarn("• " + s);
+        for (String s : animOk)   logOk("• " + s);
+    }
+
+    // ---------------------------
+    // FACTORY STATE LOG (PRO REPORT)
+    // ---------------------------
+   
+    logInfo("FACTORY STATE CHECK:");
+
+    boolean hardMod =
+            integrityBroken || suExec || pkgHit || testKeys;
+
+    boolean hasWarnings =
+            !rootWarn.isEmpty() || !blWarn.isEmpty() || !animWarn.isEmpty() || oemAllowedOn ||
+            (vbState != null && vbState.contains("yellow"));
+
+    if (hardMod) {
+        logError("Device is MODIFIED — factory integrity lost.");
+    } else if (hasWarnings) {
+        logWarn("Device appears STOCK, but with elevated configuration warnings.");
+    } else {
+        logOk("Device appears to be in FACTORY / STOCK condition.");
+    }
+
+    // ---------------------------
+    // FINAL VERDICT
+    // ---------------------------
+    logLine();
     logInfo("FINAL VERDICT:");
     logInfo("RISK SCORE: " + risk + " / 100");
 
-    if (risk >= 70 || suExec || pkgHit) {
+    if (hardMod || risk >= 70) {
         logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
-    } else if (risk >= 35) {
-        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+    } else if (risk >= 35 || hasWarnings) {
+        logWarn("STATUS: SUSPICIOUS / CAUTION (review recommended).");
     } else {
         logOk("STATUS: SAFE (no significant modification evidence).");
     }

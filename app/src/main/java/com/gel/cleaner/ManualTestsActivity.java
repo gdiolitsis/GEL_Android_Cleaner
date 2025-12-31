@@ -5883,7 +5883,7 @@ private void lab24RootSuspicion() {
     if (hardMod) {
         logError("Device is MODIFIED — factory integrity lost.");
     } else if (hasWarnings) {
-        logWarn("logWarn("Device appears STOCK, with non-default developer configuration enabled.");");
+        logWarn("Device appears STOCK, with non-default developer configuration enabled.");
     } else {
         logOk("Device appears to be in FACTORY / STOCK condition.");
     }
@@ -5911,7 +5911,7 @@ if (hardMod || risk >= 70) {
 }
 
 logOk("Lab 24 finished.");
-logLin
+logLine();
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS

@@ -1949,13 +1949,15 @@ private void lab1SpeakerTone() {
             }
 
         } catch (Throwable t) {
-            logError("Speaker tone test failed");
-        } finally {
-            if (tg != null) tg.release();
-        }
+        logError("Speaker tone test failed");
+    } finally {
+        if (tg != null) tg.release();
+    }
 
-    }).start();
-}
+    logOk("Lab 1 finished.");
+    logLine();
+
+}).start();
 
 // ============================================================
 // LAB 2 — Speaker Frequency Sweep
@@ -2013,13 +2015,15 @@ private void lab2SpeakerSweep() {
             }
 
         } catch (Throwable t) {
-            logError("Speaker frequency sweep failed");
-        } finally {
-            if (tg != null) tg.release();
-        }
+        logError("Speaker frequency sweep failed");
+    } finally {
+        if (tg != null) tg.release();
+    }
 
-    }).start();
-}
+    logOk("Lab 2 finished.");
+    logLine();
+
+}).start();
 
 /* ============================================================
    LAB 3 — Earpiece Audio Path Check
@@ -2079,12 +2083,14 @@ private void lab3EarpieceManual() {
                     am.setMode(oldMode);
                     am.setSpeakerphoneOn(oldSpeaker);
                 }
-            } catch (Throwable ignore) {}
-            enableSingleExportButton();
-        }
-
-    }).start();
+            } catch (Throwable ignore) {
 }
+
+logOk("Lab 3 finished.");
+logLine();
+enableSingleExportButton();
+
+}).start();
 
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -2120,9 +2126,11 @@ private void lab4MicManual() {
                         : "Microphone signal detected successfully."
         );
 
-        enableSingleExportButton();
+        logOk("Lab 4 finished.");
+logLine();
+enableSingleExportButton();
 
-    }).start();
+}).start();
 }
 
 /* ============================================================
@@ -2161,8 +2169,12 @@ private void lab5Vibration() {
         logOk("Vibration pattern executed");
 
     } catch (Throwable t) {
-        logError("Vibration test failed");
-    }
+    logError("Vibration test failed");
+}
+
+logOk("Lab 5 finished.");
+logLine();
+enableSingleExportButton();
 }
 
 // ============================================================  
@@ -2174,15 +2186,18 @@ private void lab5Vibration() {
    ============================================================ */
 
 private void lab6DisplayTouch() {
- 
+
     logLine();
     logSection("LAB 6 — Display / Touch Basic Inspection");
     logLine();
-    
+
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
             6006
     );
+
+    logOk("Lab 6 finished.");
+    logLine();
 }
 
 /* ============================================================
@@ -2199,6 +2214,8 @@ private void lab7RotationManual() {
             new Intent(this, RotationCheckActivity.class),
             7007
     );
+logOk("Lab 7 finished.");
+logLine();
 }
 
 /* ============================================================
@@ -2215,6 +2232,8 @@ private void lab8ProximityCall() {
             new Intent(this, ProximityCheckActivity.class),
             8008
     );
+    logOk("Lab 8 finished.");
+logLine();
 }
 
 /* ============================================================
@@ -2333,8 +2352,11 @@ private void lab9SensorsCheck() {
         logOk("Sensor suite appears complete and healthy for this device.");
 
     } catch (Exception e) {
-        logError("Sensors analysis error: " + e.getMessage());
-    }
+    logError("Sensors analysis error: " + e.getMessage());
+}
+
+logOk("Lab 9 finished.");
+logLine();
 }
 
 /* ============================================================
@@ -2568,10 +2590,13 @@ private float dnsResolveMs(String host) {
         InetAddress.getByName(host);  
         long t1 = SystemClock.elapsedRealtime();  
         return (t1 - t0);  
-    } catch (Exception e) {  
-        return -1f;  
-    }  
-}  
+    } catch (Exception e) {
+    return -1f;
+}
+
+logOk("Lab 10 finished.");
+logLine();
+}
 
 private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {  
     if (linkSpeedMbps <= 0) linkSpeedMbps = 72;  
@@ -2681,6 +2706,8 @@ private void lab11MobileDataDiagnostic() {
     // Laboratory conclusion
     // ------------------------------------------------------------
     logOk("Laboratory snapshot collected. No functional verdict inferred.");
+logOk("Lab 11 finished.");
+logLine();
 }
 
 // ============================================================
@@ -2763,8 +2790,10 @@ private void lab12CallFunctionInterpretation() {
     );
 
     logInfo(
-            "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
-    );
+        "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
+);
+logOk("Lab 12 finished.");
+logLine();
 }
 
 // ============================================================
@@ -2878,6 +2907,9 @@ private void lab13InternetQuickCheck() {
     } catch (Throwable e) {
         logWarn("Network exposure snapshot unavailable: " + e.getMessage());
     }
+
+    logOk("Lab 13 finished.");
+    logLine();
 }
    
 // ============================================================
@@ -3480,6 +3512,9 @@ logOk("✅ LAB 14 result stored successfully.");
 
 // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
 logLab14Confidence();
+
+logOk("LAB 14 finished.");
+logLine();
             }
         });
 
@@ -3879,6 +3914,7 @@ try {
 
 } catch (Throwable ignore) {}
 
+logOk("LAB 15 finished.");
 logLine();
 
 // ------------------------------------------------------------
@@ -4052,7 +4088,6 @@ logLine();
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
-logLine();
 logOk("Lab 16 finished.");
 logLine();
 }
@@ -4376,6 +4411,9 @@ new Thread(() -> {
 
         }); // <-- ui.post
 
+        logOk("LAB 17 finished.");
+        logLine();
+
     } catch (Throwable ignore) {
         // silent
     }
@@ -4598,7 +4636,6 @@ private void lab18StorageSnapshot() {
         logWarn("Unable to access filesystem statistics safely.");
     }
 
-    logLine();
     logOk("Lab 18 finished.");
     logLine();
 }
@@ -4850,8 +4887,6 @@ private void lab19AppsFootprint() {
     logInfo("Installed packages:");
     logOk("Total: " + totalPkgs + " | User apps: " + userApps + " | System apps: " + systemApps);
 
-    logLine();
-
     // -----------------------------
     // PRESSURE METRICS (capability-based)
     // -----------------------------
@@ -4873,8 +4908,6 @@ private void lab19AppsFootprint() {
             " | Storage access: " + storageLike +
             " | Notifications: " + notifLike);
 
-    logLine();
-
     // -----------------------------
     // REDUNDANCY (honest)
     // -----------------------------
@@ -4890,8 +4923,6 @@ private void lab19AppsFootprint() {
 
     if (keyboardsLike >= 2) logWarn("• Multiple keyboards detected (" + keyboardsLike + ").");
     else logOk("• Keyboards: " + keyboardsLike);
-
-    logLine();
 
     // -----------------------------
     // VERDICT LOGIC (honest thresholds)
@@ -5030,7 +5061,6 @@ private void lab19AppsFootprint() {
         logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");
     }
 
-    logLine();
     logOk("Lab 19 finished.");
     logLine();
 }
@@ -5163,7 +5193,6 @@ private void lab20RamSnapshot() {
         logError("RAM snapshot failed.");
     }
 
-    logLine();
     logOk("Lab 20 finished.");
     logLine();
 }
@@ -5252,7 +5281,6 @@ private void lab21UptimeHints() {
         logError("Uptime analysis failed.");
     }
 
-    logLine();
     logOk("Lab 21 finished.");
     logLine();
 }
@@ -5538,7 +5566,10 @@ logOk("disable the active biometric in Settings, to test another sensor, then re
 
     lab22Running = false;
 }
+logOk("LAB 22 finished.");
+logLine();
 }
+
 
 // ============================================================
 // ROOT HELPERS — minimal, safe, no assumptions
@@ -5698,7 +5729,7 @@ private void lab23SecurityPatchManual() {
     // ------------------------------------------------------------
     // 4) Trust Boundary Clarification
     // ------------------------------------------------------------
-    logLine();
+
     logInfo("Play Protect scope: malware scanning & app verification.");
     logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");
 
@@ -5820,13 +5851,20 @@ else if (risk <= 30)  level = "MEDIUM";
 else if (risk <= 60)  level = "HIGH";  
 else                  level = "CRITICAL";  
 
-logLine();  
-logInfo("Security Risk Score: " + risk + "/100  (" + level + ") " + riskBubble(risk));  
+logInfo("Security Risk Score:");
+
+if (risk >= 70) {
+    logError(risk + "/100 (" + level + ") " + riskBubble(risk));
+} else if (risk >= 30) {
+    logWarn(risk + "/100 (" + level + ") " + riskBubble(risk));
+} else {
+    logOk(risk + "/100 (" + level + ") " + riskBubble(risk));
+}
 
 // ============================================================  
 // 6) AUTO-FIX / ACTION HINTS  
 // ============================================================  
-logLine();  
+
 logInfo("Recommended Actions:");  
 
 if (usbDebug || devOpts) {  
@@ -5859,6 +5897,8 @@ else if (risk >= 30)
 else  
     logOk("✔️ Risk level acceptable.");
 
+logOk("LAB 24 finished.");
+logLine();
 }
 
 // ============================================================
@@ -6094,7 +6134,6 @@ private void lab25RootSuspicion() {
     // ---------------------------
     int risk = Math.min(100, rootScore + blScore + animScore);
 
-    logLine();
     logInfo("Root Scan:");
     if (rootFindings.isEmpty()) {
         logOk("No strong root traces detected.");
@@ -6102,7 +6141,6 @@ private void lab25RootSuspicion() {
         for (String s : rootFindings) logWarn("• " + s);
     }
 
-    logLine();
     logInfo("Bootloader / Verified Boot:");
     if (blFindings.isEmpty()) {
         logOk("No bootloader anomalies detected.");
@@ -6110,7 +6148,6 @@ private void lab25RootSuspicion() {
         for (String s : blFindings) logWarn("• " + s);
     }
 
-    logLine();
     logInfo("Boot Animation / Splash:");
     if (animFindings.isEmpty()) {
         logOk("No custom animation traces detected.");
@@ -6118,7 +6155,6 @@ private void lab25RootSuspicion() {
         for (String s : animFindings) logWarn("• " + s);
     }
 
-    logLine();
     logInfo("FINAL VERDICT:");
     logInfo("RISK SCORE: " + risk + " / 100");
 
@@ -6131,6 +6167,7 @@ private void lab25RootSuspicion() {
     }
 
     logOk("Lab 25 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -6221,6 +6258,7 @@ private void lab26CrashHistory() {
 
 logLine();  
 logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
+logLine();  
 
 int crashCount = 0;  
 int anrCount = 0;  
@@ -6245,7 +6283,6 @@ try {
 
             if (errs != null && !errs.isEmpty()) {
 
-                logLine();
                 logInfo("Realtime Error Snapshot (current state):");
 
                 for (ActivityManager.ProcessErrorStateInfo e : errs) {
@@ -6266,7 +6303,8 @@ try {
                     }
                 }
 
-                logInfo("Note: snapshot shows ONLY current crashed/ANR processes (not history).");
+                logInfo("Note:");
+                logOk("snapshot shows ONLY current crashed/ANR processes (not history).");
             }
         }
     }
@@ -6347,18 +6385,35 @@ String riskColor =
         (risk <= 50) ? "🟨" :  
         (risk <= 80) ? "🟧" : "🟥";  
 
-logInfo("Crash events: " + crashCount);  
-logInfo("ANR events: " + anrCount);  
-logInfo("System-level faults: " + systemCount);  
+logInfo("Crash events:");
+if (crashCount > 0) logWarn(String.valueOf(crashCount));
+else logOk("0");
 
-logInfo(riskColor + " Stability Risk Score: " + risk + "%"); 
- logInfo("Note: risk score is based on detected system log signals; availability varies by OEM/Android.");
+logInfo("ANR events:");
+if (anrCount > 0) logWarn(String.valueOf(anrCount));
+else logOk("0");
+
+logInfo("System-level faults:");
+if (systemCount > 0) logError(String.valueOf(systemCount));
+else logOk("0");
+
+logInfo("Stability Risk Score:");
+
+if (risk >= 60)
+    logError(risk + "%");
+else if (risk >= 30)
+    logWarn(risk + "%");
+else
+    logOk(risk + "%");
+
+logInfo("Note:");
+logOk("risk score is based on detected system log signals; availability varies by OEM/Android.");
 
 // ============================================================  
 // (D) HEATMAP (top offenders)  
 // ============================================================  
 if (!appEvents.isEmpty()) {  
-    logLine();  
+
     logInfo("Heatmap (Top Categories / Packages — best-effort):");
 
     appEvents.entrySet()  
@@ -6377,15 +6432,30 @@ if (!appEvents.isEmpty()) {
 // ============================================================  
 // (E) FULL DETAILS  
 // ============================================================  
-if (!details.isEmpty()) {  
-    logLine();  
-    logInfo("Detailed Crash Records:");  
-    for (String d : details) logInfo(d);  
-} else {  
-    logOk("No crash history found.");  
-}  
+if (!details.isEmpty()) {
+
+    logInfo("Detailed Crash Records:");
+
+    int count = details.size();
+
+    if (count == 1) {
+        logWarn("1 crash record detected:");
+    } else if (count <= 3) {
+        logWarn(count + " crash records detected:");
+    } else {
+        logError(count + " crash records detected (HIGH instability).");
+    }
+
+    for (String d : details) {
+        logInfo("• " + d);
+    }
+
+} else {
+    logOk("No crash history found.");
+}
 
 logOk("Lab 26 finished.");
+logLine();  
 
 }
 
@@ -6425,6 +6495,7 @@ private void lab27PermissionsPrivacy() {
 
 logLine();  
 logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
+logLine();  
 
 PackageManager pm = getPackageManager();  
 if (pm == null) {  
@@ -6529,16 +6600,38 @@ String riskColor =
         (riskPct <= 50) ? "🟨" :  
         (riskPct <= 80) ? "🟧" : "🟥";  
 
-logInfo("Apps scanned: " + totalApps);  
-logInfo("Dangerous permissions GRANTED (total count): " + dangTotal);
-logInfo("Flagged apps: " + flaggedApps);  
-logInfo(riskColor + " Privacy Risk Score: " + riskPct + "%");  
+logInfo("Apps scanned:");
+logOk(String.valueOf(totalApps));
+
+logInfo("Dangerous permissions GRANTED (total count):");
+if (dangTotal == 0)
+    logOk(String.valueOf(dangTotal));
+else if (dangTotal <= 5)
+    logWarn(String.valueOf(dangTotal));
+else
+    logError(String.valueOf(dangTotal));
+
+logInfo("Flagged apps:");
+if (flaggedApps == 0)
+    logOk(String.valueOf(flaggedApps));
+else if (flaggedApps <= 2)
+    logWarn(String.valueOf(flaggedApps));
+else
+    logError(String.valueOf(flaggedApps));
+
+logInfo("Privacy Risk Score:");
+if (riskPct >= 70)
+    logError(riskPct + "%");
+else if (riskPct >= 30)
+    logWarn(riskPct + "%");
+else
+    logOk(riskPct + "%");
 
 // ============================================================  
 // TOP OFFENDERS  
 // ============================================================  
 if (!appRisk.isEmpty()) {  
-    logLine();  
+	
     logInfo("Top Privacy Offenders:");  
 
     appRisk.entrySet()  
@@ -6559,15 +6652,22 @@ if (!appRisk.isEmpty()) {
 // ============================================================  
 // FULL DETAILS  
 // ============================================================  
-if (!details.isEmpty()) {  
-    logLine();  
-    logInfo("Permission Details (flagged apps):");  
-    for (String d : details) logInfo(d);  
-} else {  
-    logOk("No high-risk permission patterns detected.");  
-}  
+if (!details.isEmpty()) {
+
+    logInfo("Permission Details (flagged apps):");
+
+    for (String d : details) {
+        // κάθε flagged entry είναι από μόνο του finding
+        logWarn(d);
+    }
+
+} else {
+
+    logOk("No high-risk permission patterns detected.");
+}
 
 logOk("Lab 27 finished.");
+logLine();  
 
 }
 
@@ -6644,6 +6744,7 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 private void lab28CombineFindings() {
 logLine();
 logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
+logLine();
 
 // ------------------------------------------------------------  
 // 1) THERMALS (from zones + battery temp)  

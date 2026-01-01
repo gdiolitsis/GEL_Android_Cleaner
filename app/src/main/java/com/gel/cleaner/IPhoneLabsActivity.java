@@ -652,40 +652,45 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     // UI HELPER
     // ============================================================
 
-    private View makeLabButton(String title, String desc, View.OnClickListener cb) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(14), dp(14), dp(14), dp(14));
-        card.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    private View makeLabButton(
+        String title,
+        String subtitle,
+        View.OnClickListener onClick
+) {
+    LinearLayout container = new LinearLayout(this);
+    container.setOrientation(LinearLayout.VERTICAL);
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        lp.setMargins(0, dp(6), 0, dp(6));
-        card.setLayoutParams(lp);
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT   // ⬅ ΤΟ ΣΗΜΑΝΤΙΚΟ
+    );
+    lp.setMargins(0, dp(10), 0, dp(10));
+    container.setLayoutParams(lp);
 
-        card.setClickable(true);
-        card.setFocusable(true);
-        card.setOnClickListener(cb);
+    container.setPadding(dp(16), dp(16), dp(16), dp(16));
+    container.setBackground(makeGoldStrokeBg()); // ό,τι έχεις ήδη
+    container.setMinimumHeight(0);
+    container.setClickable(true);
+    container.setFocusable(true);
 
-        TextView t = new TextView(this);
-        t.setText(title);
-        t.setTextSize(sp(16f));
-        t.setTextColor(COLOR_GREEN_MAIN);
-        t.setGravity(Gravity.CENTER_HORIZONTAL);
-        card.addView(t);
+    TextView t = new TextView(this);
+    t.setText(title);
+    t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+    t.setIncludeFontPadding(false);
+    t.setTextColor(COLOR_GREEN);
 
-        TextView s = new TextView(this);
-        s.setText(desc);
-        s.setTextSize(sp(13f));
-        s.setTextColor(COLOR_GREEN_SUB);
-        s.setGravity(Gravity.CENTER_HORIZONTAL);
-        s.setPadding(0, dp(6), 0, 0);
-        card.addView(s);
+    TextView s = new TextView(this);
+    s.setText(subtitle);
+    s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+    s.setTextColor(COLOR_GREEN_SOFT);
+    s.setPadding(0, dp(6), 0, 0);
 
-        return card;
-    }
+    container.addView(t);
+    container.addView(s);
+
+    container.setOnClickListener(onClick);
+    return container;
+}
 
     // ============================================================
     // HELPERS (dp/sp + I/O)

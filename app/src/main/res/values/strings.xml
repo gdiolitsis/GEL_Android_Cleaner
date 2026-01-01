@@ -69,11 +69,6 @@ Android Manual Tests · iPhone Labs · Export Report
 <!-- SECTION LABELS -->
 <!-- ================================================= -->
 
-<!-- ANDROID -->
-<string name="manual_tests">ANDROID MANUAL TESTS</string>
-
-<!-- iPHONE -->
-<string name="auto_diagnosis">iPHONE DIAGNOSIS</string>
 
 <!-- SERVICE -->
 <string name="service_report">SERVICE REPORT</string>

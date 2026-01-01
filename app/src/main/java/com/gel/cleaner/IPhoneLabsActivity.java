@@ -665,40 +665,48 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     private View makeLabButton(
         String title,
         String subtitle,
-        View.OnClickListener onClick
+        View.OnClickListener realClick
 ) {
     LinearLayout container = new LinearLayout(this);
     container.setOrientation(LinearLayout.VERTICAL);
 
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT   // ⬅ ΤΟ ΣΗΜΑΝΤΙΚΟ
+            ViewGroup.LayoutParams.WRAP_CONTENT
     );
     lp.setMargins(0, dp(10), 0, dp(10));
     container.setLayoutParams(lp);
 
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-    container.setMinimumHeight(0);
+    container.setBackgroundResource(R.drawable.gel_btn_gold_bordo); // ΤΟ ΕΤΟΙΜΟ drawable
     container.setClickable(true);
     container.setFocusable(true);
+    container.setFocusableInTouchMode(false);
 
     TextView t = new TextView(this);
     t.setText(title);
     t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+    t.setTextColor(0xFF00FF9C);
     t.setIncludeFontPadding(false);
-    t.setTextColor(0xFF00FF9C); // neon green
 
     TextView s = new TextView(this);
     s.setText(subtitle);
     s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-    s.setTextColor(0xFFFFFFFF); // white
+    s.setTextColor(0xFFFFFFFF);
     s.setPadding(0, dp(6), 0, 0);
 
     container.addView(t);
     container.addView(s);
 
-    container.setOnClickListener(onClick);
+    // ✅ GUARDED CLICK — ΕΔΩ ΤΟ ΚΛΕΙΔΙ
+    container.setOnClickListener(v -> {
+        if (!panicLogLoaded && !title.contains("Import")) {
+            GELServiceLog.warn("⚠ Load Panic Log first.");
+            return;
+        }
+        realClick.onClick(v);
+    });
+
     return container;
 }
 

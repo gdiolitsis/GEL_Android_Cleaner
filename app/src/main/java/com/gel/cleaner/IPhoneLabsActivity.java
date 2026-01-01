@@ -444,14 +444,14 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
 
-        if (!panicLogLoaded || panicText == null || panicText.trim().isEmpty()) {
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
             GELServiceLog.warn("⚠ Δεν έχει φορτωθεί panic log.");
             GELServiceLog.info("ℹ Πρώτα: Panic Log Import.");
             return;
         }
 
         // Already cached on import, but re-run safely in case.
-        parseAndCacheSignature(panicText);
+        parseAndCacheSignature(panicLogText);
 
         GELServiceLog.info("• File: " + (panicLogName != null ? panicLogName : "unknown"));
         GELServiceLog.info("• Crash Type: " + sigCrashType);
@@ -544,7 +544,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
 
-        if (!panicLogLoaded || panicText == null || panicText.trim().isEmpty()) {
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
             GELServiceLog.warn("⚠ Ανεπαρκή δεδομένα (δεν υπάρχει panic log).");
             return;
         }
@@ -567,7 +567,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
 
-        if (!panicLogLoaded || panicText == null || panicText.trim().isEmpty()) {
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
             GELServiceLog.warn("⚠ Δεν υπάρχει log για συσχέτιση.");
             return;
         }
@@ -606,7 +606,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
 
-        if (!panicLogLoaded || panicText == null || panicText.trim().isEmpty()) {
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
             GELServiceLog.ok("✔ Δεν υπάρχει panic log — δεν τεκμηριώνεται βλάβη από logs.");
             GELServiceLog.info("ℹ Σύσταση: αν υπάρχει σύμπτωμα, ζήτα panic log / history από πελάτη.");
             return;

@@ -59,6 +59,72 @@ public class IPhoneLabsActivity extends Activity {
     private boolean panicLogLoaded = false;
     private String  panicLogName   = null;
     private String  panicText      = null;
+    
+    // ============================================================
+    // PANIC LOG ANALYZER
+    // ============================================================
+    private void runPanicLogAnalyzer() {
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("📄 iPhone LAB — Panic Log Analyzer");
+
+        if (!panicLogLoaded || panicLogText == null) {
+            GELServiceLog.warn("⚠ Δεν έχει φορτωθεί panic log.");
+            return;
+        }
+
+        IPSPanicParser.Result r =
+                IPSPanicParser.analyze(this, panicLogText);
+
+        if (r == null) {
+            GELServiceLog.warn("⚠ No known panic signature matched.");
+            return;
+        }
+
+        GELServiceLog.info("📄 Panic Signature Match");
+        GELServiceLog.info("• Pattern ID: " + r.patternId);
+        GELServiceLog.info("• Domain: " + r.domain);
+        GELServiceLog.info("• Cause: " + r.cause);
+        GELServiceLog.info("• Severity: " + r.severity);
+        GELServiceLog.info("• Confidence: " + r.confidence);
+        GELServiceLog.info("🧾 Recommendation: " + r.recommendation);
+    }
+
+private String readTextStream(InputStream is) throws Exception {
+    BufferedInputStream bis = new BufferedInputStream(is);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+    byte[] buf = new byte[4096];
+    int read;
+    int total = 0;
+
+    while ((read = bis.read(buf)) != -1) {
+        total += read;
+        if (total > MAX_TEXT_BYTES) break;
+        bos.write(buf, 0, read);
+    }
+    bis.close();
+    return bos.toString("UTF-8");
+}
+
+private String readPanicFromZip(InputStream is) throws Exception {
+    ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
+    ZipEntry entry;
+    int scanned = 0;
+
+    while ((entry = zis.getNextEntry()) != null && scanned < ZIP_SCAN_CAP) {
+        scanned++;
+
+        String name = entry.getName().toLowerCase();
+
+        if (name.contains("panic") || name.endsWith(".ips") || name.endsWith(".log")) {
+            String text = readTextStream(zis);
+            zis.close();
+            return text;
+        }
+    }
+    zis.close();
+    throw new Exception("No panic log found in ZIP");
+}
 
     // Parsed signature state
     private String sigCrashType    = "Unknown";
@@ -74,8 +140,8 @@ public class IPhoneLabsActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        ScrollView scroll = new ScrollView(this);
+        
+        scrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setClickable(false);
         scroll.setFocusable(false);
@@ -172,26 +238,49 @@ public class IPhoneLabsActivity extends Activity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode != REQ_PANIC_LOG) return;
+    if (requestCode != REQ_PANIC_LOG) return;
 
-        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
-            GELServiceLog.warn("⚠ Panic log import cancelled.");
-            return;
-        }
-
-        try {
-            Uri uri = data.getData();
-            loadPanicFromUri(uri);
-        } catch (Exception e) {
-            panicLogLoaded = false;
-            panicLogName = null;
-            panicText = null;
-            GELServiceLog.err("❌ Panic log import failed: " + e.getMessage());
-        }
+    if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+        GELServiceLog.warn("⚠ Panic log import cancelled.");
+        return;
     }
+
+    Uri uri = data.getData();
+
+    try {
+        String name = uri.getLastPathSegment();
+        panicLogName = name;
+
+        InputStream is = getContentResolver().openInputStream(uri);
+        if (is == null) throw new Exception("InputStream null");
+
+        if (name != null && name.toLowerCase().endsWith(".zip")) {
+            panicLogText = readPanicFromZip(is);
+        } else {
+            panicLogText = readTextStream(is);
+        }
+
+        if (panicLogText == null || panicLogText.trim().isEmpty()) {
+            throw new Exception("Empty panic log");
+        }
+
+        panicLogLoaded = true;
+
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("📂 iPhone LAB — Panic Log Imported");
+        GELServiceLog.info("• File: " + panicLogName);
+        GELServiceLog.ok("✔ Panic log ready for analysis.");
+
+    } catch (Exception e) {
+        panicLogLoaded = false;
+        panicLogText   = null;
+
+        GELServiceLog.err("❌ Panic log import failed: " + e.getMessage());
+    }
+}
 
     private void loadPanicFromUri(Uri uri) throws Exception {
         ContentResolver cr = getContentResolver();

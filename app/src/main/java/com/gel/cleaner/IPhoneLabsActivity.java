@@ -458,6 +458,13 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     // ============================================================
 
     private void runPanicSignatureParser() {
+
+    // GUARD — REQUIRE PANIC LOG
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("⚠ Load Panic Log first.");
+        return;
+    }
+    
     GELServiceLog.info("────────────────────────────────");
     GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
 
@@ -557,6 +564,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     // ============================================================
 
     private void runStabilityLab() {
+
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("⚠ Load Panic Log first.");
+        return;
+    }
+    
     GELServiceLog.info("────────────────────────────────");
     GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
 
@@ -579,6 +592,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 }
 
     private void runImpactLab() {
+
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("⚠ Load Panic Log first.");
+        return;
+    }
+    
     GELServiceLog.info("────────────────────────────────");
     GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
 
@@ -609,6 +628,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 }
 
     private void runServiceRecommendationLab() {
+
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("⚠ Load Panic Log first.");
+        return;
+    }
+    
     GELServiceLog.info("────────────────────────────────");
     GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
 

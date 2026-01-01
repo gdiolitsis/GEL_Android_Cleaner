@@ -20,11 +20,11 @@ public class IPhoneLabsActivity extends GELAutoActivityHook {
     // ============================================================
     // COLORS (MATCH MANUAL TESTS SCREEN)
     // ============================================================
-    private static final int COLOR_BG            = 0xFF101010;
-    private static final int COLOR_GREEN_MAIN    = 0xFF00FF66; // neon green
-    private static final int COLOR_GREEN_SUB     = 0xFF00CC55; // softer green
-    private static final int COLOR_WHITE         = 0xFFFFFFFF;
-    private static final int COLOR_GRAY          = 0xFFCCCCCC;
+    private static final int COLOR_BG         = 0xFF101010;
+    private static final int COLOR_GREEN_MAIN = 0xFF00FF66; // neon green
+    private static final int COLOR_GREEN_SUB  = 0xFF00CC55;
+    private static final int COLOR_WHITE      = 0xFFFFFFFF;
+    private static final int COLOR_GRAY       = 0xFFCCCCCC;
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -68,29 +68,29 @@ public class IPhoneLabsActivity extends GELAutoActivityHook {
         root.addView(sub);
 
         // ============================================================
-        // LAB BUTTONS (NEON GREEN STYLE)
+        // LAB BUTTONS
         // ============================================================
         root.addView(makeLabButton(
                 "📂 Panic Log Analyzer",
-                "Ανάλυση panic logs (kernel / watchdog / reboot)\nΕντοπισμός αιτίας crash",
+                "Ανάλυση panic logs (kernel / watchdog / reboot)",
                 v -> runPanicLogLab()
         ));
 
         root.addView(makeLabButton(
                 "📊 System Stability Evaluation",
-                "Αξιολόγηση σταθερότητας iOS\nΒάσει συχνότητας σφαλμάτων",
+                "Αξιολόγηση σταθερότητας iOS βάσει logs",
                 v -> runStabilityLab()
         ));
 
         root.addView(makeLabButton(
                 "🧠 Impact Analysis",
-                "Συσχέτιση σφαλμάτων με πιθανό hardware domain\nCPU · RAM · Storage · Power",
+                "Συσχέτιση σφαλμάτων με hardware domain",
                 v -> runImpactLab()
         ));
 
         root.addView(makeLabButton(
                 "🧾 Service Recommendation",
-                "Τελικό service verdict για τεχνικό\nΕπισκευή · Παρακολούθηση · OK",
+                "Τελικό service verdict για τεχνικό",
                 v -> runServiceRecommendationLab()
         ));
 
@@ -99,39 +99,39 @@ public class IPhoneLabsActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // LAB IMPLEMENTATIONS (LOGGING)
+    // LAB IMPLEMENTATIONS (LOGGING ONLY)
     // ============================================================
 
     private void runPanicLogLab() {
-        GELServiceLog.line();
+        GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("📂 iPhone LAB — Panic Log Analyzer");
         GELServiceLog.info("• Αναμονή εισαγωγής panic log (TXT / ZIP)");
         GELServiceLog.warn("⚠ Δεν έχει φορτωθεί αρχείο log.");
     }
 
     private void runStabilityLab() {
-        GELServiceLog.line();
+        GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
         GELServiceLog.info("• Ανάλυση συχνότητας panic / reboot events");
         GELServiceLog.warn("⚠ Ανεπαρκή δεδομένα για πλήρη αξιολόγηση.");
     }
 
     private void runImpactLab() {
-        GELServiceLog.line();
+        GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
         GELServiceLog.info("• Συσχέτιση σφαλμάτων με πιθανό hardware");
         GELServiceLog.warn("⚠ Απαιτούνται panic logs για ακρίβεια.");
     }
 
     private void runServiceRecommendationLab() {
-        GELServiceLog.line();
+        GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
         GELServiceLog.ok("✔ Δεν εντοπίστηκε κρίσιμη ένδειξη άμεσης βλάβης.");
         GELServiceLog.info("ℹ Σύσταση: παρακολούθηση ή περαιτέρω έλεγχος.");
     }
 
     // ============================================================
-    // UI HELPER — MATCHES MANUAL TEST BUTTONS
+    // UI HELPER
     // ============================================================
     private View makeLabButton(String title, String desc, View.OnClickListener cb) {
         LinearLayout card = new LinearLayout(this);

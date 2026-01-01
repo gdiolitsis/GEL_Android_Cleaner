@@ -59,12 +59,18 @@
         Επαγγελματική διάγνωση συσκευής\nΑυτόματα + Χειροκίνητα Tests + Εξαγωγή Αναφοράς
     </string>
 
-    <!-- Auto Diagnosis -->
-    <string name="auto_diagnosis">ΑΥΤΟΜΑΤΗ ΔΙΑΓΝΩΣΗ</string>
-    <string name="gel_phone_diag_title">GEL Διάγνωση Συσκευής</string>
-    <string name="gel_phone_diag_desc">
-        Πλήρης αυτόματη διάγνωση 30 εργαστηριακών ελέγχων\nHardware · RAM · Storage · Battery · Network · Sensors…
-    </string>
+    <!-- iPhone Diagnosis -->
+<string name="auto_diagnosis">ΔΙΑΓΝΩΣΗ iPhone</string>
+
+<string name="gel_phone_diag_title">GEL Διάγνωση iPhone</string>
+
+<string name="gel_phone_diag_desc">
+    Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος
+    • Ανάλυση Panic Logs
+    • Έλεγχος Σταθερότητας Συστήματος
+    • Εντοπισμός βλάβης hardware
+    • Καταγραφή αποτελεσμάτων service
+</string>
 
     <!-- Manual Tests -->
     <string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS</string>

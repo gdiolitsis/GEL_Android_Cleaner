@@ -60,7 +60,6 @@
     </string>
 
     <!-- iPhone Diagnosis -->
-<string name="auto_diagnosis">ΔΙΑΓΝΩΣΗ iPhone</string>
 
 <string name="gel_phone_diag_title">GEL Διάγνωση iPhone</string>
 
@@ -73,8 +72,7 @@
 </string>
 
     <!-- Manual Tests -->
-    <string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS</string>
-    <string name="manual_tests_title">Χειροκίνητα Tests</string>
+    <string name="manual_tests_title">GEL Χειροκίνητα Tests Android</string>
     <string name="manual_tests_desc">
         Στοχευμένοι έλεγχοι για service:\nΉχος, δόνηση, οθόνη, αισθητήρες, RAM live, WiFi κ.λπ.
     </string>

@@ -19,8 +19,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
+
+import com.gel.cleaner.iphone.IPSPanicParser;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;

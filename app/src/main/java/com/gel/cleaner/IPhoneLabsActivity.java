@@ -458,29 +458,28 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     // ============================================================
 
     private void runPanicSignatureParser() {
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
+    GELServiceLog.info("────────────────────────────────");
+    GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
 
-        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-            GELServiceLog.warn("⚠ Δεν έχει φορτωθεί panic log.");
-            GELServiceLog.info("ℹ Πρώτα: Panic Log Import.");
-            return;
-        }
-
-        // Already cached on import, but re-run safely in case.
-        parseAndCacheSignature(panicLogText);
-
-        GELServiceLog.info("• File: " + (panicLogName != null ? panicLogName : "unknown"));
-        GELServiceLog.info("• Crash Type: " + sigCrashType);
-        GELServiceLog.info("• Domain: " + sigDomain);
-        GELServiceLog.info("• Confidence: " + sigConfidence);
-
-        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-            GELServiceLog.info("• Evidence: " + sigKeyEvidence);
-        }
-
-        GELServiceLog.ok("✔ Signature extracted.");
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("Panic log not loaded.");
+        GELServiceLog.info("Load a panic log first.");
+        return;
     }
+
+    parseAndCacheSignature(panicLogText);
+
+    GELServiceLog.info("File: " + (panicLogName != null ? panicLogName : "unknown"));
+    GELServiceLog.info("Crash Type: " + sigCrashType);
+    GELServiceLog.info("Domain: " + sigDomain);
+    GELServiceLog.info("Confidence: " + sigConfidence);
+
+    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+        GELServiceLog.info("Evidence: " + sigKeyEvidence);
+    }
+
+    GELServiceLog.ok("Signature extracted.");
+}
 
     private void parseAndCacheSignature(String text) {
         // Defaults
@@ -558,95 +557,81 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     // ============================================================
 
     private void runStabilityLab() {
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
+    GELServiceLog.info("────────────────────────────────");
+    GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
 
-        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-            GELServiceLog.warn("⚠ Ανεπαρκή δεδομένα (δεν υπάρχει panic log).");
-            return;
-        }
-
-        // Heuristic (no fake precision)
-        if ("High".equals(sigConfidence) && "Kernel Panic".equals(sigCrashType)) {
-            GELServiceLog.warn("⚠ Stability risk: recurring Kernel Panic indicators.");
-        } else if ("Medium".equals(sigConfidence)) {
-            GELServiceLog.warn("⚠ Stability: μέτριος κίνδυνος — απαιτείται παρακολούθηση.");
-        } else {
-            GELServiceLog.ok("✔ Stability: δεν προκύπτει ισχυρός δείκτης αστάθειας από το διαθέσιμο log.");
-        }
-
-        GELServiceLog.info("• Crash Type: " + sigCrashType);
-        GELServiceLog.info("• Domain: " + sigDomain);
-        GELServiceLog.info("• Confidence: " + sigConfidence);
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("No panic log available.");
+        return;
     }
+
+    if ("High".equals(sigConfidence) && "Kernel Panic".equals(sigCrashType)) {
+        GELServiceLog.error("High stability risk detected (Kernel Panic).");
+    } else if ("Medium".equals(sigConfidence)) {
+        GELServiceLog.warn("Moderate stability risk detected.");
+    } else {
+        GELServiceLog.ok("No strong instability indicators detected.");
+    }
+
+    GELServiceLog.info("Crash Type: " + sigCrashType);
+    GELServiceLog.info("Domain: " + sigDomain);
+    GELServiceLog.info("Confidence: " + sigConfidence);
+}
 
     private void runImpactLab() {
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
+    GELServiceLog.info("────────────────────────────────");
+    GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
 
-        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-            GELServiceLog.warn("⚠ Δεν υπάρχει log για συσχέτιση.");
-            return;
-        }
-
-        GELServiceLog.info("• Crash Type: " + sigCrashType);
-        GELServiceLog.info("• Suggested Domain: " + sigDomain);
-        GELServiceLog.info("• Confidence: " + sigConfidence);
-
-        // Service-friendly hint (no certainty)
-        if ("Power / PMIC".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: πιθανό power instability (PMIC / battery / flex).");
-        } else if ("Storage / NAND / FS".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: πιθανό storage subsystem issue (NAND / FS).");
-        } else if ("Baseband / Cellular".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: πιθανό baseband / cellular fault path.");
-        } else if ("GPU / Graphics".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: πιθανό graphics subsystem fault path.");
-        } else if ("Thermal / Cooling".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: πιθανό θερμικό throttling/shutdown.");
-        } else if ("Memory / OS Pressure".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: memory pressure / jetsam pattern.");
-        } else if ("Kernel / OS Core".equals(sigDomain)) {
-            GELServiceLog.warn("⚠ Hint: core kernel panic indicators.");
-        } else {
-            GELServiceLog.info("ℹ Hint: δεν προκύπτει σαφές domain από τα διαθέσιμα δεδομένα.");
-        }
-
-        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-            GELServiceLog.info("• Evidence: " + sigKeyEvidence);
-        }
-
-        GELServiceLog.ok("✔ Impact analysis completed.");
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.warn("No panic log available for correlation.");
+        return;
     }
+
+    GELServiceLog.info("Crash Type: " + sigCrashType);
+    GELServiceLog.info("Suggested Domain: " + sigDomain);
+    GELServiceLog.info("Confidence: " + sigConfidence);
+
+    if ("Power / PMIC".equals(sigDomain) ||
+        "Baseband / Cellular".equals(sigDomain)) {
+        GELServiceLog.error("High-risk hardware domain suspected.");
+    } else if ("Thermal / Cooling".equals(sigDomain) ||
+               "Memory / OS Pressure".equals(sigDomain)) {
+        GELServiceLog.warn("Potential subsystem instability detected.");
+    } else {
+        GELServiceLog.ok("No high-risk hardware domain identified.");
+    }
+
+    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+        GELServiceLog.info("Evidence: " + sigKeyEvidence);
+    }
+
+    GELServiceLog.ok("Impact analysis completed.");
+}
 
     private void runServiceRecommendationLab() {
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
+    GELServiceLog.info("────────────────────────────────");
+    GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
 
-        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-            GELServiceLog.ok("✔ Δεν υπάρχει panic log — δεν τεκμηριώνεται βλάβη από logs.");
-            GELServiceLog.info("ℹ Σύσταση: αν υπάρχει σύμπτωμα, ζήτα panic log / history από πελάτη.");
-            return;
-        }
-
-        // Service output based on confidence/type
-        if ("High".equals(sigConfidence) && ("Kernel Panic".equals(sigCrashType) || "Watchdog / Hang".equals(sigCrashType))) {
-            GELServiceLog.warn("⚠ Σύσταση: περαιτέρω έλεγχος + πιθανό hardware domain: " + sigDomain);
-            GELServiceLog.info("ℹ Αν επαναλαμβάνεται: προτείνεται service-level inspection.");
-        } else if ("Medium".equals(sigConfidence)) {
-            GELServiceLog.warn("⚠ Σύσταση: παρακολούθηση + συλλογή περισσότερων logs.");
-            GELServiceLog.info("ℹ Domain hint: " + sigDomain);
-        } else {
-            GELServiceLog.ok("✔ Δεν υπάρχει ισχυρή ένδειξη κρίσιμης βλάβης από το συγκεκριμένο log.");
-            GELServiceLog.info("ℹ Σύσταση: basic checks + monitor.");
-        }
-
-        GELServiceLog.info("• Crash Type: " + sigCrashType);
-        GELServiceLog.info("• Domain: " + sigDomain);
-        GELServiceLog.info("• Confidence: " + sigConfidence);
-
-        GELServiceLog.ok("✔ Service verdict recorded.");
+    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+        GELServiceLog.ok("No panic log provided — no fault evidenced by logs.");
+        GELServiceLog.info("Recommendation: request logs if symptoms persist.");
+        return;
     }
+
+    if ("High".equals(sigConfidence)) {
+        GELServiceLog.error("Service-level inspection recommended.");
+    } else if ("Medium".equals(sigConfidence)) {
+        GELServiceLog.warn("Monitoring recommended. Collect additional logs.");
+    } else {
+        GELServiceLog.ok("No critical fault indicated by this panic log.");
+    }
+
+    GELServiceLog.info("Crash Type: " + sigCrashType);
+    GELServiceLog.info("Domain: " + sigDomain);
+    GELServiceLog.info("Confidence: " + sigConfidence);
+
+    GELServiceLog.ok("Service verdict recorded.");
+}
 
     // ============================================================
     // UI HELPER
@@ -668,7 +653,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     container.setLayoutParams(lp);
 
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackgroundColor(0xFF101010); // GEL dark
+    container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
     container.setMinimumHeight(0);
     container.setClickable(true);
     container.setFocusable(true);
@@ -682,7 +667,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     TextView s = new TextView(this);
     s.setText(subtitle);
     s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-    s.setTextColor(0xFF7CFFCB); // soft green
+    s.setTextColor(0xFFFFFFFF); // white
     s.setPadding(0, dp(6), 0, 0);
 
     container.addView(t);

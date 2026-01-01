@@ -53,12 +53,12 @@ public class IPhoneLabsActivity extends Activity {
     private static final int COLOR_WHITE      = 0xFFFFFFFF;
     private static final int COLOR_GRAY       = 0xFFCCCCCC;
 
-    // ============================================================
-    // STATE
-    // ============================================================
-    private boolean panicLogLoaded = false;
-    private String  panicLogName   = null;
-    private String  panicText      = null;
+// ============================================================
+// STATE (CANONICAL — ΜΙΑ ΚΑΙ ΜΟΝΑΔΙΚΗ ΑΛΗΘΕΙΑ)
+// ============================================================
+private boolean panicLogLoaded = false;
+private String  panicLogName   = null;
+private String  panicLogText   = null;
     
     // ============================================================
     // PANIC LOG ANALYZER

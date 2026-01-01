@@ -15,8 +15,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
-public class IPhoneLabsActivity extends GELAutoActivityHook {
-
+public class IPhoneLabsActivity extends Activity {
     // ============================================================
     // COLORS (MATCH MANUAL TESTS SCREEN)
     // ============================================================
@@ -45,6 +44,11 @@ public class IPhoneLabsActivity extends GELAutoActivityHook {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(16), dp(16), dp(16), dp(16));
         root.setBackgroundColor(COLOR_BG);
+
+        root.setClickable(false);
+        root.setFocusable(false);
+        scroll.setClickable(false);
+        scroll.setFocusable(false);
 
         // ============================================================
         // TITLE

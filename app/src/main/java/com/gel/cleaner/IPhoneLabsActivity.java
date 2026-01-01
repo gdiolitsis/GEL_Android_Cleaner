@@ -1,11 +1,14 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// IPhoneLabsActivity.java — iPhone Diagnostics Labs v1.0
+// IPhoneLabsActivity.java — iPhone Diagnostics Labs v1.0 FINAL
 // Dark-Gold + Neon Green Edition (MATCHES Manual Tests UI)
 
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -16,6 +19,12 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 public class IPhoneLabsActivity extends Activity {
+
+    // ============================================================
+    // REQUEST CODES
+    // ============================================================
+    private static final int REQ_PANIC_LOG = 1011;
+
     // ============================================================
     // COLORS (MATCH MANUAL TESTS SCREEN)
     // ============================================================
@@ -39,16 +48,15 @@ public class IPhoneLabsActivity extends Activity {
         // ============================================================
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
+        scroll.setClickable(false);
+        scroll.setFocusable(false);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(16), dp(16), dp(16), dp(16));
         root.setBackgroundColor(COLOR_BG);
-
         root.setClickable(false);
         root.setFocusable(false);
-        scroll.setClickable(false);
-        scroll.setFocusable(false);
 
         // ============================================================
         // TITLE
@@ -74,24 +82,29 @@ public class IPhoneLabsActivity extends Activity {
         // ============================================================
         // LAB BUTTONS
         // ============================================================
+
+        // 1️⃣ PANIC LOG IMPORT
         root.addView(makeLabButton(
-                "📂 Panic Log Analyzer",
-                "Ανάλυση panic logs (kernel / watchdog / reboot)",
-                v -> runPanicLogLab()
+                "📂 Panic Log Import",
+                "Εισαγωγή panic log (TXT / LOG / ZIP)",
+                v -> openPanicLogPicker()
         ));
 
+        // 2️⃣ STABILITY
         root.addView(makeLabButton(
                 "📊 System Stability Evaluation",
                 "Αξιολόγηση σταθερότητας iOS βάσει logs",
                 v -> runStabilityLab()
         ));
 
+        // 3️⃣ IMPACT
         root.addView(makeLabButton(
                 "🧠 Impact Analysis",
                 "Συσχέτιση σφαλμάτων με hardware domain",
                 v -> runImpactLab()
         ));
 
+        // 4️⃣ SERVICE VERDICT
         root.addView(makeLabButton(
                 "🧾 Service Recommendation",
                 "Τελικό service verdict για τεχνικό",
@@ -103,28 +116,64 @@ public class IPhoneLabsActivity extends Activity {
     }
 
     // ============================================================
-    // LAB IMPLEMENTATIONS (LOGGING ONLY)
+    // PANIC LOG IMPORT
     // ============================================================
 
-    private void runPanicLogLab() {
+    private void openPanicLogPicker() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("*/*");
+        i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                "text/plain",
+                "application/zip",
+                "application/octet-stream"
+        });
+
+        startActivityForResult(i, REQ_PANIC_LOG);
+
         GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("📂 iPhone LAB — Panic Log Analyzer");
-        GELServiceLog.info("• Αναμονή εισαγωγής panic log (TXT / ZIP)");
-        GELServiceLog.warn("⚠ Δεν έχει φορτωθεί αρχείο log.");
+        GELServiceLog.info("📂 iPhone LAB — Panic Log Import requested");
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode != REQ_PANIC_LOG) return;
+
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            GELServiceLog.warn("⚠ Panic log import cancelled by user.");
+            return;
+        }
+
+        try {
+            Uri uri = data.getData();
+            String name = uri.getLastPathSegment();
+
+            GELServiceLog.info("────────────────────────────────");
+            GELServiceLog.info("📂 iPhone LAB — Panic Log Imported");
+            GELServiceLog.info("• File: " + name);
+            GELServiceLog.ok("✔ Panic log ready for analysis.");
+
+        } catch (Exception e) {
+            GELServiceLog.err("❌ Panic log import failed: " + e.getMessage());
+        }
+    }
+
+    // ============================================================
+    // LAB LOGIC (SERVICE-GRADE)
+    // ============================================================
 
     private void runStabilityLab() {
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
-        GELServiceLog.info("• Ανάλυση συχνότητας panic / reboot events");
-        GELServiceLog.warn("⚠ Ανεπαρκή δεδομένα για πλήρη αξιολόγηση.");
+        GELServiceLog.warn("⚠ Ανεπαρκή δεδομένα (απαιτούνται panic logs).");
     }
 
     private void runImpactLab() {
         GELServiceLog.info("────────────────────────────────");
         GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
-        GELServiceLog.info("• Συσχέτιση σφαλμάτων με πιθανό hardware");
-        GELServiceLog.warn("⚠ Απαιτούνται panic logs για ακρίβεια.");
+        GELServiceLog.warn("⚠ Δεν υπάρχει panic log για συσχέτιση.");
     }
 
     private void runServiceRecommendationLab() {
@@ -137,6 +186,7 @@ public class IPhoneLabsActivity extends Activity {
     // ============================================================
     // UI HELPER
     // ============================================================
+
     private View makeLabButton(String title, String desc, View.OnClickListener cb) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);

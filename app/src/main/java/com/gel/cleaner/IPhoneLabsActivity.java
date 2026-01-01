@@ -668,7 +668,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     container.setLayoutParams(lp);
 
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackground(makeGoldStrokeBg()); // ό,τι έχεις ήδη
+    container.setBackgroundColor(0xFF101010); // GEL dark
     container.setMinimumHeight(0);
     container.setClickable(true);
     container.setFocusable(true);
@@ -677,12 +677,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     t.setText(title);
     t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
     t.setIncludeFontPadding(false);
-    t.setTextColor(COLOR_GREEN);
+    t.setTextColor(0xFF00FF9C); // neon green
 
     TextView s = new TextView(this);
     s.setText(subtitle);
     s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-    s.setTextColor(COLOR_GREEN_SOFT);
+    s.setTextColor(0xFF7CFFCB); // soft green
     s.setPadding(0, dp(6), 0, 0);
 
     container.addView(t);

@@ -20,6 +20,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 
 import com.gel.cleaner.iphone.IPSPanicParser;
@@ -54,13 +56,21 @@ public class IPhoneLabsActivity extends Activity {
     private static final int COLOR_WHITE      = 0xFFFFFFFF;
     private static final int COLOR_GRAY       = 0xFFCCCCCC;
 
-// ============================================================
-// STATE (CANONICAL — ΜΙΑ ΚΑΙ ΜΟΝΑΔΙΚΗ ΑΛΗΘΕΙΑ)
-// ============================================================
-private boolean panicLogLoaded = false;
-private String  panicLogName   = null;
-private String  panicLogText   = null;
-    
+    // ============================================================
+    // STATE (CANONICAL — ΜΙΑ ΚΑΙ ΜΟΝΑΔΙΚΗ ΑΛΗΘΕΙΑ)
+    // ============================================================
+    private boolean panicLogLoaded = false;
+    private String  panicLogName   = null;
+    private String  panicLogText   = null;
+
+    // ============================================================
+    // TOAST (VISIBLE GUARD MESSAGE)
+    // ============================================================
+    private void toast(String msg) {
+        try { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); }
+        catch (Throwable ignore) {}
+    }
+
     // ============================================================
     // PANIC LOG ANALYZER
     // ============================================================
@@ -90,42 +100,42 @@ private String  panicLogText   = null;
         GELServiceLog.info("🧾 Recommendation: " + r.recommendation);
     }
 
-private String readTextStream(InputStream is) throws Exception {
-    BufferedInputStream bis = new BufferedInputStream(is);
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    private String readTextStream(InputStream is) throws Exception {
+        BufferedInputStream bis = new BufferedInputStream(is);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-    byte[] buf = new byte[4096];
-    int read;
-    int total = 0;
+        byte[] buf = new byte[4096];
+        int read;
+        int total = 0;
 
-    while ((read = bis.read(buf)) != -1) {
-        total += read;
-        if (total > MAX_TEXT_BYTES) break;
-        bos.write(buf, 0, read);
-    }
-    bis.close();
-    return bos.toString("UTF-8");
-}
-
-private String readPanicFromZip(InputStream is) throws Exception {
-    ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
-    ZipEntry entry;
-    int scanned = 0;
-
-    while ((entry = zis.getNextEntry()) != null && scanned < ZIP_SCAN_CAP) {
-        scanned++;
-
-        String name = entry.getName().toLowerCase();
-
-        if (name.contains("panic") || name.endsWith(".ips") || name.endsWith(".log")) {
-            String text = readTextStream(zis);
-            zis.close();
-            return text;
+        while ((read = bis.read(buf)) != -1) {
+            total += read;
+            if (total > MAX_TEXT_BYTES) break;
+            bos.write(buf, 0, read);
         }
+        bis.close();
+        return bos.toString("UTF-8");
     }
-    zis.close();
-    throw new Exception("No panic log found in ZIP");
-}
+
+    private String readPanicFromZip(InputStream is) throws Exception {
+        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
+        ZipEntry entry;
+        int scanned = 0;
+
+        while ((entry = zis.getNextEntry()) != null && scanned < ZIP_SCAN_CAP) {
+            scanned++;
+
+            String name = entry.getName().toLowerCase();
+
+            if (name.contains("panic") || name.endsWith(".ips") || name.endsWith(".log")) {
+                String text = readTextStream(zis);
+                zis.close();
+                return text;
+            }
+        }
+        zis.close();
+        throw new Exception("No panic log found in ZIP");
+    }
 
     // Parsed signature state
     private String sigCrashType    = "Unknown";
@@ -139,98 +149,98 @@ private String readPanicFromZip(InputStream is) throws Exception {
     }
 
     @Override
-protected void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    // ROOT SCROLL
-    ScrollView scroll = new ScrollView(this);
-    scroll.setLayoutParams(new ScrollView.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-    ));
-    scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-    scroll.setFillViewport(false);
+        // ROOT SCROLL
+        ScrollView scroll = new ScrollView(this);
+        scroll.setLayoutParams(new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        scroll.setFillViewport(false);
 
-    // CONTENT ROOT
-    LinearLayout root = new LinearLayout(this);
-    root.setLayoutParams(new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-    ));
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(16), dp(16), dp(16), dp(16));
-    root.setBackgroundColor(COLOR_BG);
+        // CONTENT ROOT
+        LinearLayout root = new LinearLayout(this);
+        root.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(16), dp(16), dp(16), dp(16));
+        root.setBackgroundColor(COLOR_BG);
 
-    // TITLE
-    TextView title = new TextView(this);
-    title.setLayoutParams(new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-    ));
-    title.setText("GEL iPhone Diagnostics");
-    title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-    title.setTextColor(COLOR_WHITE);
-    title.setGravity(Gravity.CENTER_HORIZONTAL);
-    title.setIncludeFontPadding(false);
-    root.addView(title);
+        // TITLE
+        TextView title = new TextView(this);
+        title.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        title.setText("GEL iPhone Diagnostics");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
+        title.setTextColor(COLOR_WHITE);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        title.setIncludeFontPadding(false);
+        root.addView(title);
 
-    // SUBTITLE
-    TextView sub = new TextView(this);
-    sub.setLayoutParams(new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-    ));
-    sub.setText(
-            "Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος\n" +
-            "Ανάλυση δεδομένων service (χωρίς άμεση πρόσβαση στη συσκευή)"
-    );
-    sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-    sub.setTextColor(COLOR_GRAY);
-    sub.setGravity(Gravity.CENTER_HORIZONTAL);
-    sub.setPadding(0, dp(8), 0, dp(18));
-    sub.setIncludeFontPadding(false);
-    root.addView(sub);
+        // SUBTITLE
+        TextView sub = new TextView(this);
+        sub.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        sub.setText(
+                "Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος\n" +
+                "Ανάλυση δεδομένων service (χωρίς άμεση πρόσβαση στη συσκευή)"
+        );
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        sub.setTextColor(COLOR_GRAY);
+        sub.setGravity(Gravity.CENTER_HORIZONTAL);
+        sub.setPadding(0, dp(8), 0, dp(18));
+        sub.setIncludeFontPadding(false);
+        root.addView(sub);
 
         // ============================================================
         // LABS — FINAL SET
         // ============================================================
 
- // 1️⃣ Import — ΔΕΝ απαιτεί panic log
-root.addView(makeLabButton(
-        "📦 Panic Log Import (TXT / ZIP)",
-        "Auto unzip + load panic report",
-        false,
-        v -> openPanicLogPicker()
-));
+        // 1️⃣ Import — ΔΕΝ απαιτεί panic log
+        root.addView(makeLabButton(
+                "📦 Panic Log Import (TXT / ZIP)",
+                "Auto unzip + load panic report",
+                false,
+                v -> openPanicLogPicker()
+        ));
 
-// 2️⃣–5️⃣ Labs — ΑΠΑΙΤΟΥΝ panic log
-root.addView(makeLabButton(
-        "🧷 Panic Signature Parser",
-        "Crash type • Domain • Confidence • Evidence",
-        true,
-        v -> runPanicSignatureParser()
-));
+        // 2️⃣–5️⃣ Labs — ΑΠΑΙΤΟΥΝ panic log
+        root.addView(makeLabButton(
+                "🧷 Panic Signature Parser",
+                "Crash type • Domain • Confidence • Evidence",
+                true,
+                v -> runPanicSignatureParser()
+        ));
 
-root.addView(makeLabButton(
-        "📊 System Stability Evaluation",
-        "Evaluate iOS stability from logs",
-        true,
-        v -> runStabilityLab()
-));
+        root.addView(makeLabButton(
+                "📊 System Stability Evaluation",
+                "Evaluate iOS stability from logs",
+                true,
+                v -> runStabilityLab()
+        ));
 
-root.addView(makeLabButton(
-        "🧠 Impact Analysis",
-        "Correlate crash with hardware domain",
-        true,
-        v -> runImpactLab()
-));
+        root.addView(makeLabButton(
+                "🧠 Impact Analysis",
+                "Correlate crash with hardware domain",
+                true,
+                v -> runImpactLab()
+        ));
 
-root.addView(makeLabButton(
-        "🧾 Service Recommendation",
-        "Final service verdict",
-        true,
-        v -> runServiceRecommendationLab()
-));
+        root.addView(makeLabButton(
+                "🧾 Service Recommendation",
+                "Final service verdict",
+                true,
+                v -> runServiceRecommendationLab()
+        ));
 
         scroll.addView(root);
         setContentView(scroll);
@@ -257,109 +267,109 @@ root.addView(makeLabButton(
     }
 
     @Override
-protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode != REQ_PANIC_LOG) return;
+        if (requestCode != REQ_PANIC_LOG) return;
 
-    if (resultCode != RESULT_OK || data == null || data.getData() == null) {
-        GELServiceLog.warn("⚠ Panic log import cancelled.");
-        return;
-    }
-
-    Uri uri = data.getData();
-
-    try {
-        String name = uri.getLastPathSegment();
-        panicLogName = name;
-
-        InputStream is = getContentResolver().openInputStream(uri);
-        if (is == null) throw new Exception("InputStream null");
-
-        if (name != null && name.toLowerCase().endsWith(".zip")) {
-            panicLogText = readPanicFromZip(is);
-        } else {
-            panicLogText = readTextStream(is);
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            GELServiceLog.warn("⚠ Panic log import cancelled.");
+            return;
         }
 
-        if (panicLogText == null || panicLogText.trim().isEmpty()) {
-            throw new Exception("Empty panic log");
+        Uri uri = data.getData();
+
+        try {
+            String name = uri.getLastPathSegment();
+            panicLogName = name;
+
+            InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null) throw new Exception("InputStream null");
+
+            if (name != null && name.toLowerCase().endsWith(".zip")) {
+                panicLogText = readPanicFromZip(is);
+            } else {
+                panicLogText = readTextStream(is);
+            }
+
+            if (panicLogText == null || panicLogText.trim().isEmpty()) {
+                throw new Exception("Empty panic log");
+            }
+
+            panicLogLoaded = true;
+
+            GELServiceLog.info("────────────────────────────────");
+            GELServiceLog.info("📂 iPhone LAB — Panic Log Imported");
+            GELServiceLog.info("• File: " + panicLogName);
+            GELServiceLog.ok("✔ Panic log ready for analysis.");
+
+        } catch (Exception e) {
+            panicLogLoaded = false;
+            panicLogText   = null;
+
+            GELServiceLog.warn("❌ Panic log import failed: " + e.getMessage());
         }
-
-        panicLogLoaded = true;
-
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("📂 iPhone LAB — Panic Log Imported");
-        GELServiceLog.info("• File: " + panicLogName);
-        GELServiceLog.ok("✔ Panic log ready for analysis.");
-
-    } catch (Exception e) {
-        panicLogLoaded = false;
-        panicLogText   = null;
-
-        GELServiceLog.warn("❌ Panic log import failed: " + e.getMessage());
     }
-}
 
     private void loadPanicFromUri(Uri uri) throws Exception {
-    ContentResolver cr = getContentResolver();
-    String name = (uri != null) ? String.valueOf(uri.getLastPathSegment()) : "unknown";
+        ContentResolver cr = getContentResolver();
+        String name = (uri != null) ? String.valueOf(uri.getLastPathSegment()) : "unknown";
 
-    GELServiceLog.info("────────────────────────────────");
-    GELServiceLog.info("📦 iPhone LAB — Loading file");
-    GELServiceLog.info("• Source: SAF document");
-    GELServiceLog.info("• Name: " + name);
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("📦 iPhone LAB — Loading file");
+        GELServiceLog.info("• Source: SAF document");
+        GELServiceLog.info("• Name: " + name);
 
-    boolean isZip = looksLikeZip(name);
+        boolean isZip = looksLikeZip(name);
 
-    String loadedText;
-    String chosenInner = null;
+        String loadedText;
+        String chosenInner = null;
 
-    if (isZip) {
-        ZipExtractResult zr = extractBestTextFromZip(cr, uri);
-        loadedText = (zr != null) ? zr.text : null;
-        chosenInner = (zr != null) ? zr.entryName : null;
+        if (isZip) {
+            ZipExtractResult zr = extractBestTextFromZip(cr, uri);
+            loadedText = (zr != null) ? zr.text : null;
+            chosenInner = (zr != null) ? zr.entryName : null;
 
-        if (loadedText == null || loadedText.trim().isEmpty()) {
-            panicLogLoaded = false;
+            if (loadedText == null || loadedText.trim().isEmpty()) {
+                panicLogLoaded = false;
+                panicLogName = name;
+                panicLogText = null;
+                GELServiceLog.warn("❌ ZIP opened but no readable TXT/IPS/LOG entry found.");
+                return;
+            }
+
+            panicLogLoaded = true;
+            panicLogName = (chosenInner != null) ? (name + " → " + chosenInner) : name;
+            panicLogText = loadedText;
+
+            GELServiceLog.ok("✔ ZIP auto-extract OK.");
+            GELServiceLog.info("• Extracted: " + (chosenInner != null ? chosenInner : "(unknown entry)"));
+            GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
+
+        } else {
+            loadedText = readAllTextSafely(cr, uri);
+
+            if (loadedText == null || loadedText.trim().isEmpty()) {
+                panicLogLoaded = false;
+                panicLogName = name;
+                panicLogText = null;
+                GELServiceLog.warn("❌ File loaded but empty / unreadable.");
+                return;
+            }
+
+            panicLogLoaded = true;
             panicLogName = name;
-            panicLogText = null;
-            GELServiceLog.warn("❌ ZIP opened but no readable TXT/IPS/LOG entry found.");
-            return;
+            panicLogText = loadedText;
+
+            GELServiceLog.ok("✔ Text file loaded.");
+            GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
         }
 
-        panicLogLoaded = true;
-        panicLogName = (chosenInner != null) ? (name + " → " + chosenInner) : name;
-        panicLogText = loadedText;
+        // Auto-parse signature immediately
+        parseAndCacheSignature(panicLogText);
 
-        GELServiceLog.ok("✔ ZIP auto-extract OK.");
-        GELServiceLog.info("• Extracted: " + (chosenInner != null ? chosenInner : "(unknown entry)"));
-        GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
-
-    } else {
-        loadedText = readAllTextSafely(cr, uri);
-
-        if (loadedText == null || loadedText.trim().isEmpty()) {
-            panicLogLoaded = false;
-            panicLogName = name;
-            panicLogText = null;
-            GELServiceLog.warn("❌ File loaded but empty / unreadable.");
-            return;
-        }
-
-        panicLogLoaded = true;
-        panicLogName = name;
-        panicLogText = loadedText;
-
-        GELServiceLog.ok("✔ Text file loaded.");
-        GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
+        GELServiceLog.ok("✔ Panic log ready.");
     }
-
-    // Auto-parse signature immediately
-    parseAndCacheSignature(panicLogText);
-
-    GELServiceLog.ok("✔ Panic log ready.");
-}
 
     // ============================================================
     // ZIP AUTO-EXTRACT (Best candidate)
@@ -401,7 +411,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
                 String en = e.getName() != null ? e.getName() : "";
                 String low = en.toLowerCase(Locale.US);
 
-                // Candidate filters: ips/txt/log or anything containing "panic"
                 boolean candidate =
                         low.endsWith(".ips") ||
                         low.endsWith(".log") ||
@@ -418,7 +427,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
                 if (text == null || text.trim().isEmpty()) continue;
 
-                // Score candidate (prefer .ips + contains "panic" + contains typical keys)
                 int score = 0;
                 if (low.endsWith(".ips")) score += 50;
                 if (low.contains("panic")) score += 25;
@@ -429,7 +437,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
                     best = new ZipExtractResult(en, text);
                 }
 
-                // Early exit if very good
                 if (score >= 90) break;
             }
 
@@ -461,37 +468,36 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     private void runPanicSignatureParser() {
 
-    // GUARD — REQUIRE PANIC LOG
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("⚠ Load Panic Log first.");
-        return;
+        // GUARD — REQUIRE PANIC LOG
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("⚠ Load Panic Log first.");
+            return;
+        }
+
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
+
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("Panic log not loaded.");
+            GELServiceLog.info("Load a panic log first.");
+            return;
+        }
+
+        parseAndCacheSignature(panicLogText);
+
+        GELServiceLog.info("File: " + (panicLogName != null ? panicLogName : "unknown"));
+        GELServiceLog.info("Crash Type: " + sigCrashType);
+        GELServiceLog.info("Domain: " + sigDomain);
+        GELServiceLog.info("Confidence: " + sigConfidence);
+
+        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+            GELServiceLog.info("Evidence: " + sigKeyEvidence);
+        }
+
+        GELServiceLog.ok("Signature extracted.");
     }
-    
-    GELServiceLog.info("────────────────────────────────");
-    GELServiceLog.info("🧷 iPhone LAB — Panic Signature Parser");
-
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("Panic log not loaded.");
-        GELServiceLog.info("Load a panic log first.");
-        return;
-    }
-
-    parseAndCacheSignature(panicLogText);
-
-    GELServiceLog.info("File: " + (panicLogName != null ? panicLogName : "unknown"));
-    GELServiceLog.info("Crash Type: " + sigCrashType);
-    GELServiceLog.info("Domain: " + sigDomain);
-    GELServiceLog.info("Confidence: " + sigConfidence);
-
-    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-        GELServiceLog.info("Evidence: " + sigKeyEvidence);
-    }
-
-    GELServiceLog.ok("Signature extracted.");
-}
 
     private void parseAndCacheSignature(String text) {
-        // Defaults
         sigCrashType   = "Unknown";
         sigDomain      = "Unknown";
         sigConfidence  = "Low";
@@ -501,7 +507,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
         String low = text.toLowerCase(Locale.US);
 
-        // Crash type detection (simple but robust)
         boolean isWatchdog = low.contains("watchdog") || low.contains("0x8badf00d");
         boolean isKernelPanic = low.contains("panic(") || low.contains("panic cpu") || low.contains("panicstring");
         boolean isJetsam = low.contains("jetsam") || low.contains("memorystatus") || low.contains("highwater");
@@ -513,15 +518,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         boolean isGpu = low.contains("gpu") || low.contains("agx") || low.contains("metal") || low.contains("gpus");
         boolean isSensor = low.contains("sensor") || low.contains("mic") || low.contains("camera") || low.contains("touch");
 
-        // Choose crash type
         if (isWatchdog) sigCrashType = "Watchdog / Hang";
         else if (isJetsam) sigCrashType = "Jetsam / Memory Pressure";
         else if (isThermal) sigCrashType = "Thermal Shutdown / Throttle";
         else if (isKernelPanic) sigCrashType = "Kernel Panic";
         else sigCrashType = "Unknown / Generic";
 
-        // Domain detection
-        // (We never claim certainty. It's a domain hint for technician.)
         if (isBaseband) sigDomain = "Baseband / Cellular";
         else if (isNand) sigDomain = "Storage / NAND / FS";
         else if (isGpu) sigDomain = "GPU / Graphics";
@@ -533,7 +535,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         else if (isKernelPanic) sigDomain = "Kernel / OS Core";
         else sigDomain = "Unknown";
 
-        // Confidence (based on strong indicators)
         int points = 0;
         StringBuilder ev = new StringBuilder();
 
@@ -567,156 +568,156 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     private void runStabilityLab() {
 
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("⚠ Load Panic Log first.");
-        return;
-    }
-    
-    GELServiceLog.info("────────────────────────────────");
-    GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("⚠ Load Panic Log first.");
+            return;
+        }
 
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("No panic log available.");
-        return;
-    }
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("📊 iPhone LAB — System Stability Evaluation");
 
-    if ("High".equals(sigConfidence) && "Kernel Panic".equals(sigCrashType)) {
-        GELServiceLog.error("High stability risk detected (Kernel Panic).");
-    } else if ("Medium".equals(sigConfidence)) {
-        GELServiceLog.warn("Moderate stability risk detected.");
-    } else {
-        GELServiceLog.ok("No strong instability indicators detected.");
-    }
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("No panic log available.");
+            return;
+        }
 
-    GELServiceLog.info("Crash Type: " + sigCrashType);
-    GELServiceLog.info("Domain: " + sigDomain);
-    GELServiceLog.info("Confidence: " + sigConfidence);
-}
+        if ("High".equals(sigConfidence) && "Kernel Panic".equals(sigCrashType)) {
+            GELServiceLog.error("High stability risk detected (Kernel Panic).");
+        } else if ("Medium".equals(sigConfidence)) {
+            GELServiceLog.warn("Moderate stability risk detected.");
+        } else {
+            GELServiceLog.ok("No strong instability indicators detected.");
+        }
+
+        GELServiceLog.info("Crash Type: " + sigCrashType);
+        GELServiceLog.info("Domain: " + sigDomain);
+        GELServiceLog.info("Confidence: " + sigConfidence);
+    }
 
     private void runImpactLab() {
 
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("⚠ Load Panic Log first.");
-        return;
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("⚠ Load Panic Log first.");
+            return;
+        }
+
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
+
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("No panic log available for correlation.");
+            return;
+        }
+
+        GELServiceLog.info("Crash Type: " + sigCrashType);
+        GELServiceLog.info("Suggested Domain: " + sigDomain);
+        GELServiceLog.info("Confidence: " + sigConfidence);
+
+        if ("Power / PMIC".equals(sigDomain) ||
+                "Baseband / Cellular".equals(sigDomain)) {
+            GELServiceLog.error("High-risk hardware domain suspected.");
+        } else if ("Thermal / Cooling".equals(sigDomain) ||
+                "Memory / OS Pressure".equals(sigDomain)) {
+            GELServiceLog.warn("Potential subsystem instability detected.");
+        } else {
+            GELServiceLog.ok("No high-risk hardware domain identified.");
+        }
+
+        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+            GELServiceLog.info("Evidence: " + sigKeyEvidence);
+        }
+
+        GELServiceLog.ok("Impact analysis completed.");
     }
-    
-    GELServiceLog.info("────────────────────────────────");
-    GELServiceLog.info("🧠 iPhone LAB — Impact Analysis");
-
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("No panic log available for correlation.");
-        return;
-    }
-
-    GELServiceLog.info("Crash Type: " + sigCrashType);
-    GELServiceLog.info("Suggested Domain: " + sigDomain);
-    GELServiceLog.info("Confidence: " + sigConfidence);
-
-    if ("Power / PMIC".equals(sigDomain) ||
-        "Baseband / Cellular".equals(sigDomain)) {
-        GELServiceLog.error("High-risk hardware domain suspected.");
-    } else if ("Thermal / Cooling".equals(sigDomain) ||
-               "Memory / OS Pressure".equals(sigDomain)) {
-        GELServiceLog.warn("Potential subsystem instability detected.");
-    } else {
-        GELServiceLog.ok("No high-risk hardware domain identified.");
-    }
-
-    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-        GELServiceLog.info("Evidence: " + sigKeyEvidence);
-    }
-
-    GELServiceLog.ok("Impact analysis completed.");
-}
 
     private void runServiceRecommendationLab() {
 
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.warn("⚠ Load Panic Log first.");
-        return;
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.warn("⚠ Load Panic Log first.");
+            return;
+        }
+
+        GELServiceLog.info("────────────────────────────────");
+        GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
+
+        if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
+            GELServiceLog.ok("No panic log provided — no fault evidenced by logs.");
+            GELServiceLog.info("Recommendation: request logs if symptoms persist.");
+            return;
+        }
+
+        if ("High".equals(sigConfidence)) {
+            GELServiceLog.error("Service-level inspection recommended.");
+        } else if ("Medium".equals(sigConfidence)) {
+            GELServiceLog.warn("Monitoring recommended. Collect additional logs.");
+        } else {
+            GELServiceLog.ok("No critical fault indicated by this panic log.");
+        }
+
+        GELServiceLog.info("Crash Type: " + sigCrashType);
+        GELServiceLog.info("Domain: " + sigDomain);
+        GELServiceLog.info("Confidence: " + sigConfidence);
+
+        GELServiceLog.ok("Service verdict recorded.");
     }
-    
-    GELServiceLog.info("────────────────────────────────");
-    GELServiceLog.info("🧾 iPhone LAB — Service Recommendation");
-
-    if (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty()) {
-        GELServiceLog.ok("No panic log provided — no fault evidenced by logs.");
-        GELServiceLog.info("Recommendation: request logs if symptoms persist.");
-        return;
-    }
-
-    if ("High".equals(sigConfidence)) {
-        GELServiceLog.error("Service-level inspection recommended.");
-    } else if ("Medium".equals(sigConfidence)) {
-        GELServiceLog.warn("Monitoring recommended. Collect additional logs.");
-    } else {
-        GELServiceLog.ok("No critical fault indicated by this panic log.");
-    }
-
-    GELServiceLog.info("Crash Type: " + sigCrashType);
-    GELServiceLog.info("Domain: " + sigDomain);
-    GELServiceLog.info("Confidence: " + sigConfidence);
-
-    GELServiceLog.ok("Service verdict recorded.");
-}
 
     // ============================================================
     // UI HELPER
     // ============================================================
 
     private View makeLabButton(
-        String title,
-        String subtitle,
-        boolean requiresPanicLog,
-        View.OnClickListener realClick
-) {
-    LinearLayout container = new LinearLayout(this);
-    container.setOrientation(LinearLayout.VERTICAL);
+            String title,
+            String subtitle,
+            boolean requiresPanicLog,
+            View.OnClickListener realClick
+    ) {
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
 
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-    );
-    lp.setMargins(0, dp(10), 0, dp(10));
-    container.setLayoutParams(lp);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(0, dp(10), 0, dp(10));
+        container.setLayoutParams(lp);
 
-    container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-    container.setClickable(true);
-    container.setFocusable(true);
-    container.setFocusableInTouchMode(false);
+        container.setPadding(dp(16), dp(16), dp(16), dp(16));
+        container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        container.setClickable(true);
+        container.setFocusable(true);
+        container.setFocusableInTouchMode(false);
 
-    TextView t = new TextView(this);
-    t.setText(title);
-    t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
-    t.setTextColor(0xFF00FF9C);
-    t.setIncludeFontPadding(false);
-    t.setClickable(false);
-    t.setFocusable(false);
+        TextView t = new TextView(this);
+        t.setText(title);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        t.setTextColor(0xFF00FF9C);
+        t.setIncludeFontPadding(false);
+        t.setClickable(false);
+        t.setFocusable(false);
 
-    TextView s = new TextView(this);
-    s.setText(subtitle);
-    s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-    s.setTextColor(0xFFFFFFFF);
-    s.setPadding(0, dp(6), 0, 0);
-    s.setClickable(false);
-    s.setFocusable(false);
+        TextView s = new TextView(this);
+        s.setText(subtitle);
+        s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        s.setTextColor(0xFFFFFFFF);
+        s.setPadding(0, dp(6), 0, 0);
+        s.setClickable(false);
+        s.setFocusable(false);
 
-    container.addView(t);
-    container.addView(s);
+        container.addView(t);
+        container.addView(s);
 
-    container.setOnClickListener(v -> {
-        if (requiresPanicLog && !panicLogLoaded) {
-            GELServiceLog.warn("⚠ Load Panic Log first.");
-            return;
-        }
-        if (realClick != null) {
-            realClick.onClick(v);
-        }
-    });
+        // IMPORTANT: visible guard (toast) + log
+        container.setOnClickListener(v -> {
+            if (requiresPanicLog && (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty())) {
+                toast("Load panic log first.");
+                GELServiceLog.warn("⚠ Load Panic Log first.");
+                return;
+            }
+            if (realClick != null) realClick.onClick(v);
+        });
 
-    return container;
-}
+        return container;
+    }
 
     // ============================================================
     // HELPERS (dp/sp + I/O)
@@ -759,7 +760,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
             byte[] bytes = bos.toByteArray();
 
-            // Best-effort charset: UTF-8 first, then ISO-8859-1 fallback
             String s = new String(bytes, Charset.forName("UTF-8"));
             if (looksGarbled(s)) {
                 s = new String(bytes, Charset.forName("ISO-8859-1"));
@@ -807,7 +807,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     private boolean looksGarbled(String s) {
         if (s == null || s.isEmpty()) return false;
-        // Heuristic: too many replacement chars suggests wrong encoding
         int bad = 0;
         int lim = Math.min(s.length(), 4000);
         for (int i = 0; i < lim; i++) {

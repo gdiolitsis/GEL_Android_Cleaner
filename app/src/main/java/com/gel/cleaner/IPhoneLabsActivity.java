@@ -141,22 +141,16 @@ private String readPanicFromZip(InputStream is) throws Exception {
 protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    // ============================================================
-    // ROOT SCROLL (SAFE FOR ALL SCREENS)
-    // ============================================================
+    // ROOT SCROLL
     ScrollView scroll = new ScrollView(this);
     scroll.setLayoutParams(new ScrollView.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
     ));
     scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-    scroll.setFillViewport(false); // ⛔ ΠΟΤΕ true εδώ
-    scroll.setClickable(false);
-    scroll.setFocusable(false);
+    scroll.setFillViewport(false);
 
-    // ============================================================
     // CONTENT ROOT
-    // ============================================================
     LinearLayout root = new LinearLayout(this);
     root.setLayoutParams(new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -165,12 +159,8 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(16), dp(16), dp(16), dp(16));
     root.setBackgroundColor(COLOR_BG);
-    root.setClickable(false);
-    root.setFocusable(false);
 
-    // ============================================================
     // TITLE
-    // ============================================================
     TextView title = new TextView(this);
     title.setLayoutParams(new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -180,12 +170,10 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
     title.setTextColor(COLOR_WHITE);
     title.setGravity(Gravity.CENTER_HORIZONTAL);
-    title.setIncludeFontPadding(false); // ⬅ σημαντικό για OEMs
+    title.setIncludeFontPadding(false);
     root.addView(title);
 
-    // ============================================================
     // SUBTITLE
-    // ============================================================
     TextView sub = new TextView(this);
     sub.setLayoutParams(new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -202,9 +190,38 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     sub.setIncludeFontPadding(false);
     root.addView(sub);
 
-    // ============================================================
+    // LABS — FINAL SET
+    root.addView(makeLabButton(
+            "📦 Panic Log Import (TXT / ZIP)",
+            "Αυτόματο unzip + φόρτωση panic report",
+            v -> openPanicLogPicker()
+    ));
+
+    root.addView(makeLabButton(
+            "🧷 Panic Signature Parser",
+            "Crash type • Domain • Confidence • Evidence",
+            v -> runPanicSignatureParser()
+    ));
+
+    root.addView(makeLabButton(
+            "📊 System Stability Evaluation",
+            "Αξιολόγηση σταθερότητας iOS βάσει logs",
+            v -> runStabilityLab()
+    ));
+
+    root.addView(makeLabButton(
+            "🧠 Impact Analysis",
+            "Συσχέτιση σφάλματος με hardware domain",
+            v -> runImpactLab()
+    ));
+
+    root.addView(makeLabButton(
+            "🧾 Service Recommendation",
+            "Τελικό service verdict",
+            v -> runServiceRecommendationLab()
+    ));
+
     // FINAL BIND
-    // ============================================================
     scroll.addView(root);
     setContentView(scroll);
 }

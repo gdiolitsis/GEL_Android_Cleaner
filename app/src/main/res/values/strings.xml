@@ -55,51 +55,108 @@
     <string name="toast_done">Permissions granted</string>
 
     <!-- ===================================== -->
-    <!-- GEL SERVICE LAB -->
-    <!-- ===================================== -->
+<!-- GEL SERVICE LAB -->
+<!-- ===================================== -->
 
-    <string name="gel_service_lab">GEL Service Lab</string>
-    <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
+<string name="gel_service_lab">GEL Service Lab</string>
 
-    <!-- iPhone Diagnosis -->
+<string name="gel_service_lab_sub">
+Professional device diagnostics
+Android Manual Tests · iPhone Labs · Export Report
+</string>
+
+<!-- ================================================= -->
+<!-- SECTION LABELS -->
+<!-- ================================================= -->
+
+<!-- ANDROID -->
+<string name="manual_tests">ANDROID MANUAL TESTS</string>
+
+<!-- iPHONE -->
+<string name="auto_diagnosis">iPHONE DIAGNOSIS</string>
+
+<!-- SERVICE -->
+<string name="service_report">SERVICE REPORT</string>
+
+<!-- ================================================= -->
+<!-- ANDROID MANUAL TESTS BUTTON -->
+<!-- ================================================= -->
+
+<string name="manual_tests_title">GEL Android Manual Tests</string>
+
+<string name="manual_tests_desc">
+Targeted service-level tests:
+Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
+</string>
+
+<!-- ================================================= -->
+<!-- iPHONE LABS BUTTON -->
+<!-- ================================================= -->
 
 <string name="gel_phone_diag_title">GEL iPhone Diagnosis</string>
 
 <string name="gel_phone_diag_desc">
-    Laboratory diagnostics for iPhone using system files
-    • Panic log analysis
-    • System stability evaluation
-    • Hardware fault detection
-    • Service-level log recording
+Laboratory diagnostics for iPhone using system files
+• Panic log analysis
+• System stability evaluation
+• Hardware fault detection
+• Service-level log recording
 </string>
 
-    <!-- Manual Tests -->
-    <string name="manual_tests_title">GEL Android Manual Tests</string>
-    <string name="manual_tests_desc">
-        Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
-    </string>
+<!-- ================================================= -->
+<!-- SERVICE REPORT / EXPORT -->
+<!-- ================================================= -->
 
-    <!-- Service Report -->
-    <string name="service_report">SERVICE REPORT</string>
-    <string name="export_report_title">Export Service Report</string>
-    <string name="export_report_desc">Final report for the customer (PDF or TXT) + automatic reset</string>
-    <string name="export_pdf_button">📄 Export PDF</string>
-    <string name="export_pdf_error">PDF export error</string>
+<string name="export_report_title">Export Service Report</string>
 
-    <!-- REPORT STRINGS -->
-    <string name="report_title">GEL Service Report</string>
-    <string name="report_dev_line">GDiolitsis Engine Lab (GEL) — Author &amp; Developer</string>
-    <string name="report_date">Date</string>
-    <string name="report_device">Device</string>
-    <string name="report_android">Android</string>
-    <string name="report_diag_header">=== Service Lab Diagnostics ===</string>
-    <string name="report_no_entries">[No diagnostic entries found]</string>
-    <string name="report_end">--- End of Report ---</string>
-    <string name="report_signature">Technician Signature:</string>
+<string name="export_report_desc">
+Generate final technician report
+(Android + iPhone diagnostics)
+PDF or TXT format
+</string>
 
-    <string name="preview_empty">
-        No diagnostics yet.\nRun Auto Diagnosis or Manual Tests\nand then export.
-    </string>
+<string name="export_pdf_button">📄 Export Report (PDF)</string>
+<string name="export_pdf_error">PDF export failed</string>
+
+<!-- ================================================= -->
+<!-- REPORT BODY -->
+<!-- ================================================= -->
+
+<string name="report_title">GEL Service Report</string>
+<string name="report_dev_line">
+GDiolitsis Engine Lab (GEL) — Author &amp; Developer
+</string>
+
+<string name="report_date">Date</string>
+<string name="report_device">Device</string>
+<string name="report_android">Android</string>
+
+<string name="report_diag_header">
+=== Service Lab Diagnostics ===
+</string>
+
+<string name="report_no_entries">
+[No diagnostic entries found]
+</string>
+
+<string name="report_end">
+--- End of Report ---
+</string>
+
+<string name="report_signature">
+Technician Signature:
+</string>
+
+<!-- ================================================= -->
+<!-- EMPTY / PREVIEW -->
+<!-- ================================================= -->
+
+<string name="preview_empty">
+No diagnostics yet.
+Run Android Manual Tests or iPhone Labs
+and then export the report.
+</string>
+
 
     <!-- DAMAGE CHECKLIST -->
     <string name="damage_title">Damage Inspection</string>

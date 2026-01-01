@@ -678,7 +678,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     container.setLayoutParams(lp);
 
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackgroundResource(R.drawable.gel_btn_gold_bordo); // ΤΟ ΕΤΟΙΜΟ drawable
+    container.setBackgroundResource(R.drawable.gel_btn_outline_selector.xml); // ΤΟ ΕΤΟΙΜΟ drawable
     container.setClickable(true);
     container.setFocusable(true);
     container.setFocusableInTouchMode(false);

@@ -61,12 +61,18 @@
     <string name="gel_service_lab">GEL Service Lab</string>
     <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
 
-    <!-- Auto Diagnosis -->
-    <string name="auto_diagnosis">AUTO DIAGNOSIS</string>
-    <string name="gel_phone_diag_title">GEL Phone Diagnosis</string>
-    <string name="gel_phone_diag_desc">
-        Full automatic diagnosis of 30 service-level checks\nHardware · RAM · Storage · Battery · Network · Sensors…
-    </string>
+    <!-- iPhone Diagnosis -->
+<string name="auto_diagnosis">iPHONE DIAGNOSIS</string>
+
+<string name="gel_phone_diag_title">GEL iPhone Diagnosis</string>
+
+<string name="gel_phone_diag_desc">
+    Laboratory diagnostics for iPhone using system files
+    • Panic log analysis
+    • System stability evaluation
+    • Hardware fault detection
+    • Service-level log recording
+</string>
 
     <!-- Manual Tests -->
     <string name="manual_tests">MANUAL TESTS</string>

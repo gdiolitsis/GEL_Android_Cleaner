@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "name": "GEL iOS Panic Signature Pack",
+    "version": "1.0",
+    "scope": "offline",
+    "engine": "rule-based",
+    "author": "GDiolitsis Engine Lab (GEL)"
+  },
+
+  "patterns": [
+
+    {
+      "id": "PANIC_THERMAL_SENSOR",
+      "domain": "Thermal / Sensors",
+      "severity": "HIGH",
+      "confidence": "High",
+      "cause": "Thermal sensor signal loss or overheating",
+      "recommendation": "Inspect thermal sensors, flex cables and board temperature zones.",
+      "match": [
+        "Thermal",
+        "sensor",
+        "missing"
+      ]
+    },
+
+    {
+      "id": "PANIC_WATCHDOG_TIMEOUT",
+      "domain": "System / Watchdog",
+      "severity": "MEDIUM",
+      "confidence": "Medium",
+      "cause": "System hang leading to watchdog reset",
+      "recommendation": "Investigate software freezes or secondary hardware faults.",
+      "match": [
+        "watchdog",
+        "timeout"
+      ]
+    },
+
+    {
+      "id": "PANIC_PMIC_SHUTDOWN",
+      "domain": "Power / PMIC",
+      "severity": "CRITICAL",
+      "confidence": "High",
+      "cause": "Power management IC shutdown",
+      "recommendation": "Check PMIC, power rails and battery power delivery.",
+      "match": [
+        "PMIC",
+        "shutdown"
+      ]
+    },
+
+    {
+      "id": "PANIC_BASEBAND_FAILURE",
+      "domain": "Baseband / Modem",
+      "severity": "HIGH",
+      "confidence": "High",
+      "cause": "Baseband processor crash or communication failure",
+      "recommendation": "Inspect baseband IC, RF section and related power lines.",
+      "match": [
+        "baseband",
+        "panic"
+      ]
+    },
+
+    {
+      "id": "PANIC_STORAGE_IO",
+      "domain": "Storage / NAND",
+      "severity": "HIGH",
+      "confidence": "Medium",
+      "cause": "I/O error or NAND access failure",
+      "recommendation": "Check NAND health, storage controller and filesystem integrity.",
+      "match": [
+        "I/O error",
+        "storage"
+      ]
+    },
+
+    {
+      "id": "PANIC_MEMORY_FAULT",
+      "domain": "Memory / RAM",
+      "severity": "CRITICAL",
+      "confidence": "High",
+      "cause": "Unrecoverable memory fault detected",
+      "recommendation": "Inspect RAM IC and memory lines; board-level repair may be required.",
+      "match": [
+        "memory",
+        "panic"
+      ]
+    },
+
+    {
+      "id": "PANIC_KERNEL_ASSERT",
+      "domain": "Kernel / OS",
+      "severity": "MEDIUM",
+      "confidence": "Low",
+      "cause": "Kernel assertion failure",
+      "recommendation": "Evaluate software integrity; hardware correlation possible.",
+      "match": [
+        "assert",
+        "kernel"
+      ]
+    }
+
+  ]
+}

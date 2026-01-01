@@ -687,4 +687,3 @@ public class IPhoneLabsActivity extends Activity {
         return false;
     }
 }
-```0

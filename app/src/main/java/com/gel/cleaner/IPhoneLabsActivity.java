@@ -138,41 +138,76 @@ private String readPanicFromZip(InputStream is) throws Exception {
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClickable(false);
-        scroll.setFocusable(false);
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16), dp(16), dp(16), dp(16));
-        root.setBackgroundColor(COLOR_BG);
-        root.setClickable(false);
-        root.setFocusable(false);
+    // ============================================================
+    // ROOT SCROLL (SAFE FOR ALL SCREENS)
+    // ============================================================
+    ScrollView scroll = new ScrollView(this);
+    scroll.setLayoutParams(new ScrollView.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+    ));
+    scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+    scroll.setFillViewport(false); // ⛔ ΠΟΤΕ true εδώ
+    scroll.setClickable(false);
+    scroll.setFocusable(false);
 
-        // ============================================================
-        // TITLE
-        // ============================================================
-        TextView title = new TextView(this);
-        title.setText("GEL iPhone Diagnostics");
-        title.setTextSize(sp(22f));
-        title.setTextColor(COLOR_WHITE);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.addView(title);
+    // ============================================================
+    // CONTENT ROOT
+    // ============================================================
+    LinearLayout root = new LinearLayout(this);
+    root.setLayoutParams(new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    ));
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(16), dp(16), dp(16), dp(16));
+    root.setBackgroundColor(COLOR_BG);
+    root.setClickable(false);
+    root.setFocusable(false);
 
-        TextView sub = new TextView(this);
-        sub.setText(
-                "Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος\n" +
-                "Ανάλυση δεδομένων service (χωρίς άμεση πρόσβαση στη συσκευή)"
-        );
-        sub.setTextSize(sp(14f));
-        sub.setTextColor(COLOR_GRAY);
-        sub.setGravity(Gravity.CENTER_HORIZONTAL);
-        sub.setPadding(0, dp(8), 0, dp(18));
-        root.addView(sub);
+    // ============================================================
+    // TITLE
+    // ============================================================
+    TextView title = new TextView(this);
+    title.setLayoutParams(new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    ));
+    title.setText("GEL iPhone Diagnostics");
+    title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
+    title.setTextColor(COLOR_WHITE);
+    title.setGravity(Gravity.CENTER_HORIZONTAL);
+    title.setIncludeFontPadding(false); // ⬅ σημαντικό για OEMs
+    root.addView(title);
+
+    // ============================================================
+    // SUBTITLE
+    // ============================================================
+    TextView sub = new TextView(this);
+    sub.setLayoutParams(new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    ));
+    sub.setText(
+            "Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος\n" +
+            "Ανάλυση δεδομένων service (χωρίς άμεση πρόσβαση στη συσκευή)"
+    );
+    sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+    sub.setTextColor(COLOR_GRAY);
+    sub.setGravity(Gravity.CENTER_HORIZONTAL);
+    sub.setPadding(0, dp(8), 0, dp(18));
+    sub.setIncludeFontPadding(false);
+    root.addView(sub);
+
+    // ============================================================
+    // FINAL BIND
+    // ============================================================
+    scroll.addView(root);
+    setContentView(scroll);
+}
 
         // ============================================================
         // LABS — FINAL SET

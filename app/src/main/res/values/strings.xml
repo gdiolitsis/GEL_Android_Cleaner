@@ -74,7 +74,7 @@
 </string>
 
     <!-- Manual Tests -->
-    <string name="manual_tests_title">Android Manual Tests</string>
+    <string name="manual_tests_title">GEL Android Manual Tests</string>
     <string name="manual_tests_desc">
         Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
     </string>

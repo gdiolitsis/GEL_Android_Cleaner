@@ -62,7 +62,6 @@
     <string name="gel_service_lab_sub">Professional device diagnostics\nAuto + Manual tests + Export report</string>
 
     <!-- iPhone Diagnosis -->
-<string name="auto_diagnosis">iPHONE DIAGNOSIS</string>
 
 <string name="gel_phone_diag_title">GEL iPhone Diagnosis</string>
 
@@ -75,8 +74,7 @@
 </string>
 
     <!-- Manual Tests -->
-    <string name="manual_tests">MANUAL TESTS</string>
-    <string name="manual_tests_title">Manual Tests</string>
+    <string name="manual_tests_title">Android Manual Tests</string>
     <string name="manual_tests_desc">
         Targeted tests for service:\nSound, vibration, display, sensors, RAM live, WiFi, etc.
     </string>

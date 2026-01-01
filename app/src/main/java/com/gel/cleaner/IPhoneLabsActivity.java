@@ -195,40 +195,42 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
         // LABS — FINAL SET
         // ============================================================
 
-        // 1️⃣ PANIC LOG IMPORT (TXT / LOG / ZIP)
-        root.addView(makeLabButton(
-                "📦 Panic Log Import (TXT / ZIP)",
-                "Αυτόματο unzip + φόρτωση panic report",
-                v -> openPanicLogPicker()
-        ));
+ // 1️⃣ Import — ΔΕΝ απαιτεί panic log
+root.addView(makeLabButton(
+        "📦 Panic Log Import (TXT / ZIP)",
+        "Auto unzip + load panic report",
+        false,
+        v -> openPanicLogPicker()
+));
 
-        // 2️⃣ PANIC SIGNATURE PARSER
-        root.addView(makeLabButton(
-                "🧷 Panic Signature Parser",
-                "Crash type • Domain • Confidence • Evidence",
-                v -> runPanicSignatureParser()
-        ));
+// 2️⃣–5️⃣ Labs — ΑΠΑΙΤΟΥΝ panic log
+root.addView(makeLabButton(
+        "🧷 Panic Signature Parser",
+        "Crash type • Domain • Confidence • Evidence",
+        true,
+        v -> runPanicSignatureParser()
+));
 
-        // 3️⃣ SYSTEM STABILITY
-        root.addView(makeLabButton(
-                "📊 System Stability Evaluation",
-                "Αξιολόγηση σταθερότητας iOS βάσει logs",
-                v -> runStabilityLab()
-        ));
+root.addView(makeLabButton(
+        "📊 System Stability Evaluation",
+        "Evaluate iOS stability from logs",
+        true,
+        v -> runStabilityLab()
+));
 
-        // 4️⃣ IMPACT ANALYSIS
-        root.addView(makeLabButton(
-                "🧠 Impact Analysis",
-                "Συσχέτιση σφάλματος με hardware domain",
-                v -> runImpactLab()
-        ));
+root.addView(makeLabButton(
+        "🧠 Impact Analysis",
+        "Correlate crash with hardware domain",
+        true,
+        v -> runImpactLab()
+));
 
-        // 5️⃣ SERVICE RECOMMENDATION
-        root.addView(makeLabButton(
-                "🧾 Service Recommendation",
-                "Τελικό service verdict",
-                v -> runServiceRecommendationLab()
-        ));
+root.addView(makeLabButton(
+        "🧾 Service Recommendation",
+        "Final service verdict",
+        true,
+        v -> runServiceRecommendationLab()
+));
 
         scroll.addView(root);
         setContentView(scroll);
@@ -665,6 +667,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     private View makeLabButton(
         String title,
         String subtitle,
+        boolean requiresPanicLog,
         View.OnClickListener realClick
 ) {
     LinearLayout container = new LinearLayout(this);
@@ -678,7 +681,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     container.setLayoutParams(lp);
 
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
-    container.setBackgroundResource(R.drawable.gel_btn_outline_selector.xml); // ΤΟ ΕΤΟΙΜΟ drawable
+    container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
     container.setClickable(true);
     container.setFocusable(true);
     container.setFocusableInTouchMode(false);
@@ -688,23 +691,28 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
     t.setTextColor(0xFF00FF9C);
     t.setIncludeFontPadding(false);
+    t.setClickable(false);
+    t.setFocusable(false);
 
     TextView s = new TextView(this);
     s.setText(subtitle);
     s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
     s.setTextColor(0xFFFFFFFF);
     s.setPadding(0, dp(6), 0, 0);
+    s.setClickable(false);
+    s.setFocusable(false);
 
     container.addView(t);
     container.addView(s);
 
-    // ✅ GUARDED CLICK — ΕΔΩ ΤΟ ΚΛΕΙΔΙ
     container.setOnClickListener(v -> {
-        if (!panicLogLoaded && !title.contains("Import")) {
+        if (requiresPanicLog && !panicLogLoaded) {
             GELServiceLog.warn("⚠ Load Panic Log first.");
             return;
         }
-        realClick.onClick(v);
+        if (realClick != null) {
+            realClick.onClick(v);
+        }
     });
 
     return container;

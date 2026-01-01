@@ -65,12 +65,6 @@ Android Χειροκίνητα Tests · iPhone Εργαστήρια · Εξαγ�
 <!-- SECTION LABELS (ΧΡΗΣΙΜΟΠΟΙΟΥΝΤΑΙ ΑΠΟ JAVA) -->
 <!-- ================================================= -->
 
-<!-- ANDROID -->
-<string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS ANDROID</string>
-
-<!-- iPHONE -->
-<string name="auto_diagnosis">ΔΙΑΓΝΩΣΗ iPHONE</string>
-
 <!-- SERVICE -->
 <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
 

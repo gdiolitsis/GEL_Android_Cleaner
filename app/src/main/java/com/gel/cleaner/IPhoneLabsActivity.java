@@ -190,42 +190,6 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     sub.setIncludeFontPadding(false);
     root.addView(sub);
 
-    // LABS — FINAL SET
-    root.addView(makeLabButton(
-            "📦 Panic Log Import (TXT / ZIP)",
-            "Αυτόματο unzip + φόρτωση panic report",
-            v -> openPanicLogPicker()
-    ));
-
-    root.addView(makeLabButton(
-            "🧷 Panic Signature Parser",
-            "Crash type • Domain • Confidence • Evidence",
-            v -> runPanicSignatureParser()
-    ));
-
-    root.addView(makeLabButton(
-            "📊 System Stability Evaluation",
-            "Αξιολόγηση σταθερότητας iOS βάσει logs",
-            v -> runStabilityLab()
-    ));
-
-    root.addView(makeLabButton(
-            "🧠 Impact Analysis",
-            "Συσχέτιση σφάλματος με hardware domain",
-            v -> runImpactLab()
-    ));
-
-    root.addView(makeLabButton(
-            "🧾 Service Recommendation",
-            "Τελικό service verdict",
-            v -> runServiceRecommendationLab()
-    ));
-
-    // FINAL BIND
-    scroll.addView(root);
-    setContentView(scroll);
-}
-
         // ============================================================
         // LABS — FINAL SET
         // ============================================================

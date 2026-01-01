@@ -141,7 +141,7 @@ private String readPanicFromZip(InputStream is) throws Exception {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        scrollView scroll = new ScrollView(this);
+        ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setClickable(false);
         scroll.setFocusable(false);
@@ -278,68 +278,69 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         panicLogLoaded = false;
         panicLogText   = null;
 
-        GELServiceLog.err("❌ Panic log import failed: " + e.getMessage());
+        GELServiceLog.warn("❌ Panic log import failed: " + e.getMessage());
     }
 }
 
     private void loadPanicFromUri(Uri uri) throws Exception {
-        ContentResolver cr = getContentResolver();
-        String name = (uri != null) ? String.valueOf(uri.getLastPathSegment()) : "unknown";
+    ContentResolver cr = getContentResolver();
+    String name = (uri != null) ? String.valueOf(uri.getLastPathSegment()) : "unknown";
 
-        GELServiceLog.info("────────────────────────────────");
-        GELServiceLog.info("📦 iPhone LAB — Loading file");
-        GELServiceLog.info("• Source: SAF document");
-        GELServiceLog.info("• Name: " + name);
+    GELServiceLog.info("────────────────────────────────");
+    GELServiceLog.info("📦 iPhone LAB — Loading file");
+    GELServiceLog.info("• Source: SAF document");
+    GELServiceLog.info("• Name: " + name);
 
-        boolean isZip = looksLikeZip(name);
+    boolean isZip = looksLikeZip(name);
 
-        String loadedText;
-        String chosenInner = null;
+    String loadedText;
+    String chosenInner = null;
 
-        if (isZip) {
-            ZipExtractResult zr = extractBestTextFromZip(cr, uri);
-            loadedText = zr != null ? zr.text : null;
-            chosenInner = zr != null ? zr.entryName : null;
+    if (isZip) {
+        ZipExtractResult zr = extractBestTextFromZip(cr, uri);
+        loadedText = (zr != null) ? zr.text : null;
+        chosenInner = (zr != null) ? zr.entryName : null;
 
-            if (loadedText == null || loadedText.trim().isEmpty()) {
-                panicLogLoaded = false;
-                panicLogName = name;
-                panicText = null;
-                GELServiceLog.err("❌ ZIP opened but no readable TXT/IPS/LOG entry found.");
-                return;
-            }
-
-            panicLogLoaded = true;
-            panicLogName = (chosenInner != null) ? (name + " → " + chosenInner) : name;
-            panicText = loadedText;
-
-            GELServiceLog.ok("✔ ZIP auto-extract OK.");
-            GELServiceLog.info("• Extracted: " + (chosenInner != null ? chosenInner : "(unknown entry)"));
-            GELServiceLog.info("• Size: " + panicText.length() + " chars");
-
-        } else {
-            loadedText = readAllTextSafely(cr, uri);
-            if (loadedText == null || loadedText.trim().isEmpty()) {
-                panicLogLoaded = false;
-                panicLogName = name;
-                panicText = null;
-                GELServiceLog.err("❌ File loaded but empty / unreadable.");
-                return;
-            }
-
-            panicLogLoaded = true;
+        if (loadedText == null || loadedText.trim().isEmpty()) {
+            panicLogLoaded = false;
             panicLogName = name;
-            panicText = loadedText;
-
-            GELServiceLog.ok("✔ Text file loaded.");
-            GELServiceLog.info("• Size: " + panicText.length() + " chars");
+            panicLogText = null;
+            GELServiceLog.warn("❌ ZIP opened but no readable TXT/IPS/LOG entry found.");
+            return;
         }
 
-        // Auto-parse signature immediately (so other labs have state)
-        parseAndCacheSignature(panicText);
+        panicLogLoaded = true;
+        panicLogName = (chosenInner != null) ? (name + " → " + chosenInner) : name;
+        panicLogText = loadedText;
 
-        GELServiceLog.ok("✔ Panic log ready.");
+        GELServiceLog.ok("✔ ZIP auto-extract OK.");
+        GELServiceLog.info("• Extracted: " + (chosenInner != null ? chosenInner : "(unknown entry)"));
+        GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
+
+    } else {
+        loadedText = readAllTextSafely(cr, uri);
+
+        if (loadedText == null || loadedText.trim().isEmpty()) {
+            panicLogLoaded = false;
+            panicLogName = name;
+            panicLogText = null;
+            GELServiceLog.warn("❌ File loaded but empty / unreadable.");
+            return;
+        }
+
+        panicLogLoaded = true;
+        panicLogName = name;
+        panicLogText = loadedText;
+
+        GELServiceLog.ok("✔ Text file loaded.");
+        GELServiceLog.info("• Size: " + panicLogText.length() + " chars");
     }
+
+    // Auto-parse signature immediately
+    parseAndCacheSignature(panicLogText);
+
+    GELServiceLog.ok("✔ Panic log ready.");
+}
 
     // ============================================================
     // ZIP AUTO-EXTRACT (Best candidate)

@@ -2525,98 +2525,86 @@ public void onRequestPermissionsResult(int requestCode, String[] perms, int[] gr
     }  
 }  
 
-// ============================================================  
-// LAB 10 — DEEPSCAN v3.0  
-// ============================================================  
-private void runWifiDeepScan(WifiManager wm) {  
-    new Thread(() -> {  
-        try {  
-            logLine();  
-            logInfo("GEL Network DeepScan v3.0 started...");  
+// ============================================================
+// LAB 10 — DEEPSCAN v3.0
+// ============================================================
+private void runWifiDeepScan(WifiManager wm) {
+    new Thread(() -> {
+        try {
+            logLine();
+            logInfo("GEL Network DeepScan v3.0 started...");
 
-            String gatewayStr = null;  
-            try {  
-                DhcpInfo dh = wm.getDhcpInfo();  
-                if (dh != null) gatewayStr = ipToStr(dh.gateway);  
-            } catch (Exception ignored) {}  
+            String gatewayStr = null;
+            try {
+                DhcpInfo dh = wm.getDhcpInfo();
+                if (dh != null) gatewayStr = ipToStr(dh.gateway);
+            } catch (Exception ignored) {}
 
-            // 1) Ping latency to 8.8.8.8 using TCP connect (works non-root)  
-            float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);  
-            if (pingMs > 0)  
-                logOk(String.format(Locale.US, "Ping latency to 8.8.8.8: %.1f ms", pingMs));  
-            else  
-                logWarn("Ping latency test failed (network blocked).");  
+            // 1) Ping latency
+            float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
+            if (pingMs > 0)
+                logOk(String.format(Locale.US,
+                        "Ping latency to 8.8.8.8: %.1f ms", pingMs));
+            else
+                logWarn("Ping latency test failed (network blocked).");
 
-            // 2) DNS resolve time  
-            float dnsMs = dnsResolveMs("google.com");  
-            if (dnsMs > 0)  
-                logOk(String.format(Locale.US, "DNS resolve google.com: %.0f ms", dnsMs));  
-            else  
-                logWarn("DNS resolve failed.");  
+            // 2) DNS resolve
+            float dnsMs = dnsResolveMs("google.com");
+            if (dnsMs > 0)
+                logOk(String.format(Locale.US,
+                        "DNS resolve google.com: %.0f ms", dnsMs));
+            else
+                logWarn("DNS resolve failed.");
 
-            // 3) Gateway ping (TCP to 80)  
-            if (gatewayStr != null) {  
-                float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);  
-                if (gwMs > 0)  
-                    logOk(String.format(Locale.US, "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));  
-                else  
-                    logWarn("Gateway ping failed.");  
-            } else {  
-                logWarn("Gateway not detected.");  
-            }  
+            // 3) Gateway ping
+            if (gatewayStr != null) {
+                float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);
+                if (gwMs > 0)
+                    logOk(String.format(Locale.US,
+                            "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));
+                else
+                    logWarn("Gateway ping failed.");
+            } else {
+                logWarn("Gateway not detected.");
+            }
 
-            // 4) SpeedSim heuristic  
-            WifiInfo info = wm.getConnectionInfo();  
-            int link = info != null ? info.getLinkSpeed() : 0;  
-            int rssi = info != null ? info.getRssi() : -80;  
-            float speedSim = estimateSpeedSimMbps(link, rssi);  
-            logOk(String.format(Locale.US, "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));  
+            // 4) SpeedSim
+            WifiInfo info = wm.getConnectionInfo();
+            int link = info != null ? info.getLinkSpeed() : 0;
+            int rssi = info != null ? info.getRssi() : -80;
+            float speedSim = estimateSpeedSimMbps(link, rssi);
+            logOk(String.format(Locale.US,
+                    "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
 
-            logOk("DeepScan finished.");  
+            logOk("DeepScan finished.");
+            logLine();
+            logOk("Lab 10 finished.");
 
-        } catch (Exception e) {  
-            logError("DeepScan error: " + e.getMessage());  
-        }  
-    }).start();  
-}  
+        } catch (Exception e) {
+            logError("DeepScan error: " + e.getMessage());
+        }
+    }).start();
+}
 
-private float tcpLatencyMs(String host, int port, int timeoutMs) {  
-    long t0 = SystemClock.elapsedRealtime();  
-    Socket s = new Socket();  
-    try {  
-        s.connect(new InetSocketAddress(host, port), timeoutMs);  
-        long t1 = SystemClock.elapsedRealtime();  
-        return (t1 - t0);  
-    } catch (Exception e) {  
-        return -1f;  
-    } finally {  
-        try { s.close(); } catch (Exception ignored) {}  
-    }  
-}  
-
-private float dnsResolveMs(String host) {  
-    long t0 = SystemClock.elapsedRealtime();  
-    try {  
-        InetAddress.getByName(host);  
-        long t1 = SystemClock.elapsedRealtime();  
-        return (t1 - t0);  
+private float dnsResolveMs(String host) {
+    long t0 = SystemClock.elapsedRealtime();
+    try {
+        InetAddress.getByName(host);
+        return SystemClock.elapsedRealtime() - t0;
     } catch (Exception e) {
         return -1f;
     }
-} // ✅ ΚΛΕΙΝΕΙ ΕΔΩ Η ΜΕΘΟΔΟΣ
+}
 
-logOk("Lab 10 finished.");
-logLine();
-
-private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {  
-    if (linkSpeedMbps <= 0) linkSpeedMbps = 72;  
-    float rssiFactor;  
-    if (rssiDbm > -55) rssiFactor = 1.2f;  
-    else if (rssiDbm > -65) rssiFactor = 1.0f;  
-    else if (rssiDbm > -75) rssiFactor = 0.7f;  
-    else rssiFactor = 0.4f;  
-    return Math.max(5f, linkSpeedMbps * rssiFactor);  
-}  
+private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
+    if (linkSpeedMbps <= 0) linkSpeedMbps = 72;
+    float rssiFactor;
+    if (rssiDbm > -55) rssiFactor = 1.2f;
+    else if (rssiDbm > -65) rssiFactor = 1.0f;
+    else if (rssiDbm > -75) rssiFactor = 0.7f;
+    else rssiFactor = 0.4f;
+    return Math.max(5f, linkSpeedMbps * rssiFactor);
+}
 
 // ============================================================  
 // LAB 11 — Mobile Data Diagnostic

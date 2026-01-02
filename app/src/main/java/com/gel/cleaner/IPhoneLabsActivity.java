@@ -6,7 +6,6 @@ package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,6 +21,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
 
 import com.gel.cleaner.iphone.IPSPanicParser;
@@ -35,8 +35,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class IPhoneLabsActivity extends AppCompatActivity {
-
-    private TextView txtLog;
 
     private final StringBuilder logHtmlBuffer = new StringBuilder();
 
@@ -790,10 +788,7 @@ private void logError(String msg) {
 private void appendHtml(String htmlLine) {
     if (txtLog == null) return;
 
-    if (logHtmlBuffer.length() > 0) {
-        logHtmlBuffer.append("<br><br>");
-    }
-    logHtmlBuffer.append(htmlLine);
+    logHtmlBuffer.append(htmlLine).append("<br>");
 
     try {
         txtLog.setText(

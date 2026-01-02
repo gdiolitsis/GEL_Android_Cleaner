@@ -222,8 +222,8 @@ public class IPhoneLabsActivity extends Activity {
         // Boot log (and ensure Service Log has a header line for export)
         logLine();
         logInfo("GEL iPhone Labs — ready.");
-        logInfo("Import a panic log, then run labs.");
-        logLine();
+        logOk("Import a panic log, then run labs.");
+        
     }
 
     // ============================================================
@@ -251,6 +251,7 @@ public class IPhoneLabsActivity extends Activity {
 
         logLine();
         logInfo("Panic Log Import requested (SAF).");
+        logLine();
     }
 
     @Override
@@ -288,19 +289,23 @@ public class IPhoneLabsActivity extends Activity {
             // Cache signature once on import (safe)
             parseAndCacheSignature(panicLogText);
 
-            logLine();
             logOk("Panic log imported.");
-            logKV("File", panicLogName, H_NEON);
-            logKV("Size", String.valueOf(panicLogText.length()) + " chars", H_DIM);
-            logOk("Ready for analysis.");
+
+logInfo("File:");
+logOk(panicLogName);
+
+logInfo("Size:");
+logOk(panicLogText.length() + " chars");
+
+logOk("Ready for analysis.");
 
         } catch (Exception e) {
             panicLogLoaded = false;
             panicLogText   = null;
 
-            logLine();
             logError("Panic log import failed.");
-            logKV("Reason", safe(e.getMessage()), H_WARN);
+            logInfo("Reason:");
+            logWarn(safe(e.getMessage()));
         }
     }
 
@@ -311,133 +316,247 @@ public class IPhoneLabsActivity extends Activity {
         if (!guardPanicLog()) return;
 
         logLine();
-        logInfo("LAB — Panic Log Analyzer");
+        logInfo("LAB  1— Panic Log Analyzer");
+        logLine();
 
         IPSPanicParser.Result r = IPSPanicParser.analyze(this, panicLogText);
 
         if (r == null) {
             logWarn("No known panic signature matched.");
-            logKV("File", safe(panicLogName), H_DIM);
+            logInfo("File:");
+            logOk(safe(panicLogName));
+            
             return;
         }
 
         logOk("Panic signature matched.");
-        logKV("Pattern ID", safe(r.patternId), H_NEON);
-        logKV("Domain", safe(r.domain), severityColor(r.severity));
-        logKV("Cause", safe(r.cause), H_WHITE);
-        logKV("Severity", safe(r.severity), severityColor(r.severity));
-        logKV("Confidence", safe(r.confidence), confColor(safe(r.confidence)));
-        logKV("Recommendation", safe(r.recommendation), H_WHITE);
+
+logInfo("Pattern ID:");
+logOk(safe(r.patternId));
+
+logInfo("Domain:");
+logWarn(safe(r.domain));   // domain = warning hint, όχι fact
+
+logInfo("Cause:");
+logOk(safe(r.cause));
+
+logInfo("Severity:");
+if ("High".equalsIgnoreCase(r.severity)) {
+    logError(safe(r.severity));
+} else if ("Medium".equalsIgnoreCase(r.severity)) {
+    logWarn(safe(r.severity));
+} else {
+    logOk(safe(r.severity));
+}
+
+logInfo("Confidence:");
+if ("High".equalsIgnoreCase(r.confidence)) {
+    logOk(safe(r.confidence));
+} else if ("Medium".equalsIgnoreCase(r.confidence)) {
+    logWarn(safe(r.confidence));
+} else {
+    logInfo(safe(r.confidence));
+}
+
+logInfo("Recommendation:");
+logOk(safe(r.recommendation));
+
+logOk("Lab 1 finished.");
     }
 
     // ============================================================
-    // LAB 2 — PANIC SIGNATURE PARSER (local heuristic)
-    // ============================================================
-    private void runPanicSignatureParser() {
-        if (!guardPanicLog()) return;
+// LAB 2 — PANIC SIGNATURE PARSER (human-readable)
+// ============================================================
+private void runPanicSignatureParser() {
+    if (!guardPanicLog()) return;
 
-        logLine();
-        logInfo("LAB — Panic Signature Parser");
+    logLine();
+    logInfo("LAB 2 — Panic Signature Parser");
+    logLine();
 
-        // Re-run safely
-        parseAndCacheSignature(panicLogText);
+    parseAndCacheSignature(panicLogText);
 
-        logKV("File", safe(panicLogName), H_DIM);
-        logKV("Crash Type", safe(sigCrashType), crashColor(sigCrashType));
-        logKV("Domain", safe(sigDomain), domainColor(sigDomain));
-        logKV("Confidence", safe(sigConfidence), confColor(sigConfidence));
+    logInfo("File:");
+    logOk(safe(panicLogName));
 
-        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-            logKV("Evidence", safe(sigKeyEvidence), H_DIM);
-        }
-
-        logOk("Signature extracted.");
+    logInfo("Crash Type:");
+    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
+        logError(safe(sigCrashType));
+        logWarn("This indicates a serious system-level crash.");
+    } else {
+        logOk(safe(sigCrashType));
     }
 
-    // ============================================================
-    // LAB 3 — STABILITY
-    // ============================================================
-    private void runStabilityLab() {
-        if (!guardPanicLog()) return;
+    logInfo("Domain:");
+    logWarn(safe(sigDomain));
+    logInfo("Domain indicates a possible subsystem involved, not a confirmed fault.");
 
-        logLine();
-        logInfo("LAB — System Stability Evaluation");
-
-        // Ensure signature exists
-        parseAndCacheSignature(panicLogText);
-
-        // Human-ish verdict (no fake precision)
-        if ("High".equals(sigConfidence) && ("Kernel Panic".equals(sigCrashType) || "Watchdog / Hang".equals(sigCrashType))) {
-            logError("Stability risk: strong critical indicators detected.");
-        } else if ("Medium".equals(sigConfidence)) {
-            logWarn("Stability risk: moderate indicators — collect more logs.");
-        } else {
-            logOk("No strong instability indicators in this log.");
-        }
-
-        logKV("Crash Type", safe(sigCrashType), crashColor(sigCrashType));
-        logKV("Domain", safe(sigDomain), domainColor(sigDomain));
-        logKV("Confidence", safe(sigConfidence), confColor(sigConfidence));
+    logInfo("Confidence:");
+    if ("High".equalsIgnoreCase(sigConfidence)) {
+        logOk(safe(sigConfidence));
+    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+        logWarn(safe(sigConfidence));
+    } else {
+        logInfo(safe(sigConfidence));
     }
 
-    // ============================================================
-    // LAB 4 — IMPACT
-    // ============================================================
-    private void runImpactLab() {
-        if (!guardPanicLog()) return;
-
-        logLine();
-        logInfo("LAB — Impact Analysis");
-
-        parseAndCacheSignature(panicLogText);
-
-        logKV("Crash Type", safe(sigCrashType), crashColor(sigCrashType));
-        logKV("Suggested Domain", safe(sigDomain), domainColor(sigDomain));
-        logKV("Confidence", safe(sigConfidence), confColor(sigConfidence));
-
-        // Technician hint (still no certainty)
-        if ("Power / PMIC".equals(sigDomain) || "Storage / NAND / FS".equals(sigDomain) || "Baseband / Cellular".equals(sigDomain)) {
-            logError("High-risk domain hint — service inspection recommended if recurring.");
-        } else if ("Thermal / Cooling".equals(sigDomain) || "Memory / OS Pressure".equals(sigDomain)) {
-            logWarn("Subsystem instability hint — verify thermals / memory pressure context.");
-        } else if ("GPU / Graphics".equals(sigDomain) || "I2C / Peripheral Bus".equals(sigDomain) || "Sensors / I/O".equals(sigDomain)) {
-            logWarn("Hardware-path hint — correlate with symptoms (touch/cam/sensors/graphics).");
-        } else {
-            logOk("No strong hardware-domain conclusion from this log alone.");
-        }
-
-        if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-            logKV("Evidence", safe(sigKeyEvidence), H_DIM);
-        }
-
-        logOk("Impact analysis completed.");
+    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+        logInfo("Evidence found in log:");
+        logOk(safe(sigKeyEvidence));
     }
 
-    // ============================================================
-    // LAB 5 — SERVICE VERDICT
-    // ============================================================
-    private void runServiceRecommendationLab() {
-        if (!guardPanicLog()) return;
+    logOk("Crash signature successfully extracted.");
+    logOk("Lab 2 finished.");
+}
 
-        logLine();
-        logInfo("LAB — Service Recommendation");
 
-        parseAndCacheSignature(panicLogText);
+// ============================================================
+// LAB 3 — SYSTEM STABILITY EVALUATION
+// ============================================================
+private void runStabilityLab() {
+    if (!guardPanicLog()) return;
 
-        if ("High".equals(sigConfidence) && ("Kernel Panic".equals(sigCrashType) || "Watchdog / Hang".equals(sigCrashType))) {
-            logError("Service-level inspection recommended (recurring critical pattern).");
-        } else if ("Medium".equals(sigConfidence)) {
-            logWarn("Monitor + collect additional logs (more evidence needed).");
-        } else {
-            logOk("No critical fault indicated by this log alone.");
-        }
+    logLine();
+    logInfo("LAB 3 — System Stability Evaluation");
+    logLine();
 
-        logKV("Crash Type", safe(sigCrashType), crashColor(sigCrashType));
-        logKV("Domain", safe(sigDomain), domainColor(sigDomain));
-        logKV("Confidence", safe(sigConfidence), confColor(sigConfidence));
+    parseAndCacheSignature(panicLogText);
 
-        logOk("Service verdict recorded (included in Export Service Report).");
+    if ("High".equalsIgnoreCase(sigConfidence)
+            && ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
+
+        logError("High system instability detected.");
+        logWarn("This crash pattern is commonly associated with reboots or freezes.");
+
+    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+
+        logWarn("Moderate stability risk detected.");
+        logInfo("The system may behave unpredictably under certain conditions.");
+
+    } else {
+
+        logOk("No strong instability indicators found in this log.");
     }
+
+    logInfo("Crash Type:");
+    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
+        logError(safe(sigCrashType));
+    } else {
+        logOk(safe(sigCrashType));
+    }
+
+    logInfo("Confidence Level:");
+    if ("High".equalsIgnoreCase(sigConfidence)) {
+        logOk(safe(sigConfidence));
+    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+        logWarn(safe(sigConfidence));
+    } else {
+        logInfo(safe(sigConfidence));
+    }
+
+    logOk("System stability evaluation completed.");
+    logOk("Lab 3 finished.");
+}
+
+
+// ============================================================
+// LAB 4 — IMPACT ANALYSIS
+// ============================================================
+private void runImpactLab() {
+    if (!guardPanicLog()) return;
+
+    logLine();
+    logInfo("LAB 4 — Impact Analysis");
+    logLine();
+
+    parseAndCacheSignature(panicLogText);
+
+    logInfo("Crash Type:");
+    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
+        logError(safe(sigCrashType));
+    } else {
+        logOk(safe(sigCrashType));
+    }
+
+    logInfo("Suspected Domain:");
+    logWarn(safe(sigDomain));
+
+    if ("Power / PMIC".equals(sigDomain)
+            || "Storage / NAND / FS".equals(sigDomain)
+            || "Baseband / Cellular".equals(sigDomain)) {
+
+        logError("Critical hardware-related path suggested.");
+        logWarn("If crashes repeat, professional service inspection is advised.");
+
+    } else if ("Thermal / Cooling".equals(sigDomain)
+            || "Memory / OS Pressure".equals(sigDomain)) {
+
+        logWarn("System stress-related impact detected.");
+        logInfo("May be related to overheating, heavy usage, or charging conditions.");
+
+    } else if ("GPU / Graphics".equals(sigDomain)
+            || "Sensors / I/O".equals(sigDomain)
+            || "I2C / Peripheral Bus".equals(sigDomain)) {
+
+        logWarn("Peripheral or interaction-related impact suggested.");
+        logInfo("Correlate with visual issues, touch problems, or sensor behavior.");
+
+    } else {
+
+        logOk("No clear hardware impact identified from this log alone.");
+    }
+
+    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+        logInfo("Supporting Evidence:");
+        logOk(safe(sigKeyEvidence));
+    }
+
+    logOk("Impact analysis completed.");
+    logOk("Lab 4 finished.");
+}
+
+
+// ============================================================
+// LAB 5 — SERVICE RECOMMENDATION
+// ============================================================
+private void runServiceRecommendationLab() {
+    if (!guardPanicLog()) return;
+
+    logLine();
+    logInfo("LAB 5 — Service Recommendation");
+    logLine();
+
+    parseAndCacheSignature(panicLogText);
+
+    if ("High".equalsIgnoreCase(sigConfidence)
+            && ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
+
+        logError("Service inspection strongly recommended.");
+        logWarn("Critical crash pattern with high confidence detected.");
+
+    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+
+        logWarn("Monitoring recommended.");
+        logInfo("If symptoms continue, additional panic logs should be collected.");
+
+    } else {
+
+        logOk("No immediate service action required based on this log.");
+    }
+
+    logInfo("Summary:");
+    logInfo("Crash Type:"); logOk(safe(sigCrashType));
+    logInfo("Domain Hint:"); logWarn(safe(sigDomain));
+    logInfo("Confidence Level:"); logOk(safe(sigConfidence));
+
+    logOk("Service recommendation recorded.");
+    logOk("Lab 5 finished.");
+}
 
     // ============================================================
     // GUARD
@@ -632,112 +751,120 @@ public class IPhoneLabsActivity extends Activity {
     }
 
     // ============================================================
-    // LOGGING (UI + GELServiceLog) — SAME EXPORT PIPELINE
-    // ============================================================
-    private void logLine() {
-        appendHtml("<font color='" + H_DIM + "'>────────────────────────────────</font>");
-        try { GELServiceLog.info("────────────────────────────────"); } catch (Throwable ignore) {}
+// LOGGING (UI + GELServiceLog) — SAME EXPORT PIPELINE
+// ============================================================
+
+private void logLine() {
+    String line = "────────────────────────────────";
+    appendHtml("<font color='#888888'>" + line + "</font>");
+    try { GELServiceLog.info(line); } catch (Throwable ignore) {}
+}
+
+private void logInfo(String msg) {
+    appendHtml("<font color='#FFFFFF'>ℹ " + escape(msg) + "</font>");
+    try { GELServiceLog.info("ℹ " + msg); } catch (Throwable ignore) {}
+}
+
+private void logOk(String msg) {
+    appendHtml("<font color='#00FF66'>✔ " + escape(msg) + "</font>");
+    try { GELServiceLog.ok("✔ " + msg); } catch (Throwable ignore) {}
+}
+
+private void logWarn(String msg) {
+    appendHtml("<font color='#FFCC00'>⚠ " + escape(msg) + "</font>");
+    try { GELServiceLog.warn("⚠ " + msg); } catch (Throwable ignore) {}
+}
+
+private void logError(String msg) {
+    appendHtml("<font color='#FF4444'>✖ " + escape(msg) + "</font>");
+    try { GELServiceLog.error("✖ " + msg); } catch (Throwable ignore) {}
+}
+
+// ------------------------------------------------------------
+// UI APPENDER
+// ------------------------------------------------------------
+private void appendHtml(String htmlLine) {
+    if (txtLog == null) return;
+
+    CharSequence cur = txtLog.getText();
+    String base = (cur != null) ? cur.toString() : "";
+
+    String next;
+    if (base.trim().isEmpty()) next = htmlLine;
+    else next = base + "<br>" + htmlLine;
+
+    try {
+        txtLog.setText(Html.fromHtml(next, Html.FROM_HTML_MODE_LEGACY));
+    } catch (Throwable t) {
+        txtLog.setText(stripHtml(next));
     }
+}
 
-    private void logInfo(String msg) {
-        appendHtml("<font color='" + H_WHITE + "'>ℹ " + escape(msg) + "</font>");
-        try { GELServiceLog.info("ℹ " + msg); } catch (Throwable ignore) {}
-    }
+private String stripHtml(String s) {
+    if (s == null) return "";
+    return s.replace("<br>", "\n").replaceAll("<[^>]*>", "");
+}
 
-    private void logOk(String msg) {
-        appendHtml("<font color='" + H_OK + "'>✔ " + escape(msg) + "</font>");
-        try { GELServiceLog.ok("✔ " + msg); } catch (Throwable ignore) {}
-    }
-
-    private void logWarn(String msg) {
-        appendHtml("<font color='" + H_WARN + "'>⚠ " + escape(msg) + "</font>");
-        try { GELServiceLog.warn("⚠ " + msg); } catch (Throwable ignore) {}
-    }
-
-    private void logError(String msg) {
-        appendHtml("<font color='" + H_ERR + "'>✖ " + escape(msg) + "</font>");
-        try { GELServiceLog.error("✖ " + msg); } catch (Throwable ignore) {}
-    }
-
-    // Label WHITE, Value colored
-    private void logKV(String label, String value, String valueColor) {
-        String l = (label == null) ? "" : label;
-        String v = (value == null) ? "" : value;
-        appendHtml(
-                "<font color='" + H_WHITE + "'>• " + escape(l) + ": </font>" +
-                "<font color='" + (valueColor != null ? valueColor : H_NEON) + "'>" + escape(v) + "</font>"
-        );
-        try {
-            // Export-friendly plain text (still readable)
-            GELServiceLog.info("• " + l + ": " + v);
-        } catch (Throwable ignore) {}
-    }
-
-    private void appendHtml(String htmlLine) {
-        if (txtLog == null) return;
-
-        CharSequence cur = txtLog.getText();
-        String base = (cur != null) ? cur.toString() : "";
-
-        String next;
-        if (base.trim().isEmpty()) next = htmlLine;
-        else next = base + "<br>" + htmlLine;
-
-        try {
-            txtLog.setText(Html.fromHtml(next, Html.FROM_HTML_MODE_LEGACY));
-        } catch (Throwable t) {
-            // fallback plain
-            txtLog.setText(stripHtml(next));
-        }
-    }
-
-    private String stripHtml(String s) {
-        if (s == null) return "";
-        return s.replace("<br>", "\n").replaceAll("<[^>]*>", "");
-    }
-
-    private String escape(String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-    }
+private String escape(String s) {
+    if (s == null) return "";
+    return s.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+}
 
     // ============================================================
-    // COLORS HELPERS
-    // ============================================================
-    private String confColor(String conf) {
-        if (conf == null) return H_DIM;
-        if ("High".equalsIgnoreCase(conf)) return H_ERR;
-        if ("Medium".equalsIgnoreCase(conf)) return H_WARN;
-        return H_OK;
-    }
+// SEMANTIC HELPERS (NO COLORS — LOG METHODS DECIDE)
+// ============================================================
 
-    private String severityColor(String sev) {
-        if (sev == null) return H_DIM;
-        String s = sev.toLowerCase(Locale.US);
-        if (s.contains("critical") || s.contains("high")) return H_ERR;
-        if (s.contains("medium") || s.contains("warn")) return H_WARN;
-        return H_OK;
-    }
+private boolean isHighConfidence(String conf) {
+    return conf != null && "High".equalsIgnoreCase(conf);
+}
 
-    private String crashColor(String crash) {
-        if (crash == null) return H_DIM;
-        if (crash.contains("Kernel Panic")) return H_ERR;
-        if (crash.contains("Watchdog")) return H_ERR;
-        if (crash.contains("Thermal")) return H_WARN;
-        if (crash.contains("Jetsam")) return H_WARN;
-        return H_NEON;
-    }
+private boolean isMediumConfidence(String conf) {
+    return conf != null && "Medium".equalsIgnoreCase(conf);
+}
 
-    private String domainColor(String domain) {
-        if (domain == null) return H_DIM;
-        if (domain.contains("Power") || domain.contains("Baseband") || domain.contains("Storage")) return H_ERR;
-        if (domain.contains("Thermal") || domain.contains("Memory") || domain.contains("GPU")) return H_WARN;
-        return H_NEON;
-    }
+private boolean isCriticalSeverity(String sev) {
+    if (sev == null) return false;
+    String s = sev.toLowerCase(Locale.US);
+    return s.contains("critical") || s.contains("high");
+}
 
-    private String safe(String s) {
-        return (s == null || s.trim().isEmpty()) ? "unknown" : s;
-    }
+private boolean isMediumSeverity(String sev) {
+    if (sev == null) return false;
+    String s = sev.toLowerCase(Locale.US);
+    return s.contains("medium") || s.contains("warn");
+}
+
+private boolean isCriticalCrash(String crash) {
+    if (crash == null) return false;
+    return crash.contains("Kernel Panic")
+            || crash.contains("Watchdog");
+}
+
+private boolean isWarningCrash(String crash) {
+    if (crash == null) return false;
+    return crash.contains("Thermal")
+            || crash.contains("Jetsam");
+}
+
+private boolean isHighRiskDomain(String domain) {
+    if (domain == null) return false;
+    return domain.contains("Power")
+            || domain.contains("Baseband")
+            || domain.contains("Storage");
+}
+
+private boolean isWarningDomain(String domain) {
+    if (domain == null) return false;
+    return domain.contains("Thermal")
+            || domain.contains("Memory")
+            || domain.contains("GPU");
+}
+
+private String safe(String s) {
+    return (s == null || s.trim().isEmpty()) ? "unknown" : s;
+}
 
     // ============================================================
     // HELPERS (dp/sp + I/O)

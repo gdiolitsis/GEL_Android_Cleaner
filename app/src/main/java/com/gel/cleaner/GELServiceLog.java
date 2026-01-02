@@ -68,6 +68,20 @@ public class GELServiceLog {
         add("──", line);
     }
 
+// ============================================================
+// SECTION HEADER (SERVICE REPORT SPLIT)
+// ============================================================
+public static synchronized void section(String title) {
+    if (title == null || title.trim().isEmpty())
+        title = "Service Section";
+
+    String line = "══════════════════════════════════════════";
+
+    add("SECTION", line);
+    add("SECTION", title.toUpperCase(Locale.US));
+    add("SECTION", line);
+}
+
     // ============================================================
     // GET FULL REPORT
     // ============================================================

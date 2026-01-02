@@ -217,113 +217,131 @@ public class IPhoneLabsActivity extends AppCompatActivity {
         txtLog.setIncludeFontPadding(false);
         root.addView(txtLog);
 
-        // FINAL BIND
-        scroll.addView(root);
-        setContentView(scroll);
-        
+ // ============================================================
+// EXPORT SERVICE REPORT BUTTON (iPhone Labs)
+// ============================================================
+Button btnExport = new Button(this);
+btnExport.setText(getString(R.string.export_report_title));
+btnExport.setAllCaps(false);
+btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+btnExport.setTextColor(0xFFFFFFFF);
+
+LinearLayout.LayoutParams lpExp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
+btnExport.setLayoutParams(lpExp);
+
+btnExport.setOnClickListener(v -> {
+    Intent i = new Intent(this, ServiceReportActivity.class);
+    startActivity(i);
+});
+
+// ⬇️ ΜΠΑΙΝΕΙ ΠΡΙΝ ΤΟ FINAL BIND
+root.addView(btnExport);
+
+// ============================================================
+// FINAL BIND
+// ============================================================
+scroll.addView(root);
+setContentView(scroll);
+
 // ============================================================
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
 GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
 
-// First informational entry for iPhone labs
-logInfo("iPhone diagnostic labs ready.");
-logInfo("Import a panic log to begin analysis.");
-        
+// Boot / intro entries (ONCE)
+logLine();
+logInfo("GEL iPhone Labs — ready.");
+logOk("Import a panic log to begin analysis.");
+
+} // onCreate ends here
+
 // ============================================================
-// SERVICE LOG — SECTION HEADER (iPhone Labs)
+// TOAST (VISIBLE GUARD MESSAGE)
 // ============================================================
-GELServiceLog.section("iPhone Diagnostics — Panic Log Analysis");
+private void toast(String msg) {
+    try { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); }
+    catch (Throwable ignore) {}
+}
 
-        // Boot log (and ensure Service Log has a header line for export)
-        logLine();
-        logInfo("GEL iPhone Labs — ready.");
-        logOk("Import a panic log, then run labs.");
-        
+// ============================================================
+// PANIC LOG IMPORT (SAF)
+// ============================================================
+private void openPanicLogPicker() {
+    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+    i.addCategory(Intent.CATEGORY_OPENABLE);
+    i.setType("*/*");
+    i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+            "text/plain",
+            "application/zip",
+            "application/octet-stream"
+    });
+
+    startActivityForResult(i, REQ_PANIC_LOG);
+
+    logLine();
+    logInfo("Panic Log Import requested (SAF).");
+    logLine();
+}
+
+@Override
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode != REQ_PANIC_LOG) return;
+
+    if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+        logWarn("Panic log import cancelled.");
+        return;
     }
 
-    // ============================================================
-    // TOAST (VISIBLE GUARD MESSAGE)
-    // ============================================================
-    private void toast(String msg) {
-        try { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); }
-        catch (Throwable ignore) {}
-    }
+    Uri uri = data.getData();
 
-    // ============================================================
-    // PANIC LOG IMPORT (SAF)
-    // ============================================================
-    private void openPanicLogPicker() {
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("*/*");
-        i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
-                "text/plain",
-                "application/zip",
-                "application/octet-stream"
-        });
+    try {
+        String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
+        panicLogName = (name != null) ? name : "unknown";
 
-        startActivityForResult(i, REQ_PANIC_LOG);
+        InputStream is = getContentResolver().openInputStream(uri);
+        if (is == null) throw new Exception("InputStream null");
 
-        logLine();
-        logInfo("Panic Log Import requested (SAF).");
-        logLine();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode != REQ_PANIC_LOG) return;
-
-        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
-            logWarn("Panic log import cancelled.");
-            return;
+        if (looksLikeZip(panicLogName)) {
+            panicLogText = readPanicFromZip(is);
+        } else {
+            panicLogText = readTextStream(is);
         }
 
-        Uri uri = data.getData();
-
-        try {
-            String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
-            panicLogName = (name != null) ? name : "unknown";
-
-            InputStream is = getContentResolver().openInputStream(uri);
-            if (is == null) throw new Exception("InputStream null");
-
-            if (looksLikeZip(panicLogName)) {
-                panicLogText = readPanicFromZip(is);
-            } else {
-                panicLogText = readTextStream(is);
-            }
-
-            if (panicLogText == null || panicLogText.trim().isEmpty()) {
-                throw new Exception("Empty log");
-            }
-
-            panicLogLoaded = true;
-
-            // Cache signature once on import (safe)
-            parseAndCacheSignature(panicLogText);
-
-            logOk("Panic log imported.");
-
-logInfo("File:");
-logOk(panicLogName);
-
-logInfo("Size:");
-logOk(panicLogText.length() + " chars");
-
-logOk(" Ready for analysis.");
-
-        } catch (Exception e) {
-            panicLogLoaded = false;
-            panicLogText   = null;
-
-            logError("Panic log import failed.");
-            logInfo("Reason:");
-            logWarn(safe(e.getMessage()));
+        if (panicLogText == null || panicLogText.trim().isEmpty()) {
+            throw new Exception("Empty log");
         }
+
+        panicLogLoaded = true;
+
+        // Cache signature once on import (safe)
+        parseAndCacheSignature(panicLogText);
+
+        logOk("Panic log imported.");
+
+        logInfo("File:");
+        logOk(safe(panicLogName));
+
+        logInfo("Size:");
+        logOk(String.valueOf(panicLogText.length()) + " chars");
+
+        logOk("Ready for analysis.");
+
+    } catch (Exception e) {
+        panicLogLoaded = false;
+        panicLogText   = null;
+
+        logError("Panic log import failed.");
+        logInfo("Reason:");
+        logWarn(safe(e.getMessage()));
     }
+}
 
 // ============================================================
 // LAB 1 — PANIC LOG ANALYZER (Initial Screening)

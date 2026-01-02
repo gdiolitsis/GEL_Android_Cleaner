@@ -2615,16 +2615,6 @@ private void runWifiDeepScan(WifiManager wm) {
     }).start();
 }
 
-private float dnsResolveMs(String host) {
-    long t0 = SystemClock.elapsedRealtime();
-    try {
-        InetAddress.getByName(host);
-        return SystemClock.elapsedRealtime() - t0;
-    } catch (Exception e) {
-        return -1f;
-    }
-}
-
 private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
     if (linkSpeedMbps <= 0) linkSpeedMbps = 72;
     float rssiFactor;

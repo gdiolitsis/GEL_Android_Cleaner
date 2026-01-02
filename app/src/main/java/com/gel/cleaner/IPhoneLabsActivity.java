@@ -363,10 +363,11 @@ if ("High".equalsIgnoreCase(r.confidence)) {
 logInfo("Recommendation:");
 logOk(safe(r.recommendation));
 
+logLine();
 logOk("Lab 1 finished.");
-    }
+}
 
-    // ============================================================
+// ============================================================
 // LAB 2 — PANIC SIGNATURE PARSER (human-readable)
 // ============================================================
 private void runPanicSignatureParser() {
@@ -409,6 +410,8 @@ private void runPanicSignatureParser() {
     }
 
     logOk("Crash signature successfully extracted.");
+    
+    logLine();
     logOk("Lab 2 finished.");
 }
 
@@ -460,6 +463,8 @@ private void runStabilityLab() {
     }
 
     logOk("System stability evaluation completed.");
+    
+    logLine();
     logOk("Lab 3 finished.");
 }
 
@@ -518,6 +523,8 @@ private void runImpactLab() {
     }
 
     logOk("Impact analysis completed.");
+    
+    logLine();
     logOk("Lab 4 finished.");
 }
 
@@ -557,6 +564,8 @@ private void runServiceRecommendationLab() {
     logInfo("Confidence Level:"); logOk(safe(sigConfidence));
 
     logOk("Service recommendation recorded.");
+    
+    logLine();
     logOk("Lab 5 finished.");
 }
 

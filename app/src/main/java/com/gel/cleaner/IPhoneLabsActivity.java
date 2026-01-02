@@ -139,7 +139,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 1) Import (no guard)
         root.addView(makeLabButton(
-                "📦 Panic Log Import (TXT / ZIP)",
+                " Panic Log Import (TXT / ZIP)",
                 "Auto unzip + load panic report",
                 false,
                 v -> openPanicLogPicker()
@@ -147,7 +147,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 2) Analyzer (guard)
         root.addView(makeLabButton(
-                "📄 Panic Log Analyzer",
+                " Panic Log Analyzer",
                 "Pattern match • Domain • Cause • Severity • Recommendation",
                 true,
                 v -> runPanicLogAnalyzer()
@@ -155,7 +155,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 3) Signature Parser (guard)
         root.addView(makeLabButton(
-                "🧷 Panic Signature Parser",
+                " Panic Signature Parser",
                 "Crash Type • Domain • Confidence • Evidence",
                 true,
                 v -> runPanicSignatureParser()
@@ -163,7 +163,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 4) Stability (guard)
         root.addView(makeLabButton(
-                "📊 System Stability Evaluation",
+                " System Stability Evaluation",
                 "Evaluate iOS stability from available logs",
                 true,
                 v -> runStabilityLab()
@@ -171,7 +171,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 5) Impact (guard)
         root.addView(makeLabButton(
-                "🧠 Impact Analysis",
+                " Impact Analysis",
                 "Correlate crash with probable hardware domain",
                 true,
                 v -> runImpactLab()
@@ -179,7 +179,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 6) Service Verdict (guard)
         root.addView(makeLabButton(
-                "🧾 Service Recommendation",
+                " Service Recommendation",
                 "Final service verdict (technician-friendly)",
                 true,
                 v -> runServiceRecommendationLab()
@@ -335,7 +335,7 @@ logInfo("Pattern ID:");
 logOk(safe(r.patternId));
 
 logInfo("Domain:");
-logWarn(safe(r.domain));   // domain = warning hint, όχι fact
+logWarn(safe(r.domain));   // domain = warning hint,  fact
 
 logInfo("Cause:");
 logOk(safe(r.cause));
@@ -755,29 +755,29 @@ private void runServiceRecommendationLab() {
 // ============================================================
 
 private void logLine() {
-    String line = "────────────────────────────────";
+    String line = "";
     appendHtml("<font color='#888888'>" + line + "</font>");
     try { GELServiceLog.info(line); } catch (Throwable ignore) {}
 }
 
 private void logInfo(String msg) {
-    appendHtml("<font color='#FFFFFF'>ℹ " + escape(msg) + "</font>");
-    try { GELServiceLog.info("ℹ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFFFFF'> " + escape(msg) + "</font>");
+    try { GELServiceLog.info(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#00FF66'>✔ " + escape(msg) + "</font>");
-    try { GELServiceLog.ok("✔ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#00FF66'> " + escape(msg) + "</font>");
+    try { GELServiceLog.ok(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFCC00'>⚠ " + escape(msg) + "</font>");
-    try { GELServiceLog.warn("⚠ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFCC00'> " + escape(msg) + "</font>");
+    try { GELServiceLog.warn(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF4444'>✖ " + escape(msg) + "</font>");
-    try { GELServiceLog.error("✖ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FF4444'> " + escape(msg) + "</font>");
+    try { GELServiceLog.error(" " + msg); } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------
@@ -791,7 +791,7 @@ private void appendHtml(String htmlLine) {
 
     String next;
     if (base.trim().isEmpty()) next = htmlLine;
-    else next = base + "<br>" + htmlLine;
+    else next = base + "<br/><br/>" + htmlLine;
 
     try {
         txtLog.setText(Html.fromHtml(next, Html.FROM_HTML_MODE_LEGACY));

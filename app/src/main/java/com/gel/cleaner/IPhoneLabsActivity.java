@@ -141,7 +141,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 1) Import (no guard)
         root.addView(makeLabButton(
-                "LAB 1 - Panic Log Import (TXT / ZIP)",
+                "Panic Log Import (TXT / ZIP)",
                 "Auto unzip + load panic report",
                 false,
                 v -> openPanicLogPicker()
@@ -149,7 +149,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 2) Analyzer (guard)
         root.addView(makeLabButton(
-                "LAB 2 -  Panic Log Analyzer",
+                "LAB 1 -  Panic Log Analyzer",
                 "Pattern match • Domain • Cause • Severity • Recommendation",
                 true,
                 v -> runPanicLogAnalyzer()
@@ -157,7 +157,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 3) Signature Parser (guard)
         root.addView(makeLabButton(
-                "LAB 3 -  Panic Signature Parser",
+                "LAB 2 -  Panic Signature Parser",
                 "Crash Type • Domain • Confidence • Evidence",
                 true,
                 v -> runPanicSignatureParser()
@@ -165,7 +165,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 4) Stability (guard)
         root.addView(makeLabButton(
-                "LAB 4 - System Stability Evaluation",
+                "LAB 3 - System Stability Evaluation",
                 "Evaluate iOS stability from available logs",
                 true,
                 v -> runStabilityLab()
@@ -173,7 +173,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 5) Impact (guard)
         root.addView(makeLabButton(
-                "LAB 5 -  Impact Analysis",
+                "LAB 4 -  Impact Analysis",
                 "Correlate crash with probable hardware domain",
                 true,
                 v -> runImpactLab()
@@ -181,7 +181,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 
         // 6) Service Verdict (guard)
         root.addView(makeLabButton(
-                "LAB 6 - Service Recommendation",
+                "LAB 5 - Service Recommendation",
                 "Final service verdict (technician-friendly)",
                 true,
                 v -> runServiceRecommendationLab()
@@ -757,32 +757,29 @@ private void runServiceRecommendationLab() {
 // ============================================================
 
 private void logLine() {
-    String line = "----------------------------------------";
-
-    appendHtml("<br><font color='#888888'>" + line + "</font>");
-    try { 
-        GELServiceLog.info(line); 
-    } catch (Throwable ignore) {}
+    String line = "────────────────────────────────";
+    appendHtml("<font color='#888888'>" + line + "</font>");
+    try { GELServiceLog.info(line); } catch (Throwable ignore) {}
 }
 
 private void logInfo(String msg) {
-    appendHtml("<font color='#FFFFFF'>INFO: " + escape(msg) + "</font>");
-    try { GELServiceLog.info("INFO: " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFFFFF'>ℹ️ " + escape(msg) + "</font>");
+    try { GELServiceLog.info("ℹ️ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#00FF66'>OK: " + escape(msg) + "</font>");
-    try { GELServiceLog.ok("OK: " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#00FF66'>✅ " + escape(msg) + "</font>");
+    try { GELServiceLog.ok("✅ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFCC00'>WARN: " + escape(msg) + "</font>");
-    try { GELServiceLog.warn("WARN: " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFCC00'>⚠️ " + escape(msg) + "</font>");
+    try { GELServiceLog.warn("⚠️ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF4444'>ERROR: " + escape(msg) + "</font>");
-    try { GELServiceLog.error("ERROR: " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FF4444'>❌ " + escape(msg) + "</font>");
+    try { GELServiceLog.error("❌ " + msg); } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------

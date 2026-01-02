@@ -2601,12 +2601,12 @@ private float dnsResolveMs(String host) {
         long t1 = SystemClock.elapsedRealtime();  
         return (t1 - t0);  
     } catch (Exception e) {
-    return -1f;
-}
+        return -1f;
+    }
+} // ✅ ΚΛΕΙΝΕΙ ΕΔΩ Η ΜΕΘΟΔΟΣ
 
 logOk("Lab 10 finished.");
 logLine();
-}
 
 private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {  
     if (linkSpeedMbps <= 0) linkSpeedMbps = 72;  

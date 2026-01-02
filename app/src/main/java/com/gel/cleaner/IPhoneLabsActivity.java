@@ -220,6 +220,11 @@ public class IPhoneLabsActivity extends AppCompatActivity {
         // FINAL BIND
         scroll.addView(root);
         setContentView(scroll);
+        
+// ============================================================
+// SERVICE LOG — SECTION HEADER (iPhone Labs)
+// ============================================================
+GELServiceLog.section("iPhone Diagnostics — Panic Log Analysis");
 
         // Boot log (and ensure Service Log has a header line for export)
         logLine();
@@ -299,7 +304,7 @@ logOk(panicLogName);
 logInfo("Size:");
 logOk(panicLogText.length() + " chars");
 
-logOk("Ready for analysis.");
+logOk(" Ready for analysis.");
 
         } catch (Exception e) {
             panicLogLoaded = false;
@@ -311,70 +316,88 @@ logOk("Ready for analysis.");
         }
     }
 
-    // ============================================================
-    // LAB 1 — PANIC LOG ANALYZER (IPSPanicParser)
-    // ============================================================
-    private void runPanicLogAnalyzer() {
-        if (!guardPanicLog()) return;
+// ============================================================
+// LAB 1 — PANIC LOG ANALYZER (Initial Screening)
+// ============================================================
+private void runPanicLogAnalyzer() {
+    if (!guardPanicLog()) return;
+
+    logLine();
+    logInfo("LAB 1 — Panic Log Analyzer");
+    logInfo("Initial screening of the panic log against known crash patterns.");
+    logLine();
+
+    IPSPanicParser.Result r = IPSPanicParser.analyze(this, panicLogText);
+
+    if (r == null) {
+        logWarn("No known panic signature matched.");
+
+        logInfo("What this means:");
+        logOk("The log is valid, but it does not match a predefined crash pattern.");
+
+        logInfo("Why this matters:");
+        logOk("Some crashes require behavioral analysis rather than signature matching.");
+
+        logInfo("Next step:");
+        logOk("The next lab will interpret crash behavior beyond fixed signatures.");
+
+        logInfo("File analyzed:");
+        logOk(safe(panicLogName));
 
         logLine();
-        logInfo("LAB  1— Panic Log Analyzer");
-        logLine();
+        logOk("Lab 1 finished.");
+        return;
+    }
 
-        IPSPanicParser.Result r = IPSPanicParser.analyze(this, panicLogText);
+    logOk("Panic signature matched.");
 
-        if (r == null) {
-            logWarn("No known panic signature matched.");
-            logInfo("File:");
-            logOk(safe(panicLogName));
-            
-            return;
-        }
+    logInfo("Pattern ID:");
+    logOk(safe(r.patternId));
 
-        logOk("Panic signature matched.");
+    logInfo("Domain (hint):");
+    logWarn(safe(r.domain));
 
-logInfo("Pattern ID:");
-logOk(safe(r.patternId));
+    logInfo("Reported Cause:");
+    logOk(safe(r.cause));
 
-logInfo("Domain:");
-logWarn(safe(r.domain));   // domain = warning hint,  fact
+    logInfo("Severity:");
+    if ("High".equalsIgnoreCase(r.severity)) {
+        logError(safe(r.severity));
+    } else if ("Medium".equalsIgnoreCase(r.severity)) {
+        logWarn(safe(r.severity));
+    } else {
+        logOk(safe(r.severity));
+    }
 
-logInfo("Cause:");
-logOk(safe(r.cause));
+    logInfo("Confidence:");
+    if ("High".equalsIgnoreCase(r.confidence)) {
+        logOk(safe(r.confidence));
+    } else if ("Medium".equalsIgnoreCase(r.confidence)) {
+        logWarn(safe(r.confidence));
+    } else {
+        logInfo(safe(r.confidence));
+    }
 
-logInfo("Severity:");
-if ("High".equalsIgnoreCase(r.severity)) {
-    logError(safe(r.severity));
-} else if ("Medium".equalsIgnoreCase(r.severity)) {
-    logWarn(safe(r.severity));
-} else {
-    logOk(safe(r.severity));
+    logInfo("Initial Recommendation:");
+    logOk(safe(r.recommendation));
+
+    logInfo("Next step:");
+    logOk("The extracted signature will be interpreted in detail in the next lab.");
+
+    logLine();
+    logOk("Lab 1 finished.");
 }
 
-logInfo("Confidence:");
-if ("High".equalsIgnoreCase(r.confidence)) {
-    logOk(safe(r.confidence));
-} else if ("Medium".equalsIgnoreCase(r.confidence)) {
-    logWarn(safe(r.confidence));
-} else {
-    logInfo(safe(r.confidence));
-}
-
-logInfo("Recommendation:");
-logOk(safe(r.recommendation));
-
-logLine();
-logOk("Lab 1 finished.");
-}
 
 // ============================================================
-// LAB 2 — PANIC SIGNATURE PARSER (human-readable)
+// LAB 2 — PANIC SIGNATURE PARSER (Behavior Interpretation)
 // ============================================================
 private void runPanicSignatureParser() {
     if (!guardPanicLog()) return;
 
     logLine();
     logInfo("LAB 2 — Panic Signature Parser");
+    logInfo("Interpreting crash behavior using contextual evidence.");
     logLine();
 
     parseAndCacheSignature(panicLogText);
@@ -386,16 +409,16 @@ private void runPanicSignatureParser() {
     if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
             || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
         logError(safe(sigCrashType));
-        logWarn("This indicates a serious system-level crash.");
+        logWarn("This represents a serious system-level interruption.");
     } else {
         logOk(safe(sigCrashType));
     }
 
-    logInfo("Domain:");
+    logInfo("Subsystem Hint:");
     logWarn(safe(sigDomain));
-    logInfo("Domain indicates a possible subsystem involved, not a confirmed fault.");
+    logInfo("This indicates a possible subsystem involved, not a confirmed fault.");
 
-    logInfo("Confidence:");
+    logInfo("Confidence Level:");
     if ("High".equalsIgnoreCase(sigConfidence)) {
         logOk(safe(sigConfidence));
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
@@ -405,12 +428,13 @@ private void runPanicSignatureParser() {
     }
 
     if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-        logInfo("Evidence found in log:");
+        logInfo("Key Evidence Found:");
         logOk(safe(sigKeyEvidence));
     }
 
-    logOk("Crash signature successfully extracted.");
-    
+    logInfo("Next step:");
+    logOk("System stability will be evaluated based on this crash behavior.");
+
     logLine();
     logOk("Lab 2 finished.");
 }
@@ -424,6 +448,7 @@ private void runStabilityLab() {
 
     logLine();
     logInfo("LAB 3 — System Stability Evaluation");
+    logInfo("Assessing whether the crash indicates broader system instability.");
     logLine();
 
     parseAndCacheSignature(panicLogText);
@@ -433,39 +458,30 @@ private void runStabilityLab() {
             || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
 
         logError("High system instability indicators detected.");
-        logWarn("This crash pattern is commonly associated with reboots or freezes.");
+        logWarn("Such crashes are often associated with reboots or freezes.");
+
         logInfo("In simple terms:");
-        logOk("The device could not maintain stable operation under certain conditions.");
+        logOk("The device was unable to maintain stable operation under certain conditions.");
 
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
         logWarn("Moderate stability risk detected.");
-        logInfo("The system may behave unpredictably under certain conditions.");
+        logInfo("The system may become unstable under specific scenarios.");
 
     } else {
 
-        logOk("No strong instability indicators found in this log.");
+        logOk("No strong indicators of ongoing system instability found.");
     }
 
     logInfo("Crash Type:");
-    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
-            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
-        logError(safe(sigCrashType));
-    } else {
-        logOk(safe(sigCrashType));
-    }
+    logOk(safe(sigCrashType));
 
     logInfo("Confidence Level:");
-    if ("High".equalsIgnoreCase(sigConfidence)) {
-        logOk(safe(sigConfidence));
-    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
-        logWarn(safe(sigConfidence));
-    } else {
-        logInfo(safe(sigConfidence));
-    }
+    logOk(safe(sigConfidence));
 
-    logOk("System stability evaluation completed.");
-    
+    logInfo("Next step:");
+    logOk("The potential impact on hardware-related domains will be evaluated.");
+
     logLine();
     logOk("Lab 3 finished.");
 }
@@ -479,17 +495,13 @@ private void runImpactLab() {
 
     logLine();
     logInfo("LAB 4 — Impact Analysis");
+    logInfo("Evaluating which hardware or system areas may be affected.");
     logLine();
 
     parseAndCacheSignature(panicLogText);
 
     logInfo("Crash Type:");
-    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
-            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
-        logError(safe(sigCrashType));
-    } else {
-        logOk(safe(sigCrashType));
-    }
+    logOk(safe(sigCrashType));
 
     logInfo("Suspected Domain:");
     logWarn(safe(sigDomain));
@@ -497,25 +509,18 @@ private void runImpactLab() {
     if ("Power / PMIC".equals(sigDomain)
             || "Storage / NAND / FS".equals(sigDomain)
             || "Baseband / Cellular".equals(sigDomain)) {
-            
-        logInfo("Important clarification:");
-        logOk("This does not confirm a faulty part. It only guides where inspection starts.");
 
-        logError("Critical hardware-related path suggested.");
-        logWarn("If crashes repeat, professional service inspection is advised.");
+        logInfo("Important clarification:");
+        logOk("This does not confirm a faulty component.");
+
+        logError("A critical hardware-related path is suggested.");
+        logWarn("If crashes repeat, professional inspection is advised.");
 
     } else if ("Thermal / Cooling".equals(sigDomain)
             || "Memory / OS Pressure".equals(sigDomain)) {
 
-        logWarn("System stress-related impact detected.");
-        logInfo("May be related to overheating, heavy usage, or charging conditions.");
-
-    } else if ("GPU / Graphics".equals(sigDomain)
-            || "Sensors / I/O".equals(sigDomain)
-            || "I2C / Peripheral Bus".equals(sigDomain)) {
-
-        logWarn("Peripheral or interaction-related impact suggested.");
-        logInfo("Correlate with visual issues, touch problems, or sensor behavior.");
+        logWarn("System stress-related impact suggested.");
+        logInfo("Often linked to heat, load, or prolonged usage.");
 
     } else {
 
@@ -527,21 +532,23 @@ private void runImpactLab() {
         logOk(safe(sigKeyEvidence));
     }
 
-    logOk("Impact analysis completed.");
-    
+    logInfo("Next step:");
+    logOk("A final service-level recommendation will be provided.");
+
     logLine();
     logOk("Lab 4 finished.");
 }
 
 
 // ============================================================
-// LAB 5 — SERVICE RECOMMENDATION
+// LAB 5 — SERVICE RECOMMENDATION (Final Verdict)
 // ============================================================
 private void runServiceRecommendationLab() {
     if (!guardPanicLog()) return;
 
     logLine();
     logInfo("LAB 5 — Service Recommendation");
+    logInfo("Final service-level guidance based on all previous findings.");
     logLine();
 
     parseAndCacheSignature(panicLogText);
@@ -550,29 +557,27 @@ private void runServiceRecommendationLab() {
             && ("Kernel Panic".equalsIgnoreCase(sigCrashType)
             || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
 
-        logError("Service inspection strongly recommended.");
-        logWarn("Critical crash pattern with high confidence detected.");
+        logError("Service inspection is strongly recommended.");
+        logWarn("A critical crash pattern with high confidence was detected.");
 
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
-        logWarn("Monitoring recommended.");
-        logInfo("If symptoms continue, additional panic logs should be collected.");
+        logWarn("Monitoring is recommended.");
+        logInfo("If similar crashes occur, further inspection is advised.");
 
     } else {
 
-        logOk("No immediate service action required based on this log.");
+        logOk("No immediate service action is required at this time.");
     }
 
     logInfo("Summary:");
-    logInfo("Crash Type:"); logOk(safe(sigCrashType));
-    logInfo("Domain Hint:"); logWarn(safe(sigDomain));
-    logInfo("Confidence Level:"); logOk(safe(sigConfidence));
+    logOk("Crash Type: " + safe(sigCrashType));
+    logOk("Domain Hint: " + safe(sigDomain));
+    logOk("Confidence Level: " + safe(sigConfidence));
 
-    logOk("Service recommendation recorded.");
-    
     logInfo("Final note:");
-    logOk("A single panic log is a snapshot, not a final diagnosis.");
-    
+    logOk("A single panic log represents a snapshot, not a definitive diagnosis.");
+
     logLine();
     logOk("Lab 5 finished.");
 }

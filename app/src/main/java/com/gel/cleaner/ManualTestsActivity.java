@@ -797,6 +797,35 @@ private String formatUptime(long ms) {
 }
 
 // ============================================================
+// NETWORK HELPERS — USED BY LAB 10
+// ============================================================
+
+private float tcpLatencyMs(String host, int port, int timeoutMs) {
+    long t0 = SystemClock.elapsedRealtime();
+    Socket s = new Socket();
+    try {
+        s.connect(new InetSocketAddress(host, port), timeoutMs);
+        long t1 = SystemClock.elapsedRealtime();
+        return (t1 - t0);
+    } catch (Exception e) {
+        return -1f;
+    } finally {
+        try { s.close(); } catch (Exception ignored) {}
+    }
+}
+
+private float dnsResolveMs(String host) {
+    long t0 = SystemClock.elapsedRealtime();
+    try {
+        InetAddress.getByName(host);
+        long t1 = SystemClock.elapsedRealtime();
+        return (t1 - t0);
+    } catch (Exception e) {
+        return -1f;
+    }
+}
+
+// ============================================================
 // GEL BATTERY + LAB15 SUPPORT — REQUIRED (RESTORE MISSING SYMBOLS)
 // KEEP THIS BLOCK INSIDE ManualTestsActivity (helpers area)
 // ============================================================

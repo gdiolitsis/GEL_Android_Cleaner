@@ -432,8 +432,10 @@ private void runStabilityLab() {
             && ("Kernel Panic".equalsIgnoreCase(sigCrashType)
             || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
 
-        logError("High system instability detected.");
+        logError("High system instability indicators detected.");
         logWarn("This crash pattern is commonly associated with reboots or freezes.");
+        logInfo("In simple terms:");
+        logOk("The device could not maintain stable operation under certain conditions.");
 
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
@@ -495,6 +497,9 @@ private void runImpactLab() {
     if ("Power / PMIC".equals(sigDomain)
             || "Storage / NAND / FS".equals(sigDomain)
             || "Baseband / Cellular".equals(sigDomain)) {
+            
+        logInfo("Important clarification:");
+        logOk("This does not confirm a faulty part. It only guides where inspection starts.");
 
         logError("Critical hardware-related path suggested.");
         logWarn("If crashes repeat, professional service inspection is advised.");
@@ -564,6 +569,9 @@ private void runServiceRecommendationLab() {
     logInfo("Confidence Level:"); logOk(safe(sigConfidence));
 
     logOk("Service recommendation recorded.");
+    
+    logInfo("Final note:");
+    logOk("A single panic log is a snapshot, not a final diagnosis.");
     
     logLine();
     logOk("Lab 5 finished.");
@@ -766,29 +774,29 @@ private void runServiceRecommendationLab() {
 // ============================================================
 
 private void logLine() {
-    String line = "────────────────────────────────";
+    String line = "";
     appendHtml("<font color='#888888'>" + line + "</font>");
     try { GELServiceLog.info(line); } catch (Throwable ignore) {}
 }
 
 private void logInfo(String msg) {
-    appendHtml("<font color='#FFFFFF'>ℹ️ " + escape(msg) + "</font>");
-    try { GELServiceLog.info("ℹ️ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFFFFF'> " + escape(msg) + "</font>");
+    try { GELServiceLog.info(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#00FF66'>✅ " + escape(msg) + "</font>");
-    try { GELServiceLog.ok("✅ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#00FF66'> " + escape(msg) + "</font>");
+    try { GELServiceLog.ok(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFCC00'>⚠️ " + escape(msg) + "</font>");
-    try { GELServiceLog.warn("⚠️ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFCC00'> " + escape(msg) + "</font>");
+    try { GELServiceLog.warn(" " + msg); } catch (Throwable ignore) {}
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF4444'>❌ " + escape(msg) + "</font>");
-    try { GELServiceLog.error("❌ " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FF4444'> " + escape(msg) + "</font>");
+    try { GELServiceLog.error(" " + msg); } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------

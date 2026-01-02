@@ -34,7 +34,11 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class IPhoneLabsActivity extends Activity {
+public class IPhoneLabsActivity extends AppCompatActivity {
+
+    private TextView txtLog;
+
+    private final StringBuilder logHtmlBuffer = new StringBuilder();
 
     // ============================================================
     // REQUEST CODES
@@ -139,7 +143,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 1) Import (no guard)
         root.addView(makeLabButton(
-                " Panic Log Import (TXT / ZIP)",
+                "LAB 1 - Panic Log Import (TXT / ZIP)",
                 "Auto unzip + load panic report",
                 false,
                 v -> openPanicLogPicker()
@@ -147,7 +151,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 2) Analyzer (guard)
         root.addView(makeLabButton(
-                " Panic Log Analyzer",
+                "LAB 2 -  Panic Log Analyzer",
                 "Pattern match • Domain • Cause • Severity • Recommendation",
                 true,
                 v -> runPanicLogAnalyzer()
@@ -155,7 +159,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 3) Signature Parser (guard)
         root.addView(makeLabButton(
-                " Panic Signature Parser",
+                "LAB 3 -  Panic Signature Parser",
                 "Crash Type • Domain • Confidence • Evidence",
                 true,
                 v -> runPanicSignatureParser()
@@ -163,7 +167,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 4) Stability (guard)
         root.addView(makeLabButton(
-                " System Stability Evaluation",
+                "LAB 4 - System Stability Evaluation",
                 "Evaluate iOS stability from available logs",
                 true,
                 v -> runStabilityLab()
@@ -171,7 +175,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 5) Impact (guard)
         root.addView(makeLabButton(
-                " Impact Analysis",
+                "LAB 5 -  Impact Analysis",
                 "Correlate crash with probable hardware domain",
                 true,
                 v -> runImpactLab()
@@ -179,7 +183,7 @@ public class IPhoneLabsActivity extends Activity {
 
         // 6) Service Verdict (guard)
         root.addView(makeLabButton(
-                " Service Recommendation",
+                "LAB 6 - Service Recommendation",
                 "Final service verdict (technician-friendly)",
                 true,
                 v -> runServiceRecommendationLab()
@@ -786,17 +790,20 @@ private void logError(String msg) {
 private void appendHtml(String htmlLine) {
     if (txtLog == null) return;
 
-    CharSequence cur = txtLog.getText();
-    String base = (cur != null) ? cur.toString() : "";
-
-    String next;
-    if (base.trim().isEmpty()) next = htmlLine;
-    else next = base + "<br/><br/>" + htmlLine;
+    if (logHtmlBuffer.length() > 0) {
+        logHtmlBuffer.append("<br><br>");
+    }
+    logHtmlBuffer.append(htmlLine);
 
     try {
-        txtLog.setText(Html.fromHtml(next, Html.FROM_HTML_MODE_LEGACY));
+        txtLog.setText(
+            Html.fromHtml(
+                logHtmlBuffer.toString(),
+                Html.FROM_HTML_MODE_LEGACY
+            )
+        );
     } catch (Throwable t) {
-        txtLog.setText(stripHtml(next));
+        txtLog.setText(logHtmlBuffer.toString());
     }
 }
 

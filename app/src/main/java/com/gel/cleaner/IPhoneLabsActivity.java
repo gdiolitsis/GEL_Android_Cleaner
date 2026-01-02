@@ -224,6 +224,15 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 // ============================================================
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
+GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
+
+// First informational entry for iPhone labs
+logInfo("iPhone diagnostic labs ready.");
+logInfo("Import a panic log to begin analysis.");
+        
+// ============================================================
+// SERVICE LOG — SECTION HEADER (iPhone Labs)
+// ============================================================
 GELServiceLog.section("iPhone Diagnostics — Panic Log Analysis");
 
         // Boot log (and ensure Service Log has a header line for export)
@@ -382,7 +391,7 @@ private void runPanicLogAnalyzer() {
     logOk(safe(r.recommendation));
 
     logInfo("Next step:");
-    logOk("The extracted signature will be interpreted in detail in the next lab.");
+    logOk("The extracted signature will be interpreted in detail in the next LAB 2.");
 
     logLine();
     logOk("Lab 1 finished.");
@@ -433,7 +442,7 @@ private void runPanicSignatureParser() {
     }
 
     logInfo("Next step:");
-    logOk("System stability will be evaluated based on this crash behavior.");
+    logOk("The extracted signature will be interpreted in detail in the next LAB 3.");
 
     logLine();
     logOk("Lab 2 finished.");
@@ -480,7 +489,7 @@ private void runStabilityLab() {
     logOk(safe(sigConfidence));
 
     logInfo("Next step:");
-    logOk("The potential impact on hardware-related domains will be evaluated.");
+    logOk("The following LAB 4 analyzes which hardware area is most likely involved.");
 
     logLine();
     logOk("Lab 3 finished.");
@@ -533,12 +542,11 @@ private void runImpactLab() {
     }
 
     logInfo("Next step:");
-    logOk("A final service-level recommendation will be provided.");
+    logOk("A final service-level recommendation will be provided at LAB 5.");
 
     logLine();
     logOk("Lab 4 finished.");
 }
-
 
 // ============================================================
 // LAB 5 — SERVICE RECOMMENDATION (Final Verdict)
@@ -548,35 +556,66 @@ private void runServiceRecommendationLab() {
 
     logLine();
     logInfo("LAB 5 — Service Recommendation");
-    logInfo("Final service-level guidance based on all previous findings.");
+    logInfo("Final technical summary based on available panic log data.");
     logLine();
 
     parseAndCacheSignature(panicLogText);
 
+    // ------------------------------------------------------------
+    // HUMAN VERDICT (NO FEAR, NO LIES)
+    // ------------------------------------------------------------
     if ("High".equalsIgnoreCase(sigConfidence)
             && ("Kernel Panic".equalsIgnoreCase(sigCrashType)
             || "Watchdog / Hang".equalsIgnoreCase(sigCrashType))) {
 
-        logError("Service inspection is strongly recommended.");
-        logWarn("A critical crash pattern with high confidence was detected.");
+        logWarn("Important notice:");
+        logOk("The log shows a recurring critical system crash pattern.");
+
+        logWarn("What this usually indicates:");
+        logOk("Such crashes are commonly linked to power instability, system protection triggers, or hardware stress.");
+
+        logWarn("Service recommendation:");
+        logError("Professional inspection is recommended if the issue repeats.");
 
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
-        logWarn("Monitoring is recommended.");
-        logInfo("If similar crashes occur, further inspection is advised.");
+        logWarn("Observed condition:");
+        logOk("The log indicates instability under certain conditions.");
+
+        logWarn("Recommended action:");
+        logOk("Monitoring is advised. Collect additional logs if symptoms continue.");
 
     } else {
 
-        logOk("No immediate service action is required at this time.");
+        logOk("Result summary:");
+        logOk("No critical fault is indicated by this panic log alone.");
+
+        logInfo("What this means:");
+        logOk("If this was a one-time event, no immediate service action is required.");
     }
 
-    logInfo("Summary:");
-    logOk("Crash Type: " + safe(sigCrashType));
-    logOk("Domain Hint: " + safe(sigDomain));
-    logOk("Confidence Level: " + safe(sigConfidence));
+    // ------------------------------------------------------------
+    // TECHNICIAN SUMMARY (PDF-FRIENDLY)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Technical summary:");
 
+    logInfo("Crash type:");
+    logOk(safe(sigCrashType));
+
+    logInfo("Domain indication:");
+    logWarn(safe(sigDomain));
+
+    logInfo("Confidence level:");
+    logOk(safe(sigConfidence));
+
+    // ------------------------------------------------------------
+    // FINAL NOTE (VERY IMPORTANT)
+    // ------------------------------------------------------------
+    logLine();
     logInfo("Final note:");
-    logOk("A single panic log represents a snapshot, not a definitive diagnosis.");
+    logOk("A panic log represents a snapshot in time, not a full diagnosis.");
+    logOk("Conclusions should be correlated with device history and user symptoms.");
 
     logLine();
     logOk("Lab 5 finished.");

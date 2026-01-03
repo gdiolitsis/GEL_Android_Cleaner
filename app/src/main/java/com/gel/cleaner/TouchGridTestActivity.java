@@ -162,9 +162,19 @@ public class TouchGridTestActivity extends Activity {
                         invalidate();
 
                         if (allCleared()) {
-                            setResult(RESULT_OK);
-                            finish();
-                        }
+
+    GELServiceLog.section("LAB 6 — Display / Touch");
+
+    GELServiceLog.logOk("Touch grid completed successfully.");
+    GELServiceLog.logOk("All screen zones responded to touch input.");
+    GELServiceLog.logOk("No dead zones detected during manual interaction.");
+
+    GELServiceLog.logOk("Lab 6 finished.");
+    GELServiceLog.logLine();
+
+    setResult(RESULT_OK);
+    finish();
+}
                     }
                 }
                 return true;

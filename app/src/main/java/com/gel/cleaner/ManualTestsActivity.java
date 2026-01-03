@@ -438,7 +438,7 @@ private static final int LAB15_TOTAL_SECONDS = 180;
 
         body7.addView(makeTestButton("25. Crash / Freeze History", this::lab25CrashHistory));
         body7.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
-        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab26PermissionsPrivacy));
+        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
         body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
         body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
 
@@ -5537,7 +5537,7 @@ private void lab24RootSuspicion() {
     boolean suFound = false;
 
     for (String p : suPaths) {
-        if (lab25_fileExists(p)) {
+        if (lab24_fileExists(p)) {
             suFound = true;
             rootScore += 18;
             rootFindings.add("su/busybox path found: " + p);

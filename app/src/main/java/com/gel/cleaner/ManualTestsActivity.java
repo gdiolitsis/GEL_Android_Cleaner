@@ -6587,10 +6587,6 @@ if (isSystem ||
     continue;
 }
 
-        // Skip system apps unless they have highly dangerous perms  
-        boolean isSystem = (p.applicationInfo != null) &&  
-                ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);  
-
         String[] req = p.requestedPermissions;  
         int[] grant = p.requestedPermissionsFlags;  
 

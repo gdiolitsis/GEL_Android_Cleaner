@@ -404,41 +404,41 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         body4.addView(makeTestButtonGreenGold("17. Intelligent System Health Analysis",this::lab17RunAuto));
 
         // ============================================================
-        // SECTION 5: STORAGE & PERFORMANCE — LABS 18–21
+        // SECTION 5: STORAGE & PERFORMANCE — LABS 18–20
         // ============================================================
         LinearLayout body5 = makeSectionBody();
         Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);
         root.addView(header5);
         root.addView(body5);
-
+        
         body5.addView(makeTestButton("18. Storage Health Inspection", this::lab18StorageSnapshot));
-        body5.addView(makeTestButton("19. Installed Applications Impact Analysis", this::lab19AppsFootprint));
-        body5.addView(makeTestButton("20. Memory Pressure & Stability Analysis", this::lab20RamSnapshot));
-        body5.addView(makeTestButton("21. Uptime & Reboot Pattern Analysis", this::lab21UptimeHints));
+        body5.addView(makeTestButton("19. Memory Pressure & Stability Analysis", this::lab19RamSnapshot));
+        body5.addView(makeTestButton("20. Uptime & Reboot Pattern Analysis", this::lab20UptimeHints));
 
         // ============================================================
-        // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 22–25
+        // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21–24
         // ============================================================
         LinearLayout body6 = makeSectionBody();
         Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);
         root.addView(header6);
         root.addView(body6);
 
-        body6.addView(makeTestButton("22. Screen Lock / Biometrics", this::lab22ScreenLock));
-        body6.addView(makeTestButton("23. Security Patch Check", this::lab23SecurityPatchManual));
-        body6.addView(makeTestButton("24. Developer Options Risk", this::lab24DevOptions));
-        body6.addView(makeTestButton("25. Root / Bootloader Suspicion", this::lab25RootSuspicion));
+        body6.addView(makeTestButton("21. Screen Lock / Biometrics", this::lab21ScreenLock));
+        body6.addView(makeTestButton("22. Security Patch Check", this::lab22SecurityPatchManual));
+        body6.addView(makeTestButton("23. Developer Options Risk", this::lab23DevOptions));
+        body6.addView(makeTestButton("24. Root / Bootloader Suspicion", this::lab24RootSuspicion));
 
         // ============================================================
-        // SECTION 7: ADVANCED / LOGS — LABS 26–29
+        // SECTION 7: ADVANCED / LOGS — LABS 25–29
         // ============================================================
         LinearLayout body7 = makeSectionBody();
         Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);
         root.addView(header7);
         root.addView(body7);
 
-        body7.addView(makeTestButton("26. Crash / Freeze History", this::lab26CrashHistory));
-        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
+        body7.addView(makeTestButton("25. Crash / Freeze History", this::lab25CrashHistory));
+        body7.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
+        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab26PermissionsPrivacy));
         body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
         body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
 
@@ -1809,7 +1809,7 @@ private String readSys(File dir, String name) {
 }
 
 // ============================================================
-// GEL — HELPERS FOR LAB 18 / 19 / 20 / 21
+// GEL — HELPERS FOR LAB 18 / 19 / 21/ 26
 // PRODUCTION • ROOT-AWARE • HUMAN-ORIENTED
 // ============================================================
 
@@ -1854,7 +1854,7 @@ private boolean detectStorageWearSignals() {
 }
 
 // ============================================================
-// LAB 19 — APPS IMPACT HELPERS
+// LAB 26 — APPS IMPACT HELPERS
 // ============================================================
 
 private boolean isSystemApp(ApplicationInfo ai) {
@@ -1873,7 +1873,7 @@ private long getAppInstalledSizeSafe(String pkg) {
 }
 
 // ============================================================
-// LAB 20 — RAM / MEMORY HELPERS (ROOT AWARE)
+// LAB 19 — RAM / MEMORY HELPERS (ROOT AWARE)
 // ============================================================
 
 private boolean isZramActiveSafe() {
@@ -1912,7 +1912,7 @@ private long readCachedMemoryKbSafe() {
 }
 
 // ============================================================
-// LAB 21 — UPTIME / REBOOT / PRESSURE HELPERS
+// LAB 20 — UPTIME / REBOOT / PRESSURE HELPERS
 // ============================================================
 
 // Reads kernel OOM kill counter (heuristic pressure signal)
@@ -4665,11 +4665,1398 @@ private void lab18StorageSnapshot() {
 }
 
 // ============================================================
-// LABS 19: Apps Footprint 
+// LAB 19 — Live RAM Health Snapshot
+// FINAL — HUMAN • REAL-TIME • ROOT-AWARE • NO GUESSING
+//
+// ✔ Instant snapshot (not stress / not forecast)
+// ✔ Explains what the system is doing NOW
+// ✔ Root-aware (extra insight, never fake)
+// ✔ No cleaning myths, no placebo claims
+// ============================================================
+private void lab19RamSnapshot() {
+
+    logLine();
+    logInfo("LAB 19 — Live RAM Health Snapshot");
+    logLine();
+
+    try {
+        ActivityManager am =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+        if (am == null) {
+            logError("Memory service not available.");
+            return;
+        }
+
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+
+        long total = mi.totalMem;
+        long free  = mi.availMem;
+        long used  = total - free;
+
+        int pctFree = (int) ((free * 100L) / Math.max(1L, total));
+
+        logInfo("Current RAM usage:");
+        logOk(
+                humanBytes(used) + " used / " +
+                humanBytes(total) +
+                " (free " + humanBytes(free) + ", " + pctFree + "%)"
+        );
+
+        // ---------------- HUMAN INTERPRETATION ----------------
+        if (pctFree < 8) {
+            logError("❌ Critical RAM pressure.");
+            logError("System is actively killing background apps to survive.");
+            logWarn("User experience: strong lag, reloads, UI stutter.");
+
+        } else if (pctFree < 15) {
+            logWarn("⚠️ High RAM pressure detected.");
+            logWarn("Multitasking may be unstable under load.");
+
+        } else if (pctFree < 25) {
+            logInfo("RAM usage is elevated.");
+            logInfo("This is normal during heavy apps or gaming.");
+
+        } else {
+            logOk("✅ RAM level is healthy at this moment.");
+        }
+
+        // ---------------- LOW MEMORY STATE ----------------
+        if (mi.lowMemory) {
+            logWarn("⚠️ Android reports low-memory state.");
+            logWarn("System protection mechanisms are active.");
+        }
+
+        // ---------------- ROOT-AWARE INTELLIGENCE ----------------
+        boolean rooted = isDeviceRooted();
+
+        if (rooted) {
+            logLine();
+            logInfo("Advanced RAM analysis:");
+
+            boolean zramActive = isZramActiveSafe();   // swap/zram check
+            boolean swapActive = isSwapActiveSafe();   // generic swap
+
+            if (zramActive || swapActive) {
+                logWarn("⚠️ Memory compression / swap detected.");
+                logInfo("System is extending RAM using CPU cycles.");
+                logOk("This improves stability but may reduce performance.");
+            } else {
+                logOk("No swap or memory compression detected.");
+            }
+
+            long cachedKb = readCachedMemoryKbSafe();
+            if (cachedKb > 0) {
+                logInfo(
+                        "Cached memory: " +
+                        humanBytes(cachedKb * 1024L) +
+                        " (reclaimable by system)"
+                );
+            }
+        }
+
+    } catch (Throwable t) {
+        logError("RAM snapshot failed.");
+    }
+
+    logOk("Lab 19 finished.");
+    logLine();
+}
+
+// ============================================================
+// LAB 20 — Uptime & Reboot Intelligence
+// FINAL — HUMAN • ROOT-AWARE • NO BULLSHIT
+// ============================================================
+private void lab20UptimeHints() {
+
+    logLine();
+    logInfo("LAB 20 — System Uptime & Reboot Behaviour");
+    logLine();
+
+    try {
+
+        long upMs = SystemClock.elapsedRealtime();
+        String upStr = formatUptime(upMs);
+
+        logInfo("System uptime:");
+        logOk(upStr);
+
+        boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h
+        boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
+        boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;
+
+        // ----------------------------------------------------
+        // HUMAN INTERPRETATION (NON-ROOT)
+        // ----------------------------------------------------
+        if (veryRecentReboot) {
+
+            logWarn("⚠️ Recent reboot detected.");
+            logWarn("Some issues may be temporarily masked (memory, thermal, background load).");
+            logInfo("Diagnostics are valid, but not fully representative yet.");
+
+        } else if (veryLongUptime) {
+
+            logWarn("⚠️ Long uptime detected.");
+            logWarn("Background processes and memory pressure may accumulate over time.");
+
+            if (extremeUptime) {
+                logError("❌ Extremely long uptime (>14 days).");
+                logError("Strongly recommended: reboot before drawing final conclusions.");
+            } else {
+                logInfo("Recommendation:");
+                logOk("A reboot can help reset system state before deep diagnostics.");
+            }
+
+        } else {
+
+            logOk("✅ Uptime is within a healthy range for diagnostics.");
+        }
+
+        // ----------------------------------------------------
+        // ROOT-AWARE INTELLIGENCE (SILENT IF NOT ROOTED)
+        // ----------------------------------------------------
+        if (isDeviceRooted()) {
+
+            logLine();
+            logInfo("Advanced uptime signals:");
+
+            // soft indicators — no lies
+            boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;
+            boolean frequentReboots   = detectFrequentRebootsHint();
+
+            if (frequentReboots) {
+                logWarn("⚠️ Repeated reboot pattern detected.");
+                logWarn("This may indicate instability, crashes or watchdog resets.");
+            } else {
+                logOk("No abnormal reboot patterns detected.");
+            }
+
+            if (!lowMemoryPressure) {
+                logWarn("⚠️ Memory pressure events detected during uptime.");
+                logInfo("System may be aggressively managing apps in background.");
+            } else {
+                logOk("No significant memory pressure signals detected.");
+            }
+
+            logInfo("Interpretation:");
+            logOk("Uptime behaviour appears consistent with normal system operation.");
+
+        }
+
+    } catch (Throwable t) {
+        logError("Uptime analysis failed.");
+    }
+
+    logOk("Lab 20 finished.");
+    logLine();
+}
+
+// ============================================================  
+// LABS 21 — 24 SECURITY & SYSTEM HEALTH  
+// ============================================================  
+
+// ============================================================
+// LAB 21 — Screen Lock / Biometrics LIVE + Root-Aware
+// REAL • USER-DRIVEN • NO LIES • POLICY + INFRA CHECK (ROOT)
+// ============================================================
+private boolean lab21Running = false;
+
+private void lab21ScreenLock() {
+
+    // GUARD — avoid double-tap spam
+    if (lab21Running) {
+        logWarn("LAB 21 is already running...");
+        return;
+    }
+    lab21Running = true;
+
+    logLine();
+    logInfo("LAB 21 — Screen Lock / Biometrics (Live + Root-Aware)");
+    logLine();
+
+    // ------------------------------------------------------------
+    // PART A — LOCK CONFIG + STATE
+    // ------------------------------------------------------------
+    boolean secure = false;
+    boolean lockedNow = false;
+
+    try {
+        android.app.KeyguardManager km =
+                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+
+        if (km != null) {
+
+            secure = km.isDeviceSecure();
+
+            try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}
+
+            if (secure) {
+                logOk("Secure lock configured (PIN / Pattern / Password).");
+            } else {
+                logError("NO secure lock configured — device is UNPROTECTED!");
+                logWarn("Risk: anyone with physical access can access data.");
+            }
+
+            if (secure) {
+    logInfo("Current state:");
+    if (lockedNow) {
+        logOk("LOCKED (keyguard active).");
+    } else {
+        logWarn("UNLOCKED right now (device open).");
+    }
+}
+
+        } else {
+            logWarn("KeyguardManager not available — cannot read lock status.");
+        }
+
+    } catch (Throwable e) {
+        logWarn("Screen lock detection failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
+    // ------------------------------------------------------------
+boolean biometricSupported = false;
+
+if (android.os.Build.VERSION.SDK_INT >= 29) {
+    try {
+        android.hardware.biometrics.BiometricManager bm =
+                getSystemService(android.hardware.biometrics.BiometricManager.class);
+
+        if (bm != null) {
+            int result = bm.canAuthenticate(
+                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+            );
+
+            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+                biometricSupported = true;
+                logOk("Biometric hardware PRESENT (system reports available).");
+            } else {
+                logWarn("Biometric hardware PRESENT but NOT ready / not usable.");
+            }
+        } else {
+            logWarn("BiometricManager unavailable.");
+        }
+    } catch (Throwable e) {
+        logWarn("Biometric capability check failed: " + e.getMessage());
+    }
+} else {
+    logWarn("Biometric framework not supported on this Android version.");
+}
+
+    // ------------------------------------------------------------
+    // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
+    // ------------------------------------------------------------
+    boolean hasLockDb = false;
+    boolean hasGatekeeper = false;
+    boolean hasKeystore = false;
+
+    boolean root = isRootAvailable();
+    if (root) {
+
+        logInfo("Root mode:");
+        logOk("AVAILABLE (extra infrastructure checks enabled).");
+
+        hasLockDb     = rootPathExists("/data/system/locksettings.db");
+        hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
+                        rootPathExists("/data/system/gatekeeper.pattern.key") ||
+                        rootGlobExists("/data/system/gatekeeper*");
+        hasKeystore   = rootPathExists("/data/misc/keystore") ||
+                        rootPathExists("/data/misc/keystore/");
+
+        if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
+        else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");
+
+        if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");
+        else logWarn("Locksettings database not detected (ROM/vendor variation possible).");
+
+        if (hasKeystore) logOk("System keystore path detected (secure storage present).");
+        else logWarn("Keystore path not detected (vendor / Android version variation possible).");
+
+    } else {
+        logInfo("Root mode:");
+        logOk("not available (standard checks only).");
+    }
+
+    // ============================================================
+    // LAB 21 — TRUST BOUNDARY AWARENESS
+    // ============================================================
+
+    try {
+        if (secure) {
+    logInfo("Post-reboot protection:");
+    logOk("authentication REQUIRED before data access.");
+} else {
+    logInfo("Post-reboot protection:");
+    logError("NOT enforced — data exposure risk after reboot.");
+}
+    } catch (Throwable ignore) {}
+
+    if (secure) {
+    logInfo("Primary security layer:");
+    logOk("knowledge-based credential (PIN / Pattern / Password).");
+} else {
+    logInfo("Primary security layer:");
+    logWarn("NONE (no credential configured).");
+}
+
+if (biometricSupported) {
+    logInfo("Convenience layer:");
+    logOk("biometrics available (user-facing).");
+} else {
+    logInfo("Convenience layer:");
+    logWarn("biometrics not available or not ready (non-critical).");
+}
+
+    if (secure && !lockedNow) {
+        logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
+    }
+
+    if (root) {
+        if (hasGatekeeper || hasLockDb) logOk("System enforcement signals present (auth infrastructure active).");
+        else logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");
+    }
+
+    // ------------------------------------------------------------
+    // PART D — RISK SCORE (FAST, CLEAR)
+    // ------------------------------------------------------------
+    int risk = 0;
+
+    if (!secure) risk += 70;
+    if (secure && !lockedNow) risk += 10;
+    if (secure && !biometricSupported) risk += 5;
+
+    if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");
+    else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
+    else logOk("Security impact: LOW (" + risk + "/100)");
+
+    // ------------------------------------------------------------
+    // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
+    // ------------------------------------------------------------
+    if (!secure) {
+        logWarn("Live biometric test skipped: secure lock required.");
+        lab21Running = false;
+        return;
+    }
+
+    if (!biometricSupported) {
+        logInfo("Live biometric test not started:");
+        logWarn("biometrics not ready/available.");
+        logInfo("Action:");
+        logOk("enroll biometrics in Settings, then re-run LAB 21.");
+        lab21Running = false;
+        return;
+    }
+
+    if (android.os.Build.VERSION.SDK_INT >= 28) {
+        try {
+            logLine();
+            logInfo("LIVE SENSOR TEST:");
+            logOk("Place finger / face for biometric authentication NOW.");
+            logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
+            logLine();
+
+            java.util.concurrent.Executor executor = getMainExecutor();
+            android.os.CancellationSignal cancel = new android.os.CancellationSignal();
+
+            android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+
+                        @Override
+public void onAuthenticationSucceeded(
+        android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
+
+    logInfo("LIVE BIOMETRIC TEST:");
+    logOk("PASS — biometric sensor and authentication pipeline verified functional.");
+
+    logInfo("Multi-biometric devices:");
+    logWarn("If the device supports multiple biometrics, Android tests ONE sensor per run.");
+    logOk("Disable the current biometric in Settings and re-run LAB 21 to test another sensor.");
+    logInfo("Biometric selection note:");
+    logWarn("Android selects the biometric sensor automatically (OEM priority).");
+    logWarn("Disabling a biometric in Settings may NOT change the sensor used.");
+
+    lab21Running = false;
+}
+
+                        @Override
+public void onAuthenticationFailed() {
+    logInfo("LIVE BIOMETRIC TEST:");
+    logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
+    lab21Running = false;
+}
+
+@Override
+public void onAuthenticationError(int errorCode, CharSequence errString) {
+    logWarn("System fallback to device credential detected — biometric sensor not confirmed functional.");
+    lab21Running = false;
+}
+                    };
+
+            android.hardware.biometrics.BiometricPrompt prompt =
+        new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                .setTitle("LAB 21 — Live Biometric Sensor Test")
+                .setSubtitle("Place finger / face to verify sensor works")
+                .setDescription("This is a REAL hardware test (no simulation).")
+                .setNegativeButton(
+                        "Cancel test",
+                        executor,
+                        (dialog, which) -> {
+                            logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
+                            lab21Running = false;
+                        }
+                )
+                .setAllowedAuthenticators(
+        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                )
+                .build();
+
+            logInfo("Starting LIVE biometric prompt...");
+            prompt.authenticate(cancel, executor, cb);
+
+        } catch (Throwable e) {
+            logWarn("Live biometric prompt failed: " + e.getMessage());
+            lab21Running = false;
+        }
+    } else {
+    logOk("Live biometric prompt not supported on this Android version.");
+    logInfo("Action required:");
+logOk("→ Test biometrics via system lock screen settings, then re-run LAB 21.");
+
+    logInfo("Note:");
+logOk("device may support multiple biometric sensors; each LAB 21 run, verifies ONE sensor path.");
+
+logInfo("Action:");
+logOk("disable the active biometric in Settings, to test another sensor, then re-run LAB 21.");
+
+    lab21Running = false;
+}
+logOk("LAB 21 finished.");
+logLine();
+}
+
+
+// ============================================================
+// ROOT HELPERS — minimal, safe, no assumptions
+// ============================================================
+private boolean isRootAvailable() {
+    try {
+        if (new java.io.File("/system/xbin/su").exists()) return true;
+        if (new java.io.File("/system/bin/su").exists())  return true;
+        if (new java.io.File("/sbin/su").exists())        return true;
+        if (new java.io.File("/su/bin/su").exists())      return true;
+
+        String out = runSu("id");
+        return out != null && out.toLowerCase(java.util.Locale.US).contains("uid=0");
+    } catch (Throwable ignore) {
+        return false;
+    }
+}
+
+private boolean rootPathExists(String path) {
+    String cmd = "[ -e '" + path + "' ] && echo OK || echo NO";
+    String out = runSu(cmd);
+    return out != null && out.contains("OK");
+}
+
+private boolean rootGlobExists(String glob) {
+    String cmd = "ls " + glob + " 1>/dev/null 2>/dev/null && echo OK || echo NO";
+    String out = runSu(cmd);
+    return out != null && out.contains("OK");
+}
+
+private String runSu(String command) {
+    java.io.BufferedReader br = null;
+    try {
+        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", command});
+        br = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append(line);
+        }
+        try { p.waitFor(); } catch (Throwable ignore) {}
+        String s = sb.toString().trim();
+        return s.isEmpty() ? null : s;
+    } catch (Throwable ignore) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
+// LAB 22 — Security Patch & Play Protect (AUTO + MANUAL)
+// ============================================================
+private void lab22SecurityPatchManual() {
+
+    logLine();
+    logInfo("LAB 22 — Security Patch & Play Protect Check");
+    logLine();
+
+    // ------------------------------------------------------------
+    // 1) Security Patch Level (raw)
+    // ------------------------------------------------------------
+    String patch = null;
+    try {
+        patch = android.os.Build.VERSION.SECURITY_PATCH;
+        if (patch != null && !patch.isEmpty()) {
+            logInfo("Security Patch Level: " + patch);
+        } else {
+            logWarn("Security Patch Level not reported by system.");
+        }
+    } catch (Throwable e) {
+        logWarn("Security patch read failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 2) Patch Freshness Intelligence (AGE + RISK)
+    // ------------------------------------------------------------
+    try {
+        if (patch != null && !patch.isEmpty()) {
+
+            java.text.SimpleDateFormat sdf =
+                    new java.text.SimpleDateFormat(
+                            "yyyy-MM-dd", java.util.Locale.US);
+            sdf.setLenient(false);
+
+            long patchTime = sdf.parse(patch).getTime();
+            long now = System.currentTimeMillis();
+
+            long diffMs = now - patchTime;
+            long diffDays = diffMs / (1000L * 60 * 60 * 24);
+            long diffMonths = diffDays / 30;
+
+            logInfo("Security patch age: ~" + diffMonths + " months.");
+
+            if (diffMonths <= 3) {
+                logOk("Patch currency status: RECENT (low known exploit exposure).");
+            } else if (diffMonths <= 6) {
+                logWarn("Patch currency status: MODERATELY OUTDATED.");
+            } else {
+                logError("Patch currency status: OUTDATED — missing recent security fixes.");
+            }
+        }
+    } catch (Throwable e) {
+        logWarn("Security patch age evaluation failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 3) Play Protect Detection (best effort, no root)
+    // ------------------------------------------------------------
+    try {
+        PackageManager pm = getPackageManager();
+
+        boolean gmsPresent = false;
+        try {
+            pm.getPackageInfo("com.google.android.gms", 0);
+            gmsPresent = true;
+        } catch (Exception ignore) {}
+
+        if (!gmsPresent) {
+            logError("Google Play Services NOT present — Play Protect unavailable.");
+        } else {
+
+            int verify = -1;
+            try {
+                verify = Settings.Global.getInt(
+                        getContentResolver(),
+                        "package_verifier_enable",
+                        -1
+                );
+            } catch (Exception ignore) {}
+
+            if (verify == 1) {
+                logOk("Play Protect: ENABLED (Google Verify Apps ON).");
+            } else if (verify == 0) {
+                logWarn("Play Protect: DISABLED (Verify Apps OFF).");
+            } else {
+                // Fallback detection (activity presence)
+                Intent i = new Intent();
+                i.setClassName(
+                        "com.google.android.gms",
+                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+                );
+
+                if (i.resolveActivity(pm) != null) {
+                    logOk("Play Protect module detected (settings activity present).");
+                } else {
+                    logWarn("Play Protect status unclear (OEM or restricted build).");
+                }
+            }
+        }
+
+    } catch (Throwable e) {
+        logWarn("Play Protect detection error: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 4) Trust Boundary Clarification
+    // ------------------------------------------------------------
+
+    logInfo("Play Protect scope: malware scanning & app verification.");
+    logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");
+
+    // ------------------------------------------------------------
+    // 5) Manual Guidance (Technician)
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Manual checks:");
+    logInfo("1) Settings → About phone → Android version → Security patch level.");
+    logWarn("   Very old patch levels increase exploit exposure.");
+    logInfo("2) Google Play Store → Play Protect → verify scanning is enabled.");
+
+    logOk("Lab 22 finished.");
+    logLine();
+}
+
+// ============================================================
+// LAB 23 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
+// GEL Security v3.1 (Realtime Snapshot)
+// ============================================================
+private void lab23DevOptions() {
+logLine();
+logInfo("LAB 23 — Developer Options / ADB Risk Note (Realtime).");
+logLine();
+int risk = 0;  
+
+
+// ============================================================  
+// 1) USB DEBUGGING FLAG (ADB_ENABLED)  
+// ============================================================  
+boolean usbDebug = false;  
+try {  
+    int adb = Settings.Global.getInt(  
+            getContentResolver(),  
+            Settings.Global.ADB_ENABLED,  
+            0  
+    );  
+    usbDebug = (adb == 1);  
+
+    logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
+
+    if (usbDebug) {  
+        logWarn("USB Debugging ENABLED — physical access risk.");  
+        risk += 30;  
+    } else {  
+        logOk("USB Debugging is OFF.");  
+    }  
+
+} catch (Exception e) {  
+    logWarn("Could not read USB Debugging flag (OEM restriction).");  
+    risk += 5;  
+}  
+
+// ============================================================  
+// 2) DEVELOPER OPTIONS FLAG  
+// ============================================================  
+boolean devOpts = false;  
+try {  
+    int dev = Settings.Global.getInt(  
+            getContentResolver(),  
+            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,  
+            0  
+    );  
+    devOpts = (dev == 1);  
+
+    logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);  
+
+    if (devOpts) {  
+        logWarn("Developer Options ENABLED.");  
+        risk += 20;  
+    } else {  
+        logOk("Developer Options are OFF.");  
+    }  
+
+} catch (Exception e) {  
+    logWarn("Could not read Developer Options flag.");  
+    risk += 5;  
+}  
+
+// ============================================================  
+// 3) ADB OVER WIFI (TCP/IP mode — port 5555)  
+// ============================================================  
+boolean adbWifi = isPortOpen(5555, 200);  
+
+logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
+
+if (adbWifi) {  
+    logError("ADB over Wi-Fi ACTIVE — remote debugging possible on local network.");  
+    risk += 40;  
+} else {  
+    logOk("ADB over Wi-Fi is OFF.");  
+}  
+
+// ============================================================  
+// 4) ADB PAIRING MODE (Android 11–14 typical ports)  
+// ============================================================  
+boolean adbPairing =  
+        isPortOpen(3700, 200) ||   // some OEM pairing  
+        isPortOpen(7460, 200) ||   // pairing service  
+        scanPairingPortRange();    // 7460–7490
+
+logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
+
+if (adbPairing) {  
+    logError("ADB Pairing is ACTIVE — device discoverable for pairing.");  
+    risk += 25;  
+} else {  
+    logOk("ADB Pairing is OFF.");  
+}  
+
+// ============================================================  
+// 5) FINAL RISK SCORE  
+// ============================================================  
+if (risk > 100) risk = 100;  
+
+String level;  
+if (risk <= 10)       level = "LOW";  
+else if (risk <= 30)  level = "MEDIUM";  
+else if (risk <= 60)  level = "HIGH";  
+else                  level = "CRITICAL";  
+
+logInfo("Security Risk Score:");
+
+if (risk >= 70) {
+    logError(risk + "/100 (" + level + ") " + riskBubble(risk));
+} else if (risk >= 30) {
+    logWarn(risk + "/100 (" + level + ") " + riskBubble(risk));
+} else {
+    logOk(risk + "/100 (" + level + ") " + riskBubble(risk));
+}
+
+// ============================================================  
+// 6) AUTO-FIX / ACTION HINTS  
+// ============================================================  
+
+logInfo("Recommended Actions:");  
+
+if (usbDebug || devOpts) {  
+    logWarn("• Disable Developer Options / USB Debugging:");  
+    logInfo("  Settings → System → Developer options → OFF");  
+    logInfo("  USB debugging → OFF");  
+} else {  
+    logOk("• Developer options & USB debugging look safe.");  
+}  
+
+if (adbWifi) {  
+    logError("• ADB over Wi-Fi must be disabled:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
+    logInfo("  Or reboot to clear tcpip mode.");  
+} else {  
+    logOk("• Wireless debugging is not active.");  
+}  
+
+if (adbPairing) {  
+    logError("• Turn OFF ADB Pairing / Wireless debugging:");  
+    logInfo("  Developer options → Wireless debugging → OFF");  
+} else {  
+    logOk("• ADB Pairing is not active.");  
+}  
+
+if (risk >= 60)  
+    logError("⚠️  Very high risk — disable ADB features immediately!");  
+else if (risk >= 30)  
+    logWarn("⚠️  Partial exposure — review ADB settings.");  
+else  
+    logOk("✔️ Risk level acceptable.");
+
+logOk("LAB 23 finished.");
+logLine();
+}
+
+// ============================================================
+// UI BUBBLES (GEL)
+// ============================================================
+private String bubble(boolean on) {
+return on ? "🔴" : "🟢";
+}
+
+private String riskBubble(int risk) {
+if (risk <= 10) return "🟢";
+if (risk <= 30) return "🟡";
+if (risk <= 60) return "🟠";
+return "🔴";
+}
+
+// ============================================================
+// HELPERS — PORT CHECK (LOCALHOST)
+// ============================================================
+private boolean isPortOpen(int port, int timeoutMs) {
+Socket s = null;
+try {
+s = new Socket();
+s.connect(new InetSocketAddress("127.0.0.1", port), timeoutMs);
+return true;
+} catch (Exception e) {
+return false;
+} finally {
+if (s != null) try { s.close(); } catch (Exception ignored) {}
+}
+}
+
+// Scan pairing port range 7460-7490 (best-effort)
+private boolean scanPairingPortRange() {
+for (int p = 7460; p <= 7490; p++) {
+if (isPortOpen(p, 80)) return true;
+}
+return false;
+}
+
+// ============================================================
+// LAB 24 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
+// GEL Universal Edition — NO external libs
+// ============================================================
+private void lab24RootSuspicion() {
+
+    logLine();
+    logInfo("LAB 24 — Root / Bootloader Integrity Scan (AUTO).");
+    logLine();
+
+    // ---------------------------
+    // (1) ROOT DETECTION
+    // ---------------------------
+    int rootScore = 0;
+    List<String> rootFindings = new ArrayList<>();
+
+    // su / busybox paths
+    String[] suPaths = {
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/su/bin/su",
+            "/system/bin/busybox",
+            "/system/xbin/busybox",
+            "/vendor/bin/su",
+            "/odm/bin/su"
+    };
+
+    boolean suFound = false;
+
+    for (String p : suPaths) {
+        if (lab25_fileExists(p)) {
+            suFound = true;
+            rootScore += 18;
+            rootFindings.add("su/busybox path found: " + p);
+        }
+    }
+
+    // which su (best-effort, avoid false positives)
+    String whichSu = lab24_execFirstLine("which su");
+    if (whichSu != null && whichSu.contains("/su")) {
+        rootScore += 12;
+        rootFindings.add("'which su' returned: " + whichSu);
+        suFound = true;
+    }
+
+    // try exec su (strong indicator)
+    boolean suExec = lab24_canExecSu();
+    if (suExec) {
+        rootScore += 25;
+        rootFindings.add("su execution possible (shell granted).");
+        suFound = true;
+    }
+
+    // known root packages
+    String[] rootPkgs = {
+            "com.topjohnwu.magisk",
+            "eu.chainfire.supersu",
+            "com.koushikdutta.superuser",
+            "com.noshufou.android.su",
+            "com.kingroot.kinguser",
+            "com.kingo.root",
+            "com.saurik.substrate",
+            "de.robv.android.xposed.installer"
+    };
+
+    List<String> installed = lab24_getInstalledPackagesLower();
+    boolean pkgHit = false;
+
+    for (String rp : rootPkgs) {
+        if (installed.contains(rp)) {
+            pkgHit = true;
+            rootScore += 20;
+            rootFindings.add("root package installed: " + rp);
+        }
+    }
+
+    // build tags
+    try {
+        String tags = Build.TAGS;
+        if (tags != null && tags.contains("test-keys")) {
+            rootScore += 15;
+            rootFindings.add("Build.TAGS contains test-keys.");
+        }
+    } catch (Throwable ignore) {}
+
+    // suspicious system properties
+    String roSecure = lab24_getProp("ro.secure");
+    String roDebug  = lab24_getProp("ro.debuggable");
+
+    if ("0".equals(roSecure)) {
+        rootScore += 18;
+        rootFindings.add("ro.secure=0 (insecure build).");
+    }
+    if ("1".equals(roDebug)) {
+        rootScore += 12;
+        rootFindings.add("ro.debuggable=1 (debuggable build).");
+    }
+
+    // ---------------------------
+    // (2) BOOTLOADER / VERIFIED BOOT
+    // ---------------------------
+    int blScore = 0;
+    List<String> blFindings = new ArrayList<>();
+
+    String vbState = lab24_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
+    String vbmeta  = lab24_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
+    String flashL  = lab24_getProp("ro.boot.flash.locked"); // 1/0
+    String wlBit   = lab24_getProp("ro.boot.warranty_bit"); // 0/1 (OEM)
+
+    if (vbState != null &&
+            (vbState.contains("orange") ||
+             vbState.contains("yellow") ||
+             vbState.contains("red"))) {
+        blScore += 30;
+        blFindings.add("VerifiedBootState=" + vbState);
+    } else if (vbState != null) {
+        blFindings.add("VerifiedBootState=" + vbState);
+    }
+
+    if (vbmeta != null && vbmeta.contains("unlocked")) {
+        blScore += 35;
+        blFindings.add("vbmeta.device_state=unlocked");
+    } else if (vbmeta != null) {
+        blFindings.add("vbmeta.device_state=" + vbmeta);
+    }
+
+    if ("0".equals(flashL)) {
+        blScore += 25;
+        blFindings.add("flash.locked=0 (bootloader unlocked).");
+    } else if (flashL != null) {
+        blFindings.add("flash.locked=" + flashL);
+    }
+
+    if ("1".equals(wlBit)) {
+        blScore += 15;
+        blFindings.add("warranty_bit=1 (tamper flag).");
+    }
+
+    // OEM unlock allowed (settings)
+    try {
+        int oemAllowed =
+                Settings.Global.getInt(
+                        getContentResolver(),
+                        "oem_unlock_allowed",
+                        0
+                );
+        if (oemAllowed == 1) {
+            blScore += 10;
+            blFindings.add("OEM unlock allowed=1 (developer enabled).");
+        }
+    } catch (Throwable ignore) {}
+
+    // /proc/cmdline hints
+    String cmdline = lab24_readOneLine("/proc/cmdline");
+    if (cmdline != null) {
+        String c = cmdline.toLowerCase(Locale.US);
+        if (c.contains("verifiedbootstate=orange") ||
+            c.contains("verifiedbootstate=yellow") ||
+            c.contains("vbmeta.device_state=unlocked") ||
+            c.contains("bootloader=unlocked")) {
+            blScore += 20;
+            blFindings.add("/proc/cmdline reports unlocked / weak verified boot.");
+        }
+    }
+
+    // ---------------------------
+    // (3) BOOT ANIMATION / SPLASH MOD
+    // ---------------------------
+    int animScore = 0;
+    List<String> animFindings = new ArrayList<>();
+
+    if (lab25_fileExists("/data/local/bootanimation.zip")) {
+        animScore += 35;
+        animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");
+    }
+
+    boolean sysBoot =
+            lab24_fileExists("/system/media/bootanimation.zip") ||
+            lab24_fileExists("/product/media/bootanimation.zip") ||
+            lab24_fileExists("/oem/media/bootanimation.zip") ||
+            lab24_fileExists("/vendor/media/bootanimation.zip");
+
+    if (!sysBoot) {
+        animScore += 15;
+        animFindings.add("No stock bootanimation found (possible custom ROM).");
+    } else {
+        animFindings.add("Stock bootanimation path exists.");
+    }
+
+    // ---------------------------
+    // FINAL RISK SCORE
+    // ---------------------------
+    int risk = Math.min(100, rootScore + blScore + animScore);
+
+    logInfo("Root Scan:");
+    if (rootFindings.isEmpty()) {
+        logOk("No strong root traces detected.");
+    } else {
+        for (String s : rootFindings) logWarn("• " + s);
+    }
+
+    logInfo("Bootloader / Verified Boot:");
+    if (blFindings.isEmpty()) {
+        logOk("No bootloader anomalies detected.");
+    } else {
+        for (String s : blFindings) logWarn("• " + s);
+    }
+
+    logInfo("Boot Animation / Splash:");
+    if (animFindings.isEmpty()) {
+        logOk("No custom animation traces detected.");
+    } else {
+        for (String s : animFindings) logWarn("• " + s);
+    }
+
+    logInfo("FINAL VERDICT:");
+    logInfo("RISK SCORE: " + risk + " / 100");
+
+    if (risk >= 70 || suExec || pkgHit) {
+        logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
+    } else if (risk >= 35) {
+        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+    } else {
+        logOk("STATUS: SAFE (no significant modification evidence).");
+    }
+
+    logOk("Lab 24 finished.");
+    logLine();
+}
+
+// ============================================================
+// LAB 24 — INTERNAL HELPERS
+// ============================================================
+private boolean lab24_fileExists(String path) {
+    try { return new File(path).exists(); }
+    catch (Throwable t) { return false; }
+}
+
+private List<String> lab24_getInstalledPackagesLower() {
+    List<String> out = new ArrayList<>();
+    try {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        if (apps != null) {
+            for (ApplicationInfo ai : apps) {
+                String p = ai.packageName;
+                if (p != null) out.add(p.toLowerCase(Locale.US));
+            }
+        }
+    } catch (Throwable ignore) {}
+    return out;
+}
+
+private boolean lab24_canExecSu() {
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+        BufferedReader br =
+                new BufferedReader(
+                        new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null &&
+               line.toLowerCase(Locale.US).contains("uid=0");
+    } catch (Throwable t) {
+        return false;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
+}
+
+private String lab24_execFirstLine(String cmd) {
+    Process p = null;
+    try {
+        p = Runtime.getRuntime().exec(cmd);
+        BufferedReader br =
+                new BufferedReader(
+                        new InputStreamReader(p.getInputStream()));
+        String line = br.readLine();
+        br.close();
+        return line != null ? line.trim() : null;
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
+    }
+}
+
+private String lab24_getProp(String key) {
+    String v = lab24_execFirstLine("getprop " + key);
+    if (v == null) return null;
+    v = v.trim();
+    return v.isEmpty() ? null : v.toLowerCase(Locale.US);
+}
+
+private String lab24_readOneLine(String path) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(new File(path)));
+        return br.readLine();
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        if (br != null) try { br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
+// LABS 25 — 29: ADVANCED / LOGS
 // ============================================================
 
 // ============================================================
-// LAB 19 — Installed Apps Footprint & System Load Intelligence
+// LAB 25 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
+// ============================================================
+private void lab25CrashHistory() {
+
+logLine();  
+logInfo("LAB 25 — GEL Crash Intelligence (AUTO)");  
+logLine();  
+
+int crashCount = 0;  
+int anrCount = 0;  
+int systemCount = 0;  
+
+Map<String, Integer> appEvents = new HashMap<>(); // Group per app  
+List<String> details = new ArrayList<>();  
+
+// ============================================================
+// (A) Android 11+ — REALTIME ERROR SNAPSHOT (NOT HISTORY)
+// ============================================================
+// REPLACE your whole (A) block with this:
+try {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+
+        if (am != null) {
+
+            List<ActivityManager.ProcessErrorStateInfo> errs =
+                    am.getProcessesInErrorState();
+
+            if (errs != null && !errs.isEmpty()) {
+
+                logInfo("Realtime Error Snapshot (current state):");
+
+                for (ActivityManager.ProcessErrorStateInfo e : errs) {
+
+                    String app = (e != null && e.processName != null)
+                            ? e.processName
+                            : "(unknown)";
+
+                    // Group snapshot per process (ok)
+                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
+
+                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
+                        details.add("SNAPSHOT CRASH: " + app + " — " + safeStr(e.shortMsg));
+                    } else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                        details.add("SNAPSHOT ANR: " + app + " — " + safeStr(e.shortMsg));
+                    } else {
+                        details.add("SNAPSHOT ERROR: " + app + " — " + safeStr(e.shortMsg));
+                    }
+                }
+
+                logInfo("Note:");
+                logOk("snapshot shows ONLY current crashed/ANR processes (not history).");
+            }
+        }
+    }
+} catch (Throwable ignore) {}
+
+// ============================================================  
+// (B) DropBox crash logs — legacy Android sources  
+// ============================================================  
+try {  
+    DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
+
+    if (db != null) {  
+        String[] tags = {  
+                "system_app_crash", "data_app_crash",  
+                "system_app_anr", "data_app_anr",  
+                "system_server_crash", "system_server_wtf",  
+                "system_server_anr"  
+        };  
+
+        for (String tag : tags) {  
+            DropBoxManager.Entry ent = db.getNextEntry(tag, 0);  
+
+            while (ent != null) {  
+
+                if (tag.contains("system_server")) {
+    systemCount++;
+} else if (tag.contains("anr")) {
+    anrCount++;
+} else if (tag.contains("crash")) {
+    crashCount++;
+}
+
+                String shortTxt = readDropBoxEntry(ent);  
+
+                String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
+                details.add(clean + ": " + shortTxt);  
+
+                // grouping     
+             try {
+
+    String key;
+
+    if (shortTxt != null && shortTxt.length() > 0) {
+        String t = shortTxt.toLowerCase(Locale.US);
+        int pi = t.indexOf("package:");
+        if (pi >= 0) {
+            String rest = t.substring(pi + 8).trim();
+            String[] parts = rest.split("[\\s\\n\\r\\t]+");
+            key = (parts.length > 0 && parts[0].contains(".")) ? parts[0] : clean;
+        } else {
+            key = clean;
+        }
+    } else {
+        key = clean;
+    }
+
+    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
+
+} catch (Exception ignored) {}
+ent = db.getNextEntry(tag, ent.getTimeMillis());
+            }   // END while
+        }       // END for
+    }           // END if (db != null)
+} catch (Exception ignored) {}   // END DropBox try
+
+// ============================================================  
+// (C) SUMMARY + RISK SCORE  
+// ============================================================  
+int risk = 0;  
+risk += crashCount * 5;  
+risk += anrCount * 8;  
+risk += systemCount * 15;  
+if (risk > 100) risk = 100;  
+
+// COLOR INDICATOR  
+String riskColor =  
+        (risk <= 20) ? "🟩" :  
+        (risk <= 50) ? "🟨" :  
+        (risk <= 80) ? "🟧" : "🟥";  
+
+logInfo("Crash events:");
+if (crashCount > 0) logWarn(String.valueOf(crashCount));
+else logOk("0");
+
+logInfo("ANR events:");
+if (anrCount > 0) logWarn(String.valueOf(anrCount));
+else logOk("0");
+
+logInfo("System-level faults:");
+if (systemCount > 0) logError(String.valueOf(systemCount));
+else logOk("0");
+
+logInfo("Stability Risk Score:");
+
+if (risk >= 60)
+    logError(risk + "%");
+else if (risk >= 30)
+    logWarn(risk + "%");
+else
+    logOk(risk + "%");
+
+logInfo("Note:");
+logOk("risk score is based on detected system log signals; availability varies by OEM/Android.");
+
+// ============================================================  
+// (D) HEATMAP (top offenders)  
+// ============================================================  
+if (!appEvents.isEmpty()) {  
+
+    logInfo("Heatmap (Top Categories / Packages — best-effort):");
+
+    appEvents.entrySet()  
+            .stream()  
+            .sorted((a, b) -> b.getValue() - a.getValue())  
+            .limit(5)  
+            .forEach(e -> {  
+                String c = (e.getValue() >= 10) ? "🟥" :  
+                           (e.getValue() >= 5)  ? "🟧" :  
+                           (e.getValue() >= 2)  ? "🟨" :  
+                                                  "🟩";  
+                logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");  
+            });  
+}  
+
+// ============================================================  
+// (E) FULL DETAILS  
+// ============================================================  
+if (!details.isEmpty()) {
+
+    logInfo("Detailed Crash Records:");
+
+    int count = details.size();
+
+    if (count == 1) {
+        logWarn("1 crash record detected:");
+    } else if (count <= 3) {
+        logWarn(count + " crash records detected:");
+    } else {
+        logError(count + " crash records detected (HIGH instability).");
+    }
+
+    for (String d : details) {
+        logInfo("• " + d);
+    }
+
+} else {
+    logOk("No crash history found.");
+}
+
+logOk("Lab 25 finished.");
+logLine();  
+
+}
+
+// ============================================================
+// SMALL helper inside same block (allowed)
+// Reads first 10 lines of DropBox entry
+// ============================================================
+private String readDropBoxEntry(DropBoxManager.Entry ent) {
+    try {
+        if (ent == null) return "(no text)";
+        InputStream is = ent.getInputStream();
+        if (is == null) return "(no text)";
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        int count = 0;
+        while ((line = br.readLine()) != null && count < 10) {
+            sb.append(line).append(" ");
+            count++;
+        }
+        br.close();
+        return sb.toString().trim();
+    } catch (Exception e) {
+        return "(read error)";
+    }
+}
+
+private String safeStr(String s) {
+    return (s == null || s.trim().isEmpty()) ? "(no details)" : s.trim();
+}
+
+// ============================================================
+// LAB 26 — Installed Apps Footprint & System Load Intelligence
 // FINAL — LOCKED — PRODUCTION-GRADE — HUMAN OUTPUT — ROOT AWARE
 //
 // ✔ Honest diagnostics (no lies, no “magic”)
@@ -4681,10 +6068,10 @@ private void lab18StorageSnapshot() {
 //
 // NOTE (GEL RULE): Full lab block returned for copy-paste.
 // ============================================================
-private void lab19AppsFootprint() {
+private void lab26AppsFootprint() {
 
     logLine();
-    logInfo("LAB 19 — Installed Apps Footprint & System Load");
+    logInfo("LAB 26 — Installed Apps Footprint & System Load");
     logLine();
 
     final PackageManager pm = getPackageManager();
@@ -5085,7 +6472,7 @@ private void lab19AppsFootprint() {
         logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");
     }
 
-    logOk("Lab 19 finished.");
+    logOk("Lab 26 finished.");
     logLine();
 }
 
@@ -5119,1397 +6506,6 @@ private long dirSizeBestEffortRoot(File dir) {
         } catch (Throwable ignore) {}
     }
     return total;
-}
-
-// ============================================================
-// LAB 20 — Live RAM Health Snapshot
-// FINAL — HUMAN • REAL-TIME • ROOT-AWARE • NO GUESSING
-//
-// ✔ Instant snapshot (not stress / not forecast)
-// ✔ Explains what the system is doing NOW
-// ✔ Root-aware (extra insight, never fake)
-// ✔ No cleaning myths, no placebo claims
-// ============================================================
-private void lab20RamSnapshot() {
-
-    logLine();
-    logInfo("LAB 20 — Live RAM Health Snapshot");
-    logLine();
-
-    try {
-        ActivityManager am =
-                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-
-        if (am == null) {
-            logError("Memory service not available.");
-            return;
-        }
-
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        am.getMemoryInfo(mi);
-
-        long total = mi.totalMem;
-        long free  = mi.availMem;
-        long used  = total - free;
-
-        int pctFree = (int) ((free * 100L) / Math.max(1L, total));
-
-        logInfo("Current RAM usage:");
-        logOk(
-                humanBytes(used) + " used / " +
-                humanBytes(total) +
-                " (free " + humanBytes(free) + ", " + pctFree + "%)"
-        );
-
-        // ---------------- HUMAN INTERPRETATION ----------------
-        if (pctFree < 8) {
-            logError("❌ Critical RAM pressure.");
-            logError("System is actively killing background apps to survive.");
-            logWarn("User experience: strong lag, reloads, UI stutter.");
-
-        } else if (pctFree < 15) {
-            logWarn("⚠️ High RAM pressure detected.");
-            logWarn("Multitasking may be unstable under load.");
-
-        } else if (pctFree < 25) {
-            logInfo("RAM usage is elevated.");
-            logInfo("This is normal during heavy apps or gaming.");
-
-        } else {
-            logOk("✅ RAM level is healthy at this moment.");
-        }
-
-        // ---------------- LOW MEMORY STATE ----------------
-        if (mi.lowMemory) {
-            logWarn("⚠️ Android reports low-memory state.");
-            logWarn("System protection mechanisms are active.");
-        }
-
-        // ---------------- ROOT-AWARE INTELLIGENCE ----------------
-        boolean rooted = isDeviceRooted();
-
-        if (rooted) {
-            logLine();
-            logInfo("Advanced RAM analysis:");
-
-            boolean zramActive = isZramActiveSafe();   // swap/zram check
-            boolean swapActive = isSwapActiveSafe();   // generic swap
-
-            if (zramActive || swapActive) {
-                logWarn("⚠️ Memory compression / swap detected.");
-                logInfo("System is extending RAM using CPU cycles.");
-                logOk("This improves stability but may reduce performance.");
-            } else {
-                logOk("No swap or memory compression detected.");
-            }
-
-            long cachedKb = readCachedMemoryKbSafe();
-            if (cachedKb > 0) {
-                logInfo(
-                        "Cached memory: " +
-                        humanBytes(cachedKb * 1024L) +
-                        " (reclaimable by system)"
-                );
-            }
-        }
-
-    } catch (Throwable t) {
-        logError("RAM snapshot failed.");
-    }
-
-    logOk("Lab 20 finished.");
-    logLine();
-}
-
-// ============================================================
-// LAB 21 — Uptime & Reboot Intelligence
-// FINAL — HUMAN • ROOT-AWARE • NO BULLSHIT
-// ============================================================
-private void lab21UptimeHints() {
-
-    logLine();
-    logInfo("LAB 21 — System Uptime & Reboot Behaviour");
-    logLine();
-
-    try {
-
-        long upMs = SystemClock.elapsedRealtime();
-        String upStr = formatUptime(upMs);
-
-        logInfo("System uptime:");
-        logOk(upStr);
-
-        boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h
-        boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
-        boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;
-
-        // ----------------------------------------------------
-        // HUMAN INTERPRETATION (NON-ROOT)
-        // ----------------------------------------------------
-        if (veryRecentReboot) {
-
-            logWarn("⚠️ Recent reboot detected.");
-            logWarn("Some issues may be temporarily masked (memory, thermal, background load).");
-            logInfo("Diagnostics are valid, but not fully representative yet.");
-
-        } else if (veryLongUptime) {
-
-            logWarn("⚠️ Long uptime detected.");
-            logWarn("Background processes and memory pressure may accumulate over time.");
-
-            if (extremeUptime) {
-                logError("❌ Extremely long uptime (>14 days).");
-                logError("Strongly recommended: reboot before drawing final conclusions.");
-            } else {
-                logInfo("Recommendation:");
-                logOk("A reboot can help reset system state before deep diagnostics.");
-            }
-
-        } else {
-
-            logOk("✅ Uptime is within a healthy range for diagnostics.");
-        }
-
-        // ----------------------------------------------------
-        // ROOT-AWARE INTELLIGENCE (SILENT IF NOT ROOTED)
-        // ----------------------------------------------------
-        if (isDeviceRooted()) {
-
-            logLine();
-            logInfo("Advanced uptime signals:");
-
-            // soft indicators — no lies
-            boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;
-            boolean frequentReboots   = detectFrequentRebootsHint();
-
-            if (frequentReboots) {
-                logWarn("⚠️ Repeated reboot pattern detected.");
-                logWarn("This may indicate instability, crashes or watchdog resets.");
-            } else {
-                logOk("No abnormal reboot patterns detected.");
-            }
-
-            if (!lowMemoryPressure) {
-                logWarn("⚠️ Memory pressure events detected during uptime.");
-                logInfo("System may be aggressively managing apps in background.");
-            } else {
-                logOk("No significant memory pressure signals detected.");
-            }
-
-            logInfo("Interpretation:");
-            logOk("Uptime behaviour appears consistent with normal system operation.");
-
-        }
-
-    } catch (Throwable t) {
-        logError("Uptime analysis failed.");
-    }
-
-    logOk("Lab 21 finished.");
-    logLine();
-}
-
-// ============================================================  
-// LABS 22 — 25: SECURITY & SYSTEM HEALTH  
-// ============================================================  
-
-// ============================================================
-// LAB 22 — Screen Lock / Biometrics LIVE + Root-Aware
-// REAL • USER-DRIVEN • NO LIES • POLICY + INFRA CHECK (ROOT)
-// ============================================================
-private boolean lab22Running = false;
-
-private void lab22ScreenLock() {
-
-    // GUARD — avoid double-tap spam
-    if (lab22Running) {
-        logWarn("LAB 22 is already running...");
-        return;
-    }
-    lab22Running = true;
-
-    logLine();
-    logInfo("LAB 22 — Screen Lock / Biometrics (Live + Root-Aware)");
-    logLine();
-
-    // ------------------------------------------------------------
-    // PART A — LOCK CONFIG + STATE
-    // ------------------------------------------------------------
-    boolean secure = false;
-    boolean lockedNow = false;
-
-    try {
-        android.app.KeyguardManager km =
-                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-
-        if (km != null) {
-
-            secure = km.isDeviceSecure();
-
-            try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}
-
-            if (secure) {
-                logOk("Secure lock configured (PIN / Pattern / Password).");
-            } else {
-                logError("NO secure lock configured — device is UNPROTECTED!");
-                logWarn("Risk: anyone with physical access can access data.");
-            }
-
-            if (secure) {
-    logInfo("Current state:");
-    if (lockedNow) {
-        logOk("LOCKED (keyguard active).");
-    } else {
-        logWarn("UNLOCKED right now (device open).");
-    }
-}
-
-        } else {
-            logWarn("KeyguardManager not available — cannot read lock status.");
-        }
-
-    } catch (Throwable e) {
-        logWarn("Screen lock detection failed: " + e.getMessage());
-    }
-
-    // ------------------------------------------------------------
-    // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
-    // ------------------------------------------------------------
-boolean biometricSupported = false;
-
-if (android.os.Build.VERSION.SDK_INT >= 29) {
-    try {
-        android.hardware.biometrics.BiometricManager bm =
-                getSystemService(android.hardware.biometrics.BiometricManager.class);
-
-        if (bm != null) {
-            int result = bm.canAuthenticate(
-                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-            );
-
-            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
-                biometricSupported = true;
-                logOk("Biometric hardware PRESENT (system reports available).");
-            } else {
-                logWarn("Biometric hardware PRESENT but NOT ready / not usable.");
-            }
-        } else {
-            logWarn("BiometricManager unavailable.");
-        }
-    } catch (Throwable e) {
-        logWarn("Biometric capability check failed: " + e.getMessage());
-    }
-} else {
-    logWarn("Biometric framework not supported on this Android version.");
-}
-
-    // ------------------------------------------------------------
-    // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
-    // ------------------------------------------------------------
-    boolean hasLockDb = false;
-    boolean hasGatekeeper = false;
-    boolean hasKeystore = false;
-
-    boolean root = isRootAvailable();
-    if (root) {
-
-        logInfo("Root mode:");
-        logOk("AVAILABLE (extra infrastructure checks enabled).");
-
-        hasLockDb     = rootPathExists("/data/system/locksettings.db");
-        hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
-                        rootPathExists("/data/system/gatekeeper.pattern.key") ||
-                        rootGlobExists("/data/system/gatekeeper*");
-        hasKeystore   = rootPathExists("/data/misc/keystore") ||
-                        rootPathExists("/data/misc/keystore/");
-
-        if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
-        else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");
-
-        if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");
-        else logWarn("Locksettings database not detected (ROM/vendor variation possible).");
-
-        if (hasKeystore) logOk("System keystore path detected (secure storage present).");
-        else logWarn("Keystore path not detected (vendor / Android version variation possible).");
-
-    } else {
-        logInfo("Root mode:");
-        logOk("not available (standard checks only).");
-    }
-
-    // ============================================================
-    // LAB 22 — TRUST BOUNDARY AWARENESS
-    // ============================================================
-
-    try {
-        if (secure) {
-    logInfo("Post-reboot protection:");
-    logOk("authentication REQUIRED before data access.");
-} else {
-    logInfo("Post-reboot protection:");
-    logError("NOT enforced — data exposure risk after reboot.");
-}
-    } catch (Throwable ignore) {}
-
-    if (secure) {
-    logInfo("Primary security layer:");
-    logOk("knowledge-based credential (PIN / Pattern / Password).");
-} else {
-    logInfo("Primary security layer:");
-    logWarn("NONE (no credential configured).");
-}
-
-if (biometricSupported) {
-    logInfo("Convenience layer:");
-    logOk("biometrics available (user-facing).");
-} else {
-    logInfo("Convenience layer:");
-    logWarn("biometrics not available or not ready (non-critical).");
-}
-
-    if (secure && !lockedNow) {
-        logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
-    }
-
-    if (root) {
-        if (hasGatekeeper || hasLockDb) logOk("System enforcement signals present (auth infrastructure active).");
-        else logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");
-    }
-
-    // ------------------------------------------------------------
-    // PART D — RISK SCORE (FAST, CLEAR)
-    // ------------------------------------------------------------
-    int risk = 0;
-
-    if (!secure) risk += 70;
-    if (secure && !lockedNow) risk += 10;
-    if (secure && !biometricSupported) risk += 5;
-
-    if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");
-    else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
-    else logOk("Security impact: LOW (" + risk + "/100)");
-
-    // ------------------------------------------------------------
-    // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
-    // ------------------------------------------------------------
-    if (!secure) {
-        logWarn("Live biometric test skipped: secure lock required.");
-        lab22Running = false;
-        return;
-    }
-
-    if (!biometricSupported) {
-        logInfo("Live biometric test not started:");
-        logWarn("biometrics not ready/available.");
-        logInfo("Action:");
-        logOk("enroll biometrics in Settings, then re-run LAB 22.");
-        lab22Running = false;
-        return;
-    }
-
-    if (android.os.Build.VERSION.SDK_INT >= 28) {
-        try {
-            logLine();
-            logInfo("LIVE SENSOR TEST:");
-            logOk("Place finger / face for biometric authentication NOW.");
-            logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
-            logLine();
-
-            java.util.concurrent.Executor executor = getMainExecutor();
-            android.os.CancellationSignal cancel = new android.os.CancellationSignal();
-
-            android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
-                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-
-                        @Override
-public void onAuthenticationSucceeded(
-        android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-
-    logInfo("LIVE BIOMETRIC TEST:");
-    logOk("PASS — biometric sensor and authentication pipeline verified functional.");
-
-    logInfo("Multi-biometric devices:");
-    logWarn("If the device supports multiple biometrics, Android tests ONE sensor per run.");
-    logOk("Disable the current biometric in Settings and re-run LAB 22 to test another sensor.");
-    logInfo("Biometric selection note:");
-    logWarn("Android selects the biometric sensor automatically (OEM priority).");
-    logWarn("Disabling a biometric in Settings may NOT change the sensor used.");
-
-    lab22Running = false;
-}
-
-                        @Override
-public void onAuthenticationFailed() {
-    logInfo("LIVE BIOMETRIC TEST:");
-    logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
-    lab22Running = false;
-}
-
-@Override
-public void onAuthenticationError(int errorCode, CharSequence errString) {
-    logWarn("System fallback to device credential detected — biometric sensor not confirmed functional.");
-    lab22Running = false;
-}
-                    };
-
-            android.hardware.biometrics.BiometricPrompt prompt =
-        new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                .setTitle("LAB 22 — Live Biometric Sensor Test")
-                .setSubtitle("Place finger / face to verify sensor works")
-                .setDescription("This is a REAL hardware test (no simulation).")
-                .setNegativeButton(
-                        "Cancel test",
-                        executor,
-                        (dialog, which) -> {
-                            logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
-                            lab22Running = false;
-                        }
-                )
-                .setAllowedAuthenticators(
-        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                )
-                .build();
-
-            logInfo("Starting LIVE biometric prompt...");
-            prompt.authenticate(cancel, executor, cb);
-
-        } catch (Throwable e) {
-            logWarn("Live biometric prompt failed: " + e.getMessage());
-            lab22Running = false;
-        }
-    } else {
-    logOk("Live biometric prompt not supported on this Android version.");
-    logInfo("Action required:");
-logOk("→ Test biometrics via system lock screen settings, then re-run LAB 22.");
-
-    logInfo("Note:");
-logOk("device may support multiple biometric sensors; each LAB 22 run, verifies ONE sensor path.");
-
-logInfo("Action:");
-logOk("disable the active biometric in Settings, to test another sensor, then re-run LAB 22.");
-
-    lab22Running = false;
-}
-logOk("LAB 22 finished.");
-logLine();
-}
-
-
-// ============================================================
-// ROOT HELPERS — minimal, safe, no assumptions
-// ============================================================
-private boolean isRootAvailable() {
-    try {
-        if (new java.io.File("/system/xbin/su").exists()) return true;
-        if (new java.io.File("/system/bin/su").exists())  return true;
-        if (new java.io.File("/sbin/su").exists())        return true;
-        if (new java.io.File("/su/bin/su").exists())      return true;
-
-        String out = runSu("id");
-        return out != null && out.toLowerCase(java.util.Locale.US).contains("uid=0");
-    } catch (Throwable ignore) {
-        return false;
-    }
-}
-
-private boolean rootPathExists(String path) {
-    String cmd = "[ -e '" + path + "' ] && echo OK || echo NO";
-    String out = runSu(cmd);
-    return out != null && out.contains("OK");
-}
-
-private boolean rootGlobExists(String glob) {
-    String cmd = "ls " + glob + " 1>/dev/null 2>/dev/null && echo OK || echo NO";
-    String out = runSu(cmd);
-    return out != null && out.contains("OK");
-}
-
-private String runSu(String command) {
-    java.io.BufferedReader br = null;
-    try {
-        Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", command});
-        br = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            if (sb.length() > 0) sb.append("\n");
-            sb.append(line);
-        }
-        try { p.waitFor(); } catch (Throwable ignore) {}
-        String s = sb.toString().trim();
-        return s.isEmpty() ? null : s;
-    } catch (Throwable ignore) {
-        return null;
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignore) {}
-    }
-}
-
-// ============================================================
-// LAB 23 — Security Patch & Play Protect (AUTO + MANUAL)
-// ============================================================
-private void lab23SecurityPatchManual() {
-
-    logLine();
-    logInfo("LAB 23 — Security Patch & Play Protect Check");
-    logLine();
-
-    // ------------------------------------------------------------
-    // 1) Security Patch Level (raw)
-    // ------------------------------------------------------------
-    String patch = null;
-    try {
-        patch = android.os.Build.VERSION.SECURITY_PATCH;
-        if (patch != null && !patch.isEmpty()) {
-            logInfo("Security Patch Level: " + patch);
-        } else {
-            logWarn("Security Patch Level not reported by system.");
-        }
-    } catch (Throwable e) {
-        logWarn("Security patch read failed: " + e.getMessage());
-    }
-
-    // ------------------------------------------------------------
-    // 2) Patch Freshness Intelligence (AGE + RISK)
-    // ------------------------------------------------------------
-    try {
-        if (patch != null && !patch.isEmpty()) {
-
-            java.text.SimpleDateFormat sdf =
-                    new java.text.SimpleDateFormat(
-                            "yyyy-MM-dd", java.util.Locale.US);
-            sdf.setLenient(false);
-
-            long patchTime = sdf.parse(patch).getTime();
-            long now = System.currentTimeMillis();
-
-            long diffMs = now - patchTime;
-            long diffDays = diffMs / (1000L * 60 * 60 * 24);
-            long diffMonths = diffDays / 30;
-
-            logInfo("Security patch age: ~" + diffMonths + " months.");
-
-            if (diffMonths <= 3) {
-                logOk("Patch currency status: RECENT (low known exploit exposure).");
-            } else if (diffMonths <= 6) {
-                logWarn("Patch currency status: MODERATELY OUTDATED.");
-            } else {
-                logError("Patch currency status: OUTDATED — missing recent security fixes.");
-            }
-        }
-    } catch (Throwable e) {
-        logWarn("Security patch age evaluation failed: " + e.getMessage());
-    }
-
-    // ------------------------------------------------------------
-    // 3) Play Protect Detection (best effort, no root)
-    // ------------------------------------------------------------
-    try {
-        PackageManager pm = getPackageManager();
-
-        boolean gmsPresent = false;
-        try {
-            pm.getPackageInfo("com.google.android.gms", 0);
-            gmsPresent = true;
-        } catch (Exception ignore) {}
-
-        if (!gmsPresent) {
-            logError("Google Play Services NOT present — Play Protect unavailable.");
-        } else {
-
-            int verify = -1;
-            try {
-                verify = Settings.Global.getInt(
-                        getContentResolver(),
-                        "package_verifier_enable",
-                        -1
-                );
-            } catch (Exception ignore) {}
-
-            if (verify == 1) {
-                logOk("Play Protect: ENABLED (Google Verify Apps ON).");
-            } else if (verify == 0) {
-                logWarn("Play Protect: DISABLED (Verify Apps OFF).");
-            } else {
-                // Fallback detection (activity presence)
-                Intent i = new Intent();
-                i.setClassName(
-                        "com.google.android.gms",
-                        "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
-                );
-
-                if (i.resolveActivity(pm) != null) {
-                    logOk("Play Protect module detected (settings activity present).");
-                } else {
-                    logWarn("Play Protect status unclear (OEM or restricted build).");
-                }
-            }
-        }
-
-    } catch (Throwable e) {
-        logWarn("Play Protect detection error: " + e.getMessage());
-    }
-
-    // ------------------------------------------------------------
-    // 4) Trust Boundary Clarification
-    // ------------------------------------------------------------
-
-    logInfo("Play Protect scope: malware scanning & app verification.");
-    logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");
-
-    // ------------------------------------------------------------
-    // 5) Manual Guidance (Technician)
-    // ------------------------------------------------------------
-    logLine();
-    logInfo("Manual checks:");
-    logInfo("1) Settings → About phone → Android version → Security patch level.");
-    logWarn("   Very old patch levels increase exploit exposure.");
-    logInfo("2) Google Play Store → Play Protect → verify scanning is enabled.");
-
-    logOk("Lab 23 finished.");
-    logLine();
-}
-
-// ============================================================
-// LAB 24 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
-// GEL Security v3.1 (Realtime Snapshot)
-// ============================================================
-private void lab24DevOptions() {
-logLine();
-logInfo("LAB 24 — Developer Options / ADB Risk Note (Realtime).");
-logLine();
-int risk = 0;  
-
-
-// ============================================================  
-// 1) USB DEBUGGING FLAG (ADB_ENABLED)  
-// ============================================================  
-boolean usbDebug = false;  
-try {  
-    int adb = Settings.Global.getInt(  
-            getContentResolver(),  
-            Settings.Global.ADB_ENABLED,  
-            0  
-    );  
-    usbDebug = (adb == 1);  
-
-    logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);  
-
-    if (usbDebug) {  
-        logWarn("USB Debugging ENABLED — physical access risk.");  
-        risk += 30;  
-    } else {  
-        logOk("USB Debugging is OFF.");  
-    }  
-
-} catch (Exception e) {  
-    logWarn("Could not read USB Debugging flag (OEM restriction).");  
-    risk += 5;  
-}  
-
-// ============================================================  
-// 2) DEVELOPER OPTIONS FLAG  
-// ============================================================  
-boolean devOpts = false;  
-try {  
-    int dev = Settings.Global.getInt(  
-            getContentResolver(),  
-            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,  
-            0  
-    );  
-    devOpts = (dev == 1);  
-
-    logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);  
-
-    if (devOpts) {  
-        logWarn("Developer Options ENABLED.");  
-        risk += 20;  
-    } else {  
-        logOk("Developer Options are OFF.");  
-    }  
-
-} catch (Exception e) {  
-    logWarn("Could not read Developer Options flag.");  
-    risk += 5;  
-}  
-
-// ============================================================  
-// 3) ADB OVER WIFI (TCP/IP mode — port 5555)  
-// ============================================================  
-boolean adbWifi = isPortOpen(5555, 200);  
-
-logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));  
-
-if (adbWifi) {  
-    logError("ADB over Wi-Fi ACTIVE — remote debugging possible on local network.");  
-    risk += 40;  
-} else {  
-    logOk("ADB over Wi-Fi is OFF.");  
-}  
-
-// ============================================================  
-// 4) ADB PAIRING MODE (Android 11–14 typical ports)  
-// ============================================================  
-boolean adbPairing =  
-        isPortOpen(3700, 200) ||   // some OEM pairing  
-        isPortOpen(7460, 200) ||   // pairing service  
-        scanPairingPortRange();    // 7460–7490
-
-logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));  
-
-if (adbPairing) {  
-    logError("ADB Pairing is ACTIVE — device discoverable for pairing.");  
-    risk += 25;  
-} else {  
-    logOk("ADB Pairing is OFF.");  
-}  
-
-// ============================================================  
-// 5) FINAL RISK SCORE  
-// ============================================================  
-if (risk > 100) risk = 100;  
-
-String level;  
-if (risk <= 10)       level = "LOW";  
-else if (risk <= 30)  level = "MEDIUM";  
-else if (risk <= 60)  level = "HIGH";  
-else                  level = "CRITICAL";  
-
-logInfo("Security Risk Score:");
-
-if (risk >= 70) {
-    logError(risk + "/100 (" + level + ") " + riskBubble(risk));
-} else if (risk >= 30) {
-    logWarn(risk + "/100 (" + level + ") " + riskBubble(risk));
-} else {
-    logOk(risk + "/100 (" + level + ") " + riskBubble(risk));
-}
-
-// ============================================================  
-// 6) AUTO-FIX / ACTION HINTS  
-// ============================================================  
-
-logInfo("Recommended Actions:");  
-
-if (usbDebug || devOpts) {  
-    logWarn("• Disable Developer Options / USB Debugging:");  
-    logInfo("  Settings → System → Developer options → OFF");  
-    logInfo("  USB debugging → OFF");  
-} else {  
-    logOk("• Developer options & USB debugging look safe.");  
-}  
-
-if (adbWifi) {  
-    logError("• ADB over Wi-Fi must be disabled:");  
-    logInfo("  Developer options → Wireless debugging → OFF");  
-    logInfo("  Or reboot to clear tcpip mode.");  
-} else {  
-    logOk("• Wireless debugging is not active.");  
-}  
-
-if (adbPairing) {  
-    logError("• Turn OFF ADB Pairing / Wireless debugging:");  
-    logInfo("  Developer options → Wireless debugging → OFF");  
-} else {  
-    logOk("• ADB Pairing is not active.");  
-}  
-
-if (risk >= 60)  
-    logError("⚠️  Very high risk — disable ADB features immediately!");  
-else if (risk >= 30)  
-    logWarn("⚠️  Partial exposure — review ADB settings.");  
-else  
-    logOk("✔️ Risk level acceptable.");
-
-logOk("LAB 24 finished.");
-logLine();
-}
-
-// ============================================================
-// UI BUBBLES (GEL)
-// ============================================================
-private String bubble(boolean on) {
-return on ? "🔴" : "🟢";
-}
-
-private String riskBubble(int risk) {
-if (risk <= 10) return "🟢";
-if (risk <= 30) return "🟡";
-if (risk <= 60) return "🟠";
-return "🔴";
-}
-
-// ============================================================
-// HELPERS — PORT CHECK (LOCALHOST)
-// ============================================================
-private boolean isPortOpen(int port, int timeoutMs) {
-Socket s = null;
-try {
-s = new Socket();
-s.connect(new InetSocketAddress("127.0.0.1", port), timeoutMs);
-return true;
-} catch (Exception e) {
-return false;
-} finally {
-if (s != null) try { s.close(); } catch (Exception ignored) {}
-}
-}
-
-// Scan pairing port range 7460-7490 (best-effort)
-private boolean scanPairingPortRange() {
-for (int p = 7460; p <= 7490; p++) {
-if (isPortOpen(p, 80)) return true;
-}
-return false;
-}
-
-// ============================================================
-// LAB 25 — Root / Bootloader Suspicion Checklist (FULL AUTO + RISK SCORE)
-// GEL Universal Edition — NO external libs
-// ============================================================
-private void lab25RootSuspicion() {
-
-    logLine();
-    logInfo("LAB 25 — Root / Bootloader Integrity Scan (AUTO).");
-    logLine();
-
-    // ---------------------------
-    // (1) ROOT DETECTION
-    // ---------------------------
-    int rootScore = 0;
-    List<String> rootFindings = new ArrayList<>();
-
-    // su / busybox paths
-    String[] suPaths = {
-            "/system/bin/su",
-            "/system/xbin/su",
-            "/sbin/su",
-            "/su/bin/su",
-            "/system/bin/busybox",
-            "/system/xbin/busybox",
-            "/vendor/bin/su",
-            "/odm/bin/su"
-    };
-
-    boolean suFound = false;
-
-    for (String p : suPaths) {
-        if (lab25_fileExists(p)) {
-            suFound = true;
-            rootScore += 18;
-            rootFindings.add("su/busybox path found: " + p);
-        }
-    }
-
-    // which su (best-effort, avoid false positives)
-    String whichSu = lab25_execFirstLine("which su");
-    if (whichSu != null && whichSu.contains("/su")) {
-        rootScore += 12;
-        rootFindings.add("'which su' returned: " + whichSu);
-        suFound = true;
-    }
-
-    // try exec su (strong indicator)
-    boolean suExec = lab25_canExecSu();
-    if (suExec) {
-        rootScore += 25;
-        rootFindings.add("su execution possible (shell granted).");
-        suFound = true;
-    }
-
-    // known root packages
-    String[] rootPkgs = {
-            "com.topjohnwu.magisk",
-            "eu.chainfire.supersu",
-            "com.koushikdutta.superuser",
-            "com.noshufou.android.su",
-            "com.kingroot.kinguser",
-            "com.kingo.root",
-            "com.saurik.substrate",
-            "de.robv.android.xposed.installer"
-    };
-
-    List<String> installed = lab25_getInstalledPackagesLower();
-    boolean pkgHit = false;
-
-    for (String rp : rootPkgs) {
-        if (installed.contains(rp)) {
-            pkgHit = true;
-            rootScore += 20;
-            rootFindings.add("root package installed: " + rp);
-        }
-    }
-
-    // build tags
-    try {
-        String tags = Build.TAGS;
-        if (tags != null && tags.contains("test-keys")) {
-            rootScore += 15;
-            rootFindings.add("Build.TAGS contains test-keys.");
-        }
-    } catch (Throwable ignore) {}
-
-    // suspicious system properties
-    String roSecure = lab25_getProp("ro.secure");
-    String roDebug  = lab25_getProp("ro.debuggable");
-
-    if ("0".equals(roSecure)) {
-        rootScore += 18;
-        rootFindings.add("ro.secure=0 (insecure build).");
-    }
-    if ("1".equals(roDebug)) {
-        rootScore += 12;
-        rootFindings.add("ro.debuggable=1 (debuggable build).");
-    }
-
-    // ---------------------------
-    // (2) BOOTLOADER / VERIFIED BOOT
-    // ---------------------------
-    int blScore = 0;
-    List<String> blFindings = new ArrayList<>();
-
-    String vbState = lab25_getProp("ro.boot.verifiedbootstate"); // green/yellow/orange/red
-    String vbmeta  = lab25_getProp("ro.boot.vbmeta.device_state"); // locked/unlocked
-    String flashL  = lab25_getProp("ro.boot.flash.locked"); // 1/0
-    String wlBit   = lab25_getProp("ro.boot.warranty_bit"); // 0/1 (OEM)
-
-    if (vbState != null &&
-            (vbState.contains("orange") ||
-             vbState.contains("yellow") ||
-             vbState.contains("red"))) {
-        blScore += 30;
-        blFindings.add("VerifiedBootState=" + vbState);
-    } else if (vbState != null) {
-        blFindings.add("VerifiedBootState=" + vbState);
-    }
-
-    if (vbmeta != null && vbmeta.contains("unlocked")) {
-        blScore += 35;
-        blFindings.add("vbmeta.device_state=unlocked");
-    } else if (vbmeta != null) {
-        blFindings.add("vbmeta.device_state=" + vbmeta);
-    }
-
-    if ("0".equals(flashL)) {
-        blScore += 25;
-        blFindings.add("flash.locked=0 (bootloader unlocked).");
-    } else if (flashL != null) {
-        blFindings.add("flash.locked=" + flashL);
-    }
-
-    if ("1".equals(wlBit)) {
-        blScore += 15;
-        blFindings.add("warranty_bit=1 (tamper flag).");
-    }
-
-    // OEM unlock allowed (settings)
-    try {
-        int oemAllowed =
-                Settings.Global.getInt(
-                        getContentResolver(),
-                        "oem_unlock_allowed",
-                        0
-                );
-        if (oemAllowed == 1) {
-            blScore += 10;
-            blFindings.add("OEM unlock allowed=1 (developer enabled).");
-        }
-    } catch (Throwable ignore) {}
-
-    // /proc/cmdline hints
-    String cmdline = lab25_readOneLine("/proc/cmdline");
-    if (cmdline != null) {
-        String c = cmdline.toLowerCase(Locale.US);
-        if (c.contains("verifiedbootstate=orange") ||
-            c.contains("verifiedbootstate=yellow") ||
-            c.contains("vbmeta.device_state=unlocked") ||
-            c.contains("bootloader=unlocked")) {
-            blScore += 20;
-            blFindings.add("/proc/cmdline reports unlocked / weak verified boot.");
-        }
-    }
-
-    // ---------------------------
-    // (3) BOOT ANIMATION / SPLASH MOD
-    // ---------------------------
-    int animScore = 0;
-    List<String> animFindings = new ArrayList<>();
-
-    if (lab25_fileExists("/data/local/bootanimation.zip")) {
-        animScore += 35;
-        animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");
-    }
-
-    boolean sysBoot =
-            lab25_fileExists("/system/media/bootanimation.zip") ||
-            lab25_fileExists("/product/media/bootanimation.zip") ||
-            lab25_fileExists("/oem/media/bootanimation.zip") ||
-            lab25_fileExists("/vendor/media/bootanimation.zip");
-
-    if (!sysBoot) {
-        animScore += 15;
-        animFindings.add("No stock bootanimation found (possible custom ROM).");
-    } else {
-        animFindings.add("Stock bootanimation path exists.");
-    }
-
-    // ---------------------------
-    // FINAL RISK SCORE
-    // ---------------------------
-    int risk = Math.min(100, rootScore + blScore + animScore);
-
-    logInfo("Root Scan:");
-    if (rootFindings.isEmpty()) {
-        logOk("No strong root traces detected.");
-    } else {
-        for (String s : rootFindings) logWarn("• " + s);
-    }
-
-    logInfo("Bootloader / Verified Boot:");
-    if (blFindings.isEmpty()) {
-        logOk("No bootloader anomalies detected.");
-    } else {
-        for (String s : blFindings) logWarn("• " + s);
-    }
-
-    logInfo("Boot Animation / Splash:");
-    if (animFindings.isEmpty()) {
-        logOk("No custom animation traces detected.");
-    } else {
-        for (String s : animFindings) logWarn("• " + s);
-    }
-
-    logInfo("FINAL VERDICT:");
-    logInfo("RISK SCORE: " + risk + " / 100");
-
-    if (risk >= 70 || suExec || pkgHit) {
-        logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
-    } else if (risk >= 35) {
-        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
-    } else {
-        logOk("STATUS: SAFE (no significant modification evidence).");
-    }
-
-    logOk("Lab 25 finished.");
-    logLine();
-}
-
-// ============================================================
-// LAB 25 — INTERNAL HELPERS
-// ============================================================
-private boolean lab25_fileExists(String path) {
-    try { return new File(path).exists(); }
-    catch (Throwable t) { return false; }
-}
-
-private List<String> lab25_getInstalledPackagesLower() {
-    List<String> out = new ArrayList<>();
-    try {
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-        if (apps != null) {
-            for (ApplicationInfo ai : apps) {
-                String p = ai.packageName;
-                if (p != null) out.add(p.toLowerCase(Locale.US));
-            }
-        }
-    } catch (Throwable ignore) {}
-    return out;
-}
-
-private boolean lab25_canExecSu() {
-    Process p = null;
-    try {
-        p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
-        BufferedReader br =
-                new BufferedReader(
-                        new InputStreamReader(p.getInputStream()));
-        String line = br.readLine();
-        br.close();
-        return line != null &&
-               line.toLowerCase(Locale.US).contains("uid=0");
-    } catch (Throwable t) {
-        return false;
-    } finally {
-        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-    }
-}
-
-private String lab25_execFirstLine(String cmd) {
-    Process p = null;
-    try {
-        p = Runtime.getRuntime().exec(cmd);
-        BufferedReader br =
-                new BufferedReader(
-                        new InputStreamReader(p.getInputStream()));
-        String line = br.readLine();
-        br.close();
-        return line != null ? line.trim() : null;
-    } catch (Throwable t) {
-        return null;
-    } finally {
-        if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
-    }
-}
-
-private String lab25_getProp(String key) {
-    String v = lab25_execFirstLine("getprop " + key);
-    if (v == null) return null;
-    v = v.trim();
-    return v.isEmpty() ? null : v.toLowerCase(Locale.US);
-}
-
-private String lab25_readOneLine(String path) {
-    BufferedReader br = null;
-    try {
-        br = new BufferedReader(new FileReader(new File(path)));
-        return br.readLine();
-    } catch (Throwable t) {
-        return null;
-    } finally {
-        if (br != null) try { br.close(); } catch (Throwable ignore) {}
-    }
-}
-
-// ============================================================
-// LABS 26 — 29: ADVANCED / LOGS
-// ============================================================
-
-// ============================================================
-// LAB 26 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
-// ============================================================
-private void lab26CrashHistory() {
-
-logLine();  
-logInfo("LAB 26 — GEL Crash Intelligence (AUTO)");  
-logLine();  
-
-int crashCount = 0;  
-int anrCount = 0;  
-int systemCount = 0;  
-
-Map<String, Integer> appEvents = new HashMap<>(); // Group per app  
-List<String> details = new ArrayList<>();  
-
-// ============================================================
-// (A) Android 11+ — REALTIME ERROR SNAPSHOT (NOT HISTORY)
-// ============================================================
-// REPLACE your whole (A) block with this:
-try {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-
-        if (am != null) {
-
-            List<ActivityManager.ProcessErrorStateInfo> errs =
-                    am.getProcessesInErrorState();
-
-            if (errs != null && !errs.isEmpty()) {
-
-                logInfo("Realtime Error Snapshot (current state):");
-
-                for (ActivityManager.ProcessErrorStateInfo e : errs) {
-
-                    String app = (e != null && e.processName != null)
-                            ? e.processName
-                            : "(unknown)";
-
-                    // Group snapshot per process (ok)
-                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
-
-                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
-                        details.add("SNAPSHOT CRASH: " + app + " — " + safeStr(e.shortMsg));
-                    } else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
-                        details.add("SNAPSHOT ANR: " + app + " — " + safeStr(e.shortMsg));
-                    } else {
-                        details.add("SNAPSHOT ERROR: " + app + " — " + safeStr(e.shortMsg));
-                    }
-                }
-
-                logInfo("Note:");
-                logOk("snapshot shows ONLY current crashed/ANR processes (not history).");
-            }
-        }
-    }
-} catch (Throwable ignore) {}
-
-// ============================================================  
-// (B) DropBox crash logs — legacy Android sources  
-// ============================================================  
-try {  
-    DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);  
-
-    if (db != null) {  
-        String[] tags = {  
-                "system_app_crash", "data_app_crash",  
-                "system_app_anr", "data_app_anr",  
-                "system_server_crash", "system_server_wtf",  
-                "system_server_anr"  
-        };  
-
-        for (String tag : tags) {  
-            DropBoxManager.Entry ent = db.getNextEntry(tag, 0);  
-
-            while (ent != null) {  
-
-                if (tag.contains("system_server")) {
-    systemCount++;
-} else if (tag.contains("anr")) {
-    anrCount++;
-} else if (tag.contains("crash")) {
-    crashCount++;
-}
-
-                String shortTxt = readDropBoxEntry(ent);  
-
-                String clean = tag.toUpperCase(Locale.US).replace("_", " ");  
-                details.add(clean + ": " + shortTxt);  
-
-                // grouping     
-             try {
-
-    String key;
-
-    if (shortTxt != null && shortTxt.length() > 0) {
-        String t = shortTxt.toLowerCase(Locale.US);
-        int pi = t.indexOf("package:");
-        if (pi >= 0) {
-            String rest = t.substring(pi + 8).trim();
-            String[] parts = rest.split("[\\s\\n\\r\\t]+");
-            key = (parts.length > 0 && parts[0].contains(".")) ? parts[0] : clean;
-        } else {
-            key = clean;
-        }
-    } else {
-        key = clean;
-    }
-
-    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
-
-} catch (Exception ignored) {}
-ent = db.getNextEntry(tag, ent.getTimeMillis());
-            }   // END while
-        }       // END for
-    }           // END if (db != null)
-} catch (Exception ignored) {}   // END DropBox try
-
-// ============================================================  
-// (C) SUMMARY + RISK SCORE  
-// ============================================================  
-int risk = 0;  
-risk += crashCount * 5;  
-risk += anrCount * 8;  
-risk += systemCount * 15;  
-if (risk > 100) risk = 100;  
-
-// COLOR INDICATOR  
-String riskColor =  
-        (risk <= 20) ? "🟩" :  
-        (risk <= 50) ? "🟨" :  
-        (risk <= 80) ? "🟧" : "🟥";  
-
-logInfo("Crash events:");
-if (crashCount > 0) logWarn(String.valueOf(crashCount));
-else logOk("0");
-
-logInfo("ANR events:");
-if (anrCount > 0) logWarn(String.valueOf(anrCount));
-else logOk("0");
-
-logInfo("System-level faults:");
-if (systemCount > 0) logError(String.valueOf(systemCount));
-else logOk("0");
-
-logInfo("Stability Risk Score:");
-
-if (risk >= 60)
-    logError(risk + "%");
-else if (risk >= 30)
-    logWarn(risk + "%");
-else
-    logOk(risk + "%");
-
-logInfo("Note:");
-logOk("risk score is based on detected system log signals; availability varies by OEM/Android.");
-
-// ============================================================  
-// (D) HEATMAP (top offenders)  
-// ============================================================  
-if (!appEvents.isEmpty()) {  
-
-    logInfo("Heatmap (Top Categories / Packages — best-effort):");
-
-    appEvents.entrySet()  
-            .stream()  
-            .sorted((a, b) -> b.getValue() - a.getValue())  
-            .limit(5)  
-            .forEach(e -> {  
-                String c = (e.getValue() >= 10) ? "🟥" :  
-                           (e.getValue() >= 5)  ? "🟧" :  
-                           (e.getValue() >= 2)  ? "🟨" :  
-                                                  "🟩";  
-                logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");  
-            });  
-}  
-
-// ============================================================  
-// (E) FULL DETAILS  
-// ============================================================  
-if (!details.isEmpty()) {
-
-    logInfo("Detailed Crash Records:");
-
-    int count = details.size();
-
-    if (count == 1) {
-        logWarn("1 crash record detected:");
-    } else if (count <= 3) {
-        logWarn(count + " crash records detected:");
-    } else {
-        logError(count + " crash records detected (HIGH instability).");
-    }
-
-    for (String d : details) {
-        logInfo("• " + d);
-    }
-
-} else {
-    logOk("No crash history found.");
-}
-
-logOk("Lab 26 finished.");
-logLine();  
-
-}
-
-// ============================================================
-// SMALL helper inside same block (allowed)
-// Reads first 10 lines of DropBox entry
-// ============================================================
-private String readDropBoxEntry(DropBoxManager.Entry ent) {
-    try {
-        if (ent == null) return "(no text)";
-        InputStream is = ent.getInputStream();
-        if (is == null) return "(no text)";
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        int count = 0;
-        while ((line = br.readLine()) != null && count < 10) {
-            sb.append(line).append(" ");
-            count++;
-        }
-        br.close();
-        return sb.toString().trim();
-    } catch (Exception e) {
-        return "(read error)";
-    }
-}
-
-private String safeStr(String s) {
-    return (s == null || s.trim().isEmpty()) ? "(no details)" : s.trim();
 }
 
 // ============================================================
@@ -7490,4 +7486,3 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
-

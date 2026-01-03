@@ -1,10 +1,10 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Foldable Ready v4.1 (GEL Patched)
+// GDiolitsis Engine Lab (GEL) â€” Author & Developer
+// ServiceReportActivity â€” Foldable Ready v4.1 (GEL Patched)
 // --------------------------------------------------------------
-// ✔ Based 100% on your latest file (NO logic changes)
-// ✔ Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
-// ✔ FIXED: broken braces (exportWithCheck was inside onCreate)
-// ✔ FIXED: single Export PDF button (stable height)
+// âœ” Based 100% on your latest file (NO logic changes)
+// âœ” Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
+// âœ” FIXED: broken braces (exportWithCheck was inside onCreate)
+// âœ” FIXED: single Export PDF button (stable height)
 // --------------------------------------------------------------
 // NOTE (GEL RULE): Full file for copy-paste. No partial patches.
 
@@ -106,7 +106,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("📄 " + getString(R.string.export_report_title));
+        title.setText("ðŸ“„ " + getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -132,26 +132,38 @@ public class ServiceReportActivity extends AppCompatActivity {
         txtPreview.setText(getPreviewText());
         root.addView(txtPreview);
 
-        // ----------------------------------------------------------
-        // EXPORT PDF BUTTON (SINGLE + STABLE HEIGHT)
-        // ----------------------------------------------------------
-        AppCompatButton btnPdf = new AppCompatButton(this);
-        btnPdf.setText(getString(R.string.export_pdf_button));
-        btnPdf.setAllCaps(false);
-        btnPdf.setTextSize(15f);
-        btnPdf.setTextColor(0xFFFFFFFF);
-        btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        // EXPORT PDF BUTTON — FIXED HEIGHT (NO GELAutoDP)
+AppCompatButton btnPdf = new AppCompatButton(this);
+btnPdf.setText(getString(R.string.export_pdf_button));
+btnPdf.setAllCaps(false);
+btnPdf.setTextSize(15f);
+btnPdf.setTextColor(0xFFFFFFFF);
+btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(56)
-                );
-        lp.setMargins(dp(8), dp(16), dp(8), dp(24));
-        btnPdf.setLayoutParams(lp);
+// ❗ ΟΧΙ dp() — RAW PIXELS
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (int) (56 * getResources().getDisplayMetrics().density)
+        );
+lp.setMargins(
+        (int) (8 * getResources().getDisplayMetrics().density),
+        (int) (16 * getResources().getDisplayMetrics().density),
+        (int) (8 * getResources().getDisplayMetrics().density),
+        (int) (24 * getResources().getDisplayMetrics().density)
+);
+btnPdf.setLayoutParams(lp);
 
-        btnPdf.setOnClickListener(v -> exportWithCheck(true));
-        root.addView(btnPdf);
+// έξτρα ασφάλεια
+btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
+btnPdf.setPadding(0,
+        (int) (12 * getResources().getDisplayMetrics().density),
+        0,
+        (int) (12 * getResources().getDisplayMetrics().density)
+);
+
+btnPdf.setOnClickListener(v -> exportWithCheck(true));
+root.addView(btnPdf);
 
         scroll.addView(root);
         setContentView(scroll);
@@ -191,7 +203,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT — MULTI PAGE + LOGO
+    // PDF EXPORT â€” MULTI PAGE + LOGO
     // ----------------------------------------------------------
     private void exportPdf() {
         try {

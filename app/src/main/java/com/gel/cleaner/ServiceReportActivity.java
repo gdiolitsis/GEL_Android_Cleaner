@@ -140,11 +140,13 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // BUTTON PDF
 Button btnPdf = new Button(this);
+AppCompatButton btnPdf = new AppCompatButton(this);
+
 btnPdf.setText(getString(R.string.export_pdf_button));
 btnPdf.setAllCaps(false);
 btnPdf.setTextSize(15f);
-btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 btnPdf.setTextColor(0xFFFFFFFF);
+btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
 LinearLayout.LayoutParams lp =
         new LinearLayout.LayoutParams(
@@ -154,10 +156,14 @@ LinearLayout.LayoutParams lp =
 lp.setMargins(dp(8), dp(16), dp(8), dp(24));
 btnPdf.setLayoutParams(lp);
 
+btnPdf.setMinHeight(0);
+btnPdf.setMinimumHeight(0);
+btnPdf.setPadding(0, dp(12), 0, dp(12));
+
 btnPdf.setOnClickListener(v -> exportWithCheck(true));
 
 root.addView(btnPdf);
-
+        
 scroll.addView(root);
 setContentView(scroll);
         }

@@ -490,14 +490,18 @@ setContentView(scroll);
 // ============================================================
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
-GELServiceLog.clear();
 
-// SECTION HEADER
+// ⚠️ ΔΕΝ καθαρίζουμε εδώ το Service Log
+// Το clear γίνεται ΜΟΝΟ σε Export ή New Session
+
+// SECTION HEADER (γράφεται ΜΙΑ φορά)
 GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");
 
-// First informational entry
+// Intro entry για το service report
+logLine();
 logInfo(getString(R.string.manual_log_desc));
-    }  // onCreate ends here
+
+}  // onCreate ENDS HERE
 
     // ============================================================
     // GEL legacy aliases (LOCKED)

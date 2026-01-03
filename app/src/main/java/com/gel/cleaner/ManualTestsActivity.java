@@ -137,6 +137,11 @@ import java.util.Map;
 public class ManualTestsActivity extends AppCompatActivity {
 
     // ============================================================
+    // SERVICE LOG SESSION FLAG (CRITICAL)
+    // ============================================================
+    private boolean serviceLogInit = false;
+
+    // ============================================================
     // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
     // ============================================================
     private String lastScoreHealth      = "N/A";
@@ -494,12 +499,17 @@ setContentView(scroll);
 // ⚠️ ΔΕΝ καθαρίζουμε εδώ το Service Log
 // Το clear γίνεται ΜΟΝΟ σε Export ή New Session
 
-// SECTION HEADER (γράφεται ΜΙΑ φορά)
-GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");
+if (!serviceLogInit) {
 
-// Intro entry για το service report
-logLine();
-logInfo(getString(R.string.manual_log_desc));
+    // SECTION HEADER (γράφεται ΜΙΑ φορά ανά session)
+    GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");
+
+    // Intro entry για το service report
+    logLine();
+    logInfo(getString(R.string.manual_log_desc));
+
+    serviceLogInit = true;
+}
 
 }  // onCreate ENDS HERE
 
@@ -6274,16 +6284,24 @@ private void lab26AppsFootprint() {
         if (lowPkg.contains("keyboard") || lowPkg.contains("ime"))
             keyboardsLike++;
 
-        // Store top offenders only for user apps (so it stays human)
-        if (!isSystem && score >= 14) {
-            Offender o = new Offender();
-            o.label = labelStr;
-            o.pkg = pkg;
-            o.score = score;
-            String tgs = tags.toString().trim();
-            if (tgs.endsWith(",")) tgs = tgs.substring(0, tgs.length() - 1).trim();
-            o.tags = (tgs.length() > 0 ? tgs : "high-capability");
-            offenders.add(o);
+// Store top offenders — USER APPS ONLY
+// Exclude system apps & Play Store related packages
+if (!isSystem &&
+    score >= 14 &&
+    !pkg.startsWith("com.android.") &&
+    !pkg.startsWith("com.google.android.") &&
+    !pkg.equals("com.android.vending")) {
+
+    Offender o = new Offender();
+    o.label = labelStr;
+    o.pkg = pkg;
+    o.score = score;
+
+    String tgs = tags.toString().trim();
+    if (tgs.endsWith(",")) tgs = tgs.substring(0, tgs.length() - 1).trim();
+    o.tags = (tgs.length() > 0 ? tgs : "high-capability");
+
+    offenders.add(o);
         }
     }
 
@@ -6365,14 +6383,14 @@ private void lab26AppsFootprint() {
     if (redundancy) riskPoints += 1;
 
     logInfo("Human verdict:");
-
+    
     if (riskPoints >= 8) {
-        logError("❌ High app pressure detected.");
-        logError("This increases the probability of lag, background drain and update instability.");
-        logInfo("What this means (simple terms):");
-        logWarn("Your phone is carrying too many “always-on capable” apps at once.");
-        logOk("Recommendation: keep only what you really use, and reduce duplicates.");
-        logOk("This is common on power-user devices — not a defect.");
+    logWarn("⚠️ High app pressure detected.");
+    logWarn("This increases the probability of lag, or background drain over time.");
+    logInfo("What this means (simple terms):");
+    logWarn("Your phone runs many apps with background or high-permission capabilities.");
+    logOk("This is common on power-user devices and is NOT a hardware fault.");
+    logOk("Recommendation: keep only what you really use and reduce duplicates if you want extra smoothness.");
 
     } else if (riskPoints >= 5) {
         logWarn("⚠️ Moderate app pressure detected.");
@@ -6393,7 +6411,7 @@ private void lab26AppsFootprint() {
         logLine();
         logInfo("High-capability user apps (not accused — just flagged):");
 
-        int limit = Math.min(8, offenders.size());
+        int limit = Math.min(10, offenders.size());
         for (int i = 0; i < limit; i++) {
             Offender o = offenders.get(i);
             logWarn("• " + o.label + "  [" + o.tags + "]");
@@ -6551,6 +6569,23 @@ try {
     for (android.content.pm.PackageInfo p : packs) {  
         if (p == null || p.packageName == null) continue;  
         totalApps++;  
+        
+        String pkg = p.packageName;
+
+// ============================================================
+// EXCLUDE SYSTEM / GOOGLE / PLAY STORE APPS (LAB 27)
+// ============================================================
+boolean isSystem =
+        (p.applicationInfo != null) &&
+        ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||
+         (p.applicationInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0);
+
+if (isSystem ||
+    pkg.startsWith("com.android.") ||
+    pkg.startsWith("com.google.android.") ||
+    pkg.equals("com.android.vending")) {
+    continue;
+}
 
         // Skip system apps unless they have highly dangerous perms  
         boolean isSystem = (p.applicationInfo != null) &&  
@@ -6687,7 +6722,14 @@ if (!details.isEmpty()) {
 
     logOk("No high-risk permission patterns detected.");
 }
-
+ 
+ // ============================================================
+// PRIVACY CONTEXT NOTE (SERVICE REPORT SAFE)
+// ============================================================
+logInfo("Privacy analysis note:");
+logOk("Granted permissions do not imply malicious behavior.");
+logOk("This result does not indicate hardware or system failure.");
+ 
 logOk("Lab 27 finished.");
 logLine();  
 

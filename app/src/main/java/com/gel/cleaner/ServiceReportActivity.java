@@ -1,15 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ServiceReportActivity — Foldable Ready v4.1 (GEL Patched)
 // --------------------------------------------------------------
-// ✔ Based 100% on your latest file (no logic changes)
-// ✔ Added Foldable-Safe Export Pipeline:
-//      - GELFoldableOrchestrator callback hook
-//      - Stabilized PDF export on split-screen & dual-pane
-//      - Zero-crash on rotation / posture change
-// ✔ Fully compatible with:
-//      GELFoldableOrchestrator / GELFoldableUIManager / DualPaneManager
+// ✔ Based 100% on your latest file (NO logic changes)
+// ✔ Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
+// ✔ FIXED: broken braces (exportWithCheck was inside onCreate)
+// ✔ FIXED: single Export PDF button (stable height)
 // --------------------------------------------------------------
-// NOTE: Full-file patch — έτοιμο για copy-paste. Δούλευε πάντα πάνω στο ΤΕΛΕΥΤΑΙΟ αρχείο.
+// NOTE (GEL RULE): Full file for copy-paste. No partial patches.
 
 package com.gel.cleaner;
 
@@ -28,7 +25,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Gravity;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -58,13 +54,11 @@ public class ServiceReportActivity extends AppCompatActivity {
     private final GELFoldableCallback foldableCallback = new GELFoldableCallback() {
         @Override
         public void onPostureChanged(@NonNull Posture posture) {
-            // Safe UI stabilization during posture changes
             if (txtPreview != null) txtPreview.postInvalidate();
         }
 
         @Override
         public void onScreenChanged(boolean isInner) {
-            // Adjust preview width/spacing dynamically
             if (txtPreview != null) {
                 txtPreview.setTextSize(isInner ? 14f : 13f);
             }
@@ -122,7 +116,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         TextView sub = new TextView(this);
         sub.setText(
                 getString(R.string.report_dev_line) + "\n" +
-                getString(R.string.export_report_desc).trim()
+                        getString(R.string.export_report_desc).trim()
         );
         sub.setTextSize(sp(13f));
         sub.setTextColor(0xFFCCCCCC);
@@ -138,38 +132,33 @@ public class ServiceReportActivity extends AppCompatActivity {
         txtPreview.setText(getPreviewText());
         root.addView(txtPreview);
 
-        // BUTTON PDF
-Button btnPdf = new Button(this);
-AppCompatButton btnPdf = new AppCompatButton(this);
+        // ----------------------------------------------------------
+        // EXPORT PDF BUTTON (SINGLE + STABLE HEIGHT)
+        // ----------------------------------------------------------
+        AppCompatButton btnPdf = new AppCompatButton(this);
+        btnPdf.setText(getString(R.string.export_pdf_button));
+        btnPdf.setAllCaps(false);
+        btnPdf.setTextSize(15f);
+        btnPdf.setTextColor(0xFFFFFFFF);
+        btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-btnPdf.setText(getString(R.string.export_pdf_button));
-btnPdf.setAllCaps(false);
-btnPdf.setTextSize(15f);
-btnPdf.setTextColor(0xFFFFFFFF);
-btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(56)
+                );
+        lp.setMargins(dp(8), dp(16), dp(8), dp(24));
+        btnPdf.setLayoutParams(lp);
 
-LinearLayout.LayoutParams lp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(56)
-        );
-lp.setMargins(dp(8), dp(16), dp(8), dp(24));
-btnPdf.setLayoutParams(lp);
+        btnPdf.setOnClickListener(v -> exportWithCheck(true));
+        root.addView(btnPdf);
 
-btnPdf.setMinHeight(0);
-btnPdf.setMinimumHeight(0);
-btnPdf.setPadding(0, dp(12), 0, dp(12));
-
-btnPdf.setOnClickListener(v -> exportWithCheck(true));
-
-root.addView(btnPdf);
-        
-scroll.addView(root);
-setContentView(scroll);
-        }
+        scroll.addView(root);
+        setContentView(scroll);
+    }
 
     // ----------------------------------------------------------
-    // EXPORT CHECK (UNCHANGED)
+    // EXPORT CHECK
     // ----------------------------------------------------------
     private void exportWithCheck(boolean pdf) {
 
@@ -179,9 +168,10 @@ setContentView(scroll);
         }
 
         if (Build.VERSION.SDK_INT <= 29) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED) {
 
                 ActivityCompat.requestPermissions(
                         this,
@@ -192,21 +182,22 @@ setContentView(scroll);
             }
         }
 
-        // Foldable-safe export
         GELFoldableUIManager.freezeTransitions(this);
 
+        // only PDF supported here (kept your signature param)
         exportPdf();
 
         GELFoldableUIManager.unfreezeTransitions(this);
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT — MULTI PAGE + LOGO (UNCHANGED)
+    // PDF EXPORT — MULTI PAGE + LOGO
     // ----------------------------------------------------------
     private void exportPdf() {
         try {
             File outDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS);
+                    Environment.DIRECTORY_DOWNLOADS
+            );
             if (!outDir.exists()) outDir.mkdirs();
 
             String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
@@ -258,9 +249,9 @@ setContentView(scroll);
 
                 while (currentLine < lines.length && y < maxY) {
                     String line = unicodeWrap(lines[currentLine], 85);
-                    for (String sub : line.split("\n")) {
+                    for (String subLine : line.split("\n")) {
                         if (y >= maxY) break;
-                        canvas.drawText(sub, margin, y, paint);
+                        canvas.drawText(subLine, margin, y, paint);
                         y += lineHeight;
                     }
                     currentLine++;
@@ -275,17 +266,21 @@ setContentView(scroll);
             fos.close();
             pdf.close();
 
-            Toast.makeText(this,
+            Toast.makeText(
+                    this,
                     "PDF " + getString(R.string.toast_done) + "\n" + out.getAbsolutePath(),
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG
+            ).show();
 
             GELServiceLog.clear();
             txtPreview.setText(getPreviewText());
 
         } catch (Exception e) {
-            Toast.makeText(this,
+            Toast.makeText(
+                    this,
                     getString(R.string.export_pdf_error) + ": " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 
@@ -305,7 +300,7 @@ setContentView(scroll);
     }
 
     // ----------------------------------------------------------
-    // REPORT BUILDER (UNCHANGED)
+    // REPORT BUILDER
     // ----------------------------------------------------------
     private String buildReportBody() {
         StringBuilder sb = new StringBuilder();
@@ -315,8 +310,7 @@ setContentView(scroll);
         sb.append("----------------------------------------\n");
 
         sb.append(getString(R.string.report_date)).append(": ")
-                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                        .format(new Date()))
+                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()))
                 .append("\n\n");
 
         sb.append(getString(R.string.report_device)).append(": ")

@@ -137,29 +137,28 @@ public class ServiceReportActivity extends AppCompatActivity {
         txtPreview.setText(getPreviewText());
         root.addView(txtPreview);
 
-        // EXPORT SERVICE REPORT BUTTON (FULL WIDTH)
-Button btnPdf = new Button(this);
-btnPdf.setText(getString(R.string.export_pdf_button));
-btnPdf.setAllCaps(false);
-btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-btnPdf.setTextColor(0xFFFFFFFF);
+        // BUTTON ROW
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER_HORIZONTAL);
 
-LinearLayout.LayoutParams lp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lp.setMargins(dp(4), dp(12), dp(4), dp(20));
-btnPdf.setLayoutParams(lp);
+Button btnPdf = new Button(this);  
+    btnPdf.setText(getString(R.string.export_pdf_button));  
+    btnPdf.setAllCaps(false);  
+    btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);  
+    btnPdf.setTextColor(0xFFFFFFFF);  
+    LinearLayout.LayoutParams lp2 =  
+            new LinearLayout.LayoutParams(0, dp(48), 1f);  
+    lp2.setMargins(dp(4), dp(8), dp(4), dp(8));  
+    btnPdf.setLayoutParams(lp2);  
+    btnPdf.setOnClickListener(v -> exportWithCheck(true));  
 
-btnPdf.setOnClickListener(v -> exportWithCheck(true));
+    btnRow.addView(btnPdf);  
+    root.addView(btnRow);  
 
-// ⬇️ απευθείας στο root
-root.addView(btnPdf);
-    
-        scroll.addView(root);
-        setContentView(scroll);
-    }
+    scroll.addView(root);  
+    setContentView(scroll);  
+}
 
     // ----------------------------------------------------------
     // EXPORT CHECK (UNCHANGED)

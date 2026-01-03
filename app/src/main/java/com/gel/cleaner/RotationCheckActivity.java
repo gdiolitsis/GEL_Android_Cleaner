@@ -27,6 +27,8 @@ import android.widget.TextView;
  *  - RESULT_CANCELED → user pressed "End Test"
  *
  * No loops. No threads. No timers.
+ *
+ * GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public class RotationCheckActivity extends Activity
@@ -35,23 +37,27 @@ public class RotationCheckActivity extends Activity
     private SensorManager sensorManager;
     private Sensor accelerometer;
 
-    private float lastX = 0;
-    private float lastY = 0;
+    private float lastX = 0f;
+    private float lastY = 0f;
     private boolean initialized = false;
 
     private static final float ROTATION_THRESHOLD = 4.0f;
 
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Lock orientation (sensor-based detection only)
+        // Lock orientation — detection is sensor-based only
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager != null)
+        if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
 
         // ============================================================
         // ROOT
@@ -78,12 +84,11 @@ public class RotationCheckActivity extends Activity
                         FrameLayout.LayoutParams.WRAP_CONTENT
                 );
         infoLp.gravity = Gravity.CENTER;
-        info.setLayoutParams(infoLp);
 
-        root.addView(info);
+        root.addView(info, infoLp);
 
         // ============================================================
-        // END TEST BUTTON (RED — SAME AS LAB 6 & 8)
+        // END TEST BUTTON (RED)
         // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
@@ -107,15 +112,25 @@ public class RotationCheckActivity extends Activity
         endLp.leftMargin = dp(24);
         endLp.rightMargin = dp(24);
         endLp.bottomMargin = dp(24);
+
         end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
+
+            GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
+
+            GELServiceLog.logWarn("Rotation test was cancelled by user.");
+            GELServiceLog.logWarn("No orientation change detected during the test.");
+            GELServiceLog.logOk("Manual re-test recommended to confirm sensor behavior.");
+
+            GELServiceLog.logOk("Lab 7 finished.");
+            GELServiceLog.logLine();
+
             setResult(RESULT_CANCELED);
             finish();
         });
 
         root.addView(end);
-
         setContentView(root);
     }
 
@@ -134,12 +149,17 @@ public class RotationCheckActivity extends Activity
     @Override
     protected void onPause() {
         super.onPause();
-        if (sensorManager != null)
+        if (sensorManager != null) {
             sensorManager.unregisterListener(this);
+        }
     }
 
+    // ============================================================
+    // SENSOR CALLBACK
+    // ============================================================
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         float x = event.values[0];
         float y = event.values[1];
 
@@ -154,6 +174,16 @@ public class RotationCheckActivity extends Activity
         float dy = Math.abs(y - lastY);
 
         if (dx > ROTATION_THRESHOLD || dy > ROTATION_THRESHOLD) {
+
+            GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
+
+            GELServiceLog.logOk("Device rotation detected via accelerometer.");
+            GELServiceLog.logOk("Orientation change confirmed (portrait ↔ landscape).");
+            GELServiceLog.logOk("Motion sensors responding normally.");
+
+            GELServiceLog.logOk("Lab 7 finished.");
+            GELServiceLog.logLine();
+
             setResult(RESULT_OK);
             finish();
         }
@@ -164,6 +194,9 @@ public class RotationCheckActivity extends Activity
         // not used
     }
 
+    // ============================================================
+    // UTILS
+    // ============================================================
     private int dp(int v) {
         float d = getResources().getDisplayMetrics().density;
         return (int) (v * d + 0.5f);

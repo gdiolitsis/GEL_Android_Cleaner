@@ -159,6 +159,7 @@ root.addView(btnPdf);
 
 scroll.addView(root);
 setContentView(scroll);
+        }
 
     // ----------------------------------------------------------
     // EXPORT CHECK (UNCHANGED)

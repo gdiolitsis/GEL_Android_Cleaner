@@ -5,10 +5,22 @@
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/gel_bg_pressed"/>
+
             <stroke
                 android:width="2dp"
                 android:color="@color/gel_gold"/>
+
             <corners android:radius="12dp"/>
+
+            <!-- 🔒 ΚΡΙΣΙΜΟ -->
+            <size android:height="56dp"/>
+
+            <!-- 🔒 ΚΡΙΣΙΜΟ -->
+            <padding
+                android:left="16dp"
+                android:top="14dp"
+                android:right="16dp"
+                android:bottom="14dp"/>
         </shape>
     </item>
 
@@ -16,10 +28,22 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/gel_bg"/>
+
             <stroke
                 android:width="2dp"
                 android:color="@color/gel_gold"/>
+
             <corners android:radius="12dp"/>
+
+            <!-- 🔒 ΚΡΙΣΙΜΟ -->
+            <size android:height="56dp"/>
+
+            <!-- 🔒 ΚΡΙΣΙΜΟ -->
+            <padding
+                android:left="16dp"
+                android:top="14dp"
+                android:right="16dp"
+                android:bottom="14dp"/>
         </shape>
     </item>
 

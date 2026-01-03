@@ -27,6 +27,8 @@ import android.widget.TextView;
  *  - RESULT_CANCELED → user pressed "End Test"
  *
  * No loops. No threads. No timers.
+ *
+ * GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public class ProximityCheckActivity extends Activity
@@ -38,6 +40,8 @@ public class ProximityCheckActivity extends Activity
     private boolean initialRead = false;
     private float initialValue = 0f;
 
+    private boolean loggedFinish = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,8 +50,9 @@ public class ProximityCheckActivity extends Activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager != null)
+        if (sensorManager != null) {
             proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        }
 
         // ============================================================
         // ROOT
@@ -74,12 +79,11 @@ public class ProximityCheckActivity extends Activity
                         FrameLayout.LayoutParams.WRAP_CONTENT
                 );
         infoLp.gravity = Gravity.CENTER;
-        info.setLayoutParams(infoLp);
 
-        root.addView(info);
+        root.addView(info, infoLp);
 
         // ============================================================
-        // END TEST BUTTON (RED — SAME AS LAB 6)
+        // END TEST BUTTON (RED — SAME AS LAB 6 & 7)
         // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
@@ -106,6 +110,20 @@ public class ProximityCheckActivity extends Activity
         end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
+
+            if (!loggedFinish) {
+                loggedFinish = true;
+
+                GELServiceLog.section("LAB 8 — Proximity Sensor");
+
+                GELServiceLog.logWarn("Proximity test was cancelled by user.");
+                GELServiceLog.logWarn("No proximity state change was detected during the test.");
+                GELServiceLog.logOk("Manual re-test recommended to confirm sensor behavior.");
+
+                GELServiceLog.logOk("Lab 8 finished.");
+                GELServiceLog.logLine();
+            }
+
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -130,8 +148,9 @@ public class ProximityCheckActivity extends Activity
     @Override
     protected void onPause() {
         super.onPause();
-        if (sensorManager != null)
+        if (sensorManager != null) {
             sensorManager.unregisterListener(this);
+        }
     }
 
     @Override
@@ -146,6 +165,20 @@ public class ProximityCheckActivity extends Activity
 
         // Any significant change = sensor responded
         if (Math.abs(v - initialValue) > 0.5f) {
+
+            if (!loggedFinish) {
+                loggedFinish = true;
+
+                GELServiceLog.section("LAB 8 — Proximity Sensor");
+
+                GELServiceLog.logOk("Proximity sensor state change detected.");
+                GELServiceLog.logOk("Near/Far response confirmed during manual interaction.");
+                GELServiceLog.logOk("Front proximity sensing path responding normally.");
+
+                GELServiceLog.logOk("Lab 8 finished.");
+                GELServiceLog.logLine();
+            }
+
             setResult(RESULT_OK);
             finish();
         }
@@ -160,4 +193,4 @@ public class ProximityCheckActivity extends Activity
         float d = getResources().getDisplayMetrics().density;
         return (int) (v * d + 0.5f);
     }
-    }
+}

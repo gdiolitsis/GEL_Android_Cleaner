@@ -452,29 +452,35 @@ private static final int LAB15_TOTAL_SECONDS = 180;
         txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
         root.addView(txtLog);
 
-        // ============================================================
-        // EXPORT SERVICE REPORT BUTTON
-        // ============================================================
-        Button btnExport = new Button(this);
-        btnExport.setText(getString(R.string.export_report_title));
-        btnExport.setAllCaps(false);
-        btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        btnExport.setTextColor(0xFFFFFFFF);
+// ============================================================
+// EXPORT SERVICE REPORT BUTTON (LOCKED HEIGHT)
+// ============================================================
+Button btnExport = new Button(this);
+btnExport.setText(getString(R.string.export_report_title));
+btnExport.setAllCaps(false);
+btnExport.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // 👈 σημαντικό
+btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+btnExport.setTextColor(0xFFFFFFFF);
 
-        LinearLayout.LayoutParams lpExp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpExp.setMargins(dp(4), dp(12), dp(4), dp(20));
-        btnExport.setLayoutParams(lpExp);
+// 🔒 ΚΛΕΙΔΩΜΕΝΟ ΥΨΟΣ
+LinearLayout.LayoutParams lpExp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(56)
+        );
+lpExp.setMargins(dp(8), dp(16), dp(8), dp(24));
+btnExport.setLayoutParams(lpExp);
 
-        btnExport.setOnClickListener(v -> {
-            Intent i = new Intent(this, ServiceReportActivity.class);
-            startActivity(i);
-        });
+// 🔒 ΔΕΝ ΑΦΗΝΟΥΜΕ ΤΟ ANDROID ΝΑ ΤΟ ΣΥΡΡΙΚΝΩΣΕΙ
+btnExport.setMinimumHeight(dp(56));
+btnExport.setPadding(0, dp(12), 0, dp(12));
 
-        root.addView(btnExport);
+btnExport.setOnClickListener(v -> {
+    startActivity(new Intent(this, ServiceReportActivity.class));
+});
+
+// ⬇️ ΠΑΝΤΑ ΠΡΙΝ ΤΟ FINAL BIND
+root.addView(btnExport);
 
 // ============================================================
 // FINAL BIND

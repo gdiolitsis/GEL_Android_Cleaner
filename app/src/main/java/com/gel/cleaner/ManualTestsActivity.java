@@ -80,6 +80,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7489,3 +7490,4 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // END OF CLASS
 // ============================================================
 }
+

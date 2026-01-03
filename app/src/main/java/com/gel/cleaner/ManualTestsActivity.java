@@ -459,28 +459,26 @@ private static final int LAB15_TOTAL_SECONDS = 180;
 Button btnExport = new Button(this);
 btnExport.setText(getString(R.string.export_report_title));
 btnExport.setAllCaps(false);
-btnExport.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); // 👈 σημαντικό
-btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 btnExport.setTextColor(0xFFFFFFFF);
+btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-// 🔒 ΚΛΕΙΔΩΜΕΝΟ ΥΨΟΣ
+// 🔒 OVERRIDE THEME / DRAWABLE
+btnExport.setMinHeight(0);
+btnExport.setMinimumHeight(0);
+btnExport.setPadding(dp(16), dp(14), dp(16), dp(14));
+
 LinearLayout.LayoutParams lpExp =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(56)
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
 lpExp.setMargins(dp(8), dp(16), dp(8), dp(24));
 btnExport.setLayoutParams(lpExp);
 
-// 🔒 ΔΕΝ ΑΦΗΝΟΥΜΕ ΤΟ ANDROID ΝΑ ΤΟ ΣΥΡΡΙΚΝΩΣΕΙ
-btnExport.setMinimumHeight(dp(56));
-btnExport.setPadding(0, dp(12), 0, dp(12));
+btnExport.setOnClickListener(v ->
+        startActivity(new Intent(this, ServiceReportActivity.class))
+);
 
-btnExport.setOnClickListener(v -> {
-    startActivity(new Intent(this, ServiceReportActivity.class));
-});
-
-// ⬇️ ΠΑΝΤΑ ΠΡΙΝ ΤΟ FINAL BIND
 root.addView(btnExport);
 
 // ============================================================

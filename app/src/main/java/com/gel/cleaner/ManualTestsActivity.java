@@ -5678,7 +5678,7 @@ private void lab24RootSuspicion() {
     int animScore = 0;
     List<String> animFindings = new ArrayList<>();
 
-    if (lab25_fileExists("/data/local/bootanimation.zip")) {
+    if (lab24_fileExists("/data/local/bootanimation.zip")) {
         animScore += 35;
         animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");
     }

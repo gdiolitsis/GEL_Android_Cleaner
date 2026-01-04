@@ -704,7 +704,28 @@ if (am != null) {
         // ==========================
         // LOOP TONE (EARPIECE)
         // ==========================
-        lab3Tone = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
+        AudioAttributes attrs = new AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+        .build();
+
+AudioFormat format = new AudioFormat.Builder()
+        .setSampleRate(8000)
+        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+        .build();
+
+lab3Track = new AudioTrack(
+        attrs,
+        format,
+        AudioTrack.getMinBufferSize(
+                8000,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+        ),
+        AudioTrack.MODE_STATIC,
+        AudioManager.AUDIO_SESSION_ID_GENERATE
+);
 
         new Thread(() -> {
             while (lab3WaitingUser) {
@@ -2403,7 +2424,7 @@ private void lab3EarpieceManual() {
         } finally {
             try {
                 if (am != null) {
-                    am.setMicrophoneMute(oldMicMute);
+                    am.setMicrophoneMute(false);
                     am.setMode(oldMode);
                     am.setSpeakerphoneOn(oldSpeaker);
                 }

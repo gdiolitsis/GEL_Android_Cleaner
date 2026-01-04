@@ -291,24 +291,36 @@ public class TouchGridTestActivity extends Activity {
         }
 
         private void logSuccessResult() {
-            GELServiceLog.section("LAB 6 — Display / Touch");
-            GELServiceLog.ok("Touch grid test completed.");
-            GELServiceLog.ok("All screen zones responded to touch input.");
-            GELServiceLog.ok("No dead touch zones detected.");
-            GELServiceLog.ok("Lab 6 finished.");
-            GELServiceLog.addLine(null);
-        }
 
-        private void logIncompleteResult() {
-            int total = ROWS * COLS;
-            int remaining = countUncleared();
+    logSection("LAB 6 — Display / Touch");
 
-            GELServiceLog.section("LAB 6 — Display / Touch");
-            GELServiceLog.warn("Touch grid test incomplete.");
-            GELServiceLog.warn("Untouched zones detected: " + remaining + " / " + total);
-            GELServiceLog.info("Manual re-test recommended.");
-            GELServiceLog.ok("Lab 6 finished.");
-            GELServiceLog.addLine(null);
-        }
+    logOk("Touch grid test completed.");
+    logOk("All screen zones responded to touch input.");
+    logOk("No dead touch zones detected.");
+
+    logOk("Lab 6 finished.");
+    logLine();
+}
+
+private void logIncompleteResult() {
+
+    int total = ROWS * COLS;
+    int remaining = countUncleared();
+
+    logSection("LAB 6 — Display / Touch");
+
+    logWarn("Touch grid test incomplete.");
+    logWarn(
+            "These " + remaining + " screen zones did not respond to touch input " +
+            "(" + remaining + " / " + total + ")."
+    );
+
+    logInfo("This may indicate:");
+    logError("• Localized digitizer dead zones");
+    logWarn("Manual re-test is recommended to confirm behavior.");
+
+    logOk("Lab 6 finished.");
+    logLine();
+}
     }
 }

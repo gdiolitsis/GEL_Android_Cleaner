@@ -88,6 +88,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -914,6 +915,19 @@ private boolean lab3TtsMuted = false;
 // ==========================
 private TextToSpeech tts;
 private boolean ttsReady = false;
+
+// ============================================================
+// LAB 3 — Tone stop helper
+// ============================================================
+private void stopLab3Tone() {
+    try {
+        if (lab3Tone != null) {
+            lab3Tone.stopTone();
+            lab3Tone.release();
+        }
+    } catch (Throwable ignore) {}
+    lab3Tone = null;
+}
 
 // ============================================================
 // TELEPHONY SNAPSHOT (SAFE / INFO ONLY)

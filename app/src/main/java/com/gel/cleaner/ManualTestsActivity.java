@@ -677,48 +677,35 @@ private void askUserEarpieceConfirmationLoop() {
 
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
-        
+
         // ==========================
-        // VOICE PROMPT — ΠΡΙΝ ΟΤΙΔΗΠΟΤΕ ΑΛΛΟ
-        // ==========================
-        
-if (!lab3TtsMuted && ttsReady && tts != null) {
-    tts.speak(
-        "Put the phone at your ear. Did you hear the sound from the earpiece?",
-        TextToSpeech.QUEUE_FLUSH,
-        null,
-        "LAB3_PROMPT"
-    );
-}
-
+        // LOOP TONE (EARPIECE — ONLY)
 // ==========================
-// LOOP TONE (EARPIECE — SAFE)
-// ==========================
-lab3Tone = new ToneGenerator(
-        AudioManager.STREAM_VOICE_CALL, // ΜΟΝΟ ΑΥΤΟ
-        80
-);
-
-new Thread(() -> {
-    while (lab3WaitingUser) {
-        try {
-            if (lab3Tone != null) {
-                lab3Tone.startTone(
-                        ToneGenerator.TONE_DTMF_1,
-                        800
-                );
-            }
-            SystemClock.sleep(1000);
-        } catch (Throwable ignore) {}
-    }
-}).start();
-
-AlertDialog.Builder b =
-        new AlertDialog.Builder(
-                ManualTestsActivity.this,
-                android.R.style.Theme_Material_Dialog_NoActionBar
+        lab3Tone = new ToneGenerator(
+                AudioManager.STREAM_VOICE_CALL, // ΜΟΝΟ voice call stream
+                80
         );
-b.setCancelable(false);
+
+        new Thread(() -> {
+            while (lab3WaitingUser) {
+                try {
+                    if (lab3Tone != null) {
+                        lab3Tone.startTone(
+                                ToneGenerator.TONE_DTMF_1,
+                                800
+                        );
+                    }
+                    SystemClock.sleep(1000);
+                } catch (Throwable ignore) {}
+            }
+        }).start();
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
         // ============================================================
         // GEL DARK + GOLD POPUP (LAB 3)
@@ -751,36 +738,6 @@ b.setCancelable(false);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
-        
-// =====================
-// 🔇 MUTE VOICE TOGGLE
-// =====================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setChecked(lab3TtsMuted);
-muteBox.setPadding(0, dp(10), 0, dp(6));
-muteBox.setGravity(Gravity.CENTER);
-
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    lab3TtsMuted = checked;
-
-    // αποθήκευση
-    SharedPreferences p =
-            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-
-    p.edit()
-     .putBoolean("lab3_tts_muted", checked)
-     .apply();
-
-    // άμεσο κόψιμο φωνής αν γίνει mute
-    if (checked && tts != null) {
-        tts.stop();
-    }
-});
-
-root.addView(muteBox);
 
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -863,9 +820,9 @@ private void restoreLab3Audio() {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
-            am.setMicrophoneMute(false);   // ⬅ ΥΠΟΧΡΕΩΤΙΚΟ
-            am.setMode(lab3OldMode);       // επαναφορά mode
-            am.setSpeakerphoneOn(lab3OldSpeaker); // επαναφορά speaker
+            am.setMicrophoneMute(false);
+            am.setMode(lab3OldMode);
+            am.setSpeakerphoneOn(lab3OldSpeaker);
         }
     } catch (Throwable ignore) {}
 }
@@ -881,17 +838,6 @@ protected void onPause() {
     restoreLab3Audio();
 }
 
-@Override
-protected void onDestroy() {
-    super.onDestroy();
-    try {
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
-    } catch (Throwable ignore) {}
-}
-
 // ============================================================
 // LAB 3 — STATE / HELPERS
 // ============================================================
@@ -899,17 +845,6 @@ private volatile boolean lab3WaitingUser = false;
 private ToneGenerator lab3Tone;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
-
-/* ============================================================
-   LAB 3 — TTS CONTROL
-   ============================================================ */
-private boolean lab3TtsMuted = false;
-
-// ==========================
-// TEXT TO SPEECH (GLOBAL)
-// ==========================
-private TextToSpeech tts;
-private boolean ttsReady = false;
 
 // ============================================================
 // LAB 3 — Tone stop helper
@@ -2341,7 +2276,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check
+   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED)
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2352,6 +2287,7 @@ private void lab3EarpieceManual() {
     new Thread(() -> {
 
         AudioManager am = null;
+
         int oldMode = AudioManager.MODE_NORMAL;
         boolean oldSpeaker = false;
         boolean oldMicMute = false;
@@ -2374,7 +2310,7 @@ private void lab3EarpieceManual() {
             oldMicMute = am.isMicrophoneMute();
 
             // ====================================================
-            // 🔒 HARD LOCK TO EARPIECE (NO SPEAKER, NO BT)
+            // 🔒 HARD LOCK TO EARPIECE (SINGLE SOURCE OF TRUTH)
             // ====================================================
             am.setBluetoothScoOn(false);
             am.stopBluetoothSco();
@@ -2383,17 +2319,22 @@ private void lab3EarpieceManual() {
             am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setMicrophoneMute(true);
 
-            // 🔥 extra kick για OEMs που κολλάνε
+            // OEM fallback (Xiaomi / Samsung edge cases)
             am.setSpeakerphoneOn(false);
 
-            // ✅ ΜΟΝΑΔΙΚΟ ΣΩΣΤΟ DELAY (routing settle)
+            // routing settle — ONLY ONCE
             SystemClock.sleep(250);
             // ====================================================
 
+            // PLAY TEST TONE VIA EARPIECE
             playEarpieceTestTone220Hz(900);
 
+            // MIC CAPTURE (TOP MIC)
             MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+                    MicDiagnosticEngine.run(
+                            this,
+                            MicDiagnosticEngine.MicType.TOP
+                    );
 
             logLabelValue("Top Mic RMS", String.valueOf((int) r.rms));
             logLabelValue("Top Mic Peak", String.valueOf((int) r.peak));
@@ -2408,11 +2349,13 @@ private void lab3EarpieceManual() {
                             : "Earpiece audio path detected successfully."
             );
 
-            askUserEarpieceConfirmationLoop();
-
         } catch (Throwable t) {
             logError("LAB 3 failed");
         } finally {
+
+            // ====================================================
+            // RESTORE ORIGINAL AUDIO STATE
+            // ====================================================
             try {
                 if (am != null) {
                     am.setMicrophoneMute(oldMicMute);
@@ -2421,7 +2364,9 @@ private void lab3EarpieceManual() {
                 }
             } catch (Throwable ignore) {}
 
-            // ✅ ΤΟ LAB ΤΕΛΕΙΩΝΕΙ ΕΔΩ – ΟΧΙ ΑΠΕΞΩ
+            // ====================================================
+            // FINALIZE LAB
+            // ====================================================
             logOk("Lab 3 finished.");
             logLine();
             enableSingleExportButton();

@@ -72,6 +72,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
+import android.speech.tts.TextToSpeech;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.text.Html;
@@ -492,6 +493,18 @@ root.addView(btnExport);
 scroll.addView(root);
 setContentView(scroll);
 
+// ==========================
+// TEXT TO SPEECH INIT
+// ==========================
+tts = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts.setLanguage(Locale.US);
+        ttsReady =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
+    }
+});
+
 // ============================================================
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
@@ -657,7 +670,7 @@ private void askUserEarpieceConfirmationLoop() {
 
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
-
+       
         // 🔊 Loop tone μέχρι YES / NO
         lab3Tone = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
 
@@ -800,8 +813,28 @@ private void stopLab3Tone() {
     lab3Tone = null;
 }
 
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    try {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
+// LAB 3 — STATE / HELPERS
+// ============================================================
 private volatile boolean lab3WaitingUser = false;
-private ToneGenerator lab3Tone;  
+private ToneGenerator lab3Tone;
+
+// ==========================
+// TEXT TO SPEECH (GLOBAL)
+// ==========================
+private TextToSpeech tts;
+private boolean ttsReady = false;
 
 // ============================================================
 // TELEPHONY SNAPSHOT (SAFE / INFO ONLY)
@@ -2267,7 +2300,7 @@ private void lab3EarpieceManual() {
                             : "Earpiece audio path detected successfully."
             );
 
-            askUserEarpieceConfirmation();
+            askUserEarpieceConfirmationLoop();
 
         } catch (Throwable t) {
     logError("LAB 3 failed");

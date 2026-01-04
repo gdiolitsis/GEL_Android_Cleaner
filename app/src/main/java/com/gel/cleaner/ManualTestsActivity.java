@@ -869,6 +869,7 @@ private void restoreLab3Audio() {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
+            am.setMicrophoneMute(false); // ← ΥΠΟΧΡΕΩΤΙΚΟ
             am.setMode(lab3OldMode);
             am.setSpeakerphoneOn(lab3OldSpeaker);
         }
@@ -2371,8 +2372,9 @@ private void lab3EarpieceManual() {
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
 
-            am.setMode(AudioManager.MODE_NORMAL);
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setSpeakerphoneOn(false);
+            am.setMicrophoneMute(true);
 
             playEarpieceTestTone220Hz(900);
             SystemClock.sleep(200);

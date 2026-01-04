@@ -2301,8 +2301,8 @@ private void lab3EarpieceManual() {
             // ====================================================
             // SAVE STATE
             // ====================================================
-            oldMode = am.getMode();
-            oldSpeaker = am.isSpeakerphoneOn();
+            lab3OldMode = am.getMode();
+            lab3OldSpeaker = am.isSpeakerphoneOn();
             oldMicMute = am.isMicrophoneMute();
 
             // ====================================================
@@ -2342,7 +2342,8 @@ private void lab3EarpieceManual() {
             // ====================================================
             short[] tone = new short[sampleRate];
             for (int i = 0; i < tone.length; i++) {
-                tone[i] = (short) (Math.sin(2 * Math.PI * 220 * i / sampleRate) * 1200);
+                tone[i] = (short)
+                        (Math.sin(2 * Math.PI * 220 * i / sampleRate) * 1200);
             }
 
             for (int i = 0; i < 3; i++) {
@@ -2360,10 +2361,11 @@ private void lab3EarpieceManual() {
 
         } catch (Throwable t) {
             logError("LAB 3 failed: audio routing error.");
+            gotoFinalize();
         } finally {
 
             // ====================================================
-            // CLEANUP
+            // CLEANUP (NO AUDIO RESTORE HERE)
             // ====================================================
             try {
                 if (voiceTrack != null) {
@@ -2371,16 +2373,6 @@ private void lab3EarpieceManual() {
                     voiceTrack.release();
                 }
             } catch (Throwable ignore) {}
-
-            try {
-                if (am != null) {
-                    am.setMicrophoneMute(oldMicMute);
-                    am.setMode(oldMode);
-                    am.setSpeakerphoneOn(oldSpeaker);
-                }
-            } catch (Throwable ignore) {}
-
-            gotoFinalize();
         }
 
     }).start();
@@ -2501,13 +2493,18 @@ enableSingleExportButton();
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
+    	
+    SharedPreferences prefs =
+        getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
         // ==========================
         // TTS STATE (LOCAL)
         // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
         final boolean[] ttsReady = {false};
-        final boolean[] ttsMuted = {false};
+        final boolean[] ttsMuted = {
+        prefs.getBoolean("lab6_tts_muted", false)
+};
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2549,6 +2546,7 @@ private void lab6DisplayTouch() {
         // 🔕 MUTE TOGGLE
         // ==========================
         CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(ttsMuted[0]);
         muteBox.setText("Mute voice instructions");
         muteBox.setTextColor(0xFFDDDDDD);
         muteBox.setGravity(Gravity.CENTER);
@@ -2600,26 +2598,31 @@ private void lab6DisplayTouch() {
         });
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
-            ttsMuted[0] = checked;
-            if (checked && tts[0] != null) {
-                tts[0].stop();
-            }
-        });
+
+    ttsMuted[0] = checked;
+
+    prefs.edit()
+         .putBoolean("lab6_tts_muted", checked)
+         .apply();
+
+    if (checked && tts[0] != null) {
+        tts[0].stop();
+    }
+});
 
         start.setOnClickListener(v -> {
 
-            if (tts[0] != null) {
-                tts[0].stop();
-                tts[0].shutdown();
-            }
+    if (tts[0] != null) {
+        tts[0].stop();
+        tts[0].shutdown();
+    }
 
-            d.dismiss();
+    d.dismiss();
 
-            startActivityForResult(
-                    new Intent(this, TouchGridTestActivity.class),
-                    6006
-            );
-        });
+    startActivityForResult(
+            new Intent(ManualTestsActivity.this, TouchGridTestActivity.class),
+            6006
+    });
     });
 }
 

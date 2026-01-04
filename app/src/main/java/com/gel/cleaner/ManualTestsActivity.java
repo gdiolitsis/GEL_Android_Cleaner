@@ -2344,7 +2344,9 @@ private void lab3EarpieceManual() {
                     r.silenceDetected
                             ? "Audio path active but detected at very low level. This may occur due to call routing isolation or aggressive noise suppression."
                             : "Earpiece audio path detected successfully."
-            );
+);
+
+askUserEarpieceConfirmationLoop();
 
         } catch (Throwable t) {
             logError("LAB 3 failed");

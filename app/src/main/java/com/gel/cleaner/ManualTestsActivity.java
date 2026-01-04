@@ -677,22 +677,12 @@ private void askUserEarpieceConfirmationLoop() {
 
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
-
-        AudioManager am =
-        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
-if (am != null) {
-    lab3OldMode = am.getMode();
-    lab3OldSpeaker = am.isSpeakerphoneOn();
-
-    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-    am.setSpeakerphoneOn(false);   // 🔒 ΟΡΙΣΤΙΚΑ ΟΧΙ SPEAKER
-}
-
+        
         // ==========================
-        // VOICE PROMPT (EARPIECE)
+        // VOICE PROMPT — ΠΡΙΝ ΟΤΙΔΗΠΟΤΕ ΑΛΛΟ
         // ==========================
-        if (!lab3TtsMuted && ttsReady && tts != null) {
+        
+if (!lab3TtsMuted && ttsReady && tts != null) {
     tts.speak(
         "Put the phone at your ear. Did you hear the sound from the earpiece?",
         TextToSpeech.QUEUE_FLUSH,
@@ -873,8 +863,9 @@ private void restoreLab3Audio() {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
-            am.setMode(lab3OldMode);
-            am.setSpeakerphoneOn(lab3OldSpeaker);
+            am.setMicrophoneMute(false);   // ⬅ ΥΠΟΧΡΕΩΤΙΚΟ
+            am.setMode(lab3OldMode);       // επαναφορά mode
+            am.setSpeakerphoneOn(lab3OldSpeaker); // επαναφορά speaker
         }
     } catch (Throwable ignore) {}
 }
@@ -2375,16 +2366,31 @@ private void lab3EarpieceManual() {
                 return;
             }
 
+            // ====================================================
+            // SAVE CURRENT AUDIO STATE
+            // ====================================================
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
             oldMicMute = am.isMicrophoneMute();
 
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            // ====================================================
+            // 🔒 HARD LOCK TO EARPIECE (NO SPEAKER, NO BT)
+            // ====================================================
+            am.setBluetoothScoOn(false);
+            am.stopBluetoothSco();
             am.setSpeakerphoneOn(false);
+
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setMicrophoneMute(true);
 
+            // 🔥 extra kick για OEMs που κολλάνε
+            am.setSpeakerphoneOn(false);
+
+            // ✅ ΜΟΝΑΔΙΚΟ ΣΩΣΤΟ DELAY (routing settle)
+            SystemClock.sleep(250);
+            // ====================================================
+
             playEarpieceTestTone220Hz(900);
-            SystemClock.sleep(200);
 
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
@@ -2409,7 +2415,7 @@ private void lab3EarpieceManual() {
         } finally {
             try {
                 if (am != null) {
-                    am.setMicrophoneMute(false);
+                    am.setMicrophoneMute(oldMicMute);
                     am.setMode(oldMode);
                     am.setSpeakerphoneOn(oldSpeaker);
                 }

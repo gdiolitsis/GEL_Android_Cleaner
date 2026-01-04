@@ -687,7 +687,7 @@ private void askUserEarpieceConfirmationLoop() {
             lab3OldSpeaker = am.isSpeakerphoneOn();
 
             // FORCE EARPIECE
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            am.setMode(AudioManager.MODE_IN_CALL);
             am.setSpeakerphoneOn(false);
         }
 

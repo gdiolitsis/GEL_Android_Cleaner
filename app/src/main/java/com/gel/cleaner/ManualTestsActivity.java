@@ -2427,11 +2427,11 @@ private void lab9SensorsCheck() {
         logOk("Sensor suite appears complete and healthy for this device.");
 
     } catch (Exception e) {
-    logError("Sensors analysis error: " + e.getMessage());
-}
-
-logOk("Lab 9 finished.");
-logLine();
+        logError("Sensors analysis error: " + e.getMessage());
+    } finally {
+        logOk("Lab 9 finished.");
+        logLine();
+    }
 }
 
 /* ============================================================

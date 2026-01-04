@@ -10,29 +10,28 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 /**
  * ============================================================
  * LAB 8 — Proximity Sensor Check (LOCKED)
- * ------------------------------------------------------------
- * Detects proximity sensor state change (near / far)
- *
- * Exit:
- *  - RESULT_OK       → proximity change detected
- *  - RESULT_CANCELED → user pressed "End Test"
- *
- * No loops. No threads. No timers.
- *
- * GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public class ProximityCheckActivity extends Activity
         implements SensorEventListener {
+
+    // ==========================
+    // TEXT TO SPEECH
+    // ==========================
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     private SensorManager sensorManager;
     private Sensor proximity;
@@ -54,15 +53,9 @@ public class ProximityCheckActivity extends Activity
             proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         }
 
-        // ============================================================
-        // ROOT
-        // ============================================================
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF101010); // GEL black
+        root.setBackgroundColor(0xFF101010);
 
-        // ============================================================
-        // INFO TEXT
-        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Place your hand over the front sensor area\n" +
@@ -82,9 +75,6 @@ public class ProximityCheckActivity extends Activity
 
         root.addView(info, infoLp);
 
-        // ============================================================
-        // END TEST BUTTON (RED — SAME AS LAB 6 & 7)
-        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -93,9 +83,9 @@ public class ProximityCheckActivity extends Activity
         end.setTypeface(null, Typeface.BOLD);
 
         GradientDrawable redBtn = new GradientDrawable();
-        redBtn.setColor(0xFF8B0000);          // dark red
+        redBtn.setColor(0xFF8B0000);
         redBtn.setCornerRadius(dp(14));
-        redBtn.setStroke(dp(3), 0xFFFFD700);  // gold border
+        redBtn.setStroke(dp(3), 0xFFFFD700);
         end.setBackground(redBtn);
 
         FrameLayout.LayoutParams endLp =
@@ -116,12 +106,12 @@ public class ProximityCheckActivity extends Activity
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
 
-                GELServiceLog.logWarn("Proximity test was cancelled by user.");
-                GELServiceLog.logWarn("No proximity state change was detected during the test.");
-                GELServiceLog.logOk("Manual re-test recommended to confirm sensor behavior.");
+                GELServiceLog.warn("Proximity test was cancelled by user.");
+                GELServiceLog.warn("No proximity state change was detected during the test.");
+                GELServiceLog.ok("Manual re-test recommended to confirm sensor behavior.");
 
-                GELServiceLog.logOk("Lab 8 finished.");
-                GELServiceLog.logLine();
+                GELServiceLog.ok("Lab 8 finished.");
+                GELServiceLog.addLine(null);
             }
 
             setResult(RESULT_CANCELED);
@@ -129,8 +119,39 @@ public class ProximityCheckActivity extends Activity
         });
 
         root.addView(end);
-
         setContentView(root);
+
+        // ==========================
+        // TTS INIT
+        // ==========================
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int res = tts.setLanguage(Locale.US);
+                ttsReady =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+                if (ttsReady) {
+                    tts.speak(
+                            "Place your hand over the front sensor near the earpiece.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB8"
+                    );
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+        } catch (Throwable ignore) {}
     }
 
     @Override
@@ -163,7 +184,6 @@ public class ProximityCheckActivity extends Activity
             return;
         }
 
-        // Any significant change = sensor responded
         if (Math.abs(v - initialValue) > 0.5f) {
 
             if (!loggedFinish) {
@@ -171,12 +191,12 @@ public class ProximityCheckActivity extends Activity
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
 
-                GELServiceLog.logOk("Proximity sensor state change detected.");
-                GELServiceLog.logOk("Near/Far response confirmed during manual interaction.");
-                GELServiceLog.logOk("Front proximity sensing path responding normally.");
+                GELServiceLog.ok("Proximity sensor state change detected.");
+                GELServiceLog.ok("Near/Far response confirmed during manual interaction.");
+                GELServiceLog.ok("Front proximity sensing path responding normally.");
 
-                GELServiceLog.logOk("Lab 8 finished.");
-                GELServiceLog.logLine();
+                GELServiceLog.ok("Lab 8 finished.");
+                GELServiceLog.addLine(null);
             }
 
             setResult(RESULT_OK);

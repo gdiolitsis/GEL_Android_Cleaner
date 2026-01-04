@@ -749,7 +749,7 @@ private TelephonySnapshot getTelephonySnapshot() {
 }
 
 // ============================================================
-// LOGGING — GEL CANONICAL
+// LOGGING — GEL CANONICAL (UI + SERVICE REPORT)
 // ============================================================
 private void appendHtml(String html) {
     ui.post(() -> {
@@ -761,26 +761,38 @@ private void appendHtml(String html) {
 }
 
 private void logInfo(String msg) {
-    appendHtml("ℹ️ " + escape(msg));
+    String s = "ℹ️ " + safe(msg);
+    appendHtml(s);
+    GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#88FF88'>✔ " + escape(msg) + "</font>");
+    String s = "✔ " + safe(msg);
+    appendHtml("<font color='#88FF88'>" + s + "</font>");
+    GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFD966'>⚠ " + escape(msg) + "</font>");
+    String s = "⚠ " + safe(msg);
+    appendHtml("<font color='#FFD966'>" + s + "</font>");
+    GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF5555'>✖ " + escape(msg) + "</font>");
+    String s = "✖ " + safe(msg);
+    appendHtml("<font color='#FF5555'>" + s + "</font>");
+    GELServiceLog.logError(msg);
 }
 
 private void logLine() {
     appendHtml("----------------------------------------");
+    GELServiceLog.logLine();
 }
 
-private String escape(String s) {
+// ------------------------------------------------------------
+// SAFE ESCAPE FOR UI ONLY (SERVICE LOG STORES RAW TEXT)
+// ------------------------------------------------------------
+private String safe(String s) {
     if (s == null) return "";
     return s.replace("&", "&amp;")
             .replace("<", "&lt;")
@@ -2007,12 +2019,13 @@ private void lab1SpeakerTone() {
             logError("Speaker tone test failed");
         } finally {
             if (tg != null) tg.release();
+
+            // ✅ ΤΕΛΕΙΩΝΕΙ ΕΔΩ — ΟΧΙ ΕΞΩ
+            logOk("Lab 1 finished.");
+            logLine();
         }
 
     }).start();
-
-    logOk("Lab 1 finished.");
-    logLine();
 }
 
 // ============================================================
@@ -2074,12 +2087,13 @@ private void lab2SpeakerSweep() {
             logError("Speaker frequency sweep failed");
         } finally {
             if (tg != null) tg.release();
+
+            // ✅ ΤΕΛΟΣ LAB ΕΔΩ ΜΟΝΟ
+            logOk("Lab 2 finished.");
+            logLine();
         }
 
     }).start();
-
-    logOk("Lab 2 finished.");
-    logLine();
 }
 
 /* ============================================================
@@ -2133,22 +2147,22 @@ private void lab3EarpieceManual() {
             askUserEarpieceConfirmation();
 
         } catch (Throwable t) {
-            logError("LAB 3 failed");
-        } finally {
-            try {
-                if (am != null) {
-                    am.setMode(oldMode);
-                    am.setSpeakerphoneOn(oldSpeaker);
-                }
-            } catch (Throwable ignore) {}
+    logError("LAB 3 failed");
+} finally {
+    try {
+        if (am != null) {
+            am.setMode(oldMode);
+            am.setSpeakerphoneOn(oldSpeaker);
         }
+    } catch (Throwable ignore) {}
 
-    }).start();
-
+    // ✅ ΤΟ LAB ΤΕΛΕΙΩΝΕΙ ΕΔΩ – ΟΧΙ ΑΠΕΞΩ
     logOk("Lab 3 finished.");
     logLine();
     enableSingleExportButton();
 }
+
+}).start();
 
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -2184,12 +2198,19 @@ logLabelValue(
                 : "Microphone signal detected successfully."
 );
 
-}).start();
+} catch (Throwable t) {
 
-logOk("Lab 4 finished.");
-logLine();
-enableSingleExportButton();
-}
+        logError("Lab 4 failed");
+
+    } finally {
+
+        logOk("Lab 4 finished.");
+        logLine();
+
+        runOnUiThread(this::enableSingleExportButton);
+    }
+
+}).start();
 
 /* ============================================================
    LAB 5 — Vibration Motor Test (AUTO)
@@ -2246,16 +2267,13 @@ enableSingleExportButton();
 private void lab6DisplayTouch() {
 
     logLine();
-    logSection("LAB 6 — Display / Touch Basic Inspection");
+    logSection("LAB 6 — Display / Touch");
     logLine();
 
     startActivityForResult(
             new Intent(this, TouchGridTestActivity.class),
             6006
     );
-
-    logOk("Lab 6 finished.");
-    logLine();
 }
 
 /* ============================================================
@@ -2272,8 +2290,6 @@ private void lab7RotationManual() {
             new Intent(this, RotationCheckActivity.class),
             7007
     );
-logOk("Lab 7 finished.");
-logLine();
 }
 
 /* ============================================================
@@ -2290,8 +2306,6 @@ private void lab8ProximityCall() {
             new Intent(this, ProximityCheckActivity.class),
             8008
     );
-    logOk("Lab 8 finished.");
-logLine();
 }
 
 /* ============================================================
@@ -2890,7 +2904,6 @@ private void lab13InternetQuickCheck() {
     // PART B — Network / Privacy Exposure Snapshot
     // ------------------------------------------------------------
     try {
-        logLine();
         logInfo("Network Exposure Snapshot (no traffic inspection).");
 
         PackageManager pm2 = getPackageManager();
@@ -3709,6 +3722,9 @@ root.addView(title);
     final long startMah =
             (startInfo != null && startInfo.currentChargeMah > 0)
                     ? startInfo.currentChargeMah : -1;
+                    
+   final boolean[] wasCharging = { false };
+final long[] unplugTs = { -1 };
 
     ui.post(new Runnable() {
 
@@ -3724,6 +3740,58 @@ root.addView(title);
             long now = SystemClock.elapsedRealtime();
 
             dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
+            
+// ------------------------------------------------------------
+// CHARGING STATE TRACKING (5s debounce unplug)
+// ------------------------------------------------------------
+if (chargingNow) {
+
+    unplugTs[0] = -1;
+
+    if (!wasCharging[0]) {
+        wasCharging[0] = true;
+        startTs[0] = now;
+
+        lab15BattTempStart = getBatteryTemperature();
+        lab15BattTempPeak  = lab15BattTempStart;
+
+        lab15StatusText.setText("Charging state detected.");
+        lab15StatusText.setTextColor(0xFF39FF14);
+        logOk("✅ Charging state detected.");
+    }
+
+} else if (wasCharging[0]) {
+
+    if (unplugTs[0] < 0) {
+        unplugTs[0] = now;
+    }
+
+    long unplugSec = (now - unplugTs[0]) / 1000;
+
+    if (unplugSec >= 5) {
+
+        lab15FlapUnstable = true;
+        lab15Finished = true;
+        lab15Running  = false;
+
+        lab15StatusText.setText("Charging disconnected.");
+        lab15StatusText.setTextColor(0xFFFF4444);
+
+        logError("❌ Charger disconnected for more than 5 seconds.");
+        logError("❌ Charging test aborted.");
+
+        logOk("LAB 15 finished.");
+        logLine();
+
+        try {
+            if (lab15Dialog != null && lab15Dialog.isShowing())
+                lab15Dialog.dismiss();
+        } catch (Throwable ignore) {}
+        lab15Dialog = null;
+
+        return;
+    }
+}
 
             if (chargingNow && !wasCharging[0]) {
                 wasCharging[0] = true;
@@ -4435,24 +4503,26 @@ new Thread(() -> {
             }
 
             // ------------------------------------------------------------
-            // STORE FINAL RESULT (+ timestamp)
-            // ------------------------------------------------------------
-            try {
-                p.edit()
-                  .putInt("lab17_final_score", fFinalScore)
-                  .putString("lab17_category", fCategory)
-                  .putLong("lab17_ts", System.currentTimeMillis())
-                  .apply();
-            } catch (Throwable ignore) {}
+// STORE FINAL RESULT (+ timestamp)
+// ------------------------------------------------------------
+try {
+    p.edit()
+      .putInt("lab17_final_score", fFinalScore)
+      .putString("lab17_category", fCategory)
+      .putLong("lab17_ts", System.currentTimeMillis())
+      .apply();
+} catch (Throwable ignore) {}
 
-        }); // <-- ui.post
+// ================= FINAL (UI THREAD) =================
+logLine();
+logOk("LAB 17 finished.");
+logLine();
 
-        logOk("LAB 17 finished.");
-        logLine();
+}); // <-- END ui.post
 
-    } catch (Throwable ignore) {
-        // silent
-    }
+} catch (Throwable ignore) {
+    // silent
+}
 
 }).start();
 }
@@ -4655,7 +4725,7 @@ private void lab18StorageSnapshot() {
         // ------------------------------------------------------------
         // FINAL HUMAN SUMMARY
         // ------------------------------------------------------------
-        logLine();
+        
         logInfo("Storage summary:");
 
         if (critical) {
@@ -5044,111 +5114,124 @@ if (biometricSupported) {
     else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
     else logOk("Security impact: LOW (" + risk + "/100)");
 
-    // ------------------------------------------------------------
-    // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
-    // ------------------------------------------------------------
-    if (!secure) {
-        logWarn("Live biometric test skipped: secure lock required.");
+// ------------------------------------------------------------
+// PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
+// ------------------------------------------------------------
+if (!secure) {
+    logWarn("Live biometric test skipped: secure lock required.");
+    logOk("LAB 21 finished.");
+    logLine();
+    lab21Running = false;
+    return;
+}
+
+if (!biometricSupported) {
+    logInfo("Live biometric test not started:");
+    logWarn("Biometrics not ready or not available.");
+    logInfo("Action:");
+    logOk("Enroll biometrics in Settings, then re-run LAB 21.");
+    logOk("LAB 21 finished.");
+    logLine();
+    lab21Running = false;
+    return;
+}
+
+if (android.os.Build.VERSION.SDK_INT >= 28) {
+    try {
+        logLine();
+        logInfo("LIVE SENSOR TEST:");
+        logOk("Place finger / face for biometric authentication NOW.");
+        logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
+
+        java.util.concurrent.Executor executor = getMainExecutor();
+        android.os.CancellationSignal cancel = new android.os.CancellationSignal();
+
+        android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+
+                    @Override
+                    public void onAuthenticationSucceeded(
+                            android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
+
+                        logInfo("LIVE BIOMETRIC TEST:");
+                        logOk("PASS — biometric sensor and authentication pipeline verified functional.");
+
+                        logInfo("Multi-biometric devices:");
+                        logWarn("Android tests ONE biometric sensor per run.");
+                        logOk("Disable current biometric in Settings and re-run LAB 21 to test another sensor.");
+                        logWarn("OEM priority may keep same sensor even after disabling.");
+
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        logInfo("LIVE BIOMETRIC TEST:");
+                        logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
+
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                        logWarn("System fallback to device credential detected — biometric sensor NOT confirmed functional.");
+
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
+                };
+
+        android.hardware.biometrics.BiometricPrompt prompt =
+                new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                        .setTitle("LAB 21 — Live Biometric Sensor Test")
+                        .setSubtitle("Place finger / face to verify sensor works")
+                        .setDescription("This is a REAL hardware test (no simulation).")
+                        .setNegativeButton(
+                                "Cancel test",
+                                executor,
+                                (dialog, which) -> {
+                                    logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
+                                    logOk("LAB 21 finished.");
+                                    logLine();
+                                    lab21Running = false;
+                                }
+                        )
+                        .setAllowedAuthenticators(
+                                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                        )
+                        .build();
+
+        logInfo("Starting LIVE biometric prompt...");
+        prompt.authenticate(cancel, executor, cb);
+
+    } catch (Throwable e) {
+        logWarn("Live biometric prompt failed: " + e.getMessage());
+        logOk("LAB 21 finished.");
+        logLine();
         lab21Running = false;
-        return;
     }
 
-    if (!biometricSupported) {
-        logInfo("Live biometric test not started:");
-        logWarn("biometrics not ready/available.");
-        logInfo("Action:");
-        logOk("enroll biometrics in Settings, then re-run LAB 21.");
-        lab21Running = false;
-        return;
-    }
+} else {
 
-    if (android.os.Build.VERSION.SDK_INT >= 28) {
-        try {
-            logLine();
-            logInfo("LIVE SENSOR TEST:");
-            logOk("Place finger / face for biometric authentication NOW.");
-            logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
-            logLine();
-
-            java.util.concurrent.Executor executor = getMainExecutor();
-            android.os.CancellationSignal cancel = new android.os.CancellationSignal();
-
-            android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
-                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-
-                        @Override
-public void onAuthenticationSucceeded(
-        android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-
-    logInfo("LIVE BIOMETRIC TEST:");
-    logOk("PASS — biometric sensor and authentication pipeline verified functional.");
-
-    logInfo("Multi-biometric devices:");
-    logWarn("If the device supports multiple biometrics, Android tests ONE sensor per run.");
-    logOk("Disable the current biometric in Settings and re-run LAB 21 to test another sensor.");
-    logInfo("Biometric selection note:");
-    logWarn("Android selects the biometric sensor automatically (OEM priority).");
-    logWarn("Disabling a biometric in Settings may NOT change the sensor used.");
-
-    lab21Running = false;
-}
-
-                        @Override
-public void onAuthenticationFailed() {
-    logInfo("LIVE BIOMETRIC TEST:");
-    logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
-    lab21Running = false;
-}
-
-@Override
-public void onAuthenticationError(int errorCode, CharSequence errString) {
-    logWarn("System fallback to device credential detected — biometric sensor not confirmed functional.");
-    lab21Running = false;
-}
-                    };
-
-            android.hardware.biometrics.BiometricPrompt prompt =
-        new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                .setTitle("LAB 21 — Live Biometric Sensor Test")
-                .setSubtitle("Place finger / face to verify sensor works")
-                .setDescription("This is a REAL hardware test (no simulation).")
-                .setNegativeButton(
-                        "Cancel test",
-                        executor,
-                        (dialog, which) -> {
-                            logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
-                            lab21Running = false;
-                        }
-                )
-                .setAllowedAuthenticators(
-        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                )
-                .build();
-
-            logInfo("Starting LIVE biometric prompt...");
-            prompt.authenticate(cancel, executor, cb);
-
-        } catch (Throwable e) {
-            logWarn("Live biometric prompt failed: " + e.getMessage());
-            lab21Running = false;
-        }
-    } else {
     logOk("Live biometric prompt not supported on this Android version.");
     logInfo("Action required:");
-logOk("→ Test biometrics via system lock screen settings, then re-run LAB 21.");
+    logOk("Test biometrics via system lock screen settings, then re-run LAB 21.");
 
     logInfo("Note:");
-logOk("device may support multiple biometric sensors; each LAB 21 run, verifies ONE sensor path.");
+    logOk("Each LAB 21 run verifies ONE biometric sensor path.");
 
-logInfo("Action:");
-logOk("disable the active biometric in Settings, to test another sensor, then re-run LAB 21.");
+    logInfo("Action:");
+    logOk("Disable the active biometric in Settings to test another sensor.");
 
+    logOk("LAB 21 finished.");
+    logLine();
     lab21Running = false;
 }
-logOk("LAB 21 finished.");
-logLine();
-}
-
 
 // ============================================================
 // ROOT HELPERS — minimal, safe, no assumptions
@@ -5315,7 +5398,7 @@ private void lab22SecurityPatchManual() {
     // ------------------------------------------------------------
     // 5) Manual Guidance (Technician)
     // ------------------------------------------------------------
-    logLine();
+    
     logInfo("Manual checks:");
     logInfo("1) Settings → About phone → Android version → Security patch level.");
     logWarn("   Very old patch levels increase exploit exposure.");
@@ -5735,19 +5818,49 @@ private void lab24RootSuspicion() {
     }
 
     logInfo("FINAL VERDICT:");
-    logInfo("RISK SCORE: " + risk + " / 100");
 
-    if (risk >= 70 || suExec || pkgHit) {
-        logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
-    } else if (risk >= 35) {
-        logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
-    } else {
-        logOk("STATUS: SAFE (no significant modification evidence).");
-    }
+// ------------------------------------------------------------
+// RISK SCORE (colored VALUE only)
+// ------------------------------------------------------------
+String riskLine = "RISK SCORE: " + risk + " / 100";
+SpannableString spRisk = new SpannableString(riskLine);
 
-    logOk("Lab 24 finished.");
-    logLine();
+int color =
+        (risk >= 70) ? 0xFFFF3B3B :   // RED
+        (risk >= 35) ? 0xFFFFD700 :   // YELLOW
+                       0xFF39FF14;   // GREEN
+
+int start = riskLine.indexOf(":") + 1;
+
+spRisk.setSpan(
+        new ForegroundColorSpan(color),
+        start,
+        riskLine.length(),
+        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+);
+
+if (txtLog != null) {
+    txtLog.append(spRisk);
+    txtLog.append("\n");
+} else {
+    logInfo(riskLine);
 }
+
+// ------------------------------------------------------------
+// STATUS
+// ------------------------------------------------------------
+if (risk >= 70 || suExec || pkgHit) {
+    logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
+} else if (risk >= 35) {
+    logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+} else {
+    logOk("STATUS: SAFE (no significant modification evidence).");
+}
+
+logOk("Lab 24 finished.");
+logLine();
+
+} // ✅ ΤΕΛΟΣ ΜΕΘΟΔΟΥ
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS
@@ -6409,7 +6522,7 @@ if (!isSystem &&
     // -----------------------------
     if (!offenders.isEmpty()) {
         logLine();
-        logInfo("High-capability user apps (not accused — just flagged):");
+        logInfo("TOP 10 High-capability user apps (not accused — just flagged):");
 
         int limit = Math.min(10, offenders.size());
         for (int i = 0; i < limit; i++) {
@@ -7334,12 +7447,42 @@ return "🟥";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
-int worst = Math.min(Math.min(health, sec), Math.min(priv, perf));
-if (worst >= 80)
-return "🟩 Device is healthy — no critical issues detected.";
-if (worst >= 55)
-return "🟨 Device has moderate risks — recommend service check.";
-return "🟥 Device is NOT healthy — immediate servicing recommended.";
+
+    // ------------------------------------------------------------
+    // HARDWARE / DEVICE HEALTH VERDICT
+    // ------------------------------------------------------------
+    if (health >= 80) {
+
+        if (sec < 55 || priv < 55) {
+            return
+                "🟩 Device hardware is healthy.\n" +
+                "⚠️ Privacy & app-related risks detected.\n" +
+                "User review recommended.";
+        }
+
+        return "🟩 Device hardware is healthy.\nNo servicing required.";
+    }
+
+    if (health >= 55) {
+
+        if (sec < 55 || priv < 55) {
+            return
+                "🟨 Device hardware shows moderate wear.\n" +
+                "⚠️ Privacy & app-related risks detected.\n" +
+                "User review recommended.";
+        }
+
+        return
+            "🟨 Device hardware shows moderate wear.\n" +
+            "Service check recommended.";
+    }
+
+    // ------------------------------------------------------------
+    // REAL HARDWARE FAILURE ZONE
+    // ------------------------------------------------------------
+    return
+        "🟥 Device hardware is NOT healthy.\n" +
+        "Immediate servicing recommended.";
 }
 
 private String fmt1(float v) {

@@ -1,6 +1,7 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -29,6 +31,7 @@ public class TouchGridTestActivity extends Activity {
     // ==========================
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private boolean ttsMuted = false;
 
     private TouchGridView gridView;
     private Button endButton;
@@ -37,11 +40,12 @@ public class TouchGridTestActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 🔒 Force portrait
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        // 🔒 Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        SharedPreferences prefs =
+                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        ttsMuted = prefs.getBoolean("lab6_tts_muted", false);
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
@@ -63,7 +67,6 @@ public class TouchGridTestActivity extends Activity {
                 );
         lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         lp.bottomMargin = dp(20);
-
         endButton.setLayoutParams(lp);
 
         endButton.setOnClickListener(v -> {
@@ -73,6 +76,37 @@ public class TouchGridTestActivity extends Activity {
         });
 
         root.addView(endButton);
+
+        // ==========================
+        // 🔇 MUTE TOGGLE
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setText("Mute voice");
+        muteBox.setTextColor(Color.WHITE);
+        muteBox.setChecked(ttsMuted);
+
+        FrameLayout.LayoutParams muteLp =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+        muteLp.gravity = Gravity.TOP | Gravity.END;
+        muteLp.topMargin = dp(12);
+        muteLp.rightMargin = dp(12);
+        muteBox.setLayoutParams(muteLp);
+
+        muteBox.setOnCheckedChangeListener((b, checked) -> {
+            ttsMuted = checked;
+            prefs.edit()
+                    .putBoolean("lab6_tts_muted", checked)
+                    .apply();
+            if (checked && tts != null) {
+                tts.stop();
+            }
+        });
+
+        root.addView(muteBox);
+
         setContentView(root);
 
         // ==========================
@@ -85,7 +119,7 @@ public class TouchGridTestActivity extends Activity {
                         res != TextToSpeech.LANG_MISSING_DATA &&
                         res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-                if (ttsReady) {
+                if (ttsReady && !ttsMuted) {
                     tts.speak(
                             "Touch all dots to complete the test.",
                             TextToSpeech.QUEUE_FLUSH,
@@ -119,9 +153,6 @@ public class TouchGridTestActivity extends Activity {
         return (int) (v * d + 0.5f);
     }
 
-    // ============================================================
-    // ACTIVITY-LEVEL LOG DELEGATE
-    // ============================================================
     private void logIncompleteResult() {
         if (gridView != null) {
             gridView.logIncompleteResult();
@@ -144,9 +175,7 @@ public class TouchGridTestActivity extends Activity {
 
         public TouchGridView(Activity ctx) {
             super(ctx);
-
             cleared = new boolean[ROWS][COLS];
-
             dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             dotPaint.setColor(Color.YELLOW);
         }
@@ -162,7 +191,6 @@ public class TouchGridTestActivity extends Activity {
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
                     if (!cleared[r][c]) {
@@ -176,7 +204,6 @@ public class TouchGridTestActivity extends Activity {
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-
             if (event.getAction() == MotionEvent.ACTION_DOWN ||
                 event.getAction() == MotionEvent.ACTION_MOVE) {
 
@@ -219,9 +246,6 @@ public class TouchGridTestActivity extends Activity {
             return n;
         }
 
-        // ========================================================
-        // LOGGING (SERVICE REPORT)
-        // ========================================================
         private void logSuccessResult() {
             GELServiceLog.section("LAB 6 — Display / Touch");
             GELServiceLog.ok("Touch grid test completed.");
@@ -234,13 +258,9 @@ public class TouchGridTestActivity extends Activity {
         private void logIncompleteResult() {
             int total = ROWS * COLS;
             int remaining = countUncleared();
-
             GELServiceLog.section("LAB 6 — Display / Touch");
             GELServiceLog.warn("Touch grid test incomplete.");
             GELServiceLog.warn("Untouched zones detected: " + remaining + " / " + total);
-            GELServiceLog.info("Possible causes:");
-            GELServiceLog.warn("• User ended the test before completing all zones");
-            GELServiceLog.warn("• These " + remaining + " screen areas did not register touch input");
             GELServiceLog.info("Manual re-test recommended.");
             GELServiceLog.ok("Lab 6 finished.");
             GELServiceLog.addLine(null);

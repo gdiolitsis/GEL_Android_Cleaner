@@ -1,7 +1,6 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -11,30 +10,20 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 /**
  * ============================================================
- * LAB 7 — Rotation Check (FINAL / LOCKED)
+ * LAB 7 — Rotation Check
+ * FINAL — NO TTS • NO MUTE • NO POPUPS
  * ============================================================
  */
 public class RotationCheckActivity extends Activity
         implements SensorEventListener {
-
-    // ==========================
-    // TEXT TO SPEECH
-    // ==========================
-    private TextToSpeech tts;
-    private boolean ttsReady = false;
-    private boolean ttsMuted = false;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -52,25 +41,14 @@ public class RotationCheckActivity extends Activity
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        SharedPreferences prefs =
-                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-        ttsMuted = prefs.getBoolean("lab7_tts_muted", false);
-
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
-            accelerometer =
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
 
-        // ============================================================
-        // ROOT
-        // ============================================================
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
-        // ============================================================
-        // INFO TEXT
-        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Rotate the device slowly\n" +
@@ -89,37 +67,6 @@ public class RotationCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
-        // ============================================================
-        // 🔕 MUTE TOGGLE
-        // ============================================================
-        CheckBox muteBox = new CheckBox(this);
-        muteBox.setText("Mute voice");
-        muteBox.setTextColor(Color.WHITE);
-        muteBox.setChecked(ttsMuted);
-
-        FrameLayout.LayoutParams muteLp =
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                );
-        muteLp.gravity = Gravity.TOP | Gravity.END;
-        muteLp.topMargin = dp(12);
-        muteLp.rightMargin = dp(12);
-        muteBox.setLayoutParams(muteLp);
-
-        muteBox.setOnCheckedChangeListener((b, checked) -> {
-            ttsMuted = checked;
-            prefs.edit()
-                    .putBoolean("lab7_tts_muted", checked)
-                    .apply();
-            if (checked && tts != null) tts.stop();
-        });
-
-        root.addView(muteBox);
-
-        // ============================================================
-        // END BUTTON
-        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -146,12 +93,10 @@ public class RotationCheckActivity extends Activity
 
         end.setOnClickListener(v -> {
 
-            if (tts != null) tts.stop();
-
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
             GELServiceLog.warn("Rotation test was cancelled by user.");
             GELServiceLog.warn("No orientation change detected during the test.");
-            GELServiceLog.ok("Manual re-test recommended.");
+            GELServiceLog.warn("Manual re-test recommended.");
             GELServiceLog.ok("Lab 7 finished.");
             GELServiceLog.addLine(null);
 
@@ -161,27 +106,6 @@ public class RotationCheckActivity extends Activity
 
         root.addView(end);
         setContentView(root);
-
-        // ============================================================
-        // TTS INIT (SPEAK IMMEDIATELY)
-        // ============================================================
-        tts = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int res = tts.setLanguage(Locale.US);
-                ttsReady =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
-
-                if (ttsReady && !ttsMuted) {
-                    tts.speak(
-                            "Rotate the device slowly from portrait to landscape.",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "LAB7"
-                    );
-                }
-            }
-        });
     }
 
     @Override
@@ -205,20 +129,6 @@ public class RotationCheckActivity extends Activity
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            if (tts != null) {
-                tts.stop();
-                tts.shutdown();
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // SENSOR CALLBACK
-    // ============================================================
-    @Override
     public void onSensorChanged(SensorEvent event) {
 
         float x = event.values[0];
@@ -235,8 +145,6 @@ public class RotationCheckActivity extends Activity
         float dy = Math.abs(y - lastY);
 
         if (dx > ROTATION_THRESHOLD || dy > ROTATION_THRESHOLD) {
-
-            if (tts != null) tts.stop();
 
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
             GELServiceLog.ok("Device rotation detected via accelerometer.");

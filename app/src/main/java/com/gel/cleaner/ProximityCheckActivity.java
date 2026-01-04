@@ -1,7 +1,6 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -11,30 +10,20 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 /**
  * ============================================================
- * LAB 8 — Proximity Sensor Check (FINAL / LOCKED)
+ * LAB 8 — Proximity Sensor Check
+ * FINAL — NO TTS • NO MUTE • NO POPUPS
  * ============================================================
  */
 public class ProximityCheckActivity extends Activity
         implements SensorEventListener {
-
-    // ==========================
-    // TEXT TO SPEECH
-    // ==========================
-    private TextToSpeech tts;
-    private boolean ttsReady = false;
-    private boolean ttsMuted = false;
 
     private SensorManager sensorManager;
     private Sensor proximity;
@@ -50,25 +39,14 @@ public class ProximityCheckActivity extends Activity
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        SharedPreferences prefs =
-                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-        ttsMuted = prefs.getBoolean("lab8_tts_muted", false);
-
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
-            proximity =
-                    sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         }
 
-        // ============================================================
-        // ROOT
-        // ============================================================
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
-        // ============================================================
-        // INFO TEXT
-        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Place your hand over the front sensor area\n" +
@@ -87,37 +65,6 @@ public class ProximityCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
-        // ============================================================
-        // 🔕 MUTE TOGGLE
-        // ============================================================
-        CheckBox muteBox = new CheckBox(this);
-        muteBox.setText("Mute voice");
-        muteBox.setTextColor(Color.WHITE);
-        muteBox.setChecked(ttsMuted);
-
-        FrameLayout.LayoutParams muteLp =
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                );
-        muteLp.gravity = Gravity.TOP | Gravity.END;
-        muteLp.topMargin = dp(12);
-        muteLp.rightMargin = dp(12);
-        muteBox.setLayoutParams(muteLp);
-
-        muteBox.setOnCheckedChangeListener((b, checked) -> {
-            ttsMuted = checked;
-            prefs.edit()
-                    .putBoolean("lab8_tts_muted", checked)
-                    .apply();
-            if (checked && tts != null) tts.stop();
-        });
-
-        root.addView(muteBox);
-
-        // ============================================================
-        // END BUTTON
-        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -144,15 +91,13 @@ public class ProximityCheckActivity extends Activity
 
         end.setOnClickListener(v -> {
 
-            if (tts != null) tts.stop();
-
             if (!loggedFinish) {
                 loggedFinish = true;
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
                 GELServiceLog.warn("Proximity test was cancelled by user.");
-                GELServiceLog.warn("No proximity state change detected.");
-                GELServiceLog.ok("Manual re-test recommended.");
+                GELServiceLog.warn("No proximity state change detected during the test.");
+                GELServiceLog.warn("Manual re-test recommended.");
                 GELServiceLog.ok("Lab 8 finished.");
                 GELServiceLog.addLine(null);
             }
@@ -163,27 +108,6 @@ public class ProximityCheckActivity extends Activity
 
         root.addView(end);
         setContentView(root);
-
-        // ============================================================
-        // TTS INIT (SPEAK IMMEDIATELY)
-        // ============================================================
-        tts = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int res = tts.setLanguage(Locale.US);
-                ttsReady =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
-
-                if (ttsReady && !ttsMuted) {
-                    tts.speak(
-                            "Place your hand over the front sensor near the earpiece.",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "LAB8"
-                    );
-                }
-            }
-        });
     }
 
     @Override
@@ -207,20 +131,6 @@ public class ProximityCheckActivity extends Activity
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            if (tts != null) {
-                tts.stop();
-                tts.shutdown();
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // SENSOR CALLBACK
-    // ============================================================
-    @Override
     public void onSensorChanged(SensorEvent event) {
 
         float v = event.values[0];
@@ -232,8 +142,6 @@ public class ProximityCheckActivity extends Activity
         }
 
         if (Math.abs(v - initialValue) > 0.5f) {
-
-            if (tts != null) tts.stop();
 
             if (!loggedFinish) {
                 loggedFinish = true;

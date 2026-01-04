@@ -675,25 +675,38 @@ private void askUserEarpieceConfirmationLoop() {
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
 
-        // ==========================
-        // LOOP TONE (VOICE CALL ONLY)
-        // ==========================
-        lab3Tone = new ToneGenerator(
-                AudioManager.STREAM_VOICE_CALL,
-                80
-        );
+        private void playLab3EarpieceTones() {
 
-        new Thread(() -> {
+    new Thread(() -> {
+
+        ToneGenerator tg = null;
+
+        try {
+            tg = new ToneGenerator(
+                    AudioManager.STREAM_VOICE_CALL,
+                    80
+            );
+
+            for (int i = 0; i < 3; i++) {
+
+                tg.startTone(
+                        ToneGenerator.TONE_DTMF_1,
+                        800
+                );
+
+                SystemClock.sleep(2000); // 2 sec gap
+            }
+
+        } catch (Throwable ignore) {
+
+        } finally {
             try {
-                while (lab3WaitingUser && lab3Tone != null) {
-                    lab3Tone.startTone(
-                            ToneGenerator.TONE_DTMF_1,
-                            800
-                    );
-                    SystemClock.sleep(1000);
-                }
+                if (tg != null) tg.release();
             } catch (Throwable ignore) {}
-        }).start();
+        }
+
+    }).start();
+}
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2297,22 +2310,21 @@ private void lab3EarpieceManual() {
             lab3OldSpeaker = am.isSpeakerphoneOn();
 
             // ====================================================
-            // HARD LOCK — EARPIECE ONLY (NO AUDIO PLAY HERE)
-            // ====================================================
-            am.stopBluetoothSco();
-            am.setBluetoothScoOn(false);
-            am.setSpeakerphoneOn(false);
-            am.setMicrophoneMute(true);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+// HARD LOCK — EARPIECE ONLY (NO AUDIO PLAY HERE)
+// ====================================================
+am.stopBluetoothSco();
+am.setBluetoothScoOn(false);
+am.setSpeakerphoneOn(false);
+am.setMicrophoneMute(true);
+am.setMode(AudioManager.MODE_IN_COMMUNICATION);
 
-            SystemClock.sleep(300); // routing settle
+SystemClock.sleep(300); // routing settle
 
-            logOk("Earpiece audio routing prepared.");
+// 🔔 PLAY 3 TONES (NO LOOP, NO LOCK)
+playLab3EarpieceTones();
 
-            // ====================================================
-            // USER CONFIRMATION (ALL AUDIO LOGIC INSIDE)
-            // ====================================================
-            runOnUiThread(this::askUserEarpieceConfirmationLoop);
+// 👂 USER CONFIRMATION POPUP
+runOnUiThread(this::askUserEarpieceConfirmationLoop);
 
         } catch (Throwable t) {
             logError("LAB 3 failed: audio routing error.");

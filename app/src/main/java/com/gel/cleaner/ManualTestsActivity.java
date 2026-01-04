@@ -138,6 +138,9 @@ import java.util.Map;
 
 public class ManualTestsActivity extends AppCompatActivity {
 
+private TextToSpeech tts;
+private boolean ttsReady = false;
+
     // ============================================================
     // SERVICE LOG SESSION FLAG (CRITICAL)
     // ============================================================
@@ -493,12 +496,6 @@ root.addView(btnExport);
 // ============================================================
 scroll.addView(root);
 setContentView(scroll);
-
-// ============================================================
-// LAB 3 — LOAD VOICE MUTE STATE
-// ============================================================
-SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-lab3TtsMuted = p.getBoolean("lab3_tts_muted", false);
 
 // ==========================
 // TEXT TO SPEECH INIT
@@ -2477,17 +2474,65 @@ enableSingleExportButton();
 /* ============================================================
    LAB 6 — Display / Touch Basic Inspection (manual)
    ============================================================ */
-
 private void lab6DisplayTouch() {
 
-    logLine();
-    logSection("LAB 6 — Display / Touch");
-    logLine();
+    runOnUiThread(() -> {
 
-    startActivityForResult(
-            new Intent(this, TouchGridTestActivity.class),
-            6006
-    );
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("LAB 6 — Display / Touch");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText("Touch all dots on the screen to complete the test.");
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        Button start = new Button(this);
+        start.setText("START TEST");
+        start.setAllCaps(false);
+        start.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14);
+        startBg.setCornerRadius(dp(14));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
+
+        start.setOnClickListener(v -> {
+            startActivityForResult(
+                    new Intent(this, TouchGridTestActivity.class),
+                    6006
+            );
+        });
+
+        root.addView(start);
+        b.setView(root);
+        b.show();
+    });
 }
 
 /* ============================================================
@@ -6968,7 +7013,7 @@ if (!appRisk.isEmpty()) {
             .limit(8)  
             .forEach(e -> {  
                 String c =  
-                        (e.getValue() >= 60) ? "🟥" :  
+                        (e.getValue() >= 60) ? "??" :  
                         (e.getValue() >= 30) ? "🟧" :  
                         (e.getValue() >= 15) ? "🟨" : "🟩";  
 

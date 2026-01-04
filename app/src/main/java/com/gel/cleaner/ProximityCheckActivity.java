@@ -23,7 +23,7 @@ import java.util.Locale;
 
 /**
  * ============================================================
- * LAB 8 — Proximity Sensor Check (LOCKED)
+ * LAB 8 — Proximity Sensor Check (FINAL / LOCKED)
  * ============================================================
  */
 public class ProximityCheckActivity extends Activity
@@ -56,12 +56,19 @@ public class ProximityCheckActivity extends Activity
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
-            proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            proximity =
+                    sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         }
 
+        // ============================================================
+        // ROOT
+        // ============================================================
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
+        // ============================================================
+        // INFO TEXT
+        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Place your hand over the front sensor area\n" +
@@ -80,9 +87,9 @@ public class ProximityCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
-        // ==========================
-        // 🔇 MUTE TOGGLE
-        // ==========================
+        // ============================================================
+        // 🔕 MUTE TOGGLE
+        // ============================================================
         CheckBox muteBox = new CheckBox(this);
         muteBox.setText("Mute voice");
         muteBox.setTextColor(Color.WHITE);
@@ -103,13 +110,14 @@ public class ProximityCheckActivity extends Activity
             prefs.edit()
                     .putBoolean("lab8_tts_muted", checked)
                     .apply();
-            if (checked && tts != null) {
-                tts.stop();
-            }
+            if (checked && tts != null) tts.stop();
         });
 
         root.addView(muteBox);
 
+        // ============================================================
+        // END BUTTON
+        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -136,12 +144,14 @@ public class ProximityCheckActivity extends Activity
 
         end.setOnClickListener(v -> {
 
+            if (tts != null) tts.stop();
+
             if (!loggedFinish) {
                 loggedFinish = true;
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
                 GELServiceLog.warn("Proximity test was cancelled by user.");
-                GELServiceLog.warn("No proximity state change was detected during the test.");
+                GELServiceLog.warn("No proximity state change detected.");
                 GELServiceLog.ok("Manual re-test recommended.");
                 GELServiceLog.ok("Lab 8 finished.");
                 GELServiceLog.addLine(null);
@@ -154,9 +164,9 @@ public class ProximityCheckActivity extends Activity
         root.addView(end);
         setContentView(root);
 
-        // ==========================
-        // TTS INIT
-        // ==========================
+        // ============================================================
+        // TTS INIT (SPEAK IMMEDIATELY)
+        // ============================================================
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 int res = tts.setLanguage(Locale.US);
@@ -174,17 +184,6 @@ public class ProximityCheckActivity extends Activity
                 }
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            if (tts != null) {
-                tts.stop();
-                tts.shutdown();
-            }
-        } catch (Throwable ignore) {}
     }
 
     @Override
@@ -208,7 +207,22 @@ public class ProximityCheckActivity extends Activity
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // SENSOR CALLBACK
+    // ============================================================
+    @Override
     public void onSensorChanged(SensorEvent event) {
+
         float v = event.values[0];
 
         if (!initialRead) {
@@ -218,6 +232,8 @@ public class ProximityCheckActivity extends Activity
         }
 
         if (Math.abs(v - initialValue) > 0.5f) {
+
+            if (tts != null) tts.stop();
 
             if (!loggedFinish) {
                 loggedFinish = true;

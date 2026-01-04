@@ -10,29 +10,28 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 /**
  * ============================================================
  * LAB 7 — Rotation Check (LOCKED)
- * ------------------------------------------------------------
- * Detects real device rotation via accelerometer
- *
- * Exit:
- *  - RESULT_OK       → rotation detected
- *  - RESULT_CANCELED → user pressed "End Test"
- *
- * No loops. No threads. No timers.
- *
- * GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public class RotationCheckActivity extends Activity
         implements SensorEventListener {
+
+    // ==========================
+    // TEXT TO SPEECH
+    // ==========================
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -50,7 +49,6 @@ public class RotationCheckActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Lock orientation — detection is sensor-based only
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -59,15 +57,9 @@ public class RotationCheckActivity extends Activity
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
 
-        // ============================================================
-        // ROOT
-        // ============================================================
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF101010); // GEL black
+        root.setBackgroundColor(0xFF101010);
 
-        // ============================================================
-        // INFO TEXT
-        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Rotate the device slowly\n" +
@@ -87,9 +79,6 @@ public class RotationCheckActivity extends Activity
 
         root.addView(info, infoLp);
 
-        // ============================================================
-        // END TEST BUTTON (RED)
-        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -98,9 +87,9 @@ public class RotationCheckActivity extends Activity
         end.setTypeface(null, Typeface.BOLD);
 
         GradientDrawable redBtn = new GradientDrawable();
-        redBtn.setColor(0xFF8B0000);          // dark red
+        redBtn.setColor(0xFF8B0000);
         redBtn.setCornerRadius(dp(14));
-        redBtn.setStroke(dp(3), 0xFFFFD700);  // gold border
+        redBtn.setStroke(dp(3), 0xFFFFD700);
         end.setBackground(redBtn);
 
         FrameLayout.LayoutParams endLp =
@@ -119,12 +108,12 @@ public class RotationCheckActivity extends Activity
 
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
 
-            GELServiceLog.logWarn("Rotation test was cancelled by user.");
-            GELServiceLog.logWarn("No orientation change detected during the test.");
-            GELServiceLog.logOk("Manual re-test recommended to confirm sensor behavior.");
+            GELServiceLog.warn("Rotation test was cancelled by user.");
+            GELServiceLog.warn("No orientation change detected during the test.");
+            GELServiceLog.ok("Manual re-test recommended to confirm sensor behavior.");
 
-            GELServiceLog.logOk("Lab 7 finished.");
-            GELServiceLog.logLine();
+            GELServiceLog.ok("Lab 7 finished.");
+            GELServiceLog.addLine(null);
 
             setResult(RESULT_CANCELED);
             finish();
@@ -132,6 +121,38 @@ public class RotationCheckActivity extends Activity
 
         root.addView(end);
         setContentView(root);
+
+        // ==========================
+        // TTS INIT
+        // ==========================
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int res = tts.setLanguage(Locale.US);
+                ttsReady =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+                if (ttsReady) {
+                    tts.speak(
+                            "Rotate the device slowly from portrait to landscape.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB7"
+                    );
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+        } catch (Throwable ignore) {}
     }
 
     @Override
@@ -177,12 +198,12 @@ public class RotationCheckActivity extends Activity
 
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
 
-            GELServiceLog.logOk("Device rotation detected via accelerometer.");
-            GELServiceLog.logOk("Orientation change confirmed (portrait ↔ landscape).");
-            GELServiceLog.logOk("Motion sensors responding normally.");
+            GELServiceLog.ok("Device rotation detected via accelerometer.");
+            GELServiceLog.ok("Orientation change confirmed (portrait ↔ landscape).");
+            GELServiceLog.ok("Motion sensors responding normally.");
 
-            GELServiceLog.logOk("Lab 7 finished.");
-            GELServiceLog.logLine();
+            GELServiceLog.ok("Lab 7 finished.");
+            GELServiceLog.addLine(null);
 
             setResult(RESULT_OK);
             finish();

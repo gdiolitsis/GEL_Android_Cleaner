@@ -666,7 +666,7 @@ private String ipToStr(int ip) {
 }
 
 // ============================================================
-// LAB 3 — User Confirmation Dialog (Earpiece)
+// LAB 3 — User Confirmation Dialog (Earpiece) — FINAL
 // ============================================================
 private void askUserEarpieceConfirmationLoop() {
 
@@ -676,22 +676,20 @@ private void askUserEarpieceConfirmationLoop() {
         lab3WaitingUser = true;
 
         // ==========================
-        // LOOP TONE (EARPIECE — ONLY)
-// ==========================
+        // LOOP TONE (EARPIECE — VOICE CALL ONLY)
+        // ==========================
         lab3Tone = new ToneGenerator(
-                AudioManager.STREAM_VOICE_CALL, // ΜΟΝΟ voice call stream
+                AudioManager.STREAM_VOICE_CALL,
                 80
         );
 
         new Thread(() -> {
-            while (lab3WaitingUser) {
+            while (lab3WaitingUser && lab3Tone != null) {
                 try {
-                    if (lab3Tone != null) {
-                        lab3Tone.startTone(
-                                ToneGenerator.TONE_DTMF_1,
-                                800
-                        );
-                    }
+                    lab3Tone.startTone(
+                            ToneGenerator.TONE_DTMF_1,
+                            800
+                    );
                     SystemClock.sleep(1000);
                 } catch (Throwable ignore) {}
             }
@@ -741,7 +739,7 @@ private void askUserEarpieceConfirmationLoop() {
         btnRow.setGravity(Gravity.CENTER);
         btnRow.setPadding(0, dp(16), 0, 0);
 
-        // NO BUTTON — RED + GOLD
+        // NO BUTTON
         Button noBtn = new Button(this);
         noBtn.setText("NO");
         noBtn.setAllCaps(false);
@@ -753,7 +751,7 @@ private void askUserEarpieceConfirmationLoop() {
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
 
-        // YES BUTTON — GREEN + GOLD
+        // YES BUTTON
         Button yesBtn = new Button(this);
         yesBtn.setText("YES");
         yesBtn.setAllCaps(false);
@@ -786,11 +784,12 @@ private void askUserEarpieceConfirmationLoop() {
         }
 
         // ==========================
-        // BUTTON LOGIC
+        // BUTTON LOGIC — CLEAN EXIT
         // ==========================
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
+            SystemClock.sleep(120);
             restoreLab3Audio();
             logOk("User confirmed earpiece audio was audible.");
             d.dismiss();
@@ -799,6 +798,7 @@ private void askUserEarpieceConfirmationLoop() {
         noBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
+            SystemClock.sleep(120);
             restoreLab3Audio();
             logError("User did NOT hear audio from earpiece.");
             logWarn("Possible earpiece / routing / hardware issue detected.");
@@ -810,13 +810,17 @@ private void askUserEarpieceConfirmationLoop() {
 }
 
 // ============================================================
-// LAB 3 — AUDIO RESTORE
+// LAB 3 — AUDIO RESTORE (FULL CLEANUP)
 // ============================================================
 private void restoreLab3Audio() {
     try {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
+            am.stopBluetoothSco();
+            am.setBluetoothScoOn(false);
+            am.setSpeakerphoneOn(false);
+
             am.setMicrophoneMute(false);
             am.setMode(lab3OldMode);
             am.setSpeakerphoneOn(lab3OldSpeaker);
@@ -832,6 +836,7 @@ protected void onPause() {
     super.onPause();
     lab3WaitingUser = false;
     stopLab3Tone();
+    SystemClock.sleep(120);
     restoreLab3Audio();
 }
 
@@ -2304,6 +2309,10 @@ private void lab3EarpieceManual() {
             oldSpeaker = am.isSpeakerphoneOn();
             oldMicMute = am.isMicrophoneMute();
 
+            // κρατάμε για restore ΑΡΓΟΤΕΡΑ (helpers)
+            lab3OldMode = oldMode;
+            lab3OldSpeaker = oldSpeaker;
+
             // ====================================================
             // HARD LOCK — EARPIECE ONLY
             // ====================================================
@@ -2353,35 +2362,12 @@ private void lab3EarpieceManual() {
             logOk("Test tone routed through earpiece path.");
 
             // ====================================================
-            // USER CONFIRMATION (UI ONLY)
+            // USER CONFIRMATION (NO CLEANUP HERE)
             // ====================================================
             runOnUiThread(this::askUserEarpieceConfirmationLoop);
 
         } catch (Throwable t) {
             logError("LAB 3 failed: audio routing error.");
-        } finally {
-
-            // ====================================================
-            // HARD RESTORE — NO EXCEPTIONS
-            // ====================================================
-            try {
-                if (voiceTrack != null) {
-                    voiceTrack.stop();
-                    voiceTrack.release();
-                }
-            } catch (Throwable ignore) {}
-
-            try {
-                if (am != null) {
-                    am.setMicrophoneMute(oldMicMute);
-                    am.setSpeakerphoneOn(oldSpeaker);
-                    am.setMode(oldMode);
-                }
-            } catch (Throwable ignore) {}
-
-            logOk("Lab 3 finished.");
-            logLine();
-            enableSingleExportButton();
         }
 
     }).start();

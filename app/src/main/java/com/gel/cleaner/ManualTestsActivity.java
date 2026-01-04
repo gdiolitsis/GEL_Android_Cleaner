@@ -2431,8 +2431,9 @@ private void lab9SensorsCheck() {
     logError("Sensors analysis error: " + e.getMessage());
 } finally {
     logOk("Lab 9 finished.");
-    logLine();
-}
+        logLine();
+    }
+}  
 
 /* ============================================================
    Helper — Sensor Presence

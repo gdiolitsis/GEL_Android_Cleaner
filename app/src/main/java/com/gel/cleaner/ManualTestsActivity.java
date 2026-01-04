@@ -701,49 +701,34 @@ if (am != null) {
     );
 }
 
-        // ==========================
-        // LOOP TONE (EARPIECE)
-        // ==========================
-        AudioAttributes attrs = new AudioAttributes.Builder()
-        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-        .build();
-
-AudioFormat format = new AudioFormat.Builder()
-        .setSampleRate(8000)
-        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-        .build();
-
-lab3Track = new AudioTrack(
-        attrs,
-        format,
-        AudioTrack.getMinBufferSize(
-                8000,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-        ),
-        AudioTrack.MODE_STATIC,
-        AudioManager.AUDIO_SESSION_ID_GENERATE
+// ==========================
+// LOOP TONE (EARPIECE — SAFE)
+// ==========================
+lab3Tone = new ToneGenerator(
+        AudioManager.STREAM_VOICE_CALL, // ΜΟΝΟ ΑΥΤΟ
+        80
 );
 
-        new Thread(() -> {
-            while (lab3WaitingUser) {
-                try {
-                    if (lab3Tone != null) {
-                        lab3Tone.startTone(ToneGenerator.TONE_DTMF_1, 800);
-                    }
-                    SystemClock.sleep(1000);
-                } catch (Throwable ignore) {}
-            }
-        }).start();
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
+new Thread(() -> {
+    while (lab3WaitingUser) {
+        try {
+            if (lab3Tone != null) {
+                lab3Tone.startTone(
+                        ToneGenerator.TONE_DTMF_1,
+                        800
                 );
-        b.setCancelable(false);
+            }
+            SystemClock.sleep(1000);
+        } catch (Throwable ignore) {}
+    }
+}).start();
+
+AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                ManualTestsActivity.this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+b.setCancelable(false);
 
         // ============================================================
         // GEL DARK + GOLD POPUP (LAB 3)

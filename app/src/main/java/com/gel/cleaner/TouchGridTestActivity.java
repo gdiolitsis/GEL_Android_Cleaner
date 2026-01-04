@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,26 +15,18 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import java.util.Locale;
+
 /**
  * ============================================================
  * LAB 6 — Display / Touch Grid Test (LOCKED)
- * ------------------------------------------------------------
- * Purpose:
- *  - Detect dead touch zones / digitizer issues
- *  - User must erase all dots by touching screen
- *
- * Exit:
- *  - RESULT_OK       → all zones cleared
- *  - RESULT_CANCELED → user ended test early
- *
- * Logging:
- *  - Writes FULL result to GELServiceLog
- *
- * Author: GDiolitsis Engine Lab (GEL)
  * ============================================================
  */
 public class TouchGridTestActivity extends Activity {
 
+    // ==========================
+    // TEXT TO SPEECH
+    // ==========================
     private TextToSpeech tts;
     private boolean ttsReady = false;
 
@@ -74,13 +67,34 @@ public class TouchGridTestActivity extends Activity {
         endButton.setLayoutParams(lp);
 
         endButton.setOnClickListener(v -> {
-            logIncompleteResult();   // ✅ FIXED
+            logIncompleteResult();
             setResult(RESULT_CANCELED);
             finish();
         });
 
         root.addView(endButton);
         setContentView(root);
+
+        // ==========================
+        // TTS INIT
+        // ==========================
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int res = tts.setLanguage(Locale.US);
+                ttsReady =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+                if (ttsReady) {
+                    tts.speak(
+                            "Touch all dots to complete the test.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB6"
+                    );
+                }
+            }
+        });
 
         Toast.makeText(
                 this,
@@ -89,13 +103,24 @@ public class TouchGridTestActivity extends Activity {
         ).show();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+        } catch (Throwable ignore) {}
+    }
+
     private int dp(int v) {
         float d = getResources().getDisplayMetrics().density;
         return (int) (v * d + 0.5f);
     }
 
     // ============================================================
-    // ACTIVITY-LEVEL LOG DELEGATE (FIX)
+    // ACTIVITY-LEVEL LOG DELEGATE
     // ============================================================
     private void logIncompleteResult() {
         if (gridView != null) {
@@ -212,14 +237,11 @@ public class TouchGridTestActivity extends Activity {
 
             GELServiceLog.section("LAB 6 — Display / Touch");
             GELServiceLog.warn("Touch grid test incomplete.");
-            GELServiceLog.warn(
-                    "Untouched zones detected: " + remaining + " / " + total
-            );
+            GELServiceLog.warn("Untouched zones detected: " + remaining + " / " + total);
             GELServiceLog.info("Possible causes:");
             GELServiceLog.warn("• User ended the test before completing all zones");
-            GELServiceLog.warn("• These " + remaining +
-                    " screen areas did not register touch input during the test");
-            GELServiceLog.info("Manual re-test recommended to confirm.");
+            GELServiceLog.warn("• These " + remaining + " screen areas did not register touch input");
+            GELServiceLog.info("Manual re-test recommended.");
             GELServiceLog.ok("Lab 6 finished.");
             GELServiceLog.addLine(null);
         }

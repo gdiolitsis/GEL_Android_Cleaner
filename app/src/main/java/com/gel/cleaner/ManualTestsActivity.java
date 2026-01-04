@@ -651,44 +651,157 @@ private String ipToStr(int ip) {
 // ============================================================
 // LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
-private void askUserEarpieceConfirmation() {
+private void askUserEarpieceConfirmationLoop() {
 
-    ui.post(() -> {
-        try {
-            AlertDialog.Builder b =
-                    new AlertDialog.Builder(
-                            ManualTestsActivity.this,
-                            android.R.style.Theme_Material_Dialog_NoActionBar
-                    );
+    runOnUiThread(() -> {
 
-            b.setTitle("LAB 3 — Confirm");
-            b.setMessage("Did you hear the sound clearly from the earpiece?");
-            b.setCancelable(false);
+        if (lab3WaitingUser) return;
+        lab3WaitingUser = true;
 
-            b.setPositiveButton("YES", (d, w) -> {
-                logOk("User confirmed earpiece audio was audible");
-                enableSingleExportButton();
-            });
+        // 🔊 Loop tone μέχρι YES / NO
+        lab3Tone = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
 
-            b.setNegativeButton("NO", (d, w) -> {
-                logWarn("Earpiece signal detected but user did not hear sound clearly");
-                enableSingleExportButton();
-            });
-
-            AlertDialog dialog = b.create();
-            dialog.show();
-
-            if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawable(
-                        new ColorDrawable(0xFF101010)
-                );
+        new Thread(() -> {
+            while (lab3WaitingUser) {
+                try {
+                    if (lab3Tone != null) {
+                        lab3Tone.startTone(ToneGenerator.TONE_DTMF_1, 800);
+                    }
+                    SystemClock.sleep(1000);
+                } catch (Throwable ignore) {}
             }
+        }).start();
 
-        } catch (Throwable t) {
-            enableSingleExportButton();
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        // ============================================================
+        // GEL DARK + GOLD POPUP (LAB 3 CONFIRMATION)
+        // ============================================================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);           // GEL dark
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);   // GOLD border
+        root.setBackground(bg);
+
+        // TITLE
+        TextView title = new TextView(this);
+        title.setText("LAB 3 — Confirmation");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // MESSAGE
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Put the phone at your ear.\n\n" +
+                "Did you hear the sound clearly from the earpiece?"
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        // BUTTON ROW
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
+        btnRow.setPadding(0, dp(16), 0, 0);
+
+        // NO BUTTON — ΚΟΚΚΙΝΟ + ΧΡΥΣΟ
+        Button noBtn = new Button(this);
+        noBtn.setText("NO");
+        noBtn.setAllCaps(false);
+        noBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        noBtn.setBackground(noBg);
+
+        // YES BUTTON — NEON ΠΡΑΣΙΝΟ + ΧΡΥΣΟ
+        Button yesBtn = new Button(this);
+        yesBtn.setText("YES");
+        yesBtn.setAllCaps(false);
+        yesBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF39FF14);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yesBtn.setBackground(yesBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+        lp.setMargins(dp(12), 0, dp(12), 0);
+
+        btnRow.addView(noBtn, lp);
+        btnRow.addView(yesBtn, lp);
+        root.addView(btnRow);
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
+
+        // BUTTON LOGIC
+        yesBtn.setOnClickListener(v -> {
+            lab3WaitingUser = false;
+            stopLab3Tone();
+            logOk("User confirmed earpiece audio was audible.");
+            d.dismiss();
+        });
+
+        noBtn.setOnClickListener(v -> {
+            lab3WaitingUser = false;
+            stopLab3Tone();
+            logError("User did NOT hear audio from earpiece.");
+            logWarn("Possible earpiece / routing / hardware issue detected.");
+            d.dismiss();
+        });
+
+        d.show();
     });
 }
+
+@Override
+protected void onPause() {
+    super.onPause();
+    lab3WaitingUser = false;
+    stopLab3Tone();
+}
+
+private void stopLab3Tone() {
+    try {
+        if (lab3Tone != null) {
+            lab3Tone.stopTone();
+            lab3Tone.release();
+        }
+    } catch (Throwable ignore) {}
+    lab3Tone = null;
+}
+
+private volatile boolean lab3WaitingUser = false;
+private ToneGenerator lab3Tone;  
 
 // ============================================================
 // TELEPHONY SNAPSHOT (SAFE / INFO ONLY)
@@ -768,7 +881,7 @@ private void logInfo(String msg) {
 
 private void logOk(String msg) {
     String s = "✔ " + safe(msg);
-    appendHtml("<font color='#88FF88'>" + s + "</font>");
+    appendHtml("<font color='#39FF14'>" + s + "</font>");
     GELServiceLog.logOk(msg);
 }
 
@@ -785,7 +898,7 @@ private void logError(String msg) {
 }
 
 private void logLine() {
-    appendHtml("----------------------------------------");
+    appendHtml("--------------------------------------------------");
     GELServiceLog.logLine();
 }
 

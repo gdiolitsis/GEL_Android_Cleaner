@@ -3718,17 +3718,15 @@ root.addView(title);
     logLine();
 
     // ================= CORE LOOP =================
-    final long startTs[] = { -1 };
-    final boolean wasCharging[] = { false };
+    final long[] startTs = { -1 };
+    final boolean[] wasCharging = { false };
+    final long[] unplugTs = { -1 };
     final String[] dotFrames = { "•", "• •", "• • •" };
 
     final BatteryInfo startInfo = getBatteryInfo();
     final long startMah =
             (startInfo != null && startInfo.currentChargeMah > 0)
                     ? startInfo.currentChargeMah : -1;
-                    
-   final boolean[] wasCharging = { false };
-final long[] unplugTs = { -1 };
 
     ui.post(new Runnable() {
 
@@ -3744,72 +3742,61 @@ final long[] unplugTs = { -1 };
             long now = SystemClock.elapsedRealtime();
 
             dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
-            
-// ------------------------------------------------------------
-// CHARGING STATE TRACKING (5s debounce unplug)
-// ------------------------------------------------------------
-if (chargingNow) {
 
-    unplugTs[0] = -1;
+            // ------------------------------------------------------------
+            // CHARGING STATE TRACKING (5s debounce unplug)
+            // ------------------------------------------------------------
+            if (chargingNow) {
 
-    if (!wasCharging[0]) {
-        wasCharging[0] = true;
-        startTs[0] = now;
+                unplugTs[0] = -1;
 
-        lab15BattTempStart = getBatteryTemperature();
-        lab15BattTempPeak  = lab15BattTempStart;
+                if (!wasCharging[0]) {
+                    wasCharging[0] = true;
+                    startTs[0] = now;
 
-        lab15StatusText.setText("Charging state detected.");
-        lab15StatusText.setTextColor(0xFF39FF14);
-        logOk("✅ Charging state detected.");
-    }
+                    lab15BattTempStart = getBatteryTemperature();
+                    lab15BattTempPeak  = lab15BattTempStart;
 
-} else if (wasCharging[0]) {
+                    lab15StatusText.setText("Charging state detected.");
+                    lab15StatusText.setTextColor(0xFF39FF14);
+                    logOk("✅ Charging state detected.");
+                }
 
-    if (unplugTs[0] < 0) {
-        unplugTs[0] = now;
-    }
+            } else if (wasCharging[0]) {
 
-    long unplugSec = (now - unplugTs[0]) / 1000;
+                if (unplugTs[0] < 0) {
+                    unplugTs[0] = now;
+                }
 
-    if (unplugSec >= 5) {
+                long unplugSec = (now - unplugTs[0]) / 1000;
 
-        lab15FlapUnstable = true;
-        lab15Finished = true;
-        lab15Running  = false;
+                if (unplugSec >= 5) {
 
-        lab15StatusText.setText("Charging disconnected.");
-        lab15StatusText.setTextColor(0xFFFF4444);
+                    lab15FlapUnstable = true;
+                    lab15Finished = true;
+                    lab15Running  = false;
 
-        logError("❌ Charger disconnected for more than 5 seconds.");
-        logError("❌ Charging test aborted.");
+                    lab15StatusText.setText("Charging disconnected.");
+                    lab15StatusText.setTextColor(0xFFFF4444);
 
-        logOk("LAB 15 finished.");
-        logLine();
+                    logError("❌ Charger disconnected for more than 5 seconds.");
+                    logError("❌ Charging test aborted.");
 
-        try {
-            if (lab15Dialog != null && lab15Dialog.isShowing())
-                lab15Dialog.dismiss();
-        } catch (Throwable ignore) {}
-        lab15Dialog = null;
+                    logOk("LAB 15 finished.");
+                    logLine();
 
-        return;
-    }
-}
+                    try {
+                        if (lab15Dialog != null && lab15Dialog.isShowing())
+                            lab15Dialog.dismiss();
+                    } catch (Throwable ignore) {}
+                    lab15Dialog = null;
 
-            if (chargingNow && !wasCharging[0]) {
-                wasCharging[0] = true;
-                startTs[0] = now;
-
-                lab15BattTempStart = getBatteryTemperature();
-                lab15BattTempPeak  = lab15BattTempStart;
-
-                lab15StatusText.setText("Charging state detected.");
-                lab15StatusText.setTextColor(0xFF39FF14);
-                logOk("✅ Charging state detected.");
+                    return;
+                }
             }
-           
-                        if (chargingNow) {
+
+            // temp peak tracking while charging
+            if (chargingNow) {
                 float t = getBatteryTemperature();
                 if (t > 0) {
                     if (Float.isNaN(lab15BattTempPeak) || t > lab15BattTempPeak)
@@ -3844,226 +3831,186 @@ if (chargingNow) {
                 return;
             }
 
-// ================= FINAL =================
-lab15Finished = true;
-lab15Running  = false;
+            // ================= FINAL =================
+            lab15Finished = true;
+            lab15Running  = false;
 
-lab15BattTempEnd = getBatteryTemperature();
+            lab15BattTempEnd = getBatteryTemperature();
 
-// propagate LAB15 temps to legacy / cross-lab names
-startBatteryTemp = lab15BattTempStart;
-endBatteryTemp   = lab15BattTempEnd;
+            // propagate LAB15 temps to legacy / cross-lab names
+            startBatteryTemp = lab15BattTempStart;
+            endBatteryTemp   = lab15BattTempEnd;
 
-// ------------------------------------------------------------
-// Battery temperature + thermal correlation
-// ------------------------------------------------------------
-logInfo("Battery temperature:");
-logOk(String.format(
-        Locale.US,
-        "✅ %.1f°C",
-        lab15BattTempEnd
-));
+            // ------------------------------------------------------------
+            // Battery temperature + thermal correlation
+            // ------------------------------------------------------------
+            logInfo("Battery temperature:");
+            logOk(String.format(
+                    Locale.US,
+                    "✅ %.1f°C",
+                    lab15BattTempEnd
+            ));
 
-// Thermal correlation (white label + green values)
-logLab15ThermalCorrelation(
-        lab15BattTempStart,
-        lab15BattTempPeak,
-        lab15BattTempEnd
-);
+            logLab15ThermalCorrelation(
+                    lab15BattTempStart,
+                    lab15BattTempPeak,
+                    lab15BattTempEnd
+            );
 
-// ------------------------------------------------------------
-// Thermal verdict (SINGLE, CORRECT ONE)
-// ------------------------------------------------------------
-float dtCharge = lab15BattTempEnd - lab15BattTempStart;
+            // ------------------------------------------------------------
+            // Thermal verdict
+            // ------------------------------------------------------------
+            float dtCharge = lab15BattTempEnd - lab15BattTempStart;
 
-logInfo("Thermal verdict (charging):");
+            logInfo("Thermal verdict (charging):");
 
-if (lab15OverTempDuringCharge) {
-    logError(String.format(
-            Locale.US,
-            "❌ HOT (ΔT +%.1f°C) — Elevated temperature detected.",
-            Math.max(0f, dtCharge)
-    ));
-} else {
-    logOk(String.format(
-            Locale.US,
-            "✅ OK (ΔT +%.1f°C) — Normal thermal behavior during charging.",
-            Math.max(0f, dtCharge)
-    ));
-}
+            if (lab15OverTempDuringCharge) {
+                logError(String.format(
+                        Locale.US,
+                        "❌ HOT (ΔT +%.1f°C) — Elevated temperature detected.",
+                        Math.max(0f, dtCharge)
+                ));
+            } else {
+                logOk(String.format(
+                        Locale.US,
+                        "✅ OK (ΔT +%.1f°C) — Normal thermal behavior during charging.",
+                        Math.max(0f, dtCharge)
+                ));
+            }
 
-// ------------------------------------------------------------
-// Connection stability
-// ------------------------------------------------------------
-logInfo("Charging connection:");
-if (lab15FlapUnstable) {
-    logError("❌ Unstable (plug/unplug behavior detected).");
-} else {
-    logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
-}
+            // ------------------------------------------------------------
+            // Connection stability
+            // ------------------------------------------------------------
+            logInfo("Charging connection:");
+            if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");
+            else logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
 
-// ------------------------------------------------------------
-// FINAL LAB 15 DECISION
-// ------------------------------------------------------------
-logInfo("LAB decision:");
-if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+            // ------------------------------------------------------------
+            // FINAL LAB 15 DECISION
+            // ------------------------------------------------------------
+            logInfo("LAB decision:");
+            if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+                logOk("✅ Charging system OK. No cleaning or replacement required.");
+                logOk("✅ Charging stability OK.");
+            } else {
+                logWarn("⚠️ Charging system shows potential issues.");
+                logWarn("⚠️ Further inspection or repeat test recommended.");
+            }
 
-    logOk("✅ Charging system OK. No cleaning or replacement required.");
-    logOk("✅ Charging stability OK.");
+            // ------------------------------------------------------------
+            // CHARGING INPUT & STRENGTH (mAh/min)
+            // ------------------------------------------------------------
+            BatteryInfo endInfo = getBatteryInfo();
 
-} else {
+            if (startMah > 0 && endInfo != null &&
+                    endInfo.currentChargeMah > startMah && startTs[0] > 0) {
 
-    logWarn("⚠️ Charging system shows potential issues.");
-    logWarn("⚠️ Further inspection or repeat test recommended.");
-}
+                lab15_strengthKnown = true;
 
+                long deltaMah = endInfo.currentChargeMah - startMah;
+                long dtMs     = Math.max(1, SystemClock.elapsedRealtime() - startTs[0]);
+                double minutes = dtMs / 60000.0;
 
-// ------------------------------------------------------------
-// CHARGING INPUT & STRENGTH (mAh/min)
-// ------------------------------------------------------------
-BatteryInfo endInfo = getBatteryInfo();
+                double mahPerMin = (minutes > 0) ? (deltaMah / minutes) : -1;
 
-if (startMah > 0 && endInfo != null &&
-    endInfo.currentChargeMah > startMah && startTs[0] > 0) {
+                logInfo("Charging input:");
+                logOk(String.format(
+                        Locale.US,
+                        "✅ +%d mAh in %.1f min (%.1f mAh/min)",
+                        deltaMah,
+                        minutes,
+                        mahPerMin
+                ));
 
-    lab15_strengthKnown = true;
+                logInfo("Charging strength:");
+                if (mahPerMin >= 20.0) {
+                    logOk("✅ STRONG");
+                    lab15_strengthWeak = false;
+                } else if (mahPerMin >= 10.0) {
+                    logOk("✅ NORMAL");
+                    lab15_strengthWeak = false;
+                } else if (mahPerMin >= 5.0) {
+                    logWarn("⚠️ MODERATE");
+                    lab15_strengthWeak = true;
+                } else {
+                    logError("❌ WEAK");
+                    lab15_strengthWeak = true;
+                }
 
-    long deltaMah = endInfo.currentChargeMah - startMah;
-    long dtMs     = Math.max(1, SystemClock.elapsedRealtime() - startTs[0]);
-    double minutes = dtMs / 60000.0;
+            } else {
+                logInfo("Charging strength:");
+                logWarn("⚠️ Unable to estimate accurately.");
+                lab15_strengthKnown = false;
+                lab15_strengthWeak  = true;
+            }
 
-    double mahPerMin = (minutes > 0) ? (deltaMah / minutes) : -1;
+            // ------------------------------------------------------------
+            // SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)
+            // ------------------------------------------------------------
+            try {
 
-    // Charging input
-    logInfo("Charging input:");
-    logOk(String.format(
-            Locale.US,
-            "✅ +%d mAh in %.1f min (%.1f mAh/min)",
-            deltaMah,
-            minutes,
-            mahPerMin
-    ));
+                boolean chargingStable = !lab15FlapUnstable;
 
-    // Charging strength
-    logInfo("Charging strength:");
-    if (mahPerMin >= 20.0) {
-        logOk("✅ STRONG");
-        lab15_strengthWeak = false;
+                float lab14Health  = getLastLab14HealthScore();
+                int   lab16Thermal = getLastLab16ThermalScore();
 
-    } else if (mahPerMin >= 10.0) {
-        logOk("✅ NORMAL");
-        lab15_strengthWeak = false;
+                boolean batteryHealthy = (lab14Health >= 85f);
+                boolean thermalPressure = (lab16Thermal > 0 && lab16Thermal < 75);
 
-    } else if (mahPerMin >= 5.0) {
-        logWarn("⚠️ MODERATE");
-        lab15_strengthWeak = true;
+                logInfo("Charging path:");
 
-    } else {
-        logError("❌ WEAK");
-        lab15_strengthWeak = true;
-    }
+                if (chargingStable &&
+                        lab15_strengthKnown &&
+                        lab15_strengthWeak &&
+                        (batteryHealthy || thermalPressure)) {
 
-} else {
+                    lab15_systemLimited = true;
+                    logWarn("⚠️ System-limited (not battery)");
+                    logOk("Likely cause: thermal / PMIC protection limiting current.");
 
-    logInfo("Charging strength:");
-    logWarn("⚠️ Unable to estimate accurately.");
-    lab15_strengthKnown = false;
-    lab15_strengthWeak  = true;
-}
+                } else {
+                    logOk("✅ Operating normally (no system-level current throttling).");
+                }
 
+            } catch (Throwable ignore) {}
 
-// ------------------------------------------------------------
-// SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)
-// ------------------------------------------------------------
-try {
+            logOk("LAB 15 finished.");
+            logLine();
 
-    boolean chargingStable = !lab15FlapUnstable;
+            // ------------------------------------------------------------
+            // STORE RESULT FOR LAB 17 (LAB 15 OUTPUT)
+            // ------------------------------------------------------------
+            try {
+                int chargeScore = 100;
 
-    float lab14Health  = getLastLab14HealthScore();   // -1 if unknown
-    int   lab16Thermal = getLastLab16ThermalScore(); // -1 if unknown
+                if (lab15_strengthWeak) chargeScore -= 25;
+                if (lab15FlapUnstable) chargeScore -= 25;
+                if (lab15OverTempDuringCharge) chargeScore -= 25;
 
-    boolean batteryHealthy =
-            (lab14Health >= 85f);
+                chargeScore = Math.max(0, Math.min(100, chargeScore));
 
-    boolean thermalPressure =
-            (lab16Thermal > 0 && lab16Thermal < 75);
+                SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+                p.edit()
+                        .putInt("lab15_charge_score", chargeScore)
+                        .putBoolean("lab15_system_limited", lab15_systemLimited)
+                        .putBoolean("lab15_overtemp", lab15OverTempDuringCharge)
+                        .putString("lab15_strength_label", lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG")
+                        .putLong("lab15_ts", System.currentTimeMillis())
+                        .apply();
 
-    logInfo("Charging path:");
+            } catch (Throwable ignore) {}
 
-    if (chargingStable &&
-        lab15_strengthKnown &&
-        lab15_strengthWeak &&
-        (batteryHealthy || thermalPressure)) {
-
-        lab15_systemLimited = true;
-
-        SpannableString sp =
-                new SpannableString("⚠️ System-limited (not battery)");
-
-        sp.setSpan(
-                new ForegroundColorSpan(0xFFFFFF00), // YELLOW
-                0,
-                sp.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        if (txtLog != null) {
-            txtLog.append(sp);
-            txtLog.append("\n");
-        } else {
-            logWarn("⚠️ System-limited (not battery)");
+            // ------------------------------------------------------------
+            // CLEAN EXIT — CLOSE POPUP
+            // ------------------------------------------------------------
+            try {
+                if (lab15Dialog != null && lab15Dialog.isShowing())
+                    lab15Dialog.dismiss();
+            } catch (Throwable ignore) {}
+            lab15Dialog = null;
         }
-
-        logOk("Likely cause: thermal / PMIC protection limiting current.");
-
-    } else {
-        logOk("✅ Operating normally (no system-level current throttling).");
-    }
-
-} catch (Throwable ignore) {}
-
-logOk("LAB 15 finished.");
-logLine();
-
-// ------------------------------------------------------------
-// STORE RESULT FOR LAB 17 (LAB 15 OUTPUT)
-// ------------------------------------------------------------
-try {
-    int chargeScore = 100;
-
-    if (lab15_strengthWeak) chargeScore -= 25;
-    if (lab15FlapUnstable) chargeScore -= 25;
-    if (lab15OverTempDuringCharge) chargeScore -= 25;
-
-    chargeScore = Math.max(0, Math.min(100, chargeScore));
-
-    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-p.edit()
- .putInt("lab15_charge_score", chargeScore)
- .putBoolean("lab15_system_limited", lab15_systemLimited)
- .putBoolean("lab15_overtemp", lab15OverTempDuringCharge)
- .putString(
-     "lab15_strength_label",
-     lab15_strengthWeak ? "WEAK" : "NORMAL/STRONG"
- )
- .putLong("lab15_ts", System.currentTimeMillis()) 
- .apply();
-
-} catch (Throwable ignore) {}
-
-// ------------------------------------------------------------
-// CLEAN EXIT — CLOSE POPUP
-// ------------------------------------------------------------
-try {
-    if (lab15Dialog != null && lab15Dialog.isShowing())
-        lab15Dialog.dismiss();
-} catch (Throwable ignore) {}
-lab15Dialog = null;
-
-}   // <-- END run()
-}); // <-- END ui.post Runnable
-
-}   // <-- END lab15ChargingSystemSmart()
+    });
+}
 
 // ============================================================
 // LAB 16 — Thermal Snapshot

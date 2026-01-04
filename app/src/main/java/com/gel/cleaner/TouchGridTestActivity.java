@@ -34,6 +34,9 @@ import android.widget.Toast;
  */
 public class TouchGridTestActivity extends Activity {
 
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
+
     private TouchGridView gridView;
     private Button endButton;
 

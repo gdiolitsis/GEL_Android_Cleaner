@@ -2163,6 +2163,7 @@ private void lab3EarpieceManual() {
 }
 
 }).start();
+}
 
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -2211,6 +2212,8 @@ logLabelValue(
     }
 
 }).start();
+}
+
 
 /* ============================================================
    LAB 5 — Vibration Motor Test (AUTO)

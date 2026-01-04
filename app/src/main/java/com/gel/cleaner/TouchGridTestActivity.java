@@ -71,7 +71,7 @@ public class TouchGridTestActivity extends Activity {
         endButton.setLayoutParams(lp);
 
         endButton.setOnClickListener(v -> {
-            logIncompleteResult();
+            logIncompleteResult();   // ✅ FIXED
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -89,6 +89,15 @@ public class TouchGridTestActivity extends Activity {
     private int dp(int v) {
         float d = getResources().getDisplayMetrics().density;
         return (int) (v * d + 0.5f);
+    }
+
+    // ============================================================
+    // ACTIVITY-LEVEL LOG DELEGATE (FIX)
+    // ============================================================
+    private void logIncompleteResult() {
+        if (gridView != null) {
+            gridView.logIncompleteResult();
+        }
     }
 
     // ============================================================
@@ -183,15 +192,15 @@ public class TouchGridTestActivity extends Activity {
         }
 
         // ========================================================
-        // LOGGING HELPERS
+        // LOGGING (SERVICE REPORT)
         // ========================================================
         private void logSuccessResult() {
             GELServiceLog.section("LAB 6 — Display / Touch");
-            GELServiceLog.logOk("Touch grid test completed.");
-            GELServiceLog.logOk("All screen zones responded to touch input.");
-            GELServiceLog.logOk("No dead touch zones detected.");
-            GELServiceLog.logOk("Lab 6 finished.");
-            GELServiceLog.logLine();
+            GELServiceLog.ok("Touch grid test completed.");
+            GELServiceLog.ok("All screen zones responded to touch input.");
+            GELServiceLog.ok("No dead touch zones detected.");
+            GELServiceLog.ok("Lab 6 finished.");
+            GELServiceLog.addLine(null);
         }
 
         private void logIncompleteResult() {
@@ -199,17 +208,17 @@ public class TouchGridTestActivity extends Activity {
             int remaining = countUncleared();
 
             GELServiceLog.section("LAB 6 — Display / Touch");
-            GELServiceLog.logWarn("Touch grid test incomplete.");
-            GELServiceLog.logWarn(
+            GELServiceLog.warn("Touch grid test incomplete.");
+            GELServiceLog.warn(
                     "Untouched zones detected: " + remaining + " / " + total
             );
-            GELServiceLog.logInfo("Possible causes:");
-            GELServiceLog.logWarn("• User ended the test before completing all zones");
-            GELServiceLog.logWarn("• These " + remaining +
+            GELServiceLog.info("Possible causes:");
+            GELServiceLog.warn("• User ended the test before completing all zones");
+            GELServiceLog.warn("• These " + remaining +
                     " screen areas did not register touch input during the test");
-            GELServiceLog.logInfo("Manual re-test recommended to confirm.");
-            GELServiceLog.logOk("Lab 6 finished.");
-            GELServiceLog.logLine();
+            GELServiceLog.info("Manual re-test recommended to confirm.");
+            GELServiceLog.ok("Lab 6 finished.");
+            GELServiceLog.addLine(null);
         }
     }
 }

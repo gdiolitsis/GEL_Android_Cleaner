@@ -2176,44 +2176,45 @@ private void lab4MicManual() {
 
     new Thread(() -> {
 
-        MicDiagnosticEngine.Result bottom =
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+        try {
 
-        logLabelValue("Bottom Mic RMS", String.valueOf((int) bottom.rms));
-        logLabelValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
-        logLabelValue("Bottom Mic Confidence", bottom.confidence);
+            MicDiagnosticEngine.Result bottom =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-        MicDiagnosticEngine.Result top =
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+            logLabelValue("Bottom Mic RMS", String.valueOf((int) bottom.rms));
+            logLabelValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
+            logLabelValue("Bottom Mic Confidence", bottom.confidence);
 
-        logLabelValue("Top Mic RMS", String.valueOf((int) top.rms));
-        logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
-        logLabelValue("Top Mic Confidence", top.confidence);
+            MicDiagnosticEngine.Result top =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-        logOk("Microphone recording path executed");
+            logLabelValue("Top Mic RMS", String.valueOf((int) top.rms));
+            logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));
+            logLabelValue("Top Mic Confidence", top.confidence);
 
-logLabelValue(
-        "Note",
-        (bottom.silenceDetected && top.silenceDetected)
-                ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."
-                : "Microphone signal detected successfully."
-);
+            logOk("Microphone recording path executed");
 
-} catch (Throwable t) {
+            logLabelValue(
+                    "Note",
+                    (bottom.silenceDetected && top.silenceDetected)
+                            ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."
+                            : "Microphone signal detected successfully."
+            );
 
-        logError("Lab 4 failed");
+        } catch (Throwable t) {
 
-    } finally {
+            logError("Lab 4 failed");
 
-        logOk("Lab 4 finished.");
-        logLine();
+        } finally {
 
-        runOnUiThread(this::enableSingleExportButton);
-    }
+            logOk("Lab 4 finished.");
+            logLine();
 
-}).start();
+            runOnUiThread(this::enableSingleExportButton);
+        }
+
+    }).start();
 }
-
 
 /* ============================================================
    LAB 5 — Vibration Motor Test (AUTO)
@@ -2426,12 +2427,11 @@ private void lab9SensorsCheck() {
 
         logOk("Sensor suite appears complete and healthy for this device.");
 
-    } catch (Exception e) {
-        logError("Sensors analysis error: " + e.getMessage());
-    } finally {
-        logOk("Lab 9 finished.");
-        logLine();
-    }
+    } catch (Throwable e) {
+    logError("Sensors analysis error: " + e.getMessage());
+} finally {
+    logOk("Lab 9 finished.");
+    logLine();
 }
 
 /* ============================================================

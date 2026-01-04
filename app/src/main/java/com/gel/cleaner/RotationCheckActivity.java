@@ -23,7 +23,7 @@ import java.util.Locale;
 
 /**
  * ============================================================
- * LAB 7 — Rotation Check (LOCKED)
+ * LAB 7 — Rotation Check (FINAL / LOCKED)
  * ============================================================
  */
 public class RotationCheckActivity extends Activity
@@ -58,12 +58,19 @@ public class RotationCheckActivity extends Activity
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            accelerometer =
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
 
+        // ============================================================
+        // ROOT
+        // ============================================================
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
+        // ============================================================
+        // INFO TEXT
+        // ============================================================
         TextView info = new TextView(this);
         info.setText(
                 "Rotate the device slowly\n" +
@@ -82,9 +89,9 @@ public class RotationCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
-        // ==========================
-        // 🔇 MUTE TOGGLE
-        // ==========================
+        // ============================================================
+        // 🔕 MUTE TOGGLE
+        // ============================================================
         CheckBox muteBox = new CheckBox(this);
         muteBox.setText("Mute voice");
         muteBox.setTextColor(Color.WHITE);
@@ -105,13 +112,14 @@ public class RotationCheckActivity extends Activity
             prefs.edit()
                     .putBoolean("lab7_tts_muted", checked)
                     .apply();
-            if (checked && tts != null) {
-                tts.stop();
-            }
+            if (checked && tts != null) tts.stop();
         });
 
         root.addView(muteBox);
 
+        // ============================================================
+        // END BUTTON
+        // ============================================================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -138,6 +146,8 @@ public class RotationCheckActivity extends Activity
 
         end.setOnClickListener(v -> {
 
+            if (tts != null) tts.stop();
+
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
             GELServiceLog.warn("Rotation test was cancelled by user.");
             GELServiceLog.warn("No orientation change detected during the test.");
@@ -152,9 +162,9 @@ public class RotationCheckActivity extends Activity
         root.addView(end);
         setContentView(root);
 
-        // ==========================
-        // TTS INIT
-        // ==========================
+        // ============================================================
+        // TTS INIT (SPEAK IMMEDIATELY)
+        // ============================================================
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 int res = tts.setLanguage(Locale.US);
@@ -172,17 +182,6 @@ public class RotationCheckActivity extends Activity
                 }
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            if (tts != null) {
-                tts.stop();
-                tts.shutdown();
-            }
-        } catch (Throwable ignore) {}
     }
 
     @Override
@@ -206,6 +205,20 @@ public class RotationCheckActivity extends Activity
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // SENSOR CALLBACK
+    // ============================================================
+    @Override
     public void onSensorChanged(SensorEvent event) {
 
         float x = event.values[0];
@@ -222,6 +235,8 @@ public class RotationCheckActivity extends Activity
         float dy = Math.abs(y - lastY);
 
         if (dx > ROTATION_THRESHOLD || dy > ROTATION_THRESHOLD) {
+
+            if (tts != null) tts.stop();
 
             GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
             GELServiceLog.ok("Device rotation detected via accelerometer.");

@@ -2273,7 +2273,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED / REAL)
+   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED / CLEAN)
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2294,15 +2294,14 @@ private void lab3EarpieceManual() {
             am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am == null) {
                 logError("AudioManager unavailable.");
-                gotoFinalize();
                 return;
             }
 
             // ====================================================
-            // SAVE STATE
+            // SAVE CURRENT AUDIO STATE
             // ====================================================
-            lab3OldMode = am.getMode();
-            lab3OldSpeaker = am.isSpeakerphoneOn();
+            oldMode = am.getMode();
+            oldSpeaker = am.isSpeakerphoneOn();
             oldMicMute = am.isMicrophoneMute();
 
             // ====================================================
@@ -2317,7 +2316,7 @@ private void lab3EarpieceManual() {
             SystemClock.sleep(300); // routing settle
 
             // ====================================================
-            // 🔒 FORCE VOICE SESSION (CRITICAL)
+            // FORCE VOICE CALL AUDIO SESSION
             // ====================================================
             int sampleRate = 8000;
             int bufSize = AudioTrack.getMinBufferSize(
@@ -2335,10 +2334,10 @@ private void lab3EarpieceManual() {
                     AudioTrack.MODE_STREAM
             );
 
-            voiceTrack.play(); // 🔑 THIS opens earpiece path
+            voiceTrack.play();
 
             // ====================================================
-            // PLAY TEST TONE (220Hz, LOW AMP)
+            // PLAY TEST TONE (220Hz — LOW AMP)
             // ====================================================
             short[] tone = new short[sampleRate];
             for (int i = 0; i < tone.length; i++) {
@@ -2354,18 +2353,16 @@ private void lab3EarpieceManual() {
             logOk("Test tone routed through earpiece path.");
 
             // ====================================================
-            // USER CONFIRMATION (LOOP TONE HANDLED THERE)
+            // USER CONFIRMATION (UI ONLY)
             // ====================================================
-            askUserEarpieceConfirmationLoop();
-            return;
+            runOnUiThread(this::askUserEarpieceConfirmationLoop);
 
         } catch (Throwable t) {
             logError("LAB 3 failed: audio routing error.");
-            gotoFinalize();
         } finally {
 
             // ====================================================
-            // CLEANUP (NO AUDIO RESTORE HERE)
+            // HARD RESTORE — NO EXCEPTIONS
             // ====================================================
             try {
                 if (voiceTrack != null) {
@@ -2373,18 +2370,21 @@ private void lab3EarpieceManual() {
                     voiceTrack.release();
                 }
             } catch (Throwable ignore) {}
+
+            try {
+                if (am != null) {
+                    am.setMicrophoneMute(oldMicMute);
+                    am.setSpeakerphoneOn(oldSpeaker);
+                    am.setMode(oldMode);
+                }
+            } catch (Throwable ignore) {}
+
+            logOk("Lab 3 finished.");
+            logLine();
+            enableSingleExportButton();
         }
 
     }).start();
-}
-
-// ============================================================
-// FINALIZE (SINGLE EXIT)
-// ============================================================
-private void gotoFinalize() {
-    logOk("Lab 3 finished.");
-    logLine();
-    enableSingleExportButton();
 }
 
 /* ============================================================

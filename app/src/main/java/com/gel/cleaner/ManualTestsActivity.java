@@ -2273,7 +2273,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED)
+   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED / REAL)
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2284,6 +2284,7 @@ private void lab3EarpieceManual() {
     new Thread(() -> {
 
         AudioManager am = null;
+        AudioTrack voiceTrack = null;
 
         int oldMode = AudioManager.MODE_NORMAL;
         boolean oldSpeaker = false;
@@ -2292,69 +2293,85 @@ private void lab3EarpieceManual() {
         try {
             am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am == null) {
-                logError("AudioManager unavailable");
-                logOk("Lab 3 finished.");
-                logLine();
-                enableSingleExportButton();
+                logError("AudioManager unavailable.");
+                gotoFinalize();
                 return;
             }
 
             // ====================================================
-            // SAVE CURRENT AUDIO STATE
+            // SAVE STATE
             // ====================================================
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
             oldMicMute = am.isMicrophoneMute();
 
             // ====================================================
-            // 🔒 HARD LOCK TO EARPIECE (SINGLE SOURCE OF TRUTH)
+            // HARD LOCK — EARPIECE ONLY
             // ====================================================
-            am.setBluetoothScoOn(false);
             am.stopBluetoothSco();
+            am.setBluetoothScoOn(false);
             am.setSpeakerphoneOn(false);
-
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setMicrophoneMute(true);
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
 
-            // OEM fallback (Xiaomi / Samsung edge cases)
-            am.setSpeakerphoneOn(false);
+            SystemClock.sleep(300); // routing settle
 
-            // routing settle — ONLY ONCE
-            SystemClock.sleep(250);
             // ====================================================
+            // 🔒 FORCE VOICE SESSION (CRITICAL)
+            // ====================================================
+            int sampleRate = 8000;
+            int bufSize = AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+            );
 
-            // PLAY TEST TONE VIA EARPIECE
-            playEarpieceTestTone220Hz(900);
+            voiceTrack = new AudioTrack(
+                    AudioManager.STREAM_VOICE_CALL,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufSize,
+                    AudioTrack.MODE_STREAM
+            );
 
-            // MIC CAPTURE (TOP MIC)
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(
-                            this,
-                            MicDiagnosticEngine.MicType.TOP
-                    );
+            voiceTrack.play(); // 🔑 THIS opens earpiece path
 
-            logLabelValue("Top Mic RMS", String.valueOf((int) r.rms));
-            logLabelValue("Top Mic Peak", String.valueOf((int) r.peak));
-            logLabelValue("Confidence", r.confidence);
+            // ====================================================
+            // PLAY TEST TONE (220Hz, LOW AMP)
+            // ====================================================
+            short[] tone = new short[sampleRate];
+            for (int i = 0; i < tone.length; i++) {
+                tone[i] = (short) (Math.sin(2 * Math.PI * 220 * i / sampleRate) * 1200);
+            }
 
-            logOk("Earpiece audio path executed");
+            for (int i = 0; i < 3; i++) {
+                voiceTrack.write(tone, 0, tone.length);
+            }
 
-            logLabelValue(
-                    "Note",
-                    r.silenceDetected
-                            ? "Audio path active but detected at very low level. This may occur due to call routing isolation or aggressive noise suppression."
-                            : "Earpiece audio path detected successfully."
-);
+            logOk("Earpiece voice session active.");
+            logOk("Test tone routed through earpiece path.");
 
-askUserEarpieceConfirmationLoop();
+            // ====================================================
+            // USER CONFIRMATION (LOOP TONE HANDLED THERE)
+            // ====================================================
+            askUserEarpieceConfirmationLoop();
+            return;
 
         } catch (Throwable t) {
-            logError("LAB 3 failed");
+            logError("LAB 3 failed: audio routing error.");
         } finally {
 
             // ====================================================
-            // RESTORE ORIGINAL AUDIO STATE
+            // CLEANUP
             // ====================================================
+            try {
+                if (voiceTrack != null) {
+                    voiceTrack.stop();
+                    voiceTrack.release();
+                }
+            } catch (Throwable ignore) {}
+
             try {
                 if (am != null) {
                     am.setMicrophoneMute(oldMicMute);
@@ -2363,15 +2380,19 @@ askUserEarpieceConfirmationLoop();
                 }
             } catch (Throwable ignore) {}
 
-            // ====================================================
-            // FINALIZE LAB
-            // ====================================================
-            logOk("Lab 3 finished.");
-            logLine();
-            enableSingleExportButton();
+            gotoFinalize();
         }
 
     }).start();
+}
+
+// ============================================================
+// FINALIZE (SINGLE EXIT)
+// ============================================================
+private void gotoFinalize() {
+    logOk("Lab 3 finished.");
+    logLine();
+    enableSingleExportButton();
 }
 
 /* ============================================================
@@ -2475,10 +2496,18 @@ enableSingleExportButton();
 
 /* ============================================================
    LAB 6 — Display / Touch Basic Inspection (manual)
+   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
    ============================================================ */
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
+
+        // ==========================
+        // TTS STATE (LOCAL)
+        // ==========================
+        final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsReady = {false};
+        final boolean[] ttsMuted = {false};
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2507,11 +2536,24 @@ private void lab6DisplayTouch() {
         root.addView(title);
 
         TextView msg = new TextView(this);
-        msg.setText("Touch all dots on the screen to complete the test.");
+        msg.setText(
+                "Touch all dots on the screen to complete the test.\n\n" +
+                "All screen areas must respond to touch input."
+        );
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
+
+        // ==========================
+        // 🔕 MUTE TOGGLE
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
 
         Button start = new Button(this);
         start.setText("START TEST");
@@ -2524,16 +2566,60 @@ private void lab6DisplayTouch() {
         startBg.setStroke(dp(3), 0xFFFFD700);
         start.setBackground(startBg);
 
+        root.addView(start);
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+        d.show();
+
+        // ==========================
+        // TTS INIT — SPEAK IMMEDIATELY
+        // ==========================
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int res = tts[0].setLanguage(Locale.US);
+                ttsReady[0] =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+                if (ttsReady[0] && !ttsMuted[0]) {
+                    tts[0].speak(
+                            "Touch all dots on the screen to complete the test.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB6_INTRO"
+                    );
+                }
+            }
+        });
+
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
+            if (checked && tts[0] != null) {
+                tts[0].stop();
+            }
+        });
+
         start.setOnClickListener(v -> {
+
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+            }
+
+            d.dismiss();
+
             startActivityForResult(
                     new Intent(this, TouchGridTestActivity.class),
                     6006
             );
         });
-
-        root.addView(start);
-        b.setView(root);
-        b.show();
     });
 }
 

@@ -666,7 +666,7 @@ private String ipToStr(int ip) {
 }
 
 // ============================================================
-// LAB 3 — User Confirmation Dialog (Earpiece) — FINAL
+// LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
 private void askUserEarpieceConfirmationLoop() {
 
@@ -676,7 +676,7 @@ private void askUserEarpieceConfirmationLoop() {
         lab3WaitingUser = true;
 
         // ==========================
-        // LOOP TONE (EARPIECE — VOICE CALL ONLY)
+        // LOOP TONE (VOICE CALL ONLY)
         // ==========================
         lab3Tone = new ToneGenerator(
                 AudioManager.STREAM_VOICE_CALL,
@@ -684,15 +684,15 @@ private void askUserEarpieceConfirmationLoop() {
         );
 
         new Thread(() -> {
-            while (lab3WaitingUser && lab3Tone != null) {
-                try {
+            try {
+                while (lab3WaitingUser && lab3Tone != null) {
                     lab3Tone.startTone(
                             ToneGenerator.TONE_DTMF_1,
                             800
                     );
                     SystemClock.sleep(1000);
-                } catch (Throwable ignore) {}
-            }
+                }
+            } catch (Throwable ignore) {}
         }).start();
 
         AlertDialog.Builder b =
@@ -702,9 +702,6 @@ private void askUserEarpieceConfirmationLoop() {
                 );
         b.setCancelable(false);
 
-        // ============================================================
-        // GEL DARK + GOLD POPUP (LAB 3)
-        // ============================================================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -739,7 +736,6 @@ private void askUserEarpieceConfirmationLoop() {
         btnRow.setGravity(Gravity.CENTER);
         btnRow.setPadding(0, dp(16), 0, 0);
 
-        // NO BUTTON
         Button noBtn = new Button(this);
         noBtn.setText("NO");
         noBtn.setAllCaps(false);
@@ -751,7 +747,6 @@ private void askUserEarpieceConfirmationLoop() {
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
 
-        // YES BUTTON
         Button yesBtn = new Button(this);
         yesBtn.setText("YES");
         yesBtn.setAllCaps(false);
@@ -783,49 +778,35 @@ private void askUserEarpieceConfirmationLoop() {
             );
         }
 
-        // ==========================
-        // BUTTON LOGIC — CLEAN EXIT
-        // ==========================
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
-            SystemClock.sleep(120);
             restoreLab3Audio();
+
             logOk("User confirmed earpiece audio was audible.");
+            logOk("Lab 3 finished.");
+            logLine();
+            enableSingleExportButton();
+
             d.dismiss();
         });
 
         noBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
-            SystemClock.sleep(120);
             restoreLab3Audio();
+
             logError("User did NOT hear audio from earpiece.");
             logWarn("Possible earpiece / routing / hardware issue detected.");
+            logOk("Lab 3 finished.");
+            logLine();
+            enableSingleExportButton();
+
             d.dismiss();
         });
 
         d.show();
     });
-}
-
-// ============================================================
-// LAB 3 — AUDIO RESTORE (FULL CLEANUP)
-// ============================================================
-private void restoreLab3Audio() {
-    try {
-        AudioManager am =
-                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            am.stopBluetoothSco();
-            am.setBluetoothScoOn(false);
-            am.setSpeakerphoneOn(false);
-
-            am.setMicrophoneMute(false);
-            am.setMode(lab3OldMode);
-            am.setSpeakerphoneOn(lab3OldSpeaker);
-        }
-    } catch (Throwable ignore) {}
 }
 
 // ============================================================
@@ -847,6 +828,18 @@ private volatile boolean lab3WaitingUser = false;
 private ToneGenerator lab3Tone;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
+
+private void restoreLab3Audio() {
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            am.setMicrophoneMute(false);
+            am.setMode(lab3OldMode);
+            am.setSpeakerphoneOn(lab3OldSpeaker);
+        }
+    } catch (Throwable ignore) {}
+}
 
 // ============================================================
 // LAB 3 — Tone stop helper
@@ -2289,11 +2282,6 @@ private void lab3EarpieceManual() {
     new Thread(() -> {
 
         AudioManager am = null;
-        AudioTrack voiceTrack = null;
-
-        int oldMode = AudioManager.MODE_NORMAL;
-        boolean oldSpeaker = false;
-        boolean oldMicMute = false;
 
         try {
             am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -2303,18 +2291,13 @@ private void lab3EarpieceManual() {
             }
 
             // ====================================================
-            // SAVE CURRENT AUDIO STATE
+            // SAVE CURRENT AUDIO STATE (FOR HELPERS)
             // ====================================================
-            oldMode = am.getMode();
-            oldSpeaker = am.isSpeakerphoneOn();
-            oldMicMute = am.isMicrophoneMute();
-
-            // κρατάμε για restore ΑΡΓΟΤΕΡΑ (helpers)
-            lab3OldMode = oldMode;
-            lab3OldSpeaker = oldSpeaker;
+            lab3OldMode = am.getMode();
+            lab3OldSpeaker = am.isSpeakerphoneOn();
 
             // ====================================================
-            // HARD LOCK — EARPIECE ONLY
+            // HARD LOCK — EARPIECE ONLY (NO AUDIO PLAY HERE)
             // ====================================================
             am.stopBluetoothSco();
             am.setBluetoothScoOn(false);
@@ -2324,45 +2307,10 @@ private void lab3EarpieceManual() {
 
             SystemClock.sleep(300); // routing settle
 
-            // ====================================================
-            // FORCE VOICE CALL AUDIO SESSION
-            // ====================================================
-            int sampleRate = 8000;
-            int bufSize = AudioTrack.getMinBufferSize(
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT
-            );
-
-            voiceTrack = new AudioTrack(
-                    AudioManager.STREAM_VOICE_CALL,
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufSize,
-                    AudioTrack.MODE_STREAM
-            );
-
-            voiceTrack.play();
+            logOk("Earpiece audio routing prepared.");
 
             // ====================================================
-            // PLAY TEST TONE (220Hz — LOW AMP)
-            // ====================================================
-            short[] tone = new short[sampleRate];
-            for (int i = 0; i < tone.length; i++) {
-                tone[i] = (short)
-                        (Math.sin(2 * Math.PI * 220 * i / sampleRate) * 1200);
-            }
-
-            for (int i = 0; i < 3; i++) {
-                voiceTrack.write(tone, 0, tone.length);
-            }
-
-            logOk("Earpiece voice session active.");
-            logOk("Test tone routed through earpiece path.");
-
-            // ====================================================
-            // USER CONFIRMATION (NO CLEANUP HERE)
+            // USER CONFIRMATION (ALL AUDIO LOGIC INSIDE)
             // ====================================================
             runOnUiThread(this::askUserEarpieceConfirmationLoop);
 

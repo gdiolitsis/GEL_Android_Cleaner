@@ -1,6 +1,7 @@
 package com.gel.cleaner;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -14,6 +15,7 @@ import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -32,13 +34,13 @@ public class ProximityCheckActivity extends Activity
     // ==========================
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private boolean ttsMuted = false;
 
     private SensorManager sensorManager;
     private Sensor proximity;
 
     private boolean initialRead = false;
     private float initialValue = 0f;
-
     private boolean loggedFinish = false;
 
     @Override
@@ -47,6 +49,10 @@ public class ProximityCheckActivity extends Activity
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        SharedPreferences prefs =
+                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        ttsMuted = prefs.getBoolean("lab8_tts_muted", false);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
@@ -72,8 +78,37 @@ public class ProximityCheckActivity extends Activity
                         FrameLayout.LayoutParams.WRAP_CONTENT
                 );
         infoLp.gravity = Gravity.CENTER;
-
         root.addView(info, infoLp);
+
+        // ==========================
+        // 🔇 MUTE TOGGLE
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setText("Mute voice");
+        muteBox.setTextColor(Color.WHITE);
+        muteBox.setChecked(ttsMuted);
+
+        FrameLayout.LayoutParams muteLp =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+        muteLp.gravity = Gravity.TOP | Gravity.END;
+        muteLp.topMargin = dp(12);
+        muteLp.rightMargin = dp(12);
+        muteBox.setLayoutParams(muteLp);
+
+        muteBox.setOnCheckedChangeListener((b, checked) -> {
+            ttsMuted = checked;
+            prefs.edit()
+                    .putBoolean("lab8_tts_muted", checked)
+                    .apply();
+            if (checked && tts != null) {
+                tts.stop();
+            }
+        });
+
+        root.addView(muteBox);
 
         Button end = new Button(this);
         end.setText("END TEST");
@@ -105,11 +140,9 @@ public class ProximityCheckActivity extends Activity
                 loggedFinish = true;
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
-
                 GELServiceLog.warn("Proximity test was cancelled by user.");
                 GELServiceLog.warn("No proximity state change was detected during the test.");
-                GELServiceLog.ok("Manual re-test recommended to confirm sensor behavior.");
-
+                GELServiceLog.ok("Manual re-test recommended.");
                 GELServiceLog.ok("Lab 8 finished.");
                 GELServiceLog.addLine(null);
             }
@@ -131,7 +164,7 @@ public class ProximityCheckActivity extends Activity
                         res != TextToSpeech.LANG_MISSING_DATA &&
                         res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-                if (ttsReady) {
+                if (ttsReady && !ttsMuted) {
                     tts.speak(
                             "Place your hand over the front sensor near the earpiece.",
                             TextToSpeech.QUEUE_FLUSH,
@@ -190,11 +223,9 @@ public class ProximityCheckActivity extends Activity
                 loggedFinish = true;
 
                 GELServiceLog.section("LAB 8 — Proximity Sensor");
-
                 GELServiceLog.ok("Proximity sensor state change detected.");
-                GELServiceLog.ok("Near/Far response confirmed during manual interaction.");
+                GELServiceLog.ok("Near/Far response confirmed.");
                 GELServiceLog.ok("Front proximity sensing path responding normally.");
-
                 GELServiceLog.ok("Lab 8 finished.");
                 GELServiceLog.addLine(null);
             }

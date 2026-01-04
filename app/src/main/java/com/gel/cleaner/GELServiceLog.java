@@ -102,4 +102,14 @@ public static synchronized void section(String title) {
     public static synchronized boolean isEmpty() {
         return LOG.length() == 0;
     }
+
+    // ============================================================
+    // BACKWARD-COMPATIBILITY ALIASES (DO NOT REMOVE)
+    // ============================================================
+    public static void logInfo(String msg)  { info(msg); }
+    public static void logOk(String msg)    { ok(msg); }
+    public static void logWarn(String msg)  { warn(msg); }
+    public static void logError(String msg) { error(msg); }
+    public static void logLine()            { addLine(null); }
+
 }

@@ -493,6 +493,12 @@ root.addView(btnExport);
 scroll.addView(root);
 setContentView(scroll);
 
+// ============================================================
+// LAB 3 — LOAD VOICE MUTE STATE
+// ============================================================
+SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+lab3TtsMuted = p.getBoolean("lab3_tts_muted", false);
+
 // ==========================
 // TEXT TO SPEECH INIT
 // ==========================
@@ -670,8 +676,35 @@ private void askUserEarpieceConfirmationLoop() {
 
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
-       
-        // 🔊 Loop tone μέχρι YES / NO
+
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        if (am != null) {
+            // SAVE OLD STATE
+            lab3OldMode = am.getMode();
+            lab3OldSpeaker = am.isSpeakerphoneOn();
+
+            // FORCE EARPIECE
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            am.setSpeakerphoneOn(false);
+        }
+
+        // ==========================
+        // VOICE PROMPT (EARPIECE)
+        // ==========================
+        if (!lab3TtsMuted && ttsReady && tts != null) {
+    tts.speak(
+        "Put the phone at your ear. Did you hear the sound from the earpiece?",
+        TextToSpeech.QUEUE_FLUSH,
+        null,
+        "LAB3_PROMPT"
+    );
+}
+
+        // ==========================
+        // LOOP TONE (EARPIECE)
+        // ==========================
         lab3Tone = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
 
         new Thread(() -> {
@@ -693,19 +726,18 @@ private void askUserEarpieceConfirmationLoop() {
         b.setCancelable(false);
 
         // ============================================================
-        // GEL DARK + GOLD POPUP (LAB 3 CONFIRMATION)
+        // GEL DARK + GOLD POPUP (LAB 3)
         // ============================================================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);           // GEL dark
+        bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);   // GOLD border
+        bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
-        // TITLE
         TextView title = new TextView(this);
         title.setText("LAB 3 — Confirmation");
         title.setTextColor(0xFFFFFFFF);
@@ -715,7 +747,6 @@ private void askUserEarpieceConfirmationLoop() {
         title.setPadding(0, 0, 0, dp(12));
         root.addView(title);
 
-        // MESSAGE
         TextView msg = new TextView(this);
         msg.setText(
                 "Put the phone at your ear.\n\n" +
@@ -725,14 +756,43 @@ private void askUserEarpieceConfirmationLoop() {
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
+        
+// =====================
+// 🔇 MUTE VOICE TOGGLE
+// =====================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setChecked(lab3TtsMuted);
+muteBox.setPadding(0, dp(10), 0, dp(6));
+muteBox.setGravity(Gravity.CENTER);
 
-        // BUTTON ROW
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+    lab3TtsMuted = checked;
+
+    // αποθήκευση
+    SharedPreferences p =
+            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+    p.edit()
+     .putBoolean("lab3_tts_muted", checked)
+     .apply();
+
+    // άμεσο κόψιμο φωνής αν γίνει mute
+    if (checked && tts != null) {
+        tts.stop();
+    }
+});
+
+root.addView(muteBox);
+
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER);
         btnRow.setPadding(0, dp(16), 0, 0);
 
-        // NO BUTTON — ΚΟΚΚΙΝΟ + ΧΡΥΣΟ
+        // NO BUTTON — RED + GOLD
         Button noBtn = new Button(this);
         noBtn.setText("NO");
         noBtn.setAllCaps(false);
@@ -744,7 +804,7 @@ private void askUserEarpieceConfirmationLoop() {
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
 
-        // YES BUTTON — NEON ΠΡΑΣΙΝΟ + ΧΡΥΣΟ
+        // YES BUTTON — GREEN + GOLD
         Button yesBtn = new Button(this);
         yesBtn.setText("YES");
         yesBtn.setAllCaps(false);
@@ -776,10 +836,13 @@ private void askUserEarpieceConfirmationLoop() {
             );
         }
 
+        // ==========================
         // BUTTON LOGIC
+        // ==========================
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
+            restoreLab3Audio();
             logOk("User confirmed earpiece audio was audible.");
             d.dismiss();
         });
@@ -787,6 +850,7 @@ private void askUserEarpieceConfirmationLoop() {
         noBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             stopLab3Tone();
+            restoreLab3Audio();
             logError("User did NOT hear audio from earpiece.");
             logWarn("Possible earpiece / routing / hardware issue detected.");
             d.dismiss();
@@ -796,21 +860,29 @@ private void askUserEarpieceConfirmationLoop() {
     });
 }
 
+// ============================================================
+// LAB 3 — AUDIO RESTORE
+// ============================================================
+private void restoreLab3Audio() {
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            am.setMode(lab3OldMode);
+            am.setSpeakerphoneOn(lab3OldSpeaker);
+        }
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
+// LIFECYCLE
+// ============================================================
 @Override
 protected void onPause() {
     super.onPause();
     lab3WaitingUser = false;
     stopLab3Tone();
-}
-
-private void stopLab3Tone() {
-    try {
-        if (lab3Tone != null) {
-            lab3Tone.stopTone();
-            lab3Tone.release();
-        }
-    } catch (Throwable ignore) {}
-    lab3Tone = null;
+    restoreLab3Audio();
 }
 
 @Override
@@ -829,6 +901,13 @@ protected void onDestroy() {
 // ============================================================
 private volatile boolean lab3WaitingUser = false;
 private ToneGenerator lab3Tone;
+private int lab3OldMode = AudioManager.MODE_NORMAL;
+private boolean lab3OldSpeaker = false;
+
+// ==========================
+// TTS CONTROL
+// ==========================
+private boolean lab3TtsMuted = false;
 
 // ==========================
 // TEXT TO SPEECH (GLOBAL)

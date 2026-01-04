@@ -1521,6 +1521,16 @@ private String formatTemp(float temp) {
     return String.format(Locale.US, "%.1f°C", temp);
 }
 
+// ------------------------------------------------------------
+// HTML / LOG SAFE ESCAPE
+// ------------------------------------------------------------
+private String escape(String s) {
+    if (s == null) return "";
+    return s.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+}
+
 // ============================================================
 // LAB 16 — INTERNAL + PERIPHERALS THERMAL HELPERS
 // GEL LOCKED • HUMAN-READABLE • COMPACT MODE

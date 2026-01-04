@@ -675,38 +675,13 @@ private void askUserEarpieceConfirmationLoop() {
         if (lab3WaitingUser) return;
         lab3WaitingUser = true;
 
-        private void playLab3EarpieceTones() {
-
-    new Thread(() -> {
-
-        ToneGenerator tg = null;
-
-        try {
-            tg = new ToneGenerator(
-                    AudioManager.STREAM_VOICE_CALL,
-                    80
-            );
-
-            for (int i = 0; i < 3; i++) {
-
-                tg.startTone(
-                        ToneGenerator.TONE_DTMF_1,
-                        800
-                );
-
-                SystemClock.sleep(2000); // 2 sec gap
-            }
-
-        } catch (Throwable ignore) {
-
-        } finally {
-            try {
-                if (tg != null) tg.release();
-            } catch (Throwable ignore) {}
-        }
-
-    }).start();
-}
+        // ==========================
+        // LOOP TONE — LIMITED (3 tones handled elsewhere)
+        // ==========================
+        lab3Tone = new ToneGenerator(
+                AudioManager.STREAM_VOICE_CALL,
+                80
+        );
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -715,6 +690,9 @@ private void askUserEarpieceConfirmationLoop() {
                 );
         b.setCancelable(false);
 
+        // ============================================================
+        // GEL DARK + GOLD POPUP
+        // ============================================================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -795,12 +773,9 @@ private void askUserEarpieceConfirmationLoop() {
             lab3WaitingUser = false;
             stopLab3Tone();
             restoreLab3Audio();
-
             logOk("User confirmed earpiece audio was audible.");
             logOk("Lab 3 finished.");
             logLine();
-            enableSingleExportButton();
-
             d.dismiss();
         });
 
@@ -808,13 +783,10 @@ private void askUserEarpieceConfirmationLoop() {
             lab3WaitingUser = false;
             stopLab3Tone();
             restoreLab3Audio();
-
             logError("User did NOT hear audio from earpiece.");
             logWarn("Possible earpiece / routing / hardware issue detected.");
             logOk("Lab 3 finished.");
             logLine();
-            enableSingleExportButton();
-
             d.dismiss();
         });
 

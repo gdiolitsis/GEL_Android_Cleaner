@@ -2371,7 +2371,7 @@ private void lab3EarpieceManual() {
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
 
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            am.setMode(AudioManager.MODE_NORMAL);
             am.setSpeakerphoneOn(false);
 
             playEarpieceTestTone220Hz(900);

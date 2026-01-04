@@ -679,17 +679,15 @@ private void askUserEarpieceConfirmationLoop() {
         lab3WaitingUser = true;
 
         AudioManager am =
-                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-        if (am != null) {
-            // SAVE OLD STATE
-            lab3OldMode = am.getMode();
-            lab3OldSpeaker = am.isSpeakerphoneOn();
+if (am != null) {
+    lab3OldMode = am.getMode();
+    lab3OldSpeaker = am.isSpeakerphoneOn();
 
-            // FORCE EARPIECE
-            am.setMode(AudioManager.MODE_IN_CALL);
-            am.setSpeakerphoneOn(false);
-        }
+    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    am.setSpeakerphoneOn(false);   // 🔒 ΟΡΙΣΤΙΚΑ ΟΧΙ SPEAKER
+}
 
         // ==========================
         // VOICE PROMPT (EARPIECE)
@@ -869,7 +867,6 @@ private void restoreLab3Audio() {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
-            am.setMicrophoneMute(false); // ← ΥΠΟΧΡΕΩΤΙΚΟ
             am.setMode(lab3OldMode);
             am.setSpeakerphoneOn(lab3OldSpeaker);
         }
@@ -906,9 +903,9 @@ private ToneGenerator lab3Tone;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
-// ==========================
-// TTS CONTROL
-// ==========================
+/* ============================================================
+   LAB 3 — TTS CONTROL
+   ============================================================ */
 private boolean lab3TtsMuted = false;
 
 // ==========================
@@ -2360,17 +2357,21 @@ private void lab3EarpieceManual() {
         AudioManager am = null;
         int oldMode = AudioManager.MODE_NORMAL;
         boolean oldSpeaker = false;
+        boolean oldMicMute = false;
 
         try {
             am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am == null) {
                 logError("AudioManager unavailable");
+                logOk("Lab 3 finished.");
+                logLine();
                 enableSingleExportButton();
                 return;
             }
 
             oldMode = am.getMode();
             oldSpeaker = am.isSpeakerphoneOn();
+            oldMicMute = am.isMicrophoneMute();
 
             am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             am.setSpeakerphoneOn(false);
@@ -2398,22 +2399,23 @@ private void lab3EarpieceManual() {
             askUserEarpieceConfirmationLoop();
 
         } catch (Throwable t) {
-    logError("LAB 3 failed");
-} finally {
-    try {
-        if (am != null) {
-            am.setMode(oldMode);
-            am.setSpeakerphoneOn(oldSpeaker);
+            logError("LAB 3 failed");
+        } finally {
+            try {
+                if (am != null) {
+                    am.setMicrophoneMute(oldMicMute);
+                    am.setMode(oldMode);
+                    am.setSpeakerphoneOn(oldSpeaker);
+                }
+            } catch (Throwable ignore) {}
+
+            // ✅ ΤΟ LAB ΤΕΛΕΙΩΝΕΙ ΕΔΩ – ΟΧΙ ΑΠΕΞΩ
+            logOk("Lab 3 finished.");
+            logLine();
+            enableSingleExportButton();
         }
-    } catch (Throwable ignore) {}
 
-    // ✅ ΤΟ LAB ΤΕΛΕΙΩΝΕΙ ΕΔΩ – ΟΧΙ ΑΠΕΞΩ
-    logOk("Lab 3 finished.");
-    logLine();
-    enableSingleExportButton();
-}
-
-}).start();
+    }).start();
 }
 
 /* ============================================================

@@ -2612,18 +2612,23 @@ private void lab6DisplayTouch() {
 
         start.setOnClickListener(v -> {
 
-    if (tts[0] != null) {
-        tts[0].stop();
-        tts[0].shutdown();
-    }
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+            }
 
-    d.dismiss();
+            d.dismiss();
 
-    startActivityForResult(
-            new Intent(ManualTestsActivity.this, TouchGridTestActivity.class),
-            6006
-    });
-    });
+            startActivityForResult(
+                    new Intent(
+                            ManualTestsActivity.this,
+                            TouchGridTestActivity.class
+                    ),
+                    6006
+            );
+        });
+
+    }); // ✅ ΚΛΕΙΣΙΜΟ runOnUiThread
 }
 
 /* ============================================================

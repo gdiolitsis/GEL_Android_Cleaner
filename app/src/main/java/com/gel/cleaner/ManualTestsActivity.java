@@ -5235,6 +5235,7 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
     logOk("LAB 21 finished.");
     logLine();
     lab21Running = false;
+    }
 }
 
 // ============================================================

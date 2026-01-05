@@ -2742,7 +2742,7 @@ private void lab7RotationManual() {
             d.dismiss();
 
             startActivityForResult(
-                    new Intent(this, RotationTestActivity.class),
+                    new Intent(this, RotationCheckActivity.class)
                     7007
             );
         });
@@ -2855,7 +2855,7 @@ private void lab8ProximityCall() {
             d.dismiss();
 
             startActivityForResult(
-                    new Intent(this, ProximityTestActivity.class),
+                    new Intent(this, ProximityCheckctivity.class),
                     8008
             );
         });

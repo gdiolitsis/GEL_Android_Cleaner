@@ -2263,7 +2263,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED / CLEAN)
+   LAB 3 — Earpiece Audio Path Check (CORE ONLY)
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2273,236 +2273,34 @@ private void lab3EarpieceManual() {
 
     new Thread(() -> {
 
-        AudioManager am = null;
-
-        try {
-            am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am == null) {
-                logError("AudioManager unavailable.");
-                return;
-            }
-
-// ============================================================
-// LAB 3 — STATE (CLASS LEVEL)
-// ============================================================
-private volatile boolean lab3WaitingUser = false;
-private int lab3OldMode = AudioManager.MODE_NORMAL;
-private boolean lab3OldSpeaker = false;
-
-
-// ============================================================
-// LAB 3 — Earpiece Audio Path Check (FINAL / LOCKED / CLEAN)
-// ============================================================
-private void lab3EarpieceManual() {
-
-    logLine();
-    logSection("LAB 3 — Earpiece Audio Path Check");
-    logLine();
-
-    new Thread(() -> {
-
-        AudioManager am;
-
-        try {
-            am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am == null) {
-                logError("AudioManager unavailable.");
-                return;
-            }
-
-            // ----------------------------------------------------
-            // SAVE AUDIO STATE
-            // ----------------------------------------------------
-            lab3OldMode = am.getMode();
-            lab3OldSpeaker = am.isSpeakerphoneOn();
-
-            // ----------------------------------------------------
-            // HARD LOCK — EARPIECE ONLY
-            // ----------------------------------------------------
-            am.stopBluetoothSco();
-            am.setBluetoothScoOn(false);
-            am.setSpeakerphoneOn(false);
-            am.setMicrophoneMute(true);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-
-            SystemClock.sleep(300); // routing settle
-
-            // ----------------------------------------------------
-            // PLAY 3 EARPIECE TONES (NO LOOP)
-            // ----------------------------------------------------
-            playLab3EarpieceTones();
-
-            // ----------------------------------------------------
-            // USER CONFIRMATION
-            // ----------------------------------------------------
-            runOnUiThread(this::askUserEarpieceConfirmation);
-
-        } catch (Throwable t) {
-            logError("LAB 3 failed: audio routing error.");
-        }
-
-    }).start();
-}
-
-
-// ============================================================
-// LAB 3 — PLAY 3 EARPIECE TONES (NO LOOP)
-// ============================================================
-private void playLab3EarpieceTones() {
-
-    new Thread(() -> {
-        ToneGenerator tg = null;
-
-        try {
-            tg = new ToneGenerator(
-                    AudioManager.STREAM_VOICE_CALL,
-                    80
-            );
-
-            for (int i = 0; i < 3; i++) {
-                tg.startTone(ToneGenerator.TONE_DTMF_1, 600);
-                SystemClock.sleep(2000);
-            }
-
-        } catch (Throwable ignore) {
-        } finally {
-            if (tg != null) {
-                try { tg.release(); } catch (Throwable ignore) {}
-            }
-        }
-    }).start();
-}
-
-
-// ============================================================
-// LAB 3 — USER CONFIRMATION POPUP
-// ============================================================
-private void askUserEarpieceConfirmation() {
-
-    if (lab3WaitingUser) return;
-    lab3WaitingUser = true;
-
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    ManualTestsActivity.this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-    b.setCancelable(false);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);
-    root.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("LAB 3 — Confirmation");
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-    root.addView(title);
-
-    TextView msg = new TextView(this);
-    msg.setText(
-            "Put the phone at your ear.\n\n" +
-            "Did you hear the sound clearly from the earpiece?"
-    );
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    root.addView(msg);
-
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
-    btnRow.setPadding(0, dp(16), 0, 0);
-
-    Button noBtn = new Button(this);
-    noBtn.setText("NO");
-    noBtn.setAllCaps(false);
-    noBtn.setTextColor(0xFFFFFFFF);
-
-    GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFF8B0000);
-    noBg.setCornerRadius(dp(14));
-    noBg.setStroke(dp(3), 0xFFFFD700);
-    noBtn.setBackground(noBg);
-
-    Button yesBtn = new Button(this);
-    yesBtn.setText("YES");
-    yesBtn.setAllCaps(false);
-    yesBtn.setTextColor(0xFFFFFFFF);
-
-    GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF39FF14);
-    yesBg.setCornerRadius(dp(14));
-    yesBg.setStroke(dp(3), 0xFFFFD700);
-    yesBtn.setBackground(yesBg);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-    lp.setMargins(dp(12), 0, dp(12), 0);
-
-    btnRow.addView(noBtn, lp);
-    btnRow.addView(yesBtn, lp);
-    root.addView(btnRow);
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-
-    yesBtn.setOnClickListener(v -> {
-        lab3WaitingUser = false;
-        restoreLab3Audio();
-        logOk("User confirmed earpiece audio was audible.");
-        logOk("Lab 3 finished.");
-        logLine();
-        enableSingleExportButton();
-        d.dismiss();
-    });
-
-    noBtn.setOnClickListener(v -> {
-        lab3WaitingUser = false;
-        restoreLab3Audio();
-        logError("User did NOT hear audio from earpiece.");
-        logWarn("Possible earpiece or routing issue detected.");
-        logOk("Lab 3 finished.");
-        logLine();
-        enableSingleExportButton();
-        d.dismiss();
-    });
-
-    d.show();
-}
-
-
-// ============================================================
-// LAB 3 — RESTORE AUDIO (HELPER)
-// ============================================================
-private void restoreLab3Audio() {
-    try {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            am.setMicrophoneMute(false);
-            am.setSpeakerphoneOn(lab3OldSpeaker);
-            am.setMode(lab3OldMode);
+
+        if (am == null) {
+            logError("AudioManager unavailable.");
+            return;
         }
-    } catch (Throwable ignore) {}
+
+        // SAVE STATE
+        lab3OldMode = am.getMode();
+        lab3OldSpeaker = am.isSpeakerphoneOn();
+
+        // HARD LOCK — EARPIECE ONLY
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMicrophoneMute(true);
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+
+        SystemClock.sleep(300);
+
+        // PLAY 3 TONES (NO LOOP)
+        playLab3EarpieceTones();
+
+        // ASK USER (helper)
+        runOnUiThread(this::askUserEarpieceConfirmation);
+
+    }).start();
 }
 
 /* ============================================================

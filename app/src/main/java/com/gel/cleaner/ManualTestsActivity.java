@@ -677,6 +677,8 @@ private String ipToStr(int ip) {
 // ============================================================
 private void askUserEarpieceConfirmation() {
 
+    final AlertDialog[] dialog = new AlertDialog[1];   // 👈 ΑΥΤΟ ΠΡΟΣΘΕΤΕΙΣ
+
     runOnUiThread(() -> {
 
         if (lab3WaitingUser) return;
@@ -688,6 +690,18 @@ private void askUserEarpieceConfirmation() {
                 android.R.style.Theme_Material_Dialog_NoActionBar
         );
 b.setCancelable(false);
+
+b.setView(root);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+d.show();
 
         // ============================================================
         // GEL DARK + GOLD POPUP
@@ -2473,16 +2487,6 @@ private void lab6DisplayTouch() {
         start.setBackground(startBg);
 
         root.addView(start);
-
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
-        d.show();
 
         // ==========================
         // TTS INIT — SPEAK IMMEDIATELY

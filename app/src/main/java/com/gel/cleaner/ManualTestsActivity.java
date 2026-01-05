@@ -19,6 +19,7 @@ package com.gel.cleaner;
 // ============================================================
 // ANDROID — CORE
 // ============================================================
+
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.content.res.ColorStateList;
@@ -782,6 +783,38 @@ private void restoreLab3Audio() {
             am.setSpeakerphoneOn(lab3OldSpeaker);
         }
     } catch (Throwable ignore) {}
+}
+
+private void playEarpieceBeep() {
+
+    int sampleRate = 8000;
+    int durationMs = 400;
+    int samples = sampleRate * durationMs / 1000;
+
+    short[] buffer = new short[samples];
+    double freq = 1000.0;
+
+    for (int i = 0; i < samples; i++) {
+        buffer[i] = (short)
+                (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
+    }
+
+    AudioTrack track = new AudioTrack(
+            AudioManager.STREAM_VOICE_CALL,
+            sampleRate,
+            AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            buffer.length * 2,
+            AudioTrack.MODE_STATIC
+    );
+
+    track.write(buffer, 0, buffer.length);
+    track.play();
+
+    SystemClock.sleep(durationMs + 100);
+
+    track.stop();
+    track.release();
 }
 
 // ============================================================

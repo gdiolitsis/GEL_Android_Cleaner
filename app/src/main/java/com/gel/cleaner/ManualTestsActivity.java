@@ -2363,9 +2363,9 @@ enableSingleExportButton();
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
-    	
-    SharedPreferences prefs =
-        getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+        SharedPreferences prefs =
+                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
         // ==========================
         // TTS STATE (LOCAL)
@@ -2373,8 +2373,8 @@ private void lab6DisplayTouch() {
         final TextToSpeech[] tts = new TextToSpeech[1];
         final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
-        prefs.getBoolean("lab6_tts_muted", false)
-};
+                prefs.getBoolean("lab6_tts_muted", false)
+        };
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2383,6 +2383,9 @@ private void lab6DisplayTouch() {
                 );
         b.setCancelable(false);
 
+        // ==========================
+        // UI ROOT
+        // ==========================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -2458,26 +2461,45 @@ private void lab6DisplayTouch() {
         });
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
 
-    ttsMuted[0] = checked;
+            prefs.edit()
+                    .putBoolean("lab6_tts_muted", checked)
+                    .apply();
 
-    prefs.edit()
-         .putBoolean("lab6_tts_muted", checked)
-         .apply();
+            if (checked && tts[0] != null) {
+                tts[0].stop();
+            }
+        });
 
-    if (checked && tts[0] != null) {
-        tts[0].stop();
-    }
-});
+        // ==========================
+        // DIALOG CREATE / SHOW
+        // ==========================
+        b.setView(root);
 
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+        d.show();
+
+        // ==========================
+        // START BUTTON
+        // ==========================
         start.setOnClickListener(v -> {
 
             if (tts[0] != null) {
-                tts[0].stop();
-                tts[0].shutdown();
+                try {
+                    tts[0].stop();
+                    tts[0].shutdown();
+                } catch (Throwable ignore) {}
             }
 
-            d.dismiss();
+            try {
+                if (d.isShowing()) d.dismiss();
+            } catch (Throwable ignore) {}
 
             startActivityForResult(
                     new Intent(
@@ -2488,7 +2510,7 @@ private void lab6DisplayTouch() {
             );
         });
 
-    }); // ✅ ΚΛΕΙΣΙΜΟ runOnUiThread
+    }); // end runOnUiThread
 }
 
 /* ============================================================

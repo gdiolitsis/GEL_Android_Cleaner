@@ -2205,7 +2205,8 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check
+   LAB 3 — Earpiece Audio Path Check (MANUAL)
+   WORKSHOP ONLY — uses existing helpers
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2213,48 +2214,107 @@ private void lab3EarpieceManual() {
     logSection("LAB 3 — Earpiece Audio Path Check");
     logLine();
 
-    new Thread(() -> {
+    AudioManager am =
+            (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    if (am == null) {
+        logError("AudioManager unavailable.");
+        return;
+    }
 
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am == null) {
-            logError("AudioManager unavailable.");
-            return;
-        }
+    // SAVE STATE
+    lab3OldMode = am.getMode();
+    lab3OldSpeaker = am.isSpeakerphoneOn();
 
-        // SAVE STATE
-        lab3OldMode = am.getMode();
-        lab3OldSpeaker = am.isSpeakerphoneOn();
+    logInfo("Saving audio state.");
+    logInfo("Routing audio to earpiece.");
 
-        // FORCE EARPIECE
+    try {
         am.stopBluetoothSco();
         am.setBluetoothScoOn(false);
         am.setSpeakerphoneOn(false);
         am.setMicrophoneMute(true);
         am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    } catch (Throwable t) {
+        logError("Audio routing failed.");
+        restoreLab3Audio();
+        return;
+    }
 
-        SystemClock.sleep(300);
+    SystemClock.sleep(300);
 
-        // 🔊 PLAY 3 TONES (EARPIECE)
-        ToneGenerator tg = null;
-        try {
-            tg = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
+    // 👉 ΠΡΩΤΑ οδηγία στον χρήστη
+    runOnUiThread(() -> {
 
-            for (int i = 0; i < 3; i++) {
-                tg.startTone(ToneGenerator.TONE_DTMF_1, 600);
-                SystemClock.sleep(2000);
-            }
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-        } catch (Throwable ignore) {
-        } finally {
-            if (tg != null) {
-                try { tg.release(); } catch (Throwable ignore) {}
-            }
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView msg = new TextView(this);
+        msg.setText("Put the phone earpiece to your ear.\n\nPress OK to start.");
+        msg.setTextColor(0xFFFFFFFF);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        Button ok = new Button(this);
+        ok.setText("OK");
+        root.addView(ok);
+
+        b.setView(root);
+
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
 
-        // ASK USER
-        runOnUiThread(this::askUserEarpieceConfirmation);
+        ok.setOnClickListener(v -> {
+            d.dismiss();
 
-    }).start();
+            // 👉 ΜΕΤΑ παίζουν οι τόνοι
+            new Thread(() -> {
+                try {
+                    logInfo("Playing earpiece test tones.");
+
+                    lab3Tone = new ToneGenerator(
+                            AudioManager.STREAM_VOICE_CALL, 80
+                    );
+
+                    for (int i = 1; i <= 3; i++) {
+                        logInfo("Tone " + i + " / 3");
+                        lab3Tone.startTone(
+                                ToneGenerator.TONE_DTMF_1, 600
+                        );
+                        SystemClock.sleep(1800);
+                    }
+
+                    logOk("Earpiece tone test completed.");
+
+                } catch (Throwable t) {
+                    logError("Tone playback failed.");
+                } finally {
+                    stopLab3Tone();
+                    restoreLab3Audio();
+                    logOk("LAB 3 finished.");
+                }
+            }).start();
+        });
+
+        d.show();
+    });
 }
 
 /* ============================================================
@@ -7821,14 +7881,15 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
-        if (resultCode == RESULT_OK)
-            logOk("LAB 6 — Touch grid passed (all zones responsive)");
-        else
-            logError("LAB 6 — Touch grid failed (dead zone suspected)");
 
+        // ΜΗΝ ξαναγράφεις summary logs εδώ
+        // Τα αναλυτικά logs γράφτηκαν ήδη στο TouchGridTestActivity
+
+        refreshLogView();          // 👈 ΑΠΑΡΑΙΤΗΤΟ
         enableSingleExportButton();
         return;
     }
+}
 
     if (requestCode == 7007) { // LAB 7 — Rotation
         if (resultCode == RESULT_OK)

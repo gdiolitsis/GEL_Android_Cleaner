@@ -729,18 +729,27 @@ private void askUserEarpieceConfirmation() {
         }
 
         yesBtn.setOnClickListener(v -> {
-            lab3WaitingUser = false;
-            restoreLab3Audio();
-            logOk("Lab 3 finished.");
-            d.dismiss();
-        });
+    lab3WaitingUser = false;
 
-        noBtn.setOnClickListener(v -> {
-            lab3WaitingUser = false;
-            restoreLab3Audio();
-            logOk("Lab 3 finished.");
-            d.dismiss();
-        });
+    logOk("LAB 3 — Earpiece audio path OK.");
+    logOk("User confirmed sound was heard from earpiece.");
+    logOk("Lab 3 finished.");
+
+    restoreLab3Audio();
+    d.dismiss();
+});
+
+noBtn.setOnClickListener(v -> {
+    lab3WaitingUser = false;
+
+    logError("LAB 3 — Earpiece audio path FAILED.");
+    logWarn("User did NOT hear sound from earpiece.");
+    logWarn("Possible earpiece failure or audio routing issue.");
+    logOk("Lab 3 finished.");
+
+    restoreLab3Audio();
+    d.dismiss();
+});
 
         d.show();
     });
@@ -2206,7 +2215,7 @@ private void lab2SpeakerSweep() {
 
 /* ============================================================
    LAB 3 — Earpiece Audio Path Check (MANUAL)
-   WORKSHOP ONLY — uses existing helpers
+   FINAL — dialog → tones → confirmation
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2214,8 +2223,7 @@ private void lab3EarpieceManual() {
     logSection("LAB 3 — Earpiece Audio Path Check");
     logLine();
 
-    AudioManager am =
-            (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     if (am == null) {
         logError("AudioManager unavailable.");
         return;
@@ -2242,7 +2250,7 @@ private void lab3EarpieceManual() {
 
     SystemClock.sleep(300);
 
-    // 👉 ΠΡΩΤΑ οδηγία στον χρήστη
+    // 1️⃣ ΠΡΩΤΟ POPUP — ΟΔΗΓΙΑ
     runOnUiThread(() -> {
 
         AlertDialog.Builder b =
@@ -2269,46 +2277,46 @@ private void lab3EarpieceManual() {
         root.addView(msg);
 
         Button ok = new Button(this);
-        ok.setText("OK");
-        root.addView(ok);
+ok.setText("OK");
+ok.setAllCaps(false);
+ok.setTextColor(0xFFFFFFFF);
+
+// DARK GREEN BUTTON (GEL style)
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF0B5F3B);          // σκούρο πράσινο
+okBg.setCornerRadius(dp(14));
+okBg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+ok.setBackground(okBg);
+
+root.addView(ok);
 
         b.setView(root);
 
         final AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         ok.setOnClickListener(v -> {
             d.dismiss();
 
-            // 👉 ΜΕΤΑ παίζουν οι τόνοι
+            // 2️⃣ ΠΑΙΖΟΥΝ ΟΙ ΤΟΝΟΙ (ΑΚΟΥΣΤΙΚΟ)
             new Thread(() -> {
                 try {
                     logInfo("Playing earpiece test tones.");
 
-                    lab3Tone = new ToneGenerator(
-                            AudioManager.STREAM_VOICE_CALL, 80
-                    );
-
                     for (int i = 1; i <= 3; i++) {
                         logInfo("Tone " + i + " / 3");
-                        lab3Tone.startTone(
-                                ToneGenerator.TONE_DTMF_1, 600
-                        );
-                        SystemClock.sleep(1800);
+                        playEarpieceBeep();
+                        SystemClock.sleep(600);
                     }
 
-                    logOk("Earpiece tone test completed.");
+                    logOk("Tone playback completed.");
 
                 } catch (Throwable t) {
                     logError("Tone playback failed.");
                 } finally {
-                    stopLab3Tone();
-                    restoreLab3Audio();
-                    logOk("LAB 3 finished.");
+                    // 3️⃣ ΔΕΥΤΕΡΟ POPUP — YES / NO (ΥΠΑΡΧΟΝ HELPER)
+                    askUserEarpieceConfirmation();
                 }
             }).start();
         });
@@ -7881,6 +7889,10 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
+        // Τα logs γράφτηκαν ΜΕΣΑ στο TouchGridTestActivity
+        // Εδώ απλώς τα εμφανίζουμε στο main log view
+
+        logOk("LAB 6 — Display / Touch test completed.");
         enableSingleExportButton();
         return;
     }

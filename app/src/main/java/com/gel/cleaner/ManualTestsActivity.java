@@ -7945,8 +7945,8 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
 
-    int total = TouchGridTestActivity.getTotalZones();
-    int remaining = TouchGridTestActivity.getRemainingZones();
+        int total = TouchGridTestActivity.getTotalZones();
+        int remaining = TouchGridTestActivity.getRemainingZones();
 
     logLine();
     logSection("LAB 6 — Display / Touch");
@@ -7959,9 +7959,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logOk("No dead touch zones detected.");
 
     } else {
-
-        int total = TouchGridTestActivity.getTotalZones();
-        int remaining = TouchGridTestActivity.getRemainingZones();
 
         logWarn("Touch grid test incomplete.");
         logWarn(

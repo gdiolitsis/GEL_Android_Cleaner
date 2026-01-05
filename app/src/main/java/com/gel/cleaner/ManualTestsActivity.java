@@ -689,7 +689,7 @@ private void askUserEarpieceConfirmation() {
                 );
         b.setCancelable(false);
 
-        // ---------- ROOT ----------
+        // ---------- UI ----------
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -700,34 +700,25 @@ private void askUserEarpieceConfirmation() {
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
-        TextView title = new TextView(this);
-        title.setText("LAB 3 — Confirmation");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        root.addView(title);
-
         TextView msg = new TextView(this);
-        msg.setText("Did you hear the sound from the earpiece?");
-        msg.setTextColor(0xFFDDDDDD);
+        msg.setText("Put the phone at your ear.\n\nDid you hear the sound?");
+        msg.setTextColor(0xFFFFFFFF);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setGravity(Gravity.CENTER);
 
-        Button noBtn = new Button(this);
-        noBtn.setText("NO");
-
         Button yesBtn = new Button(this);
         yesBtn.setText("YES");
+
+        Button noBtn = new Button(this);
+        noBtn.setText("NO");
 
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
         root.addView(btnRow);
 
-        // ---------- DIALOG ----------
         b.setView(root);
 
         final AlertDialog d = b.create();
@@ -737,22 +728,17 @@ private void askUserEarpieceConfirmation() {
             );
         }
 
-        // ---------- BUTTONS ----------
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             restoreLab3Audio();
-            logOk("User confirmed earpiece audio.");
             logOk("Lab 3 finished.");
-            logLine();
             d.dismiss();
         });
 
         noBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
             restoreLab3Audio();
-            logError("User did NOT hear earpiece audio.");
             logOk("Lab 3 finished.");
-            logLine();
             d.dismiss();
         });
 

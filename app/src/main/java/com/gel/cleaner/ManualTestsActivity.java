@@ -680,7 +680,14 @@ private void askUserEarpieceConfirmation() {
     runOnUiThread(() -> {
 
         if (lab3WaitingUser) return;
-        lab3WaitingUser = true;        
+        lab3WaitingUser = true;   
+
+     AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                ManualTestsActivity.this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+b.setCancelable(false);
 
         // ============================================================
         // GEL DARK + GOLD POPUP

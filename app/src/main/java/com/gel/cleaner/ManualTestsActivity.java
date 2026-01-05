@@ -711,10 +711,30 @@ private void askUserEarpieceConfirmation() {
         btnRow.setGravity(Gravity.CENTER);
 
         Button yesBtn = new Button(this);
-        yesBtn.setText("YES");
+yesBtn.setText("YES");
+yesBtn.setAllCaps(false);
+yesBtn.setTextColor(0xFFFFFFFF);
 
-        Button noBtn = new Button(this);
-        noBtn.setText("NO");
+// YES — DARK GREEN
+GradientDrawable yesBg = new GradientDrawable();
+yesBg.setColor(0xFF0B5F3B);          // βαθύ πράσινο
+yesBg.setCornerRadius(dp(14));
+yesBg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+yesBtn.setBackground(yesBg);
+yesBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
+
+Button noBtn = new Button(this);
+noBtn.setText("NO");
+noBtn.setAllCaps(false);
+noBtn.setTextColor(0xFFFFFFFF);
+
+// NO — DARK RED
+GradientDrawable noBg = new GradientDrawable();
+noBg.setColor(0xFF8B0000);           // βαθύ κόκκινο
+noBg.setCornerRadius(dp(14));
+noBg.setStroke(dp(3), 0xFFFFD700);  // χρυσό περίγραμμα
+noBtn.setBackground(noBg);
+noBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
 
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
@@ -7922,10 +7942,8 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
-        // Τα logs γράφτηκαν ΜΕΣΑ στο TouchGridTestActivity
-        // Εδώ απλώς τα εμφανίζουμε στο main log view
-
-        logOk("LAB 6 — Display / Touch test completed.");
+        // Το LAB 6 γράφει ΜΟΝΟ ΤΟΥ το αποτέλεσμα (success / incomplete)
+        // ΕΔΩ ΔΕΝ ξαναγράφουμε verdict για να μην υπάρχουν διπλότυπα ή ψεύτικα OK
         enableSingleExportButton();
         return;
     }

@@ -7881,15 +7881,11 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
-
-        // ΜΗΝ ξαναγράφεις summary logs εδώ
         // Τα αναλυτικά logs γράφτηκαν ήδη στο TouchGridTestActivity
-
-        refreshLogView();          // 👈 ΑΠΑΡΑΙΤΗΤΟ
+        refreshLogView();
         enableSingleExportButton();
         return;
     }
-}
 
     if (requestCode == 7007) { // LAB 7 — Rotation
         if (resultCode == RESULT_OK)
@@ -7905,7 +7901,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         if (resultCode == RESULT_OK)
             logOk("LAB 8 — Proximity sensor responded correctly");
         else
-            logError("LAB 8 —  No proximity response detected");
+            logError("LAB 8 — No proximity response detected");
 
         enableSingleExportButton();
     }

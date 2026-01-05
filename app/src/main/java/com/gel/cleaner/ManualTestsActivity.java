@@ -677,35 +677,19 @@ private String ipToStr(int ip) {
 // ============================================================
 private void askUserEarpieceConfirmation() {
 
-    final AlertDialog[] dialog = new AlertDialog[1];   // 👈 ΑΥΤΟ ΠΡΟΣΘΕΤΕΙΣ
-
     runOnUiThread(() -> {
 
         if (lab3WaitingUser) return;
-        lab3WaitingUser = true;   
+        lab3WaitingUser = true;
 
-     AlertDialog.Builder b =
-        new AlertDialog.Builder(
-                ManualTestsActivity.this,
-                android.R.style.Theme_Material_Dialog_NoActionBar
-        );
-b.setCancelable(false);
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-b.setView(root);
-
-final AlertDialog d = b.create();
-
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-d.show();
-
-        // ============================================================
-        // GEL DARK + GOLD POPUP
-        // ============================================================
+        // ---------- ROOT ----------
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -722,62 +706,42 @@ d.show();
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
         root.addView(title);
 
         TextView msg = new TextView(this);
-        msg.setText(
-                "Put the phone at your ear.\n\n" +
-                "Did you hear the sound clearly from the earpiece?"
-        );
+        msg.setText("Did you hear the sound from the earpiece?");
         msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
         LinearLayout btnRow = new LinearLayout(this);
-        btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER);
-        btnRow.setPadding(0, dp(16), 0, 0);
 
         Button noBtn = new Button(this);
         noBtn.setText("NO");
-        noBtn.setAllCaps(false);
-        noBtn.setTextColor(0xFFFFFFFF);
-
-        GradientDrawable noBg = new GradientDrawable();
-        noBg.setColor(0xFF8B0000);
-        noBg.setCornerRadius(dp(14));
-        noBg.setStroke(dp(3), 0xFFFFD700);
-        noBtn.setBackground(noBg);
 
         Button yesBtn = new Button(this);
         yesBtn.setText("YES");
-        yesBtn.setAllCaps(false);
-        yesBtn.setTextColor(0xFFFFFFFF);
 
-        GradientDrawable yesBg = new GradientDrawable();
-        yesBg.setColor(0xFF39FF14);
-        yesBg.setCornerRadius(dp(14));
-        yesBg.setStroke(dp(3), 0xFFFFD700);
-        yesBtn.setBackground(yesBg);
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        lp.setMargins(dp(12), 0, dp(12), 0);
-
-        btnRow.addView(noBtn, lp);
-        btnRow.addView(yesBtn, lp);
+        btnRow.addView(noBtn);
+        btnRow.addView(yesBtn);
         root.addView(btnRow);
 
+        // ---------- DIALOG ----------
+        b.setView(root);
+
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        // ---------- BUTTONS ----------
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
-            stopLab3Tone();
             restoreLab3Audio();
-            logOk("User confirmed earpiece audio was audible.");
+            logOk("User confirmed earpiece audio.");
             logOk("Lab 3 finished.");
             logLine();
             d.dismiss();
@@ -785,10 +749,8 @@ d.show();
 
         noBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;
-            stopLab3Tone();
             restoreLab3Audio();
-            logError("User did NOT hear audio from earpiece.");
-            logWarn("Possible earpiece / routing / hardware issue detected.");
+            logError("User did NOT hear earpiece audio.");
             logOk("Lab 3 finished.");
             logLine();
             d.dismiss();

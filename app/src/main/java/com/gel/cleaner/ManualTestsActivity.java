@@ -2263,7 +2263,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (CORE ONLY)
+   LAB 3 — Earpiece Audio Path Check (FINAL / MINIMAL / SAFE)
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2273,32 +2273,42 @@ private void lab3EarpieceManual() {
 
     new Thread(() -> {
 
-        AudioManager am =
-                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am;
 
-        if (am == null) {
-            logError("AudioManager unavailable.");
-            return;
+        try {
+            am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) {
+                logError("AudioManager unavailable.");
+                return;
+            }
+
+            // -----------------------------------------
+            // SAVE AUDIO STATE
+            // -----------------------------------------
+            lab3OldMode = am.getMode();
+            lab3OldSpeaker = am.isSpeakerphoneOn();
+
+            // -----------------------------------------
+            // HARD LOCK — EARPIECE ONLY
+            // -----------------------------------------
+            am.stopBluetoothSco();
+            am.setBluetoothScoOn(false);
+            am.setSpeakerphoneOn(false);
+            am.setMicrophoneMute(true);
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+
+            SystemClock.sleep(300); // routing settle
+
+            logOk("Earpiece audio routing prepared.");
+
+            // -----------------------------------------
+            // USER CONFIRMATION (helper που ΥΠΑΡΧΕΙ)
+            // -----------------------------------------
+            runOnUiThread(this::askUserEarpieceConfirmationLoop);
+
+        } catch (Throwable t) {
+            logError("LAB 3 failed: audio routing error.");
         }
-
-        // SAVE STATE
-        lab3OldMode = am.getMode();
-        lab3OldSpeaker = am.isSpeakerphoneOn();
-
-        // HARD LOCK — EARPIECE ONLY
-        am.stopBluetoothSco();
-        am.setBluetoothScoOn(false);
-        am.setSpeakerphoneOn(false);
-        am.setMicrophoneMute(true);
-        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-
-        SystemClock.sleep(300);
-
-        // PLAY 3 TONES (NO LOOP)
-        playLab3EarpieceTones();
-
-        // ASK USER (helper)
-        runOnUiThread(this::askUserEarpieceConfirmation);
 
     }).start();
 }

@@ -755,6 +755,7 @@ noBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
     logOk("LAB 3 — Earpiece audio path OK.");
     logOk("User confirmed sound was heard from earpiece.");
     logOk("Lab 3 finished.");
+    logLine();
 
     restoreLab3Audio();
     d.dismiss();
@@ -767,6 +768,7 @@ noBtn.setOnClickListener(v -> {
     logWarn("User did NOT hear sound from earpiece.");
     logWarn("Possible earpiece failure or audio routing issue.");
     logOk("Lab 3 finished.");
+    logLine();
 
     restoreLab3Audio();
     d.dismiss();
@@ -2324,7 +2326,7 @@ private void lab3EarpieceManual() {
         root.setBackground(bg);
 
         TextView msg = new TextView(this);
-        msg.setText("Put the phone earpiece to your ear.\n\nPress OK to start.");
+        msg.setText("Put the phone earpiece to your ear.\n\nPress OK to start.\n");
         msg.setTextColor(0xFFFFFFFF);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);

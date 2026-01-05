@@ -546,8 +546,8 @@ if (!serviceLogInit) {
     private void logRed(String msg)    { logError(msg); }
 
     private void logSection(String msg) {
-        logLine();
-        logInfo(msg);
+    appendHtml("&nbsp;");   // 👈 ΥΠΟΧΡΕΩΤΙΚΗ ΚΕΝΗ ΓΡΑΜΜΗ
+    logInfo(msg);
     }
 
     // ============================================================
@@ -2638,34 +2638,228 @@ private void lab6DisplayTouch() {
 
 /* ============================================================
    LAB 7 — Rotation / Auto-Rotate Check (manual)
+   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
    ============================================================ */
-
 private void lab7RotationManual() {
 
-    logLine();
-    logSection("LAB 7 — Rotation / Auto-Rotate Check");
-    logLine();
+    runOnUiThread(() -> {
 
-    startActivityForResult(
-            new Intent(this, RotationCheckActivity.class),
-            7007
-    );
+        SharedPreferences prefs =
+                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+        final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsMuted = {
+                prefs.getBoolean("lab7_tts_muted", false)
+        };
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("LAB 7 — Rotation / Auto-Rotate");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Rotate the device slowly.\n\n" +
+                "The screen should follow the device orientation."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(ttsMuted[0]);
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
+
+        Button start = new Button(this);
+        start.setText("START TEST");
+        start.setAllCaps(false);
+        start.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14);
+        startBg.setCornerRadius(dp(14));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
+
+        root.addView(start);
+
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
+                tts[0].speak(
+                        "Rotate the device slowly. The screen should follow.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB7_INTRO"
+                );
+            }
+        });
+
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
+            prefs.edit().putBoolean("lab7_tts_muted", checked).apply();
+            if (checked && tts[0] != null) tts[0].stop();
+        });
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        d.show();
+
+        start.setOnClickListener(v -> {
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+            }
+            d.dismiss();
+
+            startActivityForResult(
+                    new Intent(this, RotationTestActivity.class),
+                    7007
+            );
+        });
+    });
 }
 
 /* ============================================================
-   LAB 8 — Proximity During Call (manual)
+   LAB 8 — Proximity Sensor Test (manual)
+   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
    ============================================================ */
-
 private void lab8ProximityCall() {
 
-    logLine();
-    logSection("LAB 8 — Proximity During Call");
-    logLine();
+    runOnUiThread(() -> {
 
-    startActivityForResult(
-            new Intent(this, ProximityCheckActivity.class),
-            8008
-    );
+        SharedPreferences prefs =
+                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+        final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsMuted = {
+                prefs.getBoolean("lab8_tts_muted", false)
+        };
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("LAB 8 — Proximity Sensor");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Cover the proximity sensor with your hand.\n\n" +
+                "The screen should turn off."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(ttsMuted[0]);
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
+
+        Button start = new Button(this);
+        start.setText("START TEST");
+        start.setAllCaps(false);
+        start.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14);
+        startBg.setCornerRadius(dp(14));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
+
+        root.addView(start);
+
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
+                tts[0].speak(
+                        "Cover the proximity sensor. The screen should turn off.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB8_INTRO"
+                );
+            }
+        });
+
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
+            prefs.edit().putBoolean("lab8_tts_muted", checked).apply();
+            if (checked && tts[0] != null) tts[0].stop();
+        });
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        d.show();
+
+        start.setOnClickListener(v -> {
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+            }
+            d.dismiss();
+
+            startActivityForResult(
+                    new Intent(this, ProximityTestActivity.class),
+                    8008
+            );
+        });
+    });
 }
 
 /* ============================================================
@@ -7979,24 +8173,49 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     return;
 }
 
-    if (requestCode == 7007) { // LAB 7 — Rotation
-        if (resultCode == RESULT_OK)
-            logOk("LAB 7 — Rotation detected via sensors");
-        else
-            logError("LAB 7 — No rotation detected");
+    if (requestCode == 7007) {
 
-        enableSingleExportButton();
-        return;
+    boolean rotated = RotationTestActivity.wasRotationDetected();
+
+    logSection("LAB 7 — Rotation / Auto-Rotate");
+
+    if (rotated) {
+        logOk("Device rotation detected via accelerometer.");
+        logOk("Orientation change confirmed.");
+        logOk("Motion sensors responding normally.");
+    } else {
+        logError("Rotation was not detected.");
+        logWarn("Auto-rotate may be disabled or sensor malfunctioning.");
     }
 
-    if (requestCode == 8008) { // LAB 8 — Proximity
-        if (resultCode == RESULT_OK)
-            logOk("LAB 8 — Proximity sensor responded correctly");
-        else
-            logError("LAB 8 — No proximity response detected");
+    logOk("Lab 7 finished.");
+    logLine();
 
-        enableSingleExportButton();
+    enableSingleExportButton();
+    return;
+}
+
+    if (requestCode == 8008) {
+
+    boolean triggered = ProximityTestActivity.wasProximityTriggered();
+
+    logSection("LAB 8 — Proximity Sensor");
+
+    if (triggered) {
+        logOk("Proximity sensor responded correctly.");
+        logOk("Near/Far response confirmed.");
+        logOk("Screen turned off when sensor was covered.");
+    } else {
+        logError("Proximity sensor did not respond.");
+        logWarn("Possible sensor obstruction or hardware fault.");
     }
+
+    logOk("Lab 8 finished.");
+    logLine();
+
+    enableSingleExportButton();
+    return;
+}
 }
 
 // ============================================================

@@ -8175,11 +8175,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode == 7007) {
 
-    boolean rotated = RotationTestActivity.wasRotationDetected();
-
+    logLine();
     logSection("LAB 7 — Rotation / Auto-Rotate");
+    logLine();
 
-    if (rotated) {
+    if (resultCode == RESULT_OK) {
+    	
         logOk("Device rotation detected via accelerometer.");
         logOk("Orientation change confirmed.");
         logOk("Motion sensors responding normally.");
@@ -8195,13 +8196,14 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     return;
 }
 
-    if (requestCode == 8008) {
+    if (requestCode == 8008) { // LAB 8 — Proximity Sensor
 
-    boolean triggered = ProximityTestActivity.wasProximityTriggered();
-
+    logLine();
     logSection("LAB 8 — Proximity Sensor");
+    logLine();
 
-    if (triggered) {
+    if (resultCode == RESULT_OK) {
+
         logOk("Proximity sensor responded correctly.");
         logOk("Near/Far response confirmed.");
         logOk("Screen turned off when sensor was covered.");

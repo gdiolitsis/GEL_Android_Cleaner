@@ -7944,11 +7944,43 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == 6006) { // LAB 6 — Touch Grid
-        // Το LAB 6 γράφει ΜΟΝΟ ΤΟΥ το αποτέλεσμα (success / incomplete)
-        // ΕΔΩ ΔΕΝ ξαναγράφουμε verdict για να μην υπάρχουν διπλότυπα ή ψεύτικα OK
-        enableSingleExportButton();
-        return;
+
+    int total = TouchGridTestActivity.getTotalZones();
+    int remaining = TouchGridTestActivity.getRemainingZones();
+
+    logLine();
+    logSection("LAB 6 — Display / Touch");
+    logLine();
+
+    if (resultCode == RESULT_OK) {
+
+        logOk("Touch grid test completed.");
+        logOk("All screen zones responded to touch input.");
+        logOk("No dead touch zones detected.");
+
+    } else {
+
+        int total = TouchGridTestActivity.getTotalZones();
+        int remaining = TouchGridTestActivity.getRemainingZones();
+
+        logWarn("Touch grid test incomplete.");
+        logWarn(
+                "These " + remaining +
+                " screen zones did not respond to touch input (" +
+                remaining + " / " + total + ")."
+        );
+
+        logInfo("This may indicate:");
+        logError("Localized digitizer dead zones");
+        logWarn("Manual re-test is recommended to confirm behavior.");
     }
+
+    logOk("Lab 6 finished.");
+    logLine();
+
+    enableSingleExportButton();
+    return;
+}
 
     if (requestCode == 7007) { // LAB 7 — Rotation
         if (resultCode == RESULT_OK)

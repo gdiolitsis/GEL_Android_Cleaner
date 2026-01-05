@@ -19,7 +19,7 @@ import android.widget.TextView;
 /**
  * ============================================================
  * LAB 8 — Proximity Sensor Check
- * FINAL — NO TTS • NO MUTE • NO POPUPS
+ * FINAL — PURE TEST ONLY (NO LOGS • NO TTS • NO POPUPS)
  * ============================================================
  */
 public class ProximityCheckActivity extends Activity
@@ -30,7 +30,6 @@ public class ProximityCheckActivity extends Activity
 
     private boolean initialRead = false;
     private float initialValue = 0f;
-    private boolean loggedFinish = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +46,9 @@ public class ProximityCheckActivity extends Activity
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
+        // ======================
+        // INFO TEXT
+        // ======================
         TextView info = new TextView(this);
         info.setText(
                 "Place your hand over the front sensor area\n" +
@@ -65,6 +67,9 @@ public class ProximityCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
+        // ======================
+        // END TEST BUTTON
+        // ======================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -90,18 +95,6 @@ public class ProximityCheckActivity extends Activity
         end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
-
-            if (!loggedFinish) {
-                loggedFinish = true;
-
-                GELServiceLog.section("LAB 8 — Proximity Sensor");
-                GELServiceLog.warn("Proximity test was cancelled by user.");
-                GELServiceLog.warn("No proximity state change detected during the test.");
-                GELServiceLog.warn("Manual re-test recommended.");
-                GELServiceLog.ok("Lab 8 finished.");
-                GELServiceLog.addLine(null);
-            }
-
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -141,19 +134,8 @@ public class ProximityCheckActivity extends Activity
             return;
         }
 
+        // Near / Far state change
         if (Math.abs(v - initialValue) > 0.5f) {
-
-            if (!loggedFinish) {
-                loggedFinish = true;
-
-                GELServiceLog.section("LAB 8 — Proximity Sensor");
-                GELServiceLog.ok("Proximity sensor state change detected.");
-                GELServiceLog.ok("Near/Far response confirmed.");
-                GELServiceLog.ok("Front proximity sensing path responding normally.");
-                GELServiceLog.ok("Lab 8 finished.");
-                GELServiceLog.addLine(null);
-            }
-
             setResult(RESULT_OK);
             finish();
         }

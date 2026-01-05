@@ -19,7 +19,7 @@ import android.widget.TextView;
 /**
  * ============================================================
  * LAB 7 — Rotation Check
- * FINAL — NO TTS • NO MUTE • NO POPUPS
+ * FINAL — PURE TEST ONLY (NO LOGS • NO TTS • NO POPUPS)
  * ============================================================
  */
 public class RotationCheckActivity extends Activity
@@ -49,6 +49,9 @@ public class RotationCheckActivity extends Activity
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF101010);
 
+        // ======================
+        // INFO TEXT
+        // ======================
         TextView info = new TextView(this);
         info.setText(
                 "Rotate the device slowly\n" +
@@ -67,6 +70,9 @@ public class RotationCheckActivity extends Activity
         infoLp.gravity = Gravity.CENTER;
         root.addView(info, infoLp);
 
+        // ======================
+        // END TEST BUTTON
+        // ======================
         Button end = new Button(this);
         end.setText("END TEST");
         end.setAllCaps(false);
@@ -92,14 +98,6 @@ public class RotationCheckActivity extends Activity
         end.setLayoutParams(endLp);
 
         end.setOnClickListener(v -> {
-
-            GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
-            GELServiceLog.warn("Rotation test was cancelled by user.");
-            GELServiceLog.warn("No orientation change detected during the test.");
-            GELServiceLog.warn("Manual re-test recommended.");
-            GELServiceLog.ok("Lab 7 finished.");
-            GELServiceLog.addLine(null);
-
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -145,14 +143,6 @@ public class RotationCheckActivity extends Activity
         float dy = Math.abs(y - lastY);
 
         if (dx > ROTATION_THRESHOLD || dy > ROTATION_THRESHOLD) {
-
-            GELServiceLog.section("LAB 7 — Rotation / Auto-Rotate");
-            GELServiceLog.ok("Device rotation detected via accelerometer.");
-            GELServiceLog.ok("Orientation change confirmed.");
-            GELServiceLog.ok("Motion sensors responding normally.");
-            GELServiceLog.ok("Lab 7 finished.");
-            GELServiceLog.addLine(null);
-
             setResult(RESULT_OK);
             finish();
         }

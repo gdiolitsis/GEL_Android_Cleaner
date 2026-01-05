@@ -680,22 +680,7 @@ private void askUserEarpieceConfirmationLoop() {
     runOnUiThread(() -> {
 
         if (lab3WaitingUser) return;
-        lab3WaitingUser = true;
-
-        // ==========================
-        // LOOP TONE — LIMITED (3 tones handled elsewhere)
-        // ==========================
-        lab3Tone = new ToneGenerator(
-                AudioManager.STREAM_VOICE_CALL,
-                80
-        );
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
+        lab3WaitingUser = true;        
 
         // ============================================================
         // GEL DARK + GOLD POPUP
@@ -2260,7 +2245,7 @@ private void lab2SpeakerSweep() {
 }
 
 /* ============================================================
-   LAB 3 — Earpiece Audio Path Check (FINAL / MINIMAL / SAFE)
+   LAB 3 — Earpiece Audio Path Check
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -2270,42 +2255,44 @@ private void lab3EarpieceManual() {
 
     new Thread(() -> {
 
-        AudioManager am;
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) {
+            logError("AudioManager unavailable.");
+            return;
+        }
 
+        // SAVE STATE
+        lab3OldMode = am.getMode();
+        lab3OldSpeaker = am.isSpeakerphoneOn();
+
+        // FORCE EARPIECE
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMicrophoneMute(true);
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+
+        SystemClock.sleep(300);
+
+        // 🔊 PLAY 3 TONES (EARPIECE)
+        ToneGenerator tg = null;
         try {
-            am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (am == null) {
-                logError("AudioManager unavailable.");
-                return;
+            tg = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
+
+            for (int i = 0; i < 3; i++) {
+                tg.startTone(ToneGenerator.TONE_DTMF_1, 600);
+                SystemClock.sleep(2000);
             }
 
-            // -----------------------------------------
-            // SAVE AUDIO STATE
-            // -----------------------------------------
-            lab3OldMode = am.getMode();
-            lab3OldSpeaker = am.isSpeakerphoneOn();
-
-            // -----------------------------------------
-            // HARD LOCK — EARPIECE ONLY
-            // -----------------------------------------
-            am.stopBluetoothSco();
-            am.setBluetoothScoOn(false);
-            am.setSpeakerphoneOn(false);
-            am.setMicrophoneMute(true);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-
-            SystemClock.sleep(300); // routing settle
-
-            logOk("Earpiece audio routing prepared.");
-
-            // -----------------------------------------
-            // USER CONFIRMATION (helper που ΥΠΑΡΧΕΙ)
-            // -----------------------------------------
-            runOnUiThread(this::askUserEarpieceConfirmationLoop);
-
-        } catch (Throwable t) {
-            logError("LAB 3 failed: audio routing error.");
+        } catch (Throwable ignore) {
+        } finally {
+            if (tg != null) {
+                try { tg.release(); } catch (Throwable ignore) {}
+            }
         }
+
+        // ASK USER
+        runOnUiThread(this::askUserEarpieceConfirmation);
 
     }).start();
 }

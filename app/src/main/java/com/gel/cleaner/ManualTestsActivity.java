@@ -675,7 +675,7 @@ private String ipToStr(int ip) {
 // ============================================================
 // LAB 3 — User Confirmation Dialog (Earpiece)
 // ============================================================
-private void askUserEarpieceConfirmationLoop() {
+private void askUserEarpieceConfirmation() {
 
     runOnUiThread(() -> {
 
@@ -751,15 +751,6 @@ private void askUserEarpieceConfirmationLoop() {
         btnRow.addView(noBtn, lp);
         btnRow.addView(yesBtn, lp);
         root.addView(btnRow);
-
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
 
         yesBtn.setOnClickListener(v -> {
             lab3WaitingUser = false;

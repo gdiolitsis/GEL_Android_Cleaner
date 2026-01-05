@@ -702,7 +702,7 @@ private void askUserEarpieceConfirmation() {
         root.setBackground(bg);
 
         TextView msg = new TextView(this);
-        msg.setText("Put the phone at your ear.\n\nDid you hear the sound?");
+        msg.setText("Did you hear the sound?\n\n");
         msg.setTextColor(0xFFFFFFFF);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);

@@ -16,7 +16,7 @@ import android.widget.FrameLayout;
 /**
  * ============================================================
  * LAB 6 — Display / Touch Grid Test
- * FINAL — NO LOGS • RETURNS RESULT ONLY
+ * FINAL — NO POPUPS • NO TTS • NO MUTE
  * ============================================================
  */
 public class TouchGridTestActivity extends Activity {
@@ -52,6 +52,7 @@ public class TouchGridTestActivity extends Activity {
         endButton.setLayoutParams(lp);
 
         endButton.setOnClickListener(v -> {
+            gridView.logIncompleteResult();
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -70,17 +71,19 @@ public class TouchGridTestActivity extends Activity {
     // ============================================================
     private class TouchGridView extends View {
 
-        private static final int COLS = 8;
-        private static final int ROWS = 12;
+        private final int COLS = 8;
+        private final int ROWS = 12;
 
-        private final boolean[][] cleared = new boolean[ROWS][COLS];
-        private final Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private boolean[][] cleared;
+        private Paint dotPaint;
 
         private float cellW, cellH;
         private float radius;
 
         TouchGridView(Activity ctx) {
             super(ctx);
+            cleared = new boolean[ROWS][COLS];
+            dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             dotPaint.setColor(Color.YELLOW);
         }
 
@@ -119,6 +122,7 @@ public class TouchGridTestActivity extends Activity {
                         invalidate();
 
                         if (allCleared()) {
+                            logSuccessResult();
                             setResult(RESULT_OK);
                             finish();
                         }
@@ -135,5 +139,53 @@ public class TouchGridTestActivity extends Activity {
                     if (!cleared[r][c]) return false;
             return true;
         }
+
+        private int countUncleared() {
+            int n = 0;
+            for (int r = 0; r < ROWS; r++)
+                for (int c = 0; c < COLS; c++)
+                    if (!cleared[r][c]) n++;
+            return n;
+        }
+
+// ========================================================
+// LOGGING
+// ========================================================
+private void logSuccessResult() {
+
+    logLine();
+    logSection("LAB 6 — Display / Touch");
+    logLine();
+
+    logOk("Touch grid test completed.");
+    logOk("All screen zones responded to touch input.");
+    logOk("No dead touch zones detected.");
+
+    logOk("Lab 6 finished.");
+    logLine();
+}
+
+private void logIncompleteResult() {
+
+    int total = ROWS * COLS;
+    int remaining = countUncleared();
+
+    logLine();
+    logSection("LAB 6 — Display / Touch");
+
+    logWarn("Touch grid test incomplete.");
+    logWarn(
+            "These " + remaining +
+            " screen zones did not respond to touch input (" +
+            remaining + " / " + total + ")."
+    );
+
+    logInfo("This may indicate:");
+    logError("• Localized digitizer dead zones");
+    logWarn("Manual re-test is recommended to confirm behavior.");
+
+    logOk("Lab 6 finished.");
+    logLine();
+}
     }
 }

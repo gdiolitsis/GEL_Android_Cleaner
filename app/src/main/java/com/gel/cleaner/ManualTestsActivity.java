@@ -2855,7 +2855,7 @@ private void lab8ProximityCall() {
             d.dismiss();
 
             startActivityForResult(
-                    new Intent(this, ProximityCheckctivity.class),
+                    new Intent(this, ProximityCheckActivity.class),
                     8008
             );
         });

@@ -16,11 +16,28 @@ import android.widget.FrameLayout;
 /**
  * ============================================================
  * LAB 6 — Display / Touch Grid Test
- * FINAL — NO POPUPS • NO TTS • NO MUTE
+ * FINAL — TEST ONLY (NO LOGS HERE)
  * ============================================================
  */
 public class TouchGridTestActivity extends Activity {
 
+    // ========================================================
+    // STATIC RESULTS (READ BY ManualTestsActivity)
+    // ========================================================
+    public static int lastTotalZones = 0;
+    public static int lastRemainingZones = 0;
+
+    public static int getTotalZones() {
+        return lastTotalZones;
+    }
+
+    public static int getRemainingZones() {
+        return lastRemainingZones;
+    }
+
+    // ========================================================
+    // ACTIVITY
+    // ========================================================
     private TouchGridView gridView;
 
     @Override
@@ -52,7 +69,8 @@ public class TouchGridTestActivity extends Activity {
         endButton.setLayoutParams(lp);
 
         endButton.setOnClickListener(v -> {
-            gridView.logIncompleteResult();
+            lastTotalZones = gridView.getTotalZones();
+            lastRemainingZones = gridView.countUncleared();
             setResult(RESULT_CANCELED);
             finish();
         });
@@ -66,9 +84,9 @@ public class TouchGridTestActivity extends Activity {
         return (int) (v * d + 0.5f);
     }
 
-    // ============================================================
+    // ========================================================
     // TOUCH GRID VIEW
-    // ============================================================
+    // ========================================================
     private class TouchGridView extends View {
 
         private final int COLS = 8;
@@ -85,6 +103,10 @@ public class TouchGridTestActivity extends Activity {
             cleared = new boolean[ROWS][COLS];
             dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             dotPaint.setColor(Color.YELLOW);
+        }
+
+        int getTotalZones() {
+            return ROWS * COLS;
         }
 
         @Override
@@ -122,7 +144,8 @@ public class TouchGridTestActivity extends Activity {
                         invalidate();
 
                         if (allCleared()) {
-                            logSuccessResult();
+                            lastTotalZones = getTotalZones();
+                            lastRemainingZones = 0;
                             setResult(RESULT_OK);
                             finish();
                         }
@@ -140,52 +163,12 @@ public class TouchGridTestActivity extends Activity {
             return true;
         }
 
-        private int countUncleared() {
+        int countUncleared() {
             int n = 0;
             for (int r = 0; r < ROWS; r++)
                 for (int c = 0; c < COLS; c++)
                     if (!cleared[r][c]) n++;
             return n;
         }
-
-// ========================================================
-// LOGGING
-// ========================================================
-private void logSuccessResult() {
-
-    logLine();
-    logSection("LAB 6 — Display / Touch");
-    logLine();
-
-    logOk("Touch grid test completed.");
-    logOk("All screen zones responded to touch input.");
-    logOk("No dead touch zones detected.");
-
-    logOk("Lab 6 finished.");
-    logLine();
-}
-
-private void logIncompleteResult() {
-
-    int total = ROWS * COLS;
-    int remaining = countUncleared();
-
-    logLine();
-    logSection("LAB 6 — Display / Touch");
-
-    logWarn("Touch grid test incomplete.");
-    logWarn(
-            "These " + remaining +
-            " screen zones did not respond to touch input (" +
-            remaining + " / " + total + ")."
-    );
-
-    logInfo("This may indicate:");
-    logError("• Localized digitizer dead zones");
-    logWarn("Manual re-test is recommended to confirm behavior.");
-
-    logOk("Lab 6 finished.");
-    logLine();
-}
     }
 }

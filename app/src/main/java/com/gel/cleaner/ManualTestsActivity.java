@@ -816,11 +816,8 @@ protected void onPause() {
 // ============================================================
 // LAB 3 — STATE / HELPERS
 // ============================================================
-private volatile boolean lab3WaitingUser = false;
-private ToneGenerator lab3Tone;
-private int lab3OldMode = AudioManager.MODE_NORMAL;
-private boolean lab3OldSpeaker = false;
 
+private ToneGenerator lab3Tone;
 private void restoreLab3Audio() {
     try {
         AudioManager am =

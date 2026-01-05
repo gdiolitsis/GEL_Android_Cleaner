@@ -2742,9 +2742,9 @@ private void lab7RotationManual() {
             d.dismiss();
 
             startActivityForResult(
-                    new Intent(this, RotationCheckActivity.class)
-                    7007
-            );
+        new Intent(this, RotationCheckActivity.class),
+        7007
+);
         });
     });
 }

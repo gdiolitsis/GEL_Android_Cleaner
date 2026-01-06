@@ -510,6 +510,7 @@ setContentView(scroll);
 // ==========================
 tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
+
         int res = tts[0].setLanguage(Locale.US);
 
         ttsReady[0] =
@@ -2504,11 +2505,12 @@ private void lab6DisplayTouch() {
         // ==========================
         // TTS STATE (LOCAL)
         // ==========================
-        final TextToSpeech[] tts = new TextToSpeech[1];
-        final boolean[] ttsReady = {false};
-        final boolean[] ttsMuted = {
-                prefs.getBoolean("lab6_tts_muted", false)
-        };
+        // ==========================
+// TTS STATE (SIMPLE & SAFE)
+// ==========================
+TextToSpeech tts = null;
+boolean ttsMuted =
+        prefs.getBoolean("lab6_tts_muted", false);
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2576,15 +2578,19 @@ private void lab6DisplayTouch() {
         // ==========================
         // TTS INIT — SPEAK IMMEDIATELY
         // ==========================
-        tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int res = tts[0].setLanguage(Locale.US);
-                ttsReady[0] =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+        TextToSpeech tts;
+boolean ttsMuted =
+        prefs.getBoolean("lab6_tts_muted", false);
 
-                if (ttsReady[0] && !ttsMuted[0]) {
-                    tts[0].speak(
+tts = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts.setLanguage(Locale.US);
+
+        if (res != TextToSpeech.LANG_MISSING_DATA &&
+            res != TextToSpeech.LANG_NOT_SUPPORTED &&
+            !ttsMuted) {
+
+            tts.speak(
         "Touch all dots on the screen to complete the test.\n" +
         "All screen areas must respond to touch input.",
                             TextToSpeech.QUEUE_FLUSH,
@@ -2721,15 +2727,19 @@ private void lab7RotationManual() {
 
         root.addView(start);
 
-        tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-        int res = tts[0].setLanguage(Locale.US);
-        ttsReady[0] =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
+        TextToSpeech tts;
+boolean ttsMuted =
+        prefs.getBoolean("lab6_tts_muted", false);
 
-        if (ttsReady[0] && !ttsMuted[0]) {
-            tts[0].speak(
+tts = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts.setLanguage(Locale.US);
+
+        if (res != TextToSpeech.LANG_MISSING_DATA &&
+            res != TextToSpeech.LANG_NOT_SUPPORTED &&
+            !ttsMuted) {
+
+            tts.speak(
                     "Rotate the device slowly.\n" +
                     "The screen should follow the device orientation.",
                     TextToSpeech.QUEUE_FLUSH,
@@ -2842,15 +2852,19 @@ private void lab8ProximityCall() {
 
         root.addView(start);
 
-        tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-        int res = tts[0].setLanguage(Locale.US);
-        ttsReady[0] =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
+        TextToSpeech tts;
+boolean ttsMuted =
+        prefs.getBoolean("lab6_tts_muted", false);
 
-        if (ttsReady[0] && !ttsMuted[0]) {
-            tts[0].speak(
+tts = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts.setLanguage(Locale.US);
+
+        if (res != TextToSpeech.LANG_MISSING_DATA &&
+            res != TextToSpeech.LANG_NOT_SUPPORTED &&
+            !ttsMuted) {
+
+            tts.speak(
                     "Cover the proximity sensor with your hand.\n" +
                     "The screen should turn off.",
                     TextToSpeech.QUEUE_FLUSH,

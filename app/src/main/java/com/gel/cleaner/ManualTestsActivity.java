@@ -140,6 +140,11 @@ import java.util.Map;
 public class ManualTestsActivity extends AppCompatActivity {
 	
 // ============================================================
+// GEL DIAG — GLOBAL PREFS (CLASS LEVEL)
+// ============================================================
+private SharedPreferences prefs;
+	
+// ============================================================
 // LAB 3 — STATE (CLASS LEVEL)
 // ============================================================
 private volatile boolean lab3WaitingUser = false;
@@ -305,6 +310,8 @@ private static final int LAB15_TOTAL_SECONDS = 180;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
         ui = new Handler(Looper.getMainLooper());
 
@@ -1348,73 +1355,73 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 final TextToSpeech[] tts = new TextToSpeech[1];
 final boolean[] ttsReady = {false};
 final boolean[] ttsMuted = {
-        prefs.getBoolean("lab17_tts_muted", false)
+        prefs.getBoolean("lab14_tts_muted", false)   // 🔒 ΕΝΑ key, ΕΝΑ σημείο
 };
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF0E0E0E);          // DEEP BLACK
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700); // GOLD BORDER
-        root.setBackground(bg);
+// BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF0E0E0E);
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(3), 0xFFFFD700);
+root.setBackground(bg);
 
-        // ------------------------------------------------------------
-        // TITLE
-        // ------------------------------------------------------------
-        TextView title = new TextView(this);
-        title.setText("Battery Stress Test — Pre-Test Check");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setPadding(0, 0, 0, dp(12));
-        root.addView(title);
+// ------------------------------------------------------------
+// TITLE
+// ------------------------------------------------------------
+TextView title = new TextView(this);
+title.setText("Battery Stress Test — Pre-Test Check");
+title.setTextColor(Color.WHITE);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setPadding(0, 0, 0, dp(12));
+root.addView(title);
 
-        // ------------------------------------------------------------
-        // MESSAGE
-        // ------------------------------------------------------------
-        TextView msg = new TextView(this);
-        msg.setText(
+// ------------------------------------------------------------
+// MESSAGE
+// ------------------------------------------------------------
+TextView msg = new TextView(this);
+msg.setText(
         "For best diagnostic accuracy, it is recommended to run this test " +
         "after a system restart.\n" +
         "You may continue without restarting, but recent heavy usage " +
         "can affect the results.\n" +
         "Don't use your device for the next 5 minutes."
 );
-        msg.setTextColor(Color.WHITE);
-        msg.setTextSize(14.5f);
-        msg.setLineSpacing(0f, 1.2f);
-        root.addView(msg);
+msg.setTextColor(Color.WHITE);
+msg.setTextSize(14.5f);
+msg.setLineSpacing(0f, 1.2f);
+root.addView(msg);
 
-        // ------------------------------------------------------------
-        // CONTINUE BUTTON
-        // ------------------------------------------------------------
-        Button btnContinue = new Button(this);
-        btnContinue.setText("Continue anyway");
-        btnContinue.setAllCaps(false);
-        btnContinue.setTextColor(Color.WHITE);
-        btnContinue.setTextSize(15f);
-        btnContinue.setTypeface(null, Typeface.BOLD);
+// ------------------------------------------------------------
+// CONTINUE BUTTON
+// ------------------------------------------------------------
+Button btnContinue = new Button(this);
+btnContinue.setText("Continue anyway");
+btnContinue.setAllCaps(false);
+btnContinue.setTextColor(Color.WHITE);
+btnContinue.setTextSize(15f);
+btnContinue.setTypeface(null, Typeface.BOLD);
 
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(0xFF0B5D1E);         // DARK GREEN
-        btnBg.setCornerRadius(dp(14));
-        btnBg.setStroke(dp(2), 0xFFFFD700); // GOLD
-        btnContinue.setBackground(btnBg);
+GradientDrawable btnBg = new GradientDrawable();
+btnBg.setColor(0xFF0B5D1E);
+btnBg.setCornerRadius(dp(14));
+btnBg.setStroke(dp(2), 0xFFFFD700);
+btnContinue.setBackground(btnBg);
 
-        LinearLayout.LayoutParams lpBtn =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn.setMargins(0, dp(18), 0, 0);
-        btnContinue.setLayoutParams(lpBtn);
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpBtn.setMargins(0, dp(18), 0, 0);
+btnContinue.setLayoutParams(lpBtn);
 
-        root.addView(btnContinue);
-        
+root.addView(btnContinue);
+
 // ==========================
 // 🔕 MUTE TOGGLE
 // ==========================
@@ -1430,7 +1437,7 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
     ttsMuted[0] = checked;
 
     prefs.edit()
-            .putBoolean("lab14_tts_muted", checked)
+            .putBoolean("lab14_tts_muted", checked)   // 🔒 ΙΔΙΟ key
             .apply();
 
     if (checked && tts[0] != null) {
@@ -1446,10 +1453,11 @@ tts[0] = new TextToSpeech(this, status -> {
 
         int res = tts[0].setLanguage(Locale.US);
 
-        if (res != TextToSpeech.LANG_MISSING_DATA &&
-            res != TextToSpeech.LANG_NOT_SUPPORTED &&
-            !ttsMuted[0]) {
+        ttsReady[0] =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
 
+        if (ttsReady[0] && !ttsMuted[0]) {
             tts[0].speak(
                 "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
                 "You may continue without restarting, but recent heavy usage can affect the results. " +
@@ -1464,14 +1472,12 @@ tts[0] = new TextToSpeech(this, status -> {
 
 b.setView(root);
 
-        AlertDialog dlg = b.create();final boolean[] ttsMuted = {
-    prefs.getBoolean("lab14_tts_muted", false)
-};
-        if (dlg.getWindow() != null) {
-            dlg.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+AlertDialog dlg = b.create();
+if (dlg.getWindow() != null) {
+    dlg.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
         // ------------------------------------------------------------
         // CONTINUE CLICK — STOP TTS
@@ -1934,7 +1940,7 @@ private boolean detectHiddenThermalAnomaly(float thresholdC) {
 // True if LAB15 concluded that charging is being limited by system protection logic
 private boolean isLab15ChargingPathSystemLimited() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getBoolean("lab15_system_limited", false);
     } catch (Throwable t) {
         return false;
@@ -1944,7 +1950,7 @@ private boolean isLab15ChargingPathSystemLimited() {
 // Last known label (STRONG/NORMAL/MODERATE/WEAK) saved by LAB15
 private String getLastLab15StrengthLabel() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getString("lab15_strength_label", null);
     } catch (Throwable t) {
         return null;
@@ -1959,7 +1965,7 @@ private String getLastLab15StrengthLabel() {
 // ---------------- LAB 14 ----------------
 private float getLastLab14HealthScore() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getFloat("lab14_health_score", -1f);
     } catch (Throwable t) {
         return -1f;
@@ -1968,7 +1974,7 @@ private float getLastLab14HealthScore() {
 
 private int getLastLab14AgingIndex() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getInt("lab14_aging_index", -1);
     } catch (Throwable t) {
         return -1;
@@ -1982,7 +1988,7 @@ private boolean hasValidLab14() {
 // ---------------- LAB 15 ----------------
 private int getLastLab15ChargeScore() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getInt("lab15_charge_score", -1);
     } catch (Throwable t) {
         return -1;
@@ -1996,7 +2002,7 @@ private boolean hasValidLab15() {
 // ---------------- LAB 16 ----------------
 private int getLastLab16ThermalScore() {
     try {
-        SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
         return p.getInt("lab16_thermal_score", -1);
     } catch (Throwable t) {
         return -1;
@@ -2578,9 +2584,6 @@ private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
 
-        SharedPreferences prefs =
-                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-
         // ==========================
         // TTS STATE (LOCAL)
         // ==========================
@@ -2721,9 +2724,6 @@ private void lab7RotationManual() {
 
     runOnUiThread(() -> {
 
-        SharedPreferences prefs =
-                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-
         // ==========================
         // TTS STATE (LOCAL)
         // ==========================
@@ -2850,9 +2850,6 @@ private void lab7RotationManual() {
 private void lab8ProximityCall() {
 
     runOnUiThread(() -> {
-
-        SharedPreferences prefs =
-                getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
         // ==========================
         // TTS STATE (LOCAL)
@@ -4223,7 +4220,6 @@ logOk(String.format(
 // ----------------------------------------------------
 // Measurement reliability (LAB 14)
 // ----------------------------------------------------
-SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
 p.edit()
  .putBoolean("lab14_unstable_measurement", variabilityDetected)
@@ -4540,11 +4536,6 @@ logLine();
                     logError("❌ Charger disconnected for more than 5 seconds.");
                     logError("❌ Charging test aborted.");
 
-
-                    appendHtml("<br>");
-                    logOk("LAB 15 finished.");
-                    logLine();
-
                     try {
                         if (lab15Dialog != null && lab15Dialog.isShowing())
                             lab15Dialog.dismiss();
@@ -4657,10 +4648,6 @@ if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
     logWarn("⚠️ Further inspection or repeat test recommended.");
 }
 
-appendHtml("<br>");
-logOk("Lab 15 finished.");
-logLine();
-
             // ------------------------------------------------------------
             // CHARGING INPUT & STRENGTH (mAh/min)
             // ------------------------------------------------------------
@@ -4754,7 +4741,6 @@ logLine();
 
                 chargeScore = Math.max(0, Math.min(100, chargeScore));
 
-                SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
                 p.edit()
                         .putInt("lab15_charge_score", chargeScore)
                         .putBoolean("lab15_system_limited", lab15_systemLimited)
@@ -4895,7 +4881,7 @@ private void lab16ThermalSnapshot() {
     thermalScore = Math.max(0, Math.min(100, thermalScore));
 
 try {
-    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+    
     p.edit()
      .putInt("lab16_thermal_score", thermalScore)
      .putBoolean("lab16_thermal_danger", thermalDanger)
@@ -5343,7 +5329,7 @@ muteBox.setText("Mute voice instructions");
 muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
-root.addView(muteBox);
+box.addView(muteBox);
 
 muteBox.setOnCheckedChangeListener((v, checked) -> {
     ttsMuted[0] = checked;

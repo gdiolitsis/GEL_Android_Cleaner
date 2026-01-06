@@ -2580,6 +2580,9 @@ enableSingleExportButton();
 // LABS 6 — 9: DISPLAY & SENSORS  
 // ============================================================  
 
+// ============================================================
+// LAB 6 — Display Touch
+// ============================================================  
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
@@ -2588,7 +2591,6 @@ private void lab6DisplayTouch() {
         // TTS STATE (LOCAL)
         // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
-        final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab6_tts_muted", false)
         };
@@ -2664,13 +2666,12 @@ private void lab6DisplayTouch() {
 
                 int res = tts[0].setLanguage(Locale.US);
 
-                ttsReady[0] =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+                if (res != TextToSpeech.LANG_MISSING_DATA &&
+                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
+                    !ttsMuted[0]) {
 
-                if (ttsReady[0] && !ttsMuted[0]) {
                     tts[0].speak(
-                            "Touch all dots on the screen to complete the test.\n" +
+                            "Touch all dots on the screen to complete the test. " +
                             "All screen areas must respond to touch input.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,
@@ -2717,9 +2718,8 @@ private void lab6DisplayTouch() {
 }
 
 //==========================
-// LAB 7 - Rotation manual
-// ==========================
-
+// LAB 7 — Rotation manual
+// ==========================  
 private void lab7RotationManual() {
 
     runOnUiThread(() -> {
@@ -2728,7 +2728,6 @@ private void lab7RotationManual() {
         // TTS STATE (LOCAL)
         // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
-        final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab7_tts_muted", false)
         };
@@ -2798,13 +2797,12 @@ private void lab7RotationManual() {
 
                 int res = tts[0].setLanguage(Locale.US);
 
-                ttsReady[0] =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+                if (res != TextToSpeech.LANG_MISSING_DATA &&
+                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
+                    !ttsMuted[0]) {
 
-                if (ttsReady[0] && !ttsMuted[0]) {
                     tts[0].speak(
-                            "Rotate the device slowly.\n" +
+                            "Rotate the device slowly. " +
                             "The screen should follow the device orientation.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,
@@ -2844,9 +2842,8 @@ private void lab7RotationManual() {
 }
 
 // ==========================
-// LAB 8 - Proximity call
-// ==========================
-
+// LAB 8 — Proximity call
+// ==========================  
 private void lab8ProximityCall() {
 
     runOnUiThread(() -> {
@@ -2855,7 +2852,6 @@ private void lab8ProximityCall() {
         // TTS STATE (LOCAL)
         // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
-        final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab8_tts_muted", false)
         };
@@ -2925,13 +2921,12 @@ private void lab8ProximityCall() {
 
                 int res = tts[0].setLanguage(Locale.US);
 
-                ttsReady[0] =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+                if (res != TextToSpeech.LANG_MISSING_DATA &&
+                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
+                    !ttsMuted[0]) {
 
-                if (ttsReady[0] && !ttsMuted[0]) {
                     tts[0].speak(
-                            "Cover the proximity sensor with your hand.\n" +
+                            "Cover the proximity sensor with your hand. " +
                             "The screen should turn off.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,

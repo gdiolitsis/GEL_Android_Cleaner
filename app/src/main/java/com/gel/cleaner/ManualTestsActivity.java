@@ -3210,7 +3210,7 @@ private void runWifiDeepScan(WifiManager wm) {
             logOk(String.format(Locale.US,
                     "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
 
-            logOk("DeepScan finished.n\");
+            logOk("DeepScan finished.");
             
             appendHtml("<br>");
             logOk("Lab 10 finished.");

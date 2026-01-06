@@ -688,10 +688,11 @@ private void askUserEarpieceConfirmation() {
                 );
         b.setCancelable(false);
 
-        // ---------- UI ----------
+        // ---------- UI ROOT ----------
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+        root.setPadding(dp(28), dp(24), dp(28), dp(24));
+        root.setMinimumWidth(dp(300));   // 👈 πιο φαρδύ popup
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
@@ -699,41 +700,52 @@ private void askUserEarpieceConfirmation() {
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
+        // ---------- MESSAGE ----------
         TextView msg = new TextView(this);
-        msg.setText("Did you hear the sound?\n\n");
+        msg.setText("Did you hear the sound?");
         msg.setTextColor(0xFFFFFFFF);
+        msg.setTextSize(16f);
         msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
+        // ---------- BUTTON ROW ----------
         LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER);
+        btnRow.setPadding(0, dp(8), 0, 0);
 
+        LinearLayout.LayoutParams btnLp =
+                new LinearLayout.LayoutParams(0, dp(52), 1f);
+        btnLp.setMargins(dp(8), 0, dp(8), 0);   // 👈 κενό ανάμεσα στα κουμπιά
+
+        // ---------- NO BUTTON ----------
+        Button noBtn = new Button(this);
+        noBtn.setText("NO");
+        noBtn.setAllCaps(false);
+        noBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);           // βαθύ κόκκινο
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        noBtn.setBackground(noBg);
+        noBtn.setLayoutParams(btnLp);
+
+        // ---------- YES BUTTON ----------
         Button yesBtn = new Button(this);
-yesBtn.setText("YES");
-yesBtn.setAllCaps(false);
-yesBtn.setTextColor(0xFFFFFFFF);
+        yesBtn.setText("YES");
+        yesBtn.setAllCaps(false);
+        yesBtn.setTextColor(0xFFFFFFFF);
 
-// YES — DARK GREEN
-GradientDrawable yesBg = new GradientDrawable();
-yesBg.setColor(0xFF0B5F3B);          // βαθύ πράσινο
-yesBg.setCornerRadius(dp(14));
-yesBg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-yesBtn.setBackground(yesBg);
-yesBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0B5F3B);          // βαθύ πράσινο
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yesBtn.setBackground(yesBg);
+        yesBtn.setLayoutParams(btnLp);
 
-Button noBtn = new Button(this);
-noBtn.setText("NO");
-noBtn.setAllCaps(false);
-noBtn.setTextColor(0xFFFFFFFF);
-
-// NO — DARK RED
-GradientDrawable noBg = new GradientDrawable();
-noBg.setColor(0xFF8B0000);           // βαθύ κόκκινο
-noBg.setCornerRadius(dp(14));
-noBg.setStroke(dp(3), 0xFFFFD700);  // χρυσό περίγραμμα
-noBtn.setBackground(noBg);
-noBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
-
+        // ADD BUTTONS
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
         root.addView(btnRow);
@@ -747,34 +759,36 @@ noBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
             );
         }
 
+        // ---------- YES ACTION ----------
         yesBtn.setOnClickListener(v -> {
-    lab3WaitingUser = false;
+            lab3WaitingUser = false;
 
-    logOk("LAB 3 — Earpiece audio path OK.");
-    logOk("User confirmed sound was heard from earpiece.");
-    
-    appendHtml("<br>");
-    logOk("Lab 3 finished.");
-    logLine();
+            logOk("LAB 3 — Earpiece audio path OK.");
+            logOk("User confirmed sound was heard from earpiece.");
 
-    restoreLab3Audio();
-    d.dismiss();
-});
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
 
-noBtn.setOnClickListener(v -> {
-    lab3WaitingUser = false;
+            restoreLab3Audio();
+            d.dismiss();
+        });
 
-    logError("LAB 3 — Earpiece audio path FAILED.");
-    logWarn("User did NOT hear sound from earpiece.");
-    logWarn("Possible earpiece failure or audio routing issue.");
-    
-    appendHtml("<br>");
-    logOk("Lab 3 finished.");
-    logLine();
+        // ---------- NO ACTION ----------
+        noBtn.setOnClickListener(v -> {
+            lab3WaitingUser = false;
 
-    restoreLab3Audio();
-    d.dismiss();
-});
+            logError("LAB 3 — Earpiece audio path FAILED.");
+            logWarn("User did NOT hear sound from earpiece.");
+            logWarn("Possible earpiece failure or audio routing issue.");
+
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
+
+            restoreLab3Audio();
+            d.dismiss();
+        });
 
         d.show();
     });
@@ -1315,7 +1329,7 @@ private void logLabelValue(String label, String value) {
 }
 
 // ============================================================
-// LAB 14 — PRE-TEST ADVISORY POPUP (GEL NEON)
+// LAB 14 — PRE-TEST ADVISORY POPUP (GEL NEON) + TTS
 // ============================================================
 private void showLab14PreTestAdvisory(Runnable onContinue) {
 
@@ -1328,16 +1342,25 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
         b.setCancelable(true);
 
+// ==========================
+// TTS STATE (LOCAL)
+// ==========================
+final TextToSpeech[] tts = new TextToSpeech[1];
+final boolean[] ttsReady = {false};
+final boolean[] ttsMuted = {
+        prefs.getBoolean("lab17_tts_muted", false)
+};
+
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-// BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF0E0E0E);          // DEEP BLACK (όχι γκρι)
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(3), 0xFFFFD700); // GOLD BORDER
-root.setBackground(bg);
+        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF0E0E0E);          // DEEP BLACK
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700); // GOLD BORDER
+        root.setBackground(bg);
 
         // ------------------------------------------------------------
         // TITLE
@@ -1355,11 +1378,12 @@ root.setBackground(bg);
         // ------------------------------------------------------------
         TextView msg = new TextView(this);
         msg.setText(
-                "For best diagnostic accuracy, it is recommended to run this test " +
-                "after a system restart.\n\n" +
-                "You may continue without restarting, but recent heavy usage " +
-                "can affect the results."
-        );
+        "For best diagnostic accuracy, it is recommended to run this test " +
+        "after a system restart.\n" +
+        "You may continue without restarting, but recent heavy usage " +
+        "can affect the results.\n" +
+        "Don't use your device for the next 5 minutes."
+);
         msg.setTextColor(Color.WHITE);
         msg.setTextSize(14.5f);
         msg.setLineSpacing(0f, 1.2f);
@@ -1376,7 +1400,7 @@ root.setBackground(bg);
         btnContinue.setTypeface(null, Typeface.BOLD);
 
         GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(0xFF0B5D1E);       // DARK GREEN
+        btnBg.setColor(0xFF0B5D1E);         // DARK GREEN
         btnBg.setCornerRadius(dp(14));
         btnBg.setStroke(dp(2), 0xFFFFD700); // GOLD
         btnContinue.setBackground(btnBg);
@@ -1390,15 +1414,77 @@ root.setBackground(bg);
         btnContinue.setLayoutParams(lpBtn);
 
         root.addView(btnContinue);
+        
+// ==========================
+// 🔕 MUTE TOGGLE
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(ttsMuted[0]);
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
+root.addView(muteBox);
 
-        b.setView(root);
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+    ttsMuted[0] = checked;
 
-        AlertDialog dlg = b.create();
+    prefs.edit()
+            .putBoolean("lab14_tts_muted", checked)
+            .apply();
+
+    if (checked && tts[0] != null) {
+        tts[0].stop();
+    }
+});
+
+// ==========================
+// TTS INIT — SPEAK ON POPUP
+// ==========================
+tts[0] = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+
+        int res = tts[0].setLanguage(Locale.US);
+
+        if (res != TextToSpeech.LANG_MISSING_DATA &&
+            res != TextToSpeech.LANG_NOT_SUPPORTED &&
+            !ttsMuted[0]) {
+
+            tts[0].speak(
+                "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+                "You may continue without restarting, but recent heavy usage can affect the results. " +
+                "Don't use your device for the next 5 minutes.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB14_PRECHECK"
+            );
+        }
+    }
+});
+
+b.setView(root);
+
+        AlertDialog dlg = b.create();final boolean[] ttsMuted = {
+    prefs.getBoolean("lab14_tts_muted", false)
+};
         if (dlg.getWindow() != null) {
-            dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dlg.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
 
+        // ------------------------------------------------------------
+        // CONTINUE CLICK — STOP TTS
+        // ------------------------------------------------------------
         btnContinue.setOnClickListener(v -> {
+
+            if (tts[0] != null) {
+                try {
+                    tts[0].stop();
+                    tts[0].shutdown();
+                } catch (Throwable ignore) {}
+            }
+
             dlg.dismiss();
             if (onContinue != null) onContinue.run();
         });
@@ -3009,7 +3095,7 @@ private void lab9SensorsCheck() {
 	
 	appendHtml("<br>");
     logOk("Lab 9 finished.");
-        logLine();
+    logLine();
     }
 }  
 
@@ -3615,6 +3701,8 @@ private void lab14BatteryHealthStressTest() {
 // ------------------------------------------------------------
 // 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) ✅
 // ------------------------------------------------------------
+
+appendHtml("<br>");
 logLine();
 logInfo("✅ LAB 14 — Battery Health Stress Test");
 logLine();
@@ -4228,7 +4316,11 @@ root.setBackground(bg);
 // 🔹 TITLE — INSIDE POPUP (LAB 15)
 // ============================================================
 TextView title = new TextView(this);
-title.setText("LAB 15 — Connect the charger to the device's charging port");
+title.setText(
+        "LAB 15 — Connect the charger to the device's charging port.\n" +
+        "The system will monitor charging behavior for the next three minutes.\n" +
+        "Please keep the device connected during the test."
+);
 title.setTextColor(0xFFFFFFFF); 
 title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
@@ -4236,77 +4328,152 @@ title.setGravity(Gravity.CENTER);
 title.setPadding(0, 0, 0, dp(12));
 root.addView(title);
 
-    lab15StatusText = new TextView(this);
-    lab15StatusText.setText("Waiting for charging connection...");
-    lab15StatusText.setTextColor(0xFFAAAAAA);
-    lab15StatusText.setTextSize(15f);
-    root.addView(lab15StatusText);
+lab15StatusText = new TextView(this);
+lab15StatusText.setText("Waiting for charging connection...");
+lab15StatusText.setTextColor(0xFFAAAAAA);
+lab15StatusText.setTextSize(15f);
+root.addView(lab15StatusText);
 
-    final TextView dotsView = new TextView(this);
-    dotsView.setText("•");
-    dotsView.setTextColor(0xFF39FF14);
-    dotsView.setTextSize(22f);
-    dotsView.setGravity(Gravity.CENTER);
-    root.addView(dotsView);
+final TextView dotsView = new TextView(this);
+dotsView.setText("•");
+dotsView.setTextColor(0xFF39FF14);
+dotsView.setTextSize(22f);
+dotsView.setGravity(Gravity.CENTER);
+root.addView(dotsView);
 
-    lab15CounterText = new TextView(this);
-    lab15CounterText.setText("Progress: 0 / 180 sec");
-    lab15CounterText.setTextColor(0xFF39FF14);
-    lab15CounterText.setGravity(Gravity.CENTER);
-    root.addView(lab15CounterText);
+lab15CounterText = new TextView(this);
+lab15CounterText.setText("Progress: 0 / 180 sec");
+lab15CounterText.setTextColor(0xFF39FF14);
+lab15CounterText.setGravity(Gravity.CENTER);
+root.addView(lab15CounterText);
 
-    lab15ProgressBar = new LinearLayout(this);
-    lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-    lab15ProgressBar.setGravity(Gravity.CENTER);
+lab15ProgressBar = new LinearLayout(this);
+lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+lab15ProgressBar.setGravity(Gravity.CENTER);
 
-    for (int i = 0; i < 6; i++) {
-        View seg = new View(this);
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(0, dp(10), 1f);
-        lp.setMargins(dp(3), 0, dp(3), 0);
-        seg.setLayoutParams(lp);
-        seg.setBackgroundColor(0xFF333333);
-        lab15ProgressBar.addView(seg);
+for (int i = 0; i < 6; i++) {
+    View seg = new View(this);
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(10), 1f);
+    lp.setMargins(dp(3), 0, dp(3), 0);
+    seg.setLayoutParams(lp);
+    seg.setBackgroundColor(0xFF333333);
+    lab15ProgressBar.addView(seg);
+}
+root.addView(lab15ProgressBar);
+
+// ============================================================
+// 🔹 EXIT BUTTON
+// ============================================================
+Button exitBtn = new Button(this);
+exitBtn.setText("Exit test");
+exitBtn.setAllCaps(false);
+exitBtn.setTextColor(0xFFFFFFFF);
+exitBtn.setTypeface(null, Typeface.BOLD);
+
+GradientDrawable exitBg = new GradientDrawable();
+exitBg.setColor(0xFF8B0000);
+exitBg.setCornerRadius(dp(14));
+exitBg.setStroke(dp(3), 0xFFFFD700);
+exitBtn.setBackground(exitBg);
+
+LinearLayout.LayoutParams lpExit =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExit.setMargins(0, dp(14), 0, 0);
+exitBtn.setLayoutParams(lpExit);
+
+// ============================================================
+// 🔊 TTS — LAB 15 INTRO (LOCAL)
+// ============================================================
+final TextToSpeech[] tts = new TextToSpeech[1];
+
+exitBtn.setOnClickListener(v -> {
+    if (tts[0] != null) {
+        try {
+            tts[0].stop();
+            tts[0].shutdown();
+        } catch (Throwable ignore) {}
     }
-    root.addView(lab15ProgressBar);
+    abortLab15ByUser();
+});
 
-    // EXIT BUTTON
-    Button exitBtn = new Button(this);
-    exitBtn.setText("Exit test");
-    exitBtn.setAllCaps(false);
-    exitBtn.setTextColor(0xFFFFFFFF);
-    exitBtn.setTypeface(null, Typeface.BOLD);
+root.addView(exitBtn);
 
-    GradientDrawable exitBg = new GradientDrawable();
-    exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
-    exitBg.setStroke(dp(3), 0xFFFFD700);
-    exitBtn.setBackground(exitBg);
+// ============================================================
+// 🔹 SHOW DIALOG
+// ============================================================
+b.setView(root);
+lab15Dialog = b.create();
 
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
+if (lab15Dialog.getWindow() != null) {
+    lab15Dialog.getWindow()
+            .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+}
+
+lab15Dialog.show();
+
+final boolean[] ttsMuted = {
+        prefs.getBoolean("lab15_tts_muted", false)
+};
+
+// ==========================
+// 🔕 MUTE TOGGLE
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(ttsMuted[0]);
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
+root.addView(muteBox);
+
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+    ttsMuted[0] = checked;
+
+    prefs.edit()
+            .putBoolean("lab15_tts_muted", checked)
+            .apply();
+
+    if (checked && tts[0] != null) {
+        tts[0].stop();
+    }
+});
+
+// ============================================================
+// 🔊 TTS — SPEAK AFTER SHOW
+// ============================================================
+tts[0] = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+
+        int res = tts[0].setLanguage(Locale.US);
+
+        if (res != TextToSpeech.LANG_MISSING_DATA &&
+    res != TextToSpeech.LANG_NOT_SUPPORTED &&
+    !ttsMuted[0]) {
+            	
+
+            tts[0].speak(
+                "Connect the charger to the device's charging port. " +
+                "The system will monitor charging behavior for the next three minutes. " +
+                "Please keep the device connected during the test.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB15_INTRO"
             );
-    lpExit.setMargins(0, dp(14), 0, 0);
-    exitBtn.setLayoutParams(lpExit);
-
-    exitBtn.setOnClickListener(v -> abortLab15ByUser());
-    root.addView(exitBtn);
-
-    b.setView(root);
-    lab15Dialog = b.create();
-
-    // NOTE: Keep dialog window background dark, but border is on "root"
-    if (lab15Dialog.getWindow() != null) {
-        lab15Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
     }
+});
 
-    lab15Dialog.show();
-
-    logLine();
-    logInfo("ℹ️ LAB 15 - Charging System Diagnostic (Smart).");
-    logLine();
+// ============================================================
+// 🔹 LOGS
+// ============================================================
+appendHtml("<br>");
+logLine();
+logInfo("LAB 15 - Charging System Diagnostic (Smart).");
+logLine();
 
     // ================= CORE LOOP =================
     final long[] startTs = { -1 };
@@ -4478,17 +4645,21 @@ root.addView(title);
             if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");
             else logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
 
-            // ------------------------------------------------------------
-            // FINAL LAB 15 DECISION
-            // ------------------------------------------------------------
-            logInfo("LAB decision:");
-            if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
-                logOk("✅ Charging system OK. No cleaning or replacement required.");
-                logOk("✅ Charging stability OK.");
-            } else {
-                logWarn("⚠️ Charging system shows potential issues.");
-                logWarn("⚠️ Further inspection or repeat test recommended.");
-            }
+// ------------------------------------------------------------
+// FINAL LAB 15 DECISION
+// ------------------------------------------------------------
+logInfo("LAB decision:");
+if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+    logOk("✅ Charging system OK. No cleaning or replacement required.");
+    logOk("✅ Charging stability OK.");
+} else {
+    logWarn("⚠️ Charging system shows potential issues.");
+    logWarn("⚠️ Further inspection or repeat test recommended.");
+}
+
+appendHtml("<br>");
+logOk("Lab 15 finished.");
+logLine();
 
             // ------------------------------------------------------------
             // CHARGING INPUT & STRENGTH (mAh/min)
@@ -4734,7 +4905,6 @@ try {
      .apply();
 } catch (Throwable ignore) {}
 
-logLine();
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
@@ -5050,8 +5220,8 @@ new Thread(() -> {
                     logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
                 }
             }
-
-            // ------------------------------------------------------------
+            
+// ------------------------------------------------------------
 // STORE FINAL RESULT (+ timestamp)
 // ------------------------------------------------------------
 try {
@@ -5078,7 +5248,7 @@ logLine();
 }
 
 // ============================================================
-// LAB 17 — POPUP (GEL DARK + GOLD)
+// LAB 17 — POPUP (GEL DARK + GOLD) — WITH TTS
 // ============================================================
 private void lab17_showPopup(String titleText, String msgText) {
 
@@ -5092,6 +5262,9 @@ private void lab17_showPopup(String titleText, String msgText) {
 
     final AlertDialog[] holder = new AlertDialog[1];
 
+    // ==========================
+    // ROOT
+    // ==========================
     LinearLayout box = new LinearLayout(this);
     box.setOrientation(LinearLayout.VERTICAL);
     box.setPadding(dp(24), dp(20), dp(24), dp(20));
@@ -5102,6 +5275,9 @@ private void lab17_showPopup(String titleText, String msgText) {
     bg.setStroke(dp(3), 0xFFFFD700);
     box.setBackground(bg);
 
+    // ==========================
+    // TITLE
+    // ==========================
     TextView title = new TextView(this);
     title.setText(titleText);
     title.setTextColor(0xFFFFD700);
@@ -5109,6 +5285,9 @@ private void lab17_showPopup(String titleText, String msgText) {
     title.setPadding(0, 0, 0, dp(12));
     box.addView(title);
 
+    // ==========================
+    // MESSAGE
+    // ==========================
     TextView msg = new TextView(this);
     msg.setText(msgText);
     msg.setTextColor(0xFFFFFFFF);
@@ -5116,6 +5295,9 @@ private void lab17_showPopup(String titleText, String msgText) {
     msg.setPadding(0, 0, 0, dp(18));
     box.addView(msg);
 
+    // ==========================
+    // OK BUTTON
+    // ==========================
     Button ok = new Button(this);
     ok.setText("OK");
     ok.setAllCaps(true);
@@ -5126,28 +5308,103 @@ private void lab17_showPopup(String titleText, String msgText) {
     okBg.setColor(0xFF000000);
     okBg.setCornerRadius(dp(14));
     okBg.setStroke(dp(3), 0xFFFFD700);
-
     ok.setBackground(okBg);
     ok.setPadding(dp(18), dp(10), dp(18), dp(10));
 
-    ok.setOnClickListener(v -> {
-        try {
-            if (holder[0] != null) holder[0].dismiss();
-        } catch (Throwable ignore) {}
-    });
-
     box.addView(ok);
 
+    // ==========================
+    // BUILD DIALOG
+    // ==========================
     b.setView(box);
-
     holder[0] = b.create();
     AlertDialog popup = holder[0];
 
     if (popup.getWindow() != null) {
-        popup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popup.getWindow()
+                .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
-    popup.show();
+// ==========================
+// TTS STATE (LOCAL)
+// ==========================
+final TextToSpeech[] tts = new TextToSpeech[1];
+final boolean[] ttsReady = {false};
+final boolean[] ttsMuted = {
+        prefs.getBoolean("lab17_tts_muted", false)
+};
+
+// ==========================
+// 🔕 MUTE TOGGLE
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(ttsMuted[0]);
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
+root.addView(muteBox);
+
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+    ttsMuted[0] = checked;
+
+    prefs.edit()
+            .putBoolean("lab17_tts_muted", checked)
+            .apply();
+
+    if (checked && tts[0] != null) {
+        tts[0].stop();
+    }
+});
+
+// ==========================
+// 🔊 TTS — SAFE & LOCAL
+// ==========================
+tts[0] = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+
+        int res = tts[0].setLanguage(Locale.US);
+
+        ttsReady[0] =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+        if (ttsReady[0] && !ttsMuted[0]) {
+            tts[0].speak(
+                    "Before running this lab, please make sure that " +
+                    "lab fourteen, lab fifteen and lab sixteen have been completed.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB17_POPUP"
+            );
+        }
+    }
+});
+
+// ==========================
+// OK ACTION — WITH GUARD
+// ==========================
+final boolean[] okHandled = { false };
+
+ok.setOnClickListener(v -> {
+
+    // GUARD: μην εκτελεστεί 2 φορές
+    if (okHandled[0]) return;
+    okHandled[0] = true;
+
+    try {
+        if (tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+        }
+    } catch (Throwable ignore) {}
+
+    try {
+        if (holder[0] != null) holder[0].dismiss();
+    } catch (Throwable ignore) {}
+});
+
+popup.show();
 }
 
 // ============================================================
@@ -7594,7 +7851,7 @@ int deviceHealthScore = Math.round(
 // ------------------------------------------------------------  
 // PRINT DETAILS  
 // ------------------------------------------------------------  
-logLine();  
+
 logInfo("AUTO Breakdown:");  
 
 // Thermals  
@@ -8084,7 +8341,8 @@ private void lab29FinalSummary() {
 
     appendHtml("<br>");
     logLine();
-    logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
+    logInfo("LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
+    logLine();
 
     // ------------------------------------------------------------
     // 1) READ FULL LOG (from all labs)
@@ -8116,8 +8374,7 @@ private void lab29FinalSummary() {
     // ------------------------------------------------------------
     // 3) PRINT SUMMARY TO UI (ONLY)
     // ------------------------------------------------------------
-    logInfo("===== FINAL TECHNICIAN SUMMARY =====");
-
+    
     if (warnings.length() == 0) {
         logOk("No warnings or errors detected.");
     } else {
@@ -8129,7 +8386,11 @@ private void lab29FinalSummary() {
         }
     }
 
+    appendHtml("<br>");
+    logOk("Lab 9 finished.");
     logLine();
+
+    appendHtml("<br>");
     logInfo("To export the official PDF report, use the button below.");
 
     // Enable existing export button (do NOT create new)

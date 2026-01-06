@@ -24,17 +24,14 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK (cmdline-tools)
+      # Android SDK
       # --------------------------------------------
-      - name: Set up Android SDK (cmdline-tools only)
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
           accept-android-sdk-licenses: true
 
-      # --------------------------------------------
-      # Install SDK packages
-      # --------------------------------------------
       - name: Install Android SDK packages
         run: |
           sdkmanager \
@@ -45,17 +42,10 @@ jobs:
             "cmake;3.22.1"
 
       # --------------------------------------------
-      # Gradle Cache (ANTI-403)
+      # Gradle wrapper permissions
       # --------------------------------------------
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       # --------------------------------------------
       # AndroidX flags
@@ -75,23 +65,23 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       # --------------------------------------------
-      # Build Release (WRAPPER + RETRY)
+      # Build Release
       # --------------------------------------------
       - name: Build Release
-        run: |
-          chmod +x ./gradlew
+        run: ./gradlew assembleRelease --no-daemon
 
-          for i in 1 2 3; do
-            echo ">>> BUILD ATTEMPT $i"
-            ./gradlew assembleRelease --no-daemon && break
-            echo ">>> FAILED — retry in 30s..."
-            sleep 30
-          done
+      # --------------------------------------------
+      # Find APK safely
+      # --------------------------------------------
+      - name: Locate APK
+        run: |
+          echo ">>> Searching for APK..."
+          find . -type f -name "*.apk"
 
       # --------------------------------------------
       # Zipalign + Sign
       # --------------------------------------------
-      - name: Install zipalign & apksigner
+      - name: Install build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
@@ -99,23 +89,22 @@ jobs:
       - name: Align & Sign APK
         run: |
           echo ">>> Searching for unsigned APK..."
-          unsigned=$(find . -name "*-unsigned.apk" | head -n 1)
+          APK_PATH=$(find . -type f -name "*-unsigned.apk" | head -n 1)
 
-          if [ -z "$unsigned" ]; then
-            echo "ERROR: unsigned APK not found anywhere."
-            find app/build/outputs -type f
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: unsigned APK not found."
             exit 1
           fi
 
-          echo ">>> Found: $unsigned"
+          echo ">>> Found: $APK_PATH"
 
-          outdir=$(dirname "$unsigned")
-          cd "$outdir"
+          OUT_DIR=$(dirname "$APK_PATH")
+          cd "$OUT_DIR"
 
-          zipalign -f 4 "$(basename "$unsigned")" aligned.apk
+          zipalign -f 4 "$(basename "$APK_PATH")" aligned.apk
 
           apksigner sign \
-            --ks "$GITHUB_WORKSPACE/gel-keystore.jks" \
+            --ks $GITHUB_WORKSPACE/gel-keystore.jks \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
@@ -133,4 +122,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Android_Cleaner_Release_APK_v4
-          path: app/build/outputs/apk/release/GEL_Android_Cleaner_v4.apk
+          path: |
+            **/GEL_Android_Cleaner_v4.apk

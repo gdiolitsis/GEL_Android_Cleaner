@@ -2590,7 +2590,7 @@ private void lab6DisplayTouch() {
                             null,
                             "LAB6_INTRO"
                     );
-                }
+                 }
             }
         });
 
@@ -2721,14 +2721,21 @@ private void lab7RotationManual() {
         root.addView(start);
 
         tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
-        tts[0].speak(
-                "Rotate the device slowly.\n" +
-                "The screen should follow the device orientation.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB7_INTRO"
-        );
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts[0].setLanguage(Locale.US);
+        ttsReady[0] =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+        if (ttsReady[0] && !ttsMuted[0]) {
+            tts[0].speak(
+                    "Rotate the device slowly.\n" +
+                    "The screen should follow the device orientation.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB7_INTRO"
+            );
+        }
     }
 });
 
@@ -2835,14 +2842,21 @@ private void lab8ProximityCall() {
         root.addView(start);
 
         tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
-        tts[0].speak(
-                "Cover the proximity sensor with your hand.\n" +
-                "The screen should turn off.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB8_INTRO"
-        );
+    if (status == TextToSpeech.SUCCESS) {
+        int res = tts[0].setLanguage(Locale.US);
+        ttsReady[0] =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
+
+        if (ttsReady[0] && !ttsMuted[0]) {
+            tts[0].speak(
+                    "Cover the proximity sensor with your hand.\n" +
+                    "The screen should turn off.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB8_INTRO"
+            );
+         }
     }
 });
 

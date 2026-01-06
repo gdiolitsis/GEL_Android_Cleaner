@@ -2491,10 +2491,6 @@ enableSingleExportButton();
 // LABS 6 — 9: DISPLAY & SENSORS  
 // ============================================================  
 
-/* ============================================================
-   LAB 6 — Display / Touch Basic Inspection (manual)
-   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
-   ============================================================ */
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
@@ -2505,12 +2501,11 @@ private void lab6DisplayTouch() {
         // ==========================
         // TTS STATE (LOCAL)
         // ==========================
-        // ==========================
-// TTS STATE (SIMPLE & SAFE)
-// ==========================
-TextToSpeech tts = null;
-boolean ttsMuted =
-        prefs.getBoolean("lab6_tts_muted", false);
+        final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsReady = {false};
+        final boolean[] ttsMuted = {
+                prefs.getBoolean("lab6_tts_muted", false)
+        };
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2578,52 +2573,40 @@ boolean ttsMuted =
         // ==========================
         // TTS INIT — SPEAK IMMEDIATELY
         // ==========================
-        TextToSpeech tts;
-boolean ttsMuted =
-        prefs.getBoolean("lab6_tts_muted", false);
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
 
-tts = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-        int res = tts.setLanguage(Locale.US);
+                int res = tts[0].setLanguage(Locale.US);
 
-        if (res != TextToSpeech.LANG_MISSING_DATA &&
-            res != TextToSpeech.LANG_NOT_SUPPORTED &&
-            !ttsMuted) {
+                ttsReady[0] =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-            tts.speak(
-        "Touch all dots on the screen to complete the test.\n" +
-        "All screen areas must respond to touch input.",
+                if (ttsReady[0] && !ttsMuted[0]) {
+                    tts[0].speak(
+                            "Touch all dots on the screen to complete the test.\n" +
+                            "All screen areas must respond to touch input.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,
                             "LAB6_INTRO"
                     );
-                 }
+                }
             }
         });
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
-
-            prefs.edit()
-                    .putBoolean("lab6_tts_muted", checked)
-                    .apply();
-
-            if (checked && tts[0] != null) {
-                tts[0].stop();
-            }
+            prefs.edit().putBoolean("lab6_tts_muted", checked).apply();
+            if (checked && tts[0] != null) tts[0].stop();
         });
 
         // ==========================
         // DIALOG CREATE / SHOW
         // ==========================
         b.setView(root);
-
         final AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
         // ==========================
@@ -2632,32 +2615,21 @@ tts = new TextToSpeech(this, status -> {
         start.setOnClickListener(v -> {
 
             if (tts[0] != null) {
-                try {
-                    tts[0].stop();
-                    tts[0].shutdown();
-                } catch (Throwable ignore) {}
+                tts[0].stop();
+                tts[0].shutdown();
             }
 
-            try {
-                if (d.isShowing()) d.dismiss();
-            } catch (Throwable ignore) {}
+            d.dismiss();
 
             startActivityForResult(
-                    new Intent(
-                            ManualTestsActivity.this,
-                            TouchGridTestActivity.class
-                    ),
+                    new Intent(this, TouchGridTestActivity.class),
                     6006
             );
         });
 
-    }); // end runOnUiThread
+    });
 }
 
-/* ============================================================
-   LAB 7 — Rotation / Auto-Rotate Check (manual)
-   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
-   ============================================================ */
 private void lab7RotationManual() {
 
     runOnUiThread(() -> {
@@ -2665,7 +2637,11 @@ private void lab7RotationManual() {
         SharedPreferences prefs =
                 getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
+        // ==========================
+        // TTS STATE (LOCAL)
+        // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab7_tts_muted", false)
         };
@@ -2727,28 +2703,29 @@ private void lab7RotationManual() {
 
         root.addView(start);
 
-        TextToSpeech tts;
-boolean ttsMuted =
-        prefs.getBoolean("lab6_tts_muted", false);
+        // ==========================
+        // TTS INIT — SPEAK IMMEDIATELY
+        // ==========================
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
 
-tts = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-        int res = tts.setLanguage(Locale.US);
+                int res = tts[0].setLanguage(Locale.US);
 
-        if (res != TextToSpeech.LANG_MISSING_DATA &&
-            res != TextToSpeech.LANG_NOT_SUPPORTED &&
-            !ttsMuted) {
+                ttsReady[0] =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-            tts.speak(
-                    "Rotate the device slowly.\n" +
-                    "The screen should follow the device orientation.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB7_INTRO"
-            );
-        }
-    }
-});
+                if (ttsReady[0] && !ttsMuted[0]) {
+                    tts[0].speak(
+                            "Rotate the device slowly.\n" +
+                            "The screen should follow the device orientation.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB7_INTRO"
+                    );
+                }
+            }
+        });
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
@@ -2757,32 +2734,28 @@ tts = new TextToSpeech(this, status -> {
         });
 
         b.setView(root);
-
-        AlertDialog d = b.create();
+        final AlertDialog d = b.create();
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
         d.show();
 
         start.setOnClickListener(v -> {
+
             if (tts[0] != null) {
                 tts[0].stop();
                 tts[0].shutdown();
             }
+
             d.dismiss();
 
             startActivityForResult(
-        new Intent(this, RotationCheckActivity.class),
-        7007
-);
+                    new Intent(this, RotationCheckActivity.class),
+                    7007
+            );
         });
     });
 }
 
-/* ============================================================
-   LAB 8 — Proximity Sensor Test (manual)
-   POPUP — WITH MUTE • TTS BEFORE START • DISMISSES ON START
-   ============================================================ */
 private void lab8ProximityCall() {
 
     runOnUiThread(() -> {
@@ -2790,7 +2763,11 @@ private void lab8ProximityCall() {
         SharedPreferences prefs =
                 getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
+        // ==========================
+        // TTS STATE (LOCAL)
+        // ==========================
         final TextToSpeech[] tts = new TextToSpeech[1];
+        final boolean[] ttsReady = {false};
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab8_tts_muted", false)
         };
@@ -2852,28 +2829,29 @@ private void lab8ProximityCall() {
 
         root.addView(start);
 
-        TextToSpeech tts;
-boolean ttsMuted =
-        prefs.getBoolean("lab6_tts_muted", false);
+        // ==========================
+        // TTS INIT — SPEAK IMMEDIATELY
+        // ==========================
+        tts[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
 
-tts = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-        int res = tts.setLanguage(Locale.US);
+                int res = tts[0].setLanguage(Locale.US);
 
-        if (res != TextToSpeech.LANG_MISSING_DATA &&
-            res != TextToSpeech.LANG_NOT_SUPPORTED &&
-            !ttsMuted) {
+                ttsReady[0] =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-            tts.speak(
-                    "Cover the proximity sensor with your hand.\n" +
-                    "The screen should turn off.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB8_INTRO"
-            );
-         }
-    }
-});
+                if (ttsReady[0] && !ttsMuted[0]) {
+                    tts[0].speak(
+                            "Cover the proximity sensor with your hand.\n" +
+                            "The screen should turn off.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB8_INTRO"
+                    );
+                }
+            }
+        });
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
@@ -2882,18 +2860,18 @@ tts = new TextToSpeech(this, status -> {
         });
 
         b.setView(root);
-
-        AlertDialog d = b.create();
+        final AlertDialog d = b.create();
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
         d.show();
 
         start.setOnClickListener(v -> {
+
             if (tts[0] != null) {
                 tts[0].stop();
                 tts[0].shutdown();
             }
+
             d.dismiss();
 
             startActivityForResult(

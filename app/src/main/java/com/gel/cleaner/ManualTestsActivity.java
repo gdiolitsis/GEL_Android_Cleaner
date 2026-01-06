@@ -147,7 +147,7 @@ private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
 private TextToSpeech tts;
-private boolean ttsReady = false;
+
 
     // ============================================================
     // SERVICE LOG SESSION FLAG (CRITICAL)

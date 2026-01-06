@@ -140,6 +140,17 @@ import java.util.Map;
 public class ManualTestsActivity extends AppCompatActivity {
 	
 // ============================================================
+// GLOBAL TTS (for labs that need shared access)
+// ============================================================
+private TextToSpeech[] tts = new TextToSpeech[1];
+private boolean[] ttsReady = { false };
+
+// ============================================================
+// GLOBAL PREFS ALIAS (used by labs + helpers)
+// ============================================================
+private SharedPreferences p;
+	
+// ============================================================
 // GEL DIAG — GLOBAL PREFS (CLASS LEVEL)
 // ============================================================
 private SharedPreferences prefs;
@@ -308,10 +319,12 @@ private static final int LAB15_TOTAL_SECONDS = 180;
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+    p     = prefs;   // 🔒 ALIAS — όλα τα labs/helpers δουλεύουν με p
+}
 
         ui = new Handler(Looper.getMainLooper());
 

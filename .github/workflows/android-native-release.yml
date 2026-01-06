@@ -24,14 +24,17 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK
+      # Android SDK cmdline-tools ONLY
       # --------------------------------------------
-      - name: Set up Android SDK
+      - name: Set up Android SDK (cmdline-tools only)
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
           accept-android-sdk-licenses: true
 
+      # --------------------------------------------
+      # Install SDK packages (FIXED – manual sdkmanager)
+      # --------------------------------------------
       - name: Install Android SDK packages
         run: |
           sdkmanager \
@@ -42,10 +45,14 @@ jobs:
             "cmake;3.22.1"
 
       # --------------------------------------------
-      # Gradle wrapper permissions
+      # Gradle 8.2.1
       # --------------------------------------------
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Install Gradle
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
+          unzip -q gradle-8.2.1-bin.zip
+          echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
+          echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 
       # --------------------------------------------
       # AndroidX flags
@@ -68,40 +75,26 @@ jobs:
       # Build Release
       # --------------------------------------------
       - name: Build Release
-        run: ./gradlew assembleRelease --no-daemon
-
-      # --------------------------------------------
-      # Find APK safely
-      # --------------------------------------------
-      - name: Locate APK
-        run: |
-          echo ">>> Searching for APK..."
-          find . -type f -name "*.apk"
+        run: gradle assembleRelease
 
       # --------------------------------------------
       # Zipalign + Sign
       # --------------------------------------------
-      - name: Install build tools
+      - name: Install Android build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
 
       - name: Align & Sign APK
         run: |
-          echo ">>> Searching for unsigned APK..."
-          APK_PATH=$(find . -type f -name "*-unsigned.apk" | head -n 1)
+          cd app/build/outputs/apk/release
+          echo ">>> APKs:"
+          ls -1 *.apk
 
-          if [ -z "$APK_PATH" ]; then
-            echo "ERROR: unsigned APK not found."
-            exit 1
-          fi
+          unsigned=$(ls *-unsigned.apk | head -n 1)
+          echo ">>> Signing: $unsigned"
 
-          echo ">>> Found: $APK_PATH"
-
-          OUT_DIR=$(dirname "$APK_PATH")
-          cd "$OUT_DIR"
-
-          zipalign -f 4 "$(basename "$APK_PATH")" aligned.apk
+          zipalign -f 4 "$unsigned" aligned.apk
 
           apksigner sign \
             --ks $GITHUB_WORKSPACE/gel-keystore.jks \
@@ -122,5 +115,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: GEL_Android_Cleaner_Release_APK_v4
-          path: |
-            **/GEL_Android_Cleaner_v4.apk
+          path: app/build/outputs/apk/release/GEL_Android_Cleaner_v4.apk

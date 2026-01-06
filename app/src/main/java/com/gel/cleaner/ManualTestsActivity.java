@@ -508,10 +508,11 @@ setContentView(scroll);
 // ==========================
 // TEXT TO SPEECH INIT
 // ==========================
-tts = new TextToSpeech(this, status -> {
+tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
-        int res = tts.setLanguage(Locale.US);
-        ttsReady =
+        int res = tts[0].setLanguage(Locale.US);
+
+        ttsReady[0] =
                 res != TextToSpeech.LANG_MISSING_DATA &&
                 res != TextToSpeech.LANG_NOT_SUPPORTED;
     }

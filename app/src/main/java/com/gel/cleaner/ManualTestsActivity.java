@@ -146,9 +146,6 @@ private volatile boolean lab3WaitingUser = false;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
-private TextToSpeech tts;
-
-
     // ============================================================
     // SERVICE LOG SESSION FLAG (CRITICAL)
     // ============================================================
@@ -2630,6 +2627,10 @@ private void lab6DisplayTouch() {
     });
 }
 
+/* ==========================
+// LAB 7 - Rotation manual
+// ==========================
+
 private void lab7RotationManual() {
 
     runOnUiThread(() -> {
@@ -2755,6 +2756,10 @@ private void lab7RotationManual() {
         });
     });
 }
+
+/* ==========================
+// LAB 8 - Proximity call
+// ==========================
 
 private void lab8ProximityCall() {
 

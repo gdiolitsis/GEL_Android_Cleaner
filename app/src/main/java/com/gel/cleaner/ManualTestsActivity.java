@@ -546,9 +546,8 @@ if (!serviceLogInit) {
     private void logRed(String msg)    { logError(msg); }
 
     private void logSection(String msg) {
-    appendHtml("&nbsp;");   // 👈 ΥΠΟΧΡΕΩΤΙΚΗ ΚΕΝΗ ΓΡΑΜΜΗ
-    logInfo(msg);
-    }
+    logInfo(msg); // ΜΟΝΟ τίτλος, τίποτα άλλο
+}
 
     // ============================================================
     // UI HELPERS (GEL LOCKED)
@@ -754,6 +753,8 @@ noBtn.setPadding(dp(20), dp(10), dp(20), dp(10));
 
     logOk("LAB 3 — Earpiece audio path OK.");
     logOk("User confirmed sound was heard from earpiece.");
+    
+    appendHtml("<br>");
     logOk("Lab 3 finished.");
     logLine();
 
@@ -767,6 +768,8 @@ noBtn.setOnClickListener(v -> {
     logError("LAB 3 — Earpiece audio path FAILED.");
     logWarn("User did NOT hear sound from earpiece.");
     logWarn("Possible earpiece failure or audio routing issue.");
+    
+    appendHtml("<br>");
     logOk("Lab 3 finished.");
     logLine();
 
@@ -2147,6 +2150,7 @@ private boolean detectFrequentRebootsHint() {
 // ============================================================
 private void lab1SpeakerTone() {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 1 — Speaker Tone Test");
     logLine();
@@ -2192,7 +2196,7 @@ private void lab1SpeakerTone() {
         } finally {
             if (tg != null) tg.release();
 
-            // ✅ ΤΕΛΕΙΩΝΕΙ ΕΔΩ — ΟΧΙ ΕΞΩ
+            appendHtml("<br>");
             logOk("Lab 1 finished.");
             logLine();
         }
@@ -2205,6 +2209,7 @@ private void lab1SpeakerTone() {
 // ============================================================
 private void lab2SpeakerSweep() {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 2 — Speaker Frequency Sweep");
     logLine();
@@ -2260,7 +2265,7 @@ private void lab2SpeakerSweep() {
         } finally {
             if (tg != null) tg.release();
 
-            // ✅ ΤΕΛΟΣ LAB ΕΔΩ ΜΟΝΟ
+            appendHtml("<br>");
             logOk("Lab 2 finished.");
             logLine();
         }
@@ -2274,6 +2279,7 @@ private void lab2SpeakerSweep() {
    ============================================================ */
 private void lab3EarpieceManual() {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 3 — Earpiece Audio Path Check");
     logLine();
@@ -2385,6 +2391,7 @@ root.addView(ok);
    ============================================================ */
 private void lab4MicManual() {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
     logLine();
@@ -2422,6 +2429,7 @@ private void lab4MicManual() {
 
         } finally {
 
+            appendHtml("<br>");
             logOk("Lab 4 finished.");
             logLine();
 
@@ -2436,6 +2444,7 @@ private void lab4MicManual() {
    ============================================================ */
 private void lab5Vibration() {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 5 — Vibration Motor Test");
     logLine();
@@ -2470,6 +2479,7 @@ private void lab5Vibration() {
     logError("Vibration test failed");
 }
 
+appendHtml("<br>");
 logOk("Lab 5 finished.");
 logLine();
 enableSingleExportButton();
@@ -2574,7 +2584,8 @@ private void lab6DisplayTouch() {
 
                 if (ttsReady[0] && !ttsMuted[0]) {
                     tts[0].speak(
-                            "Touch all dots on the screen to complete the test.",
+        "Touch all dots on the screen to complete the test.\n" +
+        "All screen areas must respond to touch input.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,
                             "LAB6_INTRO"
@@ -2710,15 +2721,16 @@ private void lab7RotationManual() {
         root.addView(start);
 
         tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
-                tts[0].speak(
-                        "Rotate the device slowly. The screen should follow.",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "LAB7_INTRO"
-                );
-            }
-        });
+    if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
+        tts[0].speak(
+                "Rotate the device slowly.\n" +
+                "The screen should follow the device orientation.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB7_INTRO"
+        );
+    }
+});
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
@@ -2823,15 +2835,16 @@ private void lab8ProximityCall() {
         root.addView(start);
 
         tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
-                tts[0].speak(
-                        "Cover the proximity sensor. The screen should turn off.",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "LAB8_INTRO"
-                );
-            }
-        });
+    if (status == TextToSpeech.SUCCESS && !ttsMuted[0]) {
+        tts[0].speak(
+                "Cover the proximity sensor with your hand.\n" +
+                "The screen should turn off.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB8_INTRO"
+        );
+    }
+});
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
@@ -2868,6 +2881,7 @@ private void lab8ProximityCall() {
 
 private void lab9SensorsCheck() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 9 — Sensors Presence & Full Analysis");
     logLine();
@@ -2980,6 +2994,8 @@ private void lab9SensorsCheck() {
     } catch (Throwable e) {
     logError("Sensors analysis error: " + e.getMessage());
 } finally {
+	
+	appendHtml("<br>");
     logOk("Lab 9 finished.");
         logLine();
     }
@@ -3000,6 +3016,8 @@ private void checkSensor(SensorManager sm, int type, String name) {
 // LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR  
 // ============================================================  
 private void lab10WifiSnapshot() {  
+	
+	appendHtml("<br>");
     logLine();  
     logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");  
     logLine();
@@ -3192,9 +3210,11 @@ private void runWifiDeepScan(WifiManager wm) {
             logOk(String.format(Locale.US,
                     "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));
 
-            logOk("DeepScan finished.");
-            logLine();
+            logOk("DeepScan finished.n\");
+            
+            appendHtml("<br>");
             logOk("Lab 10 finished.");
+            logLine();
 
         } catch (Exception e) {
             logError("DeepScan error: " + e.getMessage());
@@ -3218,6 +3238,7 @@ private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
 
 private void lab11MobileDataDiagnostic() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 11 — Mobile Network Diagnostic (Laboratory)");
     logLine();
@@ -3310,6 +3331,8 @@ private void lab11MobileDataDiagnostic() {
     // Laboratory conclusion
     // ------------------------------------------------------------
     logOk("Laboratory snapshot collected. No functional verdict inferred.");
+    
+appendHtml("<br>");
 logOk("Lab 11 finished.");
 logLine();
 }
@@ -3320,6 +3343,7 @@ logLine();
 
 private void lab12CallFunctionInterpretation() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 12 — Call Function Interpretation (Laboratory)");
     logLine();
@@ -3396,6 +3420,8 @@ private void lab12CallFunctionInterpretation() {
     logInfo(
         "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
 );
+
+appendHtml("<br>");
 logOk("Lab 12 finished.");
 logLine();
 }
@@ -3405,6 +3431,7 @@ logLine();
 // ============================================================
 private void lab13InternetQuickCheck() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 13 — Internet Access Quick Check.");
     logLine();
@@ -3510,7 +3537,8 @@ private void lab13InternetQuickCheck() {
     } catch (Throwable e) {
         logWarn("Network exposure snapshot unavailable: " + e.getMessage());
     }
-
+    
+    appendHtml("<br>");
     logOk("Lab 13 finished.");
     logLine();
 }
@@ -4116,6 +4144,7 @@ logOk("✅ LAB 14 result stored successfully.");
 // 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
 logLab14Confidence();
 
+appendHtml("<br>");
 logOk("LAB 14 finished.");
 logLine();
             }
@@ -4332,6 +4361,8 @@ root.addView(title);
                     logError("❌ Charger disconnected for more than 5 seconds.");
                     logError("❌ Charging test aborted.");
 
+
+                    appendHtml("<br>");
                     logOk("LAB 15 finished.");
                     logLine();
 
@@ -4524,6 +4555,7 @@ root.addView(title);
 
             } catch (Throwable ignore) {}
 
+            appendHtml("<br>");
             logOk("LAB 15 finished.");
             logLine();
 
@@ -4568,6 +4600,7 @@ root.addView(title);
 // ============================================================
 private void lab16ThermalSnapshot() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 16 — Thermal Snapshot");
     logLine();
@@ -4693,6 +4726,7 @@ logLine();
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
+appendHtml("<br>");
 logOk("Lab 16 finished.");
 logLine();
 }
@@ -4810,6 +4844,8 @@ final boolean hvConfirmed =
 // ------------------------------------------------------------
 // START LAB 17
 // ------------------------------------------------------------
+
+appendHtml("<br>"); 
 logLine();
 logInfo("LAB 17 — GEL Intelligent System Health Analysis");
 logLine();
@@ -5015,7 +5051,8 @@ try {
 } catch (Throwable ignore) {}
 
 // ================= FINAL (UI THREAD) =================
-logLine();
+
+appendHtml("<br>");
 logOk("LAB 17 finished.");
 logLine();
 
@@ -5128,6 +5165,7 @@ private String lab17_age(long deltaMs) {
 // ============================================================
 private void lab18StorageSnapshot() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 18 — Internal Storage Health Inspection");
     logLine();
@@ -5243,6 +5281,7 @@ private void lab18StorageSnapshot() {
         logWarn("Unable to access filesystem statistics safely.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 18 finished.");
     logLine();
 }
@@ -5258,6 +5297,7 @@ private void lab18StorageSnapshot() {
 // ============================================================
 private void lab19RamSnapshot() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 19 — Live RAM Health Snapshot");
     logLine();
@@ -5343,6 +5383,7 @@ private void lab19RamSnapshot() {
         logError("RAM snapshot failed.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 19 finished.");
     logLine();
 }
@@ -5353,6 +5394,7 @@ private void lab19RamSnapshot() {
 // ============================================================
 private void lab20UptimeHints() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 20 — System Uptime & Reboot Behaviour");
     logLine();
@@ -5430,7 +5472,8 @@ private void lab20UptimeHints() {
     } catch (Throwable t) {
         logError("Uptime analysis failed.");
     }
-
+    
+    appendHtml("<br>");
     logOk("Lab 20 finished.");
     logLine();
 }
@@ -5454,6 +5497,7 @@ private void lab21ScreenLock() {
     }
     lab21Running = true;
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 21 — Screen Lock / Biometrics (Live + Root-Aware)");
     logLine();
@@ -5620,6 +5664,8 @@ if (biometricSupported) {
 // ------------------------------------------------------------
 if (!secure) {
     logWarn("Live biometric test skipped: secure lock required.");
+    
+    appendHtml("<br>");
     logOk("LAB 21 finished.");
     logLine();
     lab21Running = false;
@@ -5631,6 +5677,8 @@ if (!biometricSupported) {
     logWarn("Biometrics not ready or not available.");
     logInfo("Action:");
     logOk("Enroll biometrics in Settings, then re-run LAB 21.");
+    
+    appendHtml("<br>");
     logOk("LAB 21 finished.");
     logLine();
     lab21Running = false;
@@ -5662,6 +5710,7 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
                         logOk("Disable current biometric in Settings and re-run LAB 21 to test another sensor.");
                         logWarn("OEM priority may keep same sensor even after disabling.");
 
+                        appendHtml("<br>");
                         logOk("LAB 21 finished.");
                         logLine();
                         lab21Running = false;
@@ -5681,6 +5730,7 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
                     public void onAuthenticationError(int errorCode, CharSequence errString) {
                         logWarn("System fallback to device credential detected — biometric sensor NOT confirmed functional.");
 
+                        appendHtml("<br>");
                         logOk("LAB 21 finished.");
                         logLine();
                         lab21Running = false;
@@ -5697,6 +5747,8 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
                                 executor,
                                 (dialog, which) -> {
                                     logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
+                                    
+                                    appendHtml("<br>");
                                     logOk("LAB 21 finished.");
                                     logLine();
                                     lab21Running = false;
@@ -5712,6 +5764,8 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
 
     } catch (Throwable e) {
         logWarn("Live biometric prompt failed: " + e.getMessage());
+        
+        appendHtml("<br>");
         logOk("LAB 21 finished.");
         logLine();
         lab21Running = false;
@@ -5728,8 +5782,9 @@ if (android.os.Build.VERSION.SDK_INT >= 28) {
 
     logInfo("Action:");
     logOk("Disable the active biometric in Settings to test another sensor.");
-
-    logOk("LAB 21 finished.");
+    
+    appendHtml("<br>");
+    logOk("LAB 21 finished.");    
     logLine();
     lab21Running = false;
     }
@@ -5790,6 +5845,7 @@ private String runSu(String command) {
 // ============================================================
 private void lab22SecurityPatchManual() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 22 — Security Patch & Play Protect Check");
     logLine();
@@ -5906,6 +5962,7 @@ private void lab22SecurityPatchManual() {
     logWarn("   Very old patch levels increase exploit exposure.");
     logInfo("2) Google Play Store → Play Protect → verify scanning is enabled.");
 
+    appendHtml("<br>");
     logOk("Lab 22 finished.");
     logLine();
 }
@@ -5915,11 +5972,13 @@ private void lab22SecurityPatchManual() {
 // GEL Security v3.1 (Realtime Snapshot)
 // ============================================================
 private void lab23DevOptions() {
+	
+appendHtml("<br>"); 
 logLine();
 logInfo("LAB 23 — Developer Options / ADB Risk Note (Realtime).");
 logLine();
-int risk = 0;  
 
+int risk = 0;  
 
 // ============================================================  
 // 1) USB DEBUGGING FLAG (ADB_ENABLED)  
@@ -6061,6 +6120,7 @@ else if (risk >= 30)
 else  
     logOk("✔️ Risk level acceptable.");
 
+appendHtml("<br>");
 logOk("LAB 23 finished.");
 logLine();
 }
@@ -6109,6 +6169,7 @@ return false;
 // ============================================================
 private void lab24RootSuspicion() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 24 — Root / Bootloader Integrity Scan (AUTO).");
     logLine();
@@ -6359,6 +6420,7 @@ if (risk >= 70 || suExec || pkgHit) {
     logOk("STATUS: SAFE (no significant modification evidence).");
 }
 
+appendHtml("<br>");
 logOk("Lab 24 finished.");
 logLine();
 
@@ -6449,7 +6511,8 @@ private String lab24_readOneLine(String path) {
 // LAB 25 — GEL Crash Intelligence v5.0 (FULL AUTO EDITION)
 // ============================================================
 private void lab25CrashHistory() {
-
+	
+appendHtml("<br>");
 logLine();  
 logInfo("LAB 25 — GEL Crash Intelligence (AUTO)");  
 logLine();  
@@ -6648,6 +6711,7 @@ if (!details.isEmpty()) {
     logOk("No crash history found.");
 }
 
+appendHtml("<br>");
 logOk("Lab 25 finished.");
 logLine();  
 
@@ -6697,6 +6761,7 @@ private String safeStr(String s) {
 // ============================================================
 private void lab26AppsFootprint() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 26 — Installed Apps Footprint & System Load");
     logLine();
@@ -7107,6 +7172,7 @@ if (!isSystem &&
         logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 26 finished.");
     logLine();
 }
@@ -7148,6 +7214,7 @@ private long dirSizeBestEffortRoot(File dir) {
 // ============================================================
 private void lab27PermissionsPrivacy() {
 
+appendHtml("<br>");
 logLine();  
 logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");  
 logLine();  
@@ -7341,6 +7408,7 @@ logInfo("Privacy analysis note:");
 logOk("Granted permissions do not imply malicious behavior.");
 logOk("This result does not indicate hardware or system failure.");
  
+appendHtml("<br>");
 logOk("Lab 27 finished.");
 logLine();  
 
@@ -7417,6 +7485,8 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab28CombineFindings() {
+
+appendHtml("<br>");
 logLine();
 logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
 logLine();
@@ -7591,7 +7661,9 @@ if (verdict.startsWith("🟩")) logOk(verdict);
 else if (verdict.startsWith("🟨")) logWarn(verdict);  
 else logError(verdict);  
 
+appendHtml("<br>");
 logOk("Lab 28 finished.");
+logLine();  
 
 }
 
@@ -7998,6 +8070,7 @@ return String.format(Locale.US, "%.1f", v);
 // ============================================================
 private void lab29FinalSummary() {
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 29 — Final Technician Summary (READ-ONLY)");
 
@@ -8142,6 +8215,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         int total = TouchGridTestActivity.getTotalZones();
         int remaining = TouchGridTestActivity.getRemainingZones();
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 6 — Display / Touch");
     logLine();
@@ -8166,6 +8240,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logWarn("Manual re-test is recommended to confirm behavior.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 6 finished.");
     logLine();
 
@@ -8175,6 +8250,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode == 7007) {
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 7 — Rotation / Auto-Rotate");
     logLine();
@@ -8189,6 +8265,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logWarn("Auto-rotate may be disabled or sensor malfunctioning.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 7 finished.");
     logLine();
 
@@ -8198,6 +8275,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode == 8008) { // LAB 8 — Proximity Sensor
 
+    appendHtml("<br>");
     logLine();
     logSection("LAB 8 — Proximity Sensor");
     logLine();
@@ -8212,6 +8290,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logWarn("Possible sensor obstruction or hardware fault.");
     }
 
+    appendHtml("<br>");
     logOk("Lab 8 finished.");
     logLine();
 

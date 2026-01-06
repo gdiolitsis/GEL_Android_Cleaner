@@ -98,20 +98,21 @@ jobs:
 
       - name: Align & Sign APK
         run: |
-          cd app/build/outputs/apk/release
+          echo ">>> Searching for unsigned APK..."
+          unsigned=$(find . -name "*-unsigned.apk" | head -n 1)
 
-          echo ">>> APKs:"
-          ls -1 *.apk || true
-
-          unsigned=$(ls *-unsigned.apk | head -n 1)
           if [ -z "$unsigned" ]; then
-            echo "ERROR: unsigned apk not found"
+            echo "ERROR: unsigned APK not found anywhere."
+            find app/build/outputs -type f
             exit 1
           fi
 
-          echo ">>> Signing: $unsigned"
+          echo ">>> Found: $unsigned"
 
-          zipalign -f 4 "$unsigned" aligned.apk
+          outdir=$(dirname "$unsigned")
+          cd "$outdir"
+
+          zipalign -f 4 "$(basename "$unsigned")" aligned.apk
 
           apksigner sign \
             --ks "$GITHUB_WORKSPACE/gel-keystore.jks" \

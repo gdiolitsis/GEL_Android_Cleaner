@@ -24,7 +24,7 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK cmdline-tools ONLY
+      # Android SDK (cmdline-tools)
       # --------------------------------------------
       - name: Set up Android SDK (cmdline-tools only)
         uses: android-actions/setup-android@v3
@@ -33,7 +33,7 @@ jobs:
           accept-android-sdk-licenses: true
 
       # --------------------------------------------
-      # Install SDK packages (FIXED – manual sdkmanager)
+      # Install SDK packages
       # --------------------------------------------
       - name: Install Android SDK packages
         run: |
@@ -45,14 +45,17 @@ jobs:
             "cmake;3.22.1"
 
       # --------------------------------------------
-      # Gradle 8.2.1
+      # Gradle Cache (ANTI-403)
       # --------------------------------------------
-      - name: Install Gradle
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
-          unzip -q gradle-8.2.1-bin.zip
-          echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
-          echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       # --------------------------------------------
       # AndroidX flags
@@ -72,15 +75,23 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       # --------------------------------------------
-      # Build Release
+      # Build Release (WRAPPER + RETRY)
       # --------------------------------------------
       - name: Build Release
-        run: gradle assembleRelease
+        run: |
+          chmod +x ./gradlew
+
+          for i in 1 2 3; do
+            echo ">>> BUILD ATTEMPT $i"
+            ./gradlew assembleRelease --no-daemon && break
+            echo ">>> FAILED — retry in 30s..."
+            sleep 30
+          done
 
       # --------------------------------------------
       # Zipalign + Sign
       # --------------------------------------------
-      - name: Install Android build tools
+      - name: Install zipalign & apksigner
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign apksigner
@@ -88,16 +99,22 @@ jobs:
       - name: Align & Sign APK
         run: |
           cd app/build/outputs/apk/release
+
           echo ">>> APKs:"
-          ls -1 *.apk
+          ls -1 *.apk || true
 
           unsigned=$(ls *-unsigned.apk | head -n 1)
+          if [ -z "$unsigned" ]; then
+            echo "ERROR: unsigned apk not found"
+            exit 1
+          fi
+
           echo ">>> Signing: $unsigned"
 
           zipalign -f 4 "$unsigned" aligned.apk
 
           apksigner sign \
-            --ks $GITHUB_WORKSPACE/gel-keystore.jks \
+            --ks "$GITHUB_WORKSPACE/gel-keystore.jks" \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \

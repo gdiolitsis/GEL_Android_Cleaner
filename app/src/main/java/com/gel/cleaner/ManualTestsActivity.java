@@ -324,21 +324,20 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
     p     = prefs;   // 🔒 ALIAS — όλα τα labs/helpers δουλεύουν με p
-}
 
-        ui = new Handler(Looper.getMainLooper());
+    ui = new Handler(Looper.getMainLooper());
 
-        // ============================================================
-        // ROOT SCROLL + LAYOUT
-        // ============================================================
-        scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
+    // ============================================================
+    // ROOT SCROLL + LAYOUT
+    // ============================================================
+    scroll = new ScrollView(this);
+    scroll.setFillViewport(true);
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(16);
-        root.setPadding(pad, pad, pad, pad);
-        root.setBackgroundColor(0xFF101010); // GEL black
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    root.setPadding(pad, pad, pad, pad);
+    root.setBackgroundColor(0xFF101010); // GEL black
 
         // ============================================================
         // TITLE

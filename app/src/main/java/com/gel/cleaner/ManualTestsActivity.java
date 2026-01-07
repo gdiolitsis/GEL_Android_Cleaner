@@ -1411,7 +1411,6 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
                 prefs.getBoolean(PREF_TTS_MUTED, false)
         };
 
-        LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
@@ -1544,6 +1543,7 @@ btnContinue.setOnClickListener(v -> {
     dlg.dismiss();
     if (onContinue != null) onContinue.run();
 });
+}
 
 // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND (LAB 14)

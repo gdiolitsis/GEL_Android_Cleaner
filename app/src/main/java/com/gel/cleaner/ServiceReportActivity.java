@@ -1,10 +1,9 @@
-// GDiolitsis Engine Lab (GEL) â€” Author & Developer
-// ServiceReportActivity â€” Foldable Ready v4.1 (GEL Patched)
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// ServiceReportActivity — Foldable Ready v4.1 (GEL Patched)
 // --------------------------------------------------------------
-// âœ” Based 100% on your latest file (NO logic changes)
-// âœ” Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
-// âœ” FIXED: broken braces (exportWithCheck was inside onCreate)
-// âœ” FIXED: single Export PDF button (stable height)
+// ✔ Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
+// ✔ FIXED: broken braces (exportWithCheck was inside onCreate)
+// ✔ FIXED: single Export PDF button (stable height)
 // --------------------------------------------------------------
 // NOTE (GEL RULE): Full file for copy-paste. No partial patches.
 
@@ -106,7 +105,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("ðŸ“„ " + getString(R.string.export_report_title));
+        title.setText("📄 " + getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -203,7 +202,7 @@ root.addView(btnPdf);
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT â€” MULTI PAGE + LOGO
+    // PDF EXPORT — MULTI PAGE + LOGO
     // ----------------------------------------------------------
     private void exportPdf() {
         try {
@@ -260,7 +259,7 @@ root.addView(btnPdf);
                 int maxY = pageHeight - margin;
 
                 while (currentLine < lines.length && y < maxY) {
-                    String line = unicodeWrap(lines[currentLine], 85);
+                    String line = unicodeWrap(lines[currentLine], 72);
                     for (String subLine : line.split("\n")) {
                         if (y >= maxY) break;
                         canvas.drawText(subLine, margin, y, paint);
@@ -349,7 +348,7 @@ root.addView(btnPdf);
         if (GELServiceLog.isEmpty()) {
             sb.append(getString(R.string.report_no_entries)).append("\n");
         } else {
-            sb.append(GELServiceLog.getAll()).append("\n");
+            sb.append(stripTimestamps(GELServiceLog.getAll())).append("\n");
         }
 
         sb.append("\n").append(getString(R.string.report_end)).append("\n");
@@ -371,9 +370,16 @@ root.addView(btnPdf);
         if (GELServiceLog.isEmpty()) {
             return getString(R.string.preview_empty);
         }
-        return GELServiceLog.getAll();
+        return stripTimestamps(GELServiceLog.getAll());
     }
 
+    private String stripTimestamps(String log) {
+    if (log == null) return "";
+
+    // αφαιρεί patterns τύπου: 2026-01-07 23:21:37
+    return log.replaceAll("\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*", "");
+}
+    
     // ----------------------------------------------------------
     // GEL AUTO DP/SP HELPERS (Universal Scaling)
     // ----------------------------------------------------------

@@ -75,15 +75,14 @@ public static synchronized void section(String title) {
     if (title == null || title.trim().isEmpty())
         title = "Service Section";
 
-    String line = "═════════════════════";  
-";
+    String line = "═════════════════════";
 
     add("", line);
     add("SECTION", title.toUpperCase(Locale.US));    
     add("", line);
 }
     // ============================================================
-    // GET FULL REPORT
+    // GEL FULL REPORT
     // ============================================================
     public static synchronized String getAll() {
         return LOG.toString();

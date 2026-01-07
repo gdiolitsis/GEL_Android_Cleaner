@@ -25,6 +25,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
 
+import com.gel.cleaner.base.UIHelpers;
 import com.gel.cleaner.iphone.IPSPanicParser;
 
 import java.io.BufferedInputStream;
@@ -214,7 +215,6 @@ public class IPhoneLabsActivity extends AppCompatActivity {
         txtLog.setLineSpacing(0f, 1.12f);
         txtLog.setMovementMethod(new ScrollingMovementMethod());
         txtLog.setPadding(dp(12), dp(12), dp(12), dp(12));
-        txtLog.setBackgroundResource(R.drawable.gel_btn_outline_selector);
         txtLog.setIncludeFontPadding(false);
         root.addView(txtLog);
 
@@ -257,6 +257,8 @@ GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
 // Boot / intro entries (ONCE)
 logLine();
 logInfo("GEL iPhone Labs — ready.");
+logLine();
+
 logOk("Import a panic log to begin analysis.");
 
 } // onCreate ends here
@@ -283,7 +285,8 @@ private void openPanicLogPicker() {
     });
 
     startActivityForResult(i, REQ_PANIC_LOG);
-
+    
+    appendHtml("<br>");
     logLine();
     logInfo("Panic Log Import requested (SAF).");
     logLine();
@@ -791,86 +794,101 @@ private void runServiceRecommendationLab() {
     // UI HELPER — BUTTON (GUARDED CLICK)
     // ============================================================
     private View makeLabButton(
-            String title,
-            String subtitle,
-            boolean requiresPanicLog,
-            View.OnClickListener realClick
-    ) {
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
+        String title,
+        String subtitle,
+        boolean requiresPanicLog,
+        View.OnClickListener realClick
+) {
+    LinearLayout container = new LinearLayout(this);
+    container.setOrientation(LinearLayout.VERTICAL);
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        lp.setMargins(0, dp(10), 0, dp(10));
-        container.setLayoutParams(lp);
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    );
+    lp.setMargins(0, dp(10), 0, dp(10));
+    container.setLayoutParams(lp);
 
-        container.setPadding(dp(16), dp(16), dp(16), dp(16));
-        container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        container.setClickable(true);
-        container.setFocusable(true);
-        container.setFocusableInTouchMode(false);
+    container.setPadding(dp(16), dp(16), dp(16), dp(16));
+    container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    container.setClickable(true);
+    container.setFocusable(true);
+    container.setFocusableInTouchMode(false);
 
-        TextView t = new TextView(this);
-        t.setText(title);
-        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
-        t.setTextColor(COLOR_NEON);
-        t.setIncludeFontPadding(false);
-        t.setClickable(false);
-        t.setFocusable(false);
+    TextView t = new TextView(this);
+    t.setText(title);
+    t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+    t.setTextColor(COLOR_NEON);
+    t.setIncludeFontPadding(false);
+    t.setClickable(false);
+    t.setFocusable(false);
 
-        TextView s = new TextView(this);
-        s.setText(subtitle);
-        s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        s.setTextColor(COLOR_WHITE);
-        s.setPadding(0, dp(6), 0, 0);
-        s.setClickable(false);
-        s.setFocusable(false);
+    TextView s = new TextView(this);
+    s.setText(subtitle);
+    s.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+    s.setTextColor(COLOR_WHITE);
+    s.setPadding(0, dp(6), 0, 0);
+    s.setClickable(false);
+    s.setFocusable(false);
 
-        container.addView(t);
-        container.addView(s);
+    container.addView(t);
+    container.addView(s);
 
-        container.setOnClickListener(v -> {
-            if (requiresPanicLog && (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty())) {
-                toast("Load panic log first.");
-                logWarn("Load Panic Log first.");
-                return;
-            }
-            if (realClick != null) realClick.onClick(v);
-        });
+    // εφέ πατήματος (μία φορά για όλα τα buttons)
+    UIHelpers.applyPressEffect(container);
 
-        return container;
-    }
+    // guarded click
+    container.setOnClickListener(v -> {
+        if (requiresPanicLog && (!panicLogLoaded || panicLogText == null || panicLogText.trim().isEmpty())) {
+            toast("Load panic log first.");
+            logWarn("Load Panic Log first.");
+            return;
+        }
+        if (realClick != null) realClick.onClick(v);
+    });
+
+    return container;
+}
 
 // ============================================================
-// LOGGING (UI + GELServiceLog) — UTF CLEAN
+// LOGGING — GEL CANONICAL (UI + SERVICE REPORT)
 // ============================================================
-
-private void logLine() {
-    String line = "----------------------------------------";
-    appendHtml("<font color='#888888'>" + line + "</font>");
-    try { GELServiceLog.info(line); } catch (Throwable ignore) {}
+private void appendHtml(String html) {
+    ui.post(() -> {
+        CharSequence cur = txtLog.getText();
+        CharSequence add = Html.fromHtml(html + "<br>");
+        txtLog.setText(TextUtils.concat(cur, add));
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+    });
 }
 
 private void logInfo(String msg) {
-    appendHtml("<font color='#FFFFFF'>ℹ " + escape(msg) + "</font>");
-    try { GELServiceLog.info("ℹ " + msg); } catch (Throwable ignore) {}
+    String s = "ℹ️ " + safe(msg);
+    appendHtml(s);
+    GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#00FF66'>✔ " + escape(msg) + "</font>");
-    try { GELServiceLog.ok("✔ " + msg); } catch (Throwable ignore) {}
+    String s = "✔ " + safe(msg);
+    appendHtml("<font color='#39FF14'>" + s + "</font>");
+    GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFCC00'>⚠ " + escape(msg) + "</font>");
-    try { GELServiceLog.warn("⚠ " + msg); } catch (Throwable ignore) {}
+    String s = "⚠ " + safe(msg);
+    appendHtml("<font color='#FFD966'>" + s + "</font>");
+    GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF4444'>✖ " + escape(msg) + "</font>");
-    try { GELServiceLog.error("✖ " + msg); } catch (Throwable ignore) {}
+    String s = "✖ " + safe(msg);
+    appendHtml("<font color='#FF5555'>" + s + "</font>");
+    GELServiceLog.logError(msg);
+}
+
+private void logLine() {
+    appendHtml("--------------------------------------------------");
+    GELServiceLog.logLine();
 }
 // ------------------------------------------------------------
 // UI APPENDER

@@ -139,6 +139,8 @@ import java.util.Map;
 
 public class ManualTestsActivity extends AppCompatActivity {
 	
+private AlertDialog lab14RunningDialog;
+	
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
 // ============================================================
@@ -1535,24 +1537,21 @@ btnContinue.setOnClickListener(v -> {
 
     try {
         if (tts[0] != null) {
-            tts[0].stop();   // ✔ μόνο stop
+            tts[0].stop();
         }
     } catch (Throwable ignore) {}
 
-dlg.dismiss();
-if (onContinue != null) onContinue.run();
+    dlg.dismiss();
+    if (onContinue != null) onContinue.run();
 });
-
-dlg.show();
-}
 
 // ------------------------------------------------------------
 // LAB 14 RUNNING DIALOG (minimal, safe)
 // ------------------------------------------------------------
-private AlertDialog lab14RunningDialog;
-
 private void showLab14RunningDialog() {
+
     ui.post(() -> {
+
         try {
             if (lab14RunningDialog != null && lab14RunningDialog.isShowing())
                 return;

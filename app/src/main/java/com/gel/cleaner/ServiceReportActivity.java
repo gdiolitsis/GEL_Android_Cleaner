@@ -1,10 +1,13 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Foldable Ready v4.1 (GEL Patched)
+// ServiceReportActivity — Foldable Ready v4.2 (GEL Patched)
 // --------------------------------------------------------------
 // ✔ Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
-// ✔ FIXED: broken braces (exportWithCheck was inside onCreate)
-// ✔ FIXED: single Export PDF button (stable height)
+// ✔ Single Export PDF button kept (stable height)
+// ✔ UTF fixed (📄 icon stays clean)
+// ✔ Report: timestamps stripped from log (keeps date/time only once at top)
+// ✔ PDF: SMART word-wrap (breaks on words, not mid-word)
 // --------------------------------------------------------------
+// NOTE (GEL RULE): Always return full file for copy-paste.
 
 package com.gel.cleaner;
 
@@ -22,7 +25,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
-import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -131,37 +133,37 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.addView(txtPreview);
 
         // EXPORT PDF BUTTON — FIXED HEIGHT (NO GELAutoDP)
-AppCompatButton btnPdf = new AppCompatButton(this);
-btnPdf.setText(getString(R.string.export_pdf_button));
-btnPdf.setAllCaps(false);
-btnPdf.setTextSize(15f);
-btnPdf.setTextColor(0xFFFFFFFF);
-btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+        AppCompatButton btnPdf = new AppCompatButton(this);
+        btnPdf.setText(getString(R.string.export_pdf_button));
+        btnPdf.setAllCaps(false);
+        btnPdf.setTextSize(15f);
+        btnPdf.setTextColor(0xFFFFFFFF);
+        btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-// ❗ ΟΧΙ dp() — RAW PIXELS
-LinearLayout.LayoutParams lp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (int) (56 * getResources().getDisplayMetrics().density)
+        // ❗ ΟΧΙ dp() — RAW PIXELS (kept as-is)
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        (int) (56 * getResources().getDisplayMetrics().density)
+                );
+        lp.setMargins(
+                (int) (8 * getResources().getDisplayMetrics().density),
+                (int) (16 * getResources().getDisplayMetrics().density),
+                (int) (8 * getResources().getDisplayMetrics().density),
+                (int) (24 * getResources().getDisplayMetrics().density)
         );
-lp.setMargins(
-        (int) (8 * getResources().getDisplayMetrics().density),
-        (int) (16 * getResources().getDisplayMetrics().density),
-        (int) (8 * getResources().getDisplayMetrics().density),
-        (int) (24 * getResources().getDisplayMetrics().density)
-);
-btnPdf.setLayoutParams(lp);
+        btnPdf.setLayoutParams(lp);
 
-// έξτρα ασφάλεια
-btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
-btnPdf.setPadding(0,
-        (int) (12 * getResources().getDisplayMetrics().density),
-        0,
-        (int) (12 * getResources().getDisplayMetrics().density)
-);
+        // έξτρα ασφάλεια
+        btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
+        btnPdf.setPadding(0,
+                (int) (12 * getResources().getDisplayMetrics().density),
+                0,
+                (int) (12 * getResources().getDisplayMetrics().density)
+        );
 
-btnPdf.setOnClickListener(v -> exportWithCheck(true));
-root.addView(btnPdf);
+        btnPdf.setOnClickListener(v -> exportWithCheck(true));
+        root.addView(btnPdf);
 
         scroll.addView(root);
         setContentView(scroll);
@@ -257,9 +259,10 @@ root.addView(btnPdf);
                 int lineHeight = 12;
                 int maxY = pageHeight - margin;
 
+                // PDF wrap: word-based (no ugly mid-word cuts)
                 while (currentLine < lines.length && y < maxY) {
-                    String line = unicodeWrap(lines[currentLine], 52);
-                    for (String subLine : line.split("\n")) {
+                    String wrapped = wordWrap(lines[currentLine], 52);
+                    for (String subLine : wrapped.split("\n")) {
                         if (y >= maxY) break;
                         canvas.drawText(subLine, margin, y, paint);
                         y += lineHeight;
@@ -294,19 +297,51 @@ root.addView(btnPdf);
         }
     }
 
-    private String unicodeWrap(String text, int width) {
+    // ----------------------------------------------------------
+    // SMART WORD WRAP (PDF)
+    // ----------------------------------------------------------
+    private String wordWrap(String text, int maxLen) {
         if (text == null) return "";
-        if (text.length() <= width) return text;
+        if (text.length() <= maxLen) return text;
 
-        StringBuilder sb = new StringBuilder();
-        int index = 0;
+        StringBuilder out = new StringBuilder();
+        String[] words = text.split(" ");
+        int lineLen = 0;
 
-        while (index < text.length()) {
-            int end = Math.min(index + width, text.length());
-            sb.append(text, index, end).append("\n");
-            index = end;
+        for (String w : words) {
+
+            if (w.length() > maxLen) {
+                // if a single "word" is too long (paths), split safely
+                if (lineLen != 0) {
+                    out.append("\n");
+                    lineLen = 0;
+                }
+                int idx = 0;
+                while (idx < w.length()) {
+                    int end = Math.min(idx + maxLen, w.length());
+                    out.append(w, idx, end);
+                    idx = end;
+                    if (idx < w.length()) out.append("\n");
+                }
+                lineLen = 0;
+                continue;
+            }
+
+            if (lineLen + w.length() + (lineLen == 0 ? 0 : 1) > maxLen) {
+                out.append("\n");
+                lineLen = 0;
+            }
+
+            if (lineLen > 0) {
+                out.append(" ");
+                lineLen++;
+            }
+
+            out.append(w);
+            lineLen += w.length();
         }
-        return sb.toString();
+
+        return out.toString();
     }
 
     // ----------------------------------------------------------
@@ -319,6 +354,7 @@ root.addView(btnPdf);
         sb.append(getString(R.string.report_dev_line)).append("\n");
         sb.append("---------------------\n");
 
+        // Date/time ONLY here (top of report)
         sb.append(getString(R.string.report_date)).append(": ")
                 .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()))
                 .append("\n\n");
@@ -347,6 +383,7 @@ root.addView(btnPdf);
         if (GELServiceLog.isEmpty()) {
             sb.append(getString(R.string.report_no_entries)).append("\n");
         } else {
+            // Logs: strip timestamps so they don't repeat endlessly
             sb.append(stripTimestamps(GELServiceLog.getAll())).append("\n");
         }
 
@@ -373,12 +410,13 @@ root.addView(btnPdf);
     }
 
     private String stripTimestamps(String log) {
-    if (log == null) return "";
+        if (log == null) return "";
 
-    // αφαιρεί patterns τύπου: 2026-01-07 23:21:37
-    return log.replaceAll("\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*", "");
-}
-    
+        // removes patterns like: 2026-01-07 23:21:37
+        // (and keeps the rest of the line intact)
+        return log.replaceAll("\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*", "");
+    }
+
     // ----------------------------------------------------------
     // GEL AUTO DP/SP HELPERS (Universal Scaling)
     // ----------------------------------------------------------

@@ -146,6 +146,20 @@ private TextToSpeech[] tts = new TextToSpeech[1];
 private boolean[] ttsReady = { false };
 
 // ============================================================
+// GLOBAL TTS PREF
+// ============================================================
+private static final String PREF_TTS_MUTED = "tts_muted_global";
+
+private boolean isTtsMuted() {
+    return prefs != null && prefs.getBoolean(PREF_TTS_MUTED, false);
+}
+
+private void setTtsMuted(boolean muted) {
+    if (prefs != null)
+        prefs.edit().putBoolean(PREF_TTS_MUTED, muted).apply();
+}
+
+// ============================================================
 // GLOBAL PREFS ALIAS (used by labs + helpers)
 // ============================================================
 private SharedPreferences p;
@@ -326,8 +340,8 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     p     = prefs;   // 🔒 ALIAS — όλα τα labs/helpers δουλεύουν με p
 
     ui = new Handler(Looper.getMainLooper());
-    
-    // ============================================================
+           
+// ============================================================
 // 🔊 GLOBAL TTS INIT — ONE TIME ONLY
 // ============================================================
 tts = new TextToSpeech[1];
@@ -343,6 +357,18 @@ tts[0] = new TextToSpeech(this, status -> {
                 res != TextToSpeech.LANG_NOT_SUPPORTED;
     }
 });
+
+@Override
+protected void onDestroy() {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+            tts[0] = null;
+        }
+    } catch (Throwable ignore) {}
+    super.onDestroy();
+}
 
     // ============================================================
     // ROOT SCROLL + LAYOUT
@@ -537,17 +563,6 @@ root.addView(btnExport);
 // ============================================================
 scroll.addView(root);
 setContentView(scroll);
-
-private static final String PREF_TTS_MUTED = "tts_muted_global";
-
-private boolean isTtsMuted() {
-    return prefs != null && prefs.getBoolean(PREF_TTS_MUTED, false);
-}
-
-private void setTtsMuted(boolean muted) {
-    if (prefs != null)
-        prefs.edit().putBoolean(PREF_TTS_MUTED, muted).apply();
-}
 
 // ==========================
 // TEXT TO SPEECH INIT

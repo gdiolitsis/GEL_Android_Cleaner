@@ -1474,34 +1474,17 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
         root.addView(btnContinue);
 
 // ==========================
-// 🔕 MUTE TOGGLE (ΠΑΝΩ ΑΠΟ ΤΟ START)
+// 🔕 MUTE TOGGLE — GLOBAL
 // ==========================
 CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ GLOBAL κατάσταση
+muteBox.setChecked(isTtsMuted());
 muteBox.setText("Mute voice instructions");
 muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
 
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute στο layout
+// ⬇️ πρώτα μπαίνει το mute
 root.addView(muteBox);
-
-// ==========================
-// ▶️ START BUTTON
-// ==========================
-Button startBtn = new Button(this);
-startBtn.setText("START TEST");
-startBtn.setAllCaps(false);
-startBtn.setTextColor(0xFFFFFFFF);
-
-GradientDrawable startBg = new GradientDrawable();
-startBg.setColor(0xFF39FF14);
-startBg.setCornerRadius(dp(14));
-startBg.setStroke(dp(3), 0xFFFFD700);
-startBtn.setBackground(startBg);
-
-// ⬇️ ΜΕΤΑ μπαίνει το κουμπί Start
-root.addView(startBtn);
 
 // ==========================
 // 🔇 MUTE LOGIC — GLOBAL
@@ -1517,25 +1500,23 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
     }
 });
 
-// ==========================
-// 🔊 TTS — PLAY (SAFE & FINAL)
-// ==========================
-if (tts[0] != null) {
+// ============================================================
+// 🔊 TTS — PLAY (GLOBAL ENGINE)
+// ============================================================
+if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
     // καθάρισε ό,τι έπαιζε πριν
     tts[0].stop();
 
-    // μίλα τώρα
-    if (!ttsMuted[0]) {
-        tts[0].speak(
-                "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
-                "You may continue without restarting, but recent heavy usage can affect the results. " +
-                "Don't use your device for the next 5 minutes.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB14_PRECHECK"
-        );
-    }
+    // μίλα
+    tts[0].speak(
+            "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+            "You may continue without restarting, but recent heavy usage can affect the results. " +
+            "Don't use your device for the next five minutes.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB14_PRECHECK"
+    );
 }
 
 b.setView(root);
@@ -1558,11 +1539,12 @@ btnContinue.setOnClickListener(v -> {
         }
     } catch (Throwable ignore) {}
 
-    dlg.dismiss();
-    if (onContinue != null) onContinue.run();
+dlg.dismiss();
+if (onContinue != null) onContinue.run();
 });
 
 dlg.show();
+}
 
 // ------------------------------------------------------------
 // LAB 14 RUNNING DIALOG (minimal, safe)
@@ -4411,14 +4393,22 @@ final boolean[] ttsMuted = {
 // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
 // ==========================
 CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ GLOBAL κατάσταση
+muteBox.setChecked(isTtsMuted());
 muteBox.setText("Mute voice instructions");
 muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
 
-// 👉 ΠΡΩΤΑ το MUTE στο layout
+// ⬇️ ΠΡΩΤΑ μπαίνει το mute
 root.addView(muteBox);
+
+// ==========================
+// ▶️ START BUTTON
+// ==========================
+Button startBtn = new Button(this);
+startBtn.setText("START TEST");
+// styling όπως το έχεις…
+root.addView(startBtn);
 
 // ==========================
 // 🔇 MUTE LOGIC — GLOBAL
@@ -4430,14 +4420,14 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
 
     // κόψε τον ήχο αν πατήθηκε mute
     if (checked && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown, ΟΧΙ null
+        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
     }
 });
 
 // ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW (GLOBAL)  ✅ ΣΩΣΤΟ
+// 🔊 TTS — SPEAK AFTER SHOW (FINAL)
 // ============================================================
-if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
     // καθάρισε ό,τι έπαιζε πριν
     tts[0].stop();
@@ -5302,14 +5292,6 @@ private void lab17_showPopup(String titleText, String msgText) {
     }
 
 // ==========================
-// TTS STATE (LOCAL)
-// ==========================
-final TextToSpeech[] tts = new TextToSpeech[1];
-final boolean[] ttsMuted = {
-        prefs.getBoolean(PREF_TTS_MUTED, false)
-};
-
-// ==========================
 // 🔕 MUTE TOGGLE (LAB 17 — GLOBAL)
 // ==========================
 CheckBox muteBox = new CheckBox(this);
@@ -5340,38 +5322,26 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
 
     // κόψε τον ήχο αν πατήθηκε mute
     if (checked && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown, ΟΧΙ null
+        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
     }
 });
 
 // ==========================
-// 🔊 TTS — SAFE & LOCAL (FINAL)
+// 🔊 TTS — PLAY (GLOBAL ENGINE)
 // ==========================
-tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
+if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
-        int res = tts[0].setLanguage(Locale.US);
+    // καθάρισε ό,τι έπαιζε πριν
+    tts[0].stop();
 
-        boolean ready =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
-
-        // 🔥 ΜΙΛΑΜΕ ΜΟΛΙΣ ΕΙΝΑΙ ΕΤΟΙΜΟ
-        if (ready && !ttsMuted[0] && tts[0] != null) {
-
-            // καθάρισε ό,τι έπαιζε πριν
-            tts[0].stop();
-
-            tts[0].speak(
-                    "Before running this lab, please make sure that " +
-                    "lab fourteen, lab fifteen and lab sixteen have been completed.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB17_POPUP"
-            );
-        }
-    }
-});
+    tts[0].speak(
+            "Before running this lab, please make sure that " +
+            "lab fourteen, lab fifteen and lab sixteen have been completed.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB17_POPUP"
+    );
+}
 
 // ==========================
 // OK ACTION — WITH GUARD

@@ -901,22 +901,6 @@ private void logLine() {
 // ------------------------------------------------------------
 // UI APPENDER
 // ------------------------------------------------------------
-private void appendHtml(String htmlLine) {
-    if (txtLog == null) return;
-
-    logHtmlBuffer.append(htmlLine).append("<br>");
-
-    try {
-        txtLog.setText(
-            Html.fromHtml(
-                logHtmlBuffer.toString(),
-                Html.FROM_HTML_MODE_LEGACY
-            )
-        );
-    } catch (Throwable t) {
-        txtLog.setText(logHtmlBuffer.toString());
-    }
-}
 
 private String stripHtml(String s) {
     if (s == null) return "";

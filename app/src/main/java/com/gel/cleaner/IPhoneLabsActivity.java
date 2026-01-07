@@ -531,7 +531,7 @@ private void runImpactLab() {
     appendHtml("<br>");
     logLine();
     logInfo("LAB 4 — Impact Analysis");
-    longLine();
+    logLine();
     logInfo("Evaluating which hardware or system areas may be affected.");
 
     parseAndCacheSignature(panicLogText);

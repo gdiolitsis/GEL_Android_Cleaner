@@ -78,7 +78,7 @@ public static synchronized void section(String title) {
     String line = "═════════════════════";  
 ";
 
-    add("", line)
+    add("", line);
     add("SECTION", title.toUpperCase(Locale.US));    
     add("", line);
 }

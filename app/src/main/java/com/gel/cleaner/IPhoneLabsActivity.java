@@ -240,7 +240,6 @@ btnExport.setOnClickListener(v -> {
     startActivity(i);
 });
 
-//     FINAL BIND
 root.addView(btnExport);
 
 // ============================================================
@@ -376,8 +375,9 @@ private void runPanicLogAnalyzer() {
         logInfo("File analyzed:");
         logOk(safe(panicLogName));
 
-        logLine();
+        appendHtml("<br>");
         logOk("Lab 1 finished.");
+        logLine();
         return;
     }
 

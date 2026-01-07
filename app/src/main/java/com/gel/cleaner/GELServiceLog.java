@@ -64,7 +64,7 @@ public class GELServiceLog {
     // ============================================================
     public static synchronized void addLine(String line) {
         if (line == null || line.trim().isEmpty())
-            line = "───────────────────────────";
+            line = "─────────────────────";
     
     }
 
@@ -75,7 +75,8 @@ public static synchronized void section(String title) {
     if (title == null || title.trim().isEmpty())
         title = "Service Section";
 
-    String line = "---------------------";
+    String line = "═════════════════════";  
+";
 
     add("", line)
     add("SECTION", title.toUpperCase(Locale.US));    

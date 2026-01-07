@@ -1398,151 +1398,147 @@ private void logLabelValue(String label, String value) {
 // ============================================================
 private void showLab14PreTestAdvisory(Runnable onContinue) {
 
-    try {
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
 
-        b.setCancelable(true);
+    b.setCancelable(true);
 
-        final boolean[] ttsMuted = {
-                prefs.getBoolean(PREF_TTS_MUTED, false)
-        };
+    // ==========================
+    // ROOT
+    // ==========================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+    // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF0E0E0E);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
 
-        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF0E0E0E);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+    // ------------------------------------------------------------
+    // TITLE
+    // ------------------------------------------------------------
+    TextView title = new TextView(this);
+    title.setText("Battery Stress Test — Pre-Test Check");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
 
-        // ------------------------------------------------------------
-        // TITLE
-        // ------------------------------------------------------------
-        TextView title = new TextView(this);
-        title.setText("Battery Stress Test — Pre-Test Check");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setPadding(0, 0, 0, dp(12));
-        root.addView(title);
-
-        // ------------------------------------------------------------
-        // MESSAGE
-        // ------------------------------------------------------------
-        TextView msg = new TextView(this);
-        msg.setText(
-                "For best diagnostic accuracy, it is recommended to run this test " +
-                "after a system restart.\n" +
-                "You may continue without restarting, but recent heavy usage " +
-                "can affect the results.\n" +
-                "Don't use your device for the next 5 minutes."
-        );
-        msg.setTextColor(Color.WHITE);
-        msg.setTextSize(14.5f);
-        msg.setLineSpacing(0f, 1.2f);
-        root.addView(msg);
-
-        // ------------------------------------------------------------
-        // CONTINUE BUTTON
-        // ------------------------------------------------------------
-        Button btnContinue = new Button(this);
-        btnContinue.setText("Continue anyway");
-        btnContinue.setAllCaps(false);
-        btnContinue.setTextColor(Color.WHITE);
-        btnContinue.setTextSize(15f);
-        btnContinue.setTypeface(null, Typeface.BOLD);
-
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(0xFF0B5D1E);
-        btnBg.setCornerRadius(dp(14));
-        btnBg.setStroke(dp(2), 0xFFFFD700);
-        btnContinue.setBackground(btnBg);
-
-        LinearLayout.LayoutParams lpBtn =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn.setMargins(0, dp(18), 0, 0);
-        btnContinue.setLayoutParams(lpBtn);
-
-        root.addView(btnContinue);
-
-// ==========================
-// 🔕 MUTE TOGGLE — GLOBAL
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-
-// ⬇️ πρώτα μπαίνει το mute
-root.addView(muteBox);
-
-// ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    // αποθήκευση GLOBAL επιλογής
-    setTtsMuted(checked);
-
-    // κόψε τον ήχο αν πατήθηκε mute
-    if (checked && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop
-    }
-});
-
-// ============================================================
-// 🔊 TTS — PLAY (GLOBAL ENGINE)
-// ============================================================
-if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
-
-    // καθάρισε ό,τι έπαιζε πριν
-    tts[0].stop();
-
-    // μίλα
-    tts[0].speak(
-            "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
-            "You may continue without restarting, but recent heavy usage can affect the results. " +
-            "Don't use your device for the next five minutes.",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB14_PRECHECK"
+    // ------------------------------------------------------------
+    // MESSAGE
+    // ------------------------------------------------------------
+    TextView msg = new TextView(this);
+    msg.setText(
+            "For best diagnostic accuracy, it is recommended to run this test " +
+            "after a system restart.\n" +
+            "You may continue without restarting, but recent heavy usage " +
+            "can affect the results.\n" +
+            "Don't use your device for the next 5 minutes."
     );
-}
+    msg.setTextColor(Color.WHITE);
+    msg.setTextSize(14.5f);
+    msg.setLineSpacing(0f, 1.2f);
+    root.addView(msg);
 
-b.setView(root);
+    // ------------------------------------------------------------
+    // CONTINUE BUTTON
+    // ------------------------------------------------------------
+    Button btnContinue = new Button(this);
+    btnContinue.setText("Continue anyway");
+    btnContinue.setAllCaps(false);
+    btnContinue.setTextColor(Color.WHITE);
+    btnContinue.setTextSize(15f);
+    btnContinue.setTypeface(null, Typeface.BOLD);
 
-AlertDialog dlg = b.create();
-if (dlg.getWindow() != null) {
-    dlg.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
+    GradientDrawable btnBg = new GradientDrawable();
+    btnBg.setColor(0xFF0B5D1E);
+    btnBg.setCornerRadius(dp(14));
+    btnBg.setStroke(dp(2), 0xFFFFD700);
+    btnContinue.setBackground(btnBg);
 
-// ------------------------------------------------------------
-// CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
-// ------------------------------------------------------------
-btnContinue.setOnClickListener(v -> {
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpBtn.setMargins(0, dp(18), 0, 0);
+    btnContinue.setLayoutParams(lpBtn);
 
-    try {
-        if (tts[0] != null) {
-            tts[0].stop();
+    root.addView(btnContinue);
+
+    // ==========================
+    // 🔕 MUTE TOGGLE — GLOBAL
+    // ==========================
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(isTtsMuted());
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+
+    root.addView(muteBox);
+
+    // ==========================
+    // 🔇 MUTE LOGIC — GLOBAL
+    // ==========================
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+        setTtsMuted(checked);
+
+        if (checked && tts[0] != null) {
+            tts[0].stop();   // ✔ μόνο stop
         }
-    } catch (Throwable ignore) {}
+    });
 
-    dlg.dismiss();
-    if (onContinue != null) onContinue.run();
-});
+    // ============================================================
+    // 🔊 TTS — PLAY (GLOBAL ENGINE)
+    // ============================================================
+    if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
+
+        tts[0].stop();
+
+        tts[0].speak(
+                "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+                "You may continue without restarting, but recent heavy usage can affect the results. " +
+                "Don't use your device for the next five minutes.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB14_PRECHECK"
+        );
+    }
+
+    b.setView(root);
+
+    AlertDialog dlg = b.create();
+    if (dlg.getWindow() != null) {
+        dlg.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    // ------------------------------------------------------------
+    // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
+    // ------------------------------------------------------------
+    btnContinue.setOnClickListener(v -> {
+
+        try {
+            if (tts[0] != null) {
+                tts[0].stop();
+            }
+        } catch (Throwable ignore) {}
+
+        dlg.dismiss();
+        if (onContinue != null) onContinue.run();
+    });
+
+    dlg.show();
 }
 
 // ============================================================

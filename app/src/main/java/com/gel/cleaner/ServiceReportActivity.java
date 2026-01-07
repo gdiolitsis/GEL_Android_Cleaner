@@ -5,7 +5,6 @@
 // ✔ FIXED: broken braces (exportWithCheck was inside onCreate)
 // ✔ FIXED: single Export PDF button (stable height)
 // --------------------------------------------------------------
-// NOTE (GEL RULE): Full file for copy-paste. No partial patches.
 
 package com.gel.cleaner;
 

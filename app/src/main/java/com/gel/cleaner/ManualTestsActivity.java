@@ -1482,59 +1482,51 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
     muteBox.setTextColor(0xFFDDDDDD);
     muteBox.setGravity(Gravity.CENTER);
     muteBox.setPadding(0, dp(10), 0, dp(10));
-
     root.addView(muteBox);
 
     // ==========================
     // 🔇 MUTE LOGIC — GLOBAL
     // ==========================
     muteBox.setOnCheckedChangeListener((v, checked) -> {
-
         setTtsMuted(checked);
-
-        if (checked && tts[0] != null) {
-            tts[0].stop();   // ✔ μόνο stop
-        }
+        try {
+            if (checked && tts[0] != null) tts[0].stop();
+        } catch (Throwable ignore) {}
     });
 
     // ============================================================
     // 🔊 TTS — PLAY (GLOBAL ENGINE)
     // ============================================================
-    if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
-
-        tts[0].stop();
-
-        tts[0].speak(
-                "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
-                "You may continue without restarting, but recent heavy usage can affect the results. " +
-                "Don't use your device for the next five minutes.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB14_PRECHECK"
-        );
-    }
+    try {
+        if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
+            tts[0].stop();
+            tts[0].speak(
+                    "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+                    "You may continue without restarting, but recent heavy usage can affect the results. " +
+                    "Don't use your device for the next five minutes.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB14_PRECHECK"
+            );
+        }
+    } catch (Throwable ignore) {}
 
     b.setView(root);
 
     AlertDialog dlg = b.create();
     if (dlg.getWindow() != null) {
-        dlg.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
+        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
     // ------------------------------------------------------------
     // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
     // ------------------------------------------------------------
     btnContinue.setOnClickListener(v -> {
-
         try {
-            if (tts[0] != null) {
-                tts[0].stop();
-            }
+            if (tts[0] != null) tts[0].stop();
         } catch (Throwable ignore) {}
 
-        dlg.dismiss();
+        try { dlg.dismiss(); } catch (Throwable ignore) {}
         if (onContinue != null) onContinue.run();
     });
 
@@ -1542,23 +1534,41 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 }
 
 // ============================================================
-// GEL DARK + GOLD POPUP BACKGROUND (LAB 14)
+// LAB 14 — RUNNING POPUP (GEL DARK + GOLD)
+// FIX: must be INSIDE a method (not loose code in class body)
 // ============================================================
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(20), dp(24), dp(18));
+private AlertDialog lab14RunningDialog;
 
-// GEL dark + GOLD border
-GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);           // GEL dark black
-    bg.setCornerRadius(dp(18));       // smooth premium corners
-    bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border (thicker so it shows)
-    root.setBackground(bg);
+private void showLab14RunningDialog() {
+    ui.post(() -> {
+        try {
+            if (isFinishing()) return;
+
+            AlertDialog.Builder b =
+                    new AlertDialog.Builder(
+                            ManualTestsActivity.this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+
+            b.setCancelable(false);
+
+            // ROOT
+            LinearLayout root = new LinearLayout(this);
+            root.setOrientation(LinearLayout.VERTICAL);
+            root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+            // GEL dark + GOLD border
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(0xFF101010);
+            bg.setCornerRadius(dp(18));
+            bg.setStroke(dp(4), 0xFFFFD700);
+            root.setBackground(bg);
 
             TextView title = new TextView(this);
             title.setText("LAB 14 — Running stress test...");
             title.setTextColor(0xFFFFFFFF);
             title.setTextSize(18f);
+            title.setTypeface(null, Typeface.BOLD);
             title.setPadding(0, 0, 0, dp(10));
             root.addView(title);
 
@@ -1566,14 +1576,16 @@ GradientDrawable bg = new GradientDrawable();
             msg.setText("Please keep the app open.\nDo not charge the device during this test.");
             msg.setTextColor(0xFFDDDDDD);
             msg.setTextSize(14f);
+            msg.setLineSpacing(0f, 1.15f);
             root.addView(msg);
 
             b.setView(root);
 
             lab14RunningDialog = b.create();
             if (lab14RunningDialog.getWindow() != null) {
-                lab14RunningDialog.getWindow()
-                        .setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+                lab14RunningDialog.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(Color.TRANSPARENT)
+                );
             }
             lab14RunningDialog.show();
 

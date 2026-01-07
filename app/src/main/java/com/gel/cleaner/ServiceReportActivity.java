@@ -258,7 +258,7 @@ root.addView(btnPdf);
                 int maxY = pageHeight - margin;
 
                 while (currentLine < lines.length && y < maxY) {
-                    String line = unicodeWrap(lines[currentLine], 72);
+                    String line = unicodeWrap(lines[currentLine], 52);
                     for (String subLine : line.split("\n")) {
                         if (y >= maxY) break;
                         canvas.drawText(subLine, margin, y, paint);
@@ -317,7 +317,7 @@ root.addView(btnPdf);
 
         sb.append(getString(R.string.report_title)).append("\n");
         sb.append(getString(R.string.report_dev_line)).append("\n");
-        sb.append("----------------------------------------\n");
+        sb.append("---------------------\n");
 
         sb.append(getString(R.string.report_date)).append(": ")
                 .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()))

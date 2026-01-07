@@ -1537,7 +1537,6 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 // LAB 14 — RUNNING POPUP (GEL DARK + GOLD)
 // FIX: must be INSIDE a method (not loose code in class body)
 // ============================================================
-private AlertDialog lab14RunningDialog;
 
 private void showLab14RunningDialog() {
     ui.post(() -> {

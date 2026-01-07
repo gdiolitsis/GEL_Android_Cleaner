@@ -1361,146 +1361,127 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
         b.setCancelable(true);
 
-// ==========================
-// TTS STATE (LOCAL)
-// ==========================
-final TextToSpeech[] tts = new TextToSpeech[1];
-final boolean[] ttsReady = {false};
-final boolean[] ttsMuted = {
-        prefs.getBoolean("lab14_tts_muted", false)   // 🔒 ΕΝΑ key, ΕΝΑ σημείο
-};
+        final boolean[] ttsMuted = {
+                prefs.getBoolean("lab14_tts_muted", false)
+        };
 
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(22), dp(24), dp(20));
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-// BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF0E0E0E);
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(3), 0xFFFFD700);
-root.setBackground(bg);
-
-// ------------------------------------------------------------
-// TITLE
-// ------------------------------------------------------------
-TextView title = new TextView(this);
-title.setText("Battery Stress Test — Pre-Test Check");
-title.setTextColor(Color.WHITE);
-title.setTextSize(18f);
-title.setTypeface(null, Typeface.BOLD);
-title.setPadding(0, 0, 0, dp(12));
-root.addView(title);
-
-// ------------------------------------------------------------
-// MESSAGE
-// ------------------------------------------------------------
-TextView msg = new TextView(this);
-msg.setText(
-        "For best diagnostic accuracy, it is recommended to run this test " +
-        "after a system restart.\n" +
-        "You may continue without restarting, but recent heavy usage " +
-        "can affect the results.\n" +
-        "Don't use your device for the next 5 minutes."
-);
-msg.setTextColor(Color.WHITE);
-msg.setTextSize(14.5f);
-msg.setLineSpacing(0f, 1.2f);
-root.addView(msg);
-
-// ------------------------------------------------------------
-// CONTINUE BUTTON
-// ------------------------------------------------------------
-Button btnContinue = new Button(this);
-btnContinue.setText("Continue anyway");
-btnContinue.setAllCaps(false);
-btnContinue.setTextColor(Color.WHITE);
-btnContinue.setTextSize(15f);
-btnContinue.setTypeface(null, Typeface.BOLD);
-
-GradientDrawable btnBg = new GradientDrawable();
-btnBg.setColor(0xFF0B5D1E);
-btnBg.setCornerRadius(dp(14));
-btnBg.setStroke(dp(2), 0xFFFFD700);
-btnContinue.setBackground(btnBg);
-
-LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpBtn.setMargins(0, dp(18), 0, 0);
-btnContinue.setLayoutParams(lpBtn);
-
-root.addView(btnContinue);
-
-// ==========================
-// 🔕 MUTE TOGGLE
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(ttsMuted[0]);
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-root.addView(muteBox);
-
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-    ttsMuted[0] = checked;
-
-    prefs.edit()
-            .putBoolean("lab14_tts_muted", checked)   // 🔒 ΙΔΙΟ key
-            .apply();
-
-    if (checked && tts[0] != null) {
-        tts[0].stop();
-    }
-});
-
-// ==========================
-// TTS INIT — SPEAK ON POPUP
-// ==========================
-tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-
-        int res = tts[0].setLanguage(Locale.US);
-
-        ttsReady[0] =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
-
-        if (ttsReady[0] && !ttsMuted[0]) {
-            tts[0].speak(
-                "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
-                "You may continue without restarting, but recent heavy usage can affect the results. " +
-                "Don't use your device for the next 5 minutes.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB14_PRECHECK"
-            );
-        }
-    }
-});
-
-b.setView(root);
-
-AlertDialog dlg = b.create();
-if (dlg.getWindow() != null) {
-    dlg.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
+        // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF0E0E0E);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
 
         // ------------------------------------------------------------
-        // CONTINUE CLICK — STOP TTS
+        // TITLE
+        // ------------------------------------------------------------
+        TextView title = new TextView(this);
+        title.setText("Battery Stress Test — Pre-Test Check");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ------------------------------------------------------------
+        // MESSAGE
+        // ------------------------------------------------------------
+        TextView msg = new TextView(this);
+        msg.setText(
+                "For best diagnostic accuracy, it is recommended to run this test " +
+                "after a system restart.\n" +
+                "You may continue without restarting, but recent heavy usage " +
+                "can affect the results.\n" +
+                "Don't use your device for the next 5 minutes."
+        );
+        msg.setTextColor(Color.WHITE);
+        msg.setTextSize(14.5f);
+        msg.setLineSpacing(0f, 1.2f);
+        root.addView(msg);
+
+        // ------------------------------------------------------------
+        // CONTINUE BUTTON
+        // ------------------------------------------------------------
+        Button btnContinue = new Button(this);
+        btnContinue.setText("Continue anyway");
+        btnContinue.setAllCaps(false);
+        btnContinue.setTextColor(Color.WHITE);
+        btnContinue.setTextSize(15f);
+        btnContinue.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setColor(0xFF0B5D1E);
+        btnBg.setCornerRadius(dp(14));
+        btnBg.setStroke(dp(2), 0xFFFFD700);
+        btnContinue.setBackground(btnBg);
+
+        LinearLayout.LayoutParams lpBtn =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpBtn.setMargins(0, dp(18), 0, 0);
+        btnContinue.setLayoutParams(lpBtn);
+
+        root.addView(btnContinue);
+
+        // ==========================
+        // 🔕 MUTE TOGGLE
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(ttsMuted[0]);
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
+
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
+
+            prefs.edit()
+                    .putBoolean("lab14_tts_muted", checked)
+                    .apply();
+
+            if (checked && tts != null) {
+                tts.stop();
+            }
+        });
+
+        // ==========================
+        // 🔊 TTS — GLOBAL
+        // ==========================
+        if (ttsReady && !ttsMuted[0]) {
+            tts.speak(
+                    "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+                    "You may continue without restarting, but recent heavy usage can affect the results. " +
+                    "Don't use your device for the next 5 minutes.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB14_PRECHECK"
+            );
+        }
+
+        b.setView(root);
+
+        AlertDialog dlg = b.create();
+        if (dlg.getWindow() != null) {
+            dlg.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        // ------------------------------------------------------------
+        // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
         // ------------------------------------------------------------
         btnContinue.setOnClickListener(v -> {
 
-            if (tts[0] != null) {
-                try {
-                    tts[0].stop();
-                    tts[0].shutdown();
-                } catch (Throwable ignore) {}
+            if (tts != null) {
+                try { tts.stop(); } catch (Throwable ignore) {}
             }
 
             dlg.dismiss();
@@ -2594,15 +2575,11 @@ enableSingleExportButton();
 
 // ============================================================
 // LAB 6 — Display Touch
-// ============================================================  
+// ============================================================
 private void lab6DisplayTouch() {
 
     runOnUiThread(() -> {
 
-        // ==========================
-        // TTS STATE (LOCAL)
-        // ==========================
-        final TextToSpeech[] tts = new TextToSpeech[1];
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab6_tts_muted", false)
         };
@@ -2671,32 +2648,22 @@ private void lab6DisplayTouch() {
         root.addView(start);
 
         // ==========================
-        // TTS INIT — SPEAK IMMEDIATELY
+        // 🔊 TTS — USE GLOBAL
         // ==========================
-        tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-
-                int res = tts[0].setLanguage(Locale.US);
-
-                if (res != TextToSpeech.LANG_MISSING_DATA &&
-                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
-                    !ttsMuted[0]) {
-
-                    tts[0].speak(
-                            "Touch all dots on the screen to complete the test. " +
-                            "All screen areas must respond to touch input.",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "LAB6_INTRO"
-                    );
-                }
-            }
-        });
+        if (ttsReady && !ttsMuted[0]) {
+            tts.speak(
+                    "Touch all dots on the screen to complete the test. " +
+                    "All screen areas must respond to touch input.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB6_INTRO"
+            );
+        }
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab6_tts_muted", checked).apply();
-            if (checked && tts[0] != null) tts[0].stop();
+            if (checked && tts != null) tts.stop();
         });
 
         // ==========================
@@ -2713,10 +2680,7 @@ private void lab6DisplayTouch() {
         // ==========================
         start.setOnClickListener(v -> {
 
-            if (tts[0] != null) {
-                tts[0].stop();
-                tts[0].shutdown();
-            }
+            if (tts != null) tts.stop();
 
             d.dismiss();
 
@@ -2729,17 +2693,14 @@ private void lab6DisplayTouch() {
     });
 }
 
-//==========================
+
+// ============================================================
 // LAB 7 — Rotation manual
-// ==========================  
+// ============================================================
 private void lab7RotationManual() {
 
     runOnUiThread(() -> {
 
-        // ==========================
-        // TTS STATE (LOCAL)
-        // ==========================
-        final TextToSpeech[] tts = new TextToSpeech[1];
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab7_tts_muted", false)
         };
@@ -2802,32 +2763,22 @@ private void lab7RotationManual() {
         root.addView(start);
 
         // ==========================
-        // TTS INIT — SPEAK IMMEDIATELY
+        // 🔊 TTS — USE GLOBAL
         // ==========================
-        tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-
-                int res = tts[0].setLanguage(Locale.US);
-
-                if (res != TextToSpeech.LANG_MISSING_DATA &&
-                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
-                    !ttsMuted[0]) {
-
-                    tts[0].speak(
-                            "Rotate the device slowly. " +
-                            "The screen should follow the device orientation.",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "LAB7_INTRO"
-                    );
-                }
-            }
-        });
+        if (ttsReady && !ttsMuted[0]) {
+            tts.speak(
+                    "Rotate the device slowly. " +
+                    "The screen should follow the device orientation.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB7_INTRO"
+            );
+        }
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab7_tts_muted", checked).apply();
-            if (checked && tts[0] != null) tts[0].stop();
+            if (checked && tts != null) tts.stop();
         });
 
         b.setView(root);
@@ -2838,10 +2789,7 @@ private void lab7RotationManual() {
 
         start.setOnClickListener(v -> {
 
-            if (tts[0] != null) {
-                tts[0].stop();
-                tts[0].shutdown();
-            }
+            if (tts != null) tts.stop();
 
             d.dismiss();
 
@@ -2853,17 +2801,14 @@ private void lab7RotationManual() {
     });
 }
 
-// ==========================
+
+// ============================================================
 // LAB 8 — Proximity call
-// ==========================  
+// ============================================================
 private void lab8ProximityCall() {
 
     runOnUiThread(() -> {
 
-        // ==========================
-        // TTS STATE (LOCAL)
-        // ==========================
-        final TextToSpeech[] tts = new TextToSpeech[1];
         final boolean[] ttsMuted = {
                 prefs.getBoolean("lab8_tts_muted", false)
         };
@@ -2926,32 +2871,22 @@ private void lab8ProximityCall() {
         root.addView(start);
 
         // ==========================
-        // TTS INIT — SPEAK IMMEDIATELY
+        // 🔊 TTS — USE GLOBAL
         // ==========================
-        tts[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-
-                int res = tts[0].setLanguage(Locale.US);
-
-                if (res != TextToSpeech.LANG_MISSING_DATA &&
-                    res != TextToSpeech.LANG_NOT_SUPPORTED &&
-                    !ttsMuted[0]) {
-
-                    tts[0].speak(
-                            "Cover the proximity sensor with your hand. " +
-                            "The screen should turn off.",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "LAB8_INTRO"
-                    );
-                }
-            }
-        });
+        if (ttsReady && !ttsMuted[0]) {
+            tts.speak(
+                    "Cover the proximity sensor with your hand. " +
+                    "The screen should turn off.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB8_INTRO"
+            );
+        }
 
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab8_tts_muted", checked).apply();
-            if (checked && tts[0] != null) tts[0].stop();
+            if (checked && tts != null) tts.stop();
         });
 
         b.setView(root);
@@ -2962,10 +2897,7 @@ private void lab8ProximityCall() {
 
         start.setOnClickListener(v -> {
 
-            if (tts[0] != null) {
-                tts[0].stop();
-                tts[0].shutdown();
-            }
+            if (tts != null) tts.stop();
 
             d.dismiss();
 
@@ -4389,16 +4321,12 @@ lpExit.setMargins(0, dp(14), 0, 0);
 exitBtn.setLayoutParams(lpExit);
 
 // ============================================================
-// 🔊 TTS — LAB 15 INTRO (LOCAL)
+// 🔊 TTS — LAB 15 INTRO (GLOBAL ENGINE)
 // ============================================================
-final TextToSpeech[] tts = new TextToSpeech[1];
 
 exitBtn.setOnClickListener(v -> {
-    if (tts[0] != null) {
-        try {
-            tts[0].stop();
-            tts[0].shutdown();
-        } catch (Throwable ignore) {}
+    if (tts != null) {
+        try { tts.stop(); } catch (Throwable ignore) {}
     }
     abortLab15ByUser();
 });
@@ -4440,35 +4368,24 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
             .putBoolean("lab15_tts_muted", checked)
             .apply();
 
-    if (checked && tts[0] != null) {
-        tts[0].stop();
+    if (checked && tts != null) {
+        tts.stop();
     }
 });
 
 // ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW
+// 🔊 TTS — SPEAK AFTER SHOW (GLOBAL)
 // ============================================================
-tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-
-        int res = tts[0].setLanguage(Locale.US);
-
-        if (res != TextToSpeech.LANG_MISSING_DATA &&
-    res != TextToSpeech.LANG_NOT_SUPPORTED &&
-    !ttsMuted[0]) {
-            	
-
-            tts[0].speak(
-                "Connect the charger to the device's charging port. " +
-                "The system will monitor charging behavior for the next three minutes. " +
-                "Please keep the device connected during the test.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB15_INTRO"
-            );
-        }
-    }
-});
+if (ttsReady && !ttsMuted[0]) {
+    tts.speak(
+            "Connect the charger to the device's charging port. " +
+            "The system will monitor charging behavior for the next three minutes. " +
+            "Please keep the device connected during the test.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB15_INTRO"
+    );
+}
 
 // ============================================================
 // 🔹 LOGS
@@ -5322,7 +5239,6 @@ private void lab17_showPopup(String titleText, String msgText) {
 // TTS STATE (LOCAL)
 // ==========================
 final TextToSpeech[] tts = new TextToSpeech[1];
-final boolean[] ttsReady = {false};
 final boolean[] ttsMuted = {
         prefs.getBoolean("lab17_tts_muted", false)
 };
@@ -5358,11 +5274,12 @@ tts[0] = new TextToSpeech(this, status -> {
 
         int res = tts[0].setLanguage(Locale.US);
 
-        ttsReady[0] =
+        boolean ready =
                 res != TextToSpeech.LANG_MISSING_DATA &&
                 res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-        if (ttsReady[0] && !ttsMuted[0]) {
+        // 🔥 ΜΙΛΑΜΕ ΑΜΕΣΩΣ ΜΟΛΙΣ ΕΙΝΑΙ ΕΤΟΙΜΟ
+        if (ready && !ttsMuted[0]) {
             tts[0].speak(
                     "Before running this lab, please make sure that " +
                     "lab fourteen, lab fifteen and lab sixteen have been completed.",

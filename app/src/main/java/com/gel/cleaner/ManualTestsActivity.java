@@ -1545,24 +1545,6 @@ btnContinue.setOnClickListener(v -> {
     if (onContinue != null) onContinue.run();
 });
 
-// ------------------------------------------------------------
-// LAB 14 RUNNING DIALOG (minimal, safe)
-// ------------------------------------------------------------
-private void showLab14RunningDialog() {
-
-    ui.post(() -> {
-
-        try {
-            if (lab14RunningDialog != null && lab14RunningDialog.isShowing())
-                return;
-
-            AlertDialog.Builder b =
-                    new AlertDialog.Builder(
-                            ManualTestsActivity.this,
-                            android.R.style.Theme_Material_Dialog_NoActionBar
-                    );
-            b.setCancelable(false);
-
 // ============================================================
 // GEL DARK + GOLD POPUP BACKGROUND (LAB 14)
 // ============================================================
@@ -4357,13 +4339,16 @@ lpExit.setMargins(0, dp(14), 0, 0);
 exitBtn.setLayoutParams(lpExit);
 
 // ============================================================
-// 🔊 TTS — LAB 15 INTRO (GLOBAL ENGINE)
+// 🔊 LAB 15 — INTRO POPUP (GLOBAL TTS ENGINE)
 // ============================================================
 
+// ------------------------------------------------------------
+// EXIT BUTTON — STOP TTS (NO SHUTDOWN)
+// ------------------------------------------------------------
 exitBtn.setOnClickListener(v -> {
     try {
         if (tts[0] != null) {
-            tts[0].stop();   // ✔ ΜΟΝΟ stop
+            tts[0].stop();   // ✔ μόνο stop
         }
     } catch (Throwable ignore) {}
     abortLab15ByUser();
@@ -4384,15 +4369,11 @@ if (lab15Dialog.getWindow() != null) {
 
 lab15Dialog.show();
 
-final boolean[] ttsMuted = {
-        prefs.getBoolean(PREF_TTS_MUTED, false)
-};
-
 // ==========================
 // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
 // ==========================
 CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());
+muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
 muteBox.setText("Mute voice instructions");
 muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
@@ -4406,7 +4387,7 @@ root.addView(muteBox);
 // ==========================
 Button startBtn = new Button(this);
 startBtn.setText("START TEST");
-// styling όπως το έχεις…
+// styling όπως το έχεις ήδη
 root.addView(startBtn);
 
 // ==========================
@@ -4417,14 +4398,14 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
     // αποθήκευση GLOBAL επιλογής
     setTtsMuted(checked);
 
-    // κόψε τον ήχο αν πατήθηκε mute
+    // κόψε άμεσα τον ήχο αν μπήκε mute
     if (checked && tts[0] != null) {
         tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
     }
 });
 
 // ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW (FINAL)
+// 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
 // ============================================================
 if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
@@ -5213,7 +5194,7 @@ logLine();
 }
 
 // ============================================================
-// LAB 17 — POPUP (GEL DARK + GOLD) — WITH TTS
+// LAB 17 — POPUP (GEL DARK + GOLD) — WITH GLOBAL TTS
 // ============================================================
 private void lab17_showPopup(String titleText, String msgText) {
 
@@ -5224,8 +5205,6 @@ private void lab17_showPopup(String titleText, String msgText) {
             );
 
     b.setCancelable(true);
-
-    final AlertDialog[] holder = new AlertDialog[1];
 
     // ==========================
     // ROOT
@@ -5261,6 +5240,17 @@ private void lab17_showPopup(String titleText, String msgText) {
     box.addView(msg);
 
     // ==========================
+    // 🔕 MUTE TOGGLE (GLOBAL)
+    // ==========================
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(isTtsMuted());
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+    box.addView(muteBox);
+
+    // ==========================
     // OK BUTTON
     // ==========================
     Button ok = new Button(this);
@@ -5275,97 +5265,67 @@ private void lab17_showPopup(String titleText, String msgText) {
     okBg.setStroke(dp(3), 0xFFFFD700);
     ok.setBackground(okBg);
     ok.setPadding(dp(18), dp(10), dp(18), dp(10));
-
     box.addView(ok);
 
     // ==========================
     // BUILD DIALOG
     // ==========================
     b.setView(box);
-    holder[0] = b.create();
-    AlertDialog popup = holder[0];
+    AlertDialog popup = b.create();
 
     if (popup.getWindow() != null) {
         popup.getWindow()
                 .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
-// ==========================
-// 🔕 MUTE TOGGLE (LAB 17 — GLOBAL)
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ GLOBAL κατάσταση
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
+    // ==========================
+    // 🔇 MUTE LOGIC — GLOBAL
+    // ==========================
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
 
-// ⬇️ ΠΡΩΤΑ το mute στο layout
-box.addView(muteBox);
+        // αποθήκευση GLOBAL επιλογής
+        setTtsMuted(checked);
 
-// ==========================
-// ▶ START BUTTON
-// ==========================
-Button startBtn = new Button(this);
-startBtn.setText("START TEST");
-// ... styling κτλ
-box.addView(startBtn);
-
-// ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    // αποθήκευση GLOBAL επιλογής
-    setTtsMuted(checked);
-
-    // κόψε τον ήχο αν πατήθηκε mute
-    if (checked && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
-    }
-});
-
-// ==========================
-// 🔊 TTS — PLAY (GLOBAL ENGINE)
-// ==========================
-if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
-
-    // καθάρισε ό,τι έπαιζε πριν
-    tts[0].stop();
-
-    tts[0].speak(
-            "Before running this lab, please make sure that " +
-            "lab fourteen, lab fifteen and lab sixteen have been completed.",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB17_POPUP"
-    );
-}
-
-// ==========================
-// OK ACTION — WITH GUARD
-// ==========================
-final boolean[] okHandled = { false };
-
-ok.setOnClickListener(v -> {
-
-    // GUARD: μην εκτελεστεί 2 φορές
-    if (okHandled[0]) return;
-    okHandled[0] = true;
-
-    try {
-        if (tts[0] != null) {
-            tts[0].stop();
-            tts[0].shutdown();
+        // κόψε άμεσα τον ήχο αν μπήκε mute
+        if (checked && tts[0] != null) {
+            tts[0].stop();   // ✔ μόνο stop
         }
-    } catch (Throwable ignore) {}
+    });
 
-    try {
-        if (holder[0] != null) holder[0].dismiss();
-    } catch (Throwable ignore) {}
-});
+    // ==========================
+    // 🔊 TTS — PLAY (GLOBAL ENGINE)
+    // ==========================
+    if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
-popup.show();
+        // καθάρισε ό,τι έπαιζε πριν
+        tts[0].stop();
+
+        tts[0].speak(
+                "Before running this lab, please make sure that " +
+                "lab fourteen, lab fifteen and lab sixteen have been completed.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB17_POPUP"
+        );
+    }
+
+    // ==========================
+    // OK ACTION
+    // ==========================
+    ok.setOnClickListener(v -> {
+
+        try {
+            if (tts[0] != null) {
+                tts[0].stop();   // ✔ μόνο stop — όχι shutdown εδώ
+            }
+        } catch (Throwable ignore) {}
+
+        try {
+            popup.dismiss();
+        } catch (Throwable ignore) {}
+    });
+
+    popup.show();
 }
 
 // ============================================================

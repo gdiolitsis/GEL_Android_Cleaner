@@ -853,13 +853,21 @@ private void runServiceRecommendationLab() {
 // ============================================================
 // LOGGING — GEL CANONICAL (UI + SERVICE REPORT)
 // ============================================================
-private void appendHtml(String html) {
-    ui.post(() -> {
-        CharSequence cur = txtLog.getText();
-        CharSequence add = Html.fromHtml(html + "<br>");
-        txtLog.setText(TextUtils.concat(cur, add));
-        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-    });
+private void appendHtml(String htmlLine) {
+    if (txtLog == null) return;
+
+    logHtmlBuffer.append(htmlLine).append("<br>");
+
+    try {
+        txtLog.setText(
+            Html.fromHtml(
+                logHtmlBuffer.toString(),
+                Html.FROM_HTML_MODE_LEGACY
+            )
+        );
+    } catch (Throwable t) {
+        txtLog.setText(logHtmlBuffer.toString());
+    }
 }
 
 private void logInfo(String msg) {

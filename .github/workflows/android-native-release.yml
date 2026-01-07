@@ -24,19 +24,6 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # CACHE — GRADLE
-      # --------------------------------------------
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      # --------------------------------------------
       # Android SDK cmdline-tools ONLY
       # --------------------------------------------
       - name: Set up Android SDK (cmdline-tools only)
@@ -46,17 +33,7 @@ jobs:
           accept-android-sdk-licenses: true
 
       # --------------------------------------------
-      # CACHE — ANDROID SDK + NDK + CMAKE
-      # --------------------------------------------
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            /usr/local/lib/android/sdk
-          key: android-sdk-${{ runner.os }}-api34-ndk25-cmake322
-
-      # --------------------------------------------
-      # Install SDK packages (ONLY if not cached)
+      # Install SDK packages (FIXED – manual sdkmanager)
       # --------------------------------------------
       - name: Install Android SDK packages
         run: |
@@ -68,23 +45,12 @@ jobs:
             "cmake;3.22.1"
 
       # --------------------------------------------
-      # CACHE — GRADLE DISTRIBUTION
-      # --------------------------------------------
-      - name: Cache Gradle Distribution
-        uses: actions/cache@v4
-        with:
-          path: gradle-8.2.1
-          key: gradle-dist-8.2.1
-
-      # --------------------------------------------
-      # Gradle 8.2.1 (download only once)
+      # Gradle 8.2.1
       # --------------------------------------------
       - name: Install Gradle
         run: |
-          if [ ! -d "gradle-8.2.1" ]; then
-            wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
-            unzip -q gradle-8.2.1-bin.zip
-          fi
+          wget https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
+          unzip -q gradle-8.2.1-bin.zip
           echo "GRADLE_HOME=$PWD/gradle-8.2.1" >> $GITHUB_ENV
           echo "$PWD/gradle-8.2.1/bin" >> $GITHUB_PATH
 

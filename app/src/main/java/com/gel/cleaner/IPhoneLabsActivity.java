@@ -844,35 +844,34 @@ private void runServiceRecommendationLab() {
     }
 
 // ============================================================
-// LOGGING (UI + GELServiceLog) — SAME EXPORT PIPELINE (CLEAN)
+// LOGGING (UI + GELServiceLog) — UTF CLEAN
 // ============================================================
 
 private void logLine() {
-    String line = "";
+    String line = "----------------------------------------";
     appendHtml("<font color='#888888'>" + line + "</font>");
     try { GELServiceLog.info(line); } catch (Throwable ignore) {}
 }
 
 private void logInfo(String msg) {
-    appendHtml("<font color='#FFFFFF'> " + escape(msg) + "</font>");
-    try { GELServiceLog.info(" " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFFFFF'>ℹ " + escape(msg) + "</font>");
+    try { GELServiceLog.info("ℹ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#00FF66'> " + escape(msg) + "</font>");
-    try { GELServiceLog.ok(" " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#00FF66'>✔ " + escape(msg) + "</font>");
+    try { GELServiceLog.ok("✔ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFCC00'> " + escape(msg) + "</font>");
-    try { GELServiceLog.warn(" " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FFCC00'>⚠ " + escape(msg) + "</font>");
+    try { GELServiceLog.warn("⚠ " + msg); } catch (Throwable ignore) {}
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF4444'> " + escape(msg) + "</font>");
-    try { GELServiceLog.error(" " + msg); } catch (Throwable ignore) {}
+    appendHtml("<font color='#FF4444'>✖ " + escape(msg) + "</font>");
+    try { GELServiceLog.error("✖ " + msg); } catch (Throwable ignore) {}
 }
-
 // ------------------------------------------------------------
 // UI APPENDER
 // ------------------------------------------------------------

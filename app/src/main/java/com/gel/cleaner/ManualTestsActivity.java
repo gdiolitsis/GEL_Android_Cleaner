@@ -358,18 +358,6 @@ tts[0] = new TextToSpeech(this, status -> {
     }
 });
 
-@Override
-protected void onDestroy() {
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-            tts[0].shutdown();
-            tts[0] = null;
-        }
-    } catch (Throwable ignore) {}
-    super.onDestroy();
-}
-
     // ============================================================
     // ROOT SCROLL + LAYOUT
     // ============================================================
@@ -598,6 +586,19 @@ if (!serviceLogInit) {
 }
 
 }  // onCreate ENDS HERE
+
+@Override
+protected void onDestroy() {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+            tts[0] = null;
+        }
+    } catch (Throwable ignore) {}
+
+    super.onDestroy();
+}
 
     // ============================================================
     // GEL legacy aliases (LOCKED)

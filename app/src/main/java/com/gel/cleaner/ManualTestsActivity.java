@@ -326,6 +326,23 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     p     = prefs;   // 🔒 ALIAS — όλα τα labs/helpers δουλεύουν με p
 
     ui = new Handler(Looper.getMainLooper());
+    
+    // ============================================================
+// 🔊 GLOBAL TTS INIT — ONE TIME ONLY
+// ============================================================
+tts = new TextToSpeech[1];
+ttsReady = new boolean[]{ false };
+
+tts[0] = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+
+        int res = tts[0].setLanguage(Locale.US);
+
+        ttsReady[0] =
+                res != TextToSpeech.LANG_MISSING_DATA &&
+                res != TextToSpeech.LANG_NOT_SUPPORTED;
+    }
+});
 
     // ============================================================
     // ROOT SCROLL + LAYOUT

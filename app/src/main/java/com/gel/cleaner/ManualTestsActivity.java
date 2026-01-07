@@ -107,6 +107,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.gel.cleaner.base.UIHelpers;
+
 // ============================================================
 // JAVA — IO / NET
 // ============================================================
@@ -663,52 +665,58 @@ protected void onDestroy() {
     }
 
     private Button makeTestButton(String text, Runnable action) {
-        Button b = new Button(this);
-        b.setText(text);
-        b.setAllCaps(false);
-        b.setTextSize(14f);
-        b.setTextColor(0xFFFFFFFF);
-        b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
+    Button b = new Button(this);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextSize(14f);
+    b.setTextColor(0xFFFFFFFF);
+    b.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(48)
-                );
-        lp.setMargins(0, dp(4), 0, dp(4));
-        b.setLayoutParams(lp);
-        b.setGravity(Gravity.CENTER);
-        b.setOnClickListener(v -> action.run());
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(48)
+            );
+    lp.setMargins(0, dp(4), 0, dp(4));
+    b.setLayoutParams(lp);
+    b.setGravity(Gravity.CENTER);
 
-        return b;
-    }
+    // ✅ PRESS EFFECT (base.uihelpers)
+    UIHelpers.applyPressEffect(b);
+
+    b.setOnClickListener(v -> action.run());
+    return b;
+}
 
     private Button makeTestButtonRedGold(String text, Runnable action) {
-        Button b = new Button(this);
-        b.setText(text);
-        b.setAllCaps(false);
-        b.setTextSize(14f);
-        b.setTextColor(0xFFFFFFFF);
-        b.setTypeface(null, Typeface.BOLD);
+    Button b = new Button(this);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextSize(14f);
+    b.setTextColor(0xFFFFFFFF);
+    b.setTypeface(null, Typeface.BOLD);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF8B0000);
-        bg.setCornerRadius(dp(12));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        b.setBackground(bg);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF8B0000);
+    bg.setCornerRadius(dp(12));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    b.setBackground(bg);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lp.setMargins(0, dp(6), 0, dp(6));
-        b.setLayoutParams(lp);
-        b.setGravity(Gravity.CENTER);
-        b.setOnClickListener(v -> action.run());
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lp.setMargins(0, dp(6), 0, dp(6));
+    b.setLayoutParams(lp);
+    b.setGravity(Gravity.CENTER);
 
-        return b;
-    }
+    // ✅ PRESS EFFECT (base.uihelpers)
+    UIHelpers.applyPressEffect(b);
+
+    b.setOnClickListener(v -> action.run());
+    return b;
+}
 
 // ============================================================
 // WIFI / NETWORK HELPERS — REQUIRED
@@ -2099,6 +2107,9 @@ private Button makeTestButtonGreenGold(String text, Runnable action) {
     states.addState(new int[]{-android.R.attr.state_enabled}, disabledBg);
     states.addState(new int[]{android.R.attr.state_pressed}, pressedBg);
     states.addState(new int[]{}, normalBg);
+    btn.setBackground(states);
+
+UIHelpers.applyPressEffect(btn);
 
     // -------------------------------
     // RIPPLE (Modern Android Feel)

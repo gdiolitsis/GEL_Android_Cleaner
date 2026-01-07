@@ -112,7 +112,7 @@ Laboratory diagnostics for iPhone using system files
 <string name="export_report_desc">
 Generate final technician report
 (Android + iPhone diagnostics)
-PDF or TXT format
+PDF format
 </string>
 
 <string name="export_pdf_button">📄 Export Report (PDF)</string>

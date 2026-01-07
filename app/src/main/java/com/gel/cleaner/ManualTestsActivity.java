@@ -1447,52 +1447,55 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
     msg.setLineSpacing(0f, 1.2f);
     root.addView(msg);
 
-    // ------------------------------------------------------------
-    // CONTINUE BUTTON
-    // ------------------------------------------------------------
-    Button btnContinue = new Button(this);
-    btnContinue.setText("Continue anyway");
-    btnContinue.setAllCaps(false);
-    btnContinue.setTextColor(Color.WHITE);
-    btnContinue.setTextSize(15f);
-    btnContinue.setTypeface(null, Typeface.BOLD);
+// ==========================
+// 🔕 MUTE TOGGLE — GLOBAL
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(isTtsMuted());
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
 
-    GradientDrawable btnBg = new GradientDrawable();
-    btnBg.setColor(0xFF0B5D1E);
-    btnBg.setCornerRadius(dp(14));
-    btnBg.setStroke(dp(2), 0xFFFFD700);
-    btnContinue.setBackground(btnBg);
+// ⬇️ ΠΡΩΤΑ μπαίνει το mute
+root.addView(muteBox);
 
-    LinearLayout.LayoutParams lpBtn =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lpBtn.setMargins(0, dp(18), 0, 0);
-    btnContinue.setLayoutParams(lpBtn);
+// ==========================
+// 🔇 MUTE LOGIC — GLOBAL
+// ==========================
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+    setTtsMuted(checked);
+    try {
+        if (checked && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
 
-    root.addView(btnContinue);
+// ------------------------------------------------------------
+// CONTINUE BUTTON
+// ------------------------------------------------------------
+Button btnContinue = new Button(this);
+btnContinue.setText("Continue anyway");
+btnContinue.setAllCaps(false);
+btnContinue.setTextColor(Color.WHITE);
+btnContinue.setTextSize(15f);
+btnContinue.setTypeface(null, Typeface.BOLD);
 
-    // ==========================
-    // 🔕 MUTE TOGGLE — GLOBAL
-    // ==========================
-    CheckBox muteBox = new CheckBox(this);
-    muteBox.setChecked(isTtsMuted());
-    muteBox.setText("Mute voice instructions");
-    muteBox.setTextColor(0xFFDDDDDD);
-    muteBox.setGravity(Gravity.CENTER);
-    muteBox.setPadding(0, dp(10), 0, dp(10));
-    root.addView(muteBox);
+GradientDrawable btnBg = new GradientDrawable();
+btnBg.setColor(0xFF0B5D1E);
+btnBg.setCornerRadius(dp(14));
+btnBg.setStroke(dp(2), 0xFFFFD700);
+btnContinue.setBackground(btnBg);
 
-    // ==========================
-    // 🔇 MUTE LOGIC — GLOBAL
-    // ==========================
-    muteBox.setOnCheckedChangeListener((v, checked) -> {
-        setTtsMuted(checked);
-        try {
-            if (checked && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-    });
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpBtn.setMargins(0, dp(18), 0, 0);
+btnContinue.setLayoutParams(lpBtn);
+
+// ⬇️ ΜΕΤΑ μπαίνει το κουμπί
+root.addView(btnContinue);
 
     // ============================================================
     // 🔊 TTS — PLAY (GLOBAL ENGINE)
@@ -4322,6 +4325,33 @@ for (int i = 0; i < 6; i++) {
 }
 root.addView(lab15ProgressBar);
 
+// ==========================
+// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
+
+// ⬇️ ΠΡΩΤΑ μπαίνει το mute
+root.addView(muteBox);
+
+// ==========================
+// 🔇 MUTE LOGIC — GLOBAL
+// ==========================
+muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+    // αποθήκευση GLOBAL επιλογής
+    setTtsMuted(checked);
+
+    // κόψε άμεσα τον ήχο αν μπήκε mute
+    if (checked && tts[0] != null) {
+        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
+    }
+});
+
 // ============================================================
 // 🔹 EXIT BUTTON
 // ============================================================
@@ -4345,10 +4375,6 @@ LinearLayout.LayoutParams lpExit =
 lpExit.setMargins(0, dp(14), 0, 0);
 exitBtn.setLayoutParams(lpExit);
 
-// ============================================================
-// 🔊 LAB 15 — INTRO POPUP (GLOBAL TTS ENGINE)
-// ============================================================
-
 // ------------------------------------------------------------
 // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
 // ------------------------------------------------------------
@@ -4361,6 +4387,7 @@ exitBtn.setOnClickListener(v -> {
     abortLab15ByUser();
 });
 
+// ⬇️ ΜΕΤΑ μπαίνει το exit
 root.addView(exitBtn);
 
 // ============================================================
@@ -4376,50 +4403,13 @@ if (lab15Dialog.getWindow() != null) {
 
 lab15Dialog.show();
 
-// ==========================
-// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
-root.addView(muteBox);
-
-// ==========================
-// ▶️ START BUTTON
-// ==========================
-Button startBtn = new Button(this);
-startBtn.setText("START TEST");
-// styling όπως το έχεις ήδη
-root.addView(startBtn);
-
-// ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    // αποθήκευση GLOBAL επιλογής
-    setTtsMuted(checked);
-
-    // κόψε άμεσα τον ήχο αν μπήκε mute
-    if (checked && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
-    }
-});
-
 // ============================================================
 // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
 // ============================================================
 if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
 
-    // καθάρισε ό,τι έπαιζε πριν
     tts[0].stop();
 
-    // μίλα
     tts[0].speak(
             "Connect the charger to the device's charging port. " +
             "The system will monitor charging behavior for the next three minutes. " +

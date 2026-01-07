@@ -1447,16 +1447,16 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
                     .putBoolean("lab14_tts_muted", checked)
                     .apply();
 
-            if (checked && tts != null) {
-                tts.stop();
+            if (checked && tts[0] != null) {
+                tts[0].stop();
             }
         });
 
         // ==========================
-        // 🔊 TTS — GLOBAL
+        // 🔊 TTS — GLOBAL (ΣΩΣΤΟ)
         // ==========================
-        if (ttsReady && !ttsMuted[0]) {
-            tts.speak(
+        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+            tts[0].speak(
                     "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
                     "You may continue without restarting, but recent heavy usage can affect the results. " +
                     "Don't use your device for the next 5 minutes.",
@@ -1476,13 +1476,17 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
         }
 
         // ------------------------------------------------------------
-        // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
+        // CONTINUE CLICK — STOP TTS
         // ------------------------------------------------------------
         btnContinue.setOnClickListener(v -> {
 
-            if (tts != null) {
-                try { tts.stop(); } catch (Throwable ignore) {}
-            }
+            try {
+                if (tts[0] != null) {
+                    tts[0].stop();
+                    tts[0].shutdown();
+                    tts[0] = null;
+                }
+            } catch (Throwable ignore) {}
 
             dlg.dismiss();
             if (onContinue != null) onContinue.run();
@@ -2648,10 +2652,10 @@ private void lab6DisplayTouch() {
         root.addView(start);
 
         // ==========================
-        // 🔊 TTS — USE GLOBAL
+        // 🔊 TTS — USE GLOBAL (CORRECT)
         // ==========================
-        if (ttsReady && !ttsMuted[0]) {
-            tts.speak(
+        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+            tts[0].speak(
                     "Touch all dots on the screen to complete the test. " +
                     "All screen areas must respond to touch input.",
                     TextToSpeech.QUEUE_FLUSH,
@@ -2663,7 +2667,12 @@ private void lab6DisplayTouch() {
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab6_tts_muted", checked).apply();
-            if (checked && tts != null) tts.stop();
+
+            if (checked && tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
         });
 
         // ==========================
@@ -2680,7 +2689,11 @@ private void lab6DisplayTouch() {
         // ==========================
         start.setOnClickListener(v -> {
 
-            if (tts != null) tts.stop();
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
 
             d.dismiss();
 
@@ -2763,10 +2776,10 @@ private void lab7RotationManual() {
         root.addView(start);
 
         // ==========================
-        // 🔊 TTS — USE GLOBAL
+        // 🔊 TTS — USE GLOBAL (CORRECT)
         // ==========================
-        if (ttsReady && !ttsMuted[0]) {
-            tts.speak(
+        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+            tts[0].speak(
                     "Rotate the device slowly. " +
                     "The screen should follow the device orientation.",
                     TextToSpeech.QUEUE_FLUSH,
@@ -2778,7 +2791,12 @@ private void lab7RotationManual() {
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab7_tts_muted", checked).apply();
-            if (checked && tts != null) tts.stop();
+
+            if (checked && tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
         });
 
         b.setView(root);
@@ -2789,7 +2807,11 @@ private void lab7RotationManual() {
 
         start.setOnClickListener(v -> {
 
-            if (tts != null) tts.stop();
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
 
             d.dismiss();
 
@@ -2871,10 +2893,10 @@ private void lab8ProximityCall() {
         root.addView(start);
 
         // ==========================
-        // 🔊 TTS — USE GLOBAL
+        // 🔊 TTS — USE GLOBAL (CORRECT)
         // ==========================
-        if (ttsReady && !ttsMuted[0]) {
-            tts.speak(
+        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+            tts[0].speak(
                     "Cover the proximity sensor with your hand. " +
                     "The screen should turn off.",
                     TextToSpeech.QUEUE_FLUSH,
@@ -2886,7 +2908,12 @@ private void lab8ProximityCall() {
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean("lab8_tts_muted", checked).apply();
-            if (checked && tts != null) tts.stop();
+
+            if (checked && tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
         });
 
         b.setView(root);
@@ -2897,7 +2924,11 @@ private void lab8ProximityCall() {
 
         start.setOnClickListener(v -> {
 
-            if (tts != null) tts.stop();
+            if (tts[0] != null) {
+                tts[0].stop();
+                tts[0].shutdown();
+                tts[0] = null;
+            }
 
             d.dismiss();
 
@@ -4325,9 +4356,13 @@ exitBtn.setLayoutParams(lpExit);
 // ============================================================
 
 exitBtn.setOnClickListener(v -> {
-    if (tts != null) {
-        try { tts.stop(); } catch (Throwable ignore) {}
-    }
+    try {
+        if (tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+            tts[0] = null;
+        }
+    } catch (Throwable ignore) {}
     abortLab15ByUser();
 });
 
@@ -4368,16 +4403,18 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
             .putBoolean("lab15_tts_muted", checked)
             .apply();
 
-    if (checked && tts != null) {
-        tts.stop();
+    if (checked && tts[0] != null) {
+        tts[0].stop();
+        tts[0].shutdown();
+        tts[0] = null;
     }
 });
 
 // ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW (GLOBAL)
+// 🔊 TTS — SPEAK AFTER SHOW (GLOBAL)  ✅ ΣΩΣΤΟ
 // ============================================================
-if (ttsReady && !ttsMuted[0]) {
-    tts.speak(
+if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+    tts[0].speak(
             "Connect the charger to the device's charging port. " +
             "The system will monitor charging behavior for the next three minutes. " +
             "Please keep the device connected during the test.",
@@ -5263,11 +5300,13 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
 
     if (checked && tts[0] != null) {
         tts[0].stop();
+        tts[0].shutdown();
+        tts[0] = null;
     }
 });
 
 // ==========================
-// 🔊 TTS — SAFE & LOCAL
+// 🔊 TTS — SAFE & LOCAL (FINAL)
 // ==========================
 tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
@@ -5278,8 +5317,8 @@ tts[0] = new TextToSpeech(this, status -> {
                 res != TextToSpeech.LANG_MISSING_DATA &&
                 res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-        // 🔥 ΜΙΛΑΜΕ ΑΜΕΣΩΣ ΜΟΛΙΣ ΕΙΝΑΙ ΕΤΟΙΜΟ
-        if (ready && !ttsMuted[0]) {
+        // 🔥 ΜΙΛΑΜΕ ΜΟΛΙΣ ΕΙΝΑΙ ΕΤΟΙΜΟ
+        if (ready && !ttsMuted[0] && tts[0] != null) {
             tts[0].speak(
                     "Before running this lab, please make sure that " +
                     "lab fourteen, lab fifteen and lab sixteen have been completed.",

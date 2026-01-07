@@ -350,11 +350,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 private void runPanicLogAnalyzer() {
     if (!guardPanicLog()) return;
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 1 — Panic Log Analyzer");
-    logInfo("Initial screening of the panic log against known crash patterns.");
     logLine();
-
+    logInfo("Initial screening of the panic log against known crash patterns.");
+    
     IPSPanicParser.Result r = IPSPanicParser.analyze(this, panicLogText);
 
     if (r == null) {
@@ -412,8 +413,9 @@ private void runPanicLogAnalyzer() {
     logInfo("Next step:");
     logOk("The extracted signature will be interpreted in detail in the next LAB 2.");
 
-    logLine();
+    appendHtml("<br>");
     logOk("Lab 1 finished.");
+    logLine();
 }
 
 
@@ -423,11 +425,12 @@ private void runPanicLogAnalyzer() {
 private void runPanicSignatureParser() {
     if (!guardPanicLog()) return;
 
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 2 — Panic Signature Parser");
-    logInfo("Interpreting crash behavior using contextual evidence.");
     logLine();
-
+    logInfo("Interpreting crash behavior using contextual evidence.");
+    
     parseAndCacheSignature(panicLogText);
 
     logInfo("File:");
@@ -463,8 +466,9 @@ private void runPanicSignatureParser() {
     logInfo("Next step:");
     logOk("The extracted signature will be interpreted in detail in the next LAB 3.");
 
-    logLine();
+    appendHtml("<br>");
     logOk("Lab 2 finished.");
+    logLine();
 }
 
 
@@ -473,12 +477,14 @@ private void runPanicSignatureParser() {
 // ============================================================
 private void runStabilityLab() {
     if (!guardPanicLog()) return;
-
+    
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 3 — System Stability Evaluation");
-    logInfo("Assessing whether the crash indicates broader system instability.");
     logLine();
-
+    
+    logInfo("Assessing whether the crash indicates broader system instability.");
+    
     parseAndCacheSignature(panicLogText);
 
     if ("High".equalsIgnoreCase(sigConfidence)
@@ -510,8 +516,9 @@ private void runStabilityLab() {
     logInfo("Next step:");
     logOk("The following LAB 4 analyzes which hardware area is most likely involved.");
 
-    logLine();
+    appendHtml("<br>");
     logOk("Lab 3 finished.");
+    logLine();
 }
 
 
@@ -520,11 +527,12 @@ private void runStabilityLab() {
 // ============================================================
 private void runImpactLab() {
     if (!guardPanicLog()) return;
-
+    
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 4 — Impact Analysis");
+    longLine();
     logInfo("Evaluating which hardware or system areas may be affected.");
-    logLine();
 
     parseAndCacheSignature(panicLogText);
 
@@ -563,8 +571,9 @@ private void runImpactLab() {
     logInfo("Next step:");
     logOk("A final service-level recommendation will be provided at LAB 5.");
 
-    logLine();
+    appendHtml("<br>");
     logOk("Lab 4 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -572,12 +581,13 @@ private void runImpactLab() {
 // ============================================================
 private void runServiceRecommendationLab() {
     if (!guardPanicLog()) return;
-
+    
+    appendHtml("<br>");
     logLine();
     logInfo("LAB 5 — Service Recommendation");
-    logInfo("Final technical summary based on available panic log data.");
     logLine();
-
+    logInfo("Final technical summary based on available panic log data.");
+    
     parseAndCacheSignature(panicLogText);
 
     // ------------------------------------------------------------
@@ -636,8 +646,9 @@ private void runServiceRecommendationLab() {
     logOk("A panic log represents a snapshot in time, not a full diagnosis.");
     logOk("Conclusions should be correlated with device history and user symptoms.");
 
-    logLine();
+    appendHtml("<br>");
     logOk("Lab 5 finished.");
+    logLine();
 }
 
     // ============================================================

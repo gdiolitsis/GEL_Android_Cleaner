@@ -8305,7 +8305,7 @@ private void lab29FinalSummary() {
     }
 
     appendHtml("<br>");
-    logOk("Lab 9 finished.");
+    logOk("Lab 29 finished.");
     logLine();
 
     appendHtml("<br>");

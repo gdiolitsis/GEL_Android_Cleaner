@@ -97,6 +97,7 @@ public class GELServiceLog {
 
     // ============================================================
     // SECTION HEADER
+    // (no empty line before title)
     // ============================================================
     public static synchronized void section(String title) {
         if (title == null || title.trim().isEmpty())
@@ -115,20 +116,22 @@ public class GELServiceLog {
     }
 
     // ============================================================
-    // LAB FINISHED BLOCK — REAL EMPTY LINES (PLAIN)
+    // LAB FINISHED BLOCK
     // ============================================================
     public static synchronized void labFinished(String labName) {
-        if (labName == null) labName = "Lab";
+    if (labName == null) labName = "Lab";
 
-        // 👇 πραγματικό κενό ΠΡΙΝ
-        LOG.append("\n");
+    // 👇 ΚΕΝΟ ΠΡΙΝ (φαίνεται στο preview)
+    addHtml("<br><br>");
+    addPlain("\n");
 
-        ok(labName + " finished.");
-        line();
+    ok(labName + " finished.");
+    line();
 
-        // 👇 πραγματικό κενό ΜΕΤΑ
-        LOG.append("\n");
-    }
+    // 👇 ΚΕΝΟ ΜΕΤΑ
+    addHtml("<br><br>");
+    addPlain("\n");
+}
 
     // ============================================================
     // GETTERS

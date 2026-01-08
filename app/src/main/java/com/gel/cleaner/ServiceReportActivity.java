@@ -144,8 +144,11 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
 
         // ΜΟΝΟ HTML EXPORT
-        btnPdf.setOnClickListener(v -> exportPdfFromHtml());
-        root.addView(btnPdf);
+        // ΜΟΝΟ HTML EXPORT — DEBUG
+btnPdf.setOnClickListener(v -> {
+    Toast.makeText(this, "BTN CLICKED", Toast.LENGTH_SHORT).show();
+    exportPdfFromHtml();
+});
 
         scroll.addView(root);
         setContentView(scroll);

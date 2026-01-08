@@ -113,4 +113,14 @@ public static synchronized void section(String title) {
     public static void logError(String msg) { error(msg); }
     public static void logLine()            { addLine(null); }
 
+// ============================================================
+// GETTERS — PLAIN + HTML
+// ============================================================
+public static synchronized String getAll() {
+    return LOG.toString();      // plain text
+}
+
+public static synchronized String getHtml() {
+    return HTML.toString();     // colored html
+}
 }

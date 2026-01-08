@@ -1,10 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELServiceLog — Ultra-Safe Edition v2.1 (HTML + TEXT)
+// GELServiceLog — Ultra-Safe Edition v2.2 (HTML + TEXT)
 // ============================================================
 // • Thread-safe ALL operations
 // • Internal ring-buffer safety (auto-trim > 50.000 chars)
 // • UTF-safe emojis
 // • Dual log: PLAIN (backward compat) + HTML (styled export)
+// • NO labels (INFO / OK / WARNING / ERROR) — μόνο σύμβολα
+// • Visual separation between LABS (γραμμή + κενή γραμμή)
 // • 100% έτοιμο για copy-paste
 // ============================================================
 
@@ -19,8 +21,8 @@ public class GELServiceLog {
     // ----------------------------
     // BUFFERS
     // ----------------------------
-    private static final StringBuilder LOG = new StringBuilder(4096);      // plain text
-    private static final StringBuilder HTML = new StringBuilder(4096);    // styled
+    private static final StringBuilder LOG  = new StringBuilder(4096);   // plain text
+    private static final StringBuilder HTML = new StringBuilder(4096);   // styled html
 
     private static final SimpleDateFormat TS =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
@@ -30,14 +32,14 @@ public class GELServiceLog {
     // ============================================================
     // INTERNAL HELPERS
     // ============================================================
-    private static synchronized void add(String type, String msg) {
+    private static synchronized void add(String symbol, String msg) {
         if (msg == null) msg = "";
 
         String ts = TS.format(new Date());
 
         String line =
                 ts + "  " +
-                (type == null ? "" : type) + "  " +
+                (symbol == null ? "" : symbol) + " " +
                 sanitize(msg);
 
         LOG.append(line).append('\n');
@@ -74,29 +76,50 @@ public class GELServiceLog {
 
     // ============================================================
     // PUBLIC LOGGING API (PLAIN + HTML)
+    // • ΜΟΝΟ σύμβολο + μήνυμα
     // ============================================================
     public static synchronized void info(String msg)  {
-        add("ℹ️ INFO", msg);
+        add("ℹ", msg);
         addHtml("<font color='#7FC8FF'>ℹ " + escape(msg) + "</font>");
     }
 
     public static synchronized void ok(String msg)    {
-        add("✅ OK", msg);
+        add("✔", msg);
         addHtml("<font color='#39FF14'>✔ " + escape(msg) + "</font>");
     }
 
     public static synchronized void warn(String msg)  {
-        add("⚠️ WARNING", msg);
+        add("⚠", msg);
         addHtml("<font color='#FFD966'>⚠ " + escape(msg) + "</font>");
     }
 
     public static synchronized void error(String msg) {
-        add("❌ ERROR", msg);
+        add("✖", msg);
         addHtml("<font color='#FF5555'>✖ " + escape(msg) + "</font>");
     }
 
     // ============================================================
-    // ADD FREE LINE  (γραμμή + ΚΕΝΗ γραμμή για οπτικό διαχωρισμό)
+    // KV HELPERS — τιμή δίπλα στο label (ΟΧΙ από κάτω)
+    // ============================================================
+    public static synchronized void infoKV(String label, String value) {
+        info(label + " " + value);
+    }
+
+    public static synchronized void okKV(String label, String value) {
+        ok(label + " " + value);
+    }
+
+    public static synchronized void warnKV(String label, String value) {
+        warn(label + " " + value);
+    }
+
+    public static synchronized void errorKV(String label, String value) {
+        error(label + " " + value);
+    }
+
+    // ============================================================
+    // ADD FREE LINE
+    // • γραμμή + ΚΕΝΗ γραμμή για οπτικό διαχωρισμό LABS
     // ============================================================
     public static synchronized void addLine(String line) {
         if (line == null || line.trim().isEmpty())
@@ -114,6 +137,7 @@ public class GELServiceLog {
     // SECTION HEADER (SERVICE REPORT SPLIT)
     // • ΠΑΝΩ/ΚΑΤΩ σκέτη γραμμή
     // • ΜΟΝΟ στη μέση ο τίτλος
+    // • ΟΧΙ κενή γραμμή πριν τον τίτλο
     // ============================================================
     public static synchronized void section(String title) {
         if (title == null || title.trim().isEmpty())
@@ -130,7 +154,7 @@ public class GELServiceLog {
         addHtml(line);
         addHtml("<b>" + escape(title.toUpperCase(Locale.US)) + "</b>");
         addHtml(line);
-        addHtml(""); // κενή γραμμή
+        addHtml(""); // κενή γραμμή μετά το section
     }
 
     // ============================================================

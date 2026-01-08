@@ -128,7 +128,7 @@ public class GELServiceLog {
     addPlain(dot);
     addHtml("<span style='color:#101010'>.</span><br>");
 
-    ok(labName + " finished.");
+    ok("DEBUG_LABFIN_CALLED");
     line();
 
     // --- AFTER ---

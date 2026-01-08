@@ -91,7 +91,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("Service Report");
+        title.setText(getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -174,12 +174,16 @@ public class ServiceReportActivity extends AppCompatActivity {
     // ----------------------------------------------------------
     // PDF EXPORT — FROM HTML (FINAL)
     // ----------------------------------------------------------
-    private void exportPdfFromHtml() {
+    
+private void exportPdfFromHtml() {
 
-        if (GELServiceLog.isEmpty()) {
-            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
-            return;
-        }
+    // 🔥 DEBUG — απόδειξη ότι μπαίνουμε στο HTML export
+    Toast.makeText(this, "HTML EXPORT PATH", Toast.LENGTH_LONG).show();
+
+    if (GELServiceLog.isEmpty()) {
+        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+        return;
+    }
 
         if (Build.VERSION.SDK_INT <= 29) {
             if (ContextCompat.checkSelfPermission(

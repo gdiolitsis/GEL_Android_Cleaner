@@ -370,9 +370,9 @@ private String getPreviewText() {
 private String stripTimestamps(String log) {
     if (log == null) return "";
 
-    // remove patterns like: 2026-01-07 23:21:37
+    // αφαιρεί ΜΟΝΟ το timestamp, ΟΧΙ τα \n
     return log.replaceAll(
-            "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*",
+            "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
             ""
     );
 }

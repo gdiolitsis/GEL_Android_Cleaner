@@ -252,7 +252,17 @@ root.addView(txtPreview);
                 int maxY = pageHeight - margin;
 
                 while (currentLine < lines.length && y < maxY) {
-                    String line = unicodeWrap(lines[currentLine], 52);
+
+    String raw = lines[currentLine];
+
+    // 👉 αν η γραμμή είναι άδεια, ζωγράφισε spacer
+    if (raw.trim().isEmpty()) {
+        y += lineHeight;      // ΜΙΑ ΟΛΟΚΛΗΡΗ ΚΕΝΗ ΓΡΑΜΜΗ
+        currentLine++;
+        continue;
+    }
+
+    String line = unicodeWrap(raw, 72);
                     for (String subLine : line.split("\n")) {
                         if (y >= maxY) break;
                         canvas.drawText(subLine, margin, y, paint);

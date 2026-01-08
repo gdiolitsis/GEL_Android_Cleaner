@@ -120,7 +120,9 @@ public class GELServiceLog {
     // ============================================================
     public static synchronized void labFinished(String labName) {
         if (labName == null) labName = "Lab";
-
+        
+        addPlain(" ");
+        addHtml("<br>");
         ok(labName + " finished.");
         line();
 

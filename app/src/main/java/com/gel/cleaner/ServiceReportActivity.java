@@ -395,10 +395,10 @@ private void exportPdfFromHtml() {
     String htmlBody = GELServiceLog.getHtml();
 
     String fullHtml =
-            "<html><head>" +
+            "<!DOCTYPE html><html><head>" +
             "<meta charset='utf-8'/>" +
             "<style>" +
-            "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;}" +
+            "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;margin:16px;}" +
             "</style>" +
             "</head><body>" +
             htmlBody +
@@ -426,12 +426,16 @@ private void printWebViewToPdf(WebView webView) {
         PrintManager printManager =
                 (PrintManager) getSystemService(PRINT_SERVICE);
 
+        if (printManager == null) {
+            Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         PrintAttributes attributes =
                 new PrintAttributes.Builder()
                         .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
                         .setResolution(
-                                new PrintAttributes.Resolution(
-                                        "pdf", "pdf", 600, 600))
+                                new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
                         .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                         .build();
 

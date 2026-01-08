@@ -30,6 +30,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.text.HtmlCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -121,8 +122,10 @@ txtPreview.setTextSize(sp(13f));
 txtPreview.setTextColor(0xFFEEEEEE);
 txtPreview.setMovementMethod(new ScrollingMovementMethod());
 txtPreview.setPadding(0, 0, 0, dp(12));
+
+String html = getPreviewText();
 txtPreview.setText(
-        Html.fromHtml(getPreviewText(), Html.FROM_HTML_MODE_LEGACY)
+        HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
 );
 
 root.addView(txtPreview);

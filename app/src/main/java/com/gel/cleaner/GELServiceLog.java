@@ -121,20 +121,24 @@ public class GELServiceLog {
     public static synchronized void labFinished(String labName) {
     if (labName == null) labName = "Lab";
 
-    // real spacer: black dot in preview, but SYSTEM sees a line
-    String dot = ".";
-
     // --- BEFORE ---
-    addPlain(dot);
-    addHtml("<span style='color:#101010'>.</span><br>");
+    blank();
 
-    ok("DEBUG_LABFIN_CALLED");
+    ok(labName + " finished.");
     line();
 
     // --- AFTER ---
-    addPlain(dot);
-    addHtml("<span style='color:#101010'>.</span><br>");
+    blank();
 }
+
+// ============================================================
+// BLANK LINE (REAL SPACER)
+// ============================================================
+public static synchronized void blank() {
+    addPlain("");
+    addHtml("<br>");
+}
+
 
     // ============================================================
     // GETTERS

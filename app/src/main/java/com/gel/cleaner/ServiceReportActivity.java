@@ -99,7 +99,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText(getString(R.string.export_report_title));
+        title.setText("\n" + getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));

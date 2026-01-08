@@ -1,16 +1,14 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELServiceLog — Ultra-Safe Edition v2.0
+// GELServiceLog — Ultra-Safe Edition v2.1 (HTML + TEXT)
 // ============================================================
 // • Thread-safe ALL operations
-// • Internal ring-buffer safety (auto-trim > 50.000 lines)
-// • Safe UTF-8 emojis on all vendors (Samsung/Xiaomi)
-// • Full “Service Lab” compatibility: Auto Diagnostics / Manual Tests / Export
-// • 100% έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// • Internal ring-buffer safety (auto-trim > 50.000 chars)
+// • UTF-safe emojis
+// • Dual log: PLAIN (backward compat) + HTML (styled export)
+// • 100% έτοιμο για copy-paste
 // ============================================================
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,7 +16,12 @@ import java.util.Locale;
 
 public class GELServiceLog {
 
-    private static final StringBuilder LOG = new StringBuilder(4096);
+    // ----------------------------
+    // BUFFERS
+    // ----------------------------
+    private static final StringBuilder LOG = new StringBuilder(4096);      // plain text
+    private static final StringBuilder HTML = new StringBuilder(4096);    // styled
+
     private static final SimpleDateFormat TS =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
@@ -30,13 +33,20 @@ public class GELServiceLog {
     private static synchronized void add(String type, String msg) {
         if (msg == null) msg = "";
 
+        String ts = TS.format(new Date());
+
         String line =
-                TS.format(new Date()) + "  " +
-                type + "  " +
+                ts + "  " +
+                (type == null ? "" : type) + "  " +
                 sanitize(msg);
 
         LOG.append(line).append('\n');
+        ensureLimit();
+    }
 
+    private static synchronized void addHtml(String htmlLine) {
+        if (htmlLine == null) return;
+        HTML.append(htmlLine).append("<br>");
         ensureLimit();
     }
 
@@ -44,43 +54,85 @@ public class GELServiceLog {
         return s.replace("\n", " ").replace("\r", " ").trim();
     }
 
+    private static String escape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
     private static void ensureLimit() {
         if (LOG.length() > MAX_CHARS) {
-            int cut = (int) (MAX_CHARS * 0.20); // trim 20%
+            int cut = (int) (MAX_CHARS * 0.20);
             LOG.delete(0, cut);
+        }
+        if (HTML.length() > MAX_CHARS) {
+            int cut = (int) (MAX_CHARS * 0.20);
+            HTML.delete(0, cut);
         }
     }
 
     // ============================================================
-    // PUBLIC LOGGING API
+    // PUBLIC LOGGING API (PLAIN + HTML)
     // ============================================================
-    public static void info(String msg)  { add("ℹ️ INFO", msg); }
-    public static void ok(String msg)    { add("✅ OK", msg); }
-    public static void warn(String msg)  { add("⚠️ WARNING", msg); }
-    public static void error(String msg) { add("❌ ERROR", msg); }
+    public static synchronized void info(String msg)  {
+        add("ℹ️ INFO", msg);
+        addHtml("<font color='#7FC8FF'>ℹ " + escape(msg) + "</font>");
+    }
+
+    public static synchronized void ok(String msg)    {
+        add("✅ OK", msg);
+        addHtml("<font color='#39FF14'>✔ " + escape(msg) + "</font>");
+    }
+
+    public static synchronized void warn(String msg)  {
+        add("⚠️ WARNING", msg);
+        addHtml("<font color='#FFD966'>⚠ " + escape(msg) + "</font>");
+    }
+
+    public static synchronized void error(String msg) {
+        add("❌ ERROR", msg);
+        addHtml("<font color='#FF5555'>✖ " + escape(msg) + "</font>");
+    }
 
     // ============================================================
-    // ADD FREE LINE
+    // ADD FREE LINE  (γραμμή + ΚΕΝΗ γραμμή για οπτικό διαχωρισμό)
     // ============================================================
     public static synchronized void addLine(String line) {
         if (line == null || line.trim().isEmpty())
-            line = "─────────────────────";
-    
+            line = "────────────────────────────";
+
+        // plain
+        LOG.append(line).append('\n').append('\n');
+
+        // html
+        addHtml(line);
+        addHtml(""); // κενή γραμμή
     }
 
-// ============================================================
-// SECTION HEADER (SERVICE REPORT SPLIT)
-// ============================================================
-public static synchronized void section(String title) {
-    if (title == null || title.trim().isEmpty())
-        title = "Service Section";
+    // ============================================================
+    // SECTION HEADER (SERVICE REPORT SPLIT)
+    // • ΠΑΝΩ/ΚΑΤΩ σκέτη γραμμή
+    // • ΜΟΝΟ στη μέση ο τίτλος
+    // ============================================================
+    public static synchronized void section(String title) {
+        if (title == null || title.trim().isEmpty())
+            title = "Service Section";
 
-    String line = "═════════════════════";
+        String line = "════════════════════════════";
 
-    add("", line);
-    add("SECTION", title.toUpperCase(Locale.US));    
-    add("", line);
-}
+        // plain
+        LOG.append(line).append('\n');
+        LOG.append(title.toUpperCase(Locale.US)).append('\n');
+        LOG.append(line).append('\n').append('\n');
+
+        // html
+        addHtml(line);
+        addHtml("<b>" + escape(title.toUpperCase(Locale.US)) + "</b>");
+        addHtml(line);
+        addHtml(""); // κενή γραμμή
+    }
+
     // ============================================================
     // GEL FULL REPORT
     // ============================================================
@@ -88,11 +140,16 @@ public static synchronized void section(String title) {
         return LOG.toString();
     }
 
+    public static synchronized String getHtml() {
+        return HTML.toString();
+    }
+
     // ============================================================
     // CLEAR LOG
     // ============================================================
     public static synchronized void clear() {
         LOG.setLength(0);
+        HTML.setLength(0);
     }
 
     // ============================================================
@@ -110,5 +167,4 @@ public static synchronized void section(String title) {
     public static void logWarn(String msg)  { warn(msg); }
     public static void logError(String msg) { error(msg); }
     public static void logLine()            { addLine(null); }
-
 }

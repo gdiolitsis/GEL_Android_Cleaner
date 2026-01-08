@@ -119,18 +119,19 @@ public class GELServiceLog {
     // LAB FINISHED BLOCK
     // ============================================================
     public static synchronized void labFinished(String labName) {
-        if (labName == null) labName = "Lab";
-        
-        addPlain(" ");
-        addHtml("<br>");
-        ok(labName + " finished.");
-        line();
+    if (labName == null) labName = "Lab";
 
-        // κενή γραμμή για οπτικό διαχωρισμό
-        // 👇 ΟΠΤΙΚΗ κενή γραμμή
-    addPlain(" ");
-    addHtml("<br>");
-    }
+    // ---- κενό ΠΡΙΝ ----
+    addPlain("");
+    addHtml("&nbsp;");
+
+    ok(labName + " finished.");
+    line();
+
+    // ---- κενό ΜΕΤΑ ----
+    addPlain("");
+    addHtml("&nbsp;");
+}
 
     // ============================================================
     // GETTERS

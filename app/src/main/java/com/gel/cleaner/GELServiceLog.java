@@ -119,24 +119,33 @@ public class GELServiceLog {
     // LAB FINISHED BLOCK
     // ============================================================
     public static synchronized void labFinished(String labName) {
-    if (labName == null) labName = "Lab";
+    if (labName == null || labName.trim().isEmpty()) labName = "Lab";
 
-    // --- BEFORE ---
     blank();
-
     ok(labName + " finished.");
     line();
-
-    // --- AFTER ---
     blank();
+}
+
+// ============================================================
+// RAW HTML (no auto <br>)
+// ============================================================
+private static synchronized void addHtmlRaw(String html) {
+    if (html == null) return;
+    HTML.append(html);
+    ensureLimit();
 }
 
 // ============================================================
 // BLANK LINE (REAL SPACER)
 // ============================================================
 public static synchronized void blank() {
-    addPlain("");
-    addHtml("<br>");
+    // plain: real empty line
+    LOG.append('\n');
+    ensureLimit();
+
+    // html: two real breaks (visible gap)
+    addHtmlRaw("<br><br>");
 }
 
 

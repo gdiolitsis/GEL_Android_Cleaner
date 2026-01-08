@@ -121,16 +121,16 @@ public class GELServiceLog {
     public static synchronized void labFinished(String labName) {
     if (labName == null) labName = "Lab";
 
-    // ---- κενό ΠΡΙΝ ----
-    addPlain("");
-    addHtml("&nbsp;");
+    // ---- spacer ΠΡΙΝ ----
+    addPlain(" ");
+    addHtml("<div style='height:12px'></div>");
 
     ok(labName + " finished.");
     line();
 
-    // ---- κενό ΜΕΤΑ ----
-    addPlain("");
-    addHtml("&nbsp;");
+    // ---- spacer ΜΕΤΑ ----
+    addPlain(" ");
+    addHtml("<div style='height:12px'></div>");
 }
 
     // ============================================================

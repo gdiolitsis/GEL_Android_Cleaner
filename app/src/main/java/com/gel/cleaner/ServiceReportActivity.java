@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) - Author & Developer
-// ServiceReportActivity — HTML → PDF FINAL
+// ServiceReportActivity — HTML → PDF FINAL (WORKING)
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -14,9 +14,9 @@ import android.os.Bundle;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.text.method.ScrollingMovementMethod;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -34,6 +34,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
     private static final int REQ_WRITE = 9911;
     private TextView txtPreview;
+    private WebView pdfWebView;   // ⬅️ ΚΡΑΤΑΜΕ WebView ΜΟΝΙΜΑ
 
     // ----------------------------------------------------------
     // FOLDABLE ORCHESTRATOR
@@ -108,18 +109,21 @@ public class ServiceReportActivity extends AppCompatActivity {
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 
-        // PREVIEW
+        // PREVIEW (HTML)
         txtPreview = new TextView(this);
         txtPreview.setTextSize(sp(13f));
         txtPreview.setTextColor(0xFFEEEEEE);
-        txtPreview.setMovementMethod(new ScrollingMovementMethod());
         txtPreview.setPadding(0, 0, 0, dp(12));
 
         String html = getPreviewText();
-        txtPreview.setText(
-                HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
-        );
+        txtPreview.setText(HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY));
         root.addView(txtPreview);
+
+        // HIDDEN WEBVIEW — THE REAL EXPORT ENGINE
+        pdfWebView = new WebView(this);
+        pdfWebView.setVisibility(View.GONE);
+        pdfWebView.getSettings().setJavaScriptEnabled(false);
+        root.addView(pdfWebView);
 
         // EXPORT PDF BUTTON
         AppCompatButton btnPdf = new AppCompatButton(this);
@@ -129,26 +133,8 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setTextColor(0xFFFFFFFF);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        (int) (56 * getResources().getDisplayMetrics().density)
-                );
-        lp.setMargins(
-                (int) (8 * getResources().getDisplayMetrics().density),
-                (int) (16 * getResources().getDisplayMetrics().density),
-                (int) (8 * getResources().getDisplayMetrics().density),
-                (int) (24 * getResources().getDisplayMetrics().density)
-        );
-        btnPdf.setLayoutParams(lp);
-        btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
-
-        // ΜΟΝΟ HTML EXPORT
-        // ΜΟΝΟ HTML EXPORT — DEBUG
-btnPdf.setOnClickListener(v -> {
-    Toast.makeText(this, "BTN CLICKED", Toast.LENGTH_SHORT).show();
-    exportPdfFromHtml();
-});
+        btnPdf.setOnClickListener(v -> exportPdfFromHtml());
+        root.addView(btnPdf);
 
         scroll.addView(root);
         setContentView(scroll);
@@ -161,9 +147,7 @@ btnPdf.setOnClickListener(v -> {
         if (GELServiceLog.isEmpty()) {
             return getString(R.string.preview_empty);
         }
-
-        String html = GELServiceLog.getHtml();
-        return stripTimestamps(html);
+        return stripTimestamps(GELServiceLog.getHtml());
     }
 
     private String stripTimestamps(String log) {
@@ -175,18 +159,16 @@ btnPdf.setOnClickListener(v -> {
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT — FROM HTML (FINAL)
+    // PDF EXPORT — FROM HTML (REAL)
     // ----------------------------------------------------------
-    
-private void exportPdfFromHtml() {
+    private void exportPdfFromHtml() {
 
-    // 🔥 DEBUG — απόδειξη ότι μπαίνουμε στο HTML export
-    Toast.makeText(this, "HTML EXPORT PATH", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "HTML EXPORT MODE", Toast.LENGTH_SHORT).show();
 
-    if (GELServiceLog.isEmpty()) {
-        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
-        return;
-    }
+        if (GELServiceLog.isEmpty()) {
+            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+            return;
+        }
 
         if (Build.VERSION.SDK_INT <= 29) {
             if (ContextCompat.checkSelfPermission(
@@ -205,30 +187,24 @@ private void exportPdfFromHtml() {
 
         String htmlBody = GELServiceLog.getHtml();
 
-        // DEBUG MARK — για επιβεβαίωση HTML flow
-        htmlBody += "<br><br><b style='color:red'>HTML EXPORT ACTIVE</b><br><br>";
-
         String fullHtml =
                 "<!DOCTYPE html><html><head>" +
-                "<meta charset='utf-8'/>" +
-                "<style>" +
-                "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;margin:16px;}" +
-                "</style>" +
-                "</head><body>" +
-                htmlBody +
-                "</body></html>";
+                        "<meta charset='utf-8'/>" +
+                        "<style>" +
+                        "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;margin:16px;}" +
+                        "</style>" +
+                        "</head><body>" +
+                        htmlBody +
+                        "</body></html>";
 
-        WebView wv = new WebView(this);
-        wv.getSettings().setJavaScriptEnabled(false);
-
-        wv.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
-
-        wv.setWebViewClient(new WebViewClient() {
+        pdfWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 printWebViewToPdf(view);
             }
         });
+
+        pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
     }
 
     // ----------------------------------------------------------

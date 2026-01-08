@@ -1,13 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Foldable Ready v4.2 (GEL Patched)
+// ServiceReportActivity — Final Stable Layout Edition
 // --------------------------------------------------------------
-// ✔ Foldable-safe export pipeline kept (register/unregister + freeze/unfreeze)
-// ✔ Single Export PDF button kept (stable height)
-// ✔ UTF fixed (📄 icon stays clean)
-// ✔ Report: timestamps stripped from log (keeps date/time only once at top)
-// ✔ PDF: SMART word-wrap (breaks on words, not mid-word)
-// --------------------------------------------------------------
-// NOTE (GEL RULE): Always return full file for copy-paste.
 
 package com.gel.cleaner;
 
@@ -49,7 +42,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     private TextView txtPreview;
 
     // ----------------------------------------------------------
-    // FOLDABLE ORCHESTRATOR HOOK
+    // FOLDABLE ORCHESTRATOR
     // ----------------------------------------------------------
     private final GELFoldableCallback foldableCallback = new GELFoldableCallback() {
         @Override
@@ -59,9 +52,8 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         @Override
         public void onScreenChanged(boolean isInner) {
-            if (txtPreview != null) {
+            if (txtPreview != null)
                 txtPreview.setTextSize(isInner ? 14f : 13f);
-            }
         }
     };
 
@@ -78,7 +70,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // LOCALE WRAPPER
+    // LOCALE
     // ----------------------------------------------------------
     @Override
     protected void attachBaseContext(Context base) {
@@ -92,7 +84,6 @@ public class ServiceReportActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Universal scaling init (Foldable/Tablet aware)
         GELAutoDP.init(this);
 
         ScrollView scroll = new ScrollView(this);
@@ -132,7 +123,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         txtPreview.setText(getPreviewText());
         root.addView(txtPreview);
 
-        // EXPORT PDF BUTTON — FIXED HEIGHT (NO GELAutoDP)
+        // EXPORT PDF BUTTON
         AppCompatButton btnPdf = new AppCompatButton(this);
         btnPdf.setText(getString(R.string.export_pdf_button));
         btnPdf.setAllCaps(false);
@@ -140,7 +131,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setTextColor(0xFFFFFFFF);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-        // ❗ ΟΧΙ dp() — RAW PIXELS (kept as-is)
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -153,8 +143,6 @@ public class ServiceReportActivity extends AppCompatActivity {
                 (int) (24 * getResources().getDisplayMetrics().density)
         );
         btnPdf.setLayoutParams(lp);
-
-        // έξτρα ασφάλεια
         btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
         btnPdf.setPadding(0,
                 (int) (12 * getResources().getDisplayMetrics().density),
@@ -195,15 +183,12 @@ public class ServiceReportActivity extends AppCompatActivity {
         }
 
         GELFoldableUIManager.freezeTransitions(this);
-
-        // only PDF supported here (kept your signature param)
         exportPdf();
-
         GELFoldableUIManager.unfreezeTransitions(this);
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT — MULTI PAGE + LOGO
+    // PDF EXPORT
     // ----------------------------------------------------------
     private void exportPdf() {
         try {
@@ -259,10 +244,9 @@ public class ServiceReportActivity extends AppCompatActivity {
                 int lineHeight = 12;
                 int maxY = pageHeight - margin;
 
-                // PDF wrap: word-based (no ugly mid-word cuts)
                 while (currentLine < lines.length && y < maxY) {
-                    String wrapped = wordWrap(lines[currentLine], 52);
-                    for (String subLine : wrapped.split("\n")) {
+                    String line = unicodeWrap(lines[currentLine], 52);
+                    for (String subLine : line.split("\n")) {
                         if (y >= maxY) break;
                         canvas.drawText(subLine, margin, y, paint);
                         y += lineHeight;
@@ -297,51 +281,19 @@ public class ServiceReportActivity extends AppCompatActivity {
         }
     }
 
-    // ----------------------------------------------------------
-    // SMART WORD WRAP (PDF)
-    // ----------------------------------------------------------
-    private String wordWrap(String text, int maxLen) {
+    private String unicodeWrap(String text, int width) {
         if (text == null) return "";
-        if (text.length() <= maxLen) return text;
+        if (text.length() <= width) return text;
 
-        StringBuilder out = new StringBuilder();
-        String[] words = text.split(" ");
-        int lineLen = 0;
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
 
-        for (String w : words) {
-
-            if (w.length() > maxLen) {
-                // if a single "word" is too long (paths), split safely
-                if (lineLen != 0) {
-                    out.append("\n");
-                    lineLen = 0;
-                }
-                int idx = 0;
-                while (idx < w.length()) {
-                    int end = Math.min(idx + maxLen, w.length());
-                    out.append(w, idx, end);
-                    idx = end;
-                    if (idx < w.length()) out.append("\n");
-                }
-                lineLen = 0;
-                continue;
-            }
-
-            if (lineLen + w.length() + (lineLen == 0 ? 0 : 1) > maxLen) {
-                out.append("\n");
-                lineLen = 0;
-            }
-
-            if (lineLen > 0) {
-                out.append(" ");
-                lineLen++;
-            }
-
-            out.append(w);
-            lineLen += w.length();
+        while (index < text.length()) {
+            int end = Math.min(index + width, text.length());
+            sb.append(text, index, end).append("\n");
+            index = end;
         }
-
-        return out.toString();
+        return sb.toString();
     }
 
     // ----------------------------------------------------------
@@ -354,7 +306,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         sb.append(getString(R.string.report_dev_line)).append("\n");
         sb.append("---------------------\n");
 
-        // Date/time ONLY here (top of report)
         sb.append(getString(R.string.report_date)).append(": ")
                 .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()))
                 .append("\n\n");
@@ -367,23 +318,11 @@ public class ServiceReportActivity extends AppCompatActivity {
                 .append(Build.VERSION.RELEASE)
                 .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
 
-        sb.append(getString(R.string.damage_title)).append("\n");
-        appendDamageLine(sb, R.string.damage_screen);
-        appendDamageLine(sb, R.string.damage_pixels);
-        appendDamageLine(sb, R.string.damage_amoled);
-        appendDamageLine(sb, R.string.damage_charge_port);
-        appendDamageLine(sb, R.string.damage_speaker);
-        appendDamageLine(sb, R.string.damage_mic);
-        appendDamageLine(sb, R.string.damage_battery);
-        appendDamageLine(sb, R.string.damage_water);
-        sb.append("\n");
-
         sb.append(getString(R.string.report_diag_header)).append("\n\n");
 
         if (GELServiceLog.isEmpty()) {
             sb.append(getString(R.string.report_no_entries)).append("\n");
         } else {
-            // Logs: strip timestamps so they don't repeat endlessly
             sb.append(stripTimestamps(GELServiceLog.getAll())).append("\n");
         }
 
@@ -394,14 +333,9 @@ public class ServiceReportActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private void appendDamageLine(StringBuilder sb, int labelRes) {
-        sb.append("- ")
-                .append(getString(labelRes))
-                .append(": ")
-                .append(getString(R.string.damage_yes_no))
-                .append("\n");
-    }
-
+    // ----------------------------------------------------------
+    // PREVIEW
+    // ----------------------------------------------------------
     private String getPreviewText() {
         if (GELServiceLog.isEmpty()) {
             return getString(R.string.preview_empty);
@@ -411,14 +345,14 @@ public class ServiceReportActivity extends AppCompatActivity {
 
     private String stripTimestamps(String log) {
         if (log == null) return "";
-
-        // removes patterns like: 2026-01-07 23:21:37
-        // (and keeps the rest of the line intact)
-        return log.replaceAll("\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*", "");
+        return log.replaceAll(
+                "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*",
+                ""
+        );
     }
 
     // ----------------------------------------------------------
-    // GEL AUTO DP/SP HELPERS (Universal Scaling)
+    // DP / SP
     // ----------------------------------------------------------
     private int dp(int v) { return GELAutoDP.dp(v); }
     private float sp(float v) { return GELAutoDP.sp(v); }

@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) â€” Author & Developer
-// ServiceReportActivity â€” Final Stable Layout Edition
+// GDiolitsis Engine Lab (GEL) - Author & Developer
+// ServiceReportActivity - Final Stable Layout Edition
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -17,6 +17,7 @@ import android.graphics.pdf.PdfDocument;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -97,7 +98,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("ðŸ“„ " + getString(R.string.export_report_title));
+        title.setText("📄 " + getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -344,10 +345,10 @@ private String getPreviewText() {
         return getString(R.string.preview_empty);
     }
 
-    // παίρνουμε το COLORED html log
+    // COLORED HTML LOG
     String html = GELServiceLog.getHtml();
 
-    // αν θες να φύγουν timestamps ΚΑΙ από το preview
+    // STRIP timestamps from preview
     html = stripTimestamps(html);
 
     return html;
@@ -356,7 +357,7 @@ private String getPreviewText() {
 private String stripTimestamps(String log) {
     if (log == null) return "";
 
-    // αφαιρεί patterns τύπου: 2026-01-07 23:21:37
+    // remove patterns like: 2026-01-07 23:21:37
     return log.replaceAll(
             "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*",
             ""

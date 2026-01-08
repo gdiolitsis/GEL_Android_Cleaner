@@ -95,7 +95,7 @@ public class GELServiceLog {
     // SEPARATOR LINE
     // ============================================================
     public static synchronized void line() {
-        String sep = "--------------------";
+        String sep = "--------------------------------------------";
         addPlain(sep);
         addHtml(sep);
     }
@@ -109,7 +109,7 @@ public class GELServiceLog {
             title = "SECTION";
 
         String t = title.toUpperCase(Locale.US);
-        String sep = "--------------------";
+        String sep = "--------------------------------------------";
 
         // plain
         addPlain(sep);
@@ -123,15 +123,19 @@ public class GELServiceLog {
     }
 
     // ============================================================
-    // LAB FINISHED BLOCK
-    // ============================================================
-    public static synchronized void labFinished(String labName) {
-        if (labName == null) labName = "Lab";
+// LAB FINISHED BLOCK
+// ============================================================
+public static synchronized void labFinished(String labName) {
+    if (labName == null) labName = "Lab";
 
-        ok(labName + " finished.");
-        line();
-    }
+    ok(labName + " finished.");
+    line();
 
+    // ➕ κενή γραμμή για οπτικό διαχωρισμό
+    addPlain("");
+    addHtml("");
+}
+    
     // ============================================================
     // FULL LOG ACCESS
     // ============================================================

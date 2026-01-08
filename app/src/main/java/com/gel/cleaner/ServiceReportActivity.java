@@ -17,6 +17,11 @@ import android.graphics.pdf.PdfDocument;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.LinearLayout;
@@ -99,7 +104,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("\n" + getString(R.string.export_report_title));
+        title.setText(getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -157,7 +162,7 @@ root.addView(txtPreview);
                 (int) (12 * getResources().getDisplayMetrics().density)
         );
 
-        btnPdf.setOnClickListener(v -> exportWithCheck(true));
+        btnPdf.setOnClickListener(v -> exportPdfFromHtml());
         root.addView(btnPdf);
 
         scroll.addView(root);
@@ -375,6 +380,73 @@ private String stripTimestamps(String log) {
             "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
             ""
     );
+}
+
+// ----------------------------------------------------------
+// PDF EXPORT — FROM HTML (FINAL)
+// ----------------------------------------------------------
+private void exportPdfFromHtml() {
+
+    if (GELServiceLog.isEmpty()) {
+        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+        return;
+    }
+
+    String htmlBody = GELServiceLog.getHtml();
+
+    String fullHtml =
+            "<html><head>" +
+            "<meta charset='utf-8'/>" +
+            "<style>" +
+            "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;}" +
+            "</style>" +
+            "</head><body>" +
+            htmlBody +
+            "</body></html>";
+
+    WebView wv = new WebView(this);
+    wv.getSettings().setJavaScriptEnabled(false);
+
+    wv.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
+
+    wv.setWebViewClient(new WebViewClient() {
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            printWebViewToPdf(view);
+        }
+    });
+}
+
+// ----------------------------------------------------------
+// PRINT WEBVIEW TO PDF
+// ----------------------------------------------------------
+private void printWebViewToPdf(WebView webView) {
+
+    try {
+        PrintManager printManager =
+                (PrintManager) getSystemService(PRINT_SERVICE);
+
+        PrintAttributes attributes =
+                new PrintAttributes.Builder()
+                        .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                        .setResolution(
+                                new PrintAttributes.Resolution(
+                                        "pdf", "pdf", 600, 600))
+                        .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                        .build();
+
+        PrintDocumentAdapter adapter =
+                webView.createPrintDocumentAdapter("GEL_Service_Report");
+
+        printManager.print("GEL_Service_Report", adapter, attributes);
+
+    } catch (Exception e) {
+        Toast.makeText(
+                this,
+                "PDF error: " + e.getMessage(),
+                Toast.LENGTH_LONG
+        ).show();
+    }
 }
 
     // ----------------------------------------------------------

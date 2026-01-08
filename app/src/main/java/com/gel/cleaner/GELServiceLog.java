@@ -1,16 +1,8 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// GELServiceLog — Ultra-Safe Edition v2.0
-// ============================================================
-// • Thread-safe ALL operations
-// • Internal ring-buffer safety (auto-trim > 50.000 lines)
-// • Safe UTF-8 emojis on all vendors (Samsung/Xiaomi)
-// • Full “Service Lab” compatibility: Auto Diagnostics / Manual Tests / Export
-// • 100% έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// GELServiceLog — Stable Edition (PLAIN + HTML)
 // ============================================================
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,7 +10,12 @@ import java.util.Locale;
 
 public class GELServiceLog {
 
-    private static final StringBuilder LOG = new StringBuilder(4096);
+    // ----------------------------
+    // BUFFERS
+    // ----------------------------
+    private static final StringBuilder LOG  = new StringBuilder(4096); // plain text
+    private static final StringBuilder HTML = new StringBuilder(4096); // colored html
+
     private static final SimpleDateFormat TS =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
@@ -27,100 +24,143 @@ public class GELServiceLog {
     // ============================================================
     // INTERNAL HELPERS
     // ============================================================
-    private static synchronized void add(String type, String msg) {
-        if (msg == null) msg = "";
-
-        String line =
-                TS.format(new Date()) + "  " +
-                type + "  " +
-                sanitize(msg);
-
+    private static synchronized void addPlain(String line) {
+        if (line == null) return;
         LOG.append(line).append('\n');
+        ensureLimit();
+    }
 
+    private static synchronized void addHtml(String htmlLine) {
+        if (htmlLine == null) return;
+        HTML.append(htmlLine).append("<br>");
         ensureLimit();
     }
 
     private static String sanitize(String s) {
+        if (s == null) return "";
         return s.replace("\n", " ").replace("\r", " ").trim();
+    }
+
+    private static String escape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 
     private static void ensureLimit() {
         if (LOG.length() > MAX_CHARS) {
-            int cut = (int) (MAX_CHARS * 0.20); // trim 20%
+            int cut = (int) (MAX_CHARS * 0.20);
             LOG.delete(0, cut);
+        }
+        if (HTML.length() > MAX_CHARS) {
+            int cut = (int) (MAX_CHARS * 0.20);
+            HTML.delete(0, cut);
         }
     }
 
     // ============================================================
-    // PUBLIC LOGGING API
+    // PUBLIC LOGGING API (SYMBOLS ONLY)
     // ============================================================
-    public static void info(String msg)  { add("ℹ️ INFO", msg); }
-    public static void ok(String msg)    { add("✅ OK", msg); }
-    public static void warn(String msg)  { add("⚠️ WARNING", msg); }
-    public static void error(String msg) { add("❌ ERROR", msg); }
-
-    // ============================================================
-    // ADD FREE LINE
-    // ============================================================
-    public static synchronized void addLine(String line) {
-        if (line == null || line.trim().isEmpty())
-            line = "─────────────────────";
-    
+    public static synchronized void info(String msg)  {
+        String m = sanitize(msg);
+        addPlain("ℹ " + m);
+        addHtml("<font color='#7FC8FF'>ℹ " + escape(m) + "</font>");
     }
 
-// ============================================================
-// SECTION HEADER (SERVICE REPORT SPLIT)
-// ============================================================
-public static synchronized void section(String title) {
-    if (title == null || title.trim().isEmpty())
-        title = "Service Section";
+    public static synchronized void ok(String msg)    {
+        String m = sanitize(msg);
+        addPlain("✔ " + m);
+        addHtml("<font color='#39FF14'>✔ " + escape(m) + "</font>");
+    }
 
-    String line = "═════════════════════";
+    public static synchronized void warn(String msg)  {
+        String m = sanitize(msg);
+        addPlain("⚠ " + m);
+        addHtml("<font color='#FFD966'>⚠ " + escape(m) + "</font>");
+    }
 
-    add("", "");                 // ⬅️ ΚΕΝΗ ΓΡΑΜΜΗ ΠΑΝΩ ΠΑΝΩ
-    add("", line);
-    add("SECTION", title.toUpperCase(Locale.US));
-    add("", line);
-}
+    public static synchronized void error(String msg) {
+        String m = sanitize(msg);
+        addPlain("✖ " + m);
+        addHtml("<font color='#FF5555'>✖ " + escape(m) + "</font>");
+    }
 
     // ============================================================
-    // GEL FULL REPORT
+    // SEPARATOR LINE
+    // ============================================================
+    public static synchronized void line() {
+        String sep = "--------------------------------------------";
+        addPlain(sep);
+        addHtml(sep);
+    }
+
+    // ============================================================
+    // SECTION HEADER
+    // (no empty line before title)
+    // ============================================================
+    public static synchronized void section(String title) {
+        if (title == null || title.trim().isEmpty())
+            title = "SECTION";
+
+        String t = title.toUpperCase(Locale.US);
+        String sep = "--------------------------------------------";
+
+        addPlain(sep);
+        addPlain(t);
+        addPlain(sep);
+
+        addHtml(sep);
+        addHtml("<b>" + escape(t) + "</b>");
+        addHtml(sep);
+    }
+
+    // ============================================================
+    // LAB FINISHED BLOCK
+    // ============================================================
+    public static synchronized void labFinished(String labName) {
+        if (labName == null) labName = "Lab";
+
+        ok(labName + " finished.");
+        line();
+
+        // κενή γραμμή για οπτικό διαχωρισμό
+        addPlain("");
+        addHtml("");
+    }
+
+    // ============================================================
+    // GETTERS
     // ============================================================
     public static synchronized String getAll() {
-        return LOG.toString();
+        return LOG.toString();   // plain text
+    }
+
+    public static synchronized String getHtml() {
+        return HTML.toString();  // colored html
     }
 
     // ============================================================
-    // CLEAR LOG
+    // CLEAR
     // ============================================================
     public static synchronized void clear() {
         LOG.setLength(0);
+        HTML.setLength(0);
     }
 
     // ============================================================
-    // CHECK IF EMPTY
+    // CHECK EMPTY
     // ============================================================
     public static synchronized boolean isEmpty() {
         return LOG.length() == 0;
     }
 
     // ============================================================
-    // BACKWARD-COMPATIBILITY ALIASES (DO NOT REMOVE)
+    // BACKWARD COMPATIBILITY
     // ============================================================
     public static void logInfo(String msg)  { info(msg); }
     public static void logOk(String msg)    { ok(msg); }
     public static void logWarn(String msg)  { warn(msg); }
     public static void logError(String msg) { error(msg); }
-    public static void logLine()            { addLine(null); }
-
-// ============================================================
-// GETTERS — PLAIN + HTML
-// ============================================================
-public static synchronized String getAll() {
-    return LOG.toString();      // plain text
-}
-
-public static synchronized String getHtml() {
-    return HTML.toString();     // colored html
-}
+    public static void logLine()            { line(); }
 }

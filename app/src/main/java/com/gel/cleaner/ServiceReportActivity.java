@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) - Author & Developer
-// ServiceReportActivity - Final Stable Layout Edition
+// ServiceReportActivity — HTML → PDF FINAL
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -9,20 +9,13 @@ import com.gel.cleaner.base.*;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.pdf.PdfDocument;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -36,12 +29,6 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class ServiceReportActivity extends AppCompatActivity {
 
@@ -122,18 +109,17 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.addView(sub);
 
         // PREVIEW
-txtPreview = new TextView(this);
-txtPreview.setTextSize(sp(13f));
-txtPreview.setTextColor(0xFFEEEEEE);
-txtPreview.setMovementMethod(new ScrollingMovementMethod());
-txtPreview.setPadding(0, 0, 0, dp(12));
+        txtPreview = new TextView(this);
+        txtPreview.setTextSize(sp(13f));
+        txtPreview.setTextColor(0xFFEEEEEE);
+        txtPreview.setMovementMethod(new ScrollingMovementMethod());
+        txtPreview.setPadding(0, 0, 0, dp(12));
 
-String html = getPreviewText();
-txtPreview.setText(
-        HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
-);
-
-root.addView(txtPreview);
+        String html = getPreviewText();
+        txtPreview.setText(
+                HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        );
+        root.addView(txtPreview);
 
         // EXPORT PDF BUTTON
         AppCompatButton btnPdf = new AppCompatButton(this);
@@ -156,12 +142,8 @@ root.addView(txtPreview);
         );
         btnPdf.setLayoutParams(lp);
         btnPdf.setMinimumHeight((int) (56 * getResources().getDisplayMetrics().density));
-        btnPdf.setPadding(0,
-                (int) (12 * getResources().getDisplayMetrics().density),
-                0,
-                (int) (12 * getResources().getDisplayMetrics().density)
-        );
 
+        // ΜΟΝΟ HTML EXPORT
         btnPdf.setOnClickListener(v -> exportPdfFromHtml());
         root.addView(btnPdf);
 
@@ -170,9 +152,29 @@ root.addView(txtPreview);
     }
 
     // ----------------------------------------------------------
-    // EXPORT CHECK
+    // PREVIEW
     // ----------------------------------------------------------
-    private void exportWithCheck(boolean pdf) {
+    private String getPreviewText() {
+        if (GELServiceLog.isEmpty()) {
+            return getString(R.string.preview_empty);
+        }
+
+        String html = GELServiceLog.getHtml();
+        return stripTimestamps(html);
+    }
+
+    private String stripTimestamps(String log) {
+        if (log == null) return "";
+        return log.replaceAll(
+                "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
+                ""
+        );
+    }
+
+    // ----------------------------------------------------------
+    // PDF EXPORT — FROM HTML (FINAL)
+    // ----------------------------------------------------------
+    private void exportPdfFromHtml() {
 
         if (GELServiceLog.isEmpty()) {
             Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
@@ -194,264 +196,69 @@ root.addView(txtPreview);
             }
         }
 
-        GELFoldableUIManager.freezeTransitions(this);
-        exportPdf();
-        GELFoldableUIManager.unfreezeTransitions(this);
+        String htmlBody = GELServiceLog.getHtml();
+
+        // DEBUG MARK — για επιβεβαίωση HTML flow
+        htmlBody += "<br><br><b style='color:red'>HTML EXPORT ACTIVE</b><br><br>";
+
+        String fullHtml =
+                "<!DOCTYPE html><html><head>" +
+                "<meta charset='utf-8'/>" +
+                "<style>" +
+                "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;margin:16px;}" +
+                "</style>" +
+                "</head><body>" +
+                htmlBody +
+                "</body></html>";
+
+        WebView wv = new WebView(this);
+        wv.getSettings().setJavaScriptEnabled(false);
+
+        wv.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
+
+        wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                printWebViewToPdf(view);
+            }
+        });
     }
 
     // ----------------------------------------------------------
-    // PDF EXPORT
+    // PRINT WEBVIEW TO PDF
     // ----------------------------------------------------------
-    private void exportPdf() {
+    private void printWebViewToPdf(WebView webView) {
+
         try {
-            File outDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS
-            );
-            if (!outDir.exists()) outDir.mkdirs();
+            PrintManager printManager =
+                    (PrintManager) getSystemService(PRINT_SERVICE);
 
-            String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            File out = new File(outDir, "GEL_Service_Report_" + time + ".pdf");
-
-            String body = buildReportBody();
-
-            PdfDocument pdf = new PdfDocument();
-            Paint paint = new Paint();
-
-            int pageWidth = 595;
-            int pageHeight = 842;
-            int margin = 40;
-            int y;
-
-            String[] lines = body.split("\n");
-            int currentLine = 0;
-            int pageNumber = 1;
-
-            while (currentLine < lines.length) {
-
-                PdfDocument.PageInfo pageInfo =
-                        new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
-                PdfDocument.Page page = pdf.startPage(pageInfo);
-                Canvas canvas = page.getCanvas();
-
-                y = margin;
-
-                try {
-                    Bitmap logo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
-                    if (logo != null) {
-                        Bitmap scaled = Bitmap.createScaledBitmap(logo, 64, 64, true);
-                        canvas.drawBitmap(scaled, margin, y, paint);
-                    }
-                } catch (Exception ignored) {}
-
-                paint.setColor(0xFF000000);
-                paint.setTextSize(14f);
-                canvas.drawText(getString(R.string.report_title), margin + 80, y + 25, paint);
-
-                paint.setTextSize(10f);
-                canvas.drawText(getString(R.string.report_dev_line), margin + 80, y + 45, paint);
-
-                y += 90;
-                paint.setTextSize(9f);
-
-                int lineHeight = 12;
-                int maxY = pageHeight - margin;
-
-                while (currentLine < lines.length && y < maxY) {
-
-    String raw = lines[currentLine];
-
-    // 👉 αν η γραμμή είναι πραγματικά άδεια (ΜΟΝΟ ""), ζωγράφισε spacer
-if (raw.length() == 0) {
-    y += lineHeight;      // ΜΙΑ ΟΛΟΚΛΗΡΗ ΚΕΝΗ ΓΡΑΜΜΗ
-    currentLine++;
-    continue;
-}
-
-    String line = unicodeWrap(raw, 72);
-                    for (String subLine : line.split("\n")) {
-                        if (y >= maxY) break;
-                        canvas.drawText(subLine, margin, y, paint);
-                        y += lineHeight;
-                    }
-                    currentLine++;
-                }
-
-                pdf.finishPage(page);
-                pageNumber++;
+            if (printManager == null) {
+                Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
+                return;
             }
 
-            FileOutputStream fos = new FileOutputStream(out);
-            pdf.writeTo(fos);
-            fos.close();
-            pdf.close();
+            PrintAttributes attributes =
+                    new PrintAttributes.Builder()
+                            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                            .setResolution(
+                                    new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
+                            .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                            .build();
 
-            Toast.makeText(
-                    this,
-                    "PDF " + getString(R.string.toast_done) + "\n" + out.getAbsolutePath(),
-                    Toast.LENGTH_LONG
-            ).show();
+            PrintDocumentAdapter adapter =
+                    webView.createPrintDocumentAdapter("GEL_Service_Report");
 
-            GELServiceLog.clear();
-            txtPreview.setText(getPreviewText());
+            printManager.print("GEL_Service_Report", adapter, attributes);
 
         } catch (Exception e) {
             Toast.makeText(
                     this,
-                    getString(R.string.export_pdf_error) + ": " + e.getMessage(),
+                    "PDF error: " + e.getMessage(),
                     Toast.LENGTH_LONG
             ).show();
         }
     }
-
-    private String unicodeWrap(String text, int width) {
-        if (text == null) return "";
-        if (text.length() <= width) return text;
-
-        StringBuilder sb = new StringBuilder();
-        int index = 0;
-
-        while (index < text.length()) {
-            int end = Math.min(index + width, text.length());
-            sb.append(text, index, end).append("\n");
-            index = end;
-        }
-        return sb.toString();
-    }
-
-    // ----------------------------------------------------------
-    // REPORT BUILDER
-    // ----------------------------------------------------------
-    private String buildReportBody() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(getString(R.string.report_title)).append("\n");
-        sb.append(getString(R.string.report_dev_line)).append("\n");
-        sb.append("-----------------------------------------\n");
-
-        sb.append(getString(R.string.report_date)).append(": ")
-                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date()))
-                .append("\n\n");
-
-        sb.append(getString(R.string.report_device)).append(": ")
-                .append(Build.MANUFACTURER).append(" ")
-                .append(Build.MODEL).append("\n");
-
-        sb.append(getString(R.string.report_android)).append(": ")
-                .append(Build.VERSION.RELEASE)
-                .append("  (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
-
-        sb.append(getString(R.string.report_diag_header)).append("\n\n");
-
-        if (GELServiceLog.isEmpty()) {
-            sb.append(getString(R.string.report_no_entries)).append("\n");
-        } else {
-            sb.append(stripTimestamps(GELServiceLog.getAll())).append("\n");
-        }
-
-        sb.append("\n").append(getString(R.string.report_end)).append("\n");
-        sb.append(getString(R.string.report_signature))
-                .append(" __________________________\n");
-
-        return sb.toString();
-    }
-
-// ----------------------------------------------------------
-// PREVIEW
-// ----------------------------------------------------------
-private String getPreviewText() {
-    if (GELServiceLog.isEmpty()) {
-        return getString(R.string.preview_empty);
-    }
-
-    // COLORED HTML LOG
-    String html = GELServiceLog.getHtml();
-
-    // STRIP timestamps from preview
-    html = stripTimestamps(html);
-
-    return html;
-}
-
-private String stripTimestamps(String log) {
-    if (log == null) return "";
-
-    // αφαιρεί ΜΟΝΟ το timestamp, ΟΧΙ τα \n
-    return log.replaceAll(
-            "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
-            ""
-    );
-}
-
-// ----------------------------------------------------------
-// PDF EXPORT — FROM HTML (FINAL)
-// ----------------------------------------------------------
-private void exportPdfFromHtml() {
-
-    if (GELServiceLog.isEmpty()) {
-        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
-        return;
-    }
-
-    String htmlBody = GELServiceLog.getHtml();
-
-    String fullHtml =
-            "<!DOCTYPE html><html><head>" +
-            "<meta charset='utf-8'/>" +
-            "<style>" +
-            "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;margin:16px;}" +
-            "</style>" +
-            "</head><body>" +
-            htmlBody +
-            "</body></html>";
-
-    WebView wv = new WebView(this);
-    wv.getSettings().setJavaScriptEnabled(false);
-
-    wv.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
-
-    wv.setWebViewClient(new WebViewClient() {
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            printWebViewToPdf(view);
-        }
-    });
-}
-
-// ----------------------------------------------------------
-// PRINT WEBVIEW TO PDF
-// ----------------------------------------------------------
-private void printWebViewToPdf(WebView webView) {
-
-    try {
-        PrintManager printManager =
-                (PrintManager) getSystemService(PRINT_SERVICE);
-
-        if (printManager == null) {
-            Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        PrintAttributes attributes =
-                new PrintAttributes.Builder()
-                        .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                        .setResolution(
-                                new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
-                        .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                        .build();
-
-        PrintDocumentAdapter adapter =
-                webView.createPrintDocumentAdapter("GEL_Service_Report");
-
-        printManager.print("GEL_Service_Report", adapter, attributes);
-
-    } catch (Exception e) {
-        Toast.makeText(
-                this,
-                "PDF error: " + e.getMessage(),
-                Toast.LENGTH_LONG
-        ).show();
-    }
-}
 
     // ----------------------------------------------------------
     // DP / SP

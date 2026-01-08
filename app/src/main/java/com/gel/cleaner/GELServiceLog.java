@@ -121,16 +121,28 @@ public class GELServiceLog {
     public static synchronized void labFinished(String labName) {
     if (labName == null) labName = "Lab";
 
-    // 👇 ΚΕΝΟ ΠΡΙΝ (φαίνεται στο preview)
-    addHtml("<br><br>");
-    addPlain("\n");
+    // --------------------------------------------------
+    // SYSTEM spacer (for PDF / split / rendering)
+    // invisible but NOT empty
+    // --------------------------------------------------
+    String invisible = "\u200B"; // zero-width space
+
+    // --------------------------------------------------
+    // VISUAL spacer (for preview)
+    // black dot on black background = invisible
+    // --------------------------------------------------
+    String hiddenDotHtml = "<span style='color:#101010'>.</span><br>";
+
+    // --- BEFORE ---
+    addPlain(invisible);          // κρατιέται στο PDF σαν “γραμμή”
+    addHtml(hiddenDotHtml);       // φαίνεται σαν κενό στο preview
 
     ok(labName + " finished.");
     line();
 
-    // 👇 ΚΕΝΟ ΜΕΤΑ
-    addHtml("<br><br>");
-    addPlain("\n");
+    // --- AFTER ---
+    addPlain(invisible);
+    addHtml(hiddenDotHtml);
 }
 
     // ============================================================

@@ -255,12 +255,12 @@ root.addView(txtPreview);
 
     String raw = lines[currentLine];
 
-    // 👉 αν η γραμμή είναι άδεια, ζωγράφισε spacer
-    if (raw.trim().isEmpty()) {
-        y += lineHeight;      // ΜΙΑ ΟΛΟΚΛΗΡΗ ΚΕΝΗ ΓΡΑΜΜΗ
-        currentLine++;
-        continue;
-    }
+    // 👉 αν η γραμμή είναι πραγματικά άδεια (ΜΟΝΟ ""), ζωγράφισε spacer
+if (raw.length() == 0) {
+    y += lineHeight;      // ΜΙΑ ΟΛΟΚΛΗΡΗ ΚΕΝΗ ΓΡΑΜΜΗ
+    currentLine++;
+    continue;
+}
 
     String line = unicodeWrap(raw, 72);
                     for (String subLine : line.split("\n")) {

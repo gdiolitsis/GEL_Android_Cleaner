@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — Final Stable Layout Edition
+// GDiolitsis Engine Lab (GEL) â€” Author & Developer
+// ServiceReportActivity â€” Final Stable Layout Edition
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -97,7 +97,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // TITLE
         TextView title = new TextView(this);
-        title.setText("📄 " + getString(R.string.export_report_title));
+        title.setText("ðŸ“„ " + getString(R.string.export_report_title));
         title.setTextSize(sp(22f));
         title.setTextColor(0xFFFFD700);
         title.setPadding(0, 0, 0, dp(8));
@@ -115,13 +115,16 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.addView(sub);
 
         // PREVIEW
-        txtPreview = new TextView(this);
-        txtPreview.setTextSize(sp(13f));
-        txtPreview.setTextColor(0xFFEEEEEE);
-        txtPreview.setMovementMethod(new ScrollingMovementMethod());
-        txtPreview.setPadding(0, 0, 0, dp(12));
-        txtPreview.setText(getPreviewText());
-        root.addView(txtPreview);
+txtPreview = new TextView(this);
+txtPreview.setTextSize(sp(13f));
+txtPreview.setTextColor(0xFFEEEEEE);
+txtPreview.setMovementMethod(new ScrollingMovementMethod());
+txtPreview.setPadding(0, 0, 0, dp(12));
+txtPreview.setText(
+        Html.fromHtml(getPreviewText(), Html.FROM_HTML_MODE_LEGACY)
+);
+
+root.addView(txtPreview);
 
         // EXPORT PDF BUTTON
         AppCompatButton btnPdf = new AppCompatButton(this);
@@ -333,23 +336,32 @@ public class ServiceReportActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    // ----------------------------------------------------------
-    // PREVIEW
-    // ----------------------------------------------------------
-    private String getPreviewText() {
-        if (GELServiceLog.isEmpty()) {
-            return getString(R.string.preview_empty);
-        }
-        return stripTimestamps(GELServiceLog.getAll());
+// ----------------------------------------------------------
+// PREVIEW
+// ----------------------------------------------------------
+private String getPreviewText() {
+    if (GELServiceLog.isEmpty()) {
+        return getString(R.string.preview_empty);
     }
 
-    private String stripTimestamps(String log) {
-        if (log == null) return "";
-        return log.replaceAll(
-                "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*",
-                ""
-        );
-    }
+    // παίρνουμε το COLORED html log
+    String html = GELServiceLog.getHtml();
+
+    // αν θες να φύγουν timestamps ΚΑΙ από το preview
+    html = stripTimestamps(html);
+
+    return html;
+}
+
+private String stripTimestamps(String log) {
+    if (log == null) return "";
+
+    // αφαιρεί patterns τύπου: 2026-01-07 23:21:37
+    return log.replaceAll(
+            "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s*",
+            ""
+    );
+}
 
     // ----------------------------------------------------------
     // DP / SP

@@ -234,56 +234,66 @@ public class ServiceReportActivity extends AppCompatActivity {
     // ----------------------------------------------------------
     private void createPdfFromWebView(WebView wv) throws Exception {
 
-        final int pageWidth = 595;   // A4
-        final int pageHeight = 842;
+    final int pageWidth  = 595;  // A4
+    final int pageHeight = 842;
 
-        wv.measure(
-                View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        );
-        wv.layout(0, 0, pageWidth, wv.getMeasuredHeight());
+    wv.measure(
+            View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    );
+    wv.layout(0, 0, pageWidth, wv.getMeasuredHeight());
 
-        int contentHeight = (int) Math.ceil(wv.getContentHeight() * wv.getScale());
-        if (contentHeight <= 0) {
-            contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
-        }
+    int contentHeight =
+            (int) Math.ceil(wv.getContentHeight() * wv.getScale());
 
-        PdfDocument pdf = new PdfDocument();
+    if (contentHeight <= 0)
+        contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
 
-        int yOffset = 0;
-        int pageNumber = 1;
+    PdfDocument pdf = new PdfDocument();
 
-        while (yOffset < contentHeight) {
+    int yOffset = 0;
+    int pageNum = 1;
 
-            PdfDocument.PageInfo pageInfo =
-                    new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create();
+    while (yOffset < contentHeight) {
 
-            PdfDocument.Page page = pdf.startPage(pageInfo);
-            Canvas canvas = page.getCanvas();
+        PdfDocument.PageInfo info =
+                new PdfDocument.PageInfo.Builder(
+                        pageWidth, pageHeight, pageNum
+                ).create();
 
-            canvas.save();
-            canvas.translate(0, -yOffset);
-            wv.draw(canvas);
-            canvas.restore();
+        PdfDocument.Page page = pdf.startPage(info);
+        Canvas canvas = page.getCanvas();
 
-            pdf.finishPage(page);
+        canvas.save();
+        canvas.translate(0, -yOffset);
 
-            yOffset += pageHeight;
-            pageNumber++;
-        }
+        // αφήνουμε χώρο για header
+        canvas.translate(0, 80);
 
-        String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        String fileName = "GEL_Service_Report_" + time + ".pdf";
+        wv.draw(canvas);
+        canvas.restore();
 
-        Uri saved = savePdfToDownloads(fileName, pdf);
-        pdf.close();
+        pdf.finishPage(page);
 
-        if (saved != null) {
-            Toast.makeText(this, "PDF saved: " + fileName, Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "PDF saved.", Toast.LENGTH_LONG).show();
-        }
+        yOffset += pageHeight;
+        pageNum++;
     }
+
+    String ts =
+            new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                    .format(new Date());
+
+    String fileName = "GEL_Service_Report_" + ts + ".pdf";
+
+    Uri saved = savePdfToDownloads(fileName, pdf);
+
+    pdf.close();
+
+    if (saved != null)
+        Toast.makeText(this, "PDF saved: " + fileName, Toast.LENGTH_LONG).show();
+    else
+        Toast.makeText(this, "PDF saved.", Toast.LENGTH_LONG).show();
+}
 
     // ----------------------------------------------------------
     // SAVE PDF → DOWNLOADS

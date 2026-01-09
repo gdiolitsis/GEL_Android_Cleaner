@@ -212,19 +212,29 @@ public class ServiceReportActivity extends AppCompatActivity {
                         "</body></html>";
 
         pdfWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                view.postDelayed(() -> {
-                    try {
-                        createPdfFromWebView(view);
-                    } catch (Throwable t) {
-                        Toast.makeText(ServiceReportActivity.this,
-                                "PDF export error: " + t.getMessage(),
-                                Toast.LENGTH_LONG).show();
-                    }
-                }, 200);
-            }
+    @Override
+    public void onPageFinished(WebView view, String url) {
+
+        view.post(() -> {
+            view.measure(
+                    View.MeasureSpec.makeMeasureSpec(595, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            );
+            view.layout(0, 0, 595, view.getMeasuredHeight());
+
+            // δεύτερο post για να είμαστε 100% σίγουροι
+            view.post(() -> {
+                try {
+                    createPdfFromWebView(view);
+                } catch (Throwable t) {
+                    Toast.makeText(ServiceReportActivity.this,
+                            "PDF export error: " + t.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+            });
         });
+    }
+});
 
         pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
     }

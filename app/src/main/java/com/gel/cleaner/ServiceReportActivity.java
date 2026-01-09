@@ -219,17 +219,21 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         // FULL HTML (same vibe as live labs)
         final String fullHtml =
-                "<!DOCTYPE html><html><head>" +
-                        "<meta charset='utf-8'/>" +
-                        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
-                        "<style>" +
-                        "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;line-height:1.35;margin:16px;}" +
-                        "b{color:#FFFFFF;}" +
-                        "hr{border:0;border-top:1px solid #333;margin:10px 0;}" +
-                        "</style>" +
-                        "</head><body>" +
-                        htmlBody +
-                        "</body></html>";
+        "<!DOCTYPE html><html><head>" +
+                "<meta charset='utf-8'/>" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
+                "<style>" +
+                "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;line-height:1.35;margin:16px;}" +
+                "b{color:#FFFFFF;}" +
+                "hr{border:0;border-top:1px solid #333;margin:10px 0;}" +
+                "</style>" +
+                "</head><body>" +
+
+                // 🔴 DEBUG MARK
+                "<h1 style=\"color:red\">HTML MODE ACTIVE</h1>" +
+
+                htmlBody +
+                "</body></html>";
 
         pdfWebView.setWebViewClient(new WebViewClient() {
             @Override

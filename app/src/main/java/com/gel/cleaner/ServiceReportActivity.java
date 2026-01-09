@@ -1,7 +1,5 @@
-// GDiolitsis Engine Lab (GEL) - Author & Developer
-// ServiceReportActivity — HTML → PDF (REAL FILE EXPORT) FINAL
-// --------------------------------------------------------------
-// NOTE: This version exports COLORED HTML to PDF directly (no text fallback).
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// ServiceReportActivity — FINAL (SYNCED WITH GELServiceLog HTML)
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -20,7 +18,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -49,7 +46,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     private static final int REQ_WRITE = 9911;
 
     private TextView txtPreview;
-    private WebView pdfWebView; // hidden engine
+    private WebView pdfWebView;
 
     // ----------------------------------------------------------
     // FOLDABLE ORCHESTRATOR
@@ -124,43 +121,30 @@ public class ServiceReportActivity extends AppCompatActivity {
         sub.setPadding(0, 0, 0, dp(12));
         root.addView(sub);
 
-        // PREVIEW (HTML)
+        // PREVIEW (HTML FROM GELServiceLog)
         txtPreview = new TextView(this);
         txtPreview.setTextSize(sp(13f));
         txtPreview.setTextColor(0xFFEEEEEE);
-        txtPreview.setMovementMethod(new ScrollingMovementMethod());
         txtPreview.setPadding(0, 0, 0, dp(12));
-        txtPreview.setText(HtmlCompat.fromHtml(getPreviewText(), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        txtPreview.setText(
+                HtmlCompat.fromHtml(getPreviewHtml(), HtmlCompat.FROM_HTML_MODE_LEGACY)
+        );
         root.addView(txtPreview);
 
-        // HIDDEN WEBVIEW (EXPORT ENGINE)
+        // HIDDEN WEBVIEW (PDF ENGINE)
         pdfWebView = new WebView(this);
         pdfWebView.setVisibility(View.GONE);
         pdfWebView.getSettings().setJavaScriptEnabled(false);
         pdfWebView.getSettings().setLoadsImagesAutomatically(true);
         root.addView(pdfWebView);
 
-        // EXPORT PDF BUTTON (HTML ONLY)
+        // EXPORT BUTTON
         AppCompatButton btnPdf = new AppCompatButton(this);
         btnPdf.setText(getString(R.string.export_pdf_button));
         btnPdf.setAllCaps(false);
         btnPdf.setTextSize(15f);
         btnPdf.setTextColor(0xFFFFFFFF);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        (int) (56 * getResources().getDisplayMetrics().density)
-                );
-        lp.setMargins(
-                (int) (8 * getResources().getDisplayMetrics().density),
-                (int) (16 * getResources().getDisplayMetrics().density),
-                (int) (8 * getResources().getDisplayMetrics().density),
-                (int) (24 * getResources().getDisplayMetrics().density)
-        );
-        btnPdf.setLayoutParams(lp);
-
         btnPdf.setOnClickListener(v -> exportPdfFromHtml());
         root.addView(btnPdf);
 
@@ -169,9 +153,9 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // PREVIEW
+    // PREVIEW HTML (SYNCED)
     // ----------------------------------------------------------
-    private String getPreviewText() {
+    private String getPreviewHtml() {
         if (GELServiceLog.isEmpty()) {
             return getString(R.string.preview_empty);
         }
@@ -187,19 +171,16 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // EXPORT — HTML → PDF FILE (COLORED)
+    // EXPORT — HTML → PDF (SYNCED FLOW)
     // ----------------------------------------------------------
     private void exportPdfFromHtml() {
-
-        // ΑΠΟΔΕΙΞΗ ΟΤΙ ΕΔΩ ΜΠΑΙΝΕΙ
-        Toast.makeText(this, "HTML PDF EXPORT MODE", Toast.LENGTH_SHORT).show();
 
         if (GELServiceLog.isEmpty()) {
             Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
             return;
         }
 
-        // legacy permission for <=29 flow
+        // legacy permission (<=29)
         if (Build.VERSION.SDK_INT <= 29) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -217,29 +198,22 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         final String htmlBody = stripTimestamps(GELServiceLog.getHtml());
 
-        // FULL HTML (same vibe as live labs)
         final String fullHtml =
-        "<!DOCTYPE html><html><head>" +
-                "<meta charset='utf-8'/>" +
-                "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
-                "<style>" +
-                "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;line-height:1.35;margin:16px;}" +
-                "b{color:#FFFFFF;}" +
-                "hr{border:0;border-top:1px solid #333;margin:10px 0;}" +
-                "</style>" +
-                "</head><body>" +
-
-                // 🔴 DEBUG MARK
-                "<h1 style=\"color:red\">HTML MODE ACTIVE</h1>" +
-
-                htmlBody +
-                "</body></html>";
+                "<!DOCTYPE html><html><head>" +
+                        "<meta charset='utf-8'/>" +
+                        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
+                        "<style>" +
+                        "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;line-height:1.35;margin:16px;}" +
+                        "b{color:#FFFFFF;}" +
+                        "hr{border:0;border-top:1px solid #333;margin:10px 0;}" +
+                        "</style>" +
+                        "</head><body>" +
+                        htmlBody +
+                        "</body></html>";
 
         pdfWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-
-                // μικρό delay για να “κάτσει” το layout / contentHeight
                 view.postDelayed(() -> {
                     try {
                         createPdfFromWebView(view);
@@ -256,25 +230,21 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // CORE: Render WebView → PdfDocument (MULTI-PAGE) → Save file
+    // CORE — RENDER WEBVIEW → MULTI-PAGE PDF
     // ----------------------------------------------------------
     private void createPdfFromWebView(WebView wv) throws Exception {
 
-        // A4 in “points-like pixels” (same as your old PdfDocument sizes)
-        final int pageWidth = 595;
+        final int pageWidth = 595;   // A4
         final int pageHeight = 842;
 
-        // Force WebView to layout at page width
         wv.measure(
                 View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         );
         wv.layout(0, 0, pageWidth, wv.getMeasuredHeight());
 
-        // get full content height
         int contentHeight = (int) Math.ceil(wv.getContentHeight() * wv.getScale());
         if (contentHeight <= 0) {
-            // fallback to measured height
             contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
         }
 
@@ -291,7 +261,6 @@ public class ServiceReportActivity extends AppCompatActivity {
             PdfDocument.Page page = pdf.startPage(pageInfo);
             Canvas canvas = page.getCanvas();
 
-            // clip to page and translate
             canvas.save();
             canvas.translate(0, -yOffset);
             wv.draw(canvas);
@@ -307,7 +276,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         String fileName = "GEL_Service_Report_" + time + ".pdf";
 
         Uri saved = savePdfToDownloads(fileName, pdf);
-
         pdf.close();
 
         if (saved != null) {
@@ -315,13 +283,10 @@ public class ServiceReportActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "PDF saved.", Toast.LENGTH_LONG).show();
         }
-
-        // refresh preview (optional)
-        txtPreview.setText(HtmlCompat.fromHtml(getPreviewText(), HtmlCompat.FROM_HTML_MODE_LEGACY));
     }
 
     // ----------------------------------------------------------
-    // SAVE PDF → Downloads (MediaStore for 29+, File for legacy)
+    // SAVE PDF → DOWNLOADS
     // ----------------------------------------------------------
     @Nullable
     private Uri savePdfToDownloads(String fileName, PdfDocument pdf) throws Exception {
@@ -360,7 +325,7 @@ public class ServiceReportActivity extends AppCompatActivity {
                 os = new FileOutputStream(out);
                 pdf.writeTo(os);
 
-                return null; // legacy path
+                return null;
             }
 
         } finally {
@@ -369,7 +334,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // PERMISSION RESULT (legacy)
+    // PERMISSION RESULT (LEGACY)
     // ----------------------------------------------------------
     @Override
     public void onRequestPermissionsResult(int requestCode,

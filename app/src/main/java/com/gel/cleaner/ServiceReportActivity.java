@@ -199,17 +199,19 @@ public class ServiceReportActivity extends AppCompatActivity {
         final String htmlBody = stripTimestamps(GELServiceLog.getAll());
 
         final String fullHtml =
-                "<!DOCTYPE html><html><head>" +
-                        "<meta charset='utf-8'/>" +
-                        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
-                        "<style>" +
-                        "body{background:#101010;color:#EEEEEE;font-family:monospace;font-size:12px;line-height:1.35;margin:16px;}" +
-                        "b{color:#FFFFFF;}" +
-                        "hr{border:0;border-top:1px solid #333;margin:10px 0;}" +
-                        "</style>" +
-                        "</head><body>" +
-                        htmlBody +
-                        "</body></html>";
+        "<!DOCTYPE html><html><head>" +
+        "<meta charset='utf-8'/>" +
+        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
+        "<style>" +
+        "body{background:#0F0F0F;color:#EAEAEA;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
+        ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
+        "pre{white-space:pre-wrap;word-wrap:break-word;}" +
+        "</style>" +
+        "</head><body>" +
+        "<div class='page'><pre>" +
+        htmlBody +
+        "</pre></div>" +
+        "</body></html>";
 
         pdfWebView.setWebViewClient(new WebViewClient() {
     @Override

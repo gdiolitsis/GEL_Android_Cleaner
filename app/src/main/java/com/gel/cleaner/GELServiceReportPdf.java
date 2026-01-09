@@ -4,6 +4,7 @@
 // • Παίρνει HTML από GELServiceLog
 // • Φτιάχνει κανονικό PDF αρχείο
 // • Υποστηρίζει χρώματα, sections, headers
+// • Logo σε ΚΑΘΕ σελίδα
 // • Δεν μπλέκεται με UI — μόνο export logic
 // ============================================================
 
@@ -55,7 +56,6 @@ public final class GELServiceReportPdf {
         engine.getSettings().setJavaScriptEnabled(false);
 
         String htmlBody = GELServiceLog.getHtml();
-
         String fullHtml = buildFullHtml(htmlBody);
 
         engine.setWebViewClient(new WebViewClient() {
@@ -125,6 +125,15 @@ public final class GELServiceReportPdf {
         final int pageWidth  = 595;  // A4
         final int pageHeight = 842;
 
+        // --- FIX #1: preload logo ONCE ---
+        Bitmap logo = BitmapFactory.decodeResource(
+                ctx.getResources(), R.drawable.gel_logo);
+        Bitmap scaledLogo = null;
+        if (logo != null) {
+            scaledLogo = Bitmap.createScaledBitmap(logo, 48, 48, true);
+        }
+
+        // layout WebView to page width
         wv.measure(
                 View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -134,8 +143,10 @@ public final class GELServiceReportPdf {
         int contentHeight =
                 (int) Math.ceil(wv.getContentHeight() * wv.getScale());
 
-        if (contentHeight <= 0)
+        // --- FIX #2: safe height fallback ---
+        if (contentHeight <= pageHeight) {
             contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
+        }
 
         PdfDocument pdf = new PdfDocument();
 
@@ -154,17 +165,15 @@ public final class GELServiceReportPdf {
 
             canvas.save();
             canvas.translate(0, -yOffset);
-            // DRAW LOGO ON EVERY PAGE (TOP-LEFT)
-Bitmap logo = BitmapFactory.decodeResource(
-        ctx.getResources(), R.drawable.gel_logo);
 
-if (logo != null) {
-    Bitmap scaled = Bitmap.createScaledBitmap(logo, 48, 48, true);
-    canvas.drawBitmap(scaled, 24, 20, null);
-}
+            // LOGO ON EVERY PAGE
+            if (scaledLogo != null) {
+                canvas.drawBitmap(scaledLogo, 24, 20, null);
+            }
 
-// αφήνουμε χώρο για το header
-canvas.translate(0, 80);
+            // αφήνουμε χώρο για header
+            canvas.translate(0, 80);
+
             wv.draw(canvas);
             canvas.restore();
 
@@ -241,7 +250,7 @@ canvas.translate(0, 80);
                 os = new FileOutputStream(out);
                 pdf.writeTo(os);
 
-                return null;
+                return null; // legacy path
             }
 
         } finally {

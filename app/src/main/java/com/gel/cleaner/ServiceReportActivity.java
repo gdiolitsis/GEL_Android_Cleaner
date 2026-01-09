@@ -196,7 +196,7 @@ public class ServiceReportActivity extends AppCompatActivity {
             }
         }
 
-        final String htmlBody = stripTimestamps(GELServiceLog.getHtml());
+        final String htmlBody = stripTimestamps(GELServiceLog.getAll());
 
         final String fullHtml =
                 "<!DOCTYPE html><html><head>" +

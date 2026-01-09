@@ -12,6 +12,8 @@ package com.gel.cleaner;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
@@ -152,6 +154,17 @@ public final class GELServiceReportPdf {
 
             canvas.save();
             canvas.translate(0, -yOffset);
+            // DRAW LOGO ON EVERY PAGE (TOP-LEFT)
+Bitmap logo = BitmapFactory.decodeResource(
+        ctx.getResources(), R.drawable.gel_logo);
+
+if (logo != null) {
+    Bitmap scaled = Bitmap.createScaledBitmap(logo, 48, 48, true);
+    canvas.drawBitmap(scaled, 24, 20, null);
+}
+
+// αφήνουμε χώρο για το header
+canvas.translate(0, 80);
             wv.draw(canvas);
             canvas.restore();
 

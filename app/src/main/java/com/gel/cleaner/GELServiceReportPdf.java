@@ -196,7 +196,7 @@ public final class GELServiceReportPdf {
     }
 
     // ============================================================
-    // SAVE → DOWNLOADS (WORKS ON ALL ANDROID VERSIONS)
+    // SAVE → DOWNLOADS (STABLE, NO PERMISSION HELL)
     // ============================================================
     @Nullable
     private static Uri savePdf(Context ctx,
@@ -216,8 +216,7 @@ public final class GELServiceReportPdf {
                         Environment.DIRECTORY_DOWNLOADS);
 
                 ContentResolver cr = ctx.getContentResolver();
-                uri = cr.insert(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
 
                 if (uri == null)
                     throw new Exception("MediaStore insert failed.");
@@ -227,7 +226,6 @@ public final class GELServiceReportPdf {
                     throw new Exception("OutputStream null.");
 
                 pdf.writeTo(os);
-
                 return uri;
 
             } else {

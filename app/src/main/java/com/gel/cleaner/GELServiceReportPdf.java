@@ -203,58 +203,55 @@ public final class GELServiceReportPdf {
     // SAVE → DOWNLOADS
     // ============================================================
     @Nullable
-    private static Uri savePdf(Context ctx,
-                               String fileName,
-                               PdfDocument pdf) throws Exception {
+private static Uri savePdf(Context ctx,
+                           String fileName,
+                           PdfDocument pdf) throws Exception {
 
-        OutputStream os = null;
-        Uri uri = null;
+    OutputStream os = null;
+    Uri uri = null;
 
-        try {
-            if (Build.VERSION.SDK_INT >= 29) {
+    try {
+        if (Build.VERSION.SDK_INT >= 29) {
 
-                ContentValues cv = new ContentValues();
-                cv.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
-                cv.put(MediaStore.Downloads.MIME_TYPE, "application/pdf");
-                cv.put(MediaStore.Downloads.IS_PENDING, 1);
+            ContentValues cv = new ContentValues();
+            cv.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            cv.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+            cv.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
 
-                ContentResolver cr = ctx.getContentResolver();
-                uri = cr.insert(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+            ContentResolver cr = ctx.getContentResolver();
+            uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
 
-                if (uri == null)
-                    throw new Exception("MediaStore insert failed.");
+            if (uri == null)
+                throw new Exception("MediaStore insert failed.");
 
-                os = cr.openOutputStream(uri);
-                if (os == null)
-                    throw new Exception("OutputStream null.");
+            os = cr.openOutputStream(uri);
+            if (os == null)
+                throw new Exception("OutputStream null.");
 
-                pdf.writeTo(os);
+            pdf.writeTo(os);
 
-                cv.clear();
-                cv.put(MediaStore.Downloads.IS_PENDING, 0);
-                cr.update(uri, cv, null, null);
+            return uri;
 
-                return uri;
+        } else {
 
-            } else {
+            File dir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS);
 
-                File dir =
-                        Environment.getExternalStoragePublicDirectory(
-                                Environment.DIRECTORY_DOWNLOADS);
+            if (!dir.exists()) dir.mkdirs();
 
-                if (!dir.exists()) dir.mkdirs();
+            File out = new File(dir, fileName);
 
-                File out = new File(dir, fileName);
+            os = new FileOutputStream(out);
+            pdf.writeTo(os);
 
-                os = new FileOutputStream(out);
-                pdf.writeTo(os);
+            Toast.makeText(ctx,
+                    "PDF saved in: " + out.getAbsolutePath(),
+                    Toast.LENGTH_LONG).show();
 
-                return null; // legacy path
-            }
-
-        } finally {
-            try { if (os != null) os.close(); } catch (Exception ignore) {}
+            return null;
         }
+
+    } finally {
+        try { if (os != null) os.close(); } catch (Exception ignore) {}
     }
 }

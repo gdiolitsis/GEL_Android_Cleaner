@@ -4,7 +4,6 @@
 // • Παίρνει HTML από GELServiceLog
 // • Φτιάχνει κανονικό PDF αρχείο
 // • Υποστηρίζει χρώματα, sections, headers
-// • Logo σε ΚΑΘΕ σελίδα
 // • Δεν μπλέκεται με UI — μόνο export logic
 // ============================================================
 
@@ -125,15 +124,6 @@ public final class GELServiceReportPdf {
         final int pageWidth  = 595;  // A4
         final int pageHeight = 842;
 
-        // --- FIX #1: preload logo ONCE ---
-        Bitmap logo = BitmapFactory.decodeResource(
-                ctx.getResources(), R.drawable.gel_logo);
-        Bitmap scaledLogo = null;
-        if (logo != null) {
-            scaledLogo = Bitmap.createScaledBitmap(logo, 48, 48, true);
-        }
-
-        // layout WebView to page width
         wv.measure(
                 View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -143,10 +133,8 @@ public final class GELServiceReportPdf {
         int contentHeight =
                 (int) Math.ceil(wv.getContentHeight() * wv.getScale());
 
-        // --- FIX #2: safe height fallback ---
-        if (contentHeight <= pageHeight) {
+        if (contentHeight <= 0)
             contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
-        }
 
         PdfDocument pdf = new PdfDocument();
 
@@ -166,10 +154,18 @@ public final class GELServiceReportPdf {
             canvas.save();
             canvas.translate(0, -yOffset);
 
+            // ----------------------------------------------------
             // LOGO ON EVERY PAGE
-            if (scaledLogo != null) {
-                canvas.drawBitmap(scaledLogo, 24, 20, null);
-            }
+            // ----------------------------------------------------
+            try {
+                Bitmap logo = BitmapFactory.decodeResource(
+                        ctx.getResources(), R.drawable.gel_logo);
+
+                if (logo != null) {
+                    Bitmap scaled = Bitmap.createScaledBitmap(logo, 48, 48, true);
+                    canvas.drawBitmap(scaled, 24, 20, null);
+                }
+            } catch (Throwable ignore) {}
 
             // αφήνουμε χώρο για header
             canvas.translate(0, 80);
@@ -200,58 +196,62 @@ public final class GELServiceReportPdf {
     }
 
     // ============================================================
-    // SAVE → DOWNLOADS
+    // SAVE → DOWNLOADS (WORKS ON ALL ANDROID VERSIONS)
     // ============================================================
     @Nullable
-private static Uri savePdf(Context ctx,
-                           String fileName,
-                           PdfDocument pdf) throws Exception {
+    private static Uri savePdf(Context ctx,
+                               String fileName,
+                               PdfDocument pdf) throws Exception {
 
-    OutputStream os = null;
-    Uri uri = null;
+        OutputStream os = null;
+        Uri uri = null;
 
-    try {
-        if (Build.VERSION.SDK_INT >= 29) {
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
 
-            ContentValues cv = new ContentValues();
-            cv.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-            cv.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
-            cv.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                ContentValues cv = new ContentValues();
+                cv.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                cv.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                cv.put(MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_DOWNLOADS);
 
-            ContentResolver cr = ctx.getContentResolver();
-            uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                ContentResolver cr = ctx.getContentResolver();
+                uri = cr.insert(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
 
-            if (uri == null)
-                throw new Exception("MediaStore insert failed.");
+                if (uri == null)
+                    throw new Exception("MediaStore insert failed.");
 
-            os = cr.openOutputStream(uri);
-            if (os == null)
-                throw new Exception("OutputStream null.");
+                os = cr.openOutputStream(uri);
+                if (os == null)
+                    throw new Exception("OutputStream null.");
 
-            pdf.writeTo(os);
+                pdf.writeTo(os);
 
-            return uri;
+                return uri;
 
-        } else {
+            } else {
 
-            File dir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS);
+                File dir =
+                        Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DOWNLOADS);
 
-            if (!dir.exists()) dir.mkdirs();
+                if (!dir.exists()) dir.mkdirs();
 
-            File out = new File(dir, fileName);
+                File out = new File(dir, fileName);
 
-            os = new FileOutputStream(out);
-            pdf.writeTo(os);
+                os = new FileOutputStream(out);
+                pdf.writeTo(os);
 
-            Toast.makeText(ctx,
-                    "PDF saved in: " + out.getAbsolutePath(),
-                    Toast.LENGTH_LONG).show();
+                Toast.makeText(ctx,
+                        "PDF saved in: " + out.getAbsolutePath(),
+                        Toast.LENGTH_LONG).show();
 
-            return null;
+                return null;
+            }
+
+        } finally {
+            try { if (os != null) os.close(); } catch (Exception ignore) {}
         }
-
-    } finally {
-        try { if (os != null) os.close(); } catch (Exception ignore) {}
     }
 }

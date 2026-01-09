@@ -253,8 +253,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     );
     wv.layout(0, 0, pageWidth, wv.getMeasuredHeight());
 
-    int contentHeight =
-            (int) Math.ceil(wv.getContentHeight() * wv.getScale());
+    int contentHeight = wv.getMeasuredHeight();
 
     if (contentHeight <= 0)
         contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);

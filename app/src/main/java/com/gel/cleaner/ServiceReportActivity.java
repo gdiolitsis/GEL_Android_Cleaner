@@ -145,7 +145,9 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setTextSize(15f);
         btnPdf.setTextColor(0xFFFFFFFF);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        btnPdf.setOnClickListener(v -> exportPdfFromHtml());
+        btnPdf.setOnClickListener(v -> {
+    GELServiceReportPdf.export(ServiceReportActivity.this);
+});
         root.addView(btnPdf);
 
         scroll.addView(root);

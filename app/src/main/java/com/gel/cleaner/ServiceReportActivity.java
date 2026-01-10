@@ -188,11 +188,11 @@ public class ServiceReportActivity extends AppCompatActivity {
                         "</body></html>";
 
         pdfWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                printWebViewToPdf(view);
-            }
-        });
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        printWebViewToPdf(view);   // ΤΕΛΟΣ. ΤΙΠΟΤΑ ΑΛΛΟ.
+    }
+});
 
         pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
     }
@@ -202,42 +202,42 @@ public class ServiceReportActivity extends AppCompatActivity {
     // ----------------------------------------------------------
     private void printWebViewToPdf(final WebView webView) {
 
-        // ΠΑΝΤΑ από Activity
-        final Activity activity = ServiceReportActivity.this;
+    // 1. ΠΑΙΡΝΟΥΜΕ ΡΗΤΑ ΤΟ ACTIVITY
+    final ServiceReportActivity activity = ServiceReportActivity.this;
+
+    // 2. ΤΡΕΧΟΥΜΕ ΣΙΓΟΥΡΑ ΣΤΟ UI THREAD ΤΟΥ ACTIVITY
+    activity.runOnUiThread(() -> {
 
         if (activity.isFinishing() || activity.isDestroyed()) {
-            Toast.makeText(activity, "Activity not ready for printing.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "Activity not ready.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // ΠΑΝΤΑ στο UI thread
-        activity.runOnUiThread(() -> {
+        // 3. ΠΑΙΡΝΟΥΜΕ PRINT MANAGER ΑΠΟ ACTIVITY
+        PrintManager printManager =
+                (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
 
-            if (activity.isFinishing() || activity.isDestroyed()) return;
+        if (printManager == null) {
+            Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-            PrintManager printManager =
-                    (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
+        PrintAttributes attrs = new PrintAttributes.Builder()
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setResolution(
+                        new PrintAttributes.Resolution("pdf", "pdf", 300, 300)
+                )
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                .build();
 
-            if (printManager == null) {
-                Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            PrintAttributes attrs = new PrintAttributes.Builder()
-                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                    .setResolution(
-                            new PrintAttributes.Resolution("pdf", "pdf", 300, 300)
-                    )
-                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                    .build();
-
-            printManager.print(
-                    "GEL_Service_Report",
-                    webView.createPrintDocumentAdapter("GEL_Service_Report"),
-                    attrs
-            );
-        });
-    }
+        // 4. ΕΚΤΥΠΩΣΗ — ΜΟΝΟ ΕΤΣΙ
+        printManager.print(
+                "GEL_Service_Report",
+                webView.createPrintDocumentAdapter("GEL_Service_Report"),
+                attrs
+        );
+    });
+}
 
     // ----------------------------------------------------------
     // LOG CLEANUP FOR PDF

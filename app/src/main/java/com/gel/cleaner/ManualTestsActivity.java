@@ -4377,19 +4377,6 @@ muteBox.setPadding(0, dp(10), 0, dp(10));
 root.addView(muteBox);
 
 // ==========================
-// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
-root.addView(muteBox);
-
-// ==========================
 // 🔇 MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {

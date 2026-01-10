@@ -4997,7 +4997,9 @@ private void showLab15Popup() {
         // 🔹 SHOW DIALOG
         // ============================================================
         b.setView(root);
-        AlertDialog lab15Dialog = b.create();
+
+        // ✅ IMPORTANT: use the FIELD, not a local shadow
+        lab15Dialog = b.create();
 
         if (lab15Dialog.getWindow() != null) {
             lab15Dialog.getWindow()

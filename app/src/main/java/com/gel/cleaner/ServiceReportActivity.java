@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — TXT → PDF (STABLE + HEADER + FOOTER + LOGO)
+// ServiceReportActivity — TXT → PDF (FINAL HEADER EDITION)
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,14 +30,13 @@ public class ServiceReportActivity extends AppCompatActivity {
     private static final int PAGE_HEIGHT = 842;
 
     private TextView txtPreview;
-
-    // LOGO (βάλε το gel_logo.png στο res/drawable)
     private Bitmap gelLogo;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // φορτώνουμε το λογότυπο (βάλε gel_logo.png στο res/drawable)
         gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
 
         ScrollView scroll = new ScrollView(this);
@@ -86,50 +84,44 @@ public class ServiceReportActivity extends AppCompatActivity {
             emojiPaint.setTextSize(12f);
 
             Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            titlePaint.setTextSize(13f);
+            titlePaint.setTextSize(14f);
             titlePaint.setColor(Color.BLACK);
             titlePaint.setFakeBoldText(true);
 
-            int marginX = 32;
-            int y = 40;
-            int lineHeight = 18;
+            Paint subtitlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            subtitlePaint.setTextSize(11f);
+            subtitlePaint.setColor(Color.BLACK);
 
+            int marginX = 32;
+            int y;
+
+            int lineHeight = 18;
             int pageNum = 1;
+
             PdfDocument.Page page = startPage(pdf, pageNum);
             Canvas canvas = page.getCanvas();
             canvas.drawColor(Color.WHITE);
 
-            // ─────────────────────────────
-            // LOGO σε κάθε σελίδα
-            // ─────────────────────────────
-            drawLogo(canvas);
-
-            // ─────────────────────────────
-            // HEADER μόνο στην 1η σελίδα
-            // ─────────────────────────────
-            drawChecklistHeader(canvas, marginX, y, titlePaint, textPaint);
-            y += 160;
+            // HEADER στην πρώτη σελίδα
+            y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
 
             for (String line : lines) {
 
-                if (y > PAGE_HEIGHT - 80) {
+                if (y > PAGE_HEIGHT - 60) {
                     pdf.finishPage(page);
+
                     pageNum++;
                     page = startPage(pdf, pageNum);
                     canvas = page.getCanvas();
                     canvas.drawColor(Color.WHITE);
-                    drawLogo(canvas);
-                    y = 40;
+
+                    // HEADER σε κάθε νέα σελίδα
+                    y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
                 }
 
                 drawLineWithColoredEmoji(canvas, line, marginX, y, textPaint, emojiPaint);
                 y += lineHeight;
             }
-
-            // ─────────────────────────────
-            // FOOTER στην τελευταία σελίδα
-            // ─────────────────────────────
-            drawSignatureFooter(canvas, marginX, PAGE_HEIGHT - 120, titlePaint, textPaint);
 
             pdf.finishPage(page);
 
@@ -164,66 +156,40 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ==========================================================
-    // LOGO
+    // REPORT HEADER — SAME AS OLD REPORT (EVERY PAGE)
     // ==========================================================
-    private void drawLogo(Canvas canvas) {
-        if (gelLogo == null) return;
-        Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 80, 80, true);
-        canvas.drawBitmap(scaled, PAGE_WIDTH - 100, 20, null);
-    }
+    private int drawReportHeader(
+            Canvas c,
+            int x,
+            int startY,
+            Paint title,
+            Paint subtitle,
+            Paint text) {
 
-    // ==========================================================
-    // HEADER — CHECKLIST
-    // ==========================================================
-    private void drawChecklistHeader(Canvas c, int x, int y, Paint title, Paint text) {
+        int y = startY;
 
-        c.drawText("ΕΛΕΓΧΟΣ ΣΗΜΕΙΩΝ", x, y, title);
-        y += 20;
-
-        String[] items = {
-                "Σπασμένη οθόνη",
-                "Dead Pixels",
-                "AMOLED Burn-in",
-                "Θύρα φόρτισης",
-                "Ήχος / Ακουστικό",
-                "Μικρόφωνο",
-                "Μπαταρία",
-                "Υγρασία / Διάβρωση"
-        };
-
-        for (String it : items) {
-            c.drawText("[✔] " + it + "     [ ] ΟΧΙ", x, y, text);
-            y += 16;
+        // Logo LEFT
+        if (gelLogo != null) {
+            Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 70, 70, true);
+            c.drawBitmap(scaled, x, y - 10, null);
         }
 
-        y += 10;
-        c.drawText("--------------------------------------------", x, y, text);
-    }
+        int textStartX = x + 90;
 
-    // ==========================================================
-    // FOOTER — SIGNATURE
-    // ==========================================================
-    private void drawSignatureFooter(Canvas c, int x, int y, Paint title, Paint text) {
-
-        c.drawText("--------------------------------------------", x, y, text);
+        // Title
+        c.drawText("GEL Αναφορά Service", textStartX, y + 10, title);
         y += 20;
 
-        c.drawText("ΤΕΛΙΚΗ ΑΝΑΦΟΡΑ", x, y, title);
+        // Subtitle
+        c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
+                textStartX, y + 10, subtitle);
         y += 24;
 
-        c.drawText("Τεχνικός:", x, y, text);
-        y += 18;
-        c.drawText("______________________________", x, y, text);
-        y += 24;
+        // Separator
+        c.drawText("------------------------------------------------------------",
+                x, y + 10, text);
 
-        c.drawText("Υπογραφή:", x, y, text);
-        y += 18;
-        c.drawText("______________________________", x, y, text);
-        y += 30;
-
-        c.drawText("GDiolitsis Engine Lab (GEL)", x, y, title);
-        y += 18;
-        c.drawText("— Author & Developer", x, y, text);
+        return y + 30; // νέο Y για τα labs
     }
 
     // ==========================================================

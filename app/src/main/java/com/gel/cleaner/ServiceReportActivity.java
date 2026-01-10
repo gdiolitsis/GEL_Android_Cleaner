@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — CLEAN & STABLE PDF EXPORT
+// ServiceReportActivity — SIMPLE & STABLE PDF EXPORT
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -154,85 +154,95 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // SIMPLE EXPORT — STABLE METHOD
+    // SIMPLE EXPORT
     // WebView -> Android Print Framework -> PDF
     // ----------------------------------------------------------
     private void exportPdfSimple() {
 
-    if (GELServiceLog.isEmpty()) {
-        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
-        return;
-    }
-
-    final String body = cleanLogForPdf(GELServiceLog.getAll());
-
-    final String html =
-            "<!DOCTYPE html><html><head>" +
-                    "<meta charset='utf-8'/>" +
-                    "<style>" +
-                    "body{font-family:monospace;font-size:12px;}" +
-                    "</style>" +
-                    "</head><body>" +
-                    "<pre>" + body + "</pre>" +
-                    "</body></html>";
-
-    pdfWebView.setWebViewClient(new WebViewClient() {
-        @Override
-        public void onPageFinished(WebView view, String url) {
-
-            // ⬇⬇⬇ ΕΔΩ ΚΑΛΕΙΤΑΙ — ΜΕΣΑ ΣΤΗΝ ACTIVITY ⬇⬇⬇
-            printWebViewToPdf(view);
-        }
-    });
-
-    pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
-}
-
-// ----------------------------------------------------------
-// PRINT VIA ANDROID FRAMEWORK — HARD FIX
-// ----------------------------------------------------------
-private void printWebViewToPdf(WebView webView) {
-
-    // ΠΑΝΤΑ Activity reference
-    final Activity activity = ServiceReportActivity.this;
-
-    if (activity.isFinishing() || activity.isDestroyed()) {
-        Toast.makeText(activity, "Activity not ready for printing.", Toast.LENGTH_SHORT).show();
-        return;
-    }
-
-    webView.post(() -> {
-
-        if (activity.isFinishing() || activity.isDestroyed()) return;
-
-        PrintManager printManager =
-                (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
-
-        if (printManager == null) {
-            Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
+        if (GELServiceLog.isEmpty()) {
+            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
             return;
         }
 
-        PrintAttributes attrs = new PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                .setResolution(
-                        new PrintAttributes.Resolution("pdf", "pdf", 300, 300)
-                )
-                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                .build();
+        final String body = cleanLogForPdf(GELServiceLog.getAll());
 
-        printManager.print(
-                "GEL_Service_Report",
-                webView.createPrintDocumentAdapter("GEL_Service_Report"),
-                attrs
-        );
-    });
-}
-    
+        final String html =
+                "<!DOCTYPE html><html><head>" +
+                        "<meta charset='utf-8'/>" +
+                        "<style>" +
+                        "body{background:#FFFFFF;color:#000000;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
+                        ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
+                        "pre{white-space:pre-wrap;word-wrap:break-word;}" +
+                        ".header{border-bottom:1px solid #999;padding-bottom:8px;margin-bottom:12px;}" +
+                        ".title{font-size:16px;font-weight:bold;}" +
+                        ".sub{font-size:12px;color:#555;}" +
+                        "</style>" +
+                        "</head><body>" +
+                        "<div class='page'>" +
+                        "<div class='header'>" +
+                        "<div class='title'>GEL Αναφορά Service</div>" +
+                        "<div class='sub'>GDiolitsis Engine Lab (GEL) — Author & Developer</div>" +
+                        "</div>" +
+                        "<pre>" + body + "</pre>" +
+                        "</div>" +
+                        "</body></html>";
+
+        pdfWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                printWebViewToPdf(view);
+            }
+        });
+
+        pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+    }
+
+    // ----------------------------------------------------------
+    // PRINT VIA ANDROID FRAMEWORK — ONLY WAY
+    // ----------------------------------------------------------
+    private void printWebViewToPdf(final WebView webView) {
+
+        // ΠΑΝΤΑ από Activity
+        final Activity activity = ServiceReportActivity.this;
+
+        if (activity.isFinishing() || activity.isDestroyed()) {
+            Toast.makeText(activity, "Activity not ready for printing.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // ΠΑΝΤΑ στο UI thread
+        activity.runOnUiThread(() -> {
+
+            if (activity.isFinishing() || activity.isDestroyed()) return;
+
+            PrintManager printManager =
+                    (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
+
+            if (printManager == null) {
+                Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            PrintAttributes attrs = new PrintAttributes.Builder()
+                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                    .setResolution(
+                            new PrintAttributes.Resolution("pdf", "pdf", 300, 300)
+                    )
+                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                    .build();
+
+            printManager.print(
+                    "GEL_Service_Report",
+                    webView.createPrintDocumentAdapter("GEL_Service_Report"),
+                    attrs
+            );
+        });
+    }
+
     // ----------------------------------------------------------
     // LOG CLEANUP FOR PDF
     // - κρατά emoji
-    // - σβήνει INFO / WARNING / ERROR λέξεις
+    // - σβήνει τις λέξεις INFO / WARNING / ERROR
     // ----------------------------------------------------------
     private String cleanLogForPdf(String raw) {
         if (raw == null) return "";

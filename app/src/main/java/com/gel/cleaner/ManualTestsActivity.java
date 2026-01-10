@@ -1392,150 +1392,7 @@ private void logLabelValue(String label, String value) {
     );
 }
 
-// ============================================================
-// LAB 14 — PRE-TEST ADVISORY POPUP (GEL NEON) + TTS
-// ============================================================
-private void showLab14PreTestAdvisory(Runnable onContinue) {
 
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    ManualTestsActivity.this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-
-    b.setCancelable(true);
-
-    // ==========================
-    // ROOT
-    // ==========================
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(22), dp(24), dp(20));
-
-    // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF0E0E0E);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-
-    // ------------------------------------------------------------
-    // TITLE
-    // ------------------------------------------------------------
-    TextView title = new TextView(this);
-    title.setText("Battery Stress Test — Pre-Test Check");
-    title.setTextColor(Color.WHITE);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setPadding(0, 0, 0, dp(12));
-    root.addView(title);
-
-    // ------------------------------------------------------------
-    // MESSAGE
-    // ------------------------------------------------------------
-    TextView msg = new TextView(this);
-    msg.setText(
-            "For best diagnostic accuracy, it is recommended to run this test " +
-            "after a system restart.\n" +
-            "You may continue without restarting, but recent heavy usage " +
-            "can affect the results.\n" +
-            "Don't use your device for the next 5 minutes."
-    );
-    msg.setTextColor(Color.WHITE);
-    msg.setTextSize(14.5f);
-    msg.setLineSpacing(0f, 1.2f);
-    root.addView(msg);
-
-// ==========================
-// 🔕 MUTE TOGGLE — GLOBAL
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
-root.addView(muteBox);
-
-// ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-    setTtsMuted(checked);
-    try {
-        if (checked && tts != null && tts[0] != null) {
-    tts[0].stop();
-}
-    } catch (Throwable ignore) {}
-});
-
-// ------------------------------------------------------------
-// CONTINUE BUTTON
-// ------------------------------------------------------------
-Button btnContinue = new Button(this);
-btnContinue.setText("Continue anyway");
-btnContinue.setAllCaps(false);
-btnContinue.setTextColor(Color.WHITE);
-btnContinue.setTextSize(15f);
-btnContinue.setTypeface(null, Typeface.BOLD);
-
-GradientDrawable btnBg = new GradientDrawable();
-btnBg.setColor(0xFF0B5D1E);
-btnBg.setCornerRadius(dp(14));
-btnBg.setStroke(dp(2), 0xFFFFD700);
-btnContinue.setBackground(btnBg);
-
-LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpBtn.setMargins(0, dp(18), 0, 0);
-btnContinue.setLayoutParams(lpBtn);
-
-// ⬇️ ΜΕΤΑ μπαίνει το κουμπί
-root.addView(btnContinue);
-
-    // ============================================================
-    // 🔊 TTS — PLAY (GLOBAL ENGINE)
-    // ============================================================
-    try {
-        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-            tts[0].stop();
-            tts[0].speak(
-                    "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
-                    "You may continue without restarting, but recent heavy usage can affect the results. " +
-                    "Don't use your device for the next five minutes.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB14_PRECHECK"
-            );
-        }
-    } catch (Throwable ignore) {}
-
-    b.setView(root);
-
-    AlertDialog dlg = b.create();
-    if (dlg.getWindow() != null) {
-        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-    }
-
-    // ------------------------------------------------------------
-    // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
-    // ------------------------------------------------------------
-    btnContinue.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-
-        try { dlg.dismiss(); } catch (Throwable ignore) {}
-        if (onContinue != null) onContinue.run();
-    });
-
-    dlg.show();
-}
 
 // ============================================================
 // LAB 14 — RUNNING POPUP (GEL DARK + GOLD)
@@ -2272,6 +2129,481 @@ private boolean detectFrequentRebootsHint() {
 }
 
 // ============================================================
+// LAB 14 — PRE-TEST ADVISORY POPUP (GEL NEON) + TTS
+// ============================================================
+private void showLab14PreTestAdvisory(Runnable onContinue) {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    b.setCancelable(true);
+
+    // ==========================
+    // ROOT
+    // ==========================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+    // BLACK BACKGROUND + GOLD BORDER (GEL STYLE)
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF0E0E0E);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    // ------------------------------------------------------------
+    // TITLE
+    // ------------------------------------------------------------
+    TextView title = new TextView(this);
+    title.setText("Battery Stress Test — Pre-Test Check");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
+
+    // ------------------------------------------------------------
+    // MESSAGE
+    // ------------------------------------------------------------
+    TextView msg = new TextView(this);
+    msg.setText(
+            "For best diagnostic accuracy, it is recommended to run this test " +
+            "after a system restart.\n" +
+            "You may continue without restarting, but recent heavy usage " +
+            "can affect the results.\n" +
+            "Don't use your device for the next 5 minutes."
+    );
+    msg.setTextColor(Color.WHITE);
+    msg.setTextSize(14.5f);
+    msg.setLineSpacing(0f, 1.2f);
+    root.addView(msg);
+
+    // ==========================
+    // 🔕 MUTE TOGGLE — GLOBAL
+    // ==========================
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(isTtsMuted());
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+
+    // ⬇️ ΠΡΩΤΑ μπαίνει το mute
+    root.addView(muteBox);
+
+    // ==========================
+    // 🔇 MUTE LOGIC — GLOBAL
+    // ==========================
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
+        setTtsMuted(checked);
+        try {
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();
+            }
+        } catch (Throwable ignore) {}
+    });
+
+    // ==========================
+    // 🌐 LANGUAGE (EN/GR) — GLOBAL POPUP STATE (LOCAL)
+    // ==========================
+    final String[] lang = { "EN" }; // default
+
+    // ------------------------------------------------------------
+    // CONTROLS ROW — (keeps everything else the same)
+    // ------------------------------------------------------------
+    LinearLayout controls = new LinearLayout(this);
+    controls.setOrientation(LinearLayout.HORIZONTAL);
+    controls.setGravity(Gravity.CENTER_VERTICAL);
+    controls.setPadding(0, dp(2), 0, dp(10));
+
+    TextView langLabel = new TextView(this);
+    langLabel.setText("Language");
+    langLabel.setTextColor(0xFFDDDDDD);
+    langLabel.setTextSize(13.5f);
+
+    LinearLayout.LayoutParams lpLabel =
+            new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+    langLabel.setLayoutParams(lpLabel);
+
+    Spinner langSpinner = new Spinner(this);
+
+    ArrayAdapter<String> langAdapter =
+            new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    new String[]{"EN", "GR"}
+            );
+    langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    langSpinner.setAdapter(langAdapter);
+
+    LinearLayout.LayoutParams lpSpin =
+            new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+    langSpinner.setLayoutParams(lpSpin);
+
+    langSpinner.setOnItemSelectedListener(
+            new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(
+                        android.widget.AdapterView<?> p,
+                        View v,
+                        int pos,
+                        long id) {
+                    lang[0] = (pos == 1) ? "GR" : "EN";
+                }
+
+                @Override
+                public void onNothingSelected(
+                        android.widget.AdapterView<?> p) {}
+            });
+
+    controls.addView(langLabel);
+    controls.addView(langSpinner);
+
+    root.addView(controls);
+
+    // ------------------------------------------------------------
+    // CONTINUE BUTTON
+    // ------------------------------------------------------------
+    Button btnContinue = new Button(this);
+    btnContinue.setText("Continue anyway");
+    btnContinue.setAllCaps(false);
+    btnContinue.setTextColor(Color.WHITE);
+    btnContinue.setTextSize(15f);
+    btnContinue.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable btnBg = new GradientDrawable();
+    btnBg.setColor(0xFF0B5D1E);
+    btnBg.setCornerRadius(dp(14));
+    btnBg.setStroke(dp(2), 0xFFFFD700);
+    btnContinue.setBackground(btnBg);
+
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpBtn.setMargins(0, dp(18), 0, 0);
+    btnContinue.setLayoutParams(lpBtn);
+
+    // ⬇️ ΜΕΤΑ μπαίνει το κουμπί
+    root.addView(btnContinue);
+
+    // ============================================================
+    // 🔊 TTS — PLAY (GLOBAL ENGINE)
+    // ============================================================
+    try {
+        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+            tts[0].stop();
+
+            if ("GR".equals(lang[0])) {
+
+                tts[0].speak(
+                        "Για καλύτερη διαγνωστική ακρίβεια, προτείνεται να τρέξετε αυτή τη δοκιμή " +
+                        "μετά από επανεκκίνηση της συσκευής. " +
+                        "Μπορείτε να συνεχίσετε χωρίς επανεκκίνηση, αλλά πρόσφατη έντονη χρήση " +
+                        "μπορεί να επηρεάσει τα αποτελέσματα. " +
+                        "Μην χρησιμοποιήσετε τη συσκευή για τα επόμενα πέντε λεπτά.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB14_PRECHECK_GR"
+                );
+
+            } else {
+
+                tts[0].speak(
+                        "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
+                        "You may continue without restarting, but recent heavy usage can affect the results. " +
+                        "Don't use your device for the next five minutes.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB14_PRECHECK"
+                );
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    b.setView(root);
+
+    AlertDialog dlg = b.create();
+    if (dlg.getWindow() != null) {
+        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    // ------------------------------------------------------------
+    // CONTINUE CLICK — STOP TTS (NO SHUTDOWN)
+    // ------------------------------------------------------------
+    btnContinue.setOnClickListener(v -> {
+        try {
+            if (tts != null && tts[0] != null) tts[0].stop();
+        } catch (Throwable ignore) {}
+
+        try { dlg.dismiss(); } catch (Throwable ignore) {}
+        if (onContinue != null) onContinue.run();
+    });
+
+    dlg.show();
+}
+
+// ============================================================
+// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)
+// ============================================================
+
+private boolean lab28Muted = false;
+private String  lab28Lang  = "EN";
+
+// ------------------------------------------------------------
+// SHOW POPUP
+// ------------------------------------------------------------
+private void showLab28Popup() {
+
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(true);
+
+        // ================= ROOT =================
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        // ---- SAME STYLE AS OTHER LAB POPUPS ----
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        // ================= TITLE =================
+        TextView title = new TextView(this);
+        title.setText("LAB 28 — Technicians Only");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        box.addView(title);
+
+        // ================= MESSAGE =================
+        TextView msg = new TextView(this);
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.START);
+        msg.setText(
+                "Lab twenty eight. Technician mode. " +
+                "This lab performs symptom based analysis only. " +
+                "It does not diagnose hardware faults " +
+                "and does not confirm soldering defects. " +
+                "Findings may indicate behavior patterns " +
+                "consistent with intermittent contact issues, " +
+                "such as unstable operation, random reboots, or signal drops. " +
+                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
+                "If indicators are present, proceed only with physical inspection " +
+                "and professional bench level testing."
+        );
+        box.addView(msg);
+
+        // ============================================================
+        // CONTROLS ROW — MUTE (LEFT) + LANG (RIGHT)
+        // ============================================================
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        controls.setPadding(0, dp(16), 0, dp(10));
+
+        // ==========================
+        // 🔕 MUTE BUTTON (LEFT)
+        // ==========================
+        Button muteBtn = new Button(this);
+        muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+        muteBtn.setAllCaps(false);
+        muteBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable muteBg = new GradientDrawable();
+        muteBg.setColor(0xFF444444);
+        muteBg.setCornerRadius(dp(12));
+        muteBg.setStroke(dp(2), 0xFFFFD700);
+        muteBtn.setBackground(muteBg);
+
+        LinearLayout.LayoutParams lpMute =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        lpMute.setMargins(0, 0, dp(8), 0);
+        muteBtn.setLayoutParams(lpMute);
+
+        muteBtn.setOnClickListener(v -> {
+            lab28Muted = !lab28Muted;
+            muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+
+            // κόψε άμεσα τον ήχο
+            try {
+                if (lab28Muted && tts != null && tts[0] != null) {
+                    tts[0].stop();   // ίδιο pattern με LAB 15
+                }
+            } catch (Throwable ignore) {}
+        });
+
+        // ==========================
+        // 🌐 LANGUAGE SPINNER (RIGHT)
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        LinearLayout.LayoutParams lpLang =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        lpLang.setMargins(dp(8), 0, 0, 0);
+        langSpinner.setLayoutParams(lpLang);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lab28Lang = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        controls.addView(muteBtn);
+        controls.addView(langSpinner);
+
+        box.addView(controls);
+
+        // ==========================
+        // OK BUTTON
+        // ==========================
+        Button okBtn = new Button(this);
+        okBtn.setText("OK");
+        okBtn.setAllCaps(false);
+        okBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable okBg = new GradientDrawable();
+        okBg.setColor(0xFF1E90FF);
+        okBg.setCornerRadius(dp(14));
+        okBg.setStroke(dp(3), 0xFFFFD700);
+        okBtn.setBackground(okBg);
+
+        LinearLayout.LayoutParams lpOk =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpOk.setMargins(0, dp(16), 0, 0);
+        okBtn.setLayoutParams(lpOk);
+
+        box.addView(okBtn);
+
+        // ==========================
+        // DIALOG
+        // ==========================
+        b.setView(box);
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        d.show();
+
+        // ==========================
+        // OK → SPEAK TTS
+        // ==========================
+        okBtn.setOnClickListener(v -> {
+            speakLab28TTS();
+            d.dismiss();
+        });
+    });
+}
+
+// ============================================================
+// TTS — LAB 28 (LANGUAGE + MUTE SAFE)
+// SAME PATTERN AS LAB 15 — NO TEXT CHANGES
+// ============================================================
+private void speakLab28TTS() {
+
+    if (lab28Muted) return;
+
+    try {
+
+        if (tts == null || tts[0] == null || !ttsReady[0]) return;
+
+        // ίδιο pattern με LAB 15
+        tts[0].stop();
+
+        if ("GR".equals(lab28Lang)) {
+
+            tts[0].speak(
+                "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού. " +
+                "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
+                "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
+                "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
+                "που σχετίζονται με διακοπτόμενες επαφές, " +
+                "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
+                "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
+                "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
+                "και επαγγελματικές εργαστηριακές δοκιμές.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB28_INTRO_GR"
+            );
+
+        } else {
+
+            tts[0].speak(
+                "Lab twenty eight. Technician mode. " +
+                "This lab performs symptom based analysis only. " +
+                "It does not diagnose hardware faults " +
+                "and does not confirm soldering defects. " +
+                "Findings may indicate behavior patterns " +
+                "consistent with intermittent contact issues, " +
+                "such as unstable operation, random reboots, or signal drops. " +
+                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
+                "If indicators are present, proceed only with physical inspection " +
+                "and professional bench level testing.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB28_INTRO_EN"
+            );
+        }
+
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 
@@ -2630,6 +2962,8 @@ private void lab6DisplayTouch() {
                 prefs.getBoolean(PREF_TTS_MUTED, false)
         };
 
+        final String[] lang = { "EN" }; // default
+
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         ManualTestsActivity.this,
@@ -2678,6 +3012,40 @@ private void lab6DisplayTouch() {
         root.addView(muteBox);
 
         // ==========================
+        // 🌐 LANGUAGE (EN / GR)
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lang[0] = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        root.addView(langSpinner);
+
+        // ==========================
         // ▶️ START BUTTON
         // ==========================
         Button start = new Button(this);
@@ -2718,13 +3086,24 @@ private void lab6DisplayTouch() {
         // ==========================
         if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
-            tts[0].speak(
-                    "Touch all dots on the screen to complete the test. " +
-                    "All screen areas must respond to touch input.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB6_INTRO"
-            );
+
+            if ("GR".equals(lang[0])) {
+                tts[0].speak(
+                        "Αγγίξτε όλες τις τελείες στην οθόνη για να ολοκληρώσετε το τεστ. " +
+                        "Όλες οι περιοχές της οθόνης πρέπει να ανταποκρίνονται στην αφή.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB6_INTRO_GR"
+                );
+            } else {
+                tts[0].speak(
+                        "Touch all dots on the screen to complete the test. " +
+                        "All screen areas must respond to touch input.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB6_INTRO"
+                );
+            }
         }
 
         start.setOnClickListener(v -> {
@@ -2749,6 +3128,8 @@ private void lab7RotationManual() {
         final boolean[] ttsMuted = {
                 prefs.getBoolean(PREF_TTS_MUTED, false)
         };
+
+        final String[] lang = { "EN" }; // default
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2798,6 +3179,40 @@ private void lab7RotationManual() {
         root.addView(muteBox);
 
         // ==========================
+        // 🌐 LANGUAGE (EN / GR)
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lang[0] = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        root.addView(langSpinner);
+
+        // ==========================
         // ▶️ START BUTTON
         // ==========================
         Button start = new Button(this);
@@ -2838,13 +3253,24 @@ private void lab7RotationManual() {
         // ==========================
         if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
-            tts[0].speak(
-                    "Rotate the device slowly. " +
-                    "The screen should follow the device orientation.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB7_INTRO"
-            );
+
+            if ("GR".equals(lang[0])) {
+                tts[0].speak(
+                        "Περιστρέψτε τη συσκευή αργά. " +
+                        "Η οθόνη πρέπει να ακολουθεί τον προσανατολισμό της συσκευής.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB7_INTRO_GR"
+                );
+            } else {
+                tts[0].speak(
+                        "Rotate the device slowly. " +
+                        "The screen should follow the device orientation.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB7_INTRO"
+                );
+            }
         }
 
         start.setOnClickListener(v -> {
@@ -2868,6 +3294,8 @@ private void lab8ProximityCall() {
         final boolean[] ttsMuted = {
                 prefs.getBoolean(PREF_TTS_MUTED, false)
         };
+
+        final String[] lang = { "EN" }; // default
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -2917,6 +3345,40 @@ private void lab8ProximityCall() {
         root.addView(muteBox);
 
         // ==========================
+        // 🌐 LANGUAGE (EN / GR)
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lang[0] = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        root.addView(langSpinner);
+
+        // ==========================
         // ▶️ START BUTTON
         // ==========================
         Button start = new Button(this);
@@ -2957,13 +3419,24 @@ private void lab8ProximityCall() {
         // ==========================
         if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
-            tts[0].speak(
-                    "Cover the proximity sensor with your hand. " +
-                    "The screen should turn off.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB8_INTRO"
-            );
+
+            if ("GR".equals(lang[0])) {
+                tts[0].speak(
+                        "Καλύψτε τον αισθητήρα εγγύτητας με το χέρι σας. " +
+                        "Η οθόνη πρέπει να σβήσει.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB8_INTRO_GR"
+                );
+            } else {
+                tts[0].speak(
+                        "Cover the proximity sensor with your hand. " +
+                        "The screen should turn off.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB8_INTRO"
+                );
+            }
         }
 
         start.setOnClickListener(v -> {
@@ -4365,100 +4838,208 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
 
-    // ==========================
-    // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
-    // ==========================
-    CheckBox muteBox = new CheckBox(this);
-    muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
-    muteBox.setText("Mute voice instructions");
-    muteBox.setTextColor(0xFFDDDDDD);
-    muteBox.setGravity(Gravity.CENTER);
-    muteBox.setPadding(0, dp(10), 0, dp(10));
+// ============================================================
+// LAB 15 — POPUP (FULL) — MUTE + LANG + TTS
+// ============================================================
+private void showLab15Popup() {
 
-    // ⬇️ ΠΡΩΤΑ μπαίνει το mute
-    root.addView(muteBox);
+    runOnUiThread(() -> {
 
-    // ==========================
-    // 🔇 MUTE LOGIC — GLOBAL
-    // ==========================
-    muteBox.setOnCheckedChangeListener((v, checked) -> {
+        // -----------------------------
+        // STATE
+        // -----------------------------
+        final boolean[] ttsMuted = { isTtsMuted() };
+        final String[]  lab15Lang = { "EN" };   // default
 
-        // αποθήκευση GLOBAL επιλογής
-        setTtsMuted(checked);
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-        // κόψε άμεσα τον ήχο αν μπήκε mute
-        if (checked && tts != null && tts[0] != null) {
-            tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
+        // ==========================
+        // ROOT
+        // ==========================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // ==========================
+        // TITLE
+        // ==========================
+        TextView title = new TextView(this);
+        title.setText("LAB 15 — Charging System Diagnostic");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ==========================
+        // MESSAGE
+        // ==========================
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Connect the charger to the device's charging port.\n\n" +
+                "The system will monitor charging behavior for the next three minutes.\n" +
+                "Please keep the device connected during the test."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        // ==========================
+        // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
+
+        // ==========================
+        // 🔇 MUTE LOGIC — GLOBAL
+        // ==========================
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+            // αποθήκευση GLOBAL επιλογής
+            setTtsMuted(checked);
+            ttsMuted[0] = checked;
+
+            // κόψε άμεσα τον ήχο αν μπήκε mute
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
+            }
+        });
+
+        // ==========================
+        // 🌐 LANGUAGE SELECT
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lab15Lang[0] = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        root.addView(langSpinner);
+
+        // ============================================================
+        // 🔹 EXIT BUTTON
+        // ============================================================
+        Button exitBtn = new Button(this);
+        exitBtn.setText("Exit test");
+        exitBtn.setAllCaps(false);
+        exitBtn.setTextColor(0xFFFFFFFF);
+        exitBtn.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable exitBg = new GradientDrawable();
+        exitBg.setColor(0xFF8B0000);
+        exitBg.setCornerRadius(dp(14));
+        exitBg.setStroke(dp(3), 0xFFFFD700);
+        exitBtn.setBackground(exitBg);
+
+        LinearLayout.LayoutParams lpExit =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpExit.setMargins(0, dp(14), 0, 0);
+        exitBtn.setLayoutParams(lpExit);
+
+        // ------------------------------------------------------------
+        // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
+        // ------------------------------------------------------------
+        exitBtn.setOnClickListener(v -> {
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();   // ✔ μόνο stop
+                }
+            } catch (Throwable ignore) {}
+            abortLab15ByUser();
+        });
+
+        root.addView(exitBtn);
+
+        // ============================================================
+        // 🔹 SHOW DIALOG
+        // ============================================================
+        b.setView(root);
+        AlertDialog lab15Dialog = b.create();
+
+        if (lab15Dialog.getWindow() != null) {
+            lab15Dialog.getWindow()
+                    .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        lab15Dialog.show();
+
+        // ============================================================
+        // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL + LANG)
+        // ============================================================
+        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+
+            tts[0].stop();
+
+            if ("GR".equals(lab15Lang[0])) {
+
+                tts[0].speak(
+                        "Συνδέστε τον φορτιστή στη θύρα φόρτισης της συσκευής. " +
+                        "Το σύστημα θα παρακολουθεί τη συμπεριφορά φόρτισης " +
+                        "για τα επόμενα τρία λεπτά. " +
+                        "Παρακαλώ κρατήστε τη συσκευή συνδεδεμένη κατά τη διάρκεια του τεστ.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB15_INTRO_GR"
+                );
+
+            } else {
+
+                // ❗ ΑΚΡΙΒΩΣ ΤΟ ΙΔΙΟ ΚΕΙΜΕΝΟ ΠΟΥ ΕΙΧΕΣ
+                tts[0].speak(
+                        "Connect the charger to the device's charging port. " +
+                        "The system will monitor charging behavior for the next three minutes. " +
+                        "Please keep the device connected during the test.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB15_INTRO_EN"
+                );
+            }
         }
     });
-
-    // ============================================================
-    // 🔹 EXIT BUTTON
-    // ============================================================
-    Button exitBtn = new Button(this);
-    exitBtn.setText("Exit test");
-    exitBtn.setAllCaps(false);
-    exitBtn.setTextColor(0xFFFFFFFF);
-    exitBtn.setTypeface(null, Typeface.BOLD);
-
-    GradientDrawable exitBg = new GradientDrawable();
-    exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));   // ❗ ΔΙΟΡΘΩΣΗ: έφυγε το τυχαίο 7
-    exitBg.setStroke(dp(3), 0xFFFFD700);
-    exitBtn.setBackground(exitBg);
-
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lpExit.setMargins(0, dp(14), 0, 0);
-    exitBtn.setLayoutParams(lpExit);
-
-    // ------------------------------------------------------------
-    // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
-    // ------------------------------------------------------------
-    exitBtn.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) {
-                tts[0].stop();   // ✔ μόνο stop
-            }
-        } catch (Throwable ignore) {}
-        abortLab15ByUser();
-    });
-
-    // ⬇️ ΜΕΤΑ μπαίνει το exit
-    root.addView(exitBtn);
-
-    // ============================================================
-    // 🔹 SHOW DIALOG
-    // ============================================================
-    b.setView(root);
-    lab15Dialog = b.create();
-
-    if (lab15Dialog.getWindow() != null) {
-        lab15Dialog.getWindow()
-                .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-    }
-
-    lab15Dialog.show();
-
-    // ============================================================
-    // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
-    // ============================================================
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-
-        tts[0].stop();
-
-        tts[0].speak(
-                "Connect the charger to the device's charging port. " +
-                "The system will monitor charging behavior for the next three minutes. " +
-                "Please keep the device connected during the test.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB15_INTRO"
-        );
-    }
+}
 
     // ============================================================
     // 🔹 LOGS
@@ -5248,23 +5829,243 @@ private String lab17_age(long diffMs) {
     return d + " d";
 }
 
-// Smart popup for prerequisites / guidance
-private void lab17_showPopup(String title, String msg) {
+// ============================================================
+// LAB 17 — SMART POPUP
+// Prerequisites + Guidance + TTS + Language + Mute
+// ============================================================
 
-    try {
-        runOnUiThread(() -> {
+private void lab17_showSmartPopup(
+        boolean fresh14, boolean fresh15, boolean fresh16,
+        long now, long ts14, long ts15, long ts16) {
 
-            new androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle(title)
-                    .setMessage(msg)
-                    .setCancelable(true)
-                    .setPositiveButton("OK", (d, w) -> d.dismiss())
-                    .show();
+    runOnUiThread(() -> {
 
+        final boolean[] ttsMuted = {
+                prefs.getBoolean(PREF_TTS_MUTED, false)
+        };
+
+        final String[] lang = { "EN" };   // EN / GR
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(true);
+
+        // ================= ROOT =================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // ================= TITLE =================
+        TextView title = new TextView(this);
+        title.setText("LAB 17 — Prerequisites Check");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ================= MESSAGE =================
+        TextView msg = new TextView(this);
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.START);
+
+        StringBuilder m = new StringBuilder();
+
+        m.append("Required labs (last 2 hours):\n\n");
+
+        // ---- LAB 14 ----
+        m.append("• LAB 14: ");
+        if (!fresh14) m.append("❌ Missing / Expired\n");
+        else m.append("✔ OK (").append(lab17_age(now - ts14)).append(")\n");
+
+        // ---- LAB 15 ----
+        m.append("• LAB 15: ");
+        if (!fresh15) m.append("❌ Missing / Expired\n");
+        else m.append("✔ OK (").append(lab17_age(now - ts15)).append(")\n");
+
+        // ---- LAB 16 ----
+        m.append("• LAB 16: ");
+        if (!fresh16) m.append("❌ Missing / Expired\n");
+        else m.append("✔ OK (").append(lab17_age(now - ts16)).append(")\n");
+
+        m.append("\n");
+
+        // ================= SMART GUIDANCE =================
+        int okCount = 0;
+        if (fresh14) okCount++;
+        if (fresh15) okCount++;
+        if (fresh16) okCount++;
+
+        if (okCount == 2) {
+
+            if (!fresh14)
+                m.append("➡ Run ONLY LAB 14 to continue.\n");
+            else if (!fresh15)
+                m.append("➡ Run ONLY LAB 15 to continue.\n");
+            else
+                m.append("➡ Run ONLY LAB 16 to continue.\n");
+
+        } else if (okCount == 1) {
+
+            if (fresh14)
+                m.append("➡ Run LAB 15 + LAB 16 to continue.\n");
+            else if (fresh15)
+                m.append("➡ Run LAB 14 + LAB 16 to continue.\n");
+            else
+                m.append("➡ Run LAB 14 + LAB 15 to continue.\n");
+
+        } else {
+
+            m.append("➡ Run LAB 14 + LAB 15 + LAB 16 together.\n");
+        }
+
+        msg.setText(m.toString());
+        root.addView(msg);
+
+        // ====================================================
+        // CONTROLS ROW — MUTE (LEFT) + LANG (RIGHT)
+        // ====================================================
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        controls.setPadding(0, dp(16), 0, dp(10));
+
+        // ---- MUTE (LEFT) ----
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(ttsMuted[0]);
+        muteBox.setText("Mute voice");
+        muteBox.setTextColor(0xFFDDDDDD);
+
+        LinearLayout.LayoutParams lpMute =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        muteBox.setLayoutParams(lpMute);
+
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            ttsMuted[0] = checked;
+            prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
+            if (checked && tts != null && tts[0] != null)
+                tts[0].stop();
         });
-    } catch (Throwable ignored) {
-        // UI failure should never crash diagnostics
-    }
+
+        // ---- LANGUAGE (RIGHT) ----
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> ad =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(ad);
+
+        LinearLayout.LayoutParams lpLang =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        langSpinner.setLayoutParams(lpLang);
+
+        langSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                        lang[0] = (pos == 1) ? "GR" : "EN";
+                    }
+                    @Override public void onNothingSelected(AdapterView<?> p) {}
+                });
+
+        controls.addView(muteBox);
+        controls.addView(langSpinner);
+
+        root.addView(controls);
+
+        // ====================================================
+        // OK BUTTON
+        // ====================================================
+        Button ok = new Button(this);
+        ok.setText("OK");
+        ok.setAllCaps(false);
+        ok.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable okBg = new GradientDrawable();
+        okBg.setColor(0xFF1E90FF);
+        okBg.setCornerRadius(dp(14));
+        okBg.setStroke(dp(3), 0xFFFFD700);
+        ok.setBackground(okBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lp.setMargins(0, dp(16), 0, 0);
+        ok.setLayoutParams(lp);
+
+        root.addView(ok);
+
+        // ================= DIALOG =================
+        b.setView(root);
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        d.show();
+
+        // ================= TTS =================
+        ok.setOnClickListener(v -> {
+
+            if (!ttsMuted[0] && tts != null && tts[0] != null && ttsReady[0]) {
+
+                tts[0].stop();
+
+                if ("GR".equals(lang[0])) {
+
+                    tts[0].speak(
+                            "Εργαστήριο δεκαεπτά. Έλεγχος προϋποθέσεων.\n\n" +
+                            "Για έγκυρο αποτέλεσμα απαιτούνται τα εργαστήρια " +
+                            "δεκατέσσερα, δεκαπέντε και δεκαέξι, " +
+                            "εκτελεσμένα μέσα στις τελευταίες δύο ώρες.\n\n" +
+                            "Το σύστημα εντόπισε ποια δοκιμή λείπει " +
+                            "και σας καθοδηγεί για το επόμενο βήμα.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB17_POPUP_GR"
+                    );
+
+                } else {
+
+                    tts[0].speak(
+                            "Lab seventeen. Prerequisites check.\n\n" +
+                            "For a valid result, labs fourteen, fifteen and sixteen " +
+                            "must be completed within the last two hours.\n\n" +
+                            "The system has identified which test is missing " +
+                            "and will guide you to the correct next step.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB17_POPUP_EN"
+                    );
+                }
+            }
+
+            d.dismiss();
+        });
+    });
 }
 
 // ============================================================
@@ -7617,6 +8418,7 @@ private void lab28HardwareStability() {
     // ------------------------------------------------------------
     // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
     // ------------------------------------------------------------
+    // ⚠️ helper method (showLab28Popup) βρίσκεται στα helpers του activity
     showLab28Popup();
 
     // ------------------------------------------------------------
@@ -7702,201 +8504,6 @@ private void lab28HardwareStability() {
     appendHtml("<br>");
     logOk("Lab 28 finished.");
     logLine();
-}
-
-// ============================================================
-// POPUP — LAB 28 TECHNICIAN DISCLAIMER + TTS
-// ============================================================
-private boolean lab28Muted = false;
-private String lab28Lang = "EN";
-
-private void showLab28Popup() {
-
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setTitle("LAB 28 — Technicians Only");
-
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(30, 20, 30, 10);
-
-    TextView msg = new TextView(this);
-    msg.setText(
-        "This lab performs symptom-based analysis only.\n\n" +
-        "It does NOT diagnose hardware faults.\n" +
-        "It does NOT confirm soldering defects.\n\n" +
-        "Use this lab strictly as a TRIAGE tool.\n" +
-        "If results are positive, proceed only with physical inspection " +
-        "and professional testing."
-    );
-    msg.setTextSize(15f);
-    box.addView(msg);
-
-    // ------------------------------------------------------------
-    // CONTROLS ROW
-    // ------------------------------------------------------------
-    LinearLayout controls = new LinearLayout(this);
-    controls.setOrientation(LinearLayout.HORIZONTAL);
-    controls.setPadding(0, 20, 0, 0);
-
-    // ==========================
-    // 🔕 MUTE BUTTON
-    // ==========================
-    Button muteBtn = new Button(this);
-    muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
-    muteBtn.setOnClickListener(v -> {
-        lab28Muted = !lab28Muted;
-        muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
-
-        // κόψε άμεσα τον ήχο
-        try {
-            if (lab28Muted && tts != null && tts[0] != null) {
-                tts[0].stop();
-            }
-        } catch (Throwable ignore) {}
-    });
-
-    // ==========================
-    // 🌐 LANGUAGE SPINNER
-    // ==========================
-    Spinner langSpinner = new Spinner(this);
-    ArrayAdapter<String> langAdapter =
-            new ArrayAdapter<>(this,
-                    android.R.layout.simple_spinner_item,
-                    new String[]{"EN", "GR"});
-    langAdapter.setDropDownViewResource(
-            android.R.layout.simple_spinner_dropdown_item);
-    langSpinner.setAdapter(langAdapter);
-
-    langSpinner.setOnItemSelectedListener(
-            new android.widget.AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(
-                        android.widget.AdapterView<?> p,
-                        View v,
-                        int pos,
-                        long id) {
-                    lab28Lang = (pos == 0) ? "EN" : "GR";
-                }
-
-                @Override
-                public void onNothingSelected(
-                        android.widget.AdapterView<?> p) {}
-            });
-
-    controls.addView(muteBtn);
-    controls.addView(langSpinner);
-
-    box.addView(controls);
-
-    b.setView(box);
-
-    b.setPositiveButton("OK", (d, w) -> speakLab28TTS());
-
-    b.show();
-}
-
-// ============================================================
-// TTS — LAB 28 (LANGUAGE + MUTE SAFE) — SAME PATTERN AS LAB 15
-// ============================================================
-private void speakLab28TTS() {
-
-    if (lab28Muted) return;
-
-    try {
-
-        if (tts == null || tts[0] == null || !ttsReady[0]) return;
-
-        tts[0].stop();
-
-        if ("GR".equals(lab28Lang)) {
-
-            tts[0].speak(
-                "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού. " +
-                "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
-                "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
-                "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
-                "που σχετίζονται με διακοπτόμενες επαφές, " +
-                "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
-                "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
-                "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
-                "και επαγγελματικές εργαστηριακές δοκιμές.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB28_INTRO_GR"
-            );
-
-        } else {
-
-            tts[0].speak(
-                "Lab twenty eight. Technician mode. " +
-                "This lab performs symptom based analysis only. " +
-                "It does not diagnose hardware faults " +
-                "and does not confirm soldering defects. " +
-                "Findings may indicate behavior patterns " +
-                "consistent with intermittent contact issues, " +
-                "such as unstable operation, random reboots, or signal drops. " +
-                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
-                "If indicators are present, proceed only with physical inspection " +
-                "and professional bench level testing.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB28_INTRO_EN"
-            );
-        }
-
-    } catch (Throwable ignore) {}
-}
-
-// ============================================================
-// -------- SYMPTOM DETECTORS (SAFE — NO ROOT REQUIRED) --------
-// ============================================================
-
-private boolean detectRecentReboots() {
-    try {
-        long up = SystemClock.elapsedRealtime();
-        return up < 2 * 60 * 60 * 1000L; // reboot in last 2h
-    } catch (Throwable ignored) {}
-    return false;
-}
-
-private boolean detectSignalInstability() {
-    try {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        if (cm == null) return false;
-        NetworkInfo ni = cm.getActiveNetworkInfo();
-        return (ni == null || !ni.isConnected());
-    } catch (Throwable ignored) {}
-    return false;
-}
-
-private boolean detectSensorInstability() {
-    try {
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sm == null) return false;
-        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-        return (sensors == null || sensors.isEmpty());
-    } catch (Throwable ignored) {}
-    return false;
-}
-
-private boolean detectThermalSpikes() {
-    try {
-        float t = getBatteryTemperature();
-        return t >= 45f;
-    } catch (Throwable ignored) {}
-    return false;
-}
-
-private boolean detectPowerInstability() {
-    try {
-        Intent i = registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (i == null) return false;
-        int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        return status == BatteryManager.BATTERY_STATUS_UNKNOWN;
-    } catch (Throwable ignored) {}
-    return false;
 }
 
 // ============================================================

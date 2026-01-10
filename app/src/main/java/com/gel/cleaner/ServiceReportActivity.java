@@ -256,6 +256,7 @@ private void exportPdfFromHtml() {
 });
 
 pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
+}
 
     // ----------------------------------------------------------
     // CORE — RENDER WEBVIEW → MULTI-PAGE PDF

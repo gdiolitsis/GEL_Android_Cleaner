@@ -11,13 +11,13 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.print.PrintAttributes;
 import android.print.PrintManager;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -127,9 +127,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         btnPdf.setTextSize(15f);
         btnPdf.setTextColor(Color.WHITE);
         btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-
         btnPdf.setOnClickListener(v -> exportPdfSimple());
-
         root.addView(btnPdf);
 
         scroll.addView(root);
@@ -207,38 +205,42 @@ public class ServiceReportActivity extends AppCompatActivity {
     // ----------------------------------------------------------
     private void printWebViewToPdf(WebView webView) {
 
-        PrintManager printManager =
-                (PrintManager) getSystemService(Context.PRINT_SERVICE);
+        // ⚠️ ΥΠΟΧΡΕΩΤΙΚΟ: εκτέλεση στο UI thread του Activity
+        runOnUiThread(() -> {
 
-        if (printManager == null) {
-            Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
-            return;
-        }
+            PrintManager printManager =
+                    (PrintManager) ServiceReportActivity.this
+                            .getSystemService(Context.PRINT_SERVICE);
 
-        PrintAttributes attrs = new PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 300, 300))
-                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                .build();
+            if (printManager == null) {
+                Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
+                return;
+            }
 
-        printManager.print(
-                "GEL_Service_Report",
-                webView.createPrintDocumentAdapter("GEL_Service_Report"),
-                attrs
-        );
+            PrintAttributes attrs = new PrintAttributes.Builder()
+                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                    .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 300, 300))
+                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                    .build();
+
+            printManager.print(
+                    "GEL_Service_Report",
+                    webView.createPrintDocumentAdapter("GEL_Service_Report"),
+                    attrs
+            );
+        });
     }
 
     // ----------------------------------------------------------
     // LOG CLEANUP FOR PDF
     // - κρατά emoji
-    // - σβήνει INFO / WARNING λέξεις
+    // - σβήνει INFO / WARNING / ERROR λέξεις
     // ----------------------------------------------------------
     private String cleanLogForPdf(String raw) {
         if (raw == null) return "";
 
         String out = stripTimestamps(raw);
 
-        // αφαιρούμε τις λέξεις INFO / WARNING (κρατάμε emoji)
         out = out.replaceAll("\\bINFO\\b\\s*", "");
         out = out.replaceAll("\\bWARNING\\b\\s*", "");
         out = out.replaceAll("\\bERROR\\b\\s*", "");

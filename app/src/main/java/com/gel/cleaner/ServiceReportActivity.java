@@ -252,34 +252,31 @@ htmlBody +
 pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
 }
 
-    // ----------------------------------------------------------
-// CORE — RENDER WEBVIEW → MULTI-PAGE PDF
+// ----------------------------------------------------------
+// CORE — RENDER WEBVIEW → MULTI-PAGE PDF (FIXED)
 // ----------------------------------------------------------
 private void createPdfFromWebView(WebView wv) throws Exception {
 
     final int pageWidth  = 595;
     final int pageHeight = 842;
 
+    // --------------------------------------------------
+    // 0) FORCE RENDER πριν το capture
+    // --------------------------------------------------
     wv.measure(
             View.MeasureSpec.makeMeasureSpec(pageWidth, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
     );
     wv.layout(0, 0, pageWidth, wv.getMeasuredHeight());
 
-    int contentHeight = wv.getMeasuredHeight();
-
-    Toast.makeText(
-            this,
-            "WebView height = " + contentHeight,
-            Toast.LENGTH_SHORT
-    ).show();
+    final int contentHeight = wv.getMeasuredHeight();
 
     if (contentHeight <= 0) {
         throw new Exception("WebView has no content to render.");
     }
 
     // --------------------------------------------------
-    // 1) RENDER WEBVIEW TO BITMAP
+    // 1) RENDER WEBVIEW TO BITMAP (ΜΕ BACKGROUND)
     // --------------------------------------------------
     Bitmap bitmap = Bitmap.createBitmap(
             pageWidth,
@@ -288,6 +285,11 @@ private void createPdfFromWebView(WebView wv) throws Exception {
     );
 
     Canvas bitmapCanvas = new Canvas(bitmap);
+
+    // ⚠️ ΥΠΟΧΡΕΩΤΙΚΟ: βάφουμε λευκό background
+    bitmapCanvas.drawColor(Color.WHITE);
+
+    // ⚠️ force draw
     wv.draw(bitmapCanvas);
 
     // --------------------------------------------------
@@ -309,15 +311,19 @@ private void createPdfFromWebView(WebView wv) throws Exception {
         Canvas canvas = page.getCanvas();
 
         canvas.save();
-        canvas.translate(0, -yOffset);
-        canvas.drawBitmap(bitmap, 0, 0, null);
-        canvas.restore();
 
+        // μετακινούμε το bitmap προς τα ΠΑΝΩ
+        canvas.translate(0, -yOffset);
+
+        // ζωγραφίζουμε το bitmap
+        canvas.drawBitmap(bitmap, 0, 0, null);
+
+        canvas.restore();
         pdf.finishPage(page);
 
         yOffset += pageHeight;
         pageNum++;
-    }   // 👈👈 ΕΔΩ ΚΛΕΙΝΕΙ ΤΟ while — ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ
+    }
 
     // --------------------------------------------------
     // 3) SAVE PDF  (ΕΚΤΟΣ while)
@@ -328,9 +334,8 @@ private void createPdfFromWebView(WebView wv) throws Exception {
 
     String fileName = "GEL_Service_Report_" + ts + ".pdf";
 
-    Uri saved;
     try {
-        saved = savePdfToDownloads(fileName, pdf);
+        savePdfToDownloads(fileName, pdf);
     } finally {
         pdf.close();
     }
@@ -422,3 +427,13 @@ private void createPdfFromWebView(WebView wv) throws Exception {
     private int dp(int v) { return GELAutoDP.dp(v); }
     private float sp(float v) { return GELAutoDP.sp(v); }
 }
+// ==============================
+// PDF PRINT HELPER (OUTSIDE)
+// ==============================
+class PdfPrint {
+
+    private final PrintAttributes printAttributes;
+
+    public PdfPrint(PrintAttributes printAttributes) {
+        this.printAttributes = printAttributes;
+    }

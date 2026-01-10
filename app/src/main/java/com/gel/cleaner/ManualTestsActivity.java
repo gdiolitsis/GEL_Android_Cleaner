@@ -5573,10 +5573,10 @@ private void lab17RunAuto() {
             msg.append("Reason: missing and/or expired results.\n");
         }
 
-        lab17_showPopup(
-                "LAB 17 — Prerequisites Check",
-                msg.toString()
-        );
+        lab17_showSmartPopup(
+        fresh14, fresh15, fresh16,
+        now, ts14, ts15, ts16
+);
         return;
     }
 

@@ -235,7 +235,7 @@ htmlBody +
     @Override
     public void onPageFinished(WebView view, String url) {
 
-        view.post(() -> {
+        view.postDelayed(() -> {
             try {
                 createPdfFromWebView(view);
             } catch (Throwable t) {
@@ -245,7 +245,7 @@ htmlBody +
                         Toast.LENGTH_LONG
                 ).show();
             }
-        });
+        }, 250);   // ⏱️ εδώ είναι το delay
     }
 });
 
@@ -307,20 +307,25 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
                 ).create();
 
         PdfDocument.Page page = pdf.startPage(info);
-        Canvas canvas = page.getCanvas();
+Canvas canvas = page.getCanvas();
 
-        canvas.drawBitmap(
-                bitmap,
-                0,
-                -yOffset,
-                null
-        );
+// ===============================
+// DRAW CURRENT PAGE SLICE
+// ===============================
+canvas.save();
 
-        pdf.finishPage(page);
+// μετακινούμε το bitmap προς τα ΠΑΝΩ
+canvas.translate(0, -yOffset);
 
-        yOffset += pageHeight;
-        pageNum++;
-    }
+// ζωγραφίζουμε ΟΛΟ το bitmap
+canvas.drawBitmap(bitmap, 0, 0, null);
+
+canvas.restore();
+
+pdf.finishPage(page);
+
+yOffset += pageHeight;
+pageNum++;
 
     // --------------------------------------------------
     // 3) SAVE PDF

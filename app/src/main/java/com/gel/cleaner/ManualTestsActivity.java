@@ -4837,8 +4837,7 @@ private void lab15ChargingSystemSmart() {
         lab15ProgressBar.addView(seg);
     }
     root.addView(lab15ProgressBar);
-    }
-
+    
 // ============================================================
 // LAB 15 — POPUP (FULL) — MUTE + LANG + TTS
 // ============================================================

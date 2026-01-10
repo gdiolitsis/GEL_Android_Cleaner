@@ -97,7 +97,6 @@ public class GELServiceLog {
 
     // ============================================================
     // SECTION HEADER
-    // (no empty line before title)
     // ============================================================
     public static synchronized void section(String title) {
         if (title == null || title.trim().isEmpty())
@@ -116,38 +115,28 @@ public class GELServiceLog {
     }
 
     // ============================================================
-    // LAB FINISHED BLOCK
+    // LAB FINISHED BLOCK  ⭐ ΜΟΝΟ ΕΔΩ μπαίνει το κενό ⭐
     // ============================================================
     public static synchronized void labFinished(String labName) {
-    if (labName == null || labName.trim().isEmpty()) labName = "Lab";
+        if (labName == null || labName.trim().isEmpty())
+            labName = "Lab";
 
-    blank();
-    ok(labName + " finished.");
-    line();
-    blank();
-}
+        ok(labName + " finished.");
+        line();
 
-// ============================================================
-// RAW HTML (no auto <br>)
-// ============================================================
-private static synchronized void addHtmlRaw(String html) {
-    if (html == null) return;
-    HTML.append(html);
-    ensureLimit();
-}
+        // ---- ΕΝΑ ΚΕΝΟ ΜΕΤΑ ΤΟ LAB ----
+        addPlain("");
+        addHtmlRaw("<br>");
+    }
 
-// ============================================================
-// BLANK LINE (REAL SPACER)
-// ============================================================
-public static synchronized void blank() {
-    // plain: real empty line
-    LOG.append('\n');
-    ensureLimit();
-
-    // html: two real breaks (visible gap)
-    addHtmlRaw("<br><br>");
-}
-
+    // ============================================================
+    // RAW HTML (no auto <br>)
+    // ============================================================
+    private static synchronized void addHtmlRaw(String html) {
+        if (html == null) return;
+        HTML.append(html);
+        ensureLimit();
+    }
 
     // ============================================================
     // GETTERS

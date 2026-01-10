@@ -355,6 +355,7 @@ if (Build.VERSION.SDK_INT >= 29) {
             Toast.LENGTH_LONG
     ).show();
 }
+}
 
     // ----------------------------------------------------------
     // SAVE PDF → DOWNLOADS

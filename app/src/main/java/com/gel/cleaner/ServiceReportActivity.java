@@ -162,6 +162,7 @@ root.addView(btnPdf);
 
 scroll.addView(root);
 setContentView(scroll);
+}
 
     // ----------------------------------------------------------
     // PREVIEW HTML (SYNCED)

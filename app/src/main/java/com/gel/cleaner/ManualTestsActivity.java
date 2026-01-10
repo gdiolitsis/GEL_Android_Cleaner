@@ -7457,7 +7457,7 @@ logOk("This result does not indicate hardware or system failure.");
 appendHtml("<br>");
 logOk("Lab 27 finished.");
 logLine();  
-
+}
 }
 
 // ============================================================

@@ -220,9 +220,9 @@ private void exportPdfFromHtml() {
 "<meta charset='utf-8'/>" +
 "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
 "<style>" +
-"body{background:#FFFFFF;color:#111111;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
+"body{background:#FFFFFF;color:#000000;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
 ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
-"pre{white-space:pre-wrap;word-wrap:break-word;background:#F7F7F7;padding:8px;border-left:3px solid #FFD700;}" +
+"pre{white-space:pre-wrap;word-wrap:break-word;background:#FFFFFF;color:#000000;}" +
 "</style>" +
 "</head><body>" +
 "<div class='page'><pre>" +
@@ -235,13 +235,6 @@ htmlBody +
     public void onPageFinished(WebView view, String url) {
 
         view.post(() -> {
-
-            view.measure(
-                    View.MeasureSpec.makeMeasureSpec(595, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
-            view.layout(0, 0, 595, view.getMeasuredHeight());
-
             try {
                 createPdfFromWebView(view);
             } catch (Throwable t) {

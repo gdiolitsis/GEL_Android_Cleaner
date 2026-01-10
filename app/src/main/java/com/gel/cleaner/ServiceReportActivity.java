@@ -200,33 +200,41 @@ public class ServiceReportActivity extends AppCompatActivity {
         pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
     }
 
-    // ----------------------------------------------------------
-// PRINT VIA ANDROID FRAMEWORK (FIXED)
+// ----------------------------------------------------------
+// PRINT VIA ANDROID FRAMEWORK (FINAL FIX)
 // ----------------------------------------------------------
 private void printWebViewToPdf(WebView webView) {
 
-    // ⚠️ ΠΑΙΡΝΟΥΜΕ ΡΗΤΑ ACTIVITY CONTEXT
-    ServiceReportActivity activity = ServiceReportActivity.this;
+    // ⚠️ ΥΠΟΧΡΕΩΤΙΚΑ μέσα στο UI thread της Activity
+    runOnUiThread(() -> {
 
-    PrintManager printManager =
-            (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
+        PrintManager printManager =
+                (PrintManager) ServiceReportActivity.this
+                        .getSystemService(Context.PRINT_SERVICE);
 
-    if (printManager == null) {
-        Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
-        return;
-    }
+        if (printManager == null) {
+            Toast.makeText(
+                    ServiceReportActivity.this,
+                    "Print service not available.",
+                    Toast.LENGTH_LONG
+            ).show();
+            return;
+        }
 
-    PrintAttributes attrs = new PrintAttributes.Builder()
-            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-            .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 300, 300))
-            .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-            .build();
+        PrintAttributes attrs = new PrintAttributes.Builder()
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setResolution(
+                        new PrintAttributes.Resolution("pdf", "pdf", 300, 300)
+                )
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                .build();
 
-    printManager.print(
-            "GEL_Service_Report",
-            webView.createPrintDocumentAdapter("GEL_Service_Report"),
-            attrs
-    );
+        printManager.print(
+                "GEL_Service_Report",
+                webView.createPrintDocumentAdapter("GEL_Service_Report"),
+                attrs
+        );
+    });
 }
 
     // ----------------------------------------------------------

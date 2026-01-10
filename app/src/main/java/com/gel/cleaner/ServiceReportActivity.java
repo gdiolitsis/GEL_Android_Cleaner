@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — TXT → PDF (FINAL HEADER EDITION)
+// ServiceReportActivity — TXT → PDF (FINAL HEADER + FOOTER EDITION)
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -36,7 +36,6 @@ public class ServiceReportActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // φορτώνουμε το λογότυπο (βάλε gel_logo.png στο res/drawable)
         gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
 
         ScrollView scroll = new ScrollView(this);
@@ -92,6 +91,11 @@ public class ServiceReportActivity extends AppCompatActivity {
             subtitlePaint.setTextSize(11f);
             subtitlePaint.setColor(Color.BLACK);
 
+            Paint footerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            footerPaint.setTextSize(11f);
+            footerPaint.setColor(Color.BLACK);
+            footerPaint.setFakeBoldText(true);
+
             int marginX = 32;
             int y;
 
@@ -102,12 +106,12 @@ public class ServiceReportActivity extends AppCompatActivity {
             Canvas canvas = page.getCanvas();
             canvas.drawColor(Color.WHITE);
 
-            // HEADER στην πρώτη σελίδα
+            // HEADER πρώτη σελίδα
             y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
 
             for (String line : lines) {
 
-                if (y > PAGE_HEIGHT - 60) {
+                if (y > PAGE_HEIGHT - 80) {
                     pdf.finishPage(page);
 
                     pageNum++;
@@ -115,13 +119,29 @@ public class ServiceReportActivity extends AppCompatActivity {
                     canvas = page.getCanvas();
                     canvas.drawColor(Color.WHITE);
 
-                    // HEADER σε κάθε νέα σελίδα
                     y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
                 }
 
                 drawLineWithColoredEmoji(canvas, line, marginX, y, textPaint, emojiPaint);
                 y += lineHeight;
             }
+
+            // ==================================================
+            // FOOTER — END OF REPORT + SIGNATURE
+            // ==================================================
+            if (y > PAGE_HEIGHT - 120) {
+                pdf.finishPage(page);
+                pageNum++;
+                page = startPage(pdf, pageNum);
+                canvas = page.getCanvas();
+                canvas.drawColor(Color.WHITE);
+                y = 80;
+            }
+
+            y += 40;
+            canvas.drawText("— End of Report —", marginX, y, footerPaint);
+            y += 30;
+            canvas.drawText("Technician Signature: ________________________________", marginX, y, textPaint);
 
             pdf.finishPage(page);
 
@@ -156,7 +176,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ==========================================================
-    // REPORT HEADER — SAME AS OLD REPORT (EVERY PAGE)
+    // REPORT HEADER — CLEAN EDITION
     // ==========================================================
     private int drawReportHeader(
             Canvas c,
@@ -168,13 +188,13 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         int y = startY;
 
-        // Logo LEFT
+        // Logo LEFT (smaller)
         if (gelLogo != null) {
-            Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 70, 70, true);
-            c.drawBitmap(scaled, x, y - 10, null);
+            Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 52, 52, true);
+            c.drawBitmap(scaled, x, y - 8, null);
         }
 
-        int textStartX = x + 90;
+        int textStartX = x + 70;
 
         // Title
         c.drawText("GEL Αναφορά Service", textStartX, y + 10, title);
@@ -183,13 +203,12 @@ public class ServiceReportActivity extends AppCompatActivity {
         // Subtitle
         c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
                 textStartX, y + 10, subtitle);
-        y += 24;
+        y += 26;
 
-        // Separator
-        c.drawText("------------------------------------------------------------",
-                x, y + 10, text);
+        // ❌ ΑΦΑΙΡΕΘΗΚΕ η μακριά γραμμή που ακουμπούσε δεξιά
+        // (κρατάμε καθαρό header χωρίς border noise)
 
-        return y + 30; // νέο Y για τα labs
+        return y + 10; // νέο Y για τα labs
     }
 
     // ==========================================================

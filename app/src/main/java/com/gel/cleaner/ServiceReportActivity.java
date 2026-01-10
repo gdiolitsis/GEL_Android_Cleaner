@@ -6,6 +6,7 @@ package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;

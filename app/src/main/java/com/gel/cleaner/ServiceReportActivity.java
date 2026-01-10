@@ -139,18 +139,29 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.addView(pdfWebView);
 
         // EXPORT BUTTON
-        AppCompatButton btnPdf = new AppCompatButton(this);
-        btnPdf.setText(getString(R.string.export_pdf_button));
-        btnPdf.setAllCaps(false);
-        btnPdf.setTextSize(15f);
-        btnPdf.setTextColor(0xFFFFFFFF);
-        btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
-        btnPdf.setOnClickListener(v -> {exportPdfFromHtml();});
-        root.addView(btnPdf);
+AppCompatButton btnPdf = new AppCompatButton(this);
+btnPdf.setText(getString(R.string.export_pdf_button));
+btnPdf.setAllCaps(false);
+btnPdf.setTextSize(15f);
+btnPdf.setTextColor(0xFFFFFFFF);
+btnPdf.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-        scroll.addView(root);
-        setContentView(scroll);
+btnPdf.setOnClickListener(v -> {
+    try {
+        exportPdfFromHtml();
+    } catch (Throwable t) {
+        Toast.makeText(
+                ServiceReportActivity.this,
+                "Export failed: " + t.getMessage(),
+                Toast.LENGTH_LONG
+        ).show();
     }
+});
+
+root.addView(btnPdf);
+
+scroll.addView(root);
+setContentView(scroll);
 
     // ----------------------------------------------------------
     // PREVIEW HTML (SYNCED)
@@ -291,19 +302,52 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     String ts =
-            new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                    .format(new Date());
+        new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                .format(new Date());
 
-    String fileName = "GEL_Service_Report_" + ts + ".pdf";
+String fileName = "GEL_Service_Report_" + ts + ".pdf";
 
-    Uri saved = savePdfToDownloads(fileName, pdf);
+Uri saved = null;
 
-    pdf.close();
+try {
+    saved = savePdfToDownloads(fileName, pdf);
+} catch (Throwable t) {
+    Toast.makeText(
+            this,
+            "PDF save failed: " + t.getMessage(),
+            Toast.LENGTH_LONG
+    ).show();
+}
 
-    if (saved != null)
-        Toast.makeText(this, "PDF saved: " + fileName, Toast.LENGTH_LONG).show();
-    else
-        Toast.makeText(this, "PDF saved.", Toast.LENGTH_LONG).show();
+pdf.close();
+
+// ------------------------------------------------------------
+// FINAL USER FEEDBACK — MODE + PATH
+// ------------------------------------------------------------
+if (Build.VERSION.SDK_INT >= 29) {
+
+    if (saved != null) {
+        Toast.makeText(
+                this,
+                "PDF exported (MediaStore)\nDownloads/" + fileName,
+                Toast.LENGTH_LONG
+        ).show();
+    } else {
+        Toast.makeText(
+                this,
+                "PDF export failed (MediaStore)",
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+} else {
+
+    // legacy always writes directly to path
+    Toast.makeText(
+            this,
+            "PDF exported (Legacy)\n/storage/emulated/0/Download/" + fileName,
+            Toast.LENGTH_LONG
+    ).show();
 }
 
     // ----------------------------------------------------------

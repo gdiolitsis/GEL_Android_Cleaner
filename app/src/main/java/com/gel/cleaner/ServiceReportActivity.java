@@ -107,7 +107,7 @@ public class ServiceReportActivity extends AppCompatActivity {
             // ─────────────────────────────
             // HEADER μόνο στην 1η σελίδα
             // ─────────────────────────────
-            drawChecklistHeader(canvas, marginX, y, titlePaint);
+            drawChecklistHeader(canvas, marginX, y, titlePaint, textPaint);
             y += 160;
 
             for (String line : lines) {

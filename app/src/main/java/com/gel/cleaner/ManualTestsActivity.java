@@ -346,19 +346,23 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     ui = new Handler(Looper.getMainLooper());
            
 // ============================================================
-// 🔊 GLOBAL TTS INIT — ONE TIME ONLY
+// 🔊 GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
 // ============================================================
-tts = new TextToSpeech[1];
-ttsReady = new boolean[]{ false };
-
 tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
 
+        if (tts[0] == null) return;   // 🛡️ guard
+
         int res = tts[0].setLanguage(Locale.US);
 
-        ttsReady[0] =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
+        if (res == TextToSpeech.LANG_MISSING_DATA ||
+            res == TextToSpeech.LANG_NOT_SUPPORTED) {
+
+            // fallback
+            tts[0].setLanguage(Locale.ENGLISH);
+        }
+
+        ttsReady[0] = true;
     }
 });
 
@@ -556,20 +560,6 @@ root.addView(btnExport);
 scroll.addView(root);
 setContentView(scroll);
 
-// ==========================
-// TEXT TO SPEECH INIT
-// ==========================
-tts[0] = new TextToSpeech(this, status -> {
-    if (status == TextToSpeech.SUCCESS) {
-
-        int res = tts[0].setLanguage(Locale.US);
-
-        ttsReady[0] =
-                res != TextToSpeech.LANG_MISSING_DATA &&
-                res != TextToSpeech.LANG_NOT_SUPPORTED;
-    }
-});
-
 // ============================================================
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
@@ -593,15 +583,14 @@ if (!serviceLogInit) {
 
 @Override
 protected void onDestroy() {
-    try {
-        if (tts != null && tts[0] != null) {
+    super.onDestroy();
+    if (tts != null && tts[0] != null) {
+        try {
             tts[0].stop();
             tts[0].shutdown();
-            tts[0] = null;
-        }
-    } catch (Throwable ignore) {}
-
-    super.onDestroy();
+        } catch (Throwable ignore) {}
+        tts[0] = null;
+    }
 }
 
     // ============================================================
@@ -1474,7 +1463,9 @@ root.addView(muteBox);
 muteBox.setOnCheckedChangeListener((v, checked) -> {
     setTtsMuted(checked);
     try {
-        if (checked && tts[0] != null) tts[0].stop();
+        if (checked && tts != null && tts[0] != null) {
+    tts[0].stop();
+}
     } catch (Throwable ignore) {}
 });
 
@@ -1509,7 +1500,7 @@ root.addView(btnContinue);
     // 🔊 TTS — PLAY (GLOBAL ENGINE)
     // ============================================================
     try {
-        if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
+        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
             tts[0].stop();
             tts[0].speak(
                     "For best diagnostic accuracy, it is recommended to run this test after a system restart. " +
@@ -1534,7 +1525,7 @@ root.addView(btnContinue);
     // ------------------------------------------------------------
     btnContinue.setOnClickListener(v -> {
         try {
-            if (tts[0] != null) tts[0].stop();
+            if (tts != null && tts[0] != null) tts[0].stop();
         } catch (Throwable ignore) {}
 
         try { dlg.dismiss(); } catch (Throwable ignore) {}
@@ -2674,7 +2665,7 @@ private void lab6DisplayTouch() {
         root.addView(msg);
 
         // ==========================
-        // 🔕 MUTE TOGGLE (ΠΑΝΩ ΑΠΟ START)
+        // 🔕 MUTE TOGGLE
         // ==========================
         CheckBox muteBox = new CheckBox(this);
         muteBox.setChecked(ttsMuted[0]);
@@ -2700,12 +2691,13 @@ private void lab6DisplayTouch() {
         root.addView(start);
 
         // ==========================
-        // 🔇 MUTE LOGIC (STOP ΜΟΝΟ)
+        // 🔇 MUTE LOGIC — GLOBAL
         // ==========================
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
-            if (checked && tts[0] != null) {
+
+            if (checked && tts != null && tts[0] != null) {
                 tts[0].stop();
             }
         });
@@ -2722,7 +2714,7 @@ private void lab6DisplayTouch() {
         // ==========================
         // 🔊 TTS — SPEAK AFTER SHOW
         // ==========================
-        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+        if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
             tts[0].speak(
                     "Touch all dots on the screen to complete the test. " +
@@ -2734,7 +2726,7 @@ private void lab6DisplayTouch() {
         }
 
         start.setOnClickListener(v -> {
-            if (tts[0] != null) tts[0].stop();
+            if (tts != null && tts[0] != null) tts[0].stop();
             d.dismiss();
             startActivityForResult(
                     new Intent(this, TouchGridTestActivity.class),
@@ -2792,6 +2784,9 @@ private void lab7RotationManual() {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
+        // ==========================
+        // 🔕 MUTE TOGGLE
+        // ==========================
         CheckBox muteBox = new CheckBox(this);
         muteBox.setChecked(ttsMuted[0]);
         muteBox.setText("Mute voice instructions");
@@ -2800,6 +2795,9 @@ private void lab7RotationManual() {
         muteBox.setPadding(0, dp(10), 0, dp(10));
         root.addView(muteBox);
 
+        // ==========================
+        // ▶️ START BUTTON
+        // ==========================
         Button start = new Button(this);
         start.setText("START TEST");
         start.setAllCaps(false);
@@ -2812,19 +2810,31 @@ private void lab7RotationManual() {
         start.setBackground(startBg);
         root.addView(start);
 
+        // ==========================
+        // 🔇 MUTE LOGIC — GLOBAL
+        // ==========================
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
-            if (checked && tts[0] != null) tts[0].stop();
+
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();
+            }
         });
 
+        // ==========================
+        // DIALOG CREATE / SHOW
+        // ==========================
         b.setView(root);
         final AlertDialog d = b.create();
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
-        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+        // ==========================
+        // 🔊 TTS — SPEAK AFTER SHOW
+        // ==========================
+        if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
             tts[0].speak(
                     "Rotate the device slowly. " +
@@ -2836,7 +2846,7 @@ private void lab7RotationManual() {
         }
 
         start.setOnClickListener(v -> {
-            if (tts[0] != null) tts[0].stop();
+            if (tts != null && tts[0] != null) tts[0].stop();
             d.dismiss();
             startActivityForResult(
                     new Intent(this, RotationCheckActivity.class),
@@ -2845,7 +2855,6 @@ private void lab7RotationManual() {
         });
     });
 }
-
 
 // ============================================================
 // LAB 8 — Proximity call
@@ -2894,6 +2903,9 @@ private void lab8ProximityCall() {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
+        // ==========================
+        // 🔕 MUTE TOGGLE
+        // ==========================
         CheckBox muteBox = new CheckBox(this);
         muteBox.setChecked(ttsMuted[0]);
         muteBox.setText("Mute voice instructions");
@@ -2902,6 +2914,9 @@ private void lab8ProximityCall() {
         muteBox.setPadding(0, dp(10), 0, dp(10));
         root.addView(muteBox);
 
+        // ==========================
+        // ▶️ START BUTTON
+        // ==========================
         Button start = new Button(this);
         start.setText("START TEST");
         start.setAllCaps(false);
@@ -2914,19 +2929,31 @@ private void lab8ProximityCall() {
         start.setBackground(startBg);
         root.addView(start);
 
+        // ==========================
+        // 🔇 MUTE LOGIC — GLOBAL
+        // ==========================
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             ttsMuted[0] = checked;
             prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
-            if (checked && tts[0] != null) tts[0].stop();
+
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();
+            }
         });
 
+        // ==========================
+        // DIALOG CREATE / SHOW
+        // ==========================
         b.setView(root);
         final AlertDialog d = b.create();
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
-        if (ttsReady[0] && !ttsMuted[0] && tts[0] != null) {
+        // ==========================
+        // 🔊 TTS — SPEAK AFTER SHOW
+        // ==========================
+        if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
             tts[0].stop();
             tts[0].speak(
                     "Cover the proximity sensor with your hand. " +
@@ -2938,7 +2965,7 @@ private void lab8ProximityCall() {
         }
 
         start.setOnClickListener(v -> {
-            if (tts[0] != null) tts[0].stop();
+            if (tts != null && tts[0] != null) tts[0].stop();
             d.dismiss();
             startActivityForResult(
                     new Intent(this, ProximityCheckActivity.class),
@@ -4350,6 +4377,19 @@ muteBox.setPadding(0, dp(10), 0, dp(10));
 root.addView(muteBox);
 
 // ==========================
+// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+muteBox.setText("Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, dp(10), 0, dp(10));
+
+// ⬇️ ΠΡΩΤΑ μπαίνει το mute
+root.addView(muteBox);
+
+// ==========================
 // 🔇 MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
@@ -4358,7 +4398,7 @@ muteBox.setOnCheckedChangeListener((v, checked) -> {
     setTtsMuted(checked);
 
     // κόψε άμεσα τον ήχο αν μπήκε mute
-    if (checked && tts[0] != null) {
+    if (checked && tts != null && tts[0] != null) {
         tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
     }
 });
@@ -4374,7 +4414,7 @@ exitBtn.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable exitBg = new GradientDrawable();
 exitBg.setColor(0xFF8B0000);
-exitBg.setCornerRadius(dp(14));
+exitBg.setCornerRadius(dp(14));   // ❗ ΔΙΟΡΘΩΣΗ: έφυγε το τυχαίο 7
 exitBg.setStroke(dp(3), 0xFFFFD700);
 exitBtn.setBackground(exitBg);
 
@@ -4391,7 +4431,7 @@ exitBtn.setLayoutParams(lpExit);
 // ------------------------------------------------------------
 exitBtn.setOnClickListener(v -> {
     try {
-        if (tts[0] != null) {
+        if (tts != null && tts[0] != null) {
             tts[0].stop();   // ✔ μόνο stop
         }
     } catch (Throwable ignore) {}
@@ -4417,7 +4457,7 @@ lab15Dialog.show();
 // ============================================================
 // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
 // ============================================================
-if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
     tts[0].stop();
 
@@ -5287,35 +5327,35 @@ private void lab17_showPopup(String titleText, String msgText) {
     }
 
     // ==========================
-    // 🔇 MUTE LOGIC — GLOBAL
-    // ==========================
-    muteBox.setOnCheckedChangeListener((v, checked) -> {
+// 🔇 MUTE LOGIC — GLOBAL
+// ==========================
+muteBox.setOnCheckedChangeListener((v, checked) -> {
 
-        // αποθήκευση GLOBAL επιλογής
-        setTtsMuted(checked);
+    // αποθήκευση GLOBAL επιλογής
+    setTtsMuted(checked);
 
-        // κόψε άμεσα τον ήχο αν μπήκε mute
-        if (checked && tts[0] != null) {
-            tts[0].stop();   // ✔ μόνο stop
-        }
-    });
-
-    // ==========================
-    // 🔊 TTS — PLAY (GLOBAL ENGINE)
-    // ==========================
-    if (ttsReady[0] && !isTtsMuted() && tts[0] != null) {
-
-        // καθάρισε ό,τι έπαιζε πριν
-        tts[0].stop();
-
-        tts[0].speak(
-                "Before running this lab, please make sure that " +
-                "lab fourteen, lab fifteen and lab sixteen have been completed.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB17_POPUP"
-        );
+    // κόψε άμεσα τον ήχο αν μπήκε mute
+    if (checked && tts != null && tts[0] != null) {
+        tts[0].stop();   // ✔ μόνο stop
     }
+});
+
+// ==========================
+// 🔊 TTS — PLAY (GLOBAL ENGINE)
+// ==========================
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+
+    // καθάρισε ό,τι έπαιζε πριν
+    tts[0].stop();
+
+    tts[0].speak(
+            "Before running this lab, please make sure that " +
+            "lab fourteen, lab fifteen and lab sixteen have been completed.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB17_POPUP"
+    );
+}
 
     // ==========================
     // OK ACTION

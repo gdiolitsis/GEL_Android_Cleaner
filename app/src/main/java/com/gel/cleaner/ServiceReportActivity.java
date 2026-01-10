@@ -1,9 +1,11 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// ServiceReportActivity — TXT → PDF (STABLE)
+// ServiceReportActivity — TXT → PDF (STABLE + HEADER + FOOTER + LOGO)
 // --------------------------------------------------------------
 
 package com.gel.cleaner;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -30,9 +32,14 @@ public class ServiceReportActivity extends AppCompatActivity {
 
     private TextView txtPreview;
 
+    // LOGO (βάλε το gel_logo.png στο res/drawable)
+    private Bitmap gelLogo;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
 
         ScrollView scroll = new ScrollView(this);
         LinearLayout root = new LinearLayout(this);
@@ -56,7 +63,7 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ==========================================================
-    // CORE — TXT → PDF (NO WEBVIEW, NO PRINT API)
+    // CORE — TXT → PDF
     // ==========================================================
     private void exportTxtToPdf() {
 
@@ -78,6 +85,11 @@ public class ServiceReportActivity extends AppCompatActivity {
             Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             emojiPaint.setTextSize(12f);
 
+            Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            titlePaint.setTextSize(13f);
+            titlePaint.setColor(Color.BLACK);
+            titlePaint.setFakeBoldText(true);
+
             int marginX = 32;
             int y = 40;
             int lineHeight = 18;
@@ -87,20 +99,37 @@ public class ServiceReportActivity extends AppCompatActivity {
             Canvas canvas = page.getCanvas();
             canvas.drawColor(Color.WHITE);
 
+            // ─────────────────────────────
+            // LOGO σε κάθε σελίδα
+            // ─────────────────────────────
+            drawLogo(canvas);
+
+            // ─────────────────────────────
+            // HEADER μόνο στην 1η σελίδα
+            // ─────────────────────────────
+            drawChecklistHeader(canvas, marginX, y, titlePaint);
+            y += 160;
+
             for (String line : lines) {
 
-                if (y > PAGE_HEIGHT - 40) {
+                if (y > PAGE_HEIGHT - 80) {
                     pdf.finishPage(page);
                     pageNum++;
                     page = startPage(pdf, pageNum);
                     canvas = page.getCanvas();
                     canvas.drawColor(Color.WHITE);
+                    drawLogo(canvas);
                     y = 40;
                 }
 
                 drawLineWithColoredEmoji(canvas, line, marginX, y, textPaint, emojiPaint);
                 y += lineHeight;
             }
+
+            // ─────────────────────────────
+            // FOOTER στην τελευταία σελίδα
+            // ─────────────────────────────
+            drawSignatureFooter(canvas, marginX, PAGE_HEIGHT - 120, titlePaint, textPaint);
 
             pdf.finishPage(page);
 
@@ -135,6 +164,69 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ==========================================================
+    // LOGO
+    // ==========================================================
+    private void drawLogo(Canvas canvas) {
+        if (gelLogo == null) return;
+        Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 80, 80, true);
+        canvas.drawBitmap(scaled, PAGE_WIDTH - 100, 20, null);
+    }
+
+    // ==========================================================
+    // HEADER — CHECKLIST
+    // ==========================================================
+    private void drawChecklistHeader(Canvas c, int x, int y, Paint title, Paint text) {
+
+        c.drawText("ΕΛΕΓΧΟΣ ΣΗΜΕΙΩΝ", x, y, title);
+        y += 20;
+
+        String[] items = {
+                "Σπασμένη οθόνη",
+                "Dead Pixels",
+                "AMOLED Burn-in",
+                "Θύρα φόρτισης",
+                "Ήχος / Ακουστικό",
+                "Μικρόφωνο",
+                "Μπαταρία",
+                "Υγρασία / Διάβρωση"
+        };
+
+        for (String it : items) {
+            c.drawText("[✔] " + it + "     [ ] ΟΧΙ", x, y, text);
+            y += 16;
+        }
+
+        y += 10;
+        c.drawText("--------------------------------------------", x, y, text);
+    }
+
+    // ==========================================================
+    // FOOTER — SIGNATURE
+    // ==========================================================
+    private void drawSignatureFooter(Canvas c, int x, int y, Paint title, Paint text) {
+
+        c.drawText("--------------------------------------------", x, y, text);
+        y += 20;
+
+        c.drawText("ΤΕΛΙΚΗ ΑΝΑΦΟΡΑ", x, y, title);
+        y += 24;
+
+        c.drawText("Τεχνικός:", x, y, text);
+        y += 18;
+        c.drawText("______________________________", x, y, text);
+        y += 24;
+
+        c.drawText("Υπογραφή:", x, y, text);
+        y += 18;
+        c.drawText("______________________________", x, y, text);
+        y += 30;
+
+        c.drawText("GDiolitsis Engine Lab (GEL)", x, y, title);
+        y += 18;
+        c.drawText("— Author & Developer", x, y, text);
+    }
+
+    // ==========================================================
     // DRAW LINE WITH COLORED EMOJI
     // ==========================================================
     private void drawLineWithColoredEmoji(
@@ -150,7 +242,6 @@ public class ServiceReportActivity extends AppCompatActivity {
         String emoji = null;
         String rest  = line;
 
-        // Detect leading emoji
         if (line.startsWith("ℹ")) { emoji = "ℹ"; emojiPaint.setColor(0xFF1E90FF); }
         else if (line.startsWith("✔")) { emoji = "✔"; emojiPaint.setColor(0xFF00AA00); }
         else if (line.startsWith("⚠")) { emoji = "⚠"; emojiPaint.setColor(0xFFFFA500); }
@@ -160,7 +251,7 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         if (emoji != null) {
             canvas.drawText(emoji, dx, y, emojiPaint);
-            dx += 18; // space after emoji
+            dx += 18;
             rest = line.substring(1).trim();
         }
 

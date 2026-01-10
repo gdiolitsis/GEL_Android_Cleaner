@@ -253,9 +253,9 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
 }
 
     // ----------------------------------------------------------
-    // CORE — RENDER WEBVIEW → MULTI-PAGE PDF
-    // ----------------------------------------------------------
-    private void createPdfFromWebView(WebView wv) throws Exception {
+// CORE — RENDER WEBVIEW → MULTI-PAGE PDF
+// ----------------------------------------------------------
+private void createPdfFromWebView(WebView wv) throws Exception {
 
     final int pageWidth  = 595;
     final int pageHeight = 842;
@@ -281,12 +281,11 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
     // --------------------------------------------------
     // 1) RENDER WEBVIEW TO BITMAP
     // --------------------------------------------------
-    Bitmap bitmap =
-            Bitmap.createBitmap(
-                    pageWidth,
-                    contentHeight,
-                    Bitmap.Config.ARGB_8888
-            );
+    Bitmap bitmap = Bitmap.createBitmap(
+            pageWidth,
+            contentHeight,
+            Bitmap.Config.ARGB_8888
+    );
 
     Canvas bitmapCanvas = new Canvas(bitmap);
     wv.draw(bitmapCanvas);
@@ -307,28 +306,21 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
                 ).create();
 
         PdfDocument.Page page = pdf.startPage(info);
-Canvas canvas = page.getCanvas();
+        Canvas canvas = page.getCanvas();
 
-// ===============================
-// DRAW CURRENT PAGE SLICE
-// ===============================
-canvas.save();
+        canvas.save();
+        canvas.translate(0, -yOffset);
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        canvas.restore();
 
-// μετακινούμε το bitmap προς τα ΠΑΝΩ
-canvas.translate(0, -yOffset);
+        pdf.finishPage(page);
 
-// ζωγραφίζουμε ΟΛΟ το bitmap
-canvas.drawBitmap(bitmap, 0, 0, null);
-
-canvas.restore();
-
-pdf.finishPage(page);
-
-yOffset += pageHeight;
-pageNum++;
+        yOffset += pageHeight;
+        pageNum++;
+    }   // 👈👈 ΕΔΩ ΚΛΕΙΝΕΙ ΤΟ while — ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ
 
     // --------------------------------------------------
-    // 3) SAVE PDF
+    // 3) SAVE PDF  (ΕΚΤΟΣ while)
     // --------------------------------------------------
     String ts =
             new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
@@ -336,34 +328,20 @@ pageNum++;
 
     String fileName = "GEL_Service_Report_" + ts + ".pdf";
 
-    Uri saved = null;
+    Uri saved;
     try {
         saved = savePdfToDownloads(fileName, pdf);
     } finally {
         pdf.close();
     }
 
-    // --------------------------------------------------
-    // 4) USER FEEDBACK
-    // --------------------------------------------------
     if (Build.VERSION.SDK_INT >= 29) {
-
-        if (saved != null) {
-            Toast.makeText(
-                    this,
-                    "PDF exported\nDownloads/" + fileName,
-                    Toast.LENGTH_LONG
-            ).show();
-        } else {
-            Toast.makeText(
-                    this,
-                    "PDF export failed",
-                    Toast.LENGTH_LONG
-            ).show();
-        }
-
+        Toast.makeText(
+                this,
+                "PDF exported\nDownloads/" + fileName,
+                Toast.LENGTH_LONG
+        ).show();
     } else {
-
         Toast.makeText(
                 this,
                 "PDF exported\n/storage/emulated/0/Download/" + fileName,

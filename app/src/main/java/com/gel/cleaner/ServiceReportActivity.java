@@ -164,94 +164,102 @@ scroll.addView(root);
 setContentView(scroll);
 }
 
-    // ----------------------------------------------------------
-    // PREVIEW HTML (SYNCED)
-    // ----------------------------------------------------------
-    private String getPreviewHtml() {
-        if (GELServiceLog.isEmpty()) {
-            return getString(R.string.preview_empty);
-        }
-        return stripTimestamps(GELServiceLog.getHtml());
+// ----------------------------------------------------------
+// PREVIEW HTML (SYNCED)
+// ----------------------------------------------------------
+private String getPreviewHtml() {
+    if (GELServiceLog.isEmpty()) {
+        return getString(R.string.preview_empty);
+    }
+    return stripTimestamps(GELServiceLog.getHtml());
+}
+
+private String stripTimestamps(String log) {
+    if (log == null) return "";
+    return log.replaceAll(
+            "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
+            ""
+    );
+}
+
+// ----------------------------------------------------------
+// EXPORT — HTML → PDF (SYNCED FLOW)
+// ----------------------------------------------------------
+private void exportPdfFromHtml() {
+
+    if (GELServiceLog.isEmpty()) {
+        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+        return;
     }
 
-    private String stripTimestamps(String log) {
-        if (log == null) return "";
-        return log.replaceAll(
-                "\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}",
-                ""
-        );
+    if (pdfWebView == null) {
+        Toast.makeText(this, "PDF engine not ready.", Toast.LENGTH_LONG).show();
+        return;
     }
 
-    // ----------------------------------------------------------
-    // EXPORT — HTML → PDF (SYNCED FLOW)
-    // ----------------------------------------------------------
-    private void exportPdfFromHtml() {
+    // legacy permission (<=29)
+    if (Build.VERSION.SDK_INT <= 29) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) != PackageManager.PERMISSION_GRANTED) {
 
-        if (GELServiceLog.isEmpty()) {
-            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQ_WRITE
+            );
             return;
         }
+    }
 
-        // legacy permission (<=29)
-        if (Build.VERSION.SDK_INT <= 29) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED) {
+    final String htmlBody = stripTimestamps(GELServiceLog.getAll());
 
-                ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQ_WRITE
-                );
-                return;
-            }
-        }
+    final String fullHtml =
+            "<!DOCTYPE html><html><head>" +
+            "<meta charset='utf-8'/>" +
+            "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
+            "<style>" +
+            "body{background:#0F0F0F;color:#EAEAEA;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
+            ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
+            "pre{white-space:pre-wrap;word-wrap:break-word;}" +
+            "</style>" +
+            "</head><body>" +
+            "<div class='page'><pre>" +
+            htmlBody +
+            "</pre></div>" +
+            "</body></html>";
 
-        final String htmlBody = stripTimestamps(GELServiceLog.getAll());
+    pdfWebView.setWebViewClient(new WebViewClient() {
+        @Override
+        public void onPageFinished(WebView view, String url) {
 
-        final String fullHtml =
-        "<!DOCTYPE html><html><head>" +
-        "<meta charset='utf-8'/>" +
-        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
-        "<style>" +
-        "body{background:#0F0F0F;color:#EAEAEA;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
-        ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
-        "pre{white-space:pre-wrap;word-wrap:break-word;}" +
-        "</style>" +
-        "</head><body>" +
-        "<div class='page'><pre>" +
-        htmlBody +
-        "</pre></div>" +
-        "</body></html>";
-
-        pdfWebView.setWebViewClient(new WebViewClient() {
-    @Override
-    public void onPageFinished(WebView view, String url) {
-
-        view.post(() -> {
-            view.measure(
-                    View.MeasureSpec.makeMeasureSpec(595, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
-            view.layout(0, 0, 595, view.getMeasuredHeight());
-
-            // δεύτερο post για να είμαστε 100% σίγουροι
             view.post(() -> {
-                try {
-                    createPdfFromWebView(view);
-                } catch (Throwable t) {
-                    Toast.makeText(ServiceReportActivity.this,
-                            "PDF export error: " + t.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
-            });
-        });
-    }
-});
 
-        pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
-    }
+                view.measure(
+                        View.MeasureSpec.makeMeasureSpec(595, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                );
+                view.layout(0, 0, 595, view.getMeasuredHeight());
+
+                // δεύτερο post για να είμαστε 100% σίγουροι
+                view.post(() -> {
+                    try {
+                        createPdfFromWebView(view);
+                    } catch (Throwable t) {
+                        Toast.makeText(
+                                ServiceReportActivity.this,
+                                "PDF export error: " + t.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
+            });
+        }
+    });
+
+    pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
+}
 
     // ----------------------------------------------------------
     // CORE — RENDER WEBVIEW → MULTI-PAGE PDF

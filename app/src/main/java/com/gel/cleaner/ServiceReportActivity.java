@@ -256,7 +256,7 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
     // ----------------------------------------------------------
     private void createPdfFromWebView(WebView wv) throws Exception {
 
-    final int pageWidth  = 595;  // A4
+    final int pageWidth  = 595;
     final int pageHeight = 842;
 
     wv.measure(
@@ -267,9 +267,32 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
 
     int contentHeight = wv.getMeasuredHeight();
 
-    if (contentHeight <= 0)
-        contentHeight = Math.max(wv.getMeasuredHeight(), pageHeight);
+    Toast.makeText(
+            this,
+            "WebView height = " + contentHeight,
+            Toast.LENGTH_SHORT
+    ).show();
 
+    if (contentHeight <= 0) {
+        throw new Exception("WebView has no content to render.");
+    }
+
+    // --------------------------------------------------
+    // 1) RENDER WEBVIEW TO BITMAP
+    // --------------------------------------------------
+    Bitmap bitmap =
+            Bitmap.createBitmap(
+                    pageWidth,
+                    contentHeight,
+                    Bitmap.Config.ARGB_8888
+            );
+
+    Canvas bitmapCanvas = new Canvas(bitmap);
+    wv.draw(bitmapCanvas);
+
+    // --------------------------------------------------
+    // 2) CREATE PDF
+    // --------------------------------------------------
     PdfDocument pdf = new PdfDocument();
 
     int yOffset = 0;
@@ -285,14 +308,12 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
         PdfDocument.Page page = pdf.startPage(info);
         Canvas canvas = page.getCanvas();
 
-        canvas.save();
-        canvas.translate(0, -yOffset);
-
-        // αφήνουμε χώρο για header
-        canvas.translate(0, 80);
-
-        wv.draw(canvas);
-        canvas.restore();
+        canvas.drawBitmap(
+                bitmap,
+                0,
+                -yOffset,
+                null
+        );
 
         pdf.finishPage(page);
 
@@ -300,54 +321,49 @@ pdfWebView.loadDataWithBaseURL(null, fullHtml, "text/html", "utf-8", null);
         pageNum++;
     }
 
+    // --------------------------------------------------
+    // 3) SAVE PDF
+    // --------------------------------------------------
     String ts =
-        new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                .format(new Date());
+            new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                    .format(new Date());
 
-String fileName = "GEL_Service_Report_" + ts + ".pdf";
+    String fileName = "GEL_Service_Report_" + ts + ".pdf";
 
-Uri saved = null;
+    Uri saved = null;
+    try {
+        saved = savePdfToDownloads(fileName, pdf);
+    } finally {
+        pdf.close();
+    }
 
-try {
-    saved = savePdfToDownloads(fileName, pdf);
-} catch (Throwable t) {
-    Toast.makeText(
-            this,
-            "PDF save failed: " + t.getMessage(),
-            Toast.LENGTH_LONG
-    ).show();
-}
+    // --------------------------------------------------
+    // 4) USER FEEDBACK
+    // --------------------------------------------------
+    if (Build.VERSION.SDK_INT >= 29) {
 
-pdf.close();
+        if (saved != null) {
+            Toast.makeText(
+                    this,
+                    "PDF exported\nDownloads/" + fileName,
+                    Toast.LENGTH_LONG
+            ).show();
+        } else {
+            Toast.makeText(
+                    this,
+                    "PDF export failed",
+                    Toast.LENGTH_LONG
+            ).show();
+        }
 
-// ------------------------------------------------------------
-// FINAL USER FEEDBACK — MODE + PATH
-// ------------------------------------------------------------
-if (Build.VERSION.SDK_INT >= 29) {
-
-    if (saved != null) {
-        Toast.makeText(
-                this,
-                "PDF exported (MediaStore)\nDownloads/" + fileName,
-                Toast.LENGTH_LONG
-        ).show();
     } else {
+
         Toast.makeText(
                 this,
-                "PDF export failed (MediaStore)",
+                "PDF exported\n/storage/emulated/0/Download/" + fileName,
                 Toast.LENGTH_LONG
         ).show();
     }
-
-} else {
-
-    // legacy always writes directly to path
-    Toast.makeText(
-            this,
-            "PDF exported (Legacy)\n/storage/emulated/0/Download/" + fileName,
-            Toast.LENGTH_LONG
-    ).show();
-}
 }
 
     // ----------------------------------------------------------

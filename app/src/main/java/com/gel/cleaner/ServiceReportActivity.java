@@ -181,7 +181,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         public void onPageFinished(WebView view, String url) {
 
             // ⬇⬇⬇ ΕΔΩ ΚΑΛΕΙΤΑΙ — ΜΕΣΑ ΣΤΗΝ ACTIVITY ⬇⬇⬇
-            printNow(view);
+            printWebViewToPdf(view);
         }
     });
 

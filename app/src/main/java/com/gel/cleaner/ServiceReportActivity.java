@@ -201,35 +201,33 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------------
-    // PRINT VIA ANDROID FRAMEWORK
-    // ----------------------------------------------------------
-    private void printWebViewToPdf(WebView webView) {
+// PRINT VIA ANDROID FRAMEWORK (FIXED)
+// ----------------------------------------------------------
+private void printWebViewToPdf(WebView webView) {
 
-        // ⚠️ ΥΠΟΧΡΕΩΤΙΚΟ: εκτέλεση στο UI thread του Activity
-        runOnUiThread(() -> {
+    // ⚠️ ΠΑΙΡΝΟΥΜΕ ΡΗΤΑ ACTIVITY CONTEXT
+    ServiceReportActivity activity = ServiceReportActivity.this;
 
-            PrintManager printManager =
-                    (PrintManager) ServiceReportActivity.this
-                            .getSystemService(Context.PRINT_SERVICE);
+    PrintManager printManager =
+            (PrintManager) activity.getSystemService(Context.PRINT_SERVICE);
 
-            if (printManager == null) {
-                Toast.makeText(this, "Print service not available.", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            PrintAttributes attrs = new PrintAttributes.Builder()
-                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                    .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 300, 300))
-                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                    .build();
-
-            printManager.print(
-                    "GEL_Service_Report",
-                    webView.createPrintDocumentAdapter("GEL_Service_Report"),
-                    attrs
-            );
-        });
+    if (printManager == null) {
+        Toast.makeText(activity, "Print service not available.", Toast.LENGTH_LONG).show();
+        return;
     }
+
+    PrintAttributes attrs = new PrintAttributes.Builder()
+            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+            .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 300, 300))
+            .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+            .build();
+
+    printManager.print(
+            "GEL_Service_Report",
+            webView.createPrintDocumentAdapter("GEL_Service_Report"),
+            attrs
+    );
+}
 
     // ----------------------------------------------------------
     // LOG CLEANUP FOR PDF

@@ -5228,6 +5228,46 @@ private void lab17RunAuto() {
 }
 
 // ============================================================
+// LAB 17 — INTERNAL HELPERS
+// ============================================================
+
+// Human-readable age formatter
+private String lab17_age(long diffMs) {
+    if (diffMs < 0) return "unknown";
+
+    long sec = diffMs / 1000;
+    if (sec < 60) return sec + " sec";
+
+    long min = sec / 60;
+    if (min < 60) return min + " min";
+
+    long hr = min / 60;
+    if (hr < 24) return hr + " h";
+
+    long d = hr / 24;
+    return d + " d";
+}
+
+// Smart popup for prerequisites / guidance
+private void lab17_showPopup(String title, String msg) {
+
+    try {
+        runOnUiThread(() -> {
+
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle(title)
+                    .setMessage(msg)
+                    .setCancelable(true)
+                    .setPositiveButton("OK", (d, w) -> d.dismiss())
+                    .show();
+
+        });
+    } catch (Throwable ignored) {
+        // UI failure should never crash diagnostics
+    }
+}
+
+// ============================================================
 // LABS 18 - 21: STORAGE & PERFORMANCE
 // ============================================================
 
@@ -5374,6 +5414,16 @@ private void lab19RamSnapshot() {
     logInfo("LAB 19 — Live RAM Health Snapshot");
     logLine();
 
+    // ------------------------------------------------------------
+    // STORAGE SETUP
+    // ------------------------------------------------------------
+    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+    int     storePctFree   = -1;
+    long    storeFree      = -1;
+    long    storeTotal     = -1;
+    boolean storeLowMemory = false;
+
     try {
         ActivityManager am =
                 (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -5391,6 +5441,12 @@ private void lab19RamSnapshot() {
         long used  = total - free;
 
         int pctFree = (int) ((free * 100L) / Math.max(1L, total));
+
+        // save for prefs
+        storePctFree   = pctFree;
+        storeFree      = free;
+        storeTotal     = total;
+        storeLowMemory = mi.lowMemory;
 
         logInfo("Current RAM usage:");
         logOk(
@@ -5434,7 +5490,6 @@ private void lab19RamSnapshot() {
             boolean swapActive = isSwapActiveSafe();   // generic swap
 
             if (zramActive || swapActive) {
-            	logWarn("This indicates memory pressure beyond physical RAM.");
                 logWarn("⚠️ Memory compression / swap detected.");
                 logInfo("System is extending RAM using CPU cycles.");
                 logOk("This improves stability but may reduce performance.");
@@ -5455,16 +5510,19 @@ private void lab19RamSnapshot() {
     } catch (Throwable t) {
         logError("RAM snapshot failed.");
     }
-    
+
+    // ------------------------------------------------------------
+    // STORE RESULT (SAFE)
+    // ------------------------------------------------------------
     try {
-    p.edit()
-     .putInt("lab19_ram_free_pct", pctFree)
-     .putLong("lab19_ram_free_bytes", free)
-     .putLong("lab19_ram_total_bytes", total)
-     .putBoolean("lab19_low_memory", mi.lowMemory)
-     .putLong("lab19_last_ts", System.currentTimeMillis())
-     .apply();
-} catch (Throwable ignore) {}
+        p.edit()
+         .putInt("lab19_ram_free_pct", storePctFree)
+         .putLong("lab19_ram_free_bytes", storeFree)
+         .putLong("lab19_ram_total_bytes", storeTotal)
+         .putBoolean("lab19_low_memory", storeLowMemory)
+         .putLong("lab19_last_ts", System.currentTimeMillis())
+         .apply();
+    } catch (Throwable ignore) {}
 
     appendHtml("<br>");
     logOk("Lab 19 finished.");
@@ -5482,10 +5540,23 @@ private void lab20UptimeHints() {
     logInfo("LAB 20 — System Uptime & Reboot Behaviour");
     logLine();
 
+    // ------------------------------------------------------------
+    // STORAGE SETUP
+    // ------------------------------------------------------------
+    SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+    long    storeUpMs          = -1L;
+    boolean storeRecentReboot  = false;
+    boolean storeLongUptime    = false;
+    boolean storeExtremeUptime = false;
+
     try {
 
         long upMs = SystemClock.elapsedRealtime();
         String upStr = formatUptime(upMs);
+
+        // save for prefs
+        storeUpMs = upMs;
 
         logInfo("System uptime:");
         logOk(upStr);
@@ -5493,6 +5564,10 @@ private void lab20UptimeHints() {
         boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h
         boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
         boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;
+
+        storeRecentReboot  = veryRecentReboot;
+        storeLongUptime    = veryLongUptime;
+        storeExtremeUptime = extremeUptime;
 
         // ----------------------------------------------------
         // HUMAN INTERPRETATION (NON-ROOT)
@@ -5534,7 +5609,6 @@ private void lab20UptimeHints() {
             boolean frequentReboots   = detectFrequentRebootsHint();
 
             if (frequentReboots) {
-            	logWarn("This pattern often correlates with system instability.");
                 logWarn("⚠️ Repeated reboot pattern detected.");
                 logWarn("This may indicate instability, crashes or watchdog resets.");
             } else {
@@ -5550,23 +5624,25 @@ private void lab20UptimeHints() {
 
             logInfo("Interpretation:");
             logOk("Uptime behaviour appears consistent with normal system operation.");
-
         }
 
     } catch (Throwable t) {
         logError("Uptime analysis failed.");
     }
-    
+
+    // ------------------------------------------------------------
+    // STORE RESULT (SAFE)
+    // ------------------------------------------------------------
     try {
-    p.edit()
-     .putLong("lab20_uptime_ms", upMs)
-     .putBoolean("lab20_recent_reboot", veryRecentReboot)
-     .putBoolean("lab20_long_uptime", veryLongUptime)
-     .putBoolean("lab20_extreme_uptime", extremeUptime)
-     .putLong("lab20_last_ts", System.currentTimeMillis())
-     .apply();
-} catch (Throwable ignore) {}
-    
+        p.edit()
+         .putLong("lab20_uptime_ms", storeUpMs)
+         .putBoolean("lab20_recent_reboot", storeRecentReboot)
+         .putBoolean("lab20_long_uptime", storeLongUptime)
+         .putBoolean("lab20_extreme_uptime", storeExtremeUptime)
+         .putLong("lab20_last_ts", System.currentTimeMillis())
+         .apply();
+    } catch (Throwable ignore) {}
+
     appendHtml("<br>");
     logOk("Lab 20 finished.");
     logLine();
@@ -7595,8 +7671,7 @@ private void lab28HardwareStability() {
     else if (score <= 70) level = "HIGH";
     else level = "VERY HIGH";
 
-    if (score >= 70) logWarn(score + "/100 (" + level + ")");
-    else if (score >= 40) logWarn(score + "/100 (" + level + ")");
+    if (score >= 40) logWarn(score + "/100 (" + level + ")");
     else logOk(score + "/100 (" + level + ")");
 
     // ------------------------------------------------------------
@@ -7656,34 +7731,57 @@ private void showLab28Popup() {
     msg.setTextSize(15f);
     box.addView(msg);
 
-    // --- Controls row
+    // ------------------------------------------------------------
+    // CONTROLS ROW
+    // ------------------------------------------------------------
     LinearLayout controls = new LinearLayout(this);
     controls.setOrientation(LinearLayout.HORIZONTAL);
     controls.setPadding(0, 20, 0, 0);
 
-    // MUTE button
+    // ==========================
+    // 🔕 MUTE BUTTON
+    // ==========================
     Button muteBtn = new Button(this);
     muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
     muteBtn.setOnClickListener(v -> {
         lab28Muted = !lab28Muted;
         muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+
+        // κόψε άμεσα τον ήχο
+        try {
+            if (lab28Muted && tts != null && tts[0] != null) {
+                tts[0].stop();
+            }
+        } catch (Throwable ignore) {}
     });
 
-    // Language spinner
+    // ==========================
+    // 🌐 LANGUAGE SPINNER
+    // ==========================
     Spinner langSpinner = new Spinner(this);
     ArrayAdapter<String> langAdapter =
             new ArrayAdapter<>(this,
                     android.R.layout.simple_spinner_item,
                     new String[]{"EN", "GR"});
-    langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    langAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item);
     langSpinner.setAdapter(langAdapter);
 
-    langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-        @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-            lab28Lang = (pos == 0) ? "EN" : "GR";
-        }
-        @Override public void onNothingSelected(AdapterView<?> p) {}
-    });
+    langSpinner.setOnItemSelectedListener(
+            new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(
+                        android.widget.AdapterView<?> p,
+                        View v,
+                        int pos,
+                        long id) {
+                    lab28Lang = (pos == 0) ? "EN" : "GR";
+                }
+
+                @Override
+                public void onNothingSelected(
+                        android.widget.AdapterView<?> p) {}
+            });
 
     controls.addView(muteBtn);
     controls.addView(langSpinner);
@@ -7698,39 +7796,55 @@ private void showLab28Popup() {
 }
 
 // ============================================================
-// TTS — LAB 28 (LANGUAGE + MUTE SAFE)
+// TTS — LAB 28 (LANGUAGE + MUTE SAFE) — SAME PATTERN AS LAB 15
 // ============================================================
 private void speakLab28TTS() {
 
     if (lab28Muted) return;
 
-    if ("GR".equals(lab28Lang)) {
+    try {
 
-        speakTTS(
-            "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού.\n\n" +
-            "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων.\n" +
-            "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης.\n\n" +
-            "Τα αποτελέσματα δείχνουν μοτίβα συμπεριφοράς που ΜΠΟΡΕΙ να σχετίζονται\n" +
-            "με διακοπτόμενες επαφές, όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος.\n\n" +
-            "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση.\n\n" +
-            "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο\n" +
-            "και επαγγελματικές εργαστηριακές δοκιμές."
-        );
+        if (tts == null || tts[0] == null || !ttsReady[0]) return;
 
-    } else {
+        tts[0].stop();
 
-        speakTTS(
-            "Lab twenty eight. Technician mode.\n\n" +
-            "This lab performs symptom-based analysis only.\n" +
-            "It does NOT diagnose hardware faults.\n" +
-            "It does NOT confirm soldering defects.\n\n" +
-            "Findings may indicate behavior patterns consistent with intermittent contact issues,\n" +
-            "such as unstable operation, random reboots, or signal drops.\n\n" +
-            "Use this lab strictly as a triage tool, not as a final diagnosis.\n\n" +
-            "If indicators are present, proceed only with physical inspection\n" +
-            "and professional bench-level testing."
-        );
-    }
+        if ("GR".equals(lab28Lang)) {
+
+            tts[0].speak(
+                "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού. " +
+                "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
+                "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
+                "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
+                "που σχετίζονται με διακοπτόμενες επαφές, " +
+                "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
+                "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
+                "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
+                "και επαγγελματικές εργαστηριακές δοκιμές.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB28_INTRO_GR"
+            );
+
+        } else {
+
+            tts[0].speak(
+                "Lab twenty eight. Technician mode. " +
+                "This lab performs symptom based analysis only. " +
+                "It does not diagnose hardware faults " +
+                "and does not confirm soldering defects. " +
+                "Findings may indicate behavior patterns " +
+                "consistent with intermittent contact issues, " +
+                "such as unstable operation, random reboots, or signal drops. " +
+                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
+                "If indicators are present, proceed only with physical inspection " +
+                "and professional bench level testing.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB28_INTRO_EN"
+            );
+        }
+
+    } catch (Throwable ignore) {}
 }
 
 // ============================================================

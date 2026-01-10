@@ -120,6 +120,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -512,8 +513,9 @@ tts[0] = new TextToSpeech(this, status -> {
         body7.addView(makeTestButton("25. Crash / Freeze History", this::lab25CrashHistory));
         body7.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
         body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
-        body7.addView(makeTestButton("28. DEVICE SCORES Summary", this::lab28CombineFindings));
-        body7.addView(makeTestButton("29. FINAL TECH SUMMARY", this::lab29FinalSummary));
+        body7.addView(makeTestButton("28. Hardware Stability & Interconnect Integrity\nSolder / Contact Suspicion (SYMPTOM-BASED)",this::lab28HardwareStability));
+        body7.addView(makeTestButton("29. DEVICE SCORES Summary", this::lab28CombineFindings));
+        body7.addView(makeTestButton("30. FINAL TECH SUMMARY", this::lab29FinalSummary));
 
         // ============================================================
         // LOG AREA
@@ -3203,7 +3205,7 @@ private void lab10WifiSnapshot() {
 
     if ("Unknown".equalsIgnoreCase(ssid)) {  
         logWarn("SSID is UNKNOWN due to Android privacy policy.");  
-        logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 11.");  
+        logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 10.");  
     } else {  
         logOk("SSID read OK.");  
     }  
@@ -4278,193 +4280,193 @@ private void lab15ChargingSystemSmart() {
     }
 
     // ================= FLAGS RESET =================
-lab15Running  = true;
-lab15Finished = false;
-lab15FlapUnstable = false;
-lab15OverTempDuringCharge = false;
+    lab15Running  = true;
+    lab15Finished = false;
+    lab15FlapUnstable = false;
+    lab15OverTempDuringCharge = false;
 
-lab15BattTempStart = Float.NaN;
-lab15BattTempPeak  = Float.NaN;
-lab15BattTempEnd   = Float.NaN;
+    lab15BattTempStart = Float.NaN;
+    lab15BattTempPeak  = Float.NaN;
+    lab15BattTempEnd   = Float.NaN;
 
-// reset LAB 15 charging strength state (FIELDS)
-lab15_strengthKnown = false;
-lab15_strengthWeak  = false;
-lab15_systemLimited = false;
+    // reset LAB 15 charging strength state (FIELDS)
+    lab15_strengthKnown = false;
+    lab15_strengthWeak  = false;
+    lab15_systemLimited = false;
 
     // ================= DIALOG =================
-AlertDialog.Builder b =
-        new AlertDialog.Builder(
-                ManualTestsActivity.this,
-                android.R.style.Theme_Material_Dialog_NoActionBar
-        );
-b.setCancelable(false);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
 
-// ============================================================
-// GEL DARK + GOLD POPUP BACKGROUND LAB 15
-// ============================================================
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(20), dp(24), dp(18));
+    // ============================================================
+    // GEL DARK + GOLD POPUP BACKGROUND LAB 15
+    // ============================================================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);           // GEL dark black
-bg.setCornerRadius(dp(18));       // smooth premium corners
-bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
-root.setBackground(bg);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);           // GEL dark black
+    bg.setCornerRadius(dp(18));       // smooth premium corners
+    bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
+    root.setBackground(bg);
 
-// ============================================================
-// 🔹 TITLE — INSIDE POPUP (LAB 15)
-// ============================================================
-TextView title = new TextView(this);
-title.setText(
-        "LAB 15 — Connect the charger to the device's charging port.\n" +
-        "The system will monitor charging behavior for the next three minutes.\n" +
-        "Please keep the device connected during the test."
-);
-title.setTextColor(0xFFFFFFFF); 
-title.setTextSize(18f);
-title.setTypeface(null, Typeface.BOLD);
-title.setGravity(Gravity.CENTER);
-title.setPadding(0, 0, 0, dp(12));
-root.addView(title);
-
-lab15StatusText = new TextView(this);
-lab15StatusText.setText("Waiting for charging connection...");
-lab15StatusText.setTextColor(0xFFAAAAAA);
-lab15StatusText.setTextSize(15f);
-root.addView(lab15StatusText);
-
-final TextView dotsView = new TextView(this);
-dotsView.setText("•");
-dotsView.setTextColor(0xFF39FF14);
-dotsView.setTextSize(22f);
-dotsView.setGravity(Gravity.CENTER);
-root.addView(dotsView);
-
-lab15CounterText = new TextView(this);
-lab15CounterText.setText("Progress: 0 / 180 sec");
-lab15CounterText.setTextColor(0xFF39FF14);
-lab15CounterText.setGravity(Gravity.CENTER);
-root.addView(lab15CounterText);
-
-lab15ProgressBar = new LinearLayout(this);
-lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-lab15ProgressBar.setGravity(Gravity.CENTER);
-
-for (int i = 0; i < 6; i++) {
-    View seg = new View(this);
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(10), 1f);
-    lp.setMargins(dp(3), 0, dp(3), 0);
-    seg.setLayoutParams(lp);
-    seg.setBackgroundColor(0xFF333333);
-    lab15ProgressBar.addView(seg);
-}
-root.addView(lab15ProgressBar);
-
-// ==========================
-// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
-muteBox.setText("Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, dp(10), 0, dp(10));
-
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
-root.addView(muteBox);
-
-// ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    // αποθήκευση GLOBAL επιλογής
-    setTtsMuted(checked);
-
-    // κόψε άμεσα τον ήχο αν μπήκε mute
-    if (checked && tts != null && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
-    }
-});
-
-// ============================================================
-// 🔹 EXIT BUTTON
-// ============================================================
-Button exitBtn = new Button(this);
-exitBtn.setText("Exit test");
-exitBtn.setAllCaps(false);
-exitBtn.setTextColor(0xFFFFFFFF);
-exitBtn.setTypeface(null, Typeface.BOLD);
-
-GradientDrawable exitBg = new GradientDrawable();
-exitBg.setColor(0xFF8B0000);
-exitBg.setCornerRadius(dp(14));   // ❗ ΔΙΟΡΘΩΣΗ: έφυγε το τυχαίο 7
-exitBg.setStroke(dp(3), 0xFFFFD700);
-exitBtn.setBackground(exitBg);
-
-LinearLayout.LayoutParams lpExit =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpExit.setMargins(0, dp(14), 0, 0);
-exitBtn.setLayoutParams(lpExit);
-
-// ------------------------------------------------------------
-// EXIT BUTTON — STOP TTS (NO SHUTDOWN)
-// ------------------------------------------------------------
-exitBtn.setOnClickListener(v -> {
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();   // ✔ μόνο stop
-        }
-    } catch (Throwable ignore) {}
-    abortLab15ByUser();
-});
-
-// ⬇️ ΜΕΤΑ μπαίνει το exit
-root.addView(exitBtn);
-
-// ============================================================
-// 🔹 SHOW DIALOG
-// ============================================================
-b.setView(root);
-lab15Dialog = b.create();
-
-if (lab15Dialog.getWindow() != null) {
-    lab15Dialog.getWindow()
-            .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-}
-
-lab15Dialog.show();
-
-// ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
-// ============================================================
-if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-
-    tts[0].stop();
-
-    tts[0].speak(
-            "Connect the charger to the device's charging port. " +
-            "The system will monitor charging behavior for the next three minutes. " +
-            "Please keep the device connected during the test.",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB15_INTRO"
+    // ============================================================
+    // 🔹 TITLE — INSIDE POPUP (LAB 15)
+    // ============================================================
+    TextView title = new TextView(this);
+    title.setText(
+            "LAB 15 — Connect the charger to the device's charging port.\n" +
+            "The system will monitor charging behavior for the next three minutes.\n" +
+            "Please keep the device connected during the test."
     );
-}
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
 
-// ============================================================
-// 🔹 LOGS
-// ============================================================
-appendHtml("<br>");
-logLine();
-logInfo("LAB 15 - Charging System Diagnostic (Smart).");
-logLine();
+    lab15StatusText = new TextView(this);
+    lab15StatusText.setText("Waiting for charging connection...");
+    lab15StatusText.setTextColor(0xFFAAAAAA);
+    lab15StatusText.setTextSize(15f);
+    root.addView(lab15StatusText);
+
+    final TextView dotsView = new TextView(this);
+    dotsView.setText("•");
+    dotsView.setTextColor(0xFF39FF14);
+    dotsView.setTextSize(22f);
+    dotsView.setGravity(Gravity.CENTER);
+    root.addView(dotsView);
+
+    lab15CounterText = new TextView(this);
+    lab15CounterText.setText("Progress: 0 / 180 sec");
+    lab15CounterText.setTextColor(0xFF39FF14);
+    lab15CounterText.setGravity(Gravity.CENTER);
+    root.addView(lab15CounterText);
+
+    lab15ProgressBar = new LinearLayout(this);
+    lab15ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+    lab15ProgressBar.setGravity(Gravity.CENTER);
+
+    for (int i = 0; i < 6; i++) {
+        View seg = new View(this);
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(10), 1f);
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        seg.setLayoutParams(lp);
+        seg.setBackgroundColor(0xFF333333);
+        lab15ProgressBar.addView(seg);
+    }
+    root.addView(lab15ProgressBar);
+
+    // ==========================
+    // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+    // ==========================
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+
+    // ⬇️ ΠΡΩΤΑ μπαίνει το mute
+    root.addView(muteBox);
+
+    // ==========================
+    // 🔇 MUTE LOGIC — GLOBAL
+    // ==========================
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+        // αποθήκευση GLOBAL επιλογής
+        setTtsMuted(checked);
+
+        // κόψε άμεσα τον ήχο αν μπήκε mute
+        if (checked && tts != null && tts[0] != null) {
+            tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
+        }
+    });
+
+    // ============================================================
+    // 🔹 EXIT BUTTON
+    // ============================================================
+    Button exitBtn = new Button(this);
+    exitBtn.setText("Exit test");
+    exitBtn.setAllCaps(false);
+    exitBtn.setTextColor(0xFFFFFFFF);
+    exitBtn.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));   // ❗ ΔΙΟΡΘΩΣΗ: έφυγε το τυχαίο 7
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exitBtn.setBackground(exitBg);
+
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExit.setMargins(0, dp(14), 0, 0);
+    exitBtn.setLayoutParams(lpExit);
+
+    // ------------------------------------------------------------
+    // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
+    // ------------------------------------------------------------
+    exitBtn.setOnClickListener(v -> {
+        try {
+            if (tts != null && tts[0] != null) {
+                tts[0].stop();   // ✔ μόνο stop
+            }
+        } catch (Throwable ignore) {}
+        abortLab15ByUser();
+    });
+
+    // ⬇️ ΜΕΤΑ μπαίνει το exit
+    root.addView(exitBtn);
+
+    // ============================================================
+    // 🔹 SHOW DIALOG
+    // ============================================================
+    b.setView(root);
+    lab15Dialog = b.create();
+
+    if (lab15Dialog.getWindow() != null) {
+        lab15Dialog.getWindow()
+                .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    lab15Dialog.show();
+
+    // ============================================================
+    // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
+    // ============================================================
+    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+
+        tts[0].stop();
+
+        tts[0].speak(
+                "Connect the charger to the device's charging port. " +
+                "The system will monitor charging behavior for the next three minutes. " +
+                "Please keep the device connected during the test.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB15_INTRO"
+        );
+    }
+
+    // ============================================================
+    // 🔹 LOGS
+    // ============================================================
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 15 - Charging System Diagnostic (Smart).");
+    logLine();
 
     // ================= CORE LOOP =================
     final long[] startTs = { -1 };
@@ -4631,18 +4633,6 @@ logLine();
             if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");
             else logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
 
-// ------------------------------------------------------------
-// FINAL LAB 15 DECISION
-// ------------------------------------------------------------
-logInfo("LAB decision:");
-if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
-    logOk("✅ Charging system OK. No cleaning or replacement required.");
-    logOk("✅ Charging stability OK.");
-} else {
-    logWarn("⚠️ Charging system shows potential issues.");
-    logWarn("⚠️ Further inspection or repeat test recommended.");
-}
-
             // ------------------------------------------------------------
             // CHARGING INPUT & STRENGTH (mAh/min)
             // ------------------------------------------------------------
@@ -4688,6 +4678,18 @@ if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
                 logWarn("⚠️ Unable to estimate accurately.");
                 lab15_strengthKnown = false;
                 lab15_strengthWeak  = true;
+            }
+
+            // ------------------------------------------------------------
+            // FINAL LAB 15 DECISION  ✅ (MOVED HERE — AFTER strength calc)
+            // ------------------------------------------------------------
+            logInfo("LAB decision:");
+            if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+                logOk("✅ Charging system OK. No cleaning or replacement required.");
+                logOk("✅ Charging stability OK.");
+            } else {
+                logWarn("⚠️ Charging system shows potential issues.");
+                logWarn("⚠️ Further inspection or repeat test recommended.");
             }
 
             // ------------------------------------------------------------
@@ -4902,33 +4904,30 @@ private void lab17RunAuto() {
 
     final String PREF = "GEL_DIAG";
 
-    // STRICT WINDOW: 2 hours
     final long WINDOW_MS = 2L * 60L * 60L * 1000L;
     final long now = System.currentTimeMillis();
 
-    // ------------------------------------------------------------
-    // READ STORED RESULTS + TIMESTAMPS (STRICT)
-    // ------------------------------------------------------------
     SharedPreferences p = getSharedPreferences(PREF, MODE_PRIVATE);
 
-// LAB 14 results
-final float lab14Health  = p.getFloat("lab14_health_score", -1f);
-final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
-final long  ts14         = p.getLong("lab14_last_ts", 0L);
+    // ------------------------------------------------------------
+    // READ STORED RESULTS
+    // ------------------------------------------------------------
+    final float lab14Health  = p.getFloat("lab14_health_score", -1f);
+    final int   lab14Aging   = p.getInt("lab14_aging_index", -1);
+    final long  ts14         = p.getLong("lab14_last_ts", 0L);
 
-// LAB 14 reliability flag (future-safe)
-final boolean lab14Unstable =
-        p.getBoolean("lab14_unstable_measurement", false);
+    final boolean lab14Unstable =
+            p.getBoolean("lab14_unstable_measurement", false);
 
-final int lab15Charge = p.getInt("lab15_charge_score", -1);
-final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
-final String lab15StrengthLabel = p.getString("lab15_strength_label", null);
-final long ts15 = p.getLong("lab15_ts", 0L);
+    final int     lab15Charge        = p.getInt("lab15_charge_score", -1);
+    final boolean lab15SystemLimited = p.getBoolean("lab15_system_limited", false);
+    final String  lab15StrengthLabel = p.getString("lab15_strength_label", null);
+    final long    ts15               = p.getLong("lab15_ts", 0L);
 
-final int lab16Thermal = p.getInt("lab16_thermal_score", -1);
-final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
-final long ts16 = p.getLong("lab16_last_ts", 0L);
-    
+    final int     lab16Thermal       = p.getInt("lab16_thermal_score", -1);
+    final boolean lab16ThermalDanger = p.getBoolean("lab16_thermal_danger", false);
+    final long    ts16               = p.getLong("lab16_last_ts", 0L);
+
     // ------------------------------------------------------------
     // PRESENCE + FRESHNESS CHECK
     // ------------------------------------------------------------
@@ -4940,28 +4939,26 @@ final long ts16 = p.getLong("lab16_last_ts", 0L);
     final boolean fresh15 = has15 && (now - ts15) <= WINDOW_MS;
     final boolean fresh16 = has16 && (now - ts16) <= WINDOW_MS;
 
-// ------------------------------------------------------------
-// HIGH VARIABILITY CONFIRMATION (LAB 14 INTELLIGENCE)
-// ------------------------------------------------------------
-final long hvFirstTs    = p.getLong("lab14_hv_first_ts", -1L);
-final long hvLastTs     = p.getLong("lab14_hv_last_ts", -1L);
-final boolean hvPending = p.getBoolean("lab14_hv_pending", false);
+    // ------------------------------------------------------------
+    // HIGH VARIABILITY CONFIRMATION (LAB 14 INTELLIGENCE)
+    // ------------------------------------------------------------
+    final long hvFirstTs    = p.getLong("lab14_hv_first_ts", -1L);
+    final long hvLastTs     = p.getLong("lab14_hv_last_ts", -1L);
+    final boolean hvPending = p.getBoolean("lab14_hv_pending", false);
 
-// confirmed ONLY if repeated within strict window
-final boolean hvConfirmed =
-        hvPending &&
-        hvFirstTs > 0L &&
-        hvLastTs > hvFirstTs &&
-        (hvLastTs - hvFirstTs) <= WINDOW_MS;
+    final boolean hvConfirmed =
+            hvPending &&
+            hvFirstTs > 0L &&
+            hvLastTs > hvFirstTs &&
+            (hvLastTs - hvFirstTs) <= WINDOW_MS;
 
     // ------------------------------------------------------------
-    // PRECHECK — SMART POPUP (STRICT)
+    // PRECHECK — SMART POPUP
     // ------------------------------------------------------------
     if (!(fresh14 && fresh15 && fresh16)) {
 
         StringBuilder msg = new StringBuilder();
 
-        // status lines
         msg.append("Status (required within last 2 hours):\n\n");
 
         msg.append("• LAB 14: ");
@@ -4981,7 +4978,6 @@ final boolean hvConfirmed =
 
         msg.append("\n");
 
-        // decision
         if ((fresh14 && fresh15) && (!fresh16)) {
             msg.append("I detected you already ran LAB 14 + LAB 15.\n");
             msg.append("Run ONLY LAB 16 now to complete the set.\n");
@@ -4992,7 +4988,6 @@ final boolean hvConfirmed =
             msg.append("I detected you already ran LAB 15 + LAB 16.\n");
             msg.append("Run ONLY LAB 14 now to complete the set.\n");
         } else {
-            // if any expired OR multiple missing -> rerun all together
             msg.append("To generate a valid result, run LAB 14 + LAB 15 + LAB 16 together.\n");
             msg.append("Reason: missing and/or expired results.\n");
         }
@@ -5004,380 +4999,232 @@ final boolean hvConfirmed =
         return;
     }
 
-// ------------------------------------------------------------
-// START LAB 17
-// ------------------------------------------------------------
+    // ------------------------------------------------------------
+    // START LAB 17
+    // ------------------------------------------------------------
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 17 — GEL Intelligent System Health Analysis");
+    logLine();
 
-appendHtml("<br>"); 
-logLine();
-logInfo("LAB 17 — GEL Intelligent System Health Analysis");
-logLine();
+    new Thread(() -> {
 
-new Thread(() -> {
-
-    try {
-
-        // ------------------------------------------------------------
-        // BASE WEIGHTED SCORE
-        // ------------------------------------------------------------
-        int baseScore = Math.round(
-                (lab14Health * 0.50f) +
-                (lab15Charge * 0.25f) +
-                (lab16Thermal * 0.25f)
-        );
-        baseScore = Math.max(0, Math.min(100, baseScore));
-
-        // ------------------------------------------------------------
-        // PENALTIES (LOCKED)
-        // ------------------------------------------------------------
+        int baseScore = 0;
         int penaltyExtra = 0;
+        int finalScore = 0;
+        String category = "N/A";
 
-        if (lab15Charge < 60 && lab15SystemLimited) penaltyExtra += 6;
-        else if (lab15Charge < 60) penaltyExtra += 12;
+        try {
 
-        if (lab16Thermal < 60) penaltyExtra += 10;
-        else if (lab16Thermal < 75) penaltyExtra += 5;
+            // ------------------------------------------------------------
+            // BASE WEIGHTED SCORE
+            // ------------------------------------------------------------
+            baseScore = Math.round(
+                    (lab14Health * 0.50f) +
+                    (lab15Charge * 0.25f) +
+                    (lab16Thermal * 0.25f)
+            );
+            baseScore = Math.max(0, Math.min(100, baseScore));
 
-        if (lab14Aging >= 0) {
-            if (lab14Aging >= 70) penaltyExtra += 10;
-            else if (lab14Aging >= 50) penaltyExtra += 6;
-            else if (lab14Aging >= 30) penaltyExtra += 3;
-        }
+            // ------------------------------------------------------------
+            // PENALTIES
+            // ------------------------------------------------------------
+            if (lab15Charge < 60 && lab15SystemLimited) penaltyExtra += 6;
+            else if (lab15Charge < 60) penaltyExtra += 12;
 
-        int finalScore = Math.max(0, Math.min(100, baseScore - penaltyExtra));
+            if (lab16Thermal < 60) penaltyExtra += 10;
+            else if (lab16Thermal < 75) penaltyExtra += 5;
 
-        String category =
-                (finalScore >= 85) ? "Strong" :
-                (finalScore >= 70) ? "Normal" :
-                "Weak";
+            if (lab14Aging >= 0) {
+                if (lab14Aging >= 70) penaltyExtra += 10;
+                else if (lab14Aging >= 50) penaltyExtra += 6;
+                else if (lab14Aging >= 30) penaltyExtra += 3;
+            }
 
-        // ------------------------------------------------------------
-        // FREEZE VALUES FOR UI THREAD
-        // ------------------------------------------------------------
-        final int    fFinalScore   = finalScore;
-        final int    fPenaltyExtra = penaltyExtra;
-        final String fCategory     = category;
+            finalScore = Math.max(0, Math.min(100, baseScore - penaltyExtra));
 
-        final boolean thermalDanger =
-                lab16ThermalDanger || (lab16Thermal < 60);
+            category =
+                    (finalScore >= 85) ? "Strong" :
+                    (finalScore >= 70) ? "Normal" :
+                    "Weak";
 
-        final boolean chargingWeakOrThrottled =
-                (lab15Charge < 60) || lab15SystemLimited;
+        } catch (Throwable ignore) {
+            // silent
+        } finally {
 
-        final boolean batteryLooksFineButThermalBad =
-                (lab14Health >= 80f) && thermalDanger;
+            final int    fFinalScore   = finalScore;
+            final int    fPenaltyExtra = penaltyExtra;
+            final String fCategory     = category;
 
-        final boolean batteryBadButThermalOk =
-                (lab14Health < 70f) && (lab16Thermal >= 75);
+            final boolean thermalDanger =
+                    lab16ThermalDanger || (lab16Thermal < 60);
 
-        final boolean overallDeviceConcern =
-                thermalDanger ||
-                chargingWeakOrThrottled ||
-                (lab14Health < 70f);
+            final boolean chargingWeakOrThrottled =
+                    (lab15Charge < 60) || lab15SystemLimited;
 
-        // ------------------------------------------------------------
-        // UI OUTPUT
-        // ------------------------------------------------------------
-        ui.post(() -> {
+            final boolean batteryLooksFineButThermalBad =
+                    (lab14Health >= 80f) && thermalDanger;
 
-            // ================= SUMMARY =================
-            logInfo("LAB14 — Battery health:");
-            logOk(String.format(
-                    Locale.US,
-                    "%.0f%% | Aging index: %s",
-                    lab14Health,
-                    (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
-            ));
+            final boolean batteryBadButThermalOk =
+                    (lab14Health < 70f) && (lab16Thermal >= 75);
 
-            logInfo("LAB15 — Charging:");
-            if (lab15Charge >= 70) {
+            final boolean overallDeviceConcern =
+                    thermalDanger ||
+                    chargingWeakOrThrottled ||
+                    (lab14Health < 70f);
+
+            final String strengthLabelSafe =
+                    (lab15StrengthLabel != null ? lab15StrengthLabel : "UNKNOWN");
+
+            ui.post(() -> {
+
+                // ================= SUMMARY =================
+                logInfo("LAB14 — Battery health:");
                 logOk(String.format(
                         Locale.US,
-                        "%d%% | Strength: %s",
-                        lab15Charge,
-                        (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
+                        "%.0f%% | Aging index: %s",
+                        lab14Health,
+                        (lab14Aging >= 0 ? lab14Aging + "/100" : "N/A")
                 ));
-            } else {
-                logWarn(String.format(
-                        Locale.US,
-                        "%d%% | Strength: %s",
-                        lab15Charge,
-                        (lab15StrengthLabel != null ? lab15StrengthLabel : "N/A")
-                ));
-            }
 
-            logInfo("LAB16 — Thermal behaviour:");
-            if (lab16Thermal >= 75) {
-                logOk(String.format(Locale.US, "%d%%", lab16Thermal));
-            } else if (lab16Thermal >= 60) {
-                logWarn(String.format(Locale.US, "%d%%", lab16Thermal));
-            } else {
-                logError(String.format(Locale.US, "%d%%", lab16Thermal));
-            }
-
-            // ================= ANALYSIS =================
-            if (lab15SystemLimited) {
-                logLine();
-                logWarn("Charging limitation analysis:");
-                logWarn("System-limited throttling detected (PMIC / thermal protection).");
-                logWarn("This behaviour is NOT attributed to battery health alone.");
-            }
-
-            if (fPenaltyExtra > 0) {
-                logLine();
-                logInfo("Penalty breakdown:");
-
-                if (lab15Charge < 60 && lab15SystemLimited)
-                    logWarn("• Charging: system-limited throttling detected.");
-                else if (lab15Charge < 60)
-                    logWarn("• Charging: weak charging performance detected.");
-
-                if (lab14Aging >= 70)
-                    logError("• Aging: severe aging indicators detected.");
-                else if (lab14Aging >= 50)
-                    logWarn("• Aging: high aging indicators detected.");
-                else if (lab14Aging >= 30)
-                    logWarn("• Aging: moderate aging indicators detected.");
-            }
-
-            // ================= FINAL SCORE =================
-            logLine();
-            logInfo("Final Battery Reliability Score:");
-            if (fFinalScore >= 80) {
-                logOk(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
-            } else if (fFinalScore >= 60) {
-                logWarn(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
-            } else {
-                logError(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
-            }
-            logLine();
-
-            // ================= DIAGNOSIS =================
-            logInfo("Diagnosis:");
-
-            if (lab14Unstable) {
-                logLine();
-                logWarn("⚠️ Measurement reliability warning:");
-                logWarn("Battery measurements show instability.");
-                logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");
-                logOk("not a confirmed battery failure.");
-            }
-
-            if (!overallDeviceConcern) {
-
-                logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
-                logInfo("Note:");
-                logOk("Internal chips and critical peripherals were monitored.");
-
-            } else {
-
-                if (batteryLooksFineButThermalBad) {
-                    logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
-                    logInfo("Recommendation:");
-                    logWarn("Inspect cooling path and thermal interfaces.");
-                    logInfo("Possible causes:");
-                    logWarn("CPU/GPU load, thermal pads, heatsink contact.");
+                logInfo("LAB15 — Charging:");
+                if (lab15Charge >= 70) {
+                    logOk(String.format(
+                            Locale.US,
+                            "%d%% | Strength: %s",
+                            lab15Charge,
+                            strengthLabelSafe
+                    ));
+                } else {
+                    logWarn(String.format(
+                            Locale.US,
+                            "%d%% | Strength: %s",
+                            lab15Charge,
+                            strengthLabelSafe
+                    ));
                 }
 
-                if (chargingWeakOrThrottled) {
-                    if (lab15SystemLimited) {
-                        logWarn("⚠️ Charging appears system-limited (protection logic).");
+                logInfo("LAB16 — Thermal behaviour:");
+                if (lab16Thermal >= 75) {
+                    logOk(String.format(Locale.US, "%d%%", lab16Thermal));
+                } else if (lab16Thermal >= 60) {
+                    logWarn(String.format(Locale.US, "%d%%", lab16Thermal));
+                } else {
+                    logError(String.format(Locale.US, "%d%%", lab16Thermal));
+                }
+
+                // ================= EXTRA INTELLIGENCE =================
+                if (hvConfirmed) {
+                    logLine();
+                    logWarn("⚠️ Repeated high-variability battery measurements confirmed.");
+                    logWarn("This suggests unstable power measurement, not random fluctuation.");
+                }
+
+                // ================= ANALYSIS =================
+                if (lab15SystemLimited) {
+                    logLine();
+                    logWarn("Charging limitation analysis:");
+                    logWarn("System-limited throttling detected (PMIC / thermal protection).");
+                    logWarn("This behaviour is NOT attributed to battery health alone.");
+                }
+
+                if (fPenaltyExtra > 0) {
+                    logLine();
+                    logInfo("Penalty breakdown:");
+
+                    if (lab15Charge < 60 && lab15SystemLimited)
+                        logWarn("• Charging: system-limited throttling detected.");
+                    else if (lab15Charge < 60)
+                        logWarn("• Charging: weak charging performance detected.");
+
+                    if (lab14Aging >= 70)
+                        logError("• Aging: severe aging indicators detected.");
+                    else if (lab14Aging >= 50)
+                        logWarn("• Aging: high aging indicators detected.");
+                    else if (lab14Aging >= 30)
+                        logWarn("• Aging: moderate aging indicators detected.");
+                }
+
+                // ================= FINAL SCORE =================
+                logLine();
+                logInfo("Final Battery Reliability Score:");
+                if (fFinalScore >= 80) {
+                    logOk(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+                } else if (fFinalScore >= 60) {
+                    logWarn(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+                } else {
+                    logError(String.format(Locale.US, "%d%% (%s)", fFinalScore, fCategory));
+                }
+                logLine();
+
+                // ================= DIAGNOSIS =================
+                logInfo("Diagnosis:");
+
+                if (lab14Unstable) {
+                    logLine();
+                    logWarn("⚠️ Measurement reliability warning:");
+                    logWarn("Battery measurements show instability.");
+                    logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");
+                    logOk("not a confirmed battery failure.");
+                }
+
+                if (!overallDeviceConcern) {
+
+                    logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");
+                    logInfo("Note:");
+                    logOk("Internal chips and critical peripherals were monitored.");
+
+                } else {
+
+                    if (batteryLooksFineButThermalBad) {
+                        logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");
+                        logInfo("Recommendation:");
+                        logWarn("Inspect cooling path and thermal interfaces.");
                         logInfo("Possible causes:");
-                        logWarn("Overheating, PMIC limiting current.");
-                    } else if (lab15Charge < 60) {
-                        logWarn("⚠️ Charging performance is weak.");
-                        logInfo("Possible causes:");
-                        logWarn("Cable / adapter quality, charging port wear, battery impedance.");
+                        logWarn("CPU/GPU load, thermal pads, heatsink contact.");
+                    }
+
+                    if (chargingWeakOrThrottled) {
+                        if (lab15SystemLimited) {
+                            logWarn("⚠️ Charging appears system-limited (protection logic).");
+                            logInfo("Possible causes:");
+                            logWarn("Overheating, PMIC limiting current.");
+                        } else if (lab15Charge < 60) {
+                            logWarn("⚠️ Charging performance is weak.");
+                            logInfo("Possible causes:");
+                            logWarn("Cable / adapter quality, charging port wear, battery impedance.");
+                        }
+                    }
+
+                    if (batteryBadButThermalOk) {
+                        logWarn("⚠️ Battery health is weak while thermals are OK.");
+                        logInfo("Likely cause:");
+                        logWarn("Battery aging / capacity loss.");
+                    }
+
+                    if (lab14Health < 70f && thermalDanger) {
+                        logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
                     }
                 }
 
-                if (batteryBadButThermalOk) {
-                    logWarn("⚠️ Battery health is weak while thermals are OK.");
-                    logInfo("Likely cause:");
-                    logWarn("Battery aging / capacity loss.");
-                }
+                // ------------------------------------------------------------
+                // STORE FINAL RESULT
+                // ------------------------------------------------------------
+                try {
+                    p.edit()
+                     .putInt("lab17_final_score", fFinalScore)
+                     .putString("lab17_category", fCategory)
+                     .putLong("lab17_ts", System.currentTimeMillis())
+                     .apply();
+                } catch (Throwable ignore) {}
 
-                if (lab14Health < 70f && thermalDanger) {
-                    logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");
-                }
-            }
-            
-// ------------------------------------------------------------
-// STORE FINAL RESULT (+ timestamp)
-// ------------------------------------------------------------
-try {
-    p.edit()
-      .putInt("lab17_final_score", fFinalScore)
-      .putString("lab17_category", fCategory)
-      .putLong("lab17_ts", System.currentTimeMillis())
-      .apply();
-} catch (Throwable ignore) {}
+                appendHtml("<br>");
+                logOk("LAB 17 finished.");
+                logLine();
+            });
+        }
 
-// ================= FINAL (UI THREAD) =================
-
-appendHtml("<br>");
-logOk("LAB 17 finished.");
-logLine();
-
-}); // <-- END ui.post
-
-} catch (Throwable ignore) {
-    // silent
-}
-
-}).start();
-}
-
-// ============================================================
-// LAB 17 — POPUP (GEL DARK + GOLD) — WITH GLOBAL TTS
-// ============================================================
-private void lab17_showPopup(String titleText, String msgText) {
-
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    ManualTestsActivity.this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-
-    b.setCancelable(true);
-
-    // ==========================
-    // ROOT
-    // ==========================
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(24), dp(20), dp(24), dp(20));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    box.setBackground(bg);
-
-    // ==========================
-    // TITLE
-    // ==========================
-    TextView title = new TextView(this);
-    title.setText(titleText);
-    title.setTextColor(0xFFFFD700);
-    title.setTextSize(17f);
-    title.setPadding(0, 0, 0, dp(12));
-    box.addView(title);
-
-    // ==========================
-    // MESSAGE
-    // ==========================
-    TextView msg = new TextView(this);
-    msg.setText(msgText);
-    msg.setTextColor(0xFFFFFFFF);
-    msg.setTextSize(14.5f);
-    msg.setPadding(0, 0, 0, dp(18));
-    box.addView(msg);
-
-    // ==========================
-    // 🔕 MUTE TOGGLE (GLOBAL)
-    // ==========================
-    CheckBox muteBox = new CheckBox(this);
-    muteBox.setChecked(isTtsMuted());
-    muteBox.setText("Mute voice instructions");
-    muteBox.setTextColor(0xFFDDDDDD);
-    muteBox.setGravity(Gravity.CENTER);
-    muteBox.setPadding(0, dp(10), 0, dp(10));
-    box.addView(muteBox);
-
-    // ==========================
-    // OK BUTTON
-    // ==========================
-    Button ok = new Button(this);
-    ok.setText("OK");
-    ok.setAllCaps(true);
-    ok.setTextSize(15f);
-    ok.setTextColor(0xFF00FF6A);
-
-    GradientDrawable okBg = new GradientDrawable();
-    okBg.setColor(0xFF000000);
-    okBg.setCornerRadius(dp(14));
-    okBg.setStroke(dp(3), 0xFFFFD700);
-    ok.setBackground(okBg);
-    ok.setPadding(dp(18), dp(10), dp(18), dp(10));
-    box.addView(ok);
-
-    // ==========================
-    // BUILD DIALOG
-    // ==========================
-    b.setView(box);
-    AlertDialog popup = b.create();
-
-    if (popup.getWindow() != null) {
-        popup.getWindow()
-                .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-    }
-
-    // ==========================
-// 🔇 MUTE LOGIC — GLOBAL
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    // αποθήκευση GLOBAL επιλογής
-    setTtsMuted(checked);
-
-    // κόψε άμεσα τον ήχο αν μπήκε mute
-    if (checked && tts != null && tts[0] != null) {
-        tts[0].stop();   // ✔ μόνο stop
-    }
-});
-
-// ==========================
-// 🔊 TTS — PLAY (GLOBAL ENGINE)
-// ==========================
-if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-
-    // καθάρισε ό,τι έπαιζε πριν
-    tts[0].stop();
-
-    tts[0].speak(
-            "Before running this lab, please make sure that " +
-            "lab fourteen, lab fifteen and lab sixteen have been completed.",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB17_POPUP"
-    );
-}
-
-    // ==========================
-    // OK ACTION
-    // ==========================
-    ok.setOnClickListener(v -> {
-
-        try {
-            if (tts[0] != null) {
-                tts[0].stop();   // ✔ μόνο stop — όχι shutdown εδώ
-            }
-        } catch (Throwable ignore) {}
-
-        try {
-            popup.dismiss();
-        } catch (Throwable ignore) {}
-    });
-
-    popup.show();
-}
-
-// ============================================================
-// LAB 17 — AGE FORMATTER
-// ============================================================
-private String lab17_age(long deltaMs) {
-    if (deltaMs < 0) deltaMs = 0;
-    long sec = deltaMs / 1000L;
-    long min = sec / 60L;
-    long hr  = min / 60L;
-
-    if (hr > 0) {
-        long rm = min % 60L;
-        return hr + "h " + rm + "m ago";
-    }
-    if (min > 0) return min + "m ago";
-    return Math.max(0, sec) + "s ago";
+    }).start();
 }
 
 // ============================================================
@@ -5443,15 +5290,15 @@ private void lab18StorageSnapshot() {
         // FILESYSTEM INFO (BEST EFFORT)
         // ------------------------------------------------------------
         try {
-            String fsType = s.getClass().getMethod("getFilesystemType") != null
-                    ? (String) s.getClass().getMethod("getFilesystemType").invoke(s)
-                    : null;
-
-            if (fsType != null) {
-                logInfo("Filesystem type:");
-                logOk(fsType.toUpperCase(Locale.US));
-            }
-        } catch (Throwable ignore) {}
+    Method m = StatFs.class.getMethod("getFilesystemType");
+    if (m != null) {
+        String fsType = (String) m.invoke(s);
+        if (fsType != null) {
+            logInfo("Filesystem type:");
+            logOk(fsType.toUpperCase(Locale.US));
+        }
+    }
+} catch (Throwable ignore) {}
 
         // ------------------------------------------------------------
         // ROOT AWARE INTELLIGENCE
@@ -5587,6 +5434,7 @@ private void lab19RamSnapshot() {
             boolean swapActive = isSwapActiveSafe();   // generic swap
 
             if (zramActive || swapActive) {
+            	logWarn("This indicates memory pressure beyond physical RAM.");
                 logWarn("⚠️ Memory compression / swap detected.");
                 logInfo("System is extending RAM using CPU cycles.");
                 logOk("This improves stability but may reduce performance.");
@@ -5607,6 +5455,16 @@ private void lab19RamSnapshot() {
     } catch (Throwable t) {
         logError("RAM snapshot failed.");
     }
+    
+    try {
+    p.edit()
+     .putInt("lab19_ram_free_pct", pctFree)
+     .putLong("lab19_ram_free_bytes", free)
+     .putLong("lab19_ram_total_bytes", total)
+     .putBoolean("lab19_low_memory", mi.lowMemory)
+     .putLong("lab19_last_ts", System.currentTimeMillis())
+     .apply();
+} catch (Throwable ignore) {}
 
     appendHtml("<br>");
     logOk("Lab 19 finished.");
@@ -5676,6 +5534,7 @@ private void lab20UptimeHints() {
             boolean frequentReboots   = detectFrequentRebootsHint();
 
             if (frequentReboots) {
+            	logWarn("This pattern often correlates with system instability.");
                 logWarn("⚠️ Repeated reboot pattern detected.");
                 logWarn("This may indicate instability, crashes or watchdog resets.");
             } else {
@@ -5697,6 +5556,16 @@ private void lab20UptimeHints() {
     } catch (Throwable t) {
         logError("Uptime analysis failed.");
     }
+    
+    try {
+    p.edit()
+     .putLong("lab20_uptime_ms", upMs)
+     .putBoolean("lab20_recent_reboot", veryRecentReboot)
+     .putBoolean("lab20_long_uptime", veryLongUptime)
+     .putBoolean("lab20_extreme_uptime", extremeUptime)
+     .putLong("lab20_last_ts", System.currentTimeMillis())
+     .apply();
+} catch (Throwable ignore) {}
     
     appendHtml("<br>");
     logOk("Lab 20 finished.");
@@ -5722,296 +5591,243 @@ private void lab21ScreenLock() {
     }
     lab21Running = true;
 
-    appendHtml("<br>");
-    logLine();
-    logInfo("LAB 21 — Screen Lock / Biometrics (Live + Root-Aware)");
-    logLine();
-
-    // ------------------------------------------------------------
-    // PART A — LOCK CONFIG + STATE
-    // ------------------------------------------------------------
-    boolean secure = false;
-    boolean lockedNow = false;
-
     try {
-        android.app.KeyguardManager km =
-                (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-        if (km != null) {
-
-            secure = km.isDeviceSecure();
-
-            try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}
-
-            if (secure) {
-                logOk("Secure lock configured (PIN / Pattern / Password).");
-            } else {
-                logError("NO secure lock configured — device is UNPROTECTED!");
-                logWarn("Risk: anyone with physical access can access data.");
-            }
-
-            if (secure) {
-    logInfo("Current state:");
-    if (lockedNow) {
-        logOk("LOCKED (keyguard active).");
-    } else {
-        logWarn("UNLOCKED right now (device open).");
-    }
-}
-
-        } else {
-            logWarn("KeyguardManager not available — cannot read lock status.");
-        }
-
-    } catch (Throwable e) {
-        logWarn("Screen lock detection failed: " + e.getMessage());
-    }
-
-    // ------------------------------------------------------------
-    // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
-    // ------------------------------------------------------------
-boolean biometricSupported = false;
-
-if (android.os.Build.VERSION.SDK_INT >= 29) {
-    try {
-        android.hardware.biometrics.BiometricManager bm =
-                getSystemService(android.hardware.biometrics.BiometricManager.class);
-
-        if (bm != null) {
-            int result = bm.canAuthenticate(
-                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-            );
-
-            if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
-                biometricSupported = true;
-                logOk("Biometric hardware PRESENT (system reports available).");
-            } else {
-                logWarn("Biometric hardware PRESENT but NOT ready / not usable.");
-            }
-        } else {
-            logWarn("BiometricManager unavailable.");
-        }
-    } catch (Throwable e) {
-        logWarn("Biometric capability check failed: " + e.getMessage());
-    }
-} else {
-    logWarn("Biometric framework not supported on this Android version.");
-}
-
-    // ------------------------------------------------------------
-    // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
-    // ------------------------------------------------------------
-    boolean hasLockDb = false;
-    boolean hasGatekeeper = false;
-    boolean hasKeystore = false;
-
-    boolean root = isRootAvailable();
-    if (root) {
-
-        logInfo("Root mode:");
-        logOk("AVAILABLE (extra infrastructure checks enabled).");
-
-        hasLockDb     = rootPathExists("/data/system/locksettings.db");
-        hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
-                        rootPathExists("/data/system/gatekeeper.pattern.key") ||
-                        rootGlobExists("/data/system/gatekeeper*");
-        hasKeystore   = rootPathExists("/data/misc/keystore") ||
-                        rootPathExists("/data/misc/keystore/");
-
-        if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
-        else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");
-
-        if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");
-        else logWarn("Locksettings database not detected (ROM/vendor variation possible).");
-
-        if (hasKeystore) logOk("System keystore path detected (secure storage present).");
-        else logWarn("Keystore path not detected (vendor / Android version variation possible).");
-
-    } else {
-        logInfo("Root mode:");
-        logOk("not available (standard checks only).");
-    }
-
-    // ============================================================
-    // LAB 21 — TRUST BOUNDARY AWARENESS
-    // ============================================================
-
-    try {
-        if (secure) {
-    logInfo("Post-reboot protection:");
-    logOk("authentication REQUIRED before data access.");
-} else {
-    logInfo("Post-reboot protection:");
-    logError("NOT enforced — data exposure risk after reboot.");
-}
-    } catch (Throwable ignore) {}
-
-    if (secure) {
-    logInfo("Primary security layer:");
-    logOk("knowledge-based credential (PIN / Pattern / Password).");
-} else {
-    logInfo("Primary security layer:");
-    logWarn("NONE (no credential configured).");
-}
-
-if (biometricSupported) {
-    logInfo("Convenience layer:");
-    logOk("biometrics available (user-facing).");
-} else {
-    logInfo("Convenience layer:");
-    logWarn("biometrics not available or not ready (non-critical).");
-}
-
-    if (secure && !lockedNow) {
-        logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");
-    }
-
-    if (root) {
-        if (hasGatekeeper || hasLockDb) logOk("System enforcement signals present (auth infrastructure active).");
-        else logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");
-    }
-
-    // ------------------------------------------------------------
-    // PART D — RISK SCORE (FAST, CLEAR)
-    // ------------------------------------------------------------
-    int risk = 0;
-
-    if (!secure) risk += 70;
-    if (secure && !lockedNow) risk += 10;
-    if (secure && !biometricSupported) risk += 5;
-
-    if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");
-    else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
-    else logOk("Security impact: LOW (" + risk + "/100)");
-
-// ------------------------------------------------------------
-// PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
-// ------------------------------------------------------------
-if (!secure) {
-    logWarn("Live biometric test skipped: secure lock required.");
-    
-    appendHtml("<br>");
-    logOk("LAB 21 finished.");
-    logLine();
-    lab21Running = false;
-    return;
-}
-
-if (!biometricSupported) {
-    logInfo("Live biometric test not started:");
-    logWarn("Biometrics not ready or not available.");
-    logInfo("Action:");
-    logOk("Enroll biometrics in Settings, then re-run LAB 21.");
-    
-    appendHtml("<br>");
-    logOk("LAB 21 finished.");
-    logLine();
-    lab21Running = false;
-    return;
-}
-
-if (android.os.Build.VERSION.SDK_INT >= 28) {
-    try {
-        logLine();
-        logInfo("LIVE SENSOR TEST:");
-        logOk("Place finger / face for biometric authentication NOW.");
-        logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
-
-        java.util.concurrent.Executor executor = getMainExecutor();
-        android.os.CancellationSignal cancel = new android.os.CancellationSignal();
-
-        android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
-                new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-
-                    @Override
-                    public void onAuthenticationSucceeded(
-                            android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
-
-                        logInfo("LIVE BIOMETRIC TEST:");
-                        logOk("PASS — biometric sensor and authentication pipeline verified functional.");
-
-                        logInfo("Multi-biometric devices:");
-                        logWarn("Android tests ONE biometric sensor per run.");
-                        logOk("Disable current biometric in Settings and re-run LAB 21 to test another sensor.");
-                        logWarn("OEM priority may keep same sensor even after disabling.");
-
-                        appendHtml("<br>");
-                        logOk("LAB 21 finished.");
-                        logLine();
-                        lab21Running = false;
-                    }
-
-                    @Override
-                    public void onAuthenticationFailed() {
-                        logInfo("LIVE BIOMETRIC TEST:");
-                        logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");
-
-                        logOk("LAB 21 finished.");
-                        logLine();
-                        lab21Running = false;
-                    }
-
-                    @Override
-                    public void onAuthenticationError(int errorCode, CharSequence errString) {
-                        logWarn("System fallback to device credential detected — biometric sensor NOT confirmed functional.");
-
-                        appendHtml("<br>");
-                        logOk("LAB 21 finished.");
-                        logLine();
-                        lab21Running = false;
-                    }
-                };
-
-        android.hardware.biometrics.BiometricPrompt prompt =
-                new android.hardware.biometrics.BiometricPrompt.Builder(this)
-                        .setTitle("LAB 21 — Live Biometric Sensor Test")
-                        .setSubtitle("Place finger / face to verify sensor works")
-                        .setDescription("This is a REAL hardware test (no simulation).")
-                        .setNegativeButton(
-                                "Cancel test",
-                                executor,
-                                (dialog, which) -> {
-                                    logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
-                                    
-                                    appendHtml("<br>");
-                                    logOk("LAB 21 finished.");
-                                    logLine();
-                                    lab21Running = false;
-                                }
-                        )
-                        .setAllowedAuthenticators(
-                                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        )
-                        .build();
-
-        logInfo("Starting LIVE biometric prompt...");
-        prompt.authenticate(cancel, executor, cb);
-
-    } catch (Throwable e) {
-        logWarn("Live biometric prompt failed: " + e.getMessage());
-        
         appendHtml("<br>");
-        logOk("LAB 21 finished.");
         logLine();
-        lab21Running = false;
-    }
+        logInfo("LAB 21 — Screen Lock / Biometrics (Live + Root-Aware)");
+        logLine();
 
-} else {
+        // ------------------------------------------------------------
+        // PART A — LOCK CONFIG + STATE
+        // ------------------------------------------------------------
+        boolean secure = false;
+        boolean lockedNow = false;
 
-    logOk("Live biometric prompt not supported on this Android version.");
-    logInfo("Action required:");
-    logOk("Test biometrics via system lock screen settings, then re-run LAB 21.");
+        try {
+            android.app.KeyguardManager km =
+                    (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-    logInfo("Note:");
-    logOk("Each LAB 21 run verifies ONE biometric sensor path.");
+            if (km != null) {
 
-    logInfo("Action:");
-    logOk("Disable the active biometric in Settings to test another sensor.");
-    
-    appendHtml("<br>");
-    logOk("LAB 21 finished.");    
-    logLine();
-    lab21Running = false;
+                secure = km.isDeviceSecure();
+
+                try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}
+
+                if (secure) {
+                    logOk("Secure lock configured (PIN / Pattern / Password).");
+                } else {
+                    logError("NO secure lock configured — device is UNPROTECTED!");
+                    logWarn("Risk: anyone with physical access can access data.");
+                }
+
+                if (secure) {
+                    logInfo("Current state:");
+                    if (lockedNow) {
+                        logOk("LOCKED (keyguard active).");
+                    } else {
+                        logWarn("UNLOCKED right now (device open).");
+                    }
+                }
+
+            } else {
+                logWarn("KeyguardManager not available — cannot read lock status.");
+            }
+
+        } catch (Throwable e) {
+            logWarn("Screen lock detection failed: " + e.getMessage());
+        }
+
+        // ------------------------------------------------------------
+        // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)
+        // ------------------------------------------------------------
+        boolean biometricSupported = false;
+
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            try {
+                android.hardware.biometrics.BiometricManager bm =
+                        getSystemService(android.hardware.biometrics.BiometricManager.class);
+
+                if (bm != null) {
+                    int result = bm.canAuthenticate(
+                            android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                    );
+
+                    if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+                        biometricSupported = true;
+                        logOk("Biometric hardware PRESENT (system reports available).");
+                    } else {
+                        logWarn("Biometric hardware PRESENT but NOT ready / not usable.");
+                    }
+                } else {
+                    logWarn("BiometricManager unavailable.");
+                }
+            } catch (Throwable e) {
+                logWarn("Biometric capability check failed: " + e.getMessage());
+            }
+        } else {
+            logWarn("Biometric framework not supported on this Android version.");
+        }
+
+        // ------------------------------------------------------------
+        // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)
+        // ------------------------------------------------------------
+        boolean hasLockDb = false;
+        boolean hasGatekeeper = false;
+        boolean hasKeystore = false;
+
+        boolean root = isRootAvailable();
+        if (root) {
+
+            logInfo("Root mode:");
+            logOk("AVAILABLE (extra infrastructure checks enabled).");
+
+            hasLockDb     = rootPathExists("/data/system/locksettings.db");
+            hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||
+                            rootPathExists("/data/system/gatekeeper.pattern.key") ||
+                            rootGlobExists("/data/system/gatekeeper*");
+            hasKeystore   = rootPathExists("/data/misc/keystore") ||
+                            rootPathExists("/data/misc/keystore/");
+
+            if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");
+            else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");
+
+            if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");
+            else logWarn("Locksettings database not detected (ROM/vendor variation possible).");
+
+            if (hasKeystore) logOk("System keystore path detected (secure storage present).");
+            else logWarn("Keystore path not detected (vendor / Android version variation possible).");
+
+        } else {
+            logInfo("Root mode:");
+            logOk("not available (standard checks only).");
+        }
+
+        // ------------------------------------------------------------
+        // PART D — RISK SCORE (FAST, CLEAR)
+        // ------------------------------------------------------------
+        int risk = 0;
+
+        if (!secure) risk += 70;
+        if (secure && !lockedNow) risk += 10;
+        if (secure && !biometricSupported) risk += 5;
+
+        if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");
+        else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");
+        else logOk("Security impact: LOW (" + risk + "/100)");
+
+        // ------------------------------------------------------------
+        // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
+        // ------------------------------------------------------------
+        if (!secure) {
+            logWarn("Live biometric test skipped: secure lock required.");
+
+            appendHtml("<br>");
+            logOk("LAB 21 finished.");
+            logLine();
+            return;
+        }
+
+        if (!biometricSupported) {
+            logInfo("Live biometric test not started:");
+            logWarn("Biometrics not ready or not available.");
+            logInfo("Action:");
+            logOk("Enroll biometrics in Settings, then re-run LAB 21.");
+
+            appendHtml("<br>");
+            logOk("LAB 21 finished.");
+            logLine();
+            return;
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            try {
+
+                logLine();
+                logInfo("LIVE SENSOR TEST:");
+                logOk("Place finger / face for biometric authentication NOW.");
+
+                java.util.concurrent.Executor executor = getMainExecutor();
+                android.os.CancellationSignal cancel = new android.os.CancellationSignal();
+
+                android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                        new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+
+                            @Override
+                            public void onAuthenticationSucceeded(
+                                    android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
+
+                                logInfo("LIVE BIOMETRIC TEST:");
+                                logOk("PASS — biometric sensor verified.");
+
+                                appendHtml("<br>");
+                                logOk("LAB 21 finished.");
+                                logLine();
+                            }
+
+                            @Override
+                            public void onAuthenticationFailed() {
+                                logInfo("LIVE BIOMETRIC TEST:");
+                                logError("FAIL — biometric did NOT authenticate.");
+
+                                logOk("LAB 21 finished.");
+                                logLine();
+                            }
+
+                            @Override
+                            public void onAuthenticationError(int errorCode, CharSequence errString) {
+                                logWarn("System fallback to device credential detected.");
+
+                                appendHtml("<br>");
+                                logOk("LAB 21 finished.");
+                                logLine();
+                            }
+                        };
+
+                android.hardware.biometrics.BiometricPrompt prompt =
+                        new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                                .setTitle("LAB 21 — Live Biometric Sensor Test")
+                                .setSubtitle("Place finger / face to verify sensor works")
+                                .setDescription("This is a REAL hardware test.")
+                                .setNegativeButton(
+                                        "Cancel test",
+                                        executor,
+                                        (dialog, which) -> {
+                                            logWarn("LIVE BIOMETRIC TEST: cancelled by user.");
+                                            appendHtml("<br>");
+                                            logOk("LAB 21 finished.");
+                                            logLine();
+                                        }
+                                )
+                                .setAllowedAuthenticators(
+                                        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                                )
+                                .build();
+
+                logInfo("Starting LIVE biometric prompt...");
+                prompt.authenticate(cancel, executor, cb);
+
+            } catch (Throwable e) {
+                logWarn("Live biometric prompt failed: " + e.getMessage());
+
+                appendHtml("<br>");
+                logOk("LAB 21 finished.");
+                logLine();
+            }
+
+        } else {
+
+            logOk("Live biometric prompt not supported on this Android version.");
+            logInfo("Action required:");
+            logOk("Test biometrics via system lock screen settings, then re-run LAB 21.");
+
+            appendHtml("<br>");
+            logOk("LAB 21 finished.");
+            logLine();
+        }
+
+    } finally {
+        lab21Running = false;   // 🔒 ΠΑΝΤΑ ξεκλειδώνει
     }
 }
 
@@ -6774,7 +6590,8 @@ try {
                             : "(unknown)";
 
                     // Group snapshot per process (ok)
-                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
+                    Integer v = appEvents.get(app);
+appEvents.put(app, (v == null ? 1 : v + 1));
 
                     if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
                         details.add("SNAPSHOT CRASH: " + app + " — " + safeStr(e.shortMsg));
@@ -6843,7 +6660,8 @@ try {
         key = clean;
     }
 
-    appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
+    Integer v2 = appEvents.get(key);
+appEvents.put(key, (v2 == null ? 1 : v2 + 1));
 
 } catch (Exception ignored) {}
 ent = db.getNextEntry(tag, ent.getTimeMillis());
@@ -7594,20 +7412,23 @@ if (!appRisk.isEmpty()) {
 	
     logInfo("Top Privacy Offenders:");  
 
-    appRisk.entrySet()  
-            .stream()  
-            .sorted((a, b) -> b.getValue() - a.getValue())  
-            .limit(8)  
-            .forEach(e -> {  
-                String c =  
-                        (e.getValue() >= 60) ? "??" :  
-                        (e.getValue() >= 30) ? "🟧" :  
-                        (e.getValue() >= 15) ? "🟨" : "🟩";  
+    List<Map.Entry<String, Integer>> list =
+        new ArrayList<>(appRisk.entrySet());
 
-                logInfo(" " + c + " " + safeLabel(pm, e.getKey())  
-                        + " — Risk " + e.getValue());  
-            });  
-}  
+Collections.sort(list, (a, b) -> b.getValue() - a.getValue());
+
+int lim = Math.min(8, list.size());
+for (int i = 0; i < lim; i++) {
+    Map.Entry<String, Integer> e = list.get(i);
+
+    String c =
+            (e.getValue() >= 60) ? "🟥" :
+            (e.getValue() >= 30) ? "🟧" :
+            (e.getValue() >= 15) ? "🟨" : "🟩";
+
+    logInfo(" " + c + " " + safeLabel(pm, e.getKey())
+            + " — Risk " + e.getValue());
+}
 
 // ============================================================  
 // FULL DETAILS  
@@ -7704,7 +7525,268 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 }
 
 // ============================================================
-// LAB 28 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// LAB 28 — Hardware Stability & Interconnect Integrity
+// TECHNICIAN MODE — SYMPTOM-BASED TRIAGE ONLY
+// ⚠️ This lab does NOT diagnose hardware faults.
+// ⚠️ Does NOT confirm soldering defects.
+// ============================================================
+private void lab28HardwareStability() {
+
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 28 — Hardware Stability & Interconnect Integrity");
+    logWarn("Technician mode — symptom-based analysis ONLY.");
+    logLine();
+
+    // ------------------------------------------------------------
+    // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
+    // ------------------------------------------------------------
+    showLab28Popup();
+
+    // ------------------------------------------------------------
+    // 1) COLLECT SYMPTOMS (from system signals only)
+    // ------------------------------------------------------------
+    int score = 0;
+
+    boolean randomReboots   = detectRecentReboots();
+    boolean signalDrops     = detectSignalInstability();
+    boolean sensorFlaps     = detectSensorInstability();
+    boolean thermalSpikes   = detectThermalSpikes();
+    boolean powerGlitches   = detectPowerInstability();
+
+    logInfo("Observed symptom signals:");
+
+    if (randomReboots) {
+        logWarn("• Random reboots / sudden resets detected.");
+        score += 25;
+    } else logOk("• No abnormal reboot pattern detected.");
+
+    if (signalDrops) {
+        logWarn("• Network / radio instability detected.");
+        score += 20;
+    } else logOk("• Radio signals appear stable.");
+
+    if (sensorFlaps) {
+        logWarn("• Sensor instability (intermittent readings).");
+        score += 15;
+    } else logOk("• Sensors appear stable.");
+
+    if (thermalSpikes) {
+        logWarn("• Abnormal thermal spikes detected.");
+        score += 20;
+    } else logOk("• Thermal behavior within normal range.");
+
+    if (powerGlitches) {
+        logWarn("• Power / charging instability signals.");
+        score += 20;
+    } else logOk("• Power behavior appears stable.");
+
+    if (score > 100) score = 100;
+
+    // ------------------------------------------------------------
+    // 2) INTERPRETATION — SAFE WORDING
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Symptom Consistency Score:");
+
+    String level;
+    if (score <= 20) level = "LOW";
+    else if (score <= 45) level = "MODERATE";
+    else if (score <= 70) level = "HIGH";
+    else level = "VERY HIGH";
+
+    if (score >= 70) logWarn(score + "/100 (" + level + ")");
+    else if (score >= 40) logWarn(score + "/100 (" + level + ")");
+    else logOk(score + "/100 (" + level + ")");
+
+    // ------------------------------------------------------------
+    // 3) FINAL WORDING — TRIAGE, NOT DIAGNOSIS
+    // ------------------------------------------------------------
+    logLine();
+    logInfo("Technician note:");
+
+    if (score >= 60) {
+        logWarn("⚠️ Symptom pattern MAY be consistent with intermittent contact issues.");
+        logWarn("This includes POSSIBLE loose connectors or unstable interconnect paths.");
+        logInfo("Important:");
+        logWarn("This is NOT a hardware diagnosis.");
+        logWarn("This does NOT confirm soldering defects.");
+        logInfo("Action:");
+        logOk("Proceed only with physical inspection and professional bench testing.");
+    }
+    else if (score >= 30) {
+        logWarn("⚠️ Some instability patterns detected.");
+        logInfo("These MAY originate from software, firmware, or usage conditions.");
+        logOk("Hardware intervention is NOT indicated at this stage.");
+    }
+    else {
+        logOk("No significant instability patterns detected.");
+        logOk("No indication of interconnect or solder-related issues.");
+    }
+
+    appendHtml("<br>");
+    logOk("Lab 28 finished.");
+    logLine();
+}
+
+// ============================================================
+// POPUP — LAB 28 TECHNICIAN DISCLAIMER + TTS
+// ============================================================
+private boolean lab28Muted = false;
+private String lab28Lang = "EN";
+
+private void showLab28Popup() {
+
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setTitle("LAB 28 — Technicians Only");
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(30, 20, 30, 10);
+
+    TextView msg = new TextView(this);
+    msg.setText(
+        "This lab performs symptom-based analysis only.\n\n" +
+        "It does NOT diagnose hardware faults.\n" +
+        "It does NOT confirm soldering defects.\n\n" +
+        "Use this lab strictly as a TRIAGE tool.\n" +
+        "If results are positive, proceed only with physical inspection " +
+        "and professional testing."
+    );
+    msg.setTextSize(15f);
+    box.addView(msg);
+
+    // --- Controls row
+    LinearLayout controls = new LinearLayout(this);
+    controls.setOrientation(LinearLayout.HORIZONTAL);
+    controls.setPadding(0, 20, 0, 0);
+
+    // MUTE button
+    Button muteBtn = new Button(this);
+    muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+    muteBtn.setOnClickListener(v -> {
+        lab28Muted = !lab28Muted;
+        muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+    });
+
+    // Language spinner
+    Spinner langSpinner = new Spinner(this);
+    ArrayAdapter<String> langAdapter =
+            new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item,
+                    new String[]{"EN", "GR"});
+    langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    langSpinner.setAdapter(langAdapter);
+
+    langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+            lab28Lang = (pos == 0) ? "EN" : "GR";
+        }
+        @Override public void onNothingSelected(AdapterView<?> p) {}
+    });
+
+    controls.addView(muteBtn);
+    controls.addView(langSpinner);
+
+    box.addView(controls);
+
+    b.setView(box);
+
+    b.setPositiveButton("OK", (d, w) -> speakLab28TTS());
+
+    b.show();
+}
+
+// ============================================================
+// TTS — LAB 28 (LANGUAGE + MUTE SAFE)
+// ============================================================
+private void speakLab28TTS() {
+
+    if (lab28Muted) return;
+
+    if ("GR".equals(lab28Lang)) {
+
+        speakTTS(
+            "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού.\n\n" +
+            "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων.\n" +
+            "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης.\n\n" +
+            "Τα αποτελέσματα δείχνουν μοτίβα συμπεριφοράς που ΜΠΟΡΕΙ να σχετίζονται\n" +
+            "με διακοπτόμενες επαφές, όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος.\n\n" +
+            "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση.\n\n" +
+            "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο\n" +
+            "και επαγγελματικές εργαστηριακές δοκιμές."
+        );
+
+    } else {
+
+        speakTTS(
+            "Lab twenty eight. Technician mode.\n\n" +
+            "This lab performs symptom-based analysis only.\n" +
+            "It does NOT diagnose hardware faults.\n" +
+            "It does NOT confirm soldering defects.\n\n" +
+            "Findings may indicate behavior patterns consistent with intermittent contact issues,\n" +
+            "such as unstable operation, random reboots, or signal drops.\n\n" +
+            "Use this lab strictly as a triage tool, not as a final diagnosis.\n\n" +
+            "If indicators are present, proceed only with physical inspection\n" +
+            "and professional bench-level testing."
+        );
+    }
+}
+
+// ============================================================
+// -------- SYMPTOM DETECTORS (SAFE — NO ROOT REQUIRED) --------
+// ============================================================
+
+private boolean detectRecentReboots() {
+    try {
+        long up = SystemClock.elapsedRealtime();
+        return up < 2 * 60 * 60 * 1000L; // reboot in last 2h
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private boolean detectSignalInstability() {
+    try {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return (ni == null || !ni.isConnected());
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private boolean detectSensorInstability() {
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) return false;
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        return (sensors == null || sensors.isEmpty());
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private boolean detectThermalSpikes() {
+    try {
+        float t = getBatteryTemperature();
+        return t >= 45f;
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+private boolean detectPowerInstability() {
+    try {
+        Intent i = registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (i == null) return false;
+        int status = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        return status == BatteryManager.BATTERY_STATUS_UNKNOWN;
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+// ============================================================
+// LAB 29 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
 // Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
 // Security + Privacy + Root + Stability into final scores.
 // NOTE (GEL RULE): Whole block ready for copy-paste.
@@ -7713,7 +7795,7 @@ private void lab28CombineFindings() {
 
 appendHtml("<br>");
 logLine();
-logInfo("LAB 28 — Auto Final Diagnosis Summary (FULL AUTO)");
+logInfo("LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
 logLine();
 
 // ------------------------------------------------------------  
@@ -7814,22 +7896,22 @@ logInfo("AUTO Breakdown:");
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
     logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "%.1fÂ°C", battTemp));  
+            String.format(Locale.US, "°C", battTemp));  
 } else {  
-    logInfo("• Zones=" + zones.size() +  
-            " | max=" + fmt1(maxThermal) + "Â°C" +  
-            " | avg=" + fmt1(avgThermal) + "Â°C");  
-    if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "Â°C");  
-    if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "Â°C");  
-    if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "Â°C");  
-    if (skin != null) logInfo("• Skin=" + fmt1(skin) + "Â°C");  
-    logInfo("• Battery=" + fmt1(battTemp) + "Â°C");  
-}  
+    logInfo("• Zones=" + zones.size() +
+        " | max=" + fmt1(maxThermal) + "°C" +
+        " | avg=" + fmt1(avgThermal) + "°C");
+if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");
+if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");
+if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");
+if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");
+logInfo("• Battery=" + fmt1(battTemp) + "°C");
+}
 
-// Battery  
-logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");  
-logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +  
-        " | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);  
+// Battery
+logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
+logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
+        " | Temp=" + fmt1(battTemp) + "°C | Charging=" + charging);
 
 // Storage  
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");  
@@ -7887,7 +7969,7 @@ else if (verdict.startsWith("🟨")) logWarn(verdict);
 else logError(verdict);  
 
 appendHtml("<br>");
-logOk("Lab 28 finished.");
+logOk("Lab 29 finished.");
 logLine();  
 
 }
@@ -8289,7 +8371,7 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
 // Does NOT modify GELServiceLog — only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
@@ -8297,7 +8379,7 @@ private void lab29FinalSummary() {
 
     appendHtml("<br>");
     logLine();
-    logInfo("LAB 29 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
+    logInfo("LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
     logLine();
 
     // ------------------------------------------------------------
@@ -8319,12 +8401,11 @@ private void lab29FinalSummary() {
     for (String l : lines) {
         String low = l.toLowerCase(Locale.US);
 
-        if (low.contains("⚠️ ") || low.contains("warning")) {
-            warnings.append(l).append("\n");
-        }
-        if (low.contains("❌") || low.contains("error")) {
-            warnings.append(l).append("\n");
-        }
+        if (low.contains("⚠️") || low.contains("warning")) {
+    warnings.append(l).append("\n");
+} else if (low.contains("❌") || low.contains("error")) {
+    warnings.append(l).append("\n");
+}
     }
 
     // ------------------------------------------------------------
@@ -8343,7 +8424,7 @@ private void lab29FinalSummary() {
     }
 
     appendHtml("<br>");
-    logOk("Lab 29 finished.");
+    logOk("Lab 30 finished.");
     logLine();
 
     appendHtml("<br>");

@@ -201,16 +201,29 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
 // ----------------------------------------------------------
-// PRINT VIA ANDROID FRAMEWORK (FINAL FIX)
+// PRINT VIA ANDROID FRAMEWORK — STABLE & SAFE
 // ----------------------------------------------------------
 private void printWebViewToPdf(WebView webView) {
 
-    // ⚠️ ΥΠΟΧΡΕΩΤΙΚΑ μέσα στο UI thread της Activity
-    runOnUiThread(() -> {
+    // Πρέπει:
+    // 1) να τρέξει στο UI thread
+    // 2) το Activity να ΜΗΝ είναι finishing / destroyed
+
+    if (isFinishing() || isDestroyed()) {
+        Toast.makeText(
+                this,
+                "Activity not ready for printing.",
+                Toast.LENGTH_SHORT
+        ).show();
+        return;
+    }
+
+    webView.post(() -> {
+
+        if (isFinishing() || isDestroyed()) return;
 
         PrintManager printManager =
-                (PrintManager) ServiceReportActivity.this
-                        .getSystemService(Context.PRINT_SERVICE);
+                (PrintManager) getSystemService(Context.PRINT_SERVICE);
 
         if (printManager == null) {
             Toast.makeText(
@@ -236,7 +249,6 @@ private void printWebViewToPdf(WebView webView) {
         );
     });
 }
-
     // ----------------------------------------------------------
     // LOG CLEANUP FOR PDF
     // - κρατά emoji

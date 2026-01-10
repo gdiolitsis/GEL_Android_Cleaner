@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Build;
@@ -436,4 +437,5 @@ class PdfPrint {
 
     public PdfPrint(PrintAttributes printAttributes) {
         this.printAttributes = printAttributes;
+    }
     }

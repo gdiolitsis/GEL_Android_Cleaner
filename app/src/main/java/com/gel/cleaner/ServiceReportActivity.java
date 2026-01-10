@@ -159,47 +159,34 @@ public class ServiceReportActivity extends AppCompatActivity {
     // ----------------------------------------------------------
     private void exportPdfSimple() {
 
-        if (GELServiceLog.isEmpty()) {
-            Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        final String body = cleanLogForPdf(GELServiceLog.getAll());
-
-        final String html =
-                "<!DOCTYPE html><html><head>" +
-                        "<meta charset='utf-8'/>" +
-                        "<meta name='viewport' content='width=device-width, initial-scale=1'/>" +
-                        "<style>" +
-                        "body{background:#FFFFFF;color:#000000;font-family:monospace;font-size:12px;line-height:1.45;margin:0;padding:0;}" +
-                        ".page{max-width:520px;margin:32px auto 40px auto;padding:0 12px;}" +
-                        "pre{white-space:pre-wrap;word-wrap:break-word;}" +
-                        ".header{border-bottom:1px solid #999;padding-bottom:8px;margin-bottom:12px;}" +
-                        ".title{font-size:16px;font-weight:bold;}" +
-                        ".sub{font-size:12px;color:#555;}" +
-                        "</style>" +
-                        "</head><body>" +
-                        "<div class='page'>" +
-
-                        // ---------- HEADER ----------
-                        "<div class='header'>" +
-                        "<div class='title'>GEL Αναφορά Service</div>" +
-                        "<div class='sub'>GDiolitsis Engine Lab (GEL) — Author & Developer</div>" +
-                        "</div>" +
-
-                        "<pre>" + body + "</pre>" +
-                        "</div>" +
-                        "</body></html>";
-
-        pdfWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                printWebViewToPdf(view);
-            }
-        });
-
-        pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+    if (GELServiceLog.isEmpty()) {
+        Toast.makeText(this, getString(R.string.preview_empty), Toast.LENGTH_LONG).show();
+        return;
     }
+
+    final String body = cleanLogForPdf(GELServiceLog.getAll());
+
+    final String html =
+            "<!DOCTYPE html><html><head>" +
+                    "<meta charset='utf-8'/>" +
+                    "<style>" +
+                    "body{font-family:monospace;font-size:12px;}" +
+                    "</style>" +
+                    "</head><body>" +
+                    "<pre>" + body + "</pre>" +
+                    "</body></html>";
+
+    pdfWebView.setWebViewClient(new WebViewClient() {
+        @Override
+        public void onPageFinished(WebView view, String url) {
+
+            // ⬇⬇⬇ ΕΔΩ ΚΑΛΕΙΤΑΙ — ΜΕΣΑ ΣΤΗΝ ACTIVITY ⬇⬇⬇
+            printNow(view);
+        }
+    });
+
+    pdfWebView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+}
 
 // ----------------------------------------------------------
 // PRINT VIA ANDROID FRAMEWORK — HARD FIX

@@ -7306,6 +7306,7 @@ BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
 private String safeStr(String s) {
 return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
+}
 
 // ============================================================
 // LAB 26 — Installed Apps Footprint & System Load Intelligence

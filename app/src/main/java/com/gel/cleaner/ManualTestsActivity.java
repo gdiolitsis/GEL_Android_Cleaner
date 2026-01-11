@@ -7832,6 +7832,7 @@ GELServiceLog.info("SUMMARY: APPS_IMPACT=" +
 appendHtml("<br>");  
 logOk("Lab 26 finished.");  
 logLine();
+}
 
 // ============================================================
 // ROOT HELPER — BEST EFFORT DIRECTORY SIZE

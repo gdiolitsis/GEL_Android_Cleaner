@@ -2584,6 +2584,8 @@ box.addView(controls);
 
 private String getLab28TextEN() {
     return
+        
+        "For better diagnostic accuracy, please run all labs before this test." +
         "This lab performs symptom based analysis only. " +
         "It does not diagnose hardware faults " +
         "and does not confirm soldering defects. " +
@@ -2597,6 +2599,8 @@ private String getLab28TextEN() {
 
 private String getLab28TextGR() {
     return
+        
+        "Για μεγαλύτερη διαγνωστική ακρίβεια, εκτελέστε πρώτα όλα τα labs πριν από αυτό το τεστ." +
         "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
         "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
         "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
@@ -8142,10 +8146,10 @@ private void lab28HardwareStability() {
     // ⚠️ helper method (showLab28Popup) βρίσκεται στα helpers του activity
     showLab28Popup();
 
-    // ------------------------------------------------------------
-    // 1) COLLECT SYMPTOMS (from system signals only)
-    // ------------------------------------------------------------
-    int score = 0;
+    // ============================================================
+    // STAGE A — SYMPTOM SCORE (ORIGINAL LOGIC — UNTOUCHED)
+    // ============================================================
+    int symptomScore = 0;
 
     boolean randomReboots   = detectRecentReboots();
     boolean signalDrops     = detectSignalInstability();
@@ -8157,64 +8161,158 @@ private void lab28HardwareStability() {
 
     if (randomReboots) {
         logWarn("• Random reboots / sudden resets detected.");
-        score += 25;
+        symptomScore += 25;
     } else logOk("• No abnormal reboot pattern detected.");
 
     if (signalDrops) {
         logWarn("• Network / radio instability detected.");
-        score += 20;
+        symptomScore += 20;
     } else logOk("• Radio signals appear stable.");
 
     if (sensorFlaps) {
         logWarn("• Sensor instability (intermittent readings).");
-        score += 15;
+        symptomScore += 15;
     } else logOk("• Sensors appear stable.");
 
     if (thermalSpikes) {
         logWarn("• Abnormal thermal spikes detected.");
-        score += 20;
+        symptomScore += 20;
     } else logOk("• Thermal behavior within normal range.");
 
     if (powerGlitches) {
         logWarn("• Power / charging instability signals.");
-        score += 20;
+        symptomScore += 20;
     } else logOk("• Power behavior appears stable.");
 
-    if (score > 100) score = 100;
+    if (symptomScore > 100) symptomScore = 100;
 
     // ------------------------------------------------------------
-    // 2) INTERPRETATION — SAFE WORDING
+    // SYMPTOM INTERPRETATION
     // ------------------------------------------------------------
     logLine();
     logInfo("Symptom Consistency Score:");
 
-    String level;
-    if (score <= 20) level = "LOW";
-    else if (score <= 45) level = "MODERATE";
-    else if (score <= 70) level = "HIGH";
-    else level = "VERY HIGH";
+    String symptomLevel;
+    if (symptomScore <= 20) symptomLevel = "LOW";
+    else if (symptomScore <= 45) symptomLevel = "MODERATE";
+    else if (symptomScore <= 70) symptomLevel = "HIGH";
+    else symptomLevel = "VERY HIGH";
 
-    if (score >= 40) logWarn(score + "/100 (" + level + ")");
-    else logOk(score + "/100 (" + level + ")");
+    if (symptomScore >= 40)
+        logWarn(symptomScore + "/100 (" + symptomLevel + ")");
+    else
+        logOk(symptomScore + "/100 (" + symptomLevel + ")");
 
-    // ------------------------------------------------------------
-    // 3) FINAL WORDING — TRIAGE, NOT DIAGNOSIS
-    // ------------------------------------------------------------
+    // ============================================================
+    // STAGE B — EVIDENCE SCORE (FROM GELServiceLog — SAFE ADDITION)
+    // ============================================================
+    int evidenceScore = 0;
+
+    Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
+
+    if (ev != null) {
+
+        logLine();
+        logInfo("Cross-lab evidence signals:");
+
+        if (ev.thermalSpikes) {
+            logWarn("• Evidence: thermal instability (Lab16).");
+            evidenceScore += 20;
+        } else logOk("• Evidence: no abnormal thermal pattern.");
+
+        if (ev.chargingGlitch) {
+            logWarn("• Evidence: charging / power glitches (Lab15).");
+            evidenceScore += 20;
+        } else logOk("• Evidence: charging behavior stable.");
+
+        if (ev.radioInstability) {
+            logWarn("• Evidence: radio/network instability (Lab10–13).");
+            evidenceScore += 20;
+        } else logOk("• Evidence: radio signals stable.");
+
+        if (ev.sensorFlaps) {
+            logWarn("• Evidence: sensor instability (Lab7–9).");
+            evidenceScore += 15;
+        } else logOk("• Evidence: sensors stable.");
+
+        if (ev.rebootPattern) {
+            logWarn("• Evidence: abnormal reboot pattern (Lab20).");
+            evidenceScore += 15;
+        } else logOk("• Evidence: reboot behavior normal.");
+
+        if (evidenceScore > 100) evidenceScore = 100;
+    }
+
+    // ============================================================
+    // STAGE C — EXCLUSION RULES (ANTI-FALSE-POSITIVE SHIELD)
+    // ============================================================
+    boolean softwareLikely = false;
+
+    if (ev != null) {
+
+        if ("SOFTWARE".equals(ev.crashPattern)) {
+            logWarn("• Exclusion: crash history indicates SOFTWARE origin.");
+            softwareLikely = true;
+        }
+
+        if (ev.appsHeavyImpact) {
+            logWarn("• Exclusion: installed apps impact suggests SOFTWARE stress.");
+            softwareLikely = true;
+        }
+
+        if (ev.thermalOnlyDuringCharging) {
+            logWarn("• Exclusion: thermal spikes linked to charging conditions.");
+            softwareLikely = true;
+        }
+    }
+
+    if (softwareLikely) {
+        evidenceScore -= 30;
+        if (evidenceScore < 0) evidenceScore = 0;
+        logWarn("Evidence score adjusted due to software indicators.");
+    }
+
+    // ============================================================
+    // STAGE D — FINAL CONFIDENCE
+    // ============================================================
+    int finalScore =
+            (int) (0.6f * symptomScore + 0.4f * evidenceScore);
+
+    if (finalScore > 100) finalScore = 100;
+
+    logLine();
+    logInfo("Final Stability Confidence Score:");
+
+    String finalLevel;
+    if (finalScore <= 20) finalLevel = "LOW";
+    else if (finalScore <= 45) finalLevel = "MODERATE";
+    else if (finalScore <= 70) finalLevel = "HIGH";
+    else finalLevel = "VERY HIGH";
+
+    if (finalScore >= 40)
+        logWarn(finalScore + "/100 (" + finalLevel + ")");
+    else
+        logOk(finalScore + "/100 (" + finalLevel + ")");
+
+    // ============================================================
+    // FINAL WORDING — TRIAGE, NOT DIAGNOSIS (SAFE)
+    // ============================================================
     logLine();
     logInfo("Technician note:");
 
-    if (score >= 60) {
-        logWarn("⚠️ Symptom pattern MAY be consistent with intermittent contact issues.");
+    if (finalScore >= 60) {
+        logWarn("⚠️ Multi-source instability pattern detected.");
+        logWarn("Symptoms MAY be consistent with intermittent contact issues.");
         logWarn("This includes POSSIBLE loose connectors or unstable interconnect paths.");
         logInfo("Important:");
         logWarn("This is NOT a hardware diagnosis.");
         logWarn("This does NOT confirm soldering defects.");
         logInfo("Action:");
-        logOk("Proceed only with physical inspection and professional bench testing.");
+        logOk("Professional physical inspection and bench testing recommended.");
     }
-    else if (score >= 30) {
+    else if (finalScore >= 30) {
         logWarn("⚠️ Some instability patterns detected.");
-        logInfo("These MAY originate from software, firmware, or usage conditions.");
+        logInfo("Evidence suggests mixed origin (hardware + software possible).");
         logOk("Hardware intervention is NOT indicated at this stage.");
     }
     else {
@@ -8225,6 +8323,214 @@ private void lab28HardwareStability() {
     appendHtml("<br>");
     logOk("Lab 28 finished.");
     logLine();
+}
+
+// ============================================================
+// LAB 28 — EVIDENCE STRUCT (SAFE, NULL-PROOF)
+// ============================================================
+private static class Lab28Evidence {
+    boolean thermalSpikes;
+    boolean chargingGlitch;
+    boolean radioInstability;
+    boolean sensorFlaps;
+    boolean rebootPattern;
+
+    boolean appsHeavyImpact;
+    boolean thermalOnlyDuringCharging;
+
+    String crashPattern; // "SOFTWARE", "MIXED", "UNKNOWN"
+}
+
+// ============================================================
+// LAB 28 — EVIDENCE READER (BASED ON REAL GELServiceLog FORMAT)
+// Reads only existing human-readable text. If nothing found,
+// evidence stays FALSE (NO false positives / NO crashes).
+// ============================================================
+private static class Lab28EvidenceReader {
+
+    static Lab28Evidence readFromGELServiceLog() {
+
+        Lab28Evidence ev = new Lab28Evidence();
+        ev.crashPattern = "UNKNOWN";
+
+        String log;
+        try {
+            log = GELServiceLog.getAll();
+        } catch (Throwable t) {
+            return ev; // ultra-safe
+        }
+
+        if (log == null || log.trim().isEmpty())
+            return ev;
+
+        final String L = log.toLowerCase(Locale.US);
+
+        // ------------------------------------------------------------
+        // Evidence: Thermal (Lab16 / generic phrases)
+        // ------------------------------------------------------------
+        ev.thermalSpikes =
+                containsAny(L,
+                        "thermal spike",
+                        "thermal spikes",
+                        "abnormal thermal",
+                        "overheat",
+                        "overheating",
+                        "temperature spike",
+                        "temp spike",
+                        "thermal behavior");
+
+        // Optional: "only during charging" heuristic
+        ev.thermalOnlyDuringCharging =
+                ev.thermalSpikes &&
+                containsAny(L,
+                        "while charging",
+                        "during charging",
+                        "charging only",
+                        "only while charging");
+
+        // ------------------------------------------------------------
+        // Evidence: Charging / Power (Lab15 / generic phrases)
+        // ------------------------------------------------------------
+        ev.chargingGlitch =
+                containsAny(L,
+                        "charging glitch",
+                        "power glitch",
+                        "power / charging instability",
+                        "charging instability",
+                        "usb disconnect",
+                        "disconnect while charging",
+                        "charger unstable",
+                        "power behavior");
+
+        // ------------------------------------------------------------
+        // Evidence: Radio / Network (Lab10-13 / generic phrases)
+        // ------------------------------------------------------------
+        ev.radioInstability =
+                containsAny(L,
+                        "radio instability",
+                        "network instability",
+                        "signal drop",
+                        "signal drops",
+                        "no service",
+                        "service lost",
+                        "mobile network",
+                        "wifi disconnect",
+                        "wi-fi disconnect",
+                        "internet access");
+
+        // ------------------------------------------------------------
+        // Evidence: Sensors (Lab7-9 / generic phrases)
+        // ------------------------------------------------------------
+        ev.sensorFlaps =
+                containsAny(L,
+                        "sensor instability",
+                        "intermittent readings",
+                        "sensor flaps",
+                        "proximity",
+                        "rotation",
+                        "auto-rotate",
+                        "sensor unavailable");
+
+        // ------------------------------------------------------------
+        // Evidence: Reboots / Uptime (Lab20 / generic phrases)
+        // ------------------------------------------------------------
+        ev.rebootPattern =
+                containsAny(L,
+                        "random reboots",
+                        "sudden resets",
+                        "abnormal reboot",
+                        "reboot pattern",
+                        "unexpected reboot",
+                        "uptime");
+
+        // ------------------------------------------------------------
+        // Exclusion: Crash history pattern (Lab25)
+        // ------------------------------------------------------------
+        // Heuristic: if log mentions crashes strongly, treat as SOFTWARE indicator
+        boolean crashMention =
+                containsAny(L,
+                        "crash",
+                        "anr",
+                        "freeze",
+                        "app not responding",
+                        "stopped working",
+                        "fatal exception");
+
+        if (crashMention) {
+            ev.crashPattern = "SOFTWARE";
+        }
+
+        // ------------------------------------------------------------
+        // Exclusion: Apps heavy impact (Lab26)
+        // ------------------------------------------------------------
+        ev.appsHeavyImpact =
+                containsAny(L,
+                        "installed applications impact analysis",
+                        "apps footprint",
+                        "heavy apps",
+                        "high app impact",
+                        "background apps",
+                        "excessive background");
+
+        return ev;
+    }
+
+    private static boolean containsAny(String hay, String... needles) {
+        if (hay == null || hay.isEmpty() || needles == null) return false;
+        for (String n : needles) {
+            if (n == null) continue;
+            if (hay.contains(n)) return true;
+        }
+        return false;
+    }
+}
+
+// ============================================================
+// LAB 28 — Helpers
+// ============================================================
+
+private static class Lab28Evidence {
+    boolean thermalSpikes;
+    boolean chargingGlitch;
+    boolean radioInstability;
+    boolean sensorFlaps;
+    boolean rebootPattern;
+
+    boolean appsHeavyImpact;
+    boolean thermalOnlyDuringCharging;
+
+    String crashPattern; // "SOFTWARE", "MIXED", "UNKNOWN"
+}
+
+private static class Lab28EvidenceReader {
+
+    static Lab28Evidence readFromGELServiceLog() {
+
+        Lab28Evidence ev = new Lab28Evidence();
+
+        String log = GELServiceLog.getPlainText(); // χρησιμοποιείς το buffer που ήδη έχεις
+        if (log == null) return ev;
+
+        ev.thermalSpikes   = log.contains("[LAB16_SUMMARY] THERMAL_SPIKES=YES");
+        ev.chargingGlitch = log.contains("[LAB15_SUMMARY] CHARGING_GLITCH=YES");
+        ev.radioInstability = log.contains("[LAB11_SUMMARY] RADIO_INSTABILITY=YES")
+                           || log.contains("[LAB10_SUMMARY] WIFI_INSTABILITY=YES");
+        ev.sensorFlaps    = log.contains("[LAB9_SUMMARY] SENSOR_FLAPS=YES");
+        ev.rebootPattern  = log.contains("[LAB20_SUMMARY] REBOOT_PATTERN=ABNORMAL");
+
+        ev.appsHeavyImpact = log.contains("[LAB26_SUMMARY] APPS_IMPACT=HIGH");
+        ev.thermalOnlyDuringCharging =
+                log.contains("[LAB16_SUMMARY] SPIKES_ONLY_WHILE_CHARGING=YES");
+
+        if (log.contains("[LAB25_SUMMARY] CRASH_PATTERN=SOFTWARE"))
+            ev.crashPattern = "SOFTWARE";
+        else if (log.contains("[LAB25_SUMMARY] CRASH_PATTERN=MIXED"))
+            ev.crashPattern = "MIXED";
+        else
+            ev.crashPattern = "UNKNOWN";
+
+        return ev;
+    }
 }
 
 // ============================================================

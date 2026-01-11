@@ -2314,6 +2314,56 @@ return false;
 }
 
 // ============================================================
+// SAFETY STUBS — Stability detectors
+// (production-safe, no side effects)
+// ============================================================
+
+private boolean detectRecentReboots() {
+    try {
+        // TODO: future implementation (DropBox / uptime diff)
+        return false;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private boolean detectSignalInstability() {
+    try {
+        // TODO: future implementation (Telephony / ServiceState history)
+        return false;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private boolean detectSensorInstability() {
+    try {
+        // TODO: future implementation (SensorManager error rates)
+        return false;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private boolean detectThermalSpikes() {
+    try {
+        // TODO: future implementation (thermal zones delta scan)
+        return false;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+private boolean detectPowerInstability() {
+    try {
+        // TODO: future implementation (battery + power HAL hints)
+        return false;
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+// ============================================================
 // LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)
 // ============================================================
 

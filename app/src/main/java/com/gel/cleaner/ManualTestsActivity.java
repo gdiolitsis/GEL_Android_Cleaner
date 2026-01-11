@@ -2454,25 +2454,27 @@ private void showLab28Popup() {
         });
 
         // ==========================
-        // 🌐 LANGUAGE SPINNER
-        // ==========================
-        Spinner langSpinner = new Spinner(this);
+// 🌐 LANGUAGE SPINNER
+// ==========================
+Spinner langSpinner = new Spinner(this);
 
-        ArrayAdapter<String> langAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        langAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        langSpinner.setAdapter(langAdapter);
+ArrayAdapter<String> langAdapter =
+        new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"EN", "GR"}
+        );
+langAdapter.setDropDownViewResource(
+        android.R.layout.simple_spinner_dropdown_item);
+langSpinner.setAdapter(langAdapter);
 
-        LinearLayout.LayoutParams lpLang =
-                new LinearLayout.LayoutParams(0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lpLang.setMargins(dp(8), 0, 0, 0);
-        langSpinner.setLayoutParams(lpLang);
+// 👉 Το spinner γεμίζει το κουτί
+langSpinner.setLayoutParams(
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+        )
+);
 
         // ==========================
         // LANGUAGE CHANGE LOGIC
@@ -2504,9 +2506,38 @@ private void showLab28Popup() {
                             android.widget.AdapterView<?> p) {}
                 });
 
-        controls.addView(muteBtn);
-        controls.addView(langSpinner);
-        box.addView(controls);
+// ==========================
+// 🌐 LANGUAGE BOX (RIGHT)
+// ==========================
+LinearLayout langBox = new LinearLayout(this);
+langBox.setOrientation(LinearLayout.HORIZONTAL);
+langBox.setGravity(Gravity.CENTER_VERTICAL);
+langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+
+// background κουτιού
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF1A1A1A);
+langBg.setCornerRadius(dp(12));
+langBg.setStroke(dp(2), 0xFFFFD700);
+langBox.setBackground(langBg);
+
+// layout params για το κουτάκι — ΙΔΙΟ ΥΨΟΣ ΜΕ BUTTON
+LinearLayout.LayoutParams lpLangBox =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(48),   // ίδιο ύψος με τα κουμπιά
+                1f
+        );
+lpLangBox.setMargins(dp(8), 0, 0, 0);
+langBox.setLayoutParams(lpLangBox);
+
+// βάλε το spinner ΜΕΣΑ στο κουτί
+langBox.addView(langSpinner);
+
+// και το κουτί μέσα στα controls
+controls.addView(muteBtn);
+controls.addView(langBox);
+box.addView(controls);
 
         // ==========================
         // OK BUTTON
@@ -2517,7 +2548,7 @@ private void showLab28Popup() {
         okBtn.setTextColor(0xFFFFFFFF);
 
         GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFF1E90FF);
+        okBg.setColor(0xFF0F8A3B);
         okBg.setCornerRadius(dp(14));
         okBg.setStroke(dp(3), 0xFFFFD700);
         okBtn.setBackground(okBg);

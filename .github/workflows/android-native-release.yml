@@ -33,7 +33,7 @@ jobs:
           accept-android-sdk-licenses: true
 
       # --------------------------------------------
-      # Install SDK packages (FIXED – manual sdkmanager)
+      # Install SDK packages
       # --------------------------------------------
       - name: Install Android SDK packages
         run: |
@@ -92,17 +92,17 @@ jobs:
           ls -1 *.apk
 
           APK=GEL_iDoctor_v4.apk
-echo ">>> Signing: $APK"
+          echo ">>> Signing: $APK"
 
-zipalign -f 4 "$APK" aligned.apk
+          zipalign -f 4 "$APK" aligned.apk
 
-apksigner sign \
-  --ks $GITHUB_WORKSPACE/gel-keystore.jks \
-  --ks-pass pass:"$KEYSTORE_PASSWORD" \
-  --key-pass pass:"$KEY_ALIAS_PASSWORD" \
-  --ks-key-alias "$KEY_ALIAS" \
-  --out GEL_iDoctor_v4_signed.apk \
-  aligned.apk
+          apksigner sign \
+            --ks $GITHUB_WORKSPACE/gel-keystore.jks \
+            --ks-pass pass:"$KEYSTORE_PASSWORD" \
+            --key-pass pass:"$KEY_ALIAS_PASSWORD" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --out GEL_iDoctor_v4_signed.apk \
+            aligned.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
@@ -115,4 +115,4 @@ apksigner sign \
         uses: actions/upload-artifact@v4
         with:
           name: GEL_iDoctor_Release_APK_v4
-          path: app/build/outputs/apk/release/GEL_iDoctor_v4.apk
+          path: app/build/outputs/apk/release/GEL_iDoctor_v4_signed.apk

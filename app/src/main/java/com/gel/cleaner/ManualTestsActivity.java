@@ -3642,7 +3642,7 @@ private void lab10WifiSnapshot() {
 
             if (!gpsOn && !netOn) {  
                 logWarn("Location services are OFF. SSID may show UNKNOWN.");  
-                logWarn("Opening Location Settingsâ€¦ enable Location and come back.");  
+                logWarn("Opening Location Settings... enable Location and come back.");
                 try {  
                     startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));  
                 } catch (Exception ignored) {}  
@@ -4838,211 +4838,6 @@ private void lab15ChargingSystemSmart() {
     }
     root.addView(lab15ProgressBar);
     
-// ============================================================
-// LAB 15 — POPUP (FULL) — MUTE + LANG + TTS
-// ============================================================
-private void showLab15Popup() {
-
-    runOnUiThread(() -> {
-
-        // -----------------------------
-        // STATE
-        // -----------------------------
-        final boolean[] ttsMuted = { isTtsMuted() };
-        final String[]  lab15Lang = { "EN" };   // default
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
-
-        // ==========================
-        // ROOT
-        // ==========================
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        root.setBackground(bg);
-
-        // ==========================
-        // TITLE
-        // ==========================
-        TextView title = new TextView(this);
-        title.setText("LAB 15 — Charging System Diagnostic");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
-        root.addView(title);
-
-        // ==========================
-        // MESSAGE
-        // ==========================
-        TextView msg = new TextView(this);
-        msg.setText(
-                "Connect the charger to the device's charging port.\n\n" +
-                "The system will monitor charging behavior for the next three minutes.\n" +
-                "Please keep the device connected during the test."
-        );
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
-
-        // ==========================
-        // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
-        // ==========================
-        CheckBox muteBox = new CheckBox(this);
-        muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
-        muteBox.setText("Mute voice instructions");
-        muteBox.setTextColor(0xFFDDDDDD);
-        muteBox.setGravity(Gravity.CENTER);
-        muteBox.setPadding(0, dp(10), 0, dp(10));
-        root.addView(muteBox);
-
-        // ==========================
-        // 🔇 MUTE LOGIC — GLOBAL
-        // ==========================
-        muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-            // αποθήκευση GLOBAL επιλογής
-            setTtsMuted(checked);
-            ttsMuted[0] = checked;
-
-            // κόψε άμεσα τον ήχο αν μπήκε mute
-            if (checked && tts != null && tts[0] != null) {
-                tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
-            }
-        });
-
-        // ==========================
-        // 🌐 LANGUAGE SELECT
-        // ==========================
-        Spinner langSpinner = new Spinner(this);
-
-        ArrayAdapter<String> langAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        langAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        langSpinner.setAdapter(langAdapter);
-
-        langSpinner.setOnItemSelectedListener(
-                new android.widget.AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(
-                            android.widget.AdapterView<?> p,
-                            View v,
-                            int pos,
-                            long id) {
-                        lab15Lang[0] = (pos == 0) ? "EN" : "GR";
-                    }
-
-                    @Override
-                    public void onNothingSelected(
-                            android.widget.AdapterView<?> p) {}
-                });
-
-        root.addView(langSpinner);
-
-        // ============================================================
-        // 🔹 EXIT BUTTON
-        // ============================================================
-        Button exitBtn = new Button(this);
-        exitBtn.setText("Exit test");
-        exitBtn.setAllCaps(false);
-        exitBtn.setTextColor(0xFFFFFFFF);
-        exitBtn.setTypeface(null, Typeface.BOLD);
-
-        GradientDrawable exitBg = new GradientDrawable();
-        exitBg.setColor(0xFF8B0000);
-        exitBg.setCornerRadius(dp(14));
-        exitBg.setStroke(dp(3), 0xFFFFD700);
-        exitBtn.setBackground(exitBg);
-
-        LinearLayout.LayoutParams lpExit =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpExit.setMargins(0, dp(14), 0, 0);
-        exitBtn.setLayoutParams(lpExit);
-
-        // ------------------------------------------------------------
-        // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
-        // ------------------------------------------------------------
-        exitBtn.setOnClickListener(v -> {
-            try {
-                if (tts != null && tts[0] != null) {
-                    tts[0].stop();   // ✔ μόνο stop
-                }
-            } catch (Throwable ignore) {}
-            abortLab15ByUser();
-        });
-
-        root.addView(exitBtn);
-
-        // ============================================================
-        // 🔹 SHOW DIALOG
-        // ============================================================
-        b.setView(root);
-
-        // ✅ IMPORTANT: use the FIELD, not a local shadow
-        lab15Dialog = b.create();
-
-        if (lab15Dialog.getWindow() != null) {
-            lab15Dialog.getWindow()
-                    .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        lab15Dialog.show();
-
-        // ============================================================
-        // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL + LANG)
-        // ============================================================
-        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-
-            tts[0].stop();
-
-            if ("GR".equals(lab15Lang[0])) {
-
-                tts[0].speak(
-                        "Συνδέστε τον φορτιστή στη θύρα φόρτισης της συσκευής. " +
-                        "Το σύστημα θα παρακολουθεί τη συμπεριφορά φόρτισης " +
-                        "για τα επόμενα τρία λεπτά. " +
-                        "Παρακαλώ κρατήστε τη συσκευή συνδεδεμένη κατά τη διάρκεια του τεστ.",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "LAB15_INTRO_GR"
-                );
-
-            } else {
-
-                // ❗ ΑΚΡΙΒΩΣ ΤΟ ΙΔΙΟ ΚΕΙΜΕΝΟ ΠΟΥ ΕΙΧΕΣ
-                tts[0].speak(
-                        "Connect the charger to the device's charging port. " +
-                        "The system will monitor charging behavior for the next three minutes. " +
-                        "Please keep the device connected during the test.",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "LAB15_INTRO_EN"
-                );
-            }
-        }
-    });
-}
-
     // ============================================================
     // 🔹 LOGS
     // ============================================================
@@ -5339,6 +5134,211 @@ private void showLab15Popup() {
                     lab15Dialog.dismiss();
             } catch (Throwable ignore) {}
             lab15Dialog = null;
+        }
+    });
+}
+
+// ============================================================
+// LAB 15 — POPUP (FULL) — MUTE + LANG + TTS
+// ============================================================
+private void showLab15Popup() {
+
+    runOnUiThread(() -> {
+
+        // -----------------------------
+        // STATE
+        // -----------------------------
+        final boolean[] ttsMuted = { isTtsMuted() };
+        final String[]  lab15Lang = { "EN" };   // default
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        // ==========================
+        // ROOT
+        // ==========================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // ==========================
+        // TITLE
+        // ==========================
+        TextView title = new TextView(this);
+        title.setText("LAB 15 — Charging System Diagnostic");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ==========================
+        // MESSAGE
+        // ==========================
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Connect the charger to the device's charging port.\n\n" +
+                "The system will monitor charging behavior for the next three minutes.\n" +
+                "Please keep the device connected during the test."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        // ==========================
+        // 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+        muteBox.setText("Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, dp(10), 0, dp(10));
+        root.addView(muteBox);
+
+        // ==========================
+        // 🔇 MUTE LOGIC — GLOBAL
+        // ==========================
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+
+            // αποθήκευση GLOBAL επιλογής
+            setTtsMuted(checked);
+            ttsMuted[0] = checked;
+
+            // κόψε άμεσα τον ήχο αν μπήκε mute
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown
+            }
+        });
+
+        // ==========================
+        // 🌐 LANGUAGE SELECT
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            android.widget.AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+                        lab15Lang[0] = (pos == 0) ? "EN" : "GR";
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            android.widget.AdapterView<?> p) {}
+                });
+
+        root.addView(langSpinner);
+
+        // ============================================================
+        // 🔹 EXIT BUTTON
+        // ============================================================
+        Button exitBtn = new Button(this);
+        exitBtn.setText("Exit test");
+        exitBtn.setAllCaps(false);
+        exitBtn.setTextColor(0xFFFFFFFF);
+        exitBtn.setTypeface(null, Typeface.BOLD);
+
+        GradientDrawable exitBg = new GradientDrawable();
+        exitBg.setColor(0xFF8B0000);
+        exitBg.setCornerRadius(dp(14));
+        exitBg.setStroke(dp(3), 0xFFFFD700);
+        exitBtn.setBackground(exitBg);
+
+        LinearLayout.LayoutParams lpExit =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpExit.setMargins(0, dp(14), 0, 0);
+        exitBtn.setLayoutParams(lpExit);
+
+        // ------------------------------------------------------------
+        // EXIT BUTTON — STOP TTS (NO SHUTDOWN)
+        // ------------------------------------------------------------
+        exitBtn.setOnClickListener(v -> {
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();   // ✔ μόνο stop
+                }
+            } catch (Throwable ignore) {}
+            abortLab15ByUser();
+        });
+
+        root.addView(exitBtn);
+
+        // ============================================================
+        // 🔹 SHOW DIALOG
+        // ============================================================
+        b.setView(root);
+
+        // ✅ IMPORTANT: use the FIELD, not a local shadow
+        lab15Dialog = b.create();
+
+        if (lab15Dialog.getWindow() != null) {
+            lab15Dialog.getWindow()
+                    .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        lab15Dialog.show();
+
+        // ============================================================
+        // 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL + LANG)
+        // ============================================================
+        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+
+            tts[0].stop();
+
+            if ("GR".equals(lab15Lang[0])) {
+
+                tts[0].speak(
+                        "Συνδέστε τον φορτιστή στη θύρα φόρτισης της συσκευής. " +
+                        "Το σύστημα θα παρακολουθεί τη συμπεριφορά φόρτισης " +
+                        "για τα επόμενα τρία λεπτά. " +
+                        "Παρακαλώ κρατήστε τη συσκευή συνδεδεμένη κατά τη διάρκεια του τεστ.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB15_INTRO_GR"
+                );
+
+            } else {
+
+                // ❗ ΑΚΡΙΒΩΣ ΤΟ ΙΔΙΟ ΚΕΙΜΕΝΟ ΠΟΥ ΕΙΧΕΣ
+                tts[0].speak(
+                        "Connect the charger to the device's charging port. " +
+                        "The system will monitor charging behavior for the next three minutes. " +
+                        "Please keep the device connected during the test.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB15_INTRO_EN"
+                );
+            }
         }
     });
 }

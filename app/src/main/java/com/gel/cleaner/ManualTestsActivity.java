@@ -705,9 +705,6 @@ lp.setMargins(0, dp(6), 0, dp(6));
 b.setLayoutParams(lp);  
 b.setGravity(Gravity.CENTER);  
 
-// ✅ PRESS EFFECT (base.uihelpers)  
-UIHelpers.applyPressEffect(b);  
-
 b.setOnClickListener(v -> action.run());  
 return b;
 

@@ -677,9 +677,6 @@ lp.setMargins(0, dp(4), 0, dp(4));
 b.setLayoutParams(lp);  
 b.setGravity(Gravity.CENTER);  
 
-// ✅ PRESS EFFECT (base.uihelpers)  
-UIHelpers.applyPressEffect(b);  
-
 b.setOnClickListener(v -> action.run());  
 return b;
 
@@ -8324,7 +8321,6 @@ private void lab28HardwareStability() {
 // ============================================================
 // LAB 28 — EVIDENCE STRUCT (SAFE, NULL-PROOF)
 // ============================================================
-private static class Lab28Evidence {
     boolean thermalSpikes;
     boolean chargingGlitch;
     boolean radioInstability;
@@ -8342,7 +8338,6 @@ private static class Lab28Evidence {
 // Reads only existing human-readable text. If nothing found,
 // evidence stays FALSE (NO false positives / NO crashes).
 // ============================================================
-private static class Lab28EvidenceReader {
 
     static Lab28Evidence readFromGELServiceLog() {
 

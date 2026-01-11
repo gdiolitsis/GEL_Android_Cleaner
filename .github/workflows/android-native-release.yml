@@ -1,4 +1,4 @@
-name: Manual Build — GEL iDoctor v4
+name: Manual Build — GEL iDoctor (APK + AAB)
 
 on:
   workflow_dispatch:
@@ -24,9 +24,9 @@ jobs:
           distribution: "temurin"
 
       # --------------------------------------------
-      # Android SDK cmdline-tools ONLY
+      # Android SDK
       # --------------------------------------------
-      - name: Set up Android SDK (cmdline-tools only)
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
@@ -72,13 +72,15 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
 
       # --------------------------------------------
-      # Build Release
+      # 🔨 BUILD BOTH
       # --------------------------------------------
-      - name: Build Release
-        run: gradle assembleRelease
+      - name: Build APK + AAB
+        run: |
+          gradle assembleRelease
+          gradle bundleRelease
 
       # --------------------------------------------
-      # Zipalign + Sign
+      # 🔐 Sign APK (ONLY APK, όχι AAB)
       # --------------------------------------------
       - name: Install Android build tools
         run: |
@@ -91,7 +93,7 @@ jobs:
           echo ">>> APKs:"
           ls -1 *.apk
 
-          APK=GEL_iDoctor_v4.apk
+          APK=$(ls *.apk | head -n 1)
           echo ">>> Signing: $APK"
 
           zipalign -f 4 "$APK" aligned.apk
@@ -109,10 +111,19 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
       # --------------------------------------------
-      # Upload Artifact
+      # 📦 Upload APK
       # --------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GEL_iDoctor_Release_APK_v4
+          name: GEL_iDoctor_APK_v4
           path: app/build/outputs/apk/release/GEL_iDoctor_v4_signed.apk
+
+      # --------------------------------------------
+      # 📦 Upload AAB
+      # --------------------------------------------
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEL_iDoctor_AAB_v4
+          path: app/build/outputs/bundle/release/app-release.aab

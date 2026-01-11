@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GEL Android Doctor</string>
+    <string name="app_name">GEL iDoctor</string>
 
     <!-- Ενότητες UI -->
     <string name="system">🛠 Σύστημα</string>
@@ -183,12 +183,12 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
 
     <!-- 7 ΚΑΤΗΓΟΡΙΕΣ -->
     <string name="manual_cat_1">Ήχος &amp; Δόνηση — Manual Labs 1–5</string>
-    <string name="manual_cat_2">Οθόνη &amp; Αισθητήρες — Manual Labs 6–10</string>
-    <string name="manual_cat_3">Ασύρματα &amp; Συνδεσιμότητα — Manual Labs 11–14</string>
-    <string name="manual_cat_4">Μπαταρία &amp; Θερμοκρασία — Manual Labs 15–18</string>
-    <string name="manual_cat_5">Αποθήκευση &amp; Απόδοση — Manual Labs 19–22</string>
-    <string name="manual_cat_6">Ασφάλεια &amp; Υγεία Συστήματος — Manual Labs 23–26</string>
-    <string name="manual_cat_7">Advanced / Logs — Manual Labs 27–30</string>
+    <string name="manual_cat_2">Οθόνη &amp; Αισθητήρες — Manual Labs 6–9</string>
+    <string name="manual_cat_3">Ασύρματα &amp; Συνδεσιμότητα — Manual Labs 10–13</string>
+    <string name="manual_cat_4">Μπαταρία &amp; Θερμοκρασία — Manual Labs 14–17</string>
+    <string name="manual_cat_5">Αποθήκευση &amp; Απόδοση — Manual Labs 18–20</string>
+    <string name="manual_cat_6">Ασφάλεια &amp; Υγεία Συστήματος — Manual Labs 21–24</string>
+    <string name="manual_cat_7">Advanced / Logs — Manual Labs 25–30</string>
 
     <!-- LOG -->
     <string name="manual_log_title">Καταγραφή Manual Tests</string>

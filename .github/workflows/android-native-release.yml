@@ -1,4 +1,4 @@
-name: Manual Build — GEL Android Cleaner v4
+name: Manual Build — GEL iDoctor v4
 
 on:
   workflow_dispatch:
@@ -101,7 +101,7 @@ jobs:
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEY_ALIAS_PASSWORD" \
             --ks-key-alias "$KEY_ALIAS" \
-            --out GEL_Android_Cleaner_v4.apk \
+            --out GEL_iDoctor_v4.apk \
             aligned.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

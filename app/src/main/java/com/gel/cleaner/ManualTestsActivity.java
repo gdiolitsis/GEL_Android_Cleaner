@@ -5288,6 +5288,8 @@ p.edit()
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
+boolean thermalSpikesDetected = thermalDanger;
+
 GELServiceLog.info("SUMMARY: THERMAL_PATTERN=" +
         (thermalSpikesDetected ? "SPIKES" : "NORMAL"));
         
@@ -6028,92 +6030,94 @@ logLine();
 // ============================================================
 private void lab20UptimeHints() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 20 — System Uptime & Reboot Behaviour");  
-logLine();  
+    boolean frequentReboots = false;   // ⭐ πρέπει να είναι εδώ, ΟΧΙ μέσα σε if
 
-try {  
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 20 — System Uptime & Reboot Behaviour");
+    logLine();
 
-    long upMs = SystemClock.elapsedRealtime();  
-    String upStr = formatUptime(upMs);  
+    try {
 
-    logInfo("System uptime:");  
-    logOk(upStr);  
+        long upMs = SystemClock.elapsedRealtime();
+        String upStr = formatUptime(upMs);
 
-    boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h  
-    boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days  
-    boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;  
+        logInfo("System uptime:");
+        logOk(upStr);
 
-    // ----------------------------------------------------  
-    // HUMAN INTERPRETATION (NON-ROOT)  
-    // ----------------------------------------------------  
-    if (veryRecentReboot) {  
+        boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h
+        boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
+        boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;
 
-        logWarn("⚠️ Recent reboot detected.");  
-        logWarn("Some issues may be temporarily masked (memory, thermal, background load).");  
-        logInfo("Diagnostics are valid, but not fully representative yet.");  
+        // ----------------------------------------------------
+        // HUMAN INTERPRETATION (NON-ROOT)
+        // ----------------------------------------------------
+        if (veryRecentReboot) {
 
-    } else if (veryLongUptime) {  
+            logWarn("⚠️ Recent reboot detected.");
+            logWarn("Some issues may be temporarily masked (memory, thermal, background load).");
+            logInfo("Diagnostics are valid, but not fully representative yet.");
 
-        logWarn("⚠️ Long uptime detected.");  
-        logWarn("Background processes and memory pressure may accumulate over time.");  
+        } else if (veryLongUptime) {
 
-        if (extremeUptime) {  
-            logError("❌ Extremely long uptime (>14 days).");  
-            logError("Strongly recommended: reboot before drawing final conclusions.");  
-        } else {  
-            logInfo("Recommendation:");  
-            logOk("A reboot can help reset system state before deep diagnostics.");  
-        }  
+            logWarn("⚠️ Long uptime detected.");
+            logWarn("Background processes and memory pressure may accumulate over time.");
 
-    } else {  
+            if (extremeUptime) {
+                logError("❌ Extremely long uptime (>14 days).");
+                logError("Strongly recommended: reboot before drawing final conclusions.");
+            } else {
+                logInfo("Recommendation:");
+                logOk("A reboot can help reset system state before deep diagnostics.");
+            }
 
-        logOk("✅ Uptime is within a healthy range for diagnostics.");  
-    }  
+        } else {
 
-    // ----------------------------------------------------  
-    // ROOT-AWARE INTELLIGENCE (SILENT IF NOT ROOTED)  
-    // ----------------------------------------------------  
-    if (isDeviceRooted()) {  
+            logOk("✅ Uptime is within a healthy range for diagnostics.");
+        }
 
-        logLine();  
-        logInfo("Advanced uptime signals:");  
+        // ----------------------------------------------------
+        // ROOT-AWARE INTELLIGENCE (SILENT IF NOT ROOTED)
+        // ----------------------------------------------------
+        if (isDeviceRooted()) {
 
-        // soft indicators — no lies  
-        boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;  
-        boolean frequentReboots   = detectFrequentRebootsHint();  
+            logLine();
+            logInfo("Advanced uptime signals:");
 
-        if (frequentReboots) {  
-            logWarn("⚠️ Repeated reboot pattern detected.");  
-            logWarn("This may indicate instability, crashes or watchdog resets.");  
-        } else {  
-            logOk("No abnormal reboot patterns detected.");  
-        }  
+            boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;
+            frequentReboots = detectFrequentRebootsHint();   // ⭐ ASSIGN, όχι νέα δήλωση
 
-        if (!lowMemoryPressure) {  
-            logWarn("⚠️ Memory pressure events detected during uptime.");  
-            logInfo("System may be aggressively managing apps in background.");  
-        } else {  
-            logOk("No significant memory pressure signals detected.");  
-        }  
+            if (frequentReboots) {
+                logWarn("⚠️ Repeated reboot pattern detected.");
+                logWarn("This may indicate instability, crashes or watchdog resets.");
+            } else {
+                logOk("No abnormal reboot patterns detected.");
+            }
 
-        logInfo("Interpretation:");  
-        logOk("Uptime behaviour appears consistent with normal system operation.");  
+            if (!lowMemoryPressure) {
+                logWarn("⚠️ Memory pressure events detected during uptime.");
+                logInfo("System may be aggressively managing apps in background.");
+            } else {
+                logOk("No significant memory pressure signals detected.");
+            }
 
-    }  
+            logInfo("Interpretation:");
+            logOk("Uptime behaviour appears consistent with normal system operation.");
+        }
 
-} catch (Throwable t) {  
-    logError("Uptime analysis failed.");  
-}  
+    } catch (Throwable t) {
+        logError("Uptime analysis failed.");
+    }
 
-GELServiceLog.info("SUMMARY: REBOOT_PATTERN=" +
-        (frequentReboots ? "ABNORMAL" : "NORMAL"));
+    // ----------------------------------------------------
+    // SUMMARY LINE (FOR LAB 28 & CROSS-LAB LOGIC)
+    // ----------------------------------------------------
+    GELServiceLog.info("SUMMARY: REBOOT_PATTERN=" +
+            (frequentReboots ? "ABNORMAL" : "NORMAL"));
 
-appendHtml("<br>");  
-logOk("Lab 20 finished.");  
-logLine();
-
+    appendHtml("<br>");
+    logOk("Lab 20 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -7316,6 +7320,8 @@ logOk(risk + "%");
 logInfo("Note:");
 logOk("risk score is based on detected system log signals; availability varies by OEM/Android.");
 
+boolean softwareCrashLikely = (crashCount > 0 || anrCount > 0);
+
 // ============================================================
 // (D) HEATMAP (top offenders)
 // ============================================================
@@ -7825,6 +7831,8 @@ if (rooted) {
 logInfo("Root-aware note:");  
 logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");  
 }  
+
+boolean appsImpactHigh = orphanDirs > 0 || orphanBytes > (200L * 1024L * 1024L);
 
 GELServiceLog.info("SUMMARY: APPS_IMPACT=" +
         (appsImpactHigh ? "HIGH" : "NORMAL"));

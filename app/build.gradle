@@ -68,6 +68,17 @@ android {
             useLegacyPackaging = true
         }
     }
+
+    // -------------------------------------------------
+    // 🎯 APK NAME — GEL iDoctor Release
+    // -------------------------------------------------
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == "release") {
+            variant.outputs.all {
+                outputFileName = "GEL_iDoctor_v4.apk"
+            }
+        }
+    }
 }
 
 dependencies {

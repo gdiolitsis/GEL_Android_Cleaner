@@ -5076,38 +5076,50 @@ logWarn("⚠️ Further inspection or repeat test recommended.");
 }
 
         // ------------------------------------------------------------  
-        // SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)  
-        // ------------------------------------------------------------  
-        try {  
+// SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)  
+// ------------------------------------------------------------  
+try {  
 
-            boolean chargingStable = !lab15FlapUnstable;  
+    boolean chargingStable = !lab15FlapUnstable;  
 
-            float lab14Health  = getLastLab14HealthScore();  
-            int   lab16Thermal = getLastLab16ThermalScore();  
+    float lab14Health  = getLastLab14HealthScore();  
+    int   lab16Thermal = getLastLab16ThermalScore();  
 
-            boolean batteryHealthy = (lab14Health >= 85f);  
-            boolean thermalPressure = (lab16Thermal > 0 && lab16Thermal < 75);  
+    boolean batteryHealthy = (lab14Health >= 85f);  
+    boolean thermalPressure = (lab16Thermal > 0 && lab16Thermal < 75);  
 
-            logInfo("Charging path:");  
+    logInfo("Charging path:");  
 
-            if (chargingStable &&  
-                    lab15_strengthKnown &&  
-                    lab15_strengthWeak &&  
-                    (batteryHealthy || thermalPressure)) {  
+    if (chargingStable &&  
+            lab15_strengthKnown &&  
+            lab15_strengthWeak &&  
+            (batteryHealthy || thermalPressure)) {  
 
-                lab15_systemLimited = true;  
-                logWarn("⚠️ System-limited (not battery)");  
-                logOk("Likely cause: thermal / PMIC protection limiting current.");  
+        lab15_systemLimited = true;  
+        logWarn("⚠️ System-limited (not battery)");  
+        logOk("Likely cause: thermal / PMIC protection limiting current.");  
 
-            } else {  
-                logOk("✅ Operating normally (no system-level current throttling).");  
-            }  
+    } else {  
+        logOk("✅ Operating normally (no system-level current throttling).");  
+    }  
 
-        } catch (Throwable ignore) {}  
+} catch (Throwable ignore) {}  // ✅ ΚΛΕΙΣΙΜΟ TRY/CATCH
 
-        appendHtml("<br>");  
-        logOk("LAB 15 finished.");  
-        logLine();  
+// ------------------------------------------------------------
+// SUMMARY FLAG (SAFE)
+// ------------------------------------------------------------
+boolean chargingGlitchDetected =
+        lab15FlapUnstable ||
+        lab15OverTempDuringCharge ||
+        lab15_strengthWeak ||
+        lab15_systemLimited;
+
+GELServiceLog.info("SUMMARY: CHARGING_STABILITY=" +
+        (chargingGlitchDetected ? "UNSTABLE" : "STABLE"));
+
+appendHtml("<br>");  
+logOk("LAB 15 finished.");  
+logLine();
 
         // ------------------------------------------------------------  
         // STORE RESULT FOR LAB 17 (LAB 15 OUTPUT)  
@@ -5276,6 +5288,9 @@ p.edit()
 logInfo("Thermal behaviour score:");
 logOk(String.format(Locale.US, "%d%%", thermalScore));
 
+GELServiceLog.info("SUMMARY: THERMAL_PATTERN=" +
+        (thermalSpikesDetected ? "SPIKES" : "NORMAL"));
+        
 appendHtml("<br>");
 logOk("Lab 16 finished.");
 logLine();
@@ -6091,7 +6106,10 @@ try {
 } catch (Throwable t) {  
     logError("Uptime analysis failed.");  
 }  
-  
+
+GELServiceLog.info("SUMMARY: REBOOT_PATTERN=" +
+        (frequentReboots ? "ABNORMAL" : "NORMAL"));
+
 appendHtml("<br>");  
 logOk("Lab 20 finished.");  
 logLine();
@@ -7341,14 +7359,15 @@ for (String d : details) {
 }
 
 } else {
-logOk("No crash history found.");
+    logOk("No crash history found.");
 }
+
+GELServiceLog.info("SUMMARY: CRASH_ORIGIN=" +
+        (softwareCrashLikely ? "SOFTWARE" : "UNCLEAR"));
 
 appendHtml("<br>");
 logOk("Lab 25 finished.");
 logLine();
-
-}
 
 // ============================================================
 // SMALL helper inside same block (allowed)
@@ -7802,15 +7821,16 @@ if (rooted) {
         }  
     } catch (Throwable ignore) {}  
 
-    logInfo("Root-aware note:");  
-    logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");  
+logInfo("Root-aware note:");  
+logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");  
 }  
+
+GELServiceLog.info("SUMMARY: APPS_IMPACT=" +
+        (appsImpactHigh ? "HIGH" : "NORMAL"));
 
 appendHtml("<br>");  
 logOk("Lab 26 finished.");  
 logLine();
-
-}
 
 // ============================================================
 // ROOT HELPER — BEST EFFORT DIRECTORY SIZE

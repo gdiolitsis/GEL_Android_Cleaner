@@ -8319,165 +8319,7 @@ private void lab28HardwareStability() {
 }
 
 // ============================================================
-// LAB 28 — EVIDENCE STRUCT (SAFE, NULL-PROOF)
-// ============================================================
-    boolean thermalSpikes;
-    boolean chargingGlitch;
-    boolean radioInstability;
-    boolean sensorFlaps;
-    boolean rebootPattern;
-
-    boolean appsHeavyImpact;
-    boolean thermalOnlyDuringCharging;
-
-    String crashPattern; // "SOFTWARE", "MIXED", "UNKNOWN"
-}
-
-// ============================================================
-// LAB 28 — EVIDENCE READER (BASED ON REAL GELServiceLog FORMAT)
-// Reads only existing human-readable text. If nothing found,
-// evidence stays FALSE (NO false positives / NO crashes).
-// ============================================================
-
-    static Lab28Evidence readFromGELServiceLog() {
-
-        Lab28Evidence ev = new Lab28Evidence();
-        ev.crashPattern = "UNKNOWN";
-
-        String log;
-        try {
-            log = GELServiceLog.getAll();
-        } catch (Throwable t) {
-            return ev; // ultra-safe
-        }
-
-        if (log == null || log.trim().isEmpty())
-            return ev;
-
-        final String L = log.toLowerCase(Locale.US);
-
-        // ------------------------------------------------------------
-        // Evidence: Thermal (Lab16 / generic phrases)
-        // ------------------------------------------------------------
-        ev.thermalSpikes =
-                containsAny(L,
-                        "thermal spike",
-                        "thermal spikes",
-                        "abnormal thermal",
-                        "overheat",
-                        "overheating",
-                        "temperature spike",
-                        "temp spike",
-                        "thermal behavior");
-
-        // Optional: "only during charging" heuristic
-        ev.thermalOnlyDuringCharging =
-                ev.thermalSpikes &&
-                containsAny(L,
-                        "while charging",
-                        "during charging",
-                        "charging only",
-                        "only while charging");
-
-        // ------------------------------------------------------------
-        // Evidence: Charging / Power (Lab15 / generic phrases)
-        // ------------------------------------------------------------
-        ev.chargingGlitch =
-                containsAny(L,
-                        "charging glitch",
-                        "power glitch",
-                        "power / charging instability",
-                        "charging instability",
-                        "usb disconnect",
-                        "disconnect while charging",
-                        "charger unstable",
-                        "power behavior");
-
-        // ------------------------------------------------------------
-        // Evidence: Radio / Network (Lab10-13 / generic phrases)
-        // ------------------------------------------------------------
-        ev.radioInstability =
-                containsAny(L,
-                        "radio instability",
-                        "network instability",
-                        "signal drop",
-                        "signal drops",
-                        "no service",
-                        "service lost",
-                        "mobile network",
-                        "wifi disconnect",
-                        "wi-fi disconnect",
-                        "internet access");
-
-        // ------------------------------------------------------------
-        // Evidence: Sensors (Lab7-9 / generic phrases)
-        // ------------------------------------------------------------
-        ev.sensorFlaps =
-                containsAny(L,
-                        "sensor instability",
-                        "intermittent readings",
-                        "sensor flaps",
-                        "proximity",
-                        "rotation",
-                        "auto-rotate",
-                        "sensor unavailable");
-
-        // ------------------------------------------------------------
-        // Evidence: Reboots / Uptime (Lab20 / generic phrases)
-        // ------------------------------------------------------------
-        ev.rebootPattern =
-                containsAny(L,
-                        "random reboots",
-                        "sudden resets",
-                        "abnormal reboot",
-                        "reboot pattern",
-                        "unexpected reboot",
-                        "uptime");
-
-        // ------------------------------------------------------------
-        // Exclusion: Crash history pattern (Lab25)
-        // ------------------------------------------------------------
-        // Heuristic: if log mentions crashes strongly, treat as SOFTWARE indicator
-        boolean crashMention =
-                containsAny(L,
-                        "crash",
-                        "anr",
-                        "freeze",
-                        "app not responding",
-                        "stopped working",
-                        "fatal exception");
-
-        if (crashMention) {
-            ev.crashPattern = "SOFTWARE";
-        }
-
-        // ------------------------------------------------------------
-        // Exclusion: Apps heavy impact (Lab26)
-        // ------------------------------------------------------------
-        ev.appsHeavyImpact =
-                containsAny(L,
-                        "installed applications impact analysis",
-                        "apps footprint",
-                        "heavy apps",
-                        "high app impact",
-                        "background apps",
-                        "excessive background");
-
-        return ev;
-    }
-
-    private static boolean containsAny(String hay, String... needles) {
-        if (hay == null || hay.isEmpty() || needles == null) return false;
-        for (String n : needles) {
-            if (n == null) continue;
-            if (hay.contains(n)) return true;
-        }
-        return false;
-    }
-}
-
-// ============================================================
-// LAB 28 — Helpers
+// LAB 28 — Helpers (KEEP ONLY THIS)
 // ============================================================
 
 private static class Lab28Evidence {
@@ -8498,29 +8340,65 @@ private static class Lab28EvidenceReader {
     static Lab28Evidence readFromGELServiceLog() {
 
         Lab28Evidence ev = new Lab28Evidence();
+        ev.crashPattern = "UNKNOWN";
 
-        String log = GELServiceLog.getPlainText(); // χρησιμοποιείς το buffer που ήδη έχεις
-        if (log == null) return ev;
+        String log;
+        try {
+            log = GELServiceLog.getAll();   // <-- σωστό API
+        } catch (Throwable t) {
+            return ev; // ultra-safe
+        }
 
-        ev.thermalSpikes   = log.contains("[LAB16_SUMMARY] THERMAL_SPIKES=YES");
-        ev.chargingGlitch = log.contains("[LAB15_SUMMARY] CHARGING_GLITCH=YES");
-        ev.radioInstability = log.contains("[LAB11_SUMMARY] RADIO_INSTABILITY=YES")
-                           || log.contains("[LAB10_SUMMARY] WIFI_INSTABILITY=YES");
-        ev.sensorFlaps    = log.contains("[LAB9_SUMMARY] SENSOR_FLAPS=YES");
-        ev.rebootPattern  = log.contains("[LAB20_SUMMARY] REBOOT_PATTERN=ABNORMAL");
+        if (log == null || log.trim().isEmpty())
+            return ev;
 
-        ev.appsHeavyImpact = log.contains("[LAB26_SUMMARY] APPS_IMPACT=HIGH");
+        final String L = log.toLowerCase(Locale.US);
+
+        ev.thermalSpikes = containsAny(L,
+                "thermal spike","thermal spikes","abnormal thermal",
+                "overheat","overheating","temperature spike","temp spike","thermal behavior");
+
         ev.thermalOnlyDuringCharging =
-                log.contains("[LAB16_SUMMARY] SPIKES_ONLY_WHILE_CHARGING=YES");
+                ev.thermalSpikes && containsAny(L,
+                        "while charging","during charging","charging only","only while charging");
 
-        if (log.contains("[LAB25_SUMMARY] CRASH_PATTERN=SOFTWARE"))
-            ev.crashPattern = "SOFTWARE";
-        else if (log.contains("[LAB25_SUMMARY] CRASH_PATTERN=MIXED"))
-            ev.crashPattern = "MIXED";
-        else
-            ev.crashPattern = "UNKNOWN";
+        ev.chargingGlitch = containsAny(L,
+                "charging glitch","power glitch","power / charging instability",
+                "charging instability","usb disconnect","disconnect while charging",
+                "charger unstable","power behavior");
+
+        ev.radioInstability = containsAny(L,
+                "radio instability","network instability","signal drop","signal drops",
+                "no service","service lost","mobile network",
+                "wifi disconnect","wi-fi disconnect","internet access");
+
+        ev.sensorFlaps = containsAny(L,
+                "sensor instability","intermittent readings","sensor flaps",
+                "proximity","rotation","auto-rotate","sensor unavailable");
+
+        ev.rebootPattern = containsAny(L,
+                "random reboots","sudden resets","abnormal reboot",
+                "reboot pattern","unexpected reboot","uptime");
+
+        boolean crashMention = containsAny(L,
+                "crash","anr","freeze","app not responding","stopped working","fatal exception");
+        if (crashMention) ev.crashPattern = "SOFTWARE";
+
+        ev.appsHeavyImpact = containsAny(L,
+                "installed applications impact analysis",
+                "apps footprint","heavy apps","high app impact",
+                "background apps","excessive background");
 
         return ev;
+    }
+
+    private static boolean containsAny(String hay, String... needles) {
+        if (hay == null || hay.isEmpty() || needles == null) return false;
+        for (String n : needles) {
+            if (n == null) continue;
+            if (hay.contains(n)) return true;
+        }
+        return false;
     }
 }
 

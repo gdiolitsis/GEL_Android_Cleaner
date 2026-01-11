@@ -7762,6 +7762,9 @@ if (!offenders.isEmpty()) {
     logOk("These apps are NOT confirmed as “bad”. They simply have strong background/permission capabilities.");  
 }  
 
+int orphanDirs = 0;
+long orphanBytes = 0L;
+
 // ============================================================  
 // ROOT AWARE INTELLIGENCE — LEFTOVERS / ORPHANS  
 // ============================================================  
@@ -7777,8 +7780,6 @@ if (rooted) {
     }  
 
     // Orphan data dirs check (honest: some dirs can be system-managed)  
-    int orphanDirs = 0;  
-    long orphanBytes = 0L;  
 
     try {  
         // /data/user/0 is common; fall back to /data/data  

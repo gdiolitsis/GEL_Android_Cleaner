@@ -2389,7 +2389,6 @@ private void showLab28Popup() {
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-        // ---- SAME STYLE AS OTHER LAB POPUPS ----
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(18));
@@ -2411,18 +2410,8 @@ private void showLab28Popup() {
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
-        msg.setText(
-                "Lab twenty eight. Technician mode. " +
-                "This lab performs symptom based analysis only. " +
-                "It does not diagnose hardware faults " +
-                "and does not confirm soldering defects. " +
-                "Findings may indicate behavior patterns " +
-                "consistent with intermittent contact issues, " +
-                "such as unstable operation, random reboots, or signal drops. " +
-                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
-                "If indicators are present, proceed only with physical inspection " +
-                "and professional bench level testing."
-        );
+
+        msg.setText(getLab28TextEN());
         box.addView(msg);
 
         // ============================================================
@@ -2434,7 +2423,7 @@ private void showLab28Popup() {
         controls.setPadding(0, dp(16), 0, dp(10));
 
         // ==========================
-        // 🔕 MUTE BUTTON (LEFT)
+        // 🔕 MUTE BUTTON
         // ==========================
         Button muteBtn = new Button(this);
         muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
@@ -2448,11 +2437,8 @@ private void showLab28Popup() {
         muteBtn.setBackground(muteBg);
 
         LinearLayout.LayoutParams lpMute =
-                new LinearLayout.LayoutParams(
-                        0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        1f
-                );
+                new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         lpMute.setMargins(0, 0, dp(8), 0);
         muteBtn.setLayoutParams(lpMute);
 
@@ -2460,16 +2446,15 @@ private void showLab28Popup() {
             lab28Muted = !lab28Muted;
             muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
 
-            // κόψε άμεσα τον ήχο
             try {
                 if (lab28Muted && tts != null && tts[0] != null) {
-                    tts[0].stop();   // ίδιο pattern με LAB 15
+                    tts[0].stop();
                 }
             } catch (Throwable ignore) {}
         });
 
         // ==========================
-        // 🌐 LANGUAGE SPINNER (RIGHT)
+        // 🌐 LANGUAGE SPINNER
         // ==========================
         Spinner langSpinner = new Spinner(this);
 
@@ -2484,14 +2469,14 @@ private void showLab28Popup() {
         langSpinner.setAdapter(langAdapter);
 
         LinearLayout.LayoutParams lpLang =
-                new LinearLayout.LayoutParams(
-                        0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        1f
-                );
+                new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         lpLang.setMargins(dp(8), 0, 0, 0);
         langSpinner.setLayoutParams(lpLang);
 
+        // ==========================
+        // LANGUAGE CHANGE LOGIC
+        // ==========================
         langSpinner.setOnItemSelectedListener(
                 new android.widget.AdapterView.OnItemSelectedListener() {
                     @Override
@@ -2500,7 +2485,18 @@ private void showLab28Popup() {
                             View v,
                             int pos,
                             long id) {
+
                         lab28Lang = (pos == 0) ? "EN" : "GR";
+
+                        // 1) Update popup text
+                        if ("GR".equals(lab28Lang)) {
+                            msg.setText(getLab28TextGR());
+                        } else {
+                            msg.setText(getLab28TextEN());
+                        }
+
+                        // 2) Speak ONLY here (after language choice)
+                        speakLab28TTS();
                     }
 
                     @Override
@@ -2510,7 +2506,6 @@ private void showLab28Popup() {
 
         controls.addView(muteBtn);
         controls.addView(langSpinner);
-
         box.addView(controls);
 
         // ==========================
@@ -2543,64 +2538,66 @@ private void showLab28Popup() {
         b.setView(box);
         final AlertDialog d = b.create();
         if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
-        // ==========================
-        // OK → SPEAK TTS
-        // ==========================
-        okBtn.setOnClickListener(v -> {
-            speakLab28TTS();
-            d.dismiss();
-        });
+        // OK → μόνο κλείσιμο
+        okBtn.setOnClickListener(v -> d.dismiss());
     });
 }
 
 // ============================================================
-// TTS — LAB 28 (LANGUAGE + MUTE SAFE)
-// SAME PATTERN AS LAB 15 — NO TEXT CHANGES
+// TEXT HELPERS
+// ============================================================
+
+private String getLab28TextEN() {
+    return
+        "This lab performs symptom based analysis only. " +
+        "It does not diagnose hardware faults " +
+        "and does not confirm soldering defects. " +
+        "Findings may indicate behavior patterns " +
+        "consistent with intermittent contact issues, " +
+        "such as unstable operation, random reboots, or signal drops. " +
+        "Use this lab strictly as a triage tool, not as a final diagnosis. " +
+        "If indicators are present, proceed only with physical inspection " +
+        "and professional bench level testing.";
+}
+
+private String getLab28TextGR() {
+    return
+        "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
+        "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
+        "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
+        "που σχετίζονται με διακοπτόμενες επαφές, " +
+        "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
+        "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
+        "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
+        "και επαγγελματικές εργαστηριακές δοκιμές.";
+}
+
+// ============================================================
+// TTS — LAB 28 (CALLED ONLY ON LANGUAGE CHANGE)
 // ============================================================
 private void speakLab28TTS() {
 
     if (lab28Muted) return;
 
     try {
-
         if (tts == null || tts[0] == null || !ttsReady[0]) return;
 
-        // ίδιο pattern με LAB 15
         tts[0].stop();
 
         if ("GR".equals(lab28Lang)) {
-
             tts[0].speak(
-                "Εργαστήριο είκοσι οκτώ. Λειτουργία τεχνικού. " +
-                "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
-                "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
-                "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
-                "που σχετίζονται με διακοπτόμενες επαφές, " +
-                "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
-                "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
-                "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
-                "και επαγγελματικές εργαστηριακές δοκιμές.",
+                getLab28TextGR(),
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "LAB28_INTRO_GR"
             );
-
         } else {
-
             tts[0].speak(
-                "Lab twenty eight. Technician mode. " +
-                "This lab performs symptom based analysis only. " +
-                "It does not diagnose hardware faults " +
-                "and does not confirm soldering defects. " +
-                "Findings may indicate behavior patterns " +
-                "consistent with intermittent contact issues, " +
-                "such as unstable operation, random reboots, or signal drops. " +
-                "Use this lab strictly as a triage tool, not as a final diagnosis. " +
-                "If indicators are present, proceed only with physical inspection " +
-                "and professional bench level testing.",
+                getLab28TextEN(),
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "LAB28_INTRO_EN"
@@ -4994,18 +4991,6 @@ ui.post(new Runnable() {
         if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");  
         else logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
 
-// ------------------------------------------------------------
-// FINAL LAB 15 DECISION
-// ------------------------------------------------------------
-logInfo("LAB decision:");
-if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
-logOk("✅ Charging system OK. No cleaning or replacement required.");
-logOk("✅ Charging stability OK.");
-} else {
-logWarn("⚠️ Charging system shows potential issues.");
-logWarn("⚠️ Further inspection or repeat test recommended.");
-}
-
 // ------------------------------------------------------------  
         // CHARGING INPUT & STRENGTH (mAh/min)  
         // ------------------------------------------------------------  
@@ -5052,6 +5037,18 @@ logWarn("⚠️ Further inspection or repeat test recommended.");
             lab15_strengthKnown = false;  
             lab15_strengthWeak  = true;  
         }  
+
+// ------------------------------------------------------------
+// FINAL LAB 15 DECISION
+// ------------------------------------------------------------
+logInfo("LAB decision:");
+if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
+logOk("✅ Charging system OK. No cleaning or replacement required.");
+logOk("✅ Charging stability OK.");
+} else {
+logWarn("⚠️ Charging system shows potential issues.");
+logWarn("⚠️ Further inspection or repeat test recommended.");
+}
 
         // ------------------------------------------------------------  
         // SYSTEM-LEVEL CHARGING THROTTLING (NOT BATTERY FAULT)  
@@ -8742,41 +8739,50 @@ return "🟥";
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
 
-// ------------------------------------------------------------  
-// HARDWARE / DEVICE HEALTH VERDICT  
-// ------------------------------------------------------------  
-if (health >= 80) {  
+    // ============================================================
+    // LEVEL 1 — HEALTHY / NORMAL
+    // ============================================================
+    if (health >= 80) {
 
-    if (sec < 55 || priv < 55) {  
-        return  
-            "🟩 Device hardware is healthy.\n" +  
-            "⚠️ Privacy & app-related risks detected.\n" +  
-            "User review recommended.";  
-    }  
+        if (sec < 55 || priv < 55) {
+            return
+                "🟩 Device condition is healthy.\n" +
+                "⚠️ Privacy or security risks detected.\n" +
+                "User review recommended.";
+        }
 
-    return "🟩 Device hardware is healthy.\nNo servicing required.";  
-}  
+        return
+            "🟩 Device condition is healthy.\n" +
+            "No servicing required.";
+    }
 
-if (health >= 55) {  
+    // ============================================================
+    // LEVEL 2 — OBSERVATION (UNCERTAIN CAUSE)
+    // ============================================================
+    if (health >= 55) {
 
-    if (sec < 55 || priv < 55) {  
-        return  
-            "🟨 Device hardware shows moderate wear.\n" +  
-            "⚠️ Privacy & app-related risks detected.\n" +  
-            "User review recommended.";  
-    }  
+        if (sec < 55 || priv < 55) {
+            return
+                "🟨 Device condition shows moderate degradation.\n" +
+                "⚠️ Privacy or security risks detected.\n" +
+                "User review recommended.";
+        }
 
-    return  
-        "🟨 Device hardware shows moderate wear.\n" +  
-        "Service check recommended.";  
-}  
+        return
+            "🟨 Device condition shows moderate degradation.\n" +
+            "Further monitoring recommended.";
+    }
 
-// ------------------------------------------------------------  
-// REAL HARDWARE FAILURE ZONE  
-// ------------------------------------------------------------  
-return  
-    "🟥 Device hardware is NOT healthy.\n" +  
-    "Immediate servicing recommended.";
+// ============================================================
+// LEVEL 3 — UNATTRIBUTED INSTABILITY
+// (NO hardware claim — evidence-based wording)
+// ============================================================
+return
+    "🟥 Device condition shows instability.\n" +
+    "⚠️ Degradation detected without a clear software cause.\n" +
+    "Cause not confirmed.\n" +
+    "Classification: Unattributed system instability.\n" +
+    "Further diagnostics recommended.";
 
 }
 

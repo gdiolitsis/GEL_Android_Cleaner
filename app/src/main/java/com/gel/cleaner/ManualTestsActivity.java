@@ -108,8 +108,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import com.gel.cleaner.base.UIHelpers;
-
 // ============================================================
 // JAVA — IO / NET
 // ============================================================
@@ -2141,8 +2139,6 @@ states.addState(new int[]{-android.R.attr.state_enabled}, disabledBg);
 states.addState(new int[]{android.R.attr.state_pressed}, pressedBg);  
 states.addState(new int[]{}, normalBg);  
 btn.setBackground(states);
-
-UIHelpers.applyPressEffect(btn);
 
 // -------------------------------  
 // RIPPLE (Modern Android Feel)  

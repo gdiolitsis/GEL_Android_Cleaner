@@ -7368,6 +7368,7 @@ GELServiceLog.info("SUMMARY: CRASH_ORIGIN=" +
 appendHtml("<br>");
 logOk("Lab 25 finished.");
 logLine();
+}
 
 // ============================================================
 // SMALL helper inside same block (allowed)

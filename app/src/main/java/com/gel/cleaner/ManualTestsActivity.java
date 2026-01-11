@@ -2274,7 +2274,7 @@ String line;
 while ((line = br.readLine()) != null) {
 if (line.startsWith("Cached:")) {
 br.close();
-return Long.parseLong(line.replaceAll("\D+", ""));
+return Long.parseLong(line.replaceAll("\\D+", ""));
 }
 }
 br.close();
@@ -2294,7 +2294,7 @@ String line;
 while ((line = br.readLine()) != null) {
 if (line.startsWith("oom_kill")) {
 br.close();
-return Integer.parseInt(line.replaceAll("\D+", ""));
+return Integer.parseInt(line.replaceAll("\\D+", ""));
 }
 }
 br.close();
@@ -7305,7 +7305,7 @@ BufferedReader br = new BufferedReader(new InputStreamReader(is));
 }
 
 private String safeStr(String s) {
-return (s == null || s.trim().isEmpty()) ? "(no
+return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 
 // ============================================================
 // LAB 26 — Installed Apps Footprint & System Load Intelligence

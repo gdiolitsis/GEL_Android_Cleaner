@@ -6,10 +6,15 @@ package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.ClipData;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.TypedValue;
@@ -21,6 +26,9 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
@@ -32,11 +40,19 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class IPhoneLabsActivity extends AppCompatActivity {
+	
+	// ==========================
+    // TTS ENGINE
+    // ==========================
+    private TextToSpeech[] tts   = new TextToSpeech[1];
+    private boolean[]     ttsReady = new boolean[1];
 
     private final StringBuilder logHtmlBuffer = new StringBuilder();
 
@@ -78,6 +94,10 @@ public class IPhoneLabsActivity extends AppCompatActivity {
     // UI (LIKE MANUAL TESTS — LOG AREA BOTTOM)
     // ============================================================
     private TextView txtLog;
+    
+    private boolean panicGuideMuted = false;
+    private String  panicGuideLang  = "EN";
+    private int panicLogCount = 0;
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -242,6 +262,8 @@ btnExport.setOnClickListener(v -> {
 
 root.addView(btnExport);
 
+showPanicLogsGuidePopup();
+
 // ============================================================
 // FINAL BIND
 // ============================================================
@@ -271,12 +293,270 @@ private void toast(String msg) {
 }
 
 // ============================================================
+// PanicLog POPUP (STYLE + MUTE + LANG + TTS)
+// ============================================================
+
+private void showPanicLogsGuidePopup() {
+
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+        IPhoneLabsActivity.this,
+        android.R.style.Theme_Material_Dialog_NoActionBar
+);
+        b.setCancelable(true);
+
+        // ================= ROOT =================
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        // ================= TITLE =================
+        TextView title = new TextView(this);
+        title.setText("PANIC LOGS — Import Guide");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        box.addView(title);
+
+        // ================= MESSAGE =================
+        TextView msg = new TextView(this);
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.START);
+        msg.setText(getPanicGuideTextEN());
+        box.addView(msg);
+
+        // ============================================================
+        // CONTROLS — MUTE + LANG
+        // ============================================================
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        controls.setPadding(0, dp(16), 0, dp(10));
+
+        // 🔕 MUTE
+        Button muteBtn = new Button(this);
+        muteBtn.setText(panicGuideMuted ? "Unmute" : "Mute");
+        muteBtn.setAllCaps(false);
+        muteBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable muteBg = new GradientDrawable();
+        muteBg.setColor(0xFF444444);
+        muteBg.setCornerRadius(dp(12));
+        muteBg.setStroke(dp(2), 0xFFFFD700);
+        muteBtn.setBackground(muteBg);
+
+        LinearLayout.LayoutParams lpMute =
+                new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lpMute.setMargins(0, 0, dp(8), 0);
+        muteBtn.setLayoutParams(lpMute);
+
+        muteBtn.setOnClickListener(v -> {
+            panicGuideMuted = !panicGuideMuted;
+            muteBtn.setText(panicGuideMuted ? "Unmute" : "Mute");
+
+            try {
+                if (panicGuideMuted && tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
+        });
+
+        // 🌐 LANGUAGE SPINNER
+        Spinner langSpinner = new Spinner(this);
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> p,
+                            View v,
+                            int pos,
+                            long id) {
+
+                        panicGuideLang = (pos == 0) ? "EN" : "GR";
+
+                        if ("GR".equals(panicGuideLang)) {
+                            msg.setText(getPanicGuideTextGR());
+                        } else {
+                            msg.setText(getPanicGuideTextEN());
+                        }
+
+                        speakPanicGuideTTS();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> p) {}
+                });
+
+        LinearLayout langBox = new LinearLayout(this);
+        langBox.setOrientation(LinearLayout.HORIZONTAL);
+        langBox.setGravity(Gravity.CENTER_VERTICAL);
+        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF1A1A1A);
+        langBg.setCornerRadius(dp(12));
+        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBox.setBackground(langBg);
+
+        LinearLayout.LayoutParams lpLangBox =
+                new LinearLayout.LayoutParams(0, dp(48), 1f);
+        lpLangBox.setMargins(dp(8), 0, 0, 0);
+        langBox.setLayoutParams(lpLangBox);
+
+        langBox.addView(langSpinner);
+
+        controls.addView(muteBtn);
+        controls.addView(langBox);
+        box.addView(controls);
+
+        // ================= OK =================
+        Button okBtn = new Button(this);
+        okBtn.setText("OK");
+        okBtn.setAllCaps(false);
+        okBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable okBg = new GradientDrawable();
+        okBg.setColor(0xFF0F8A3B);
+        okBg.setCornerRadius(dp(14));
+        okBg.setStroke(dp(3), 0xFFFFD700);
+        okBtn.setBackground(okBg);
+
+        LinearLayout.LayoutParams lpOk =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpOk.setMargins(0, dp(16), 0, 0);
+        okBtn.setLayoutParams(lpOk);
+
+        box.addView(okBtn);
+
+        b.setView(box);
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
+        d.show();
+
+        okBtn.setOnClickListener(v -> d.dismiss());
+    });
+}
+
+// ============================================================
+// TEXT HELPERS
+// ============================================================
+
+private String getPanicGuideTextEN() {
+    return
+        "To analyze iPhone stability, you need to import system logs.\n\n" +
+
+        "Where to find them on iPhone:\n" +
+        "Settings → Privacy & Security → Analytics & Improvements → Analytics Data\n\n" +
+
+        "Look for files named:\n" +
+        "• panic-full-xxxx.log\n" +
+        "• panic-base-xxxx.log\n" +
+        "• system-xxxx.ips\n\n" +
+
+        "How to export:\n" +
+        "Tap a file → Share → Save to Files or Send by Email.\n" +
+        "You must export all files.\n\n" +
+
+        "In this app:\n" +
+        "Press Import and select all log files.\n" +
+        "The app will analyze all of them together\n" +
+        "to detect stability patterns.\n\n" +
+
+        "Tip:\n" +
+        "More logs = better diagnosis accuracy.";
+}
+
+private String getPanicGuideTextGR() {
+    return
+        "Για την ανάλυση σταθερότητας iPhone χρειάζονται τα αρχεία καταγραφής.\n\n" +
+
+        "Πού τα βρίσκεις στο iPhone:\n" +
+        "Ρυθμίσεις → Απόρρητο & Ασφάλεια → Ανάλυση & Βελτιώσεις → Δεδομένα ανάλυσης\n\n" +
+
+        "Αναζήτησε αρχεία όπως:\n" +
+        "• panic-full-xxxx.log\n" +
+        "• panic-base-xxxx.log\n" +
+        "• system-xxxx.ips\n\n" +
+
+        "Πώς τα εξάγεις:\n" +
+        "Πάτησε στο αρχείο → Κοινή χρήση → Αποθήκευση στα Αρχεία ή Αποστολή με email.\n" +
+        "Πρέπει να στείλεις όλα αρχεία.\n\n" +
+
+        "Στην εφαρμογή:\n" +
+        "Πάτησε Import και διάλεξε όλα τα logs.\n" +
+        "Η εφαρμογή τα αναλύει όλα μαζί\n" +
+        "για να εντοπίσει μοτίβα αστάθειας.\n\n" +
+
+        "Συμβουλή:\n" +
+        "Όσο περισσότερα logs, τόσο πιο αξιόπιστο το αποτέλεσμα.";
+}
+
+// ============================================================
+// TTS — LAB 28 (CALLED ONLY ON LANGUAGE CHANGE)
+// ============================================================
+private void speakPanicGuideTTS() {
+
+    if (panicGuideMuted) return;
+
+    try {
+        if (tts == null || tts[0] == null || !ttsReady[0]) return;
+
+        tts[0].stop();
+
+        if ("GR".equals(panicGuideLang)) {
+            tts[0].speak(
+                getPanicGuideTextGR(),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "PANIC_GUIDE_GR"
+            );
+        } else {
+            tts[0].speak(
+                getPanicGuideTextEN(),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "PANIC_GUIDE_EN"
+            );
+        }
+
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
 // PANIC LOG IMPORT (SAF)
 // ============================================================
 private void openPanicLogPicker() {
     Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
     i.addCategory(Intent.CATEGORY_OPENABLE);
     i.setType("*/*");
+    i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
     i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
             "text/plain",
             "application/zip",
@@ -284,10 +564,10 @@ private void openPanicLogPicker() {
     });
 
     startActivityForResult(i, REQ_PANIC_LOG);
-    
+
     appendHtml("<br>");
     logLine();
-    logInfo("Panic Log Import requested (SAF).");
+    logInfo("Panic Logs Import requested (SAF).");
     logLine();
 }
 
@@ -297,50 +577,90 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode != REQ_PANIC_LOG) return;
 
-    if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+    if (resultCode != RESULT_OK || data == null) {
         logWarn("Panic log import cancelled.");
         return;
     }
 
-    Uri uri = data.getData();
-
     try {
-        String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
-        panicLogName = (name != null) ? name : "unknown";
 
-        InputStream is = getContentResolver().openInputStream(uri);
-        if (is == null) throw new Exception("InputStream null");
+        List<Uri> uris = new ArrayList<>();
 
-        if (looksLikeZip(panicLogName)) {
-            panicLogText = readPanicFromZip(is);
-        } else {
-            panicLogText = readTextStream(is);
+        if (data.getClipData() != null) {
+            ClipData clip = data.getClipData();
+            for (int i = 0; i < clip.getItemCount(); i++) {
+                uris.add(clip.getItemAt(i).getUri());
+            }
+        } else if (data.getData() != null) {
+            uris.add(data.getData());
         }
 
-        if (panicLogText == null || panicLogText.trim().isEmpty()) {
-            throw new Exception("Empty log");
+        if (uris.isEmpty()) {
+            logWarn("No files selected.");
+            return;
         }
 
+        logOk("Panic logs selected: " + uris.size());
+
+        StringBuilder allLogs = new StringBuilder();
+
+        for (Uri uri : uris) {
+
+            String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
+            String safeName = (name != null) ? name : "unknown";
+
+            InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null) continue;
+
+            String text;
+            if (looksLikeZip(safeName)) {
+                text = readPanicFromZip(is);
+            } else {
+                text = readTextStream(is);
+            }
+
+            if (text == null || text.trim().isEmpty()) {
+                logWarn("Skipped empty file: " + safe(safeName));
+                continue;
+            }
+
+            allLogs.append("\n\n===== FILE: ")
+                   .append(safeName)
+                   .append(" =====\n\n")
+                   .append(text);
+
+            logOk("Loaded: " + safe(safeName));
+        }
+
+           panicLogCount = uris.size();
+
+if (panicLogCount == 1) {
+    panicLogName = "Single panic log";
+} else {
+    panicLogName = "Multiple panic logs (" + panicLogCount + " files)";
+}
+
+        if (allLogs.length() == 0) {
+            throw new Exception("All files empty.");
+        }
+
+        panicLogText   = allLogs.toString();
         panicLogLoaded = true;
-
-        // Cache signature once on import (safe)
+        
+        // cache signature από ΟΛΑ
         parseAndCacheSignature(panicLogText);
 
-        logOk("Panic log imported.");
-
-        logInfo("File:");
-        logOk(safe(panicLogName));
-
-        logInfo("Size:");
+        logOk("Multi panic logs imported.");
+        logInfo("Total size:");
         logOk(String.valueOf(panicLogText.length()) + " chars");
-
         logOk("Ready for analysis.");
 
     } catch (Exception e) {
+
         panicLogLoaded = false;
         panicLogText   = null;
 
-        logError("Panic log import failed.");
+        logError("Panic logs import failed.");
         logInfo("Reason:");
         logWarn(safe(e.getMessage()));
     }

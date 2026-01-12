@@ -236,6 +236,7 @@ private int drawReportHeader(
     // --------------------------------------------------
     // BASIC INFO
     // --------------------------------------------------
+    if (isFirstPage) {
     String dateLine   = "Date / Ημερομηνία:  " +
             java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
     String deviceLine = "Device / Συσκευή:  " +
@@ -251,7 +252,6 @@ private int drawReportHeader(
     // --------------------------------------------------
     // DAMAGE CHECK — ΜΟΝΟ ΣΤΗΝ 1η ΣΕΛΙΔΑ
     // --------------------------------------------------
-    if (isFirstPage) {
 
         Paint sectionTitle = new Paint(text);
         sectionTitle.setFakeBoldText(true);

@@ -195,68 +195,107 @@ public class ServiceReportActivity extends AppCompatActivity {
     }
 
     // ==========================================================
-    // REPORT HEADER — WITH DAMAGE CHECK (GR + EN)
-    // ==========================================================
-    private int drawReportHeader(
-            Canvas c,
-            int x,
-            int startY,
-            Paint title,
-            Paint subtitle,
-            Paint text) {
+// REPORT HEADER — WITH DAMAGE CHECK (GR + EN)
+// ==========================================================
+private int drawReportHeader(
+        Canvas c,
+        int x,
+        int startY,
+        Paint title,
+        Paint subtitle,
+        Paint text) {
 
-        int y = startY;
+    int y = startY;
 
-        if (gelLogo != null) {
-            Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 52, 52, true);
-            c.drawBitmap(scaled, x, y - 6, null);
-        }
-
-        int textStartX = x + 70;
-
-        c.drawText("GEL Αναφορά Service", textStartX, y + 10, title);
-        y += 20;
-
-        c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
-                textStartX, y + 10, subtitle);
-        y += 30;
-
-        String dateLine   = "Ημερομηνία / Date:  " +
-                java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
-        String deviceLine = "Συσκευή / Device:  " +
-                android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
-        String osLine     = "Android:  " +
-                android.os.Build.VERSION.RELEASE +
-                " (API " + android.os.Build.VERSION.SDK_INT + ")";
-
-        c.drawText(dateLine, x, y, text);   y += 16;
-        c.drawText(deviceLine, x, y, text);y += 16;
-        c.drawText(osLine, x, y, text);    y += 22;
-
-        Paint sectionTitle = new Paint(text);
-        sectionTitle.setFakeBoldText(true);
-        c.drawText("Έλεγχος Ζημιών / Damage Check", x, y, sectionTitle);
-        y += 18;
-
-        String[] damageLines = new String[]{
-                "• Dead pixels / Καμμένα pixels",
-                "• Burn-in / Καμμένα σημεία",
-                "• Touch issues / Πρόβλημα αφής",
-                "• Camera issues / Πρόβλημα κάμερας",
-                "• Speaker issues / Πρόβλημα ηχείου",
-                "• Microphone issues / Πρόβλημα μικροφώνου",
-                "• Battery swelling / Φούσκωμα μπαταρίας",
-                "• Charging port / Θύρα φόρτισης"
-        };
-
-        for (String s : damageLines) {
-            c.drawText(s, x + 10, y, text);
-            y += 16;
-        }
-
-        y += 20;
-        return y;
+    // --------------------------------------------------
+    // LOGO
+    // --------------------------------------------------
+    if (gelLogo != null) {
+        Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 52, 52, true);
+        c.drawBitmap(scaled, x, y, null);
     }
+
+    // ⬇️ κατεβάζουμε ΟΛΟ το κείμενο μια γραμμή πιο κάτω
+    y += 70;   // αυτό είναι το «κενό» που ζήτησες
+
+    int textStartX = x;
+
+    // --------------------------------------------------
+    // TITLE
+    // --------------------------------------------------
+    c.drawText("GEL Αναφορά Service", textStartX, y, title);
+    y += 20;
+
+    c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
+            textStartX, y, subtitle);
+    y += 26;
+
+    // --------------------------------------------------
+    // BASIC INFO
+    // --------------------------------------------------
+    String dateLine   = "Ημερομηνία / Date:  " +
+            java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
+    String deviceLine = "Συσκευή / Device:  " +
+            android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
+    String osLine     = "Android:  " +
+            android.os.Build.VERSION.RELEASE +
+            " (API " + android.os.Build.VERSION.SDK_INT + ")";
+
+    c.drawText(dateLine, x, y, text);    y += 16;
+    c.drawText(deviceLine, x, y, text); y += 16;
+    c.drawText(osLine, x, y, text);     y += 22;
+
+    // --------------------------------------------------
+    // DAMAGE CHECK — TITLE
+    // --------------------------------------------------
+    Paint sectionTitle = new Paint(text);
+    sectionTitle.setFakeBoldText(true);
+
+    c.drawText("Έλεγχος Ζημιών / Damage Check", x, y, sectionTitle);
+    y += 18;
+
+    // --------------------------------------------------
+    // DAMAGE CHECK — WITH YES / NO BOXES
+    // --------------------------------------------------
+    String[] damageLines = new String[]{
+            "Dead pixels / Καμμένα pixels",
+            "Burn-in / Καμμένα σημεία",
+            "Touch issues / Πρόβλημα αφής",
+            "Camera issues / Πρόβλημα κάμερας",
+            "Speaker issues / Πρόβλημα ηχείου",
+            "Microphone issues / Πρόβλημα μικροφώνου",
+            "Battery swelling / Φούσκωμα μπαταρίας",
+            "Charging port / Θύρα φόρτισης"
+    };
+
+    Paint boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    boxPaint.setStyle(Paint.Style.STROKE);
+    boxPaint.setStrokeWidth(1.5f);
+
+    for (String s : damageLines) {
+
+        int boxSize = 10;
+
+        // □ YES
+        c.drawRect(x, y - 9, x + boxSize, y + 1, boxPaint);
+        c.drawText(" YES", x + boxSize + 4, y, text);
+
+        // □ NO
+        int noX = x + 70;
+        c.drawRect(noX, y - 9, noX + boxSize, y + 1, boxPaint);
+        c.drawText(" NO", noX + boxSize + 4, y, text);
+
+        // περιγραφή
+        c.drawText("— " + s, x + 140, y, text);
+
+        y += 16;
+    }
+
+    // λίγο κενό πριν αρχίσουν τα labs
+    y += 24;
+
+    return y;
+}
 
     // ==========================================================
     // DRAW LINE WITH COLORED EMOJI

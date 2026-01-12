@@ -126,7 +126,9 @@ public class ServiceReportActivity extends AppCompatActivity {
             canvas.drawColor(Color.WHITE);
 
             // HEADER πρώτη σελίδα
-            y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint, pageNum == 1);
+            y = drawReportHeader(canvas, marginX, 40,
+        titlePaint, subtitlePaint, textPaint,
+        pageNum == 1);
 
             for (String line : lines) {
 
@@ -138,7 +140,9 @@ public class ServiceReportActivity extends AppCompatActivity {
                     canvas = page.getCanvas();
                     canvas.drawColor(Color.WHITE);
 
-                    y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
+                    y = drawReportHeader(canvas, marginX, 40,
+        titlePaint, subtitlePaint, textPaint,
+        pageNum == 1);
                 }
 
                 drawLineWithColoredEmoji(canvas, line, marginX, y, textPaint, emojiPaint);

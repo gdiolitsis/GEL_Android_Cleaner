@@ -70,7 +70,7 @@ root.addView(txtPreview);
 AppCompatButton btn = new AppCompatButton(this);
 btn.setText("EXPORT PDF");
 btn.setAllCaps(false);
-btn.setTextColor(0xFFFFFFFF); // λευκά γράμματα
+btn.setTextColor(0xFFFFFFFF);
 btn.setTextSize(14f);
 
 // μαύρο φόντο + χρυσό περίγραμμα
@@ -91,7 +91,8 @@ btn.setPadding(0, 32, 0, 32);
 btn.setOnClickListener(v -> exportTxtToPdf());
 
 root.addView(btn);
-}
+
+// ⚠️ ΤΕΛΟΣ — ΜΗΝ ΒΑΛΕΙΣ ΑΛΛΟ }
 
     // ==========================================================
     // CORE — TXT → PDF

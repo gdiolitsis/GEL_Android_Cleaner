@@ -58,7 +58,7 @@ btn.setTextColor(0xFFFFFFFF); // λευκά γράμματα
 btn.setTextSize(14f);
 
 // GEL style (μαύρο φόντο, χρυσό περίγραμμα)
-btn.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
+btn.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
 // layout params
 LinearLayout.LayoutParams lpBtn =

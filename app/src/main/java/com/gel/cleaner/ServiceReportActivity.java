@@ -126,7 +126,7 @@ public class ServiceReportActivity extends AppCompatActivity {
             canvas.drawColor(Color.WHITE);
 
             // HEADER πρώτη σελίδα
-            y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
+            y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint, pageNum == 1);
 
             for (String line : lines) {
 
@@ -194,8 +194,8 @@ public class ServiceReportActivity extends AppCompatActivity {
         return pdf.startPage(info);
     }
 
-    // ==========================================================
-// REPORT HEADER — WITH DAMAGE CHECK (GR + EN)
+// ==========================================================
+// REPORT HEADER — DAMAGE CHECK ONLY ON FIRST PAGE
 // ==========================================================
 private int drawReportHeader(
         Canvas c,
@@ -203,7 +203,8 @@ private int drawReportHeader(
         int startY,
         Paint title,
         Paint subtitle,
-        Paint text) {
+        Paint text,
+        boolean isFirstPage) {
 
     int y = startY;
 
@@ -215,27 +216,25 @@ private int drawReportHeader(
         c.drawBitmap(scaled, x, y, null);
     }
 
-    // ⬇️ κατεβάζουμε ΟΛΟ το κείμενο μια γραμμή πιο κάτω
-    y += 70;   // αυτό είναι το «κενό» που ζήτησες
-
-    int textStartX = x;
+    // κατεβάζουμε το περιεχόμενο
+    y += 70;
 
     // --------------------------------------------------
     // TITLE
     // --------------------------------------------------
-    c.drawText("GEL Αναφορά Service", textStartX, y, title);
+    c.drawText("GEL Service Report/ Αναφορά Service", x, y, title);
     y += 20;
 
     c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
-            textStartX, y, subtitle);
+            x, y, subtitle);
     y += 26;
 
     // --------------------------------------------------
     // BASIC INFO
     // --------------------------------------------------
-    String dateLine   = "Ημερομηνία / Date:  " +
+    String dateLine   = "Date / Ημερομηνία:  " +
             java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
-    String deviceLine = "Συσκευή / Device:  " +
+    String deviceLine = "Device / Συσκευή:  " +
             android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
     String osLine     = "Android:  " +
             android.os.Build.VERSION.RELEASE +
@@ -246,53 +245,53 @@ private int drawReportHeader(
     c.drawText(osLine, x, y, text);     y += 22;
 
     // --------------------------------------------------
-    // DAMAGE CHECK — TITLE
+    // DAMAGE CHECK — ΜΟΝΟ ΣΤΗΝ 1η ΣΕΛΙΔΑ
     // --------------------------------------------------
-    Paint sectionTitle = new Paint(text);
-    sectionTitle.setFakeBoldText(true);
+    if (isFirstPage) {
 
-    c.drawText("Έλεγχος Ζημιών / Damage Check", x, y, sectionTitle);
-    y += 18;
+        Paint sectionTitle = new Paint(text);
+        sectionTitle.setFakeBoldText(true);
 
-    // --------------------------------------------------
-    // DAMAGE CHECK — WITH YES / NO BOXES
-    // --------------------------------------------------
-    String[] damageLines = new String[]{
-            "Dead pixels / Καμμένα pixels",
-            "Burn-in / Καμμένα σημεία",
-            "Touch issues / Πρόβλημα αφής",
-            "Camera issues / Πρόβλημα κάμερας",
-            "Speaker issues / Πρόβλημα ηχείου",
-            "Microphone issues / Πρόβλημα μικροφώνου",
-            "Battery swelling / Φούσκωμα μπαταρίας",
-            "Charging port / Θύρα φόρτισης"
-    };
+        c.drawText("Damage check / Έλεγχος Ζημιών", x, y, sectionTitle);
+        y += 18;
 
-    Paint boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    boxPaint.setStyle(Paint.Style.STROKE);
-    boxPaint.setStrokeWidth(1.5f);
+        String[] damageLines = new String[]{
+                "Dead pixels / Καμμένα pixels",
+                "Burn-in / Καμμένα σημεία",
+                "Touch issues / Πρόβλημα αφής",
+                "Camera issues / Πρόβλημα κάμερας",
+                "Speaker issues / Πρόβλημα ηχείου",
+                "Microphone issues / Πρόβλημα μικροφώνου",
+                "Battery swelling / Φούσκωμα μπαταρίας",
+                "Charging port / Θύρα φόρτισης"
+        };
 
-    for (String s : damageLines) {
+        Paint boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        boxPaint.setStyle(Paint.Style.STROKE);
+        boxPaint.setStrokeWidth(1.5f);
 
-        int boxSize = 10;
+        for (String s : damageLines) {
 
-        // □ YES
-        c.drawRect(x, y - 9, x + boxSize, y + 1, boxPaint);
-        c.drawText(" YES", x + boxSize + 4, y, text);
+            int boxSize = 10;
 
-        // □ NO
-        int noX = x + 70;
-        c.drawRect(noX, y - 9, noX + boxSize, y + 1, boxPaint);
-        c.drawText(" NO", noX + boxSize + 4, y, text);
+            // □ YES
+            c.drawRect(x, y - 9, x + boxSize, y + 1, boxPaint);
+            c.drawText(" YES", x + boxSize + 4, y, text);
 
-        // περιγραφή
-        c.drawText("— " + s, x + 140, y, text);
+            // □ NO
+            int noX = x + 70;
+            c.drawRect(noX, y - 9, noX + boxSize, y + 1, boxPaint);
+            c.drawText(" NO", noX + boxSize + 4, y, text);
 
-        y += 16;
+            // περιγραφή
+            c.drawText("— " + s, x + 140, y, text);
+
+            y += 16;
+        }
+
+        // κενό πριν τα labs
+        y += 24;
     }
-
-    // λίγο κενό πριν αρχίσουν τα labs
-    y += 24;
 
     return y;
 }

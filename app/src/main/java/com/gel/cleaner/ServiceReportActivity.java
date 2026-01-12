@@ -12,7 +12,6 @@ import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -34,52 +33,51 @@ public class ServiceReportActivity extends AppCompatActivity {
     private Bitmap gelLogo;
 
     @Override
-protected void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
+        gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
 
-    ScrollView scroll = new ScrollView(this);
+        ScrollView scroll = new ScrollView(this);
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(32, 32, 32, 32);
-    root.setBackgroundColor(0xFF101010);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(32, 32, 32, 32);
+        root.setBackgroundColor(0xFF101010);
 
-    txtPreview = new TextView(this);
-    txtPreview.setTextColor(0xFFFFFFFF);
-    txtPreview.setTextSize(13f);
-    txtPreview.setText(GELServiceLog.getAll());
-    root.addView(txtPreview);
+        txtPreview = new TextView(this);
+        txtPreview.setTextColor(0xFFFFFFFF);
+        txtPreview.setTextSize(13f);
+        txtPreview.setText(GELServiceLog.getAll());
+        root.addView(txtPreview);
 
-    // ---------------------------
-    // EXPORT PDF BUTTON (STYLED)
-    // ---------------------------
-AppCompatButton btn = new AppCompatButton(this);
-btn.setText("Export PDF");
-btn.setAllCaps(false);
-btn.setTextColor(0xFFFFFFFF);   // λευκά γράμματα
-btn.setTextSize(14f);
+        // ---------------------------
+        // EXPORT PDF BUTTON (STYLED)
+        // ---------------------------
+        AppCompatButton btn = new AppCompatButton(this);
+        btn.setText("Export PDF");
+        btn.setAllCaps(false);
+        btn.setTextColor(0xFFFFFFFF);
+        btn.setTextSize(14f);
 
-btn.setBackgroundResource(R.drawable.gel_btn_outline); 
-LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-lpBtn.topMargin = 32;
-btn.setLayoutParams(lpBtn);
+        btn.setBackgroundResource(R.drawable.gel_btn_outline);
 
-// ύψος για σωστή «ανάσα»
-btn.setPadding(0, 28, 0, 28);
+        LinearLayout.LayoutParams lpBtn =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+        lpBtn.topMargin = 32;
+        btn.setLayoutParams(lpBtn);
 
-btn.setOnClickListener(v -> exportTxtToPdf());
+        btn.setPadding(0, 28, 0, 28);
+        btn.setOnClickListener(v -> exportTxtToPdf());
 
-root.addView(btn);
+        root.addView(btn);
 
-    scroll.addView(root);
-    setContentView(scroll);
-}
+        scroll.addView(root);
+        setContentView(scroll);
+    }
 
     // ==========================================================
     // CORE — TXT → PDF
@@ -120,7 +118,6 @@ root.addView(btn);
 
             int marginX = 32;
             int y;
-
             int lineHeight = 18;
             int pageNum = 1;
 
@@ -128,85 +125,28 @@ root.addView(btn);
             Canvas canvas = page.getCanvas();
             canvas.drawColor(Color.WHITE);
 
-            // ==========================================================
-// REPORT HEADER — WITH DAMAGE CHECK (GR + EN)
-// ==========================================================
-private int drawReportHeader(
-        Canvas c,
-        int x,
-        int startY,
-        Paint title,
-        Paint subtitle,
-        Paint text) {
+            // HEADER πρώτη σελίδα
+            y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
 
-    int y = startY;
+            for (String line : lines) {
 
-    // --------------------------------------------------
-    // LOGO
-    // --------------------------------------------------
-    if (gelLogo != null) {
-        Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 52, 52, true);
-        c.drawBitmap(scaled, x, y - 6, null);
-    }
+                if (y > PAGE_HEIGHT - 80) {
+                    pdf.finishPage(page);
 
-    int textStartX = x + 70;
+                    pageNum++;
+                    page = startPage(pdf, pageNum);
+                    canvas = page.getCanvas();
+                    canvas.drawColor(Color.WHITE);
 
-    // --------------------------------------------------
-    // TITLE
-    // --------------------------------------------------
-    c.drawText("GEL Αναφορά Service", textStartX, y + 10, title);
-    y += 20;
+                    y = drawReportHeader(canvas, marginX, 40, titlePaint, subtitlePaint, textPaint);
+                }
 
-    c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
-            textStartX, y + 10, subtitle);
-    y += 30;
-
-    // --------------------------------------------------
-    // BASIC INFO (TOP OF PAGE)
-    // --------------------------------------------------
-    String dateLine   = "Ημερομηνία / Date:  " +
-            java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
-    String deviceLine = "Συσκευή / Device:  " + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
-    String osLine     = "Android:  " + android.os.Build.VERSION.RELEASE +
-            " (API " + android.os.Build.VERSION.SDK_INT + ")";
-
-    c.drawText(dateLine, x, y, text);   y += 16;
-    c.drawText(deviceLine, x, y, text);y += 16;
-    c.drawText(osLine, x, y, text);    y += 22;
-
-    // --------------------------------------------------
-    // DAMAGE CHECK — GR + EN
-    // --------------------------------------------------
-    Paint sectionTitle = new Paint(text);
-    sectionTitle.setFakeBoldText(true);
-
-    c.drawText("Έλεγχος Ζημιών / Damage Check", x, y, sectionTitle);
-    y += 18;
-
-    String[] damageLines = new String[]{
-            "• Dead pixels / Καμμένα pixels",
-            "• Burn-in / Καμμένα σημεία",
-            "• Touch issues / Πρόβλημα αφής",
-            "• Camera issues / Πρόβλημα κάμερας",
-            "• Speaker issues / Πρόβλημα ηχείου",
-            "• Microphone issues / Πρόβλημα μικροφώνου",
-            "• Battery swelling / Φούσκωμα μπαταρίας",
-            "• Charging port / Θύρα φόρτισης"
-    };
-
-    for (String s : damageLines) {
-        c.drawText(s, x + 10, y, text);
-        y += 16;
-    }
-
-    // λίγος αέρας πριν αρχίσουν τα labs
-    y += 20;
-
-    return y;
-}
+                drawLineWithColoredEmoji(canvas, line, marginX, y, textPaint, emojiPaint);
+                y += lineHeight;
+            }
 
             // ==================================================
-            // FOOTER — END OF REPORT + SIGNATURE
+            // FOOTER
             // ==================================================
             if (y > PAGE_HEIGHT - 120) {
                 pdf.finishPage(page);
@@ -255,7 +195,7 @@ private int drawReportHeader(
     }
 
     // ==========================================================
-    // REPORT HEADER — CLEAN EDITION
+    // REPORT HEADER — WITH DAMAGE CHECK (GR + EN)
     // ==========================================================
     private int drawReportHeader(
             Canvas c,
@@ -267,27 +207,55 @@ private int drawReportHeader(
 
         int y = startY;
 
-        // Logo LEFT (smaller)
         if (gelLogo != null) {
             Bitmap scaled = Bitmap.createScaledBitmap(gelLogo, 52, 52, true);
-            c.drawBitmap(scaled, x, y - 8, null);
+            c.drawBitmap(scaled, x, y - 6, null);
         }
 
         int textStartX = x + 70;
 
-        // Title
         c.drawText("GEL Αναφορά Service", textStartX, y + 10, title);
         y += 20;
 
-        // Subtitle
         c.drawText("GDiolitsis Engine Lab (GEL) — Author & Developer",
                 textStartX, y + 10, subtitle);
-        y += 26;
+        y += 30;
 
-        // ❌ ΑΦΑΙΡΕΘΗΚΕ η μακριά γραμμή που ακουμπούσε δεξιά
-        // (κρατάμε καθαρό header χωρίς border noise)
+        String dateLine   = "Ημερομηνία / Date:  " +
+                java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
+        String deviceLine = "Συσκευή / Device:  " +
+                android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
+        String osLine     = "Android:  " +
+                android.os.Build.VERSION.RELEASE +
+                " (API " + android.os.Build.VERSION.SDK_INT + ")";
 
-        return y + 10; // νέο Y για τα labs
+        c.drawText(dateLine, x, y, text);   y += 16;
+        c.drawText(deviceLine, x, y, text);y += 16;
+        c.drawText(osLine, x, y, text);    y += 22;
+
+        Paint sectionTitle = new Paint(text);
+        sectionTitle.setFakeBoldText(true);
+        c.drawText("Έλεγχος Ζημιών / Damage Check", x, y, sectionTitle);
+        y += 18;
+
+        String[] damageLines = new String[]{
+                "• Dead pixels / Καμμένα pixels",
+                "• Burn-in / Καμμένα σημεία",
+                "• Touch issues / Πρόβλημα αφής",
+                "• Camera issues / Πρόβλημα κάμερας",
+                "• Speaker issues / Πρόβλημα ηχείου",
+                "• Microphone issues / Πρόβλημα μικροφώνου",
+                "• Battery swelling / Φούσκωμα μπαταρίας",
+                "• Charging port / Θύρα φόρτισης"
+        };
+
+        for (String s : damageLines) {
+            c.drawText(s, x + 10, y, text);
+            y += 16;
+        }
+
+        y += 20;
+        return y;
     }
 
     // ==========================================================

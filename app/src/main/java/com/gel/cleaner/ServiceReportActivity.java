@@ -51,12 +51,26 @@ public class ServiceReportActivity extends AppCompatActivity {
         root.addView(txtPreview);
 
         AppCompatButton btn = new AppCompatButton(this);
-        btn.setText("Export PDF");
-        btn.setOnClickListener(v -> exportTxtToPdf());
-        root.addView(btn);
+btn.setText("EXPORT PDF");
+btn.setAllCaps(false);
+btn.setTextColor(0xFFFFFFFF); // λευκά γράμματα
+btn.setTextSize(14f);
 
-        scroll.addView(root);
-        setContentView(scroll);
+// χρησιμοποίησε το υπάρχον GEL style
+btn.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
+
+// layout
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lpBtn.topMargin = 32;
+btn.setLayoutParams(lpBtn);
+
+btn.setOnClickListener(v -> exportTxtToPdf());
+
+root.addView(btn);
     }
 
     // ==========================================================

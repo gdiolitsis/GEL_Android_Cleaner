@@ -55,28 +55,27 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     // ---------------------------
     // EXPORT PDF BUTTON (STYLED)
     // ---------------------------
-    AppCompatButton btn = new AppCompatButton(this);
-    btn.setText("EXPORT PDF");
-    btn.setAllCaps(false);
-    btn.setTextColor(0xFFFFFFFF);
-    btn.setTextSize(14f);
+AppCompatButton btn = new AppCompatButton(this);
+btn.setText("Export PDF");
+btn.setAllCaps(false);
+btn.setTextColor(0xFFFFFFFF);   // λευκά γράμματα
+btn.setTextSize(14f);
 
-    // μαύρο φόντο + χρυσό περίγραμμα
-    btn.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
+btn.setBackgroundResource(R.drawable.gel_btn_outline); 
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lpBtn.topMargin = 32;
+btn.setLayoutParams(lpBtn);
 
-    LinearLayout.LayoutParams lpBtn =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-    lpBtn.topMargin = 32;
-    btn.setLayoutParams(lpBtn);
+// ύψος για σωστή «ανάσα»
+btn.setPadding(0, 28, 0, 28);
 
-    btn.setPadding(0, 32, 0, 32);
+btn.setOnClickListener(v -> exportTxtToPdf());
 
-    btn.setOnClickListener(v -> exportTxtToPdf());
-
-    root.addView(btn);
+root.addView(btn);
 
     scroll.addView(root);
     setContentView(scroll);

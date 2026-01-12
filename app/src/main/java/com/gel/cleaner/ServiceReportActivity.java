@@ -34,65 +34,53 @@ public class ServiceReportActivity extends AppCompatActivity {
     private Bitmap gelLogo;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-        gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
+    gelLogo = BitmapFactory.decodeResource(getResources(), R.drawable.gel_logo);
 
-        ScrollView scroll = new ScrollView(this);
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(32, 32, 32, 32);
-        root.setBackgroundColor(0xFF101010);
+    ScrollView scroll = new ScrollView(this);
 
-        txtPreview = new TextView(this);
-        txtPreview.setTextColor(0xFFFFFFFF);
-        txtPreview.setTextSize(13f);
-        txtPreview.setText(GELServiceLog.getAll());
-        root.addView(txtPreview);
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(32, 32, 32, 32);
+    root.setBackgroundColor(0xFF101010);
 
-ScrollView scroll = new ScrollView(this);
+    txtPreview = new TextView(this);
+    txtPreview.setTextColor(0xFFFFFFFF);
+    txtPreview.setTextSize(13f);
+    txtPreview.setText(GELServiceLog.getAll());
+    root.addView(txtPreview);
 
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(32, 32, 32, 32);
-root.setBackgroundColor(0xFF101010);
+    // ---------------------------
+    // EXPORT PDF BUTTON (STYLED)
+    // ---------------------------
+    AppCompatButton btn = new AppCompatButton(this);
+    btn.setText("EXPORT PDF");
+    btn.setAllCaps(false);
+    btn.setTextColor(0xFFFFFFFF);
+    btn.setTextSize(14f);
 
-txtPreview = new TextView(this);
-txtPreview.setTextColor(0xFFFFFFFF);
-txtPreview.setTextSize(13f);
-txtPreview.setText(GELServiceLog.getAll());
-root.addView(txtPreview);
+    // μαύρο φόντο + χρυσό περίγραμμα
+    btn.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
 
-// ---------------------------
-// EXPORT PDF BUTTON (STYLED)
-// ---------------------------
-AppCompatButton btn = new AppCompatButton(this);
-btn.setText("EXPORT PDF");
-btn.setAllCaps(false);
-btn.setTextColor(0xFFFFFFFF);
-btn.setTextSize(14f);
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+    lpBtn.topMargin = 32;
+    btn.setLayoutParams(lpBtn);
 
-// μαύρο φόντο + χρυσό περίγραμμα
-btn.setBackgroundResource(R.drawable.gel_btn_gold_bordo);
+    btn.setPadding(0, 32, 0, 32);
 
-// layout
-LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-lpBtn.topMargin = 32;
-btn.setLayoutParams(lpBtn);
+    btn.setOnClickListener(v -> exportTxtToPdf());
 
-// λίγο ύψος για να «γράφει»
-btn.setPadding(0, 32, 0, 32);
+    root.addView(btn);
 
-btn.setOnClickListener(v -> exportTxtToPdf());
-
-root.addView(btn);
-
-// ⚠️ ΤΕΛΟΣ — ΜΗΝ ΒΑΛΕΙΣ ΑΛΛΟ }
+    scroll.addView(root);
+    setContentView(scroll);
+}
 
     // ==========================================================
     // CORE — TXT → PDF

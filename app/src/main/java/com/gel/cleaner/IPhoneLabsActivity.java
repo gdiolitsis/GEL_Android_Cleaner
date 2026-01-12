@@ -272,6 +272,17 @@ showPanicLogsGuidePopup();
 scroll.addView(root);
 setContentView(scroll);
 
+// ==========================
+// TTS INIT
+// ==========================
+tts[0] = new TextToSpeech(this, status -> {
+    if (status == TextToSpeech.SUCCESS) {
+        ttsReady[0] = true;
+    } else {
+        ttsReady[0] = false;
+    }
+});
+
 // ============================================================
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
@@ -285,6 +296,17 @@ logLine();
 logOk("Import a panic log to begin analysis.");
 
 } // onCreate ends here
+
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+        }
+    } catch (Throwable ignore) {}
+}
 
 // ============================================================
 // TOAST (VISIBLE GUARD MESSAGE)
@@ -533,13 +555,20 @@ private void speakPanicGuideTTS() {
         tts[0].stop();
 
         if ("GR".equals(panicGuideLang)) {
+
+            tts[0].setLanguage(new Locale("el", "GR"));
+
             tts[0].speak(
                 getPanicGuideTextGR(),
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "PANIC_GUIDE_GR"
             );
+
         } else {
+
+            tts[0].setLanguage(Locale.US);
+
             tts[0].speak(
                 getPanicGuideTextEN(),
                 TextToSpeech.QUEUE_FLUSH,

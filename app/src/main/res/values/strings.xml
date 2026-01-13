@@ -200,4 +200,30 @@ and then export the report.
         ℹ️ GEL Manual Tests — ready.\nOpen a category above and run the required labs.
     </string>
 
+    <!-- =============================== -->
+    <!-- 🍎 APPLE MODE (ADDED) -->
+    <!-- =============================== -->
+
+    <!-- PLATFORM SELECT POPUP -->
+    <string name="platform_select_title">SELECT PLATFORM</string>
+    <string name="platform_android">🤖 ANDROID</string>
+    <string name="platform_apple">🍎 APPLE</string>
+
+    <!-- DEVICE DECLARATION -->
+    <string name="apple_device_declaration">🧩 Device Declaration</string>
+    <string name="apple_device_category_title">Select device category</string>
+    <string name="apple_device_cat_iphone">iPhone</string>
+    <string name="apple_device_cat_ipad">iPad</string>
+    <string name="apple_device_cat_ipod">iPod</string>
+
+    <!-- APPLE SYSTEM (SAME STYLE AS ANDROID) -->
+    <string name="apple_system">🛠 System</string>
+
+    <!-- SAME FORMAT AS ANDROID FOR BUTTON WIDTH -->
+    <string name="apple_phone_info_internal">📱 PHONE INFO\n(Internal)</string>
+    <string name="apple_phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
+
+    <!-- APPLE DIAGNOSIS -->
+    <string name="apple_diagnosis">🚀 GEL iPhone Diagnosis</string>
+
 </resources>

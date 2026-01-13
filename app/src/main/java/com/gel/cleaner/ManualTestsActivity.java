@@ -5831,6 +5831,40 @@ try {
             humanBytes(total) +  
             " (free " + humanBytes(free) + ", " + pctFree + "%)"  
     );  
+    
+    // ---------------- MEMORY PRESSURE INDICATORS ----------------
+MemSnapshot snap = readMemSnapshotSafe();
+
+long swapUsedKb = 0;
+if (snap.swapTotalKb > 0 && snap.swapFreeKb >= 0) {
+    swapUsedKb = Math.max(0, snap.swapTotalKb - snap.swapFreeKb);
+}
+
+String pressureLevel = pressureLevel(
+        snap.memFreeKb,
+        snap.cachedKb,
+        swapUsedKb
+);
+
+String zramDep = zramDependency(swapUsedKb, total);
+String humanPressure = humanPressureLabel(pressureLevel);
+
+logLine();
+logInfo("Memory Pressure Indicators:");
+
+logOk("Memory Pressure: " + humanPressure);
+logInfo("Pressure Level: " + pressureLevel);
+logInfo("ZRAM Swap Dependency: " + zramDep);
+
+if (swapUsedKb > 0) {
+    logInfo("Swap used: " + humanBytes(swapUsedKb * 1024L));
+}
+if (snap.memFreeKb > 0) {
+    logInfo("MemFree: " + humanBytes(snap.memFreeKb * 1024L));
+}
+if (snap.cachedKb > 0) {
+    logInfo("Cached: " + humanBytes(snap.cachedKb * 1024L) + " (reclaimable)");
+}
 
     // ------------------------------------------------------------  
     // PRESSURE LEVEL (HUMAN SCALE)  

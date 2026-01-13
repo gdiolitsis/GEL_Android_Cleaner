@@ -423,6 +423,20 @@ private void showPanicLogsGuidePopup() {
         langAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(langAdapter);
+        
+        // ================= INITIAL LANGUAGE + TTS =================
+
+// διάλεξε αρχική γλώσσα από ρύθμιση / state
+if ("GR".equals(panicGuideLang)) {
+    langSpinner.setSelection(1);
+    msg.setText(getPanicGuideTextGR());
+} else {
+    langSpinner.setSelection(0);
+    msg.setText(getPanicGuideTextEN());
+}
+
+// μίλα αμέσως όταν ανοίγει το popup
+speakPanicGuideTTS();
 
         langSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {

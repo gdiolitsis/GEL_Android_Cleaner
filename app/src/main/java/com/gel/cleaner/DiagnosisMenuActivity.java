@@ -8,6 +8,7 @@ package com.gel.cleaner;
 import com.gel.cleaner.base.*;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -25,6 +26,12 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
     private GELFoldableDetector foldDetector;
     private GELFoldableAnimationPack animPack;
     private DualPaneManager dualPane;
+
+    // ============================================================
+    // PREFS — PLATFORM MODE
+    // ============================================================
+    private static final String PREFS = "gel_prefs";
+    private static final String KEY_PLATFORM = "platform_mode"; // "android" | "apple"
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -75,20 +82,29 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         root.addView(sub);
 
         // ============================================================
-        // ANDROID — MANUAL TESTS
+        // PLATFORM MODE
         // ============================================================
-        root.addView(sectionLabel(getString(R.string.manual_tests)));
+        boolean isAppleMode = isAppleMode();
 
-        View manualBtn = makeBlockButton(
-                getString(R.string.manual_tests_title),
-                getString(R.string.manual_tests_desc)
-        );
-        manualBtn.setOnClickListener(v ->
-                startActivity(new Intent(this, ManualTestsActivity.class)));
-        root.addView(manualBtn);
+        // ============================================================
+        // ANDROID — MANUAL TESTS
+        // (ΔΕΝ εμφανίζεται σε Apple mode)
+        // ============================================================
+        if (!isAppleMode) {
+            root.addView(sectionLabel(getString(R.string.manual_tests)));
+
+            View manualBtn = makeBlockButton(
+                    getString(R.string.manual_tests_title),
+                    getString(R.string.manual_tests_desc)
+            );
+            manualBtn.setOnClickListener(v ->
+                    startActivity(new Intent(this, ManualTestsActivity.class)));
+            root.addView(manualBtn);
+        }
 
         // ============================================================
         // iPHONE DIAGNOSIS (LABS)
+        // (Εμφανίζεται ΠΑΝΤΑ — Android & Apple)
         // ============================================================
         root.addView(sectionLabel(getString(R.string.auto_diagnosis)));
 
@@ -102,6 +118,7 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
 
         // ============================================================
         // SERVICE REPORT
+        // (Εμφανίζεται ΠΑΝΤΑ — αλλά σε Apple mode αφορά iPhone)
         // ============================================================
         root.addView(sectionLabel(getString(R.string.service_report)));
 
@@ -118,6 +135,17 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
         // ============================================================
         scroll.addView(root);
         setContentView(scroll);
+    }
+
+    // ============================================================
+    // PLATFORM CHECK
+    // ============================================================
+    private boolean isAppleMode() {
+        SharedPreferences prefs =
+                getSharedPreferences(PREFS, MODE_PRIVATE);
+        return "apple".equals(
+                prefs.getString(KEY_PLATFORM, "android")
+        );
     }
 
     // ============================================================

@@ -2221,6 +2221,64 @@ int pctFree = (int) ((free * 100L) / total);
 }
 
 // ============================================================
+// LAB 19 — MEMORY HELPERS (LOCAL TO ManualTestsActivity)
+// ============================================================
+
+private static class MemSnapshot {
+    long memFreeKb;
+    long cachedKb;
+    long swapTotalKb;
+    long swapFreeKb;
+}
+
+private MemSnapshot readMemSnapshotSafe() {
+    MemSnapshot m = new MemSnapshot();
+
+    try {
+        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+        if (meminfo == null) return m;
+
+        for (String l : meminfo.split("\n")) {
+            if (l.startsWith("MemFree:"))   m.memFreeKb   = parseKb(l);
+            if (l.startsWith("Cached:"))    m.cachedKb    = parseKb(l);
+            if (l.startsWith("SwapTotal:")) m.swapTotalKb = parseKb(l);
+            if (l.startsWith("SwapFree:"))  m.swapFreeKb  = parseKb(l);
+        }
+    } catch (Throwable ignore) {}
+
+    return m;
+}
+
+private String pressureLevel(long memFreeKb, long cachedKb, long swapUsedKb) {
+
+    // thresholds tuned for 4–6GB devices
+    boolean lowFree   = memFreeKb < (150 * 1024);   // <150MB
+    boolean midFree   = memFreeKb < (300 * 1024);   // <300MB
+    boolean heavySwap = swapUsedKb > (512 * 1024);  // >512MB
+    boolean midSwap   = swapUsedKb > (256 * 1024);  // >256MB
+
+    if (lowFree && heavySwap) return "High";
+    if (midFree || midSwap)   return "Medium";
+    return "Low";
+}
+
+private String zramDependency(long swapUsedKb, long totalMemBytes) {
+
+    long swapUsedMb = swapUsedKb / 1024;
+    long totalMb    = totalMemBytes / (1024 * 1024);
+
+    if (swapUsedMb > (totalMb / 4)) return "High";     // >25% of RAM
+    if (swapUsedMb > (totalMb / 8)) return "Medium";   // >12.5%
+    return "Low";
+}
+
+private String humanPressureLabel(String level) {
+    if ("High".equals(level))   return "High";
+    if ("Medium".equals(level)) return "Moderate";
+    return "Low";
+}
+
+// ============================================================
 // LAB 26 — APPS IMPACT HELPERS
 // ============================================================
 

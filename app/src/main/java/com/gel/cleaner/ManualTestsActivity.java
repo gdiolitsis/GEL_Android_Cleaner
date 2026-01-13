@@ -2221,7 +2221,8 @@ int pctFree = (int) ((free * 100L) / total);
 }
 
 // ============================================================
-// LAB 19 — MEMORY HELPERS (LOCAL TO ManualTestsActivity)
+// LAB 19 — MEMORY HELPERS (SELF-CONTAINED)
+// No external dependencies
 // ============================================================
 
 private static class MemSnapshot {
@@ -2231,27 +2232,63 @@ private static class MemSnapshot {
     long swapFreeKb;
 }
 
+// ------------------------------------------------------------
+// read /proc/meminfo without helper dependencies
+// ------------------------------------------------------------
 private MemSnapshot readMemSnapshotSafe() {
     MemSnapshot m = new MemSnapshot();
 
+    BufferedReader br = null;
     try {
-        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
-        if (meminfo == null) return m;
+        File f = new File("/proc/meminfo");
+        if (!f.exists()) return m;
 
-        for (String l : meminfo.split("\n")) {
-            if (l.startsWith("MemFree:"))   m.memFreeKb   = parseKb(l);
-            if (l.startsWith("Cached:"))    m.cachedKb    = parseKb(l);
-            if (l.startsWith("SwapTotal:")) m.swapTotalKb = parseKb(l);
-            if (l.startsWith("SwapFree:"))  m.swapFreeKb  = parseKb(l);
+        br = new BufferedReader(new FileReader(f));
+        String line;
+
+        while ((line = br.readLine()) != null) {
+
+            if (line.startsWith("MemFree:"))
+                m.memFreeKb = extractKb(line);
+
+            else if (line.startsWith("Cached:"))
+                m.cachedKb = extractKb(line);
+
+            else if (line.startsWith("SwapTotal:"))
+                m.swapTotalKb = extractKb(line);
+
+            else if (line.startsWith("SwapFree:"))
+                m.swapFreeKb = extractKb(line);
         }
-    } catch (Throwable ignore) {}
+
+    } catch (Throwable ignore) {
+    } finally {
+        try {
+            if (br != null) br.close();
+        } catch (Exception ignored) {}
+    }
 
     return m;
 }
 
+// ------------------------------------------------------------
+// extract number from "XXXX kB"
+// ------------------------------------------------------------
+private long extractKb(String line) {
+    try {
+        // keep only digits
+        String n = line.replaceAll("[^0-9]", "");
+        return Long.parseLong(n);
+    } catch (Throwable t) {
+        return 0;
+    }
+}
+
+// ------------------------------------------------------------
+// MEMORY PRESSURE LEVEL
+// ------------------------------------------------------------
 private String pressureLevel(long memFreeKb, long cachedKb, long swapUsedKb) {
 
-    // thresholds tuned for 4–6GB devices
     boolean lowFree   = memFreeKb < (150 * 1024);   // <150MB
     boolean midFree   = memFreeKb < (300 * 1024);   // <300MB
     boolean heavySwap = swapUsedKb > (512 * 1024);  // >512MB
@@ -2262,6 +2299,9 @@ private String pressureLevel(long memFreeKb, long cachedKb, long swapUsedKb) {
     return "Low";
 }
 
+// ------------------------------------------------------------
+// ZRAM SWAP DEPENDENCY
+// ------------------------------------------------------------
 private String zramDependency(long swapUsedKb, long totalMemBytes) {
 
     long swapUsedMb = swapUsedKb / 1024;
@@ -2272,6 +2312,9 @@ private String zramDependency(long swapUsedKb, long totalMemBytes) {
     return "Low";
 }
 
+// ------------------------------------------------------------
+// HUMAN LABEL
+// ------------------------------------------------------------
 private String humanPressureLabel(String level) {
     if ("High".equals(level))   return "High";
     if ("Medium".equals(level)) return "Moderate";

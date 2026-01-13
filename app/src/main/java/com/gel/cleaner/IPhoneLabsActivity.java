@@ -293,6 +293,10 @@ setContentView(scroll);
 tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
         ttsReady[0] = true;
+
+if (panicGuidePopupOpen) {
+    speakPanicGuideTTS();
+}
     } else {
         ttsReady[0] = false;
     }
@@ -435,8 +439,10 @@ if ("GR".equals(panicGuideLang)) {
     msg.setText(getPanicGuideTextEN());
 }
 
-// μίλα αμέσως όταν ανοίγει το popup
-speakPanicGuideTTS();
+// μίλα όταν το TTS είναι έτοιμο (delayed trigger)
+box.postDelayed(() -> {
+    speakPanicGuideTTS();
+}, 700);
 
         langSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {

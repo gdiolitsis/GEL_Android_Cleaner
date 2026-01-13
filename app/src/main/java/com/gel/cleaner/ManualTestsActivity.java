@@ -1435,13 +1435,19 @@ root.setBackground(bg);
 // ------------------------------------------------------------  
 // TITLE  
 // ------------------------------------------------------------  
-TextView title = new TextView(this);  
-title.setText("Battery Stress Test — Pre-Test Check");  
-title.setTextColor(Color.WHITE);  
-title.setTextSize(18f);  
-title.setTypeface(null, Typeface.BOLD);  
-title.setPadding(0, 0, 0, dp(12));  
-root.addView(title);  
+TextView title = new TextView(this);
+title.setText("Battery Stress Test — Pre-Test Check");
+title.setTextColor(Color.WHITE);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setPadding(0, 0, 0, dp(12));
+
+// 🔧 FIX για πολλαπλές γραμμές
+title.setSingleLine(false);
+title.setMaxLines(Integer.MAX_VALUE);
+title.setEllipsize(null);
+
+root.addView(title);
 
 // ------------------------------------------------------------  
 // MESSAGE  

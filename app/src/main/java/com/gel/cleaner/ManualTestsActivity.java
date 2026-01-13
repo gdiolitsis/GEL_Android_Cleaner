@@ -668,18 +668,27 @@ b.setTextSize(14f);
 b.setTextColor(0xFFFFFFFF);  
 b.setBackgroundResource(R.drawable.gel_btn_outline_selector);  
 
-LinearLayout.LayoutParams lp =  
-        new LinearLayout.LayoutParams(  
-                LinearLayout.LayoutParams.MATCH_PARENT,  
-                dp(48)  
-        );  
-lp.setMargins(0, dp(4), 0, dp(4));  
-b.setLayoutParams(lp);  
-b.setGravity(Gravity.CENTER);  
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lp.setMargins(0, dp(4), 0, dp(4));
+b.setLayoutParams(lp);
 
-b.setOnClickListener(v -> action.run());  
+// κρατάμε minimum ύψος για ομοιομορφία
+b.setMinHeight(dp(48));
+
+// επιτρέπουμε πολλές γραμμές όταν χρειάζεται
+b.setSingleLine(false);
+b.setMaxLines(2);
+b.setEllipsize(null);
+
+b.setGravity(Gravity.CENTER);
+b.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+
+b.setOnClickListener(v -> action.run());
 return b;
-
 }
 
 private Button makeTestButtonRedGold(String text, Runnable action) {  
@@ -6120,6 +6129,37 @@ try {
     } else {  
         logOk("✅ RAM level is healthy at this moment.");  
     }  
+    
+    // ---------------- MEMORY PRESSURE INDICATORS ----------------
+try {
+    MemSnapshot snap = readMemSnapshotSafe();
+
+    long swapUsedKb = 0;
+    if (snap.swapTotalKb > 0 && snap.swapFreeKb > 0) {
+        swapUsedKb = snap.swapTotalKb - snap.swapFreeKb;
+    }
+
+    String pressure =
+            pressureLevel(
+                    snap.memFreeKb,
+                    snap.cachedKb,
+                    swapUsedKb
+            );
+
+    String pressureHuman =
+            humanPressureLabel(pressure);
+
+    String zramDep =
+            zramDependency(swapUsedKb, total);
+
+    logLine();
+    logInfo("Memory Pressure:");
+    logOk("Level: " + pressureHuman);
+
+    logInfo("ZRAM / Swap Dependency:");
+    logOk(zramDep);
+
+} catch (Throwable ignore) {}
 
     // ---------------- LOW MEMORY STATE ----------------  
     if (mi.lowMemory) {  

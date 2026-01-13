@@ -527,7 +527,9 @@ box.postDelayed(() -> {
     panicGuidePopupOpen = false;
     d.dismiss();
 });
-}
+
+        }); 
+}          
 
 // ============================================================
 // TEXT HELPERS

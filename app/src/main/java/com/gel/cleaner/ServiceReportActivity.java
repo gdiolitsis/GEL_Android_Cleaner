@@ -341,4 +341,4 @@ if ("apple".equals(
 
         canvas.drawText(rest, dx, y, textPaint);
     }
-} το
+}

@@ -55,7 +55,7 @@ public class ServiceReportActivity extends AppCompatActivity {
         // EXPORT PDF BUTTON (STYLED)
         // ---------------------------
         AppCompatButton btn = new AppCompatButton(this);
-        btn.setText("Export PDF");
+        btn.setText(getString(R.string.export_pdf_button));
         btn.setAllCaps(false);
         btn.setTextColor(0xFFFFFFFF);
         btn.setTextSize(14f);
@@ -168,8 +168,10 @@ public class ServiceReportActivity extends AppCompatActivity {
 
             pdf.finishPage(page);
 
-            File outDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS);
+            File outDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+if (outDir == null) {
+    outDir = getFilesDir();
+}
             if (!outDir.exists()) outDir.mkdirs();
 
             String fileName = "GEL_Service_Report.pdf";
@@ -241,9 +243,17 @@ private int drawReportHeader(
             java.text.DateFormat.getDateTimeInstance().format(new java.util.Date());
     String deviceLine = "Device / Συσκευή:  " +
             android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL;
-    String osLine     = "Android:  " +
+    String osLine;
+if ("apple".equals(
+        getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .getString("platform_mode", "android"))) {
+
+    osLine = "Apple device diagnostics (panic logs analysis)";
+} else {
+    osLine = "Android:  " +
             android.os.Build.VERSION.RELEASE +
             " (API " + android.os.Build.VERSION.SDK_INT + ")";
+}
 
     c.drawText(dateLine, x, y, text);    y += 16;
     c.drawText(deviceLine, x, y, text); y += 16;
@@ -331,4 +341,4 @@ private int drawReportHeader(
 
         canvas.drawText(rest, dx, y, textPaint);
     }
-}
+} το

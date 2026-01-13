@@ -527,7 +527,10 @@ box.postDelayed(() -> {
     panicGuidePopupOpen = false;
     d.dismiss();
 });
-}
+
+});   // 🔒 κλείνει το runOnUiThread
+
+}     // 🔒 κλείνει τη showPanicLogsGuidePopup()
 
 // ============================================================
 // TEXT HELPERS

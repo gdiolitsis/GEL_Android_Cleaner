@@ -8,6 +8,7 @@ import com.gel.cleaner.base.*;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences; // ✅ ADDED
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,6 +29,13 @@ public class MainActivity extends GELAutoActivityHook
     private TextView txtLogs;
     private ScrollView scroll;
 
+    // ================================
+    // PREFS (ADDED — δεν πειράζουμε τίποτα άλλο)
+    // ================================
+    private static final String PREFS = "gel_prefs";
+    private static final String KEY_PLATFORM = "platform_mode"; // "android" | "apple"
+    private static final String KEY_WELCOME_SHOWN = "welcome_shown";
+
     // =========================================================
     // LOCALE HOOK
     // =========================================================
@@ -44,6 +52,15 @@ public class MainActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        SharedPreferences prefs =
+                getSharedPreferences(PREFS, MODE_PRIVATE);
+
+        String platformMode =
+                prefs.getString(KEY_PLATFORM, null);   // "android" | "apple" | null;
+
+        boolean welcomeShown =
+                prefs.getBoolean(KEY_WELCOME_SHOWN, false);
+
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
@@ -51,6 +68,11 @@ public class MainActivity extends GELAutoActivityHook
         setupLangButtons();
         setupDonate();
         setupButtons();
+
+        // ================================
+        // ✅ NEW FLOW (ADDED)
+        // ================================
+        maybeShowWelcomePopup();
 
         log("📱 Device ready", false);
     }
@@ -210,5 +232,69 @@ public class MainActivity extends GELAutoActivityHook
             if (scroll != null)
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });
+    }
+
+    // =========================================================
+    // ================== NEW CODE BELOW =======================
+    // =========================================================
+
+    // =========================================================
+    // WELCOME POPUP
+    // =========================================================
+    private void maybeShowWelcomePopup() {
+
+        SharedPreferences prefs =
+                getSharedPreferences(PREFS, MODE_PRIVATE);
+
+        boolean welcomeShown =
+                prefs.getBoolean(KEY_WELCOME_SHOWN, false);
+
+        if (welcomeShown) return;
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.platform_select_title))
+                .setMessage(getString(R.string.welcome_popup_text))
+                .setCancelable(false)
+                .setPositiveButton("OK", (d, w) -> {
+                    prefs.edit()
+                            .putBoolean(KEY_WELCOME_SHOWN, true)
+                            .apply();
+                    d.dismiss();
+
+                    // 👉 μετά το welcome ανοίγει επιλογή πλατφόρμας
+                    showPlatformSelectPopup();
+                })
+                .show();
+    }
+
+    // =========================================================
+    // PLATFORM SELECT POPUP
+    // =========================================================
+    private void showPlatformSelectPopup() {
+
+        SharedPreferences prefs =
+                getSharedPreferences(PREFS, MODE_PRIVATE);
+
+        String[] items = {
+                getString(R.string.platform_android),
+                getString(R.string.platform_apple)
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.platform_select_title))
+                .setCancelable(false)
+                .setItems(items, (d, which) -> {
+
+                    String mode = (which == 0) ? "android" : "apple";
+
+                    prefs.edit()
+                            .putString(KEY_PLATFORM, mode)
+                            .apply();
+
+                    // εδώ απλά κλείνουμε — το υπόλοιπο flow
+                    // (battery popup κλπ) θα κοπεί όταν mode == apple
+                    d.dismiss();
+                })
+                .show();
     }
 }

@@ -196,4 +196,50 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
         ℹ️ GEL Manual Tests — έτοιμο.\nΆνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.
     </string>
 
+<!-- =============================== -->
+<!-- 🍎 APPLE MODE (ΠΡΟΣΘΗΚΗ) -->
+<!-- =============================== -->
+
+<!-- PLATFORM SELECT POPUP -->
+<string name="platform_select_title">ΕΠΙΛΟΓΗ ΠΛΑΤΦΟΡΜΑΣ</string>
+<string name="platform_android">🤖 ANDROID</string>
+<string name="platform_apple">🍎 APPLE</string>
+
+<!-- WELCOME / EXPLANATION POPUP -->
+<string name="welcome_popup_text">
+Παρότι αυτή είναι μια εφαρμογή για Android,
+είναι το μοναδικό εργαλείο στην αγορά
+που μπορεί να σας βοηθήσει να κατανοήσετε
+προβλήματα και σε συσκευές Apple.
+
+Με την εισαγωγή panic logs από το iPhone ή το iPad σας,
+αναλύουμε τι πραγματικά συνέβη στο εσωτερικό της συσκευής.
+
+Θα καταλάβετε ξεκάθαρα:
+• τι σημαίνουν τα panic logs  
+• ποια ήταν η αιτία του προβλήματος  
+• και πώς μπορείτε να το λύσετε.
+
+Οπότε, διαλέξτε τι θέλετε να εξερευνήσετε:
+τη συσκευή σας Android,
+ή κάποια άλλη συσκευή Apple που έχετε.
+</string>
+
+<!-- DEVICE DECLARATION -->
+<string name="apple_device_declaration">🧩 Δήλωση Συσκευής</string>
+<string name="apple_device_category_title">Επιλογή κατηγορίας συσκευής</string>
+<string name="apple_device_cat_iphone">iPhone</string>
+<string name="apple_device_cat_ipad">iPad</string>
+<string name="apple_device_cat_ipod">iPod</string>
+
+<!-- APPLE SYSTEM (SAME STYLE AS ANDROID) -->
+<string name="apple_system">🛠 Σύστημα</string>
+
+<!-- SAME FORMAT AS ANDROID FOR BUTTON WIDTH -->
+<string name="apple_phone_info_internal">📱 Πληρ. Συσκευής\n(Εσωτερικά)</string>
+<string name="apple_phone_info_peripherals">📡 Πληρ. Συσκευής\n(Περιφερειακά)</string>
+
+<!-- APPLE DIAGNOSIS -->
+<string name="apple_diagnosis">🚀 GEL Διάγνωση iPhone</string>
+
 </resources>

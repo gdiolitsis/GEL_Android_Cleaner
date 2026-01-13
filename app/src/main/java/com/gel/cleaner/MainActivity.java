@@ -66,16 +66,60 @@ public class MainActivity extends GELAutoActivityHook
 
         applySavedLanguage();
         setupLangButtons();
+        startPlatformFlow();
         setupDonate();
         setupButtons();
+        
+// ================================
+// 🍎 APPLE MODE — UI FILTER
+// ================================
+if (isAppleMode()) {
+    applyAppleModeUI();
+}
 
         // ================================
         // ✅ NEW FLOW (ADDED)
         // ================================
-        maybeShowWelcomePopup();
-
+        
         log("📱 Device ready", false);
     }
+
+// =========================================================
+// 🍎 APPLE MODE — UI FILTER
+// =========================================================
+private void applyAppleModeUI() {
+
+    // ----- SECTIONS -----
+    hide(R.id.sectionCleaner);
+    hide(R.id.sectionJunk);
+    hide(R.id.sectionPerformance);
+
+    // ----- BUTTONS (ANDROID ONLY) -----
+    hide(R.id.btnCpuRamLive);
+    hide(R.id.btnCleanAll);
+    hide(R.id.btnBrowserCache);
+    hide(R.id.btnAppCache);
+
+    // ----- OPTIONAL: Android logs / extras -----
+    hide(R.id.txtLogs);
+
+    // ----- KEEP ONLY APPLE FLOW -----
+    show(R.id.btnDonate);
+    show(R.id.btnPhoneInfoInternal);
+    show(R.id.btnPhoneInfoPeripherals);
+    show(R.id.btnDiagnostics);
+    show(R.id.btnAppleDeviceDeclaration);
+}
+
+private void hide(int id) {
+    View v = findViewById(id);
+    if (v != null) v.setVisibility(View.GONE);
+}
+
+private void show(int id) {
+    View v = findViewById(id);
+    if (v != null) v.setVisibility(View.VISIBLE);
+}
 
     // =========================================================
     // LANGUAGE SYSTEM
@@ -97,6 +141,84 @@ public class MainActivity extends GELAutoActivityHook
         String code = LocaleHelper.getLang(this);
         LocaleHelper.set(this, code);
     }
+
+// =========================================================
+// PLATFORM CHECK
+// =========================================================
+private boolean isAppleMode() {
+    SharedPreferences prefs =
+            getSharedPreferences(PREFS, MODE_PRIVATE);
+    return "apple".equals(
+            prefs.getString(KEY_PLATFORM, "android")
+    );
+}
+
+// =========================================================
+// PLATFORM / WELCOME FLOW
+// =========================================================
+private void startPlatformFlow() {
+
+    SharedPreferences prefs =
+            getSharedPreferences(PREFS, MODE_PRIVATE);
+
+    boolean welcomeShown =
+            prefs.getBoolean(KEY_WELCOME_SHOWN, false);
+
+    String platformMode =
+            prefs.getString(KEY_PLATFORM, null); // "android" | "apple" | null
+
+    // 1️⃣ Αν δεν έχει δείξει welcome → δείξε το
+    if (!welcomeShown) {
+        showWelcomePopup();
+        return;
+    }
+
+    // 2️⃣ Αν δεν έχει διαλέξει platform → δείξε επιλογή
+    if (platformMode == null) {
+        showPlatformSelectPopup();
+        return;
+    }
+
+    // 3️⃣ Έτοιμο → προχώρα κανονικά
+    continueNormalFlow();
+}
+
+private void showWelcomePopup() {
+
+    new AlertDialog.Builder(this)
+            .setTitle(getString(R.string.platform_select_title))
+            .setMessage(getString(R.string.welcome_popup_text))
+            .setCancelable(false)
+            .setPositiveButton("OK", (d, w) -> {
+
+                SharedPreferences prefs =
+                        getSharedPreferences(PREFS, MODE_PRIVATE);
+
+                prefs.edit()
+                        .putBoolean(KEY_WELCOME_SHOWN, true)
+                        .apply();
+
+                showPlatformSelectPopup();
+            })
+            .show();
+}
+
+private void continueNormalFlow() {
+
+    SharedPreferences prefs =
+            getSharedPreferences(PREFS, MODE_PRIVATE);
+
+    String platformMode =
+            prefs.getString(KEY_PLATFORM, "android");
+
+    // ------------------------------------------------
+    // ANDROID → δείχνουμε battery capacity popup
+    // APPLE   → το παραλείπουμε τελείως
+    // ------------------------------------------------
+    if ("android".equals(platformMode)) {
+        showBatteryCapacityPopupIfNeeded();
+    }
+}
 
     // =========================================================
     // DONATE
@@ -234,40 +356,7 @@ public class MainActivity extends GELAutoActivityHook
         });
     }
 
-    // =========================================================
-    // ================== NEW CODE BELOW =======================
-    // =========================================================
-
-    // =========================================================
-    // WELCOME POPUP
-    // =========================================================
-    private void maybeShowWelcomePopup() {
-
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
-
-        boolean welcomeShown =
-                prefs.getBoolean(KEY_WELCOME_SHOWN, false);
-
-        if (welcomeShown) return;
-
-        new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.platform_select_title))
-                .setMessage(getString(R.string.welcome_popup_text))
-                .setCancelable(false)
-                .setPositiveButton("OK", (d, w) -> {
-                    prefs.edit()
-                            .putBoolean(KEY_WELCOME_SHOWN, true)
-                            .apply();
-                    d.dismiss();
-
-                    // 👉 μετά το welcome ανοίγει επιλογή πλατφόρμας
-                    showPlatformSelectPopup();
-                })
-                .show();
-    }
-
-    // =========================================================
+       // =========================================================
     // PLATFORM SELECT POPUP
     // =========================================================
     private void showPlatformSelectPopup() {

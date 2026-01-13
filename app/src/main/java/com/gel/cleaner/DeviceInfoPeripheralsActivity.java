@@ -464,6 +464,14 @@ setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, ico
 
 // 🔥 END onCreate()
 
+private boolean isAppleMode() {
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    return "apple".equals(
+            prefs.getString("platform_mode", "android")
+    );
+}
+
 // ============================================================
 // CONNECTIVITY INFO — SNAPSHOT BASED (FIXED)
 // ============================================================
@@ -605,7 +613,7 @@ private void setupSection(View header, View content, TextView icon) {
         // 1️⃣ Κλείσε ΟΛΑ τα sections
         // ------------------------------------------------------------
         if (allContents != null && allIcons != null) {
-            for (int i = 0; i < allContents.length; i++) {
+            for (int i = 1; i < allContents.length; i++) { 
                 if (allContents[i] != null)
                     allContents[i].setVisibility(View.GONE);
                 if (allIcons[i] != null)
@@ -1401,11 +1409,13 @@ private void initBatterySection() {
     refreshBatteryInfoView();
 
     if (btnCapacity != null) {
-        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-    }
-
-    maybeShowBatteryCapacityDialogOnce();
+    btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
 }
+
+if (!isAppleMode()) {
+    maybeShowBatteryCapacityDialogOnce();
+    }
+}  
 
 // ===================================================================
 // POPUP ONLY ONCE
@@ -3612,7 +3622,7 @@ private void handleSettingsClick(Context ctx, String path) {
     } catch (Throwable ignore) {}
 }
 
-private void animateCollapse(TextView v) {
+private void animateCollapse(View v) {
     if (v == null) return;
     v.setVisibility(View.GONE);
 }

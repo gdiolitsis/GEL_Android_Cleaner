@@ -50,6 +50,8 @@ import java.util.zip.ZipInputStream;
 
 public class IPhoneLabsActivity extends AppCompatActivity {
 	
+	private boolean panicGuidePopupOpen = false;
+	
 	// ==========================
     // TTS ENGINE
     // ==========================
@@ -518,9 +520,13 @@ box.postDelayed(() -> {
             d.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT));
         d.show();
+        
+        panicGuidePopupOpen = true;
 
-        okBtn.setOnClickListener(v -> d.dismiss());
-    });
+        okBtn.setOnClickListener(v -> {
+    panicGuidePopupOpen = false;
+    d.dismiss();
+});
 }
 
 // ============================================================

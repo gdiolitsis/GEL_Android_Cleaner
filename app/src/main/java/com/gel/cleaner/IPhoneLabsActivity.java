@@ -97,6 +97,7 @@ public class IPhoneLabsActivity extends AppCompatActivity {
     // ============================================================
     private TextView txtLog;
     
+    private boolean appendMode = false;
     private boolean panicGuideMuted = false;
     private String  panicGuideLang  = "EN";
     private int panicLogCount = 0;
@@ -163,13 +164,27 @@ public class IPhoneLabsActivity extends AppCompatActivity {
         // LAB BUTTONS (GUARDED)
         // ============================================================
 
-        // 1) Import (no guard)
-        root.addView(makeLabButton(
-                "Panic Log Import (TXT / ZIP)",
-                "Auto unzip + load panic report",
-                false,
-                v -> openPanicLogPicker()
-        ));
+        // 1) Import (replace mode)
+root.addView(makeLabButton(
+        "Panic Log Import (TXT / ZIP)",
+        "Auto unzip + load panic report",
+        false,
+        v -> {
+            appendMode = false;
+            openPanicLogPicker();
+        }
+));
+
+// 1b) Add more logs (append mode)
+root.addView(makeLabButton(
+        "Add more panic logs",
+        "Append logs to current analysis",
+        false,
+        v -> {
+            appendMode = true;
+            openPanicLogPicker();
+        }
+));
 
         // 2) Analyzer (guard)
         root.addView(makeLabButton(
@@ -608,6 +623,12 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
     if (requestCode != REQ_PANIC_LOG) return;
 
+    // reset ΜΟΝΟ όταν όντως γυρίσαμε από Panic Log picker
+    if (!appendMode) {
+        panicLogCount = 0;
+        panicLogText  = null;
+    }
+
     if (resultCode != RESULT_OK || data == null) {
         logWarn("Panic log import cancelled.");
         return;
@@ -634,6 +655,10 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logOk("Panic logs selected: " + uris.size());
 
         StringBuilder allLogs = new StringBuilder();
+
+if (appendMode && panicLogLoaded && panicLogText != null) {
+    allLogs.append(panicLogText);
+}
 
         for (Uri uri : uris) {
 
@@ -676,7 +701,13 @@ if (panicLogCount == 1) {
         }
 
         panicLogText   = allLogs.toString();
-        panicLogLoaded = true;
+panicLogLoaded = true;
+
+panicLogCount += uris.size();
+
+panicLogName = (panicLogCount == 1)
+        ? "Single panic log"
+        : "Multiple panic logs (" + panicLogCount + " files)";
         
         // cache signature από ΟΛΑ
         parseAndCacheSignature(panicLogText);

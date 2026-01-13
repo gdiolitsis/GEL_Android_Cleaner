@@ -83,16 +83,15 @@ if (isAppleMode()) {
         
         log("📱 Device ready", false);
     }
+    
+    private void showBatteryCapacityPopupIfNeeded() {
+    // intentionally empty — removed feature, keep stub for compatibility
+}
 
 // =========================================================
 // 🍎 APPLE MODE — UI FILTER
 // =========================================================
 private void applyAppleModeUI() {
-
-    // ----- SECTIONS -----
-    hide(R.id.sectionCleaner);
-    hide(R.id.sectionJunk);
-    hide(R.id.sectionPerformance);
 
     // ----- BUTTONS (ANDROID ONLY) -----
     hide(R.id.btnCpuRamLive);

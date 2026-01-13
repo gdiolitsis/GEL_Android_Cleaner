@@ -497,45 +497,45 @@ private String getPanicGuideTextEN() {
         "To analyze iPhone stability, you need to import system logs.\n\n" +
 
         "Where to find them on iPhone:\n" +
-        "Settings → Privacy & Security → Analytics & Improvements → Analytics Data\n\n" +
+        "Settings. → Privacy & Security. → Analytics & Improvements. → Analytics Data.\n\n" +
 
         "Look for files named:\n" +
-        "• panic-full-xxxx.log\n" +
-        "• panic-base-xxxx.log\n" +
-        "• system-xxxx.ips\n\n" +
+        "• panic-full-xxxx.log.\n" +
+        "• panic-base-xxxx.log.\n" +
+        "• system-xxxx.ips.\n\n" +
 
         "How to export:\n" +
-        "Tap a file → Share → Save to Files or Send by Email.\n" +
+        "Tap a file. → Share. → Save to Files, or, Send by Email.\n" +
         "You must export all files.\n\n" +
 
         "In this app:\n" +
-        "Press Import and select all log files.\n" +
-        "The app will analyze all of them together\n" +
+        "Press Import, and select all log files.\n" +
+        "The app, will analyze all of them together,\n" +
         "to detect stability patterns.\n\n" +
 
         "Tip:\n" +
-        "More logs = better diagnosis accuracy.";
+        "More logs, means better diagnosis accuracy.";
 }
 
 private String getPanicGuideTextGR() {
     return
-        "Για την ανάλυση σταθερότητας iPhone χρειάζονται τα αρχεία καταγραφής.\n\n" +
+        "Για την ανάλυση σταθερότητας iPhone, χρειάζονται τα αρχεία καταγραφής.\n\n" +
 
         "Πού τα βρίσκεις στο iPhone:\n" +
-        "Ρυθμίσεις → Απόρρητο & Ασφάλεια → Ανάλυση & Βελτιώσεις → Δεδομένα ανάλυσης\n\n" +
+        "Ρυθμίσεις. → Απόρρητο & Ασφάλεια. → Ανάλυση & Βελτιώσεις. → Δεδομένα ανάλυσης.\n\n" +
 
         "Αναζήτησε αρχεία όπως:\n" +
-        "• panic-full-xxxx.log\n" +
-        "• panic-base-xxxx.log\n" +
-        "• system-xxxx.ips\n\n" +
+        "• panic-full-xxxx.log.\n" +
+        "• panic-base-xxxx.log.\n" +
+        "• system-xxxx.ips.\n\n" +
 
         "Πώς τα εξάγεις:\n" +
-        "Πάτησε στο αρχείο → Κοινή χρήση → Αποθήκευση στα Αρχεία ή Αποστολή με email.\n" +
-        "Πρέπει να στείλεις όλα αρχεία.\n\n" +
+        "Πάτησε στο αρχείο. → Κοινή χρήση. → Αποθήκευση στα Αρχεία, ή, Αποστολή με email.\n" +
+        "Πρέπει να στείλεις όλα τα αρχεία.\n\n" +
 
         "Στην εφαρμογή:\n" +
-        "Πάτησε Import και διάλεξε όλα τα logs.\n" +
-        "Η εφαρμογή τα αναλύει όλα μαζί\n" +
+        "Πάτησε Import, και διάλεξε όλα τα logs.\n" +
+        "Η εφαρμογή τα αναλύει όλα μαζί,\n" +
         "για να εντοπίσει μοτίβα αστάθειας.\n\n" +
 
         "Συμβουλή:\n" +

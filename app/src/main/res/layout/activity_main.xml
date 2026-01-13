@@ -82,6 +82,19 @@
             android:gravity="center"
             android:layout_marginBottom="10dp"/>
 
+        <!-- 🍎 APPLE — DEVICE DECLARATION -->
+<Button
+    android:id="@+id/btnAppleDeviceDeclaration"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:text="@string/apple_device_declaration"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:textColor="@color/gel_btn_text_white"
+    android:gravity="center"
+    android:maxLines="2"
+    android:padding="6dp"
+    android:layout_margin="4dp"/>
+        
         <!-- DONATE BUTTON -->
         <Button
             android:id="@+id/btnDonate"

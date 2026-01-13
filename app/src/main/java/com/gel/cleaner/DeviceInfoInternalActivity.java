@@ -402,6 +402,63 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         return ssb;
     }
 
+// ============================================================
+// MEMORY METRICS — SAFE (non-root compatible)
+// ============================================================
+private static class MemSnapshot {
+    long memFreeKb;
+    long cachedKb;
+    long swapTotalKb;
+    long swapFreeKb;
+}
+
+private MemSnapshot readMemSnapshotSafe() {
+    MemSnapshot m = new MemSnapshot();
+
+    try {
+        String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+        if (meminfo == null) return m;
+
+        for (String l : meminfo.split("\n")) {
+            if (l.startsWith("MemFree:"))   m.memFreeKb   = parseKb(l);
+            if (l.startsWith("Cached:"))    m.cachedKb    = parseKb(l);
+            if (l.startsWith("SwapTotal:")) m.swapTotalKb = parseKb(l);
+            if (l.startsWith("SwapFree:"))  m.swapFreeKb  = parseKb(l);
+        }
+    } catch (Throwable ignore) {}
+
+    return m;
+}
+
+private String pressureLevel(long memFreeKb, long cachedKb, long swapUsedKb) {
+
+    // thresholds tuned for 4–6GB class devices
+    boolean lowFree   = memFreeKb < (150 * 1024);   // <150MB
+    boolean midFree   = memFreeKb < (300 * 1024);   // <300MB
+    boolean heavySwap = swapUsedKb > (512 * 1024);  // >512MB swap used
+    boolean midSwap   = swapUsedKb > (256 * 1024);  // >256MB swap used
+
+    if (lowFree && heavySwap) return "High";
+    if (midFree || midSwap)   return "Medium";
+    return "Low";
+}
+
+private String zramDependency(long swapUsedKb, long totalMemBytes) {
+
+    long swapUsedMb = swapUsedKb / 1024;
+    long totalMb    = totalMemBytes / (1024 * 1024);
+
+    if (swapUsedMb > (totalMb / 4)) return "High";     // >25% of RAM
+    if (swapUsedMb > (totalMb / 8)) return "Medium";   // >12.5%
+    return "Low";
+}
+
+private String humanPressureLabel(String level) {
+    if ("High".equals(level))   return "High";
+    if ("Medium".equals(level)) return "Moderate";
+    return "Low";
+}
+
     // ============================================================
     // SECTION BUILDERS — FULL PRO + ROOT EXTENDED + STEALTH
     // ============================================================
@@ -972,55 +1029,87 @@ private String buildRamInfo() {
         }
     } catch (Throwable ignore) {}
 
-    // ------------------------------------------------------------
-    // /proc/meminfo (core) — CONVERT TO MB (Buffers stays kB)
-    // ------------------------------------------------------------
-    String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
-    if (meminfo != null && !meminfo.isEmpty()) {
+// ------------------------------------------------------------
+// /proc/meminfo (core) — CONVERT TO MB (Buffers stays kB)
+// ------------------------------------------------------------
+String meminfo = readTextFile("/proc/meminfo", 8 * 1024);
+if (meminfo != null && !meminfo.isEmpty()) {
 
-        sb.append("\n/proc/meminfo (core):\n\n");
+    sb.append("\n/proc/meminfo (core):\n\n");
 
-        String[] lines = meminfo.split("\n");
-        for (String line : lines) {
+    String[] lines = meminfo.split("\n");
+    for (String line : lines) {
 
-            if (line.startsWith("MemTotal:")
-                    || line.startsWith("MemFree:")
-                    || line.startsWith("Cached:")
-                    || line.startsWith("Active:")
-                    || line.startsWith("Inactive:")
-                    || line.startsWith("SwapTotal:")
-                    || line.startsWith("SwapFree:")) {
+        if (line.startsWith("MemTotal:")
+                || line.startsWith("MemFree:")
+                || line.startsWith("Cached:")
+                || line.startsWith("Active:")
+                || line.startsWith("Inactive:")
+                || line.startsWith("SwapTotal:")
+                || line.startsWith("SwapFree:")) {
 
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    long kb = parseKb(parts[1]);
-                    sb.append(padRight(parts[0], 14))
-                      .append(": ")
-                      .append(kb / 1024)
-                      .append(" MB\n");
-                }
+            String[] parts = line.split(":");
+            if (parts.length == 2) {
+
+                String label = parts[0].replace(":", "").trim();
+
+                // Rename Swap -> ZRAM Swap
+                if ("SwapTotal".equals(label)) label = "ZRAM SwapTotal";
+                if ("SwapFree".equals(label))  label = "ZRAM SwapFree";
+
+                long kb = parseKb(parts[1]);
+
+                sb.append(padRight(label, 14))
+                  .append(": ")
+                  .append(kb / 1024)
+                  .append(" MB\n");
             }
+        }
 
-            // Buffers — stay in kB
-            if (line.startsWith("Buffers:")) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    sb.append(padRight(parts[0], 14))
-                      .append(": ")
-                      .append(parts[1].trim())
-                      .append("\n");
-                }
+        // Buffers — stay in kB
+        if (line.startsWith("Buffers:")) {
+            String[] parts = line.split(":");
+            if (parts.length == 2) {
+                sb.append(padRight("Buffers", 14))
+                  .append(": ")
+                  .append(parts[1].trim())
+                  .append("\n");
             }
         }
     }
+}
 
     // ------------------------------------------------------------
     // ZRAM (advanced)
     // ------------------------------------------------------------
-    if (!isRooted) {
-        sb.append(padRight("ZRAM Details", 14))
-          .append(": Requires Root access\n");
+    // ------------------------------------------------------------
+// ZRAM STATUS + DETAILS
+// ------------------------------------------------------------
+
+// Detect if swap is active (non-root safe)
+boolean zramActive = false;
+try {
+    String meminfo2 = readTextFile("/proc/meminfo", 4 * 1024);
+    if (meminfo2 != null) {
+        for (String l : meminfo2.split("\n")) {
+            if (l.startsWith("SwapTotal:")) {
+                long kb = parseKb(l);
+                if (kb > 0) zramActive = true;
+                break;
+            }
+        }
     }
+} catch (Throwable ignore) {}
+
+sb.append(padRight("ZRAM Status", 14))
+  .append(": ")
+  .append(zramActive ? "Active" : "Not active")
+  .append("\n");
+
+if (!isRooted) {
+    sb.append(padRight("ZRAM Details", 14))
+      .append(": Requires Root access\n");
+}
 
     return sb.toString();
 }

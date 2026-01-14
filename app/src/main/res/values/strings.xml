@@ -37,10 +37,7 @@
 
     <!-- JUNK (FIXED MULTILINE) -->
     <string name="browser_cache">🌐 Browser Cache\n    Cleaner</string>
-
-    <!-- ✅ REQUIRED FIX (ADDED) -->
     <string name="app_cache">🧽 App Cache Cleaner</string>
-
     <string name="app_cache_btn">🧽 App Cache\n    Cleaner</string>
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_icon_desc">App Icon</string>
@@ -90,7 +87,7 @@ Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
 </string>
 
 <!-- ================================================= -->
-<!-- iPHONE LABS BUTTON -->
+<!-- APPLE DEVICES LABS BUTTON  -->
 <!-- ================================================= -->
 
 <string name="gel_phone_diag_title">GEL Apple Devices Diagnosis</string>
@@ -201,7 +198,7 @@ and then export the report.
     </string>
 
 <!-- =============================== -->
-<!-- 🍎 APPLE MODE (ADDED) -->
+<!-- 🍎 APPLE MODE -->
 <!-- =============================== -->
 
 <!-- PLATFORM SELECT POPUP -->

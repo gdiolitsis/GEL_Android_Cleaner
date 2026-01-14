@@ -212,7 +212,7 @@ private void showWelcomePopup() {
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
-                        ManualTestsActivity.this,
+                        MainActivity.this,
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
         b.setCancelable(true);
@@ -244,7 +244,7 @@ private void showWelcomePopup() {
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
 
-        msg.setText(getLab28TextEN());
+        msg.setText(getWelcomeTextEN());
         box.addView(msg);
 
         // ============================================================
@@ -259,7 +259,7 @@ private void showWelcomePopup() {
         // 🔕 MUTE BUTTON
         // ==========================
         Button muteBtn = new Button(this);
-        muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+        muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
         muteBtn.setAllCaps(false);
         muteBtn.setTextColor(0xFFFFFFFF);
 
@@ -276,11 +276,11 @@ private void showWelcomePopup() {
         muteBtn.setLayoutParams(lpMute);
 
         muteBtn.setOnClickListener(v -> {
-            lab28Muted = !lab28Muted;
-            muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
+            welcomeMuted = !welcomeMuted;
+            muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
 
             try {
-                if (lab28Muted && tts != null && tts[0] != null) {
+                if (welcomeMuted && tts != null && tts[0] != null) {
                     tts[0].stop();
                 }
             } catch (Throwable ignore) {}
@@ -321,17 +321,17 @@ langSpinner.setLayoutParams(
                             int pos,
                             long id) {
 
-                        lab28Lang = (pos == 0) ? "EN" : "GR";
+                        welcomeLang = (pos == 0) ? "EN" : "GR";
 
                         // 1) Update popup text
-                        if ("GR".equals(lab28Lang)) {
-                            msg.setText(getLab28TextGR());
+                        if ("GR".equals(welcomeLang)) {
+                            msg.setText(getWelcomeTextGR());
                         } else {
-                            msg.setText(getLab28TextEN());
+                            msg.setText(getWelcomeTextEN());
                         }
 
                         // 2) Speak ONLY here (after language choice)
-                        speakLab28TTS();
+                        speakWelcomeTTS();
                     }
 
                     @Override
@@ -477,7 +477,6 @@ private void showPlatformSelectPopup() {
     btnAndroid.setOnClickListener(v -> {
     prefs.edit().putString(KEY_PLATFORM, "android").apply();
     d.dismiss();
-    applyAndroidModeUI();   // ή απλά τίποτα, μένεις στο main UI
     });
 
     btnApple.setOnClickListener(v -> {

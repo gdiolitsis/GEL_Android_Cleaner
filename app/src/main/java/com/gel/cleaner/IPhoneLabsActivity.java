@@ -319,6 +319,16 @@ logOk("Import a panic log to begin analysis.");
 } // onCreate ends here
 
 @Override
+protected void onPause() {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();   // 🔇 stop όταν φεύγουμε από την οθόνη
+        }
+    } catch (Throwable ignore) {}
+    super.onPause();
+}
+
+@Override
 protected void onDestroy() {
     super.onDestroy();
     try {
@@ -523,10 +533,27 @@ box.postDelayed(() -> {
                     new ColorDrawable(Color.TRANSPARENT));
         d.show();
         
+        d.setOnDismissListener(dialog -> {
+    panicGuidePopupOpen = false;
+
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();   // 🔇 κόψε φωνή
+        }
+    } catch (Throwable ignore) {}
+});
+        
         panicGuidePopupOpen = true;
 
         okBtn.setOnClickListener(v -> {
     panicGuidePopupOpen = false;
+
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();   // 🔇 κόψε φωνή
+        }
+    } catch (Throwable ignore) {}
+
     d.dismiss();
 });
 
@@ -1324,7 +1351,7 @@ private String escape(String s) {
             .replace(">", "&gt;");
 }
 
-    // ============================================================
+// ============================================================
 // SEMANTIC HELPERS (NO COLORS — LOG METHODS DECIDE)
 // ============================================================
 

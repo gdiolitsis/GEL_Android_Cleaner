@@ -185,6 +185,25 @@ private int dp(float v) {
     );
 }
 
+// =========================================================
+// PLATFORM / WELCOME FLOW
+// =========================================================
+private void startPlatformFlow() {
+    showWelcomePopup();
+}
+
+// =========================================================
+// PLATFORM CHECK
+// =========================================================
+private boolean isAppleMode() {
+    SharedPreferences prefs =
+            getSharedPreferences(PREFS, MODE_PRIVATE);
+
+    return "apple".equals(
+            prefs.getString(KEY_PLATFORM, "android")
+    );
+}
+
 // ============================================================
 // WELCOME POPUP (STYLE + MUTE + LANG + TTS)
 // ============================================================

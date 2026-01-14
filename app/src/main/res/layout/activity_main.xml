@@ -54,7 +54,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="🇬🇷"
+                    android:text="ðŸ‡¬ðŸ‡·"
                     android:textSize="24sp"
                     android:textColor="@color/gel_text_primary"
                     android:layout_marginBottom="6dp" />
@@ -64,7 +64,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="🇬🇧"
+                    android:text="ðŸ‡¬ðŸ‡§"
                     android:textSize="24sp"
                     android:textColor="@color/gel_text_primary" />
             </LinearLayout>
@@ -82,7 +82,7 @@
             android:gravity="center"
             android:layout_marginBottom="10dp"/>
 
-        <!-- 🍎 APPLE — DEVICE DECLARATION -->
+        <!-- ðŸŽ APPLE â€” DEVICE DECLARATION -->
 <Button
     android:id="@+id/btnAppleDeviceDeclaration"
     android:layout_width="match_parent"
@@ -108,6 +108,7 @@
 
         <!-- SYSTEM -->
         <TextView
+            android:id="@+id/section_system"   <!-- ✅ ADDED -->
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/system"
@@ -164,7 +165,7 @@
 
         <!-- CLEANER -->
         <TextView
-            android:id="@+id/section_clean"
+            android:id="@+id/section_clean"    <!-- ✅ ΥΠΗΡΧΕ ΗΔΗ -->
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/cleaner"
@@ -203,6 +204,7 @@
 
         <!-- JUNK -->
         <TextView
+            android:id="@+id/section_junk"     <!-- ✅ ADDED -->
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/junk"
@@ -253,6 +255,7 @@
 
         <!-- PERFORMANCE -->
         <TextView
+            android:id="@+id/section_performance"  <!-- ✅ ADDED -->
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/performance"

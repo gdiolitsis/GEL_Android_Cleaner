@@ -589,11 +589,24 @@ serviceLogInit = true;
 
 @Override
 protected void onPause() {
+
+    // ==========================
+    // LAB 3 LOGIC
+    // ==========================
+    lab3WaitingUser = false;
+    stopLab3Tone();
+    SystemClock.sleep(120);
+    restoreLab3Audio();
+
+    // ==========================
+    // TTS STOP (για όλα τα popups)
+    // ==========================
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   // 🔇 stop όταν φεύγουμε από την οθόνη
+            tts[0].stop();   // 🔇 κόβει κάθε φωνή
         }
     } catch (Throwable ignore) {}
+
     super.onPause();
 }
 
@@ -878,18 +891,6 @@ runOnUiThread(() -> {
     d.show();  
 });
 
-}
-
-// ============================================================
-// LIFECYCLE
-// ============================================================
-@Override
-protected void onPause() {
-super.onPause();
-lab3WaitingUser = false;
-stopLab3Tone();
-SystemClock.sleep(120);
-restoreLab3Audio();
 }
 
 // ============================================================

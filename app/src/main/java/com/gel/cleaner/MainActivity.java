@@ -110,6 +110,18 @@ public class MainActivity extends GELAutoActivityHook
         super.onDestroy();
     }
 
+@Override
+public void onBackPressed() {
+
+    // 🔒 Σταμάτα TTS αν παίζει
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    // 🔁 Πήγαινε κατευθείαν στο PLATFORM SELECT popup
+    showPlatformSelectPopup();
+}
+
     // =========================================================
     // PLATFORM FLOW
     // =========================================================
@@ -251,138 +263,235 @@ private String getWelcomeTextGR() {
 
             // MUTE
             Button muteBtn = new Button(this);
-            stylePopupButton(muteBtn, welcomeMuted ? "Unmute" : "Mute");
-            muteBtn.setOnClickListener(v -> {
-                welcomeMuted = !welcomeMuted;
-                stylePopupButton(muteBtn, welcomeMuted ? "Unmute" : "Mute");
-                try { if (tts[0] != null) tts[0].stop(); } catch (Throwable ignore){}
-            });
+muteBtn.setText("Mute");
+muteBtn.setAllCaps(false);
+muteBtn.setTextColor(Color.WHITE);
+
+GradientDrawable muteBg = new GradientDrawable();
+muteBg.setColor(0xFF444444);
+muteBg.setCornerRadius(dp(12));
+muteBg.setStroke(dp(2), 0xFFFFD700);
+muteBtn.setBackground(muteBg);
+
+LinearLayout.LayoutParams lpMute =
+        new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        );
+lpMute.setMargins(0, 0, dp(8), 0);
+muteBtn.setLayoutParams(lpMute);
 
             // LANG
             Spinner langSpinner = new Spinner(this);
-            ArrayAdapter<String> ad =
-                    new ArrayAdapter<>(this,
-                            android.R.layout.simple_spinner_item,
-                            new String[]{"EN","GR"});
-            ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            langSpinner.setAdapter(ad);
 
-            if ("GR".equals(welcomeLang)) {
-                langSpinner.setSelection(1);
-                msg.setText(getWelcomeTextGR());
-            }
+ArrayAdapter<String> langAdapter =
+        new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"EN", "GR"}
+        );
+langAdapter.setDropDownViewResource(
+        android.R.layout.simple_spinner_dropdown_item);
+langSpinner.setAdapter(langAdapter);
 
-            langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                    welcomeLang = (pos==0)?"EN":"GR";
-                    msg.setText("GR".equals(welcomeLang)?getWelcomeTextGR():getWelcomeTextEN());
-                    speakWelcomeTTS();
-                }
-                @Override public void onNothingSelected(AdapterView<?> p){}
-            });
+// BOX γύρω από spinner
+LinearLayout langBox = new LinearLayout(this);
+langBox.setOrientation(LinearLayout.HORIZONTAL);
+langBox.setGravity(Gravity.CENTER_VERTICAL);
+langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
 
-            LinearLayout langBox = new LinearLayout(this);
-            langBox.setOrientation(LinearLayout.HORIZONTAL);
-            langBox.setPadding(dp(8),dp(6),dp(8),dp(6));
-            GradientDrawable lbg = new GradientDrawable();
-            lbg.setColor(0xFF1A1A1A);
-            lbg.setCornerRadius(dp(12));
-            lbg.setStroke(dp(2),0xFFFFD700);
-            langBox.setBackground(lbg);
-            langBox.addView(langSpinner);
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF1A1A1A);
+langBg.setCornerRadius(dp(12));
+langBg.setStroke(dp(2), 0xFFFFD700);
+langBox.setBackground(langBg);
 
-            LinearLayout.LayoutParams w =
-                    new LinearLayout.LayoutParams(0,dp(48),1f);
-            muteBtn.setLayoutParams(w);
-            langBox.setLayoutParams(w);
+LinearLayout.LayoutParams lpLangBox =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(48),
+                1f
+        );
+lpLangBox.setMargins(dp(8), 0, 0, 0);
+langBox.setLayoutParams(lpLangBox);
 
-            controls.addView(muteBtn);
-            controls.addView(langBox);
-            box.addView(controls);
+langSpinner.setLayoutParams(
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+        )
+);
 
-            // OK
-            Button okBtn = new Button(this);
-            stylePopupButton(okBtn,"OK");
-            box.addView(okBtn);
+langBox.addView(langSpinner);
 
-            b.setView(box);
-            AlertDialog d = b.create();
-            if (d.getWindow()!=null)
-                d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+// ==========================
+// OK BUTTON  — SAME AS LAB 28
+// ==========================
+Button okBtn = new Button(this);
+okBtn.setText("OK");
+okBtn.setAllCaps(false);
+okBtn.setTextColor(Color.WHITE);
 
-            d.setOnDismissListener(x -> {
-                try { if (tts[0]!=null) tts[0].stop(); } catch(Throwable ignore){}
-            });
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF0F8A3B);
+okBg.setCornerRadius(dp(14));
+okBg.setStroke(dp(3), 0xFFFFD700);
+okBtn.setBackground(okBg);
 
-            d.show();
+LinearLayout.LayoutParams lpOk =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpOk.setMargins(0, dp(16), 0, 0);
+okBtn.setLayoutParams(lpOk);
 
-            okBtn.setOnClickListener(v -> {
-                try { if (tts[0]!=null) tts[0].stop(); } catch(Throwable ignore){}
-                d.dismiss();
-                showPlatformSelectPopup();
-            });
+box.addView(okBtn);
+
+// ==========================
+// DIALOG
+// ==========================
+b.setView(box);
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null)
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+
+// 🔒 πάντα stop TTS όταν κλείνει το popup
+d.setOnDismissListener(dialog -> {
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
+
+d.show();
+
+// ==========================
+// ▶️ OK ACTION
+// ==========================
+okBtn.setOnClickListener(v -> {
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    d.dismiss();
+
+    // συνέχιση ροής
+    showPlatformSelectPopup();
+});
+
+// =========================================================
+// PLATFORM SELECT
+// =========================================================
+private void showPlatformSelectPopup() {
+
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        MainActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+
+        b.setCancelable(true);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        TextView t = new TextView(this);
+        t.setText("SELECT PLATFORM");
+        t.setTextColor(Color.WHITE);
+        t.setTextSize(18f);
+        t.setTypeface(null, Typeface.BOLD);
+        t.setGravity(Gravity.CENTER);
+        t.setPadding(0, 0, 0, dp(12));
+        box.addView(t);
+
+        // ==========================
+        // 🤖 ANDROID BUTTON
+        // ==========================
+        Button androidBtn = new Button(this);
+        androidBtn.setText("🤖  ANDROID DEVICE");
+        androidBtn.setAllCaps(false);
+        androidBtn.setTextColor(Color.WHITE);
+        androidBtn.setTextSize(16f);
+
+        GradientDrawable btnBg1 = new GradientDrawable();
+        btnBg1.setColor(0xFF0F8A3B);
+        btnBg1.setCornerRadius(dp(14));
+        btnBg1.setStroke(dp(3), 0xFFFFD700);
+        androidBtn.setBackground(btnBg1);
+
+        LinearLayout.LayoutParams lpBtn =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpBtn.setMargins(0, dp(12), 0, 0);
+        androidBtn.setLayoutParams(lpBtn);
+
+        // ==========================
+        // 🍎 APPLE BUTTON
+        // ==========================
+        Button appleBtn = new Button(this);
+        appleBtn.setText("🍎  APPLE DEVICE");
+        appleBtn.setAllCaps(false);
+        appleBtn.setTextColor(Color.WHITE);
+        appleBtn.setTextSize(16f);
+
+        GradientDrawable btnBg2 = new GradientDrawable();
+        btnBg2.setColor(0xFF444444);
+        btnBg2.setCornerRadius(dp(14));
+        btnBg2.setStroke(dp(3), 0xFFFFD700);
+        appleBtn.setBackground(btnBg2);
+
+        LinearLayout.LayoutParams lpBtn2 =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+        lpBtn2.setMargins(0, dp(12), 0, 0);
+        appleBtn.setLayoutParams(lpBtn2);
+
+        // ==========================
+        // ADD TO BOX
+        // ==========================
+        box.addView(androidBtn);
+        box.addView(appleBtn);
+
+        b.setView(box);
+        final AlertDialog d = b.create();
+
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        d.show();
+
+        // ==========================
+        // ACTIONS  ✅ FIXED (wrong variable names)
+        // ==========================
+        androidBtn.setOnClickListener(v -> {
+            savePlatform("android");
+            d.dismiss();
         });
-    }
 
-    // =========================================================
-    // PLATFORM SELECT
-    // =========================================================
-    private void showPlatformSelectPopup() {
-
-        runOnUiThread(() -> {
-
-            AlertDialog.Builder b =
-                    new AlertDialog.Builder(
-                            MainActivity.this,
-                            android.R.style.Theme_Material_Dialog_NoActionBar
-                    );
-
-            LinearLayout box = new LinearLayout(this);
-            box.setOrientation(LinearLayout.VERTICAL);
-            box.setPadding(dp(24),dp(20),dp(24),dp(18));
-
-            GradientDrawable bg = new GradientDrawable();
-            bg.setColor(0xFF101010);
-            bg.setCornerRadius(dp(18));
-            bg.setStroke(dp(4),0xFFFFD700);
-            box.setBackground(bg);
-
-            TextView t = new TextView(this);
-            t.setText("SELECT PLATFORM");
-            t.setTextColor(Color.WHITE);
-            t.setTextSize(18f);
-            t.setTypeface(null,Typeface.BOLD);
-            t.setGravity(Gravity.CENTER);
-            t.setPadding(0,0,0,dp(12));
-            box.addView(t);
-
-            Button bAndroid = new Button(this);
-            stylePopupButton(bAndroid,"🤖  ANDROID DEVICE");
-
-            Button bApple = new Button(this);
-            stylePopupButton(bApple,"🍎  APPLE DEVICE");
-
-            box.addView(bAndroid);
-            box.addView(bApple);
-
-            b.setView(box);
-            AlertDialog d = b.create();
-            if (d.getWindow()!=null)
-                d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            d.show();
-
-            bAndroid.setOnClickListener(v -> {
-                savePlatform("android");
-                d.dismiss();
-            });
-
-            bApple.setOnClickListener(v -> {
-                savePlatform("apple");
-                d.dismiss();
-                openAppleInternalPeripherals();
-            });
+        appleBtn.setOnClickListener(v -> {
+            savePlatform("apple");
+            d.dismiss();
+            openAppleInternalPeripherals();
         });
-    }
+    });
+}
 
     // =========================================================
     // 🍎 APPLE ENTRY POINT
@@ -541,59 +650,107 @@ private String getWelcomeTextGR() {
         }
     }
 
-    // =========================================================
-    // 🍎 APPLE DEVICE DECLARATION
-    // =========================================================
-    private void showAppleDeviceDeclarationPopup() {
+// =========================================================
+// 🍎 APPLE DEVICE DECLARATION
+// =========================================================
+private void showAppleDeviceDeclarationPopup() {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_Alert);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this,
+                    android.R.style.Theme_Material_Dialog_Alert);
 
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(20),dp(20),dp(20),dp(20));
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(20), dp(20), dp(20), dp(20));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3),0xFFFFD700);
-        box.setBackground(bg);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
 
-        TextView title = new TextView(this);
-        title.setText("Select your Apple device");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null,Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0,0,0,dp(16));
-        box.addView(title);
+    TextView title = new TextView(this);
+    title.setText("Select your Apple device");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(16));
+    box.addView(title);
 
-        Button btnIphone = new Button(this);
-        stylePopupButton(btnIphone,"iPhone");
+    // ==========================
+    // 📱 iPHONE BUTTON
+    // ==========================
+    Button iphoneBtn = new Button(this);
+    iphoneBtn.setText("📱  iPHONE");
+    iphoneBtn.setAllCaps(false);
+    iphoneBtn.setTextColor(Color.WHITE);
+    iphoneBtn.setTextSize(16f);
 
-        Button btnIpad = new Button(this);
-        stylePopupButton(btnIpad,"iPad");
+    GradientDrawable iphoneBg = new GradientDrawable();
+    iphoneBg.setColor(0xFF0F8A3B);
+    iphoneBg.setCornerRadius(dp(14));
+    iphoneBg.setStroke(dp(3), 0xFFFFD700);
+    iphoneBtn.setBackground(iphoneBg);
 
-        box.addView(btnIphone);
-        box.addView(btnIpad);
+    LinearLayout.LayoutParams lpIphone =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpIphone.setMargins(0, dp(12), 0, 0);
+    iphoneBtn.setLayoutParams(lpIphone);
 
-        b.setView(box);
-        AlertDialog d = b.create();
-        if(d.getWindow()!=null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        d.show();
+    // ==========================
+    // 📲 iPAD BUTTON
+    // ==========================
+    Button ipadBtn = new Button(this);
+    ipadBtn.setText("📲  iPAD");
+    ipadBtn.setAllCaps(false);
+    ipadBtn.setTextColor(Color.WHITE);
+    ipadBtn.setTextSize(16f);
 
-        btnIphone.setOnClickListener(v -> {
-            d.dismiss();
-            showAppleModelPicker("iphone");
-        });
+    GradientDrawable ipadBg = new GradientDrawable();
+    ipadBg.setColor(0xFF444444);
+    ipadBg.setCornerRadius(dp(14));
+    ipadBg.setStroke(dp(3), 0xFFFFD700);
+    ipadBtn.setBackground(ipadBg);
 
-        btnIpad.setOnClickListener(v -> {
-            d.dismiss();
-            showAppleModelPicker("ipad");
-        });
-    }
+    LinearLayout.LayoutParams lpIpad =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpIpad.setMargins(0, dp(12), 0, 0);
+    ipadBtn.setLayoutParams(lpIpad);
+
+    // ==========================
+    // ADD TO BOX
+    // ==========================
+    box.addView(iphoneBtn);
+    box.addView(ipadBtn);
+
+    b.setView(box);
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
+
+    d.show();
+
+    // ==========================
+    // ACTIONS
+    // ==========================
+    iphoneBtn.setOnClickListener(v -> {
+        d.dismiss();
+        showAppleModelPicker("iphone");
+    });
+
+    ipadBtn.setOnClickListener(v -> {
+        d.dismiss();
+        showAppleModelPicker("ipad");
+    });
+}
 
     private void showAppleModelPicker(String type) {
 

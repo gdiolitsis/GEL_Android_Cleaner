@@ -378,10 +378,11 @@ okBtn.setOnClickListener(v -> {
     } catch (Throwable ignore) {}
 
     d.dismiss();
-
-    // συνέχιση ροής
     showPlatformSelectPopup();
 });
+
+});   
+}  
 
 // =========================================================
 // PLATFORM SELECT

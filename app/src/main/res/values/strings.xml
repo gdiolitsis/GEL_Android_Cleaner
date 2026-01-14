@@ -15,12 +15,12 @@
     <string name="donate">❤️ DONATE! KEEP THIS APP FREE</string>
 
     <!-- SYSTEM -->
-    <string name="cpu_ram_info">📱 PHONE INFO</string>
+    <string name="cpu_ram_info">📱 DEVICE INFO</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE MONITOR</string>
 
     <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 PHONE INFO\n(Internal)</string>
-    <string name="phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
+    <string name="phone_info_internal">📱 DEVICE INFO\n(Internal)</string>
+    <string name="phone_info_peripherals">📡 DEVICE INFO\n(Peripherals)</string>
 
     <!-- Battery Capacity Popup -->
     <string name="battery_popup_title">Battery Capacity</string>
@@ -46,7 +46,7 @@
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->
-    <string name="diagnostics">GEL Phone Diagnosis</string>
+    <string name="diagnostics">GEL Device Diagnosis</string>
 
     <!-- Permission prompts -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>
@@ -62,7 +62,7 @@
 
 <string name="gel_service_lab_sub">
 Professional device diagnostics
-Android Manual Tests · iPhone Labs · Export Report
+Android Manual Tests · Apple Devices Labs · Export Report
 </string>
 
 <!-- ================================================= -->
@@ -73,7 +73,7 @@ Android Manual Tests · iPhone Labs · Export Report
 <string name="manual_tests">ANDROID MANUAL TESTS</string>
 
 <!-- iPHONE -->
-<string name="auto_diagnosis">iPHONE DIAGNOSIS</string>
+<string name="auto_diagnosis">GEL Apple Devices Diagnosis</string>
     
 <!-- SERVICE -->
 <string name="service_report">SERVICE REPORT</string>
@@ -93,10 +93,10 @@ Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
 <!-- iPHONE LABS BUTTON -->
 <!-- ================================================= -->
 
-<string name="gel_phone_diag_title">GEL iPhone Diagnosis</string>
+<string name="gel_phone_diag_title">GEL Apple Devices Diagnosis</string>
 
 <string name="gel_phone_diag_desc">
-Laboratory diagnostics for iPhone using system files
+Laboratory diagnostics for Apple Devices using system files
 • Panic log analysis
 • System stability evaluation
 • Hardware fault detection
@@ -111,7 +111,7 @@ Laboratory diagnostics for iPhone using system files
 
 <string name="export_report_desc">
 Generate final technician report
-(Android + iPhone diagnostics)
+(Android + Apple Devices diagnostics)
 PDF format
 </string>
 
@@ -153,7 +153,7 @@ Technician Signature:
 
 <string name="preview_empty">
 No diagnostics yet.
-Run Android Manual Tests or iPhone Labs
+Run Android Manual Tests or Apple Devices Labs
 and then export the report.
 </string>
 
@@ -209,23 +209,6 @@ and then export the report.
 <string name="platform_android">🤖 ANDROID</string>
 <string name="platform_apple">🍎 APPLE</string>
 
-<!-- WELCOME / EXPLANATION POPUP -->
-<string name="welcome_popup_text">
-Although this is an Android application, it is the only tool on the market
-that can also help you understand problems on Apple devices.
-
-By importing panic logs from your iPhone or iPad,
-we analyze what really happened inside your device.
-
-You will clearly understand:
-• what your panic logs mean  
-• what caused the issue  
-• and how you can solve it.
-
-So, choose what you’d like to explore:
-your Android device, or another Apple device you own.
-</string>
-
 <!-- DEVICE DECLARATION -->
 <string name="apple_device_declaration">🧩 Device Declaration</string>
 <string name="apple_device_category_title">Select device category</string>
@@ -237,9 +220,9 @@ your Android device, or another Apple device you own.
 <string name="apple_system">🛠 System</string>
 
 <!-- SAME FORMAT AS ANDROID FOR BUTTON WIDTH -->
-<string name="apple_phone_info_internal">📱 PHONE INFO\n(Internal)</string>
-<string name="apple_phone_info_peripherals">📡 PHONE INFO\n(Peripherals)</string>
+<string name="apple_phone_info_internal">📱 DEVICE INFO\n(Internal)</string>
+<string name="apple_phone_info_peripherals">📡 DEVICE INFO\n(Peripherals)</string>
 
 <!-- APPLE DIAGNOSIS -->
-<string name="apple_diagnosis">🚀 GEL iPhone Diagnosis</string>
+<string name="apple_diagnosis">🚀 GEL Apple Devices Diagnosis</string>
 </resources>

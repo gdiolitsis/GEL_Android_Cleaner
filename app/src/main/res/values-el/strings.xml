@@ -36,11 +36,11 @@
     <string name="clean_all">🧹 GEL Γενικός Εκκαθαριστής</string>
 
     <!-- JUNK -->
-    <string name="browser_cache">🌐 Cache Browser\n    Εκκαθαριστής</string>
-    <string name="app_cache">🧽 Cache Εφαρμογών</string>
-    <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
-    <string name="app_cache_btn">🧽 Cache Εφαρμογών\n     Εκκαθαριστής</string>
-    <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
+<string name="browser_cache">🌐 Εκκαθαριστής\n    Cache Browser</string>
+<string name="app_cache">🧽 Εκκαθαριστής\n    Cache Εφαρμογών</string>
+<string name="app_cache_btn">🧽 Εκκαθαριστής\n    Cache Εφαρμογών</string>
+<string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
+<string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Διάγνωση Συσκευής</string>
@@ -171,14 +171,18 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <!-- MANUAL TESTS — HOSPITAL EDITION -->
     <!-- ===================================== -->
 
+    <!-- TITLE ALWAYS ENGLISH -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
+    <!-- SUBTITLE -->
     <string name="manual_hospital_sub">
 Επαγγελματικά εργαλεία service.\nΚάθε χειροκίνητο test γράφει αναλυτικά αποτελέσματα παρακάτω (OK / WARN / ERROR)\nκαι συμπεριλαμβάνεται στην τελική Αναφορά Service.
 </string>
 
+    <!-- SECTION HEADER -->
     <string name="manual_section1">ΕΝΟΤΗΤΑ 1 — Έλεγχοι Συστήματος &amp; Hardware</string>
 
+   <!-- 7 CATEGORIES -->
     <string name="manual_cat_1">Ήχος &amp; Δόνηση — Manual Labs 1–5</string>
     <string name="manual_cat_2">Οθόνη &amp; Αισθητήρες — Manual Labs 6–9</string>
     <string name="manual_cat_3">Ασύρματα &amp; Συνδεσιμότητα — Manual Labs 10–13</string>
@@ -187,6 +191,7 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <string name="manual_cat_6">Ασφάλεια &amp; Υγεία Συστήματος — Manual Labs 21–24</string>
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 25–30</string>
 
+    <!-- LOG -->
     <string name="manual_log_title">Καταγραφή Manual Tests</string>
     <string name="manual_log_desc">
 ℹ️ GEL Manual Tests — έτοιμο.\nΆνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.
@@ -217,5 +222,4 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
 
     <!-- APPLE DIAGNOSIS -->
     <string name="apple_diagnosis">🚀 GEL Διάγνωση Apple Devices</string>
-
 </resources>

@@ -111,31 +111,31 @@ private String  welcomeLang  = "EN";
 private String getWelcomeTextEN() {
     return
         "Although this is an Android application, " +
-        "it is the only tool that can also help you " +
+        "it is the only tool at the market, that can also help you " +
         "understand problems on Apple devices.\n\n" +
-        "By importing panic logs from your iPhone or iPad, " +
-        "we analyze what really happened inside your device.\n\n" +
+        "By importing panic logs, from your iPhone or iPad, " +
+        "we analyze, what really happened inside your device.\n\n" +
         "You will understand:\n" +
-        "• what your panic logs mean\n" +
-        "• what caused the issue\n" +
+        "• what your panic logs mean.\n" +
+        "• what caused the issue,\n" +
         "• and how you can solve it.\n\n" +
         "Choose what you want to explore:\n" +
-        "your Android device or an Apple device you own.";
+        "your Android device, or an other Apple device?.";
 }
 
 private String getWelcomeTextGR() {
     return
         "Παρότι αυτή είναι εφαρμογή Android, " +
-        "είναι το μοναδικό εργαλείο που μπορεί να σε βοηθήσει " +
-        "να καταλάβεις προβλήματα και σε συσκευές Apple.\n\n" +
-        "Με την εισαγωγή panic logs από iPhone ή iPad, " +
+        "είναι το μοναδικό εργαλείο στην αγορά, που μπορεί να σε βοηθήσει " +
+        "να καταλάβεις προβλήματα, και σε συσκευές Apple.\n\n" +
+        "Με την εισαγωγή panic logs, από iPhone ή iPad, " +
         "αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
         "Θα καταλάβεις:\n" +
-        "• τι σημαίνουν τα panic logs\n" +
-        "• τι προκάλεσε το πρόβλημα\n" +
+        "• τι σημαίνουν τα panic logs.\n" +
+        "• τι προκάλεσε το πρόβλημα,\n" +
         "• και πώς μπορείς να το λύσεις.\n\n" +
         "Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
-        "τη συσκευή Android σου ή μια συσκευή Apple.";
+        "τη συσκευή Android σου, ή μια άλλη συσκευή Apple?.";
 }
 
 private int dp(float v) {

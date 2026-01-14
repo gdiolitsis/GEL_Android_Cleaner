@@ -2480,7 +2480,7 @@ private boolean detectPowerInstability() {
 }
 
 // ============================================================
-// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)
+// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)  ✅FIXED
 // ============================================================
 
 private boolean lab28Muted = false;
@@ -2501,7 +2501,7 @@ private void showLab28Popup() {
         b.setCancelable(true);
 
         // ================= ROOT =================
-        LinearLayout box = new LinearLayout(this);
+        LinearLayout box = new LinearLayout(ManualTestsActivity.this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
@@ -2512,7 +2512,7 @@ private void showLab28Popup() {
         box.setBackground(bg);
 
         // ================= TITLE =================
-        TextView title = new TextView(this);
+        TextView title = new TextView(ManualTestsActivity.this);
         title.setText("LAB 28 — Technicians Only");
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(18f);
@@ -2522,18 +2522,17 @@ private void showLab28Popup() {
         box.addView(title);
 
         // ================= MESSAGE =================
-        TextView msg = new TextView(this);
+        TextView msg = new TextView(ManualTestsActivity.this);
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
-
         msg.setText(getLab28TextEN());
         box.addView(msg);
 
         // ============================================================
         // CONTROLS ROW — MUTE (LEFT) + LANG (RIGHT)
         // ============================================================
-        LinearLayout controls = new LinearLayout(this);
+        LinearLayout controls = new LinearLayout(ManualTestsActivity.this);
         controls.setOrientation(LinearLayout.HORIZONTAL);
         controls.setGravity(Gravity.CENTER_VERTICAL);
         controls.setPadding(0, dp(16), 0, dp(10));
@@ -2541,7 +2540,7 @@ private void showLab28Popup() {
         // ==========================
         // 🔕 MUTE BUTTON
         // ==========================
-        Button muteBtn = new Button(this);
+        Button muteBtn = new Button(ManualTestsActivity.this);
         muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
         muteBtn.setAllCaps(false);
         muteBtn.setTextColor(0xFFFFFFFF);
@@ -2553,112 +2552,101 @@ private void showLab28Popup() {
         muteBtn.setBackground(muteBg);
 
         LinearLayout.LayoutParams lpMute =
-                new LinearLayout.LayoutParams(0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
         lpMute.setMargins(0, 0, dp(8), 0);
         muteBtn.setLayoutParams(lpMute);
 
         muteBtn.setOnClickListener(v -> {
             lab28Muted = !lab28Muted;
             muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
-
             try {
-                if (lab28Muted && tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
+                if (lab28Muted && tts != null && tts[0] != null) tts[0].stop();
             } catch (Throwable ignore) {}
         });
 
         // ==========================
-// 🌐 LANGUAGE SPINNER
-// ==========================
-Spinner langSpinner = new Spinner(this);
+        // 🌐 LANGUAGE SPINNER
+        // ==========================
+        Spinner langSpinner = new Spinner(ManualTestsActivity.this);
 
-ArrayAdapter<String> langAdapter =
-        new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
-        );
-langAdapter.setDropDownViewResource(
-        android.R.layout.simple_spinner_dropdown_item);
-langSpinner.setAdapter(langAdapter);
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        ManualTestsActivity.this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+        
+        // αρχική γλώσσα
+        if ("GR".equals(lab28Lang)) {
+            langSpinner.setSelection(1);
+            msg.setText(getLab28TextGR());
+        } else {
+            langSpinner.setSelection(0);
+            msg.setText(getLab28TextEN());
+        }
 
-// 👉 Το spinner γεμίζει το κουτί
-langSpinner.setLayoutParams(
-        new LinearLayout.LayoutParams(
+        langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+
+                lab28Lang = (pos == 0) ? "EN" : "GR";
+
+                if ("GR".equals(lab28Lang)) {
+                    msg.setText(getLab28TextGR());
+                } else {
+                    msg.setText(getLab28TextEN());
+                }
+
+                speakLab28TTS();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> p) { }
+        });
+
+        // ==========================
+        // 🌐 LANGUAGE BOX (RIGHT)
+        // ==========================
+        LinearLayout langBox = new LinearLayout(ManualTestsActivity.this);
+        langBox.setOrientation(LinearLayout.HORIZONTAL);
+        langBox.setGravity(Gravity.CENTER_VERTICAL);
+        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF1A1A1A);
+        langBg.setCornerRadius(dp(12));
+        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBox.setBackground(langBg);
+
+        LinearLayout.LayoutParams lpLangBox =
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(48),
+                        1f
+                );
+        lpLangBox.setMargins(dp(8), 0, 0, 0);
+        langBox.setLayoutParams(lpLangBox);
+
+        langSpinner.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
-        )
-);
+        ));
+        langBox.addView(langSpinner);
 
-        // ==========================
-        // LANGUAGE CHANGE LOGIC
-        // ==========================
-        langSpinner.setOnItemSelectedListener(
-                new android.widget.AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(
-                            android.widget.AdapterView<?> p,
-                            View v,
-                            int pos,
-                            long id) {
-
-                        lab28Lang = (pos == 0) ? "EN" : "GR";
-
-                        // 1) Update popup text
-                        if ("GR".equals(lab28Lang)) {
-                            msg.setText(getLab28TextGR());
-                        } else {
-                            msg.setText(getLab28TextEN());
-                        }
-
-                        // 2) Speak ONLY here (after language choice)
-                        speakLab28TTS();
-                    }
-
-                    @Override
-                    public void onNothingSelected(
-                            android.widget.AdapterView<?> p) {}
-                });
-
-// ==========================
-// 🌐 LANGUAGE BOX (RIGHT)
-// ==========================
-LinearLayout langBox = new LinearLayout(this);
-langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER_VERTICAL);
-langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
-
-// background κουτιού
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF1A1A1A);
-langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(2), 0xFFFFD700);
-langBox.setBackground(langBg);
-
-// layout params για το κουτάκι — ΙΔΙΟ ΥΨΟΣ ΜΕ BUTTON
-LinearLayout.LayoutParams lpLangBox =
-        new LinearLayout.LayoutParams(
-                0,
-                dp(48),   // ίδιο ύψος με τα κουμπιά
-                1f
-        );
-lpLangBox.setMargins(dp(8), 0, 0, 0);
-langBox.setLayoutParams(lpLangBox);
-
-// βάλε το spinner ΜΕΣΑ στο κουτί
-langBox.addView(langSpinner);
-
-// και το κουτί μέσα στα controls
-controls.addView(muteBtn);
-controls.addView(langBox);
-box.addView(controls);
+        controls.addView(muteBtn);
+        controls.addView(langBox);
+        box.addView(controls);
 
         // ==========================
         // OK BUTTON
         // ==========================
-        Button okBtn = new Button(this);
+        Button okBtn = new Button(ManualTestsActivity.this);
         okBtn.setText("OK");
         okBtn.setAllCaps(false);
         okBtn.setTextColor(0xFFFFFFFF);
@@ -2684,30 +2672,26 @@ box.addView(controls);
         // ==========================
         b.setView(box);
         final AlertDialog d = b.create();
-        
+
         d.setOnDismissListener(dialog -> {
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();   // 🔇 stop TTS όταν κλείνει το popup
+            try {
+                if (tts != null && tts[0] != null) tts[0].stop();
+            } catch (Throwable ignore) {}
+        });
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-    } catch (Throwable ignore) {}
-});
-        
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
+
         d.show();
 
-        // OK → μόνο κλείσιμο
         okBtn.setOnClickListener(v -> {
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-        }
-    } catch (Throwable ignore) {}
-
-    d.dismiss();
-});
+            try {
+                if (tts != null && tts[0] != null) tts[0].stop();
+            } catch (Throwable ignore) {}
+            d.dismiss();
+        });
+    });
 }
 
 // ============================================================
@@ -2756,24 +2740,25 @@ private void speakLab28TTS() {
         tts[0].stop();
 
         if ("GR".equals(lab28Lang)) {
+            tts[0].setLanguage(new java.util.Locale("el", "GR"));
             tts[0].speak(
-                getLab28TextGR(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB28_INTRO_GR"
+                    getLab28TextGR(),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB28_INTRO_GR"
             );
         } else {
+            tts[0].setLanguage(java.util.Locale.US);
             tts[0].speak(
-                getLab28TextEN(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB28_INTRO_EN"
+                    getLab28TextEN(),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB28_INTRO_EN"
             );
         }
 
-    } catch (Throwable ignore) {}
+    } catch (Throwable ignore) { }
 }
-
 
 // ============================================================
 // LABS 1-5: AUDIO & VIBRATION

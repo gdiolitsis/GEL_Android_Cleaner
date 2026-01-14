@@ -15,21 +15,22 @@
     <string name="donate">❤️ ΔΩΡΕΑ! ΚΡΑΤΑ ΑΥΤΗ ΤΗΝ ΕΦΑΡΜΟΓΗ ΔΩΡΕΑΝ</string>
 
     <!-- SYSTEM -->
-    <string name="cpu_ram_info">📱 Πληροφορίες Συσκευής</string>
-    <string name="cpu_ram_live">📈 CPU / RAM Ζωντανή Παρακολούθηση</string>
+    <string name="cpu_ram_info">📱 ΠΛΗΡΟΦΟΡΙΕΣ ΣΥΣΚΕΥΗΣ</string>
+    <string name="cpu_ram_live">📈 CPU / RAM ΖΩΝΤΑΝΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗ</string>
 
-    <!-- Battery Capacity Popup (Greek) -->
+    <!-- DEVICE INFO -->
+    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Περιφερειακά)</string>
+
+    <!-- Battery Capacity Popup -->
     <string name="battery_popup_title">Χωρητικότητα Μπαταρίας</string>
     <string name="battery_popup_msg">Αν γνωρίζετε την εργοστασιακή χωρητικότητα της μπαταρίας της συσκευής σας, πληκτρολογήστε την παρακάτω (σε mAh).</string>
     <string name="battery_popup_hint">Εισάγετε χωρητικότητα (mAh)</string>
     <string name="battery_popup_ok">Αποθήκευση</string>
     <string name="battery_popup_cancel">Άκυρο</string>
 
-    <!-- Button in battery section (Greek) -->
-    <string name="battery_set_model_capacity">Δηλωση mAh μοντέλου</string>
-    <!-- PHONE INFO -->
-    <string name="phone_info_internal">📱 Πληρ. Συσκευής\n(Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 Πληρ. Συσκευής\n(Περιφερειακά)</string>
+    <!-- Button in battery section -->
+    <string name="battery_set_model_capacity">Δήλωση mAh μοντέλου</string>
 
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL Γενικός Εκκαθαριστής</string>
@@ -50,110 +51,110 @@
     <string name="toast_accessibility">Προαιρετικό: Ενεργοποίησε την Υπηρεσία Προσβασιμότητας για πλήρη καθαρισμό</string>
     <string name="toast_done">✅ Οι άδειες παραχωρήθηκαν</string>
 
-<!-- ===================================== -->
-<!-- SERVICE LAB -->
-<!-- ===================================== -->
+    <!-- ===================================== -->
+    <!-- SERVICE LAB -->
+    <!-- ===================================== -->
 
-<string name="gel_service_lab">GEL Service Lab</string>
+    <string name="gel_service_lab">GEL Service Lab</string>
 
-<string name="gel_service_lab_sub">
+    <string name="gel_service_lab_sub">
 Επαγγελματική διάγνωση συσκευής
-Android Χειροκίνητα Tests · iPhone Εργαστήρια · Εξαγωγή Αναφοράς
+Android Χειροκίνητα Tests · Apple Devices Labs · Εξαγωγή Αναφοράς
 </string>
 
-<!-- ================================================= -->
-<!-- SECTION LABELS (ΧΡΗΣΙΜΟΠΟΙΟΥΝΤΑΙ ΑΠΟ JAVA) -->
-<!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- SECTION LABELS -->
+    <!-- ================================================= -->
 
-<!-- ANDROID -->
-<string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS ANDROID</string>
+    <!-- ANDROID -->
+    <string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS ANDROID</string>
 
-<!-- iPHONE -->
-<string name="auto_diagnosis">ΔΙΑΓΝΩΣΗ iPHONE</string>
-    
-<!-- SERVICE -->
-<string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
+    <!-- APPLE DEVICES -->
+    <string name="auto_diagnosis">GEL Διάγνωση Apple Devices</string>
 
-<!-- ================================================= -->
-<!-- ANDROID MANUAL TESTS BUTTON -->
-<!-- ================================================= -->
+    <!-- SERVICE -->
+    <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
 
-<string name="manual_tests_title">GEL Χειροκίνητα Tests Android</string>
+    <!-- ================================================= -->
+    <!-- ANDROID MANUAL TESTS BUTTON -->
+    <!-- ================================================= -->
 
-<string name="manual_tests_desc">
+    <string name="manual_tests_title">GEL Χειροκίνητα Tests Android</string>
+
+    <string name="manual_tests_desc">
 Στοχευμένοι έλεγχοι για service:
 Ήχος · Δόνηση · Οθόνη · Αισθητήρες · RAM (Live) · WiFi · Θερμοκρασία
 </string>
 
-<!-- ================================================= -->
-<!-- iPHONE LABS BUTTON -->
-<!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- APPLE DEVICES LABS BUTTON -->
+    <!-- ================================================= -->
 
-<string name="gel_phone_diag_title">GEL Διάγνωση iPhone</string>
+    <string name="gel_phone_diag_title">GEL Διάγνωση Apple Devices</string>
 
-<string name="gel_phone_diag_desc">
-Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος
+    <string name="gel_phone_diag_desc">
+Εργαστηριακή διάγνωση Apple Devices μέσω αρχείων συστήματος
 • Ανάλυση Panic Logs
 • Έλεγχος Σταθερότητας Συστήματος
 • Εντοπισμός βλάβης hardware
 • Καταγραφή αποτελεσμάτων service
 </string>
 
-<!-- ================================================= -->
-<!-- SERVICE REPORT / EXPORT -->
-<!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- SERVICE REPORT / EXPORT -->
+    <!-- ================================================= -->
 
-<string name="export_report_title">Εξαγωγή Αναφοράς Service</string>
+    <string name="export_report_title">Εξαγωγή Αναφοράς Service</string>
 
-<string name="export_report_desc">
+    <string name="export_report_desc">
 Τελική αναφορά για τον πελάτη
-(Android + iPhone διαγνώσεις)
-Μορφή PDF ή TXT
+(Android + Apple Devices διαγνώσεις)
+Μορφή PDF
 </string>
 
-<string name="export_pdf_button">📄 Εξαγωγή Αναφοράς (PDF)</string>
-<string name="export_pdf_error">Σφάλμα κατά την εξαγωγή PDF</string>
+    <string name="export_pdf_button">📄 Εξαγωγή Αναφοράς (PDF)</string>
+    <string name="export_pdf_error">Σφάλμα κατά την εξαγωγή PDF</string>
 
-<!-- ================================================= -->
-<!-- REPORT BODY -->
-<!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- REPORT BODY -->
+    <!-- ================================================= -->
 
-<string name="report_title">GEL Αναφορά Service</string>
+    <string name="report_title">GEL Αναφορά Service</string>
 
-<string name="report_dev_line">
+    <string name="report_dev_line">
 GDiolitsis Engine Lab (GEL) — Author &amp; Developer
 </string>
 
-<string name="report_date">Ημερομηνία</string>
-<string name="report_device">Συσκευή</string>
-<string name="report_android">Android</string>
+    <string name="report_date">Ημερομηνία</string>
+    <string name="report_device">Συσκευή</string>
+    <string name="report_android">Android</string>
 
-<string name="report_diag_header">
+    <string name="report_diag_header">
 === Διαγνώσεις Service Lab ===
 </string>
 
-<string name="report_no_entries">
+    <string name="report_no_entries">
 [Δεν υπάρχουν καταχωρημένες διαγνώσεις]
 </string>
 
-<string name="report_end">
+    <string name="report_end">
 --- Τέλος Αναφοράς ---
 </string>
 
-<string name="report_signature">
+    <string name="report_signature">
 Υπογραφή Τεχνικού:
 </string>
 
-<!-- ================================================= -->
-<!-- EMPTY / PREVIEW -->
-<!-- ================================================= -->
+    <!-- ================================================= -->
+    <!-- EMPTY / PREVIEW -->
+    <!-- ================================================= -->
 
-<string name="preview_empty">
+    <string name="preview_empty">
 Δεν υπάρχουν ακόμη διαγνώσεις.
-Τρέξε Χειροκίνητα Tests Android ή Διάγνωση iPhone
+Τρέξε Χειροκίνητα Tests Android ή Apple Devices Labs
 και μετά κάνε εξαγωγή αναφοράς.
 </string>
-    
+
     <!-- DAMAGE CHECKLIST -->
     <string name="damage_title">Έλεγχος Ζημιών</string>
     <string name="damage_screen">Σπασμένη οθόνη</string>
@@ -170,18 +171,14 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <!-- MANUAL TESTS — HOSPITAL EDITION -->
     <!-- ===================================== -->
 
-    <!-- ΤΙΤΛΟΣ ΠΑΝΤΑ ΑΓΓΛΙΚΑ -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
-    <!-- SUBTITLE -->
     <string name="manual_hospital_sub">
-        Επαγγελματικά εργαλεία service.\nΚάθε χειροκίνητο test γράφει αναλυτικά αποτελέσματα παρακάτω (OK / WARN / ERROR)\nκαι συμπεριλαμβάνεται στην τελική Αναφορά Service.
-    </string>
+Επαγγελματικά εργαλεία service.\nΚάθε χειροκίνητο test γράφει αναλυτικά αποτελέσματα παρακάτω (OK / WARN / ERROR)\nκαι συμπεριλαμβάνεται στην τελική Αναφορά Service.
+</string>
 
-    <!-- ΕΝΟΤΗΤΑ -->
     <string name="manual_section1">ΕΝΟΤΗΤΑ 1 — Έλεγχοι Συστήματος &amp; Hardware</string>
 
-    <!-- 7 ΚΑΤΗΓΟΡΙΕΣ -->
     <string name="manual_cat_1">Ήχος &amp; Δόνηση — Manual Labs 1–5</string>
     <string name="manual_cat_2">Οθόνη &amp; Αισθητήρες — Manual Labs 6–9</string>
     <string name="manual_cat_3">Ασύρματα &amp; Συνδεσιμότητα — Manual Labs 10–13</string>
@@ -190,56 +187,35 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <string name="manual_cat_6">Ασφάλεια &amp; Υγεία Συστήματος — Manual Labs 21–24</string>
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 25–30</string>
 
-    <!-- LOG -->
     <string name="manual_log_title">Καταγραφή Manual Tests</string>
     <string name="manual_log_desc">
-        ℹ️ GEL Manual Tests — έτοιμο.\nΆνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.
-    </string>
-
-<!-- =============================== -->
-<!-- 🍎 APPLE MODE (ΠΡΟΣΘΗΚΗ) -->
-<!-- =============================== -->
-
-<!-- PLATFORM SELECT POPUP -->
-<string name="platform_select_title">ΕΠΙΛΟΓΗ ΠΛΑΤΦΟΡΜΑΣ</string>
-<string name="platform_android">🤖 ANDROID</string>
-<string name="platform_apple">🍎 APPLE</string>
-
-<!-- WELCOME / EXPLANATION POPUP -->
-<string name="welcome_popup_text">
-Παρότι αυτή είναι μια εφαρμογή για Android,
-είναι το μοναδικό εργαλείο στην αγορά
-που μπορεί να σας βοηθήσει να κατανοήσετε
-προβλήματα και σε συσκευές Apple.
-
-Με την εισαγωγή panic logs από το iPhone ή το iPad σας,
-αναλύουμε τι πραγματικά συνέβη στο εσωτερικό της συσκευής.
-
-Θα καταλάβετε ξεκάθαρα:
-• τι σημαίνουν τα panic logs  
-• ποια ήταν η αιτία του προβλήματος  
-• και πώς μπορείτε να το λύσετε.
-
-Οπότε, διαλέξτε τι θέλετε να εξερευνήσετε:
-τη συσκευή σας Android,
-ή κάποια άλλη συσκευή Apple που έχετε.
+ℹ️ GEL Manual Tests — έτοιμο.\nΆνοιξε μια κατηγορία παραπάνω και εκτέλεσε τα απαραίτητα tests.
 </string>
 
-<!-- DEVICE DECLARATION -->
-<string name="apple_device_declaration">🧩 Δήλωση Συσκευής</string>
-<string name="apple_device_category_title">Επιλογή κατηγορίας συσκευής</string>
-<string name="apple_device_cat_iphone">iPhone</string>
-<string name="apple_device_cat_ipad">iPad</string>
-<string name="apple_device_cat_ipod">iPod</string>
+    <!-- =============================== -->
+    <!-- 🍎 APPLE MODE -->
+    <!-- =============================== -->
 
-<!-- APPLE SYSTEM (SAME STYLE AS ANDROID) -->
-<string name="apple_system">🛠 Σύστημα</string>
+    <!-- PLATFORM SELECT POPUP -->
+    <string name="platform_select_title">ΕΠΙΛΟΓΗ ΠΛΑΤΦΟΡΜΑΣ</string>
+    <string name="platform_android">🤖 ANDROID</string>
+    <string name="platform_apple">🍎 APPLE</string>
 
-<!-- SAME FORMAT AS ANDROID FOR BUTTON WIDTH -->
-<string name="apple_phone_info_internal">📱 Πληρ. Συσκευής\n(Εσωτερικά)</string>
-<string name="apple_phone_info_peripherals">📡 Πληρ. Συσκευής\n(Περιφερειακά)</string>
+    <!-- DEVICE DECLARATION -->
+    <string name="apple_device_declaration">🧩 Δήλωση Συσκευής</string>
+    <string name="apple_device_category_title">Επιλογή κατηγορίας συσκευής</string>
+    <string name="apple_device_cat_iphone">iPhone</string>
+    <string name="apple_device_cat_ipad">iPad</string>
+    <string name="apple_device_cat_ipod">iPod</string>
 
-<!-- APPLE DIAGNOSIS -->
-<string name="apple_diagnosis">🚀 GEL Διάγνωση iPhone</string>
+    <!-- APPLE SYSTEM -->
+    <string name="apple_system">🛠 Σύστημα</string>
+
+    <!-- SAME FORMAT AS ANDROID -->
+    <string name="apple_phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Εσωτερικά)</string>
+    <string name="apple_phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Περιφερειακά)</string>
+
+    <!-- APPLE DIAGNOSIS -->
+    <string name="apple_diagnosis">🚀 GEL Διάγνωση Apple Devices</string>
 
 </resources>

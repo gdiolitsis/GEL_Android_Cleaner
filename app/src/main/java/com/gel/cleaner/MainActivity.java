@@ -184,7 +184,10 @@ private void startPlatformFlow() {
 
 private void showWelcomePopup() {
 
-    new AlertDialog.Builder(this)
+    new AlertDialog.Builder(
+        this,
+        android.R.style.Theme_Material_Dialog_Alert
+)
             .setTitle(getString(R.string.platform_select_title))
             .setMessage(getString(R.string.welcome_popup_text))
             .setCancelable(false)
@@ -318,7 +321,11 @@ private void continueNormalFlow() {
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder =
+        new AlertDialog.Builder(
+                this,
+                android.R.style.Theme_Material_Dialog_Alert
+        );
         builder.setTitle("Select Browser");
         String[] labels = installed.toArray(new String[0]);
 

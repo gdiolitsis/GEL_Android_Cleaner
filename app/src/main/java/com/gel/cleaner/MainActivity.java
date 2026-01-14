@@ -51,12 +51,6 @@ public class MainActivity extends GELAutoActivityHook
     private static final String PREFS = "gel_prefs";
     private static final String KEY_PLATFORM = "platform_mode"; // android | apple
 
-    // ==========================
-    // WELCOME STATE
-    // ==========================
-    private boolean welcomeMuted = false;
-    private String  welcomeLang  = "EN";
-
     // =========================================================
     // LOCALE
     // =========================================================

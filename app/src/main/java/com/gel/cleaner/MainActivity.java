@@ -355,34 +355,35 @@ private void continueNormalFlow() {
         });
     }
 
-       // =========================================================
-    // PLATFORM SELECT POPUP
-    // =========================================================
-    private void showPlatformSelectPopup() {
+// =========================================================
+// PLATFORM SELECT POPUP
+// =========================================================
+private void showPlatformSelectPopup() {
 
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
+    SharedPreferences prefs =
+            getSharedPreferences(PREFS, MODE_PRIVATE);
 
-        String[] items = {
-                getString(R.string.platform_android),
-                getString(R.string.platform_apple)
-        };
+    String[] items = {
+            getString(R.string.platform_android),
+            getString(R.string.platform_apple)
+    };
 
-        new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.platform_select_title))
-                .setCancelable(false)
-                .setItems(items, (d, which) -> {
+    new AlertDialog.Builder(
+            this,
+            android.R.style.Theme_Material_Dialog_Alert   // 🔥 FIX
+    )
+            .setTitle(getString(R.string.platform_select_title))
+            .setCancelable(false)
+            .setItems(items, (d, which) -> {
 
-                    String mode = (which == 0) ? "android" : "apple";
+                String mode = (which == 0) ? "android" : "apple";
 
-                    prefs.edit()
-                            .putString(KEY_PLATFORM, mode)
-                            .apply();
+                prefs.edit()
+                        .putString(KEY_PLATFORM, mode)
+                        .apply();
 
-                    // εδώ απλά κλείνουμε — το υπόλοιπο flow
-                    // (battery popup κλπ) θα κοπεί όταν mode == apple
-                    d.dismiss();
-                })
-                .show();
-    }
+                d.dismiss();
+            })
+            .show();
+}
 }

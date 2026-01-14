@@ -443,7 +443,9 @@ if ("GR".equals(panicGuideLang)) {
 
 // μίλα όταν το TTS είναι έτοιμο (delayed trigger)
 box.postDelayed(() -> {
-    speakPanicGuideTTS();
+    if (panicGuidePopupOpen) {
+        speakPanicGuideTTS();
+    }
 }, 700);
 
         langSpinner.setOnItemSelectedListener(
@@ -730,8 +732,6 @@ if (panicLogCount == 1) {
 
         panicLogText   = allLogs.toString();
 panicLogLoaded = true;
-
-panicLogCount += uris.size();
 
 panicLogName = (panicLogCount == 1)
         ? "Single panic log"

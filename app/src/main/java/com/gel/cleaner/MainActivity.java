@@ -76,24 +76,22 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
 
-    // 🔥 ΔΕΙΧΝΟΥΜΕ welcome ΜΟΝΟ αν δεν έχει οριστεί platform
-    if (!hasPlatformSelected()) {
-        startPlatformFlow();
-    }
+    // 🔥 ΠΑΝΤΑ δείχνουμε welcome → platform select
+    startPlatformFlow();
 
     // 🍎 APPLE MODE — UI FILTER
     if (isAppleMode()) {
         applyAppleModeUI();
     }
 
-// ==========================
-// TTS INIT
-// ==========================
-tts[0] = new TextToSpeech(this, status -> {
-    ttsReady[0] = (status == TextToSpeech.SUCCESS);
-});
+    // ==========================
+    // TTS INIT
+    // ==========================
+    tts[0] = new TextToSpeech(this, status -> {
+        ttsReady[0] = (status == TextToSpeech.SUCCESS);
+    });
 
-log("📱 Device ready", false);
+    log("📱 Device ready", false);
 }
 
 @Override
@@ -197,7 +195,7 @@ private void speakWelcomeTTS() {
         showWelcomePopup();
     }
 
-    // ============================================================
+// ============================================================
 // WELCOME POPUP — DARK GOLD + MUTE + LANG + TTS
 // ============================================================
 private void showWelcomePopup() {
@@ -541,16 +539,6 @@ private void showPlatformSelectPopup() {
         b.setLayoutParams(lp);
     }
 
-// =========================================================
-// PLATFORM STATE
-// =========================================================
-private boolean hasPlatformSelected() {
-    SharedPreferences prefs =
-            getSharedPreferences(PREFS, MODE_PRIVATE);
-
-    return prefs.contains(KEY_PLATFORM);
-}
-
     // =========================================================
     // LANGUAGE SYSTEM
     // =========================================================
@@ -671,10 +659,20 @@ private void showAppleDeviceDeclarationPopup() {
     box.addView(title);
 
     Button btnIphone = new Button(this);
-    stylePopupButton(btnIphone, "iPhone");
+btnIphone.setText("iPhone");
+btnIphone.setAllCaps(false);
+btnIphone.setTextColor(Color.WHITE);
+btnIphone.setGravity(Gravity.CENTER);
+btnIphone.setMinHeight(dp(52));
+stylePopupButton(btnIphone, "iPhone");
 
-    Button btnIpad = new Button(this);
-    stylePopupButton(btnIpad, "iPad");
+Button btnIpad = new Button(this);
+btnIpad.setText("iPad");
+btnIpad.setAllCaps(false);
+btnIpad.setTextColor(Color.WHITE);
+btnIpad.setGravity(Gravity.CENTER);
+btnIpad.setMinHeight(dp(52));
+stylePopupButton(btnIpad, "iPad");
 
     box.addView(btnIphone);
     box.addView(btnIpad);

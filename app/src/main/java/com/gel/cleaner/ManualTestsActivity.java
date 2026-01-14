@@ -588,6 +588,16 @@ serviceLogInit = true;
 }  // onCreate ENDS HERE
 
 @Override
+protected void onPause() {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();   // 🔇 stop όταν φεύγουμε από την οθόνη
+        }
+    } catch (Throwable ignore) {}
+    super.onPause();
+}
+
+@Override
 protected void onDestroy() {
 super.onDestroy();
 if (tts != null && tts[0] != null) {
@@ -2674,14 +2684,30 @@ box.addView(controls);
         // ==========================
         b.setView(box);
         final AlertDialog d = b.create();
+        
+        d.setOnDismissListener(dialog -> {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();   // 🔇 stop TTS όταν κλείνει το popup
+        }
+    } catch (Throwable ignore) {}
+});
+        
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
         // OK → μόνο κλείσιμο
-        okBtn.setOnClickListener(v -> d.dismiss());
-    });
+        okBtn.setOnClickListener(v -> {
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+        }
+    } catch (Throwable ignore) {}
+
+    d.dismiss();
+});
 }
 
 // ============================================================
@@ -2747,6 +2773,7 @@ private void speakLab28TTS() {
 
     } catch (Throwable ignore) {}
 }
+
 
 // ============================================================
 // LABS 1-5: AUDIO & VIBRATION

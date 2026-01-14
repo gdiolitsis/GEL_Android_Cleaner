@@ -369,6 +369,9 @@ d.setOnDismissListener(dialog -> {
 
 d.show();
 
+// ▶️ μίλα αυτόματα όταν ανοίγει το popup
+speakWelcomeTTS();
+
 // ==========================
 // ▶️ OK ACTION
 // ==========================
@@ -379,10 +382,10 @@ okBtn.setOnClickListener(v -> {
 
     d.dismiss();
     showPlatformSelectPopup();
-});
+        });
 
-});   
-}  
+    });   // 👈 κλείνει runOnUiThread
+}        // 👈 κλείν
 
 // =========================================================
 // PLATFORM SELECT
@@ -422,47 +425,44 @@ private void showPlatformSelectPopup() {
         // 🤖 ANDROID BUTTON
         // ==========================
         Button androidBtn = new Button(this);
-        androidBtn.setText("🤖  ANDROID DEVICE");
-        androidBtn.setAllCaps(false);
-        androidBtn.setTextColor(Color.WHITE);
-        androidBtn.setTextSize(16f);
+androidBtn.setText("🤖  ANDROID DEVICE");
+androidBtn.setAllCaps(false);
+androidBtn.setTextColor(Color.WHITE);
+androidBtn.setTextSize(16f);
 
-        GradientDrawable btnBg1 = new GradientDrawable();
-        btnBg1.setColor(0xFF0F8A3B);
-        btnBg1.setCornerRadius(dp(14));
-        btnBg1.setStroke(dp(3), 0xFFFFD700);
-        androidBtn.setBackground(btnBg1);
+GradientDrawable bgAndroid = new GradientDrawable();
+bgAndroid.setColor(0xFF000000);      // μαύρο φόντο
+bgAndroid.setCornerRadius(dp(14));
+bgAndroid.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+androidBtn.setBackground(bgAndroid);
 
-        LinearLayout.LayoutParams lpBtn =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn.setMargins(0, dp(12), 0, 0);
-        androidBtn.setLayoutParams(lpBtn);
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpBtn.setMargins(0, dp(12), 0, 0);
+androidBtn.setLayoutParams(lpBtn);
 
-        // ==========================
-        // 🍎 APPLE BUTTON
-        // ==========================
         Button appleBtn = new Button(this);
-        appleBtn.setText("🍎  APPLE DEVICE");
-        appleBtn.setAllCaps(false);
-        appleBtn.setTextColor(Color.WHITE);
-        appleBtn.setTextSize(16f);
+appleBtn.setText("🍎  APPLE DEVICE");
+appleBtn.setAllCaps(false);
+appleBtn.setTextColor(Color.WHITE);
+appleBtn.setTextSize(16f);
 
-        GradientDrawable btnBg2 = new GradientDrawable();
-        btnBg2.setColor(0xFF444444);
-        btnBg2.setCornerRadius(dp(14));
-        btnBg2.setStroke(dp(3), 0xFFFFD700);
-        appleBtn.setBackground(btnBg2);
+GradientDrawable bgApple = new GradientDrawable();
+bgApple.setColor(0xFF000000);      // μαύρο φόντο
+bgApple.setCornerRadius(dp(14));
+bgApple.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+appleBtn.setBackground(bgApple);
 
-        LinearLayout.LayoutParams lpBtn2 =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn2.setMargins(0, dp(12), 0, 0);
-        appleBtn.setLayoutParams(lpBtn2);
+LinearLayout.LayoutParams lpBtn2 =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpBtn2.setMargins(0, dp(12), 0, 0);
+appleBtn.setLayoutParams(lpBtn2);
 
         // ==========================
         // ADD TO BOX
@@ -499,7 +499,7 @@ private void showPlatformSelectPopup() {
     // =========================================================
     private void openAppleInternalPeripherals() {
         // ΠΑΕΙ κατευθείαν στα Apple infos, ΟΧΙ στα iPhone labs
-        startActivity(new Intent(this, DeviceInfoInternalActivity.class));
+        startActivity(new Intent(this, MainActivity.class));
     }
 
     // =========================================================

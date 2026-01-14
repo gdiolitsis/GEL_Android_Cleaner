@@ -81,23 +81,23 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
 
+    // ==========================
+    // TTS INIT  (ΠΡΩΤΑ!)
+    // ==========================
+    tts[0] = new TextToSpeech(this, status -> {
+        ttsReady[0] = (status == TextToSpeech.SUCCESS);
+    });
+
     // 🔥 ΠΑΝΤΑ δείχνουμε welcome → platform select (ΜΙΑ ΦΟΡΑ ΑΝΑ LAUNCH)
-if (!startupFlowDone) {
-    startupFlowDone = true;
-    startPlatformFlow();
-}
+    if (!startupFlowDone) {
+        startupFlowDone = true;
+        startPlatformFlow();
+    }
 
     // 🍎 APPLE MODE — UI FILTER
     if (isAppleMode()) {
         applyAppleModeUI();
     }
-
-    // ==========================
-    // TTS INIT
-    // ==========================
-    tts[0] = new TextToSpeech(this, status -> {
-        ttsReady[0] = (status == TextToSpeech.SUCCESS);
-    });
 
     log("📱 Device ready", false);
 }
@@ -108,6 +108,37 @@ protected void onDestroy() {
         tts[0].shutdown();
     }
     super.onDestroy();
+}
+
+// ============================================================
+// TTS — WELCOME (CALLED ONLY ON LANGUAGE CHANGE)
+// ============================================================
+private void speakWelcomeTTS() {
+
+    if (welcomeMuted) return;
+
+    try {
+        if (tts == null || tts[0] == null || !ttsReady[0]) return;
+
+        tts[0].stop();
+
+        if ("GR".equals(welcomeLang)) {
+            tts[0].speak(
+                getWelcomeTextGR(),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "WELCOME_GR"
+            );
+        } else {
+            tts[0].speak(
+                getWelcomeTextEN(),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "WELCOME_EN"
+            );
+        }
+
+    } catch (Throwable ignore) {}
 }
 
 // ==========================
@@ -155,57 +186,8 @@ private int dp(float v) {
 }
 
 // ============================================================
-// TTS — WELCOME (CALLED ONLY ON LANGUAGE CHANGE)
+// WELCOME POPUP (STYLE + MUTE + LANG + TTS)
 // ============================================================
-private void speakWelcomeTTS() {
-
-    if (welcomeMuted) return;
-
-    try {
-        if (tts == null || tts[0] == null || !ttsReady[0]) return;
-
-        tts[0].stop();
-
-        if ("GR".equals(welcomeLang)) {
-            tts[0].speak(
-                getWelcomeTextGR(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "WELCOME_GR"
-            );
-        } else {
-            tts[0].speak(
-                getWelcomeTextEN(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "WELCOME_EN"
-            );
-        }
-
-    } catch (Throwable ignore) {}
-}
-
-    // =========================================================
-    // PLATFORM CHECK
-    // =========================================================
-    private boolean isAppleMode() {
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
-        return "apple".equals(
-                prefs.getString(KEY_PLATFORM, "android")
-        );
-    }
-
-    // =========================================================
-    // PLATFORM / WELCOME FLOW — ALWAYS SHOW
-    // =========================================================
-    private void startPlatformFlow() {
-        showWelcomePopup();
-    }
-
-// ------------------------------------------------------------
-// SHOW POPUP
-// ------------------------------------------------------------
 private void showWelcomePopup() {
 
     runOnUiThread(() -> {
@@ -230,7 +212,7 @@ private void showWelcomePopup() {
 
         // ================= TITLE =================
         TextView title = new TextView(this);
-        title.setText("SELECT PLATFORM");
+        title.setText("WELCOME");
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
@@ -243,7 +225,6 @@ private void showWelcomePopup() {
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
-
         msg.setText(getWelcomeTextEN());
         box.addView(msg);
 
@@ -287,90 +268,92 @@ private void showWelcomePopup() {
         });
 
         // ==========================
-// 🌐 LANGUAGE SPINNER
-// ==========================
-Spinner langSpinner = new Spinner(this);
+        // 🌐 LANGUAGE SPINNER
+        // ==========================
+        Spinner langSpinner = new Spinner(this);
 
-ArrayAdapter<String> langAdapter =
-        new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        langSpinner.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                )
         );
-langAdapter.setDropDownViewResource(
-        android.R.layout.simple_spinner_dropdown_item);
-langSpinner.setAdapter(langAdapter);
 
-// 👉 Το spinner γεμίζει το κουτί
-langSpinner.setLayoutParams(
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-        )
-);
+        // αρχική γλώσσα
+        if ("GR".equals(welcomeLang)) {
+            langSpinner.setSelection(1);
+            msg.setText(getWelcomeTextGR());
+        } else {
+            langSpinner.setSelection(0);
+            msg.setText(getWelcomeTextEN());
+        }
 
         // ==========================
         // LANGUAGE CHANGE LOGIC
         // ==========================
         langSpinner.setOnItemSelectedListener(
-                new android.widget.AdapterView.OnItemSelectedListener() {
+                new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(
-                            android.widget.AdapterView<?> p,
+                            AdapterView<?> p,
                             View v,
                             int pos,
                             long id) {
 
                         welcomeLang = (pos == 0) ? "EN" : "GR";
 
-                        // 1) Update popup text
                         if ("GR".equals(welcomeLang)) {
                             msg.setText(getWelcomeTextGR());
                         } else {
                             msg.setText(getWelcomeTextEN());
                         }
 
-                        // 2) Speak ONLY here (after language choice)
+                        // 👉 μιλάει ΜΟΝΟ μετά την επιλογή γλώσσας
                         speakWelcomeTTS();
                     }
 
                     @Override
-                    public void onNothingSelected(
-                            android.widget.AdapterView<?> p) {}
+                    public void onNothingSelected(AdapterView<?> p) {}
                 });
 
-// ==========================
-// 🌐 LANGUAGE BOX (RIGHT)
-// ==========================
-LinearLayout langBox = new LinearLayout(this);
-langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER_VERTICAL);
-langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+        // ==========================
+        // 🌐 LANGUAGE BOX
+        // ==========================
+        LinearLayout langBox = new LinearLayout(this);
+        langBox.setOrientation(LinearLayout.HORIZONTAL);
+        langBox.setGravity(Gravity.CENTER_VERTICAL);
+        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
 
-// background κουτιού
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF1A1A1A);
-langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(2), 0xFFFFD700);
-langBox.setBackground(langBg);
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF1A1A1A);
+        langBg.setCornerRadius(dp(12));
+        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBox.setBackground(langBg);
 
-// layout params για το κουτάκι — ΙΔΙΟ ΥΨΟΣ ΜΕ BUTTON
-LinearLayout.LayoutParams lpLangBox =
-        new LinearLayout.LayoutParams(
-                0,
-                dp(48),   // ίδιο ύψος με τα κουμπιά
-                1f
-        );
-lpLangBox.setMargins(dp(8), 0, 0, 0);
-langBox.setLayoutParams(lpLangBox);
+        LinearLayout.LayoutParams lpLangBox =
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(48),
+                        1f
+                );
+        lpLangBox.setMargins(dp(8), 0, 0, 0);
+        langBox.setLayoutParams(lpLangBox);
 
-// βάλε το spinner ΜΕΣΑ στο κουτί
-langBox.addView(langSpinner);
+        langBox.addView(langSpinner);
 
-// και το κουτί μέσα στα controls
-controls.addView(muteBtn);
-controls.addView(langBox);
-box.addView(controls);
+        controls.addView(muteBtn);
+        controls.addView(langBox);
+        box.addView(controls);
 
         // ==========================
         // OK BUTTON
@@ -401,14 +384,31 @@ box.addView(controls);
         // ==========================
         b.setView(box);
         final AlertDialog d = b.create();
+
+        // 🔥 STOP TTS όταν κλείνει ΜΕ ΟΠΟΙΟΝΔΗΠΟΤΕ ΤΡΟΠΟ
+        d.setOnDismissListener(dialog -> {
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
+        });
+
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
+        // OK → stop TTS + πάμε στο platform selector
         okBtn.setOnClickListener(v -> {
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
+
             d.dismiss();
-            showPlatformSelectPopup();   // 👉 μετά πάμε στο platform selector
+            showPlatformSelectPopup();
         });
     });
 }

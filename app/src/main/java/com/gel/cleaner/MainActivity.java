@@ -36,6 +36,11 @@ import java.util.List;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
+        	
+    // ==========================
+    // STATE FLAGS
+    // ==========================
+    private boolean startupFlowDone = false;
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -76,8 +81,11 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
 
-    // 🔥 ΠΑΝΤΑ δείχνουμε welcome → platform select
+    // 🔥 ΠΑΝΤΑ δείχνουμε welcome → platform select (ΜΙΑ ΦΟΡΑ ΑΝΑ LAUNCH)
+if (!startupFlowDone) {
+    startupFlowDone = true;
     startPlatformFlow();
+}
 
     // 🍎 APPLE MODE — UI FILTER
     if (isAppleMode()) {
@@ -467,20 +475,20 @@ private void showPlatformSelectPopup() {
 
     // ================= ACTIONS =================
     btnAndroid.setOnClickListener(v -> {
-        prefs.edit().putString(KEY_PLATFORM, "android").apply();
-        d.dismiss();
-        recreate(); // refresh UI
+    prefs.edit().putString(KEY_PLATFORM, "android").apply();
+    d.dismiss();
+    applyAndroidModeUI();   // ή απλά τίποτα, μένεις στο main UI
     });
 
     btnApple.setOnClickListener(v -> {
-        prefs.edit().putString(KEY_PLATFORM, "apple").apply();
-        d.dismiss();
+    prefs.edit().putString(KEY_PLATFORM, "apple").apply();
+    d.dismiss();
 
-        // 🔥 ΑΜΕΣΗ ΜΕΤΑΒΑΣΗ ΣΤΟ Apple Labs UI
-        Intent i = new Intent(this, IPhoneLabsActivity.class);
-        startActivity(i);
-        finish();
-    });
+    // 🔥 ΑΜΕΣΗ ΜΕΤΑΒΑΣΗ ΣΤΟ Apple Labs UI
+    Intent i = new Intent(this, IPhoneLabsActivity.class);
+    startActivity(i);
+    finish();
+});
 }
 
     // =========================================================

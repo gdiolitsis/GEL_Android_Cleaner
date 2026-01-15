@@ -455,35 +455,48 @@ okBtn.setLayoutParams(lpOk);
 
 box.addView(okBtn);
 
-        // ==========================
-        // DIALOG
-        // ==========================
-        b.setView(box);
-        final AlertDialog d = b.create();
+// ==========================
+// DIALOG
+// ==========================
+b.setView(box);
+final AlertDialog d = b.create();
 
-        d.setOnDismissListener(dialog -> {
-            try {
-                if (tts != null && tts[0] != null) tts[0].stop();
-            } catch (Throwable ignore) {}
-        });
+d.setOnDismissListener(dialog -> {
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
 
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-        }
+// ❗ Έλεγχος ΠΡΙΝ πειράξουμε window
+if (isFinishing() || isDestroyed()) return;
 
-        d.show();
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT));
+}
 
-        // ▶️ μίλα μόλις ανοίξει (στη σωστή γλώσσα)
-        speakWelcomeTTS();
+d.show();
 
-        okBtn.setOnClickListener(v -> {
-            try {
-                if (tts != null && tts[0] != null) tts[0].stop();
-            } catch (Throwable ignore) {}
-            d.dismiss();
-            showPlatformSelectPopup();
-        });
+// 🔒 φέρε το μπροστά
+if (d.getWindow() != null) {
+    d.getWindow().clearFlags(
+            android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+    );
+    d.getWindow().addFlags(
+            android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
+    );
+}
+
+// ▶️ μίλα μόλις ανοίξει
+speakWelcomeTTS();
+
+okBtn.setOnClickListener(v -> {
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    d.dismiss();
+    showPlatformSelectPopup();
+});
     });
 }
 

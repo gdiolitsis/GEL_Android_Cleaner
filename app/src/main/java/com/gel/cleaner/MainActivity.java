@@ -80,12 +80,12 @@ public class MainActivity extends GELAutoActivityHook
         // ==========================
         // TTS INIT (ΠΡΩΤΑ!)
         // ==========================
-        tts[0] = new TextToSpeech(this, status -> {
-    ttsReady[0] = (status == TextToSpeech.SUCCESS);
-    if (ttsReady[0]) {
-        speakWelcomeTTS();   // 🔥 μίλα μόλις γίνει READY
-    }
-});
+        tts[0] = new TextToSpeech(
+        this,
+        status -> {
+            ttsReady[0] = (status == TextToSpeech.SUCCESS);
+        }
+);
 
         // 🔥 ALWAYS SHOW FLOW (once per launch)
         if (!startupFlowDone) {
@@ -121,33 +121,26 @@ public void onBackPressed() {
     showPlatformSelectPopup();
 }
 
-    // =========================================================
-    // PLATFORM FLOW
-    // =========================================================
-    private void startPlatformFlow() {
+// =========================================================
+// PLATFORM FLOW — ALWAYS SHOW WELCOME
+// =========================================================
+private void startPlatformFlow() {
 
-    String mode = getSavedPlatform();   // "android" ή "apple"
-
-    // Αν έχει ήδη επιλεγεί platform → ΜΗ δείχνεις welcome
-    if ("android".equals(mode) || "apple".equals(mode)) {
-        return;
-    }
-
-    // Αλλιώς, πρώτη φορά → δείξε welcome
+    // Κάθε φορά που ανοίγει η app → δείξε welcome
     showWelcomePopup();
 }
 
     private boolean isAppleMode() {
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
-        return "apple".equals(prefs.getString(KEY_PLATFORM, "android"));
-    }
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    return "apple".equals(prefs.getString("platform_mode", "none"));
+}
 
 @Override
 protected void onResume() {
     super.onResume();
 
-    String mode = getSavedPlatform();   // "android" ή "apple"
+    String mode = getSavedPlatform();   // "android" | "apple" | "none"
 
     if ("apple".equals(mode)) {
         applyAppleModeUI();
@@ -464,9 +457,6 @@ d.setOnDismissListener(dialog -> {
         if (tts != null && tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
 });
-
-// ❗ Έλεγχος ΠΡΙΝ πειράξουμε window
-if (isFinishing() || isDestroyed()) return;
 
 if (d.getWindow() != null) {
     d.getWindow().setBackgroundDrawable(

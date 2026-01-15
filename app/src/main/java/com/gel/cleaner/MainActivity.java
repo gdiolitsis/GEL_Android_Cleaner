@@ -77,15 +77,17 @@ public class MainActivity extends GELAutoActivityHook
         setupDonate();
         setupButtons();
 
-        // ==========================
-        // TTS INIT (ΠΡΩΤΑ!)
-        // ==========================
-        tts[0] = new TextToSpeech(
-        this,
-        status -> {
-            ttsReady[0] = (status == TextToSpeech.SUCCESS);
-        }
-);
+// ==========================
+// TTS INIT (ΠΡΩΤΑ!)
+// ==========================
+tts[0] = new TextToSpeech(this, status -> {
+    ttsReady[0] = (status == TextToSpeech.SUCCESS);
+
+    // Αν το welcome popup είναι ήδη ανοιχτό → μίλα ΤΩΡΑ
+    if (ttsReady[0] && welcomeShown) {
+        speakWelcomeTTS();
+    }
+});
 
         // 🔥 ALWAYS SHOW FLOW (once per launch)
         if (!startupFlowDone) {
@@ -453,6 +455,7 @@ b.setView(box);
 final AlertDialog d = b.create();
 
 d.setOnDismissListener(dialog -> {
+    welcomeShown = false;
     try {
         if (tts != null && tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
@@ -465,6 +468,9 @@ if (d.getWindow() != null) {
 
 d.show();
 
+// 👇 το popup ΕΙΝΑΙ τώρα ορατό
+welcomeShown = true;
+
 // 🔒 φέρε το μπροστά
 if (d.getWindow() != null) {
     d.getWindow().clearFlags(
@@ -475,8 +481,10 @@ if (d.getWindow() != null) {
     );
 }
 
-// ▶️ μίλα μόλις ανοίξει
-speakWelcomeTTS();
+// ▶️ προσπάθησε να μιλήσεις ΤΩΡΑ
+if (ttsReady[0]) {
+    speakWelcomeTTS();
+}
 
 okBtn.setOnClickListener(v -> {
     try {

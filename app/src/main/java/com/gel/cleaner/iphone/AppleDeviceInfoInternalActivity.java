@@ -1,5 +1,9 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceInfoInternalActivity — CARBON INFO EDITION
+// ============================================================
+// AppleDeviceInfoInternalActivity.java
+// CARBON INFO with Android Internals — HARDCODED Apple DATA
+// ============================================================
+
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
@@ -14,32 +18,28 @@ import com.gel.cleaner.iphone.specs.AppleDeviceSpec;
 
 public class AppleDeviceInfoInternalActivity extends Activity {
 
-    // -------- HEADERS (όπως υπάρχουν στο XML) --------
-    private LinearLayout headerSystem;
-    private LinearLayout headerOS;        // headerAndroid → iOS
-    private LinearLayout headerCPU;
-    private LinearLayout headerGPU;
-    private LinearLayout headerThermal;
-    private LinearLayout headerMetal;     // headerVulkan → Metal
-    private LinearLayout headerRAM;
-    private LinearLayout headerStorage;
+    // -------- SECTIONS (ίδια λογική με Android Internal) --------
+    private LinearLayout secSystem;
+    private LinearLayout secOS;
+    private LinearLayout secCPU;
+    private LinearLayout secRAM;
+    private LinearLayout secDisplay;
+    private LinearLayout secConnectivity;
 
-    // -------- CONTENT --------
+    // -------- OUTPUT --------
     private TextView outSystem;
     private TextView outOS;
     private TextView outCPU;
-    private TextView outGPU;
-    private TextView outThermal;
-    private TextView outMetal;
     private TextView outRAM;
-    private TextView outStorage;
+    private TextView outDisplay;
+    private TextView outConnectivity;
 
     private AppleDeviceSpec d;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_internal);
+        setContentView(R.layout.activity_device_info_internal); // ίδιο layout
 
         bindViews();
         d = AppleSpecProvider.getSelectedDevice(this);
@@ -48,141 +48,100 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     }
 
     // ============================================================
-    // BIND — ΜΟΝΟ ids που ΥΠΑΡΧΟΥΝ στο XML
+    // BIND
     // ============================================================
     private void bindViews() {
 
-        headerSystem   = findViewById(R.id.headerSystem);
-        headerOS       = findViewById(R.id.headerAndroid); // reuse → iOS
-        headerCPU      = findViewById(R.id.headerCpu);
-        headerGPU      = findViewById(R.id.headerGpu);
-        headerThermal  = findViewById(R.id.headerThermal);
-        headerMetal    = findViewById(R.id.headerVulkan);  // reuse → Metal
-        headerRAM      = findViewById(R.id.headerRam);
-        headerStorage  = findViewById(R.id.headerStorage);
+        // χρησιμοποιούμε Ο,ΤΙ υπάρχει ήδη στο XML
+        secSystem       = findViewById(R.id.headerSystem);
+        secOS           = findViewById(R.id.headerAndroid); // reuse → iOS
+        secCPU          = findViewById(R.id.headerCpu);
+        secRAM          = findViewById(R.id.headerRam);
+        secDisplay      = findViewById(R.id.headerGpu);     // reuse → Display
+        secConnectivity = findViewById(R.id.headerStorage); // reuse → Connectivity
 
-        outSystem   = findViewById(R.id.txtSystemContent);
-        outOS       = findViewById(R.id.txtAndroidContent); // reuse → iOS
-        outCPU      = findViewById(R.id.txtCpuContent);
-        outGPU      = findViewById(R.id.txtGpuContent);
-        outThermal  = findViewById(R.id.txtThermalContent);
-        outMetal    = findViewById(R.id.txtVulkanContent);  // reuse → Metal
-        outRAM      = findViewById(R.id.txtRamContent);
-        outStorage  = findViewById(R.id.txtStorageContent);
+        outSystem       = findViewById(R.id.txtSystemContent);
+        outOS           = findViewById(R.id.txtAndroidContent);
+        outCPU          = findViewById(R.id.txtCpuContent);
+        outRAM          = findViewById(R.id.txtRamContent);
+        outDisplay      = findViewById(R.id.txtGpuContent);
+        outConnectivity = findViewById(R.id.txtStorageContent);
     }
 
     // ============================================================
     // POPULATE — ΚΑΡΜΠΟΝ ΠΛΗΡΟΦΟΡΙΩΝ
     // ============================================================
     private void populateAll() {
+
         if (d == null) {
             hideAll();
             return;
         }
 
-        // -------- SYSTEM --------
-        show(headerSystem, outSystem);
+        // -------- 1) SYSTEM --------
+        show(secSystem);
         outSystem.setText(
                 logInfo("Manufacturer", "Apple") +
-                logInfo("Model", d.model) +
-                opt("Board", d.board) +
-                opt("Release year", String.valueOf(d.releaseYear))
+                logInfo("SoC", d.soc)
         );
 
-        // -------- iOS --------
-        show(headerOS, outOS);
+        // -------- 2) OS --------
+        show(secOS);
         outOS.setText(
-                logInfo("OS", "iOS / iPadOS") +
-                opt("Base version", d.osBase) +
-                opt("Latest supported", d.osLatest)
+                logInfo("Operating System", d.os)
         );
 
-        // -------- CPU --------
-        show(headerCPU, outCPU);
+        // -------- 3) CPU --------
+        show(secCPU);
         outCPU.setText(
-                logInfo("Chip", d.chip) +
-                opt("Architecture", d.arch) +
-                opt("Cores", d.cpuCores) +
-                opt("Process", d.processNode)
+                logInfo("CPU", d.cpu)
         );
 
-        // -------- GPU --------
-        show(headerGPU, outGPU);
-        outGPU.setText(
-                logInfo("GPU", d.gpu) +
-                opt("Cores", d.gpuCores) +
-                opt("API", "Metal")
-        );
-
-        // -------- THERMAL --------
-        if (has(d.thermalNote)) {
-            show(headerThermal, outThermal);
-            outThermal.setText(
-                    logWarn("Thermal", "Estimated") +
-                    opt("Note", d.thermalNote)
-            );
-        } else hide(headerThermal, outThermal);
-
-        // -------- METAL --------
-        show(headerMetal, outMetal);
-        outMetal.setText(
-                logInfo("Graphics API", "Metal") +
-                opt("Feature set", d.metalFeatureSet)
-        );
-
-        // -------- RAM --------
-        show(headerRAM, outRAM);
+        // -------- 4) RAM --------
+        show(secRAM);
         outRAM.setText(
-                logInfo("RAM", d.ram) +
-                opt("Type", d.ramType)
+                logInfo("Memory", d.ram)
         );
 
-        // -------- STORAGE --------
-        show(headerStorage, outStorage);
-        outStorage.setText(
-                logInfo("Base storage", d.storageBase) +
-                opt("Options", d.storageOptions)
+        // -------- 5) DISPLAY --------
+        show(secDisplay);
+        outDisplay.setText(
+                logInfo("Screen", d.screen)
+        );
+
+        // -------- 6) CONNECTIVITY --------
+        show(secConnectivity);
+        outConnectivity.setText(
+                logInfo("Wi-Fi", d.wifi) +
+                logInfo("Bluetooth", d.bluetooth) +
+                logInfo("Biometrics", d.biometrics) +
+                logInfo("Port", d.port) +
+                logInfo("Charging", d.charging)
         );
     }
 
     // ============================================================
-    // HELPERS
+    // HELPERS — ίδια φιλοσοφία logs
     // ============================================================
     private String logInfo(String k, String v) {
+        if (v == null || v.trim().isEmpty()) return "";
         return "• " + k + ": " + v + "\n";
-    }
-
-    private String logWarn(String k, String v) {
-        return "• " + k + ": " + v + "\n";
-    }
-
-    private String opt(String k, String v) {
-        if (!has(v)) return "";
-        return logInfo(k, v);
-    }
-
-    private boolean has(String s) {
-        return s != null && !s.trim().isEmpty();
     }
 
     private void hideAll() {
-        hide(headerSystem, outSystem);
-        hide(headerOS, outOS);
-        hide(headerCPU, outCPU);
-        hide(headerGPU, outGPU);
-        hide(headerThermal, outThermal);
-        hide(headerMetal, outMetal);
-        hide(headerRAM, outRAM);
-        hide(headerStorage, outStorage);
+        hide(secSystem);
+        hide(secOS);
+        hide(secCPU);
+        hide(secRAM);
+        hide(secDisplay);
+        hide(secConnectivity);
     }
 
-    private void hide(View h, View c) {
-        if (h != null) h.setVisibility(View.GONE);
-        if (c != null) c.setVisibility(View.GONE);
+    private void hide(View v) {
+        if (v != null) v.setVisibility(View.GONE);
     }
 
-    private void show(View h, View c) {
-        if (h != null) h.setVisibility(View.VISIBLE);
-        if (c != null) c.setVisibility(View.VISIBLE);
+    private void show(View v) {
+        if (v != null) v.setVisibility(View.VISIBLE);
     }
 }

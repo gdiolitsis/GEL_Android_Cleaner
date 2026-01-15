@@ -292,7 +292,8 @@ private void showWelcomePopup() {
         welcomeLang = ("el".equalsIgnoreCase(sys)) ? "GR" : "EN";
         msg.setText("GR".equals(welcomeLang) ? getWelcomeTextGR() : getWelcomeTextEN());
 
-        box.addView(msg);
+        msg.setPadding(0, 0, 0, dp(12));   // λίγο αέρα πριν τα controls
+box.addView(msg);
 
         // ============================================================
         // CONTROLS ROW — MUTE (LEFT) + LANG (RIGHT)
@@ -339,8 +340,8 @@ muteBtn.setLayoutParams(lpMute);
         // ==========================
         Spinner langSpinner = new Spinner(MainActivity.this);
         
-        langSpinner.setMinimumHeight(0);
-langSpinner.setPadding(0, 0, 0, 0);
+        langSpinner.setMinimumHeight(dp(48));
+langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
 
         ArrayAdapter<String> langAdapter =
                 new ArrayAdapter<>(
@@ -425,7 +426,7 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(16f);
+okBtn.setTextSize(18f);
 
 // 🔴 Η ΔΙΟΡΘΩΣΗ
 okBtn.setGravity(Gravity.CENTER);
@@ -440,7 +441,7 @@ okBtn.setBackground(okBg);
 LinearLayout.LayoutParams lpOk =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(48)
+                dp(56)
         );
 lpOk.setMargins(0, dp(16), 0, 0);
 okBtn.setLayoutParams(lpOk);
@@ -809,7 +810,7 @@ private void showAppleDeviceDeclarationPopup() {
     TextView title = new TextView(this);
     title.setText("Select your Apple device");
     title.setTextColor(Color.WHITE);
-    title.setTextSize(18f);
+    title.setTextSize(20f);
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(16));

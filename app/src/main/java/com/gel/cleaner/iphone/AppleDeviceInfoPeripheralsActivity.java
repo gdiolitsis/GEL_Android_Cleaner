@@ -4,7 +4,7 @@
 // CARBON INFO with Android Peripherals — HARDCODED Apple DATA
 // ============================================================
 
-package com.gel.cleaner;
+package com.gel.cleaner.iphone;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -14,8 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.gel.cleaner.iphone.AppleDeviceSpec;
-import com.gel.cleaner.iphone.AppleSpecs;
+import com.gel.cleaner.base.AppleSpecProvider;
+import com.gel.cleaner.iphone.specs.AppleDeviceSpec;
 
 public class AppleDeviceInfoPeripheralsActivity extends Activity {
 
@@ -34,7 +34,7 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
         setContentView(scroll);
 
         // ---------------- LOAD SELECTED APPLE DEVICE ----------------
-        AppleDeviceSpec d = AppleSpecs.getSelected(this);
+        AppleDeviceSpec d = AppleSpecProvider.getSelectedDevice(this);
 
         if (d == null) {
             addError("❌ No Apple device selected");

@@ -260,8 +260,6 @@ private String  welcomeLang  = "EN";
 // ------------------------------------------------------------
 private void showWelcomePopup() {
 
-    runOnUiThread(() -> {
-
         AlertDialog.Builder b =
         new AlertDialog.Builder(MainActivity.this);
         
@@ -912,20 +910,39 @@ private void showAppleDeviceDeclarationPopup() {
 
     private void showAppleModelPicker(String type) {
 
-        String[] models = "iphone".equals(type)
-                ? new String[]{"iPhone 8","iPhone X","iPhone XR","iPhone 11",
-                "iPhone 12","iPhone 13","iPhone 14","iPhone 15"}
-                : new String[]{"iPad 7","iPad 8","iPad 9",
-                "iPad Air 4","iPad Air 5","iPad Pro 11","iPad Pro 12.9"};
+    String[] models = "iphone".equals(type)
+            ? new String[]{"iPhone 8","iPhone X","iPhone XR","iPhone 11",
+                           "iPhone 12","iPhone 13","iPhone 14","iPhone 15"}
+            : new String[]{"iPad 7","iPad 8","iPad 9",
+                           "iPad Air 4","iPad Air 5",
+                           "iPad Pro 11","iPad Pro 12.9"};
 
-        new AlertDialog.Builder(this)
-                .setTitle("Select model")
-                .setItems(models,(d,which)->{
-                    saveAppleDevice(type,models[which]);
-                    startActivity(new Intent(this,IPhoneLabsActivity.class));
-                })
-                .show();
-    }
+    new AlertDialog.Builder(this)
+            .setTitle("Select model")
+            .setItems(models, (d, which) -> {
+
+                // 1️⃣ Αποθήκευση
+                saveAppleDevice(type, models[which]);
+
+                // 2️⃣ Update κουμπιού
+                TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
+                if (btn != null) {
+                    btn.setText("🍎 " + type.toUpperCase(Locale.US)
+                                + " — " + models[which]);
+                }
+
+                // 3️⃣ Επιβεβαίωση
+                Toast.makeText(
+                        this,
+                        "Selected: " + models[which],
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                // 4️⃣ Κλείσε dialog
+                d.dismiss();
+            })
+            .show();
+}
 
     private void saveAppleDevice(String type,String model){
         SharedPreferences prefs =

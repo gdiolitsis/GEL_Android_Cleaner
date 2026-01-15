@@ -254,10 +254,11 @@ private void showWelcomePopup() {
     runOnUiThread(() -> {
 
         AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        MainActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+        new AlertDialog.Builder(
+                MainActivity.this,
+                androidx.appcompat.R.style.Theme_AppCompat_Dialog
+        );
+        
         b.setCancelable(true);
 
         // ================= ROOT =================

@@ -499,19 +499,19 @@ okBtn.setOnClickListener(v -> {
 }
 
 // =========================================================
-// PLATFORM SELECT — FINAL, BULLETPROOF
+// PLATFORM SELECT — FINAL, CLEAN
 // =========================================================
 private void showPlatformSelectPopup() {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        MainActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    MainActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
 
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
@@ -552,12 +552,12 @@ androidBtn.setBackground(bgAndroid);
 
 // 🔥 ίδιο ύψος, πιο “γεμάτο” πλάτος
 LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)
-        );
-lpBtn.setMargins(dp(4), dp(12), dp(4), 0);   // 🔥 μικρότερα margins
-androidBtn.setLayoutParams(lpBtn);
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
+    lpBtn.setMargins(dp(4), dp(12), dp(4), 0);
+    androidBtn.setLayoutParams(lpBtn);
 
 // 🔒 μην κόβεται ποτέ το text
 androidBtn.setSingleLine(false);
@@ -586,61 +586,37 @@ bgApple.setStroke(dp(3), 0xFFFFD700);
 appleBtn.setBackground(bgApple);
 
 LinearLayout.LayoutParams lpBtn2 =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)
-        );
-lpBtn2.setMargins(dp(4), dp(12), dp(4), 0);  // 🔥 μικρότερα margins
-appleBtn.setLayoutParams(lpBtn2);
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
+    lpBtn2.setMargins(dp(4), dp(12), dp(4), 0);
+    appleBtn.setLayoutParams(lpBtn2);
 
-// 🔒 μην κόβεται ποτέ το text
-appleBtn.setSingleLine(false);
-appleBtn.setMaxLines(2);
-appleBtn.setEllipsize(null);
+    // ---------------- ADD ----------------
+    box.addView(androidBtn);
+    box.addView(appleBtn);
 
-        // ---------------- ADD ----------------
-        box.addView(androidBtn);
-        box.addView(appleBtn);
+    b.setView(box);
+    final AlertDialog d = b.create();
 
-        b.setView(box);
-        final AlertDialog d = b.create();
+    if (d.getWindow()!=null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
 
-        if (d.getWindow()!=null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
+    d.show();
 
-        // 🔒 πάντα stop TTS όταν κλείνει
-        d.setOnDismissListener(dialog -> {
-            try {
-                if (tts != null && tts[0] != null) tts[0].stop();
-            } catch (Throwable ignore) {}
-        });
+// ---------------- ACTIONS ----------------
+    androidBtn.setOnClickListener(v -> {
+        savePlatform("android");
+        applyAndroidModeUI();   // μένουμε στην ίδια activity
+        d.dismiss();
+    });
 
-        d.show();
-
-        // ---------------- ACTIONS ----------------
-androidBtn.setOnClickListener(v -> {
-    savePlatform("android");
-
-    Intent i = new Intent(v.getContext(), MainActivity.class);
-    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-             | Intent.FLAG_ACTIVITY_NEW_TASK
-             | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
-    v.getContext().startActivity(i);
-    d.dismiss();
-});
-
-        appleBtn.setOnClickListener(v -> {
-    savePlatform("apple");   // γυρνάμε σε Apple mode
-
-    Intent i = new Intent(v.getContext(), MainActivity.class);
-    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-             | Intent.FLAG_ACTIVITY_NEW_TASK
-             | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
-    v.getContext().startActivity(i);
-    d.dismiss();
+    appleBtn.setOnClickListener(v -> {
+        savePlatform("apple");
+        applyAppleModeUI();     // μένουμε στην ίδια activity
+        d.dismiss();
     });
 }
 

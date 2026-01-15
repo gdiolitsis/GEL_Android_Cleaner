@@ -92,9 +92,17 @@
         android:theme="@style/Theme.GEL.DarkGold">
 
         <activity
-        android:name=".IPhoneLabsActivity"
-        android:exported="false"
-        android:theme="@style/Theme.GEL.DarkGold" />
+        android:name="com.gel.cleaner.iphone.AppleDeviceInfoInternalActivity"
+        android:exported="false" />
+
+        <activity
+        android:name="com.gel.cleaner.iphone.AppleDeviceInfoPeripheralsActivity"
+        android:exported="false" />
+
+         <activity
+         android:name=".IPhoneLabsActivity"
+         android:exported="false"
+         android:theme="@style/Theme.GEL.DarkGold" />
         
         <!-- MAIN -->
         <activity

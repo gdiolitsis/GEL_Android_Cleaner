@@ -131,12 +131,6 @@ public void onBackPressed() {
         return "apple".equals(prefs.getString(KEY_PLATFORM, "android"));
     }
 
-    private void savePlatform(String mode) {
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS, MODE_PRIVATE);
-        prefs.edit().putString(KEY_PLATFORM, mode).apply();
-    }
-
 @Override
 protected void onResume() {
     super.onResume();
@@ -421,34 +415,30 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
+okBtn.setTextSize(16f);   // ίδιο μέγεθος με τα άλλα κουμπιά
 
-// 🔥 αυτό έλειπε
-okBtn.setTextSize(16f);
+// --------------------------
+// STYLE
+// --------------------------
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF0F8A3B);
+okBg.setCornerRadius(dp(14));
+okBg.setStroke(dp(3), 0xFFFFD700);
+okBtn.setBackground(okBg);
 
-// 🔥 και αυτό για να είναι ΙΔΙΟ ύψος με το Mute
+// --------------------------
+// SIZE — ίδιο ύψος με Mute & Language box
+// --------------------------
 LinearLayout.LayoutParams lpOk =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(48)   // ίδιο με Mute & Language box
+                dp(48)   // 🔒 ΚΛΕΙΔΩΜΕΝΟ: ίδιο με controls
         );
 lpOk.setMargins(0, dp(16), 0, 0);
 okBtn.setLayoutParams(lpOk);
 
-        GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFF0F8A3B);
-        okBg.setCornerRadius(dp(14));
-        okBg.setStroke(dp(3), 0xFFFFD700);
-        okBtn.setBackground(okBg);
-        
-        LinearLayout.LayoutParams lpOk =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpOk.setMargins(0, dp(16), 0, 0);
-        okBtn.setLayoutParams(lpOk);
-
-        box.addView(okBtn);
+// --------------------------
+box.addView(okBtn);
 
         // ==========================
         // DIALOG
@@ -618,9 +608,9 @@ androidBtn.setOnClickListener(v -> {
 });
 
         appleBtn.setOnClickListener(v -> {
-    savePlatform("apple");
+    savePlatform("apple");   // γυρνάμε σε Apple mode
 
-    Intent i = new Intent(v.getContext(), AppleHomeActivity.class);
+    Intent i = new Intent(v.getContext(), MainActivity.class);
     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
              | Intent.FLAG_ACTIVITY_NEW_TASK
              | Intent.FLAG_ACTIVITY_CLEAR_TASK);

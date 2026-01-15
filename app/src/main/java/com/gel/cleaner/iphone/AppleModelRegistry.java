@@ -4,7 +4,7 @@ package com.gel.cleaner.iphone;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.gel.cleaner.iphone.specs.AppleDeviceSpec;
+import com.gel.cleaner.iphone.AppleDeviceSpec;
 
 public final class AppleModelRegistry {
 

@@ -3,6 +3,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.iphone.AppleDeviceInfoInternalActivity;
+import com.gel.cleaner.iphone.AppleDeviceInfoPeripheralsActivity;
 import com.gel.cleaner.base.*;
 
 import android.content.Context;

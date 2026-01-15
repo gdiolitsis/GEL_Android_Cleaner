@@ -30,6 +30,8 @@ import java.util.Locale;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
+        	
+        private boolean welcomeShown = false;
 
     // ==========================
     // STATE
@@ -134,6 +136,34 @@ public void onBackPressed() {
                 getSharedPreferences(PREFS, MODE_PRIVATE);
         prefs.edit().putString(KEY_PLATFORM, mode).apply();
     }
+
+@Override
+protected void onResume() {
+    super.onResume();
+
+    String mode = getSavedPlatform();   // "android" ή "apple"
+
+    if ("apple".equals(mode)) {
+        applyAppleModeUI();
+    } else {
+        applyAndroidModeUI();
+    }
+}
+
+// =========================================================
+// PLATFORM STORAGE
+// =========================================================
+private void savePlatform(String mode) {
+    getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .edit()
+            .putString("platform_mode", mode)
+            .apply();
+}
+
+private String getSavedPlatform() {
+    return getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .getString("platform_mode", "android"); // default = android
+}
 
     // =========================================================
     // TTS — WELCOME
@@ -384,20 +414,32 @@ private void showWelcomePopup() {
         controls.addView(langBox);
         box.addView(controls);
 
-        // ==========================
-        // OK BUTTON
-        // ==========================
-        Button okBtn = new Button(MainActivity.this);
-        okBtn.setText("OK");
-        okBtn.setAllCaps(false);
-        okBtn.setTextColor(0xFFFFFFFF);
+// ==========================
+// OK BUTTON
+// ==========================
+Button okBtn = new Button(MainActivity.this);
+okBtn.setText("OK");
+okBtn.setAllCaps(false);
+okBtn.setTextColor(0xFFFFFFFF);
+
+// 🔥 αυτό έλειπε
+okBtn.setTextSize(16f);
+
+// 🔥 και αυτό για να είναι ΙΔΙΟ ύψος με το Mute
+LinearLayout.LayoutParams lpOk =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(48)   // ίδιο με Mute & Language box
+        );
+lpOk.setMargins(0, dp(16), 0, 0);
+okBtn.setLayoutParams(lpOk);
 
         GradientDrawable okBg = new GradientDrawable();
         okBg.setColor(0xFF0F8A3B);
         okBg.setCornerRadius(dp(14));
         okBg.setStroke(dp(3), 0xFFFFD700);
         okBtn.setBackground(okBg);
-
+        
         LinearLayout.LayoutParams lpOk =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -473,59 +515,74 @@ private void showPlatformSelectPopup() {
         t.setPadding(0,0,0,dp(12));
         box.addView(t);
 
-        // =================================================
-        // 🤖 ANDROID "BUTTON" (TextView)
-        // =================================================
-        TextView androidBtn = new TextView(this);
-        androidBtn.setText("🤖  ANDROID DEVICE");
-        androidBtn.setTextColor(Color.WHITE);
-        androidBtn.setTextSize(16f);
-        androidBtn.setTypeface(null, Typeface.BOLD);
-        androidBtn.setGravity(Gravity.CENTER);
-        androidBtn.setPadding(dp(16), dp(12), dp(16), dp(12));
-        androidBtn.setClickable(true);
-        androidBtn.setFocusable(true);
+// =================================================
+// 🤖 ANDROID "BUTTON" (TextView)
+// =================================================
+TextView androidBtn = new TextView(this);
+androidBtn.setText("🤖  ANDROID DEVICE");
+androidBtn.setTextColor(Color.WHITE);
+androidBtn.setTextSize(16f);
+androidBtn.setTypeface(null, Typeface.BOLD);
+androidBtn.setGravity(Gravity.CENTER);
+androidBtn.setClickable(true);
+androidBtn.setFocusable(true);
 
-        GradientDrawable bgAndroid = new GradientDrawable();
-        bgAndroid.setColor(0xFF000000);
-        bgAndroid.setCornerRadius(dp(14));
-        bgAndroid.setStroke(dp(3), 0xFFFFD700);
-        androidBtn.setBackground(bgAndroid);
+// 🔥 λιγότερο padding = πιο φαρδύ οπτικά
+androidBtn.setPadding(dp(10), dp(14), dp(10), dp(14));
 
-        LinearLayout.LayoutParams lpBtn =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn.setMargins(0, dp(12), 0, 0);
-        androidBtn.setLayoutParams(lpBtn);
+GradientDrawable bgAndroid = new GradientDrawable();
+bgAndroid.setColor(0xFF000000);
+bgAndroid.setCornerRadius(dp(14));
+bgAndroid.setStroke(dp(3), 0xFFFFD700);
+androidBtn.setBackground(bgAndroid);
 
-        // =================================================
-        // 🍎 APPLE "BUTTON" (TextView)
-        // =================================================
-        TextView appleBtn = new TextView(this);
-        appleBtn.setText("🍎  APPLE DEVICE");
-        appleBtn.setTextColor(Color.WHITE);
-        appleBtn.setTextSize(16f);
-        appleBtn.setTypeface(null, Typeface.BOLD);
-        appleBtn.setGravity(Gravity.CENTER);
-        appleBtn.setPadding(dp(16), dp(12), dp(16), dp(12));
-        appleBtn.setClickable(true);
-        appleBtn.setFocusable(true);
+// 🔥 ίδιο ύψος, πιο “γεμάτο” πλάτος
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(72)
+        );
+lpBtn.setMargins(dp(4), dp(12), dp(4), 0);   // 🔥 μικρότερα margins
+androidBtn.setLayoutParams(lpBtn);
 
-        GradientDrawable bgApple = new GradientDrawable();
-        bgApple.setColor(0xFF000000);
-        bgApple.setCornerRadius(dp(14));
-        bgApple.setStroke(dp(3), 0xFFFFD700);
-        appleBtn.setBackground(bgApple);
+// 🔒 μην κόβεται ποτέ το text
+androidBtn.setSingleLine(false);
+androidBtn.setMaxLines(2);
+androidBtn.setEllipsize(null);
 
-        LinearLayout.LayoutParams lpBtn2 =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpBtn2.setMargins(0, dp(12), 0, 0);
-        appleBtn.setLayoutParams(lpBtn2);
+// =================================================
+// 🍎 APPLE "BUTTON" (TextView)
+// =================================================
+TextView appleBtn = new TextView(this);
+appleBtn.setText("🍎  APPLE DEVICE");
+appleBtn.setTextColor(Color.WHITE);
+appleBtn.setTextSize(16f);
+appleBtn.setTypeface(null, Typeface.BOLD);
+appleBtn.setGravity(Gravity.CENTER);
+appleBtn.setClickable(true);
+appleBtn.setFocusable(true);
+
+// 🔥 ίδιο padding με Android
+appleBtn.setPadding(dp(10), dp(14), dp(10), dp(14));
+
+GradientDrawable bgApple = new GradientDrawable();
+bgApple.setColor(0xFF000000);
+bgApple.setCornerRadius(dp(14));
+bgApple.setStroke(dp(3), 0xFFFFD700);
+appleBtn.setBackground(bgApple);
+
+LinearLayout.LayoutParams lpBtn2 =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(72)
+        );
+lpBtn2.setMargins(dp(4), dp(12), dp(4), 0);  // 🔥 μικρότερα margins
+appleBtn.setLayoutParams(lpBtn2);
+
+// 🔒 μην κόβεται ποτέ το text
+appleBtn.setSingleLine(false);
+appleBtn.setMaxLines(2);
+appleBtn.setEllipsize(null);
 
         // ---------------- ADD ----------------
         box.addView(androidBtn);
@@ -548,16 +605,29 @@ private void showPlatformSelectPopup() {
         d.show();
 
         // ---------------- ACTIONS ----------------
-        androidBtn.setOnClickListener(v -> {
-            savePlatform("android");
-            d.dismiss();
-        });
+androidBtn.setOnClickListener(v -> {
+    savePlatform("android");
+
+    Intent i = new Intent(v.getContext(), MainActivity.class);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+             | Intent.FLAG_ACTIVITY_NEW_TASK
+             | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+    v.getContext().startActivity(i);
+    d.dismiss();
+});
 
         appleBtn.setOnClickListener(v -> {
-            savePlatform("apple");
-            d.dismiss();
-            openAppleInternalPeripherals();
-        });
+    savePlatform("apple");
+
+    Intent i = new Intent(v.getContext(), AppleHomeActivity.class);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+             | Intent.FLAG_ACTIVITY_NEW_TASK
+             | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+    v.getContext().startActivity(i);
+    d.dismiss();
+});
     });
 }
 
@@ -567,6 +637,33 @@ private void showPlatformSelectPopup() {
     private void openAppleInternalPeripherals() {
     // ΜΗΝ ξανανοίγεις MainActivity
     applyAppleModeUI();
+}
+
+// =========================================================
+// ANDROID MODE UI FILTER
+// =========================================================
+private void applyAndroidModeUI() {
+
+    // ❌ Στο Android δεν θέλουμε το Device Declaration
+    hide(R.id.btnAppleDeviceDeclaration);
+
+    // ✅ Όλα τα άλλα Android κουμπιά μένουν κανονικά
+    show(R.id.section_system);
+    show(R.id.section_clean);
+    show(R.id.section_junk);
+    show(R.id.section_performance);
+
+    show(R.id.btnCpuRamLive);
+    show(R.id.btnCleanAll);
+    show(R.id.btnBrowserCache);
+    show(R.id.btnAppCache);
+
+    show(R.id.txtLogs);
+
+    show(R.id.btnDonate);
+    show(R.id.btnPhoneInfoInternal);
+    show(R.id.btnPhoneInfoPeripherals);
+    show(R.id.btnDiagnostics);
 }
 
     // =========================================================

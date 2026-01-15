@@ -80,9 +80,12 @@ public class MainActivity extends GELAutoActivityHook
         // ==========================
         // TTS INIT (ΠΡΩΤΑ!)
         // ==========================
-        tts[0] = new TextToSpeech(this, status ->
-                ttsReady[0] = (status == TextToSpeech.SUCCESS)
-        );
+        tts[0] = new TextToSpeech(this, status -> {
+    ttsReady[0] = (status == TextToSpeech.SUCCESS);
+    if (ttsReady[0]) {
+        speakWelcomeTTS();   // 🔥 μίλα μόλις γίνει READY
+    }
+});
 
         // 🔥 ALWAYS SHOW FLOW (once per launch)
         if (!startupFlowDone) {
@@ -303,24 +306,25 @@ private void showWelcomePopup() {
         // 🔕 MUTE BUTTON
         // ==========================
         Button muteBtn = new Button(MainActivity.this);
-        muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
-        muteBtn.setAllCaps(false);
-        muteBtn.setTextColor(0xFFFFFFFF);
+muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
+muteBtn.setAllCaps(false);
+muteBtn.setTextColor(0xFFFFFFFF);
+muteBtn.setTextSize(16f);   // 👈 ΕΔΩ
 
-        GradientDrawable muteBg = new GradientDrawable();
-        muteBg.setColor(0xFF444444);
-        muteBg.setCornerRadius(dp(12));
-        muteBg.setStroke(dp(2), 0xFFFFD700);
-        muteBtn.setBackground(muteBg);
+GradientDrawable muteBg = new GradientDrawable();
+muteBg.setColor(0xFF444444);
+muteBg.setCornerRadius(dp(12));
+muteBg.setStroke(dp(2), 0xFFFFD700);
+muteBtn.setBackground(muteBg);
 
         LinearLayout.LayoutParams lpMute =
-                new LinearLayout.LayoutParams(
-                        0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        1f
-                );
-        lpMute.setMargins(0, 0, dp(8), 0);
-        muteBtn.setLayoutParams(lpMute);
+        new LinearLayout.LayoutParams(
+                0,
+                dp(48),   // 🔒 ΣΤΑΘΕΡΟ ΥΨΟΣ — ίδιο με OK & Language box
+                1f
+        );
+lpMute.setMargins(0, 0, dp(8), 0);
+muteBtn.setLayoutParams(lpMute);
 
         muteBtn.setOnClickListener(v -> {
             welcomeMuted = !welcomeMuted;
@@ -334,6 +338,9 @@ private void showWelcomePopup() {
         // 🌐 LANGUAGE SPINNER
         // ==========================
         Spinner langSpinner = new Spinner(MainActivity.this);
+        
+        langSpinner.setMinimumHeight(0);
+langSpinner.setPadding(0, 0, 0, 0);
 
         ArrayAdapter<String> langAdapter =
                 new ArrayAdapter<>(
@@ -380,7 +387,7 @@ private void showWelcomePopup() {
         LinearLayout langBox = new LinearLayout(MainActivity.this);
         langBox.setOrientation(LinearLayout.HORIZONTAL);
         langBox.setGravity(Gravity.CENTER_VERTICAL);
-        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+        langBox.setPadding(dp(10), 0, dp(10), 0);
 
         GradientDrawable langBg = new GradientDrawable();
         langBg.setColor(0xFF1A1A1A);
@@ -397,11 +404,14 @@ private void showWelcomePopup() {
         lpLangBox.setMargins(dp(8), 0, 0, 0);
         langBox.setLayoutParams(lpLangBox);
 
-        langSpinner.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT
-                ));
+        LinearLayout.LayoutParams lpSpin =
+        new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f
+        );
+langSpinner.setLayoutParams(lpSpin);
+
         langBox.addView(langSpinner);
 
         controls.addView(muteBtn);
@@ -415,29 +425,26 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(16f);   // ίδιο μέγεθος με τα άλλα κουμπιά
+okBtn.setTextSize(16f);
 
-// --------------------------
-// STYLE
-// --------------------------
+// 🔴 Η ΔΙΟΡΘΩΣΗ
+okBtn.setGravity(Gravity.CENTER);
+okBtn.setPadding(dp(12), 0, dp(12), 0);
+
 GradientDrawable okBg = new GradientDrawable();
 okBg.setColor(0xFF0F8A3B);
 okBg.setCornerRadius(dp(14));
 okBg.setStroke(dp(3), 0xFFFFD700);
 okBtn.setBackground(okBg);
 
-// --------------------------
-// SIZE — ίδιο ύψος με Mute & Language box
-// --------------------------
 LinearLayout.LayoutParams lpOk =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(48)   // 🔒 ΚΛΕΙΔΩΜΕΝΟ: ίδιο με controls
+                dp(48)
         );
 lpOk.setMargins(0, dp(16), 0, 0);
 okBtn.setLayoutParams(lpOk);
 
-// --------------------------
 box.addView(okBtn);
 
         // ==========================

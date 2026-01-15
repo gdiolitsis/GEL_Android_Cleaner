@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 public final class AppleModelRegistry {
 
     private static final Map<String, AppleDeviceSpec> DB = new HashMap<>();

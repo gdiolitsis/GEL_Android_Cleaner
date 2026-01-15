@@ -135,7 +135,9 @@ private void startPlatformFlow() {
     private boolean isAppleMode() {
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    return "apple".equals(prefs.getString("platform_mode", "none"));
+    return "apple".equals(
+            prefs.getString("platform_mode", "none")
+    );
 }
 
 @Override
@@ -724,57 +726,91 @@ private void applyAndroidModeUI() {
         }
     }
 
-    // =========================================================
-    // BUTTONS
-    // =========================================================
-    private void setupButtons() {
+// =========================================================
+// BUTTONS — PLATFORM AWARE
+// =========================================================
+private void setupButtons() {
 
-        bind(R.id.btnAppleDeviceDeclaration,
-                this::showAppleDeviceDeclarationPopup);
+    bind(R.id.btnAppleDeviceDeclaration,
+            this::showAppleDeviceDeclarationPopup);
 
-        bind(R.id.btnPhoneInfoInternal,
-                () -> startActivity(new Intent(this, DeviceInfoInternalActivity.class)));
-
-        bind(R.id.btnPhoneInfoPeripherals,
-                () -> startActivity(new Intent(this, DeviceInfoPeripheralsActivity.class)));
-
-        bind(R.id.btnCpuRamLive,
-                () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
-
-        bind(R.id.btnCleanAll,
-                () -> GELCleaner.deepClean(this,this));
-
-        bind(R.id.btnBrowserCache,
-                this::showBrowserPicker);
-
-        View appCache = findViewById(R.id.btnAppCache);
-        if(appCache!=null){
-            appCache.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(this, AppListActivity.class));
-                } catch (Exception e) {
-                    Toast.makeText(this,"Cannot open App List",Toast.LENGTH_SHORT).show();
-                }
-            });
+    // ==========================
+    // 📱 INTERNAL INFO
+    // ==========================
+    bind(R.id.btnPhoneInfoInternal, () -> {
+        if (isAppleMode()) {
+            startActivity(new Intent(
+                    this,
+                    AppleDeviceInfoInternalActivity.class
+            ));
+        } else {
+            startActivity(new Intent(
+                    this,
+                    DeviceInfoInternalActivity.class
+            ));
         }
+    });
 
-        bind(R.id.btnDiagnostics,
-                () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
+    // ==========================
+    // 🔌 PERIPHERALS INFO
+    // ==========================
+    bind(R.id.btnPhoneInfoPeripherals, () -> {
+        if (isAppleMode()) {
+            startActivity(new Intent(
+                    this,
+                    AppleDeviceInfoPeripheralsActivity.class
+            ));
+        } else {
+            startActivity(new Intent(
+                    this,
+                    DeviceInfoPeripheralsActivity.class
+            ));
+        }
+    });
+
+    // ==========================
+    // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
+    // ==========================
+    bind(R.id.btnCpuRamLive,
+            () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
+
+    bind(R.id.btnCleanAll,
+            () -> GELCleaner.deepClean(this,this));
+
+    bind(R.id.btnBrowserCache,
+            this::showBrowserPicker);
+
+    View appCache = findViewById(R.id.btnAppCache);
+    if(appCache!=null){
+        appCache.setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(this, AppListActivity.class));
+            } catch (Exception e) {
+                Toast.makeText(this,"Cannot open App List",Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void bind(int id, Runnable fn){
-        View b = findViewById(id);
-        if(b!=null){
-            b.setOnClickListener(v -> {
-                try { fn.run(); }
-                catch(Throwable t){
-                    Toast.makeText(this,
-                            "Action failed: "+t.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+    bind(R.id.btnDiagnostics,
+            () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
+}
+
+// =========================================================
+// BIND HELPER
+// =========================================================
+private void bind(int id, Runnable fn){
+    View b = findViewById(id);
+    if(b!=null){
+        b.setOnClickListener(v -> {
+            try { fn.run(); }
+            catch(Throwable t){
+                Toast.makeText(this,
+                        "Action failed: "+t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+}
 
 // =========================================================
 // 🍎 APPLE DEVICE DECLARATION

@@ -1,4 +1,4 @@
-package com.gel.cleaner.iphone;
+σεpackage com.gel.cleaner.iphone;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -208,6 +208,47 @@ public final class AppleModelRegistry {
         ));
     }
 
+// =========================================================
+// iPad Pro 11" (M2)
+// =========================================================
+DB.put("iPad Pro 11", new AppleDeviceSpec(
+        // ---- internals ----
+        "M2", "Octa-core", "8 GB", "11\" Liquid Retina",
+        "Wi-Fi 6E", "Bluetooth 5.3", "Face ID",
+        "USB-C / Thunderbolt", "Fast charge", "iPadOS 17",
+
+        // ---- camera ----
+        "12 MP", "10 MP Ultra-Wide", "—", "12 MP", "4K@60fps",
+
+        // ---- modem ----
+        "Qualcomm 5G", true, true,
+        "1", true,
+
+        // ---- connectivity ----
+        true, true,
+
+        // ---- sensors ----
+        "GPS, GLONASS", true, true,
+        true, true,
+
+        // ---- audio ----
+        "Quad speakers", true,
+        "Dual mic", false,
+
+        // ---- ports ----
+        "Thunderbolt 4", true,
+        true,
+
+        // ---- biometrics ----
+        true, false,
+
+        // ---- display ----
+        "USB-C DisplayPort", true,
+
+        // ---- storage ----
+        "128 / 256 / 512 / 1TB / 2TB"
+));
+    
     public static AppleDeviceSpec get(String model) {
         AppleDeviceSpec s = DB.get(model);
         return s != null ? s : AppleDeviceSpec.unknown();

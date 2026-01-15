@@ -2,7 +2,7 @@
 // AppleSpecProvider.java — Apple Hardcoded Bridge (Reflection Safe)
 // NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου. Copy-paste whole file.
 
-package com.gel.cleaner.iphone;
+package com.gel.cleaner.base;
 
 import android.content.Context;
 import android.content.SharedPreferences;

@@ -15,7 +15,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.gel.cleaner.base.AppleSpecProvider;
-import com.gel.cleaner.iphone.specs.AppleDeviceSpec;
+import com.gel.cleaner.iphone.AppleDeviceSpec;
 
 public class AppleDeviceInfoPeripheralsActivity extends Activity {
 

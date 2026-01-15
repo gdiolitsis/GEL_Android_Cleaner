@@ -503,8 +503,6 @@ okBtn.setOnClickListener(v -> {
 // =========================================================
 private void showPlatformSelectPopup() {
 
-    runOnUiThread(() -> {
-
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         MainActivity.this,
@@ -643,7 +641,6 @@ androidBtn.setOnClickListener(v -> {
 
     v.getContext().startActivity(i);
     d.dismiss();
-});
     });
 }
 

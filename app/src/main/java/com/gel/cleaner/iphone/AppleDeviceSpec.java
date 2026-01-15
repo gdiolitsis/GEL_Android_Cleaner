@@ -1,3 +1,5 @@
+package com.gel.cleaner.iphone;
+
 public class AppleDeviceSpec {
 
     public String soc;
@@ -30,11 +32,12 @@ public class AppleDeviceSpec {
         this.os = os;
     }
 
+    // ✅ ΜΟΝΟ αυτή η unknown
     public static AppleDeviceSpec unknown() {
         return new AppleDeviceSpec(
-            "Unknown", "Unknown", "Unknown", "Unknown",
-            "Unknown", "Unknown", "Unknown",
-            "Unknown", "Unknown", "Unknown", "Unknown"
+                "Unknown", "Unknown", "Unknown", "Unknown",
+                "Unknown", "Unknown", "Unknown",
+                "Unknown", "Unknown", "Unknown", "Unknown"
         );
     }
 }

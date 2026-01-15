@@ -102,19 +102,22 @@ public class DiagnosisMenuActivity extends GELAutoActivityHook
             root.addView(manualBtn);
         }
 
-        // ============================================================
-        // iPHONE DIAGNOSIS (LABS)
-        // (Εμφανίζεται ΠΑΝΤΑ — Android & Apple)
-        // ============================================================
-        root.addView(sectionLabel(getString(R.string.auto_diagnosis)));
+// ============================================================
+// iPHONE DIAGNOSIS (LABS)
+// (Εμφανίζεται ΜΟΝΟ σε Apple mode)
+// ============================================================
+if (isAppleMode) {
 
-        View iphoneBtn = makeBlockButton(
-                getString(R.string.gel_phone_diag_title),
-                getString(R.string.gel_phone_diag_desc)
-        );
-        iphoneBtn.setOnClickListener(v ->
-                startActivity(new Intent(this, IPhoneLabsActivity.class)));
-        root.addView(iphoneBtn);
+    root.addView(sectionLabel(getString(R.string.auto_diagnosis)));
+
+    View iphoneBtn = makeBlockButton(
+            getString(R.string.gel_phone_diag_title),
+            getString(R.string.gel_phone_diag_desc)
+    );
+    iphoneBtn.setOnClickListener(v ->
+            startActivity(new Intent(this, IPhoneLabsActivity.class)));
+    root.addView(iphoneBtn);
+}
 
         // ============================================================
         // SERVICE REPORT

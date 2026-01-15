@@ -70,7 +70,7 @@ Android Manual Tests · Apple Devices Labs · Export Report
 <string name="manual_tests">ANDROID MANUAL TESTS</string>
 
 <!-- iPHONE -->
-<string name="auto_diagnosis">GEL Apple Devices Diagnosis</string>
+<string name="auto_diagnosis">APPLE DEVICES DIAGNOSIS</string>
     
 <!-- SERVICE -->
 <string name="service_report">SERVICE REPORT</string>
@@ -90,7 +90,7 @@ Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
 <!-- APPLE DEVICES LABS BUTTON  -->
 <!-- ================================================= -->
 
-<string name="gel_phone_diag_title">Apple Devices Diagnosis</string>
+<string name="gel_phone_diag_title">GEL Apple Devices Diagnosis</string>
 
 <string name="gel_phone_diag_desc">
 Laboratory diagnostics for Apple Devices using system files

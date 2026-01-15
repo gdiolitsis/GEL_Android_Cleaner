@@ -70,7 +70,7 @@ Android Χειροκίνητα Tests · Apple Devices Labs · Εξαγωγή Α�
     <string name="manual_tests">ΧΕΙΡΟΚΙΝΗΤΑ TESTS ANDROID</string>
 
     <!-- APPLE DEVICES -->
-    <string name="auto_diagnosis">Διάγνωση Apple Devices</string>
+    <string name="auto_diagnosis">ΔΙΑΓΝΩΣΗ ΣΥΣΚΕΥΩΝ APPLE</string>
 
     <!-- SERVICE -->
     <string name="service_report">ΑΝΑΦΟΡΑ SERVICE</string>
@@ -90,7 +90,7 @@ Android Χειροκίνητα Tests · Apple Devices Labs · Εξαγωγή Α�
     <!-- APPLE DEVICES LABS BUTTON -->
     <!-- ================================================= -->
 
-    <string name="gel_phone_diag_title">GEL Διάγνωση Apple Devices</string>
+    <string name="gel_phone_diag_title">GEL Διάγνωση Συσκευών Apple</string>
 
     <string name="gel_phone_diag_desc">
 Εργαστηριακή διάγνωση Apple Devices μέσω αρχείων συστήματος

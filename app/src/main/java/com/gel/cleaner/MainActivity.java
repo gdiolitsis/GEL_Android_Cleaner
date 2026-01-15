@@ -125,8 +125,17 @@ public void onBackPressed() {
     // PLATFORM FLOW
     // =========================================================
     private void startPlatformFlow() {
-        showWelcomePopup();
+
+    String mode = getSavedPlatform();   // "android" ή "apple"
+
+    // Αν έχει ήδη επιλεγεί platform → ΜΗ δείχνεις welcome
+    if ("android".equals(mode) || "apple".equals(mode)) {
+        return;
     }
+
+    // Αλλιώς, πρώτη φορά → δείξε welcome
+    showWelcomePopup();
+}
 
     private boolean isAppleMode() {
         SharedPreferences prefs =

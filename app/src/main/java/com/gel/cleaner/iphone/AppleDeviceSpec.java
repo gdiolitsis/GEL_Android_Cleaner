@@ -251,34 +251,22 @@ public AppleDeviceSpec(
     );
 }
     
-    // =========================================================
-    // UNKNOWN
-    // =========================================================
-    public static AppleDeviceSpec unknown() {
-        return new AppleDeviceSpec(
-                "Unknown","Unknown","Unknown","Unknown",
-                "Unknown","Unknown","Unknown",
-                "Unknown","Unknown","Unknown",
-
-                "Unknown","Unknown","Unknown","Unknown","Unknown",
-
-                "Unknown",false,false,
-                "Unknown",false,
-
-                false,false,
-
-                "Unknown",false,false,
-                false,false,
-
-                "Unknown",false,
-                "Unknown",false,
-
-                "Unknown",false,
-                false,
-
-                "Unknown",false,
-
-                "Unknown"
+// =========================================================
+// UNKNOWN
+// =========================================================
+public static AppleDeviceSpec unknown() {
+    return new AppleDeviceSpec(
+            "Unknown",   // soc
+            "Unknown",   // cpu
+            "Unknown",   // ram
+            "Unknown",   // screen
+            "Unknown",   // camera
+            "Unknown",   // bluetooth
+            "Unknown",   // wifi
+            "Unknown",   // biometrics
+            "Unknown",   // port
+            "Unknown",   // charging
+            "Unknown"    // os
         );
     }
 }

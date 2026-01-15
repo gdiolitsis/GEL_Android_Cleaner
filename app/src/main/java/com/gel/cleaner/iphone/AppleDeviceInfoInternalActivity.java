@@ -1,9 +1,9 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // AppleDeviceInfoInternalActivity — CARBON INFO EDITION
+
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -13,16 +13,9 @@ import com.gel.cleaner.R;
 import com.gel.cleaner.base.AppleSpecProvider;
 import com.gel.cleaner.iphone.specs.AppleDeviceSpec;
 
-/**
- * Στόχος:
- * - ΚΑΡΜΠΟΝ στις ΠΛΗΡΟΦΟΡΙΕΣ του Android Internal
- * - Όχι καρμπον κώδικα, καρμπον ΠΕΔΙΑ/SECTIONS
- * - Hardcoded Apple δεδομένα από AppleDeviceSpec
- * - Ό,τι δεν υπάρχει σε specs → δεν εμφανίζεται
- */
 public class AppleDeviceInfoInternalActivity extends Activity {
 
-    // -------- UI roots (ίδια λογική με Android Internal) --------
+    // -------- UI roots (ίδια ids με Android layout) --------
     private LinearLayout secSystem;
     private LinearLayout secOS;
     private LinearLayout secCPU;
@@ -53,7 +46,6 @@ public class AppleDeviceInfoInternalActivity extends Activity {
 
         bindViews();
         d = AppleSpecProvider.getSelectedDevice(this);
-
         populateAll();
     }
 
@@ -61,16 +53,19 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     // BIND
     // ============================================================
     private void bindViews() {
+
+        // Sections (όλα ΥΠΑΡΧΟΥΝ στο Android layout)
         secSystem       = findViewById(R.id.section_system);
-        secOS           = findViewById(R.id.section_android); // reuse slot → iOS
+        secOS           = findViewById(R.id.section_android); // reuse → iOS
         secCPU          = findViewById(R.id.section_cpu);
         secGPU          = findViewById(R.id.section_gpu);
         secThermal      = findViewById(R.id.section_thermal);
-        secMetal        = findViewById(R.id.section_vulkan);  // reuse slot → Metal
+        secMetal        = findViewById(R.id.section_vulkan);  // reuse → Metal
         secRAM          = findViewById(R.id.section_ram);
         secStorage      = findViewById(R.id.section_storage);
         secConnectivity = findViewById(R.id.section_connectivity);
 
+        // Outputs
         outSystem       = findViewById(R.id.txtSystemContent);
         outOS           = findViewById(R.id.txtAndroidContent); // reuse → iOS
         outCPU          = findViewById(R.id.txtCpuContent);
@@ -125,7 +120,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
                 opt("API", "Metal")
         );
 
-        // -------- 5) THERMAL (estimated) --------
+        // -------- 5) THERMAL --------
         if (has(d.thermalNote)) {
             show(secThermal);
             outThermal.setText(
@@ -170,21 +165,10 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     // ============================================================
     // HELPERS — ίδια φιλοσοφία log styles
     // ============================================================
-    private String logInfo(String k, String v) {
-        return "• " + k + ": " + v + "\n";
-    }
-
-    private String logOk(String k, String v) {
-        return "• " + k + ": " + v + "\n";
-    }
-
-    private String logWarn(String k, String v) {
-        return "• " + k + ": " + v + "\n";
-    }
-
-    private String logError(String k, String v) {
-        return "• " + k + ": " + v + "\n";
-    }
+    private String logInfo(String k, String v)  { return "• " + k + ": " + v + "\n"; }
+    private String logOk(String k, String v)    { return "• " + k + ": " + v + "\n"; }
+    private String logWarn(String k, String v)  { return "• " + k + ": " + v + "\n"; }
+    private String logError(String k, String v) { return "• " + k + ": " + v + "\n"; }
 
     private String opt(String k, String v) {
         if (!has(v)) return "";

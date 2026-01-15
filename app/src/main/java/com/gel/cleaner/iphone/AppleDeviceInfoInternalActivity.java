@@ -1,54 +1,74 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceInfoInternalActivity.java — APPLE INTERNAL PRO v1.0 (CARBON UI)
-// ============================================================
-// NOTE: Πάντα δίνω ΟΛΟΚΛΗΡΟ το αρχείο έτοιμο για copy-paste (χωρίς μπλα-μπλα / χωρίς ερωτήσεις)
+// AppleDeviceInfoInternalActivity — CARBON COPY of DeviceInfoInternalActivity (APPLE HARDCODED)
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.TypedValue;
-import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
-import android.graphics.drawable.ColorDrawable;
+import androidx.appcompat.app.AlertDialog;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import com.gel.cleaner.base.GELAutoActivityHook;
+import com.gel.cleaner.iphone.AppleDeviceSpec;
+import com.gel.cleaner.iphone.AppleSpecProvider;
 
-public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
-        implements GELFoldableCallback {
+import java.util.Locale;
 
-    private static final String NEON_GREEN = "#39FF14";
+public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook {
 
-    private GELFoldableDetector foldDetector;
-    private GELFoldableUIManager foldUI;
+    // =========================
+    // UI
+    // =========================
+    private TextView txtTitleDevice;
+
+    private LinearLayout headerSystem, headerCpu, headerGpu, headerRam, headerStorage,
+            headerThermal, headerVulkan, headerConnectivity, headerAndroid;
+
+    private TextView iconSystem, iconCpu, iconGpu, iconRam, iconStorage,
+            iconThermal, iconVulkan, iconConnectivity, iconAndroid;
+
+    private LinearLayout contentSystem, contentCpu, contentGpu, contentRam, contentStorage,
+            contentThermal, contentVulkan, contentConnectivity, contentAndroid;
+
+    private TextView txtSystemContent, txtCpuContent, txtGpuContent, txtRamContent, txtStorageContent,
+            txtThermalContent, txtVulkanContent, txtConnectivityContent, txtAndroidContent;
 
     private TextView[] allContents;
     private TextView[] allIcons;
 
-    // ============================================================
-    // PREFS (SAME AS MainActivity)
-    // ============================================================
-    private static final String PREFS = "gel_prefs";
-    private static final String KEY_PLATFORM = "platform_mode"; // android | apple
-    private static final String KEY_APPLE_TYPE  = "apple_device_type";   // iphone | ipad
-    private static final String KEY_APPLE_MODEL = "apple_device_model";  // e.g. "iPhone 15"
+    // =========================
+    // APPLE DEVICE
+    // =========================
+    private AppleDeviceSpec d;
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
+    // =========================
+    // COLORS (CARBON)
+    // =========================
+    private static final String NEON_GREEN = "#39FF14";
+
+    // =========================
+    // DIMEN
+    // =========================
+    private int dp(float v) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                v,
+                getResources().getDisplayMetrics()
+        );
     }
 
     @Override
@@ -56,178 +76,379 @@ public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);
 
-        foldUI = new GELFoldableUIManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
+        // =========================
+        // LOAD SELECTED APPLE DEVICE
+        // =========================
+        d = AppleSpecProvider.getSelectedDevice(this);
 
-        // Title
-        TextView title = findViewById(R.id.txtTitleDevice);
-        if (title != null) {
-            // κρατάμε ίδιο string, αλλά Apple context
-            title.setText("🍎 Apple — Internal Info");
+        // =========================
+        // BIND VIEWS (SAME IDS)
+        // =========================
+        txtTitleDevice = findViewById(R.id.txtTitleDevice);
+
+        headerSystem = findViewById(R.id.headerSystem);
+        headerCpu = findViewById(R.id.headerCpu);
+        headerGpu = findViewById(R.id.headerGpu);
+        headerRam = findViewById(R.id.headerRam);
+        headerStorage = findViewById(R.id.headerStorage);
+        headerThermal = findViewById(R.id.headerThermal);
+        headerVulkan = findViewById(R.id.headerVulkan);
+        headerConnectivity = findViewById(R.id.headerConnectivity);
+        headerAndroid = findViewById(R.id.headerAndroid);
+
+        iconSystem = findViewById(R.id.iconSystemToggle);
+        iconCpu = findViewById(R.id.iconCpuToggle);
+        iconGpu = findViewById(R.id.iconGpuToggle);
+        iconRam = findViewById(R.id.iconRamToggle);
+        iconStorage = findViewById(R.id.iconStorageToggle);
+        iconThermal = findViewById(R.id.iconThermalToggle);
+        iconVulkan = findViewById(R.id.iconVulkanToggle);
+        iconConnectivity = findViewById(R.id.iconConnectivityToggle);
+        iconAndroid = findViewById(R.id.iconAndroidToggle);
+
+        // NOTE: στο original activity_device_info_internal τα content containers είναι τα parent των TextView.
+        // Εδώ το κρατάμε όπως στο Android activity: toggle με βάση το TextView content (accordion).
+        txtSystemContent = findViewById(R.id.txtSystemContent);
+        txtCpuContent = findViewById(R.id.txtCpuContent);
+        txtGpuContent = findViewById(R.id.txtGpuContent);
+        txtRamContent = findViewById(R.id.txtRamContent);
+        txtStorageContent = findViewById(R.id.txtStorageContent);
+        txtThermalContent = findViewById(R.id.txtThermalContent);
+        txtVulkanContent = findViewById(R.id.txtVulkanContent);
+        txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
+        txtAndroidContent = findViewById(R.id.txtAndroidContent);
+
+        // =========================
+        // TITLE (APPLE)
+        // =========================
+        if (txtTitleDevice != null) {
+            if (d != null && d.model != null && !d.model.trim().isEmpty()) {
+                txtTitleDevice.setText("🍎 " + d.model);
+            } else {
+                txtTitleDevice.setText("🍎 Apple Device — Not Selected");
+            }
+            txtTitleDevice.setTextColor(Color.WHITE);
+            txtTitleDevice.setTypeface(null, Typeface.BOLD);
+            txtTitleDevice.setGravity(Gravity.CENTER);
         }
 
-        // CONTENT (SAME IDs / SAME XML)
-        TextView txtSystemContent       = findViewById(R.id.txtSystemContent);
-        TextView txtAndroidContent      = findViewById(R.id.txtAndroidContent);
-        TextView txtCpuContent          = findViewById(R.id.txtCpuContent);
-        TextView txtGpuContent          = findViewById(R.id.txtGpuContent);
-        TextView txtThermalContent      = findViewById(R.id.txtThermalContent);
-        TextView txtVulkanContent       = findViewById(R.id.txtVulkanContent);
-        TextView txtRamContent          = findViewById(R.id.txtRamContent);
-        TextView txtStorageContent      = findViewById(R.id.txtStorageContent);
-        TextView txtConnectivityContent = findViewById(R.id.txtConnectivityContent);
+        // =========================
+        // INITIAL STATE (ALL CLOSED)
+        // =========================
+        if (txtSystemContent != null) txtSystemContent.setVisibility(View.GONE);
+        if (txtCpuContent != null) txtCpuContent.setVisibility(View.GONE);
+        if (txtGpuContent != null) txtGpuContent.setVisibility(View.GONE);
+        if (txtRamContent != null) txtRamContent.setVisibility(View.GONE);
+        if (txtStorageContent != null) txtStorageContent.setVisibility(View.GONE);
+        if (txtThermalContent != null) txtThermalContent.setVisibility(View.GONE);
+        if (txtVulkanContent != null) txtVulkanContent.setVisibility(View.GONE);
+        if (txtConnectivityContent != null) txtConnectivityContent.setVisibility(View.GONE);
+        if (txtAndroidContent != null) txtAndroidContent.setVisibility(View.GONE);
 
-        // ICONS (SAME IDs / SAME XML)
-        TextView iconSystem       = findViewById(R.id.iconSystemToggle);
-        TextView iconAndroid      = findViewById(R.id.iconAndroidToggle);
-        TextView iconCpu          = findViewById(R.id.iconCpuToggle);
-        TextView iconGpu          = findViewById(R.id.iconGpuToggle);
-        TextView iconThermal      = findViewById(R.id.iconThermalToggle);
-        TextView iconVulkan       = findViewById(R.id.iconVulkanToggle);
-        TextView iconRam          = findViewById(R.id.iconRamToggle);
-        TextView iconStorage      = findViewById(R.id.iconStorageToggle);
-        TextView iconConnectivity = findViewById(R.id.iconConnectivityToggle);
+        if (iconSystem != null) iconSystem.setText("＋");
+        if (iconCpu != null) iconCpu.setText("＋");
+        if (iconGpu != null) iconGpu.setText("＋");
+        if (iconRam != null) iconRam.setText("＋");
+        if (iconStorage != null) iconStorage.setText("＋");
+        if (iconThermal != null) iconThermal.setText("＋");
+        if (iconVulkan != null) iconVulkan.setText("＋");
+        if (iconConnectivity != null) iconConnectivity.setText("＋");
+        if (iconAndroid != null) iconAndroid.setText("＋");
 
+        // =========================
+        // ARRAYS (CARBON)
+        // =========================
         allContents = new TextView[]{
-                txtSystemContent, txtAndroidContent, txtCpuContent, txtGpuContent,
-                txtThermalContent, txtVulkanContent, txtRamContent,
-                txtStorageContent, txtConnectivityContent
+                txtSystemContent,
+                txtCpuContent,
+                txtGpuContent,
+                txtRamContent,
+                txtStorageContent,
+                txtThermalContent,
+                txtVulkanContent,
+                txtConnectivityContent,
+                txtAndroidContent
         };
 
         allIcons = new TextView[]{
-                iconSystem, iconAndroid, iconCpu, iconGpu, iconThermal,
-                iconVulkan, iconRam, iconStorage, iconConnectivity
+                iconSystem,
+                iconCpu,
+                iconGpu,
+                iconRam,
+                iconStorage,
+                iconThermal,
+                iconVulkan,
+                iconConnectivity,
+                iconAndroid
         };
 
-        // Default closed
-        for (TextView c : allContents) if (c != null) c.setVisibility(View.GONE);
-        for (TextView i : allIcons) if (i != null) i.setText("＋");
+        // =========================
+        // SET SECTION TEXTS (APPLE HARDCODED)
+        // =========================
+        setNeonSectionText(txtSystemContent, buildSystemInfo());
+        setNeonSectionText(txtCpuContent, buildCpuInfo());
+        setNeonSectionText(txtGpuContent, buildGpuInfo());
+        setNeonSectionText(txtRamContent, buildRamInfo());
+        setNeonSectionText(txtStorageContent, buildStorageInfo());
+        setNeonSectionText(txtThermalContent, buildThermalInternalReport());
+        setNeonSectionText(txtVulkanContent, buildVulkanInfo());
+        setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
+        setNeonSectionText(txtAndroidContent, buildAndroidInfo()); // θα δείχνει "N/A" για Apple
 
-        // Load selected Apple device spec (hardcoded registry)
-        Object spec = getSelectedAppleSpec();
-
-        // Build content (NEON values same engine)
-        if (txtSystemContent != null)
-            setNeonSectionText(txtSystemContent, buildAppleSystemInfo(spec));
-        if (txtAndroidContent != null)
-            setNeonSectionText(txtAndroidContent, buildAppleOsInfo(spec));
-        if (txtCpuContent != null)
-            setNeonSectionText(txtCpuContent, buildAppleCpuInfo(spec));
-        if (txtGpuContent != null)
-            setNeonSectionText(txtGpuContent, buildAppleGpuInfo(spec));
-        if (txtThermalContent != null)
-            setNeonSectionText(txtThermalContent, buildAppleThermalInfo(spec));
-        if (txtVulkanContent != null)
-            setNeonSectionText(txtVulkanContent, buildAppleMetalInfo(spec));
-        if (txtRamContent != null)
-            setNeonSectionText(txtRamContent, buildAppleRamInfo(spec));
-        if (txtStorageContent != null)
-            setNeonSectionText(txtStorageContent, buildAppleStorageInfo(spec));
-        if (txtConnectivityContent != null)
-            setNeonSectionText(txtConnectivityContent, buildAppleConnectivityInfo(spec));
-
-        // Expanders (SAME headers / SAME behavior)
-        setupSection(findViewById(R.id.headerSystem), txtSystemContent, iconSystem);
-        setupSection(findViewById(R.id.headerAndroid), txtAndroidContent, iconAndroid);
-        setupSection(findViewById(R.id.headerCpu), txtCpuContent, iconCpu);
-        setupSection(findViewById(R.id.headerGpu), txtGpuContent, iconGpu);
-        setupSection(findViewById(R.id.headerThermal), txtThermalContent, iconThermal);
-        setupSection(findViewById(R.id.headerVulkan), txtVulkanContent, iconVulkan);
-        setupSection(findViewById(R.id.headerRam), txtRamContent, iconRam);
-        setupSection(findViewById(R.id.headerStorage), txtStorageContent, iconStorage);
-        setupSection(findViewById(R.id.headerConnectivity), txtConnectivityContent, iconConnectivity);
+        // =========================
+        // ACCORDION (CARBON)
+        // =========================
+        setupSection(headerSystem, txtSystemContent, iconSystem, 0);
+        setupSection(headerCpu, txtCpuContent, iconCpu, 1);
+        setupSection(headerGpu, txtGpuContent, iconGpu, 2);
+        setupSection(headerRam, txtRamContent, iconRam, 3);
+        setupSection(headerStorage, txtStorageContent, iconStorage, 4);
+        setupSection(headerThermal, txtThermalContent, iconThermal, 5);
+        setupSection(headerVulkan, txtVulkanContent, iconVulkan, 6);
+        setupSection(headerConnectivity, txtConnectivityContent, iconConnectivity, 7);
+        setupSection(headerAndroid, txtAndroidContent, iconAndroid, 8);
     }
 
     @Override
-    public void onPostureChanged(@NonNull Posture posture) {}
+    protected void onResume() {
+        super.onResume();
 
-    @Override
-    public void onScreenChanged(boolean isInner) {
-        if (foldUI != null) foldUI.applyUI(isInner);
-    }
+        // reload selection (αν άλλαξε από Device Declaration)
+        d = AppleSpecProvider.getSelectedDevice(this);
 
-    // ============================================================
-    // EXPANDER LOGIC WITH ANIMATION (CARBON COPY)
-    // ============================================================
-
-    private void setupSection(View header, final TextView content, final TextView icon) {
-        if (header == null || content == null || icon == null) return;
-        header.setOnClickListener(v -> toggleSection(content, icon));
-    }
-
-    private void toggleSection(TextView targetContent, TextView targetIcon) {
-
-        // Close all other sections
-        for (int i = 0; i < allContents.length; i++) {
-            TextView c = allContents[i];
-            TextView ic = allIcons[i];
-
-            if (c == null || ic == null) continue;
-
-            if (c != targetContent && c.getVisibility() == View.VISIBLE) {
-                animateCollapse(c);
-                ic.setText("＋");
+        if (txtTitleDevice != null) {
+            if (d != null && d.model != null && !d.model.trim().isEmpty()) {
+                txtTitleDevice.setText("🍎 " + d.model);
+            } else {
+                txtTitleDevice.setText("🍎 Apple Device — Not Selected");
             }
         }
 
-        // Toggle only selected section
-        if (targetContent.getVisibility() == View.VISIBLE) {
-            animateCollapse(targetContent);
-            targetIcon.setText("＋");
+        setNeonSectionText(txtSystemContent, buildSystemInfo());
+        setNeonSectionText(txtCpuContent, buildCpuInfo());
+        setNeonSectionText(txtGpuContent, buildGpuInfo());
+        setNeonSectionText(txtRamContent, buildRamInfo());
+        setNeonSectionText(txtStorageContent, buildStorageInfo());
+        setNeonSectionText(txtThermalContent, buildThermalInternalReport());
+        setNeonSectionText(txtVulkanContent, buildVulkanInfo());
+        setNeonSectionText(txtConnectivityContent, buildConnectivityInfo());
+        setNeonSectionText(txtAndroidContent, buildAndroidInfo());
+    }
+
+    // ============================================================
+    // SECTION TOGGLE (CARBON)
+    // ============================================================
+    private void setupSection(View header, TextView contentText, TextView icon, int index) {
+        if (header == null || contentText == null || icon == null) return;
+
+        header.setOnClickListener(v -> toggleSection(index));
+    }
+
+    private void toggleSection(int index) {
+
+        // close all others
+        if (allContents != null && allIcons != null) {
+            for (int i = 0; i < allContents.length; i++) {
+                if (i == index) continue;
+                if (allContents[i] != null && allContents[i].getVisibility() == View.VISIBLE) {
+                    animateCollapse(allContents[i]);
+                }
+                if (allIcons[i] != null) allIcons[i].setText("＋");
+            }
+        }
+
+        // toggle selected
+        TextView target = allContents[index];
+        TextView icon = allIcons[index];
+
+        if (target == null || icon == null) return;
+
+        boolean isOpen = (target.getVisibility() == View.VISIBLE);
+        if (isOpen) {
+            animateCollapse(target);
+            icon.setText("＋");
         } else {
-            animateExpand(targetContent);
-            targetIcon.setText("−");
+            animateExpand(target);
+            icon.setText("－");
         }
     }
 
-    private void animateExpand(final View v) {
-        v.post(() -> {
-            v.measure(
-                    View.MeasureSpec.makeMeasureSpec(((View) v.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            );
-
-            final int target = v.getMeasuredHeight();
-
-            v.getLayoutParams().height = 0;
-            v.setVisibility(View.VISIBLE);
-            v.setAlpha(0f);
-
-            v.animate()
-                    .alpha(1f)
-                    .setDuration(160)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        v.getLayoutParams().height = target;
-                        v.requestLayout();
-                    })
-                    .start();
-        });
+    private void animateExpand(View v) {
+        if (v == null) return;
+        v.setAlpha(0f);
+        v.setVisibility(View.VISIBLE);
+        v.animate()
+                .alpha(1f)
+                .setDuration(180)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .start();
     }
 
-    private void animateCollapse(final View v) {
-        if (v.getVisibility() != View.VISIBLE) return;
-
-        final int initial = v.getHeight();
-        v.setAlpha(1f);
-
+    private void animateCollapse(View v) {
+        if (v == null) return;
         v.animate()
                 .alpha(0f)
-                .setDuration(120)
+                .setDuration(160)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
-                .withEndAction(() -> {
-                    v.setVisibility(View.GONE);
-                    v.getLayoutParams().height = initial;
-                    v.setAlpha(1f);
-                    v.requestLayout();
-                })
+                .withEndAction(() -> v.setVisibility(View.GONE))
                 .start();
     }
 
     // ============================================================
-    // NEON VALUE COLOR ENGINE (CARBON COPY)
+    // APPLE INTERNAL SECTIONS (HARDCODED VIA AppleDeviceSpec)
     // ============================================================
+    private String buildSystemInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
 
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "Device", "Not selected"));
+            sb.append(String.format(Locale.US, FMT, "Tip", "Use 🍎 Device Declaration"));
+            return sb.toString();
+        }
+
+        sb.append(String.format(Locale.US, FMT, "Model", safe(d.model)));
+        sb.append(String.format(Locale.US, FMT, "Release", safe(d.releaseYear)));
+        sb.append(String.format(Locale.US, FMT, "Chip", safe(d.chip)));
+        sb.append(String.format(Locale.US, FMT, "Architecture", safe(d.arch)));
+        sb.append(String.format(Locale.US, FMT, "RAM", safe(d.ram)));
+
+        // iOS version είναι δυναμικό στην πραγματικότητα → εδώ hardcoded δεν έχει νόημα.
+        sb.append(String.format(Locale.US, FMT, "OS", "iOS/iPadOS (varies)"));
+
+        return sb.toString();
+    }
+
+    private String buildCpuInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "CPU", "N/A"));
+            return sb.toString();
+        }
+
+        sb.append(String.format(Locale.US, FMT, "Chip", safe(d.chip)));
+        sb.append(String.format(Locale.US, FMT, "Arch", safe(d.arch)));
+
+        // Αν έχεις πεδία για cores μέσα στο spec μελλοντικά, τα βάζουμε.
+        sb.append(String.format(Locale.US, FMT, "CPU Cores", "See chip spec"));
+        sb.append(String.format(Locale.US, FMT, "Process", "See chip spec"));
+
+        return sb.toString();
+    }
+
+    private String buildGpuInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "GPU", "N/A"));
+            return sb.toString();
+        }
+
+        // Αν έχεις d.gpu μέσα στο AppleDeviceSpec, βάλε το. Αλλιώς “Apple GPU (integrated)”
+        String gpu = (hasField("gpu") ? safe(getFieldValue("gpu")) : "Apple GPU (integrated)");
+        sb.append(String.format(Locale.US, FMT, "GPU", gpu));
+        sb.append(String.format(Locale.US, FMT, "Metal", "Supported (varies)"));
+
+        return sb.toString();
+    }
+
+    private String buildRamInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "RAM", "N/A"));
+            return sb.toString();
+        }
+
+        sb.append(String.format(Locale.US, FMT, "RAM", safe(d.ram)));
+        sb.append(String.format(Locale.US, FMT, "Type", "LPDDR (varies)"));
+
+        return sb.toString();
+    }
+
+    private String buildStorageInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "Storage", "N/A"));
+            return sb.toString();
+        }
+
+        // Hardcoded storage tiers είναι “varies”
+        sb.append(String.format(Locale.US, FMT, "Storage", "Varies by configuration"));
+        sb.append(String.format(Locale.US, FMT, "NVMe", "Apple internal flash"));
+
+        return sb.toString();
+    }
+
+    private String buildThermalInternalReport() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "Thermal", "N/A"));
+            return sb.toString();
+        }
+
+        // Δεν διαβάζουμε sensors (hardcoded mode)
+        sb.append(String.format(Locale.US, FMT, "Cooling", "Passive (typical)"));
+        sb.append(String.format(Locale.US, FMT, "Sensors", "Internal (not exposed)"));
+        sb.append(String.format(Locale.US, FMT, "Note", "Hardcoded profile"));
+
+        return sb.toString();
+    }
+
+    private String buildVulkanInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "Graphics", "N/A"));
+            return sb.toString();
+        }
+
+        // Apple: Metal, όχι Vulkan native
+        sb.append(String.format(Locale.US, FMT, "Vulkan", "No (Metal native)"));
+        sb.append(String.format(Locale.US, FMT, "Metal", "Yes"));
+        sb.append(String.format(Locale.US, FMT, "OpenGL ES", "Deprecated (varies)"));
+
+        return sb.toString();
+    }
+
+    private String buildConnectivityInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        if (d == null) {
+            sb.append(String.format(Locale.US, FMT, "Connectivity", "N/A"));
+            return sb.toString();
+        }
+
+        sb.append(String.format(Locale.US, FMT, "Wi-Fi", safe(d.wifi)));
+        sb.append(String.format(Locale.US, FMT, "GPS", safe(d.gps)));
+        sb.append(String.format(Locale.US, FMT, "Modem", safe(d.modem)));
+
+        return sb.toString();
+    }
+
+    private String buildAndroidInfo() {
+        final String FMT = "%-14s : %s\n";
+        StringBuilder sb = new StringBuilder();
+
+        // κρατάμε το section για καρμπόν UI, αλλά δείχνουμε ότι δεν αφορά Apple
+        sb.append(String.format(Locale.US, FMT, "Android", "N/A (Apple Mode)"));
+        sb.append(String.format(Locale.US, FMT, "Note", "This section is Android-only"));
+        return sb.toString();
+    }
+
+    // ============================================================
+    // NEON (CARBON COPY)
+    // ============================================================
     private void setNeonSectionText(TextView tv, String text) {
         if (tv == null) return;
         if (text == null) text = "";
@@ -236,7 +457,7 @@ public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
 
     private CharSequence applyNeonToValues(String text) {
         SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-        String[] lines = text.split("\n", -1);
+        String[] lines = text.split("\n", -1); // keep empty lines
         int offset = 0;
         boolean previousLabelOnly = false;
 
@@ -245,9 +466,11 @@ public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
             if (len > 0) {
                 int colonIdx = line.indexOf(':');
                 if (colonIdx >= 0) {
+                    // Label-only line (ends with ':')
                     if (colonIdx == len - 1) {
                         previousLabelOnly = true;
                     } else {
+                        // Color from first non-space after ':' to end of line
                         int valueStart = offset + colonIdx + 1;
                         while (valueStart < offset + len &&
                                 Character.isWhitespace(line.charAt(valueStart - offset))) {
@@ -265,6 +488,7 @@ public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
                         previousLabelOnly = false;
                     }
                 } else if (previousLabelOnly) {
+                    // Entire line is a value for the previous label-only line
                     int valueStart = offset;
                     int valueEnd = offset + len;
                     ssb.setSpan(
@@ -281,279 +505,38 @@ public class AppleDeviceInfoInternalActivity extends GELAutoActivityHook
                 previousLabelOnly = false;
             }
 
-            offset += len + 1;
+            offset += len + 1; // +1 for '\n'
         }
 
         return ssb;
     }
 
     // ============================================================
-    // APPLE SPEC LOADER (HARD CODED REGISTRY)
+    // HELPERS
     // ============================================================
+    private String safe(Object v) {
+        if (v == null) return "N/A";
+        String s = String.valueOf(v);
+        if (s.trim().isEmpty()) return "N/A";
+        return s;
+    }
 
-    private Object getSelectedAppleSpec() {
+    // Optional: graceful access if spec evolves (gpu field etc.)
+    private boolean hasField(String name) {
+        if (d == null) return false;
+        try {
+            return d.getClass().getField(name) != null;
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
 
-        SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
-
-        String platform = p.getString(KEY_PLATFORM, "android");
-        if (!"apple".equals(platform)) {
+    private Object getFieldValue(String name) {
+        if (d == null) return null;
+        try {
+            return d.getClass().getField(name).get(d);
+        } catch (Throwable ignore) {
             return null;
         }
-
-        String type  = p.getString(KEY_APPLE_TYPE, null);
-        String model = p.getString(KEY_APPLE_MODEL, null);
-
-        if (type == null || model == null || model.trim().isEmpty()) return null;
-
-        // Resolve via registry (reflection-safe)
-        try {
-            Class<?> reg = Class.forName("com.gel.cleaner.iphone.AppleModelRegistry");
-
-            // try common method names
-            Object spec;
-
-            spec = tryInvoke(reg, "getSpec", new Class[]{String.class, String.class}, new Object[]{type, model});
-            if (spec != null) return spec;
-
-            spec = tryInvoke(reg, "get", new Class[]{String.class, String.class}, new Object[]{type, model});
-            if (spec != null) return spec;
-
-            spec = tryInvoke(reg, "resolve", new Class[]{String.class, String.class}, new Object[]{type, model});
-            if (spec != null) return spec;
-
-            spec = tryInvoke(reg, "find", new Class[]{String.class, String.class}, new Object[]{type, model});
-            if (spec != null) return spec;
-
-            // fallback: single arg model
-            spec = tryInvoke(reg, "getSpec", new Class[]{String.class}, new Object[]{model});
-            if (spec != null) return spec;
-
-            spec = tryInvoke(reg, "get", new Class[]{String.class}, new Object[]{model});
-            if (spec != null) return spec;
-
-        } catch (Throwable ignore) {}
-
-        return null;
-    }
-
-    private Object tryInvoke(Class<?> cls, String name, Class<?>[] sig, Object[] args) {
-        try {
-            Method m = cls.getDeclaredMethod(name, sig);
-            m.setAccessible(true);
-            return m.invoke(null, args);
-        } catch (Throwable ignore) { return null; }
-    }
-
-    // ============================================================
-    // SAFE FIELD READERS (NO COMPILE DEPENDENCY ON FIELD NAMES)
-    // ============================================================
-
-    private String f(Object o, String... names) {
-        if (o == null) return "";
-        for (String n : names) {
-            try {
-                Field ff = o.getClass().getDeclaredField(n);
-                ff.setAccessible(true);
-                Object v = ff.get(o);
-                if (v != null) {
-                    String s = String.valueOf(v).trim();
-                    if (!s.isEmpty()) return s;
-                }
-            } catch (Throwable ignore) {}
-        }
-        return "";
-    }
-
-    private String orDash(String s) {
-        if (s == null) return "—";
-        s = s.trim();
-        return s.isEmpty() ? "—" : s;
-    }
-
-    // ============================================================
-    // SECTION BUILDERS — APPLE (HARD CODED FROM SPEC)
-    // ============================================================
-
-    private String buildAppleSystemInfo(Object d) {
-
-        if (d == null) {
-            return "Device Selected : NONE\n\n" +
-                   "Tip : Select an Apple model first (Device Declaration)\n";
-        }
-
-        String type  = f(d, "type", "deviceType");
-        String model = f(d, "model", "modelName", "name");
-        String year  = f(d, "releaseYear", "year", "released");
-        String board = f(d, "board", "logicBoard");
-        String hw    = f(d, "hardware", "hw");
-        String arch  = f(d, "arch", "cpuArch");
-        String chip  = f(d, "chip", "soc", "processor");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Manufacturer : Apple\n");
-        sb.append("Device Type  : ").append(orDash(type)).append("\n");
-        sb.append("Model        : ").append(orDash(model)).append("\n");
-        sb.append("Release Year : ").append(orDash(year)).append("\n");
-        sb.append("Chip / SoC   : ").append(orDash(chip)).append("\n");
-        sb.append("Arch         : ").append(orDash(arch)).append("\n");
-        sb.append("Board        : ").append(orDash(board)).append("\n");
-        sb.append("Hardware     : ").append(orDash(hw)).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleOsInfo(Object d) {
-
-        if (d == null) return "OS : —\nBuild : —\n";
-
-        String os   = f(d, "os", "osName", "platform");
-        String ver  = f(d, "osVersion", "iosVersion", "version");
-        String build= f(d, "build", "osBuild");
-
-        if (os.trim().isEmpty()) os = "iOS / iPadOS";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("OS Name      : ").append(orDash(os)).append("\n");
-        sb.append("OS Version   : ").append(orDash(ver)).append("\n");
-        sb.append("OS Build     : ").append(orDash(build)).append("\n");
-
-        String kernel = f(d, "kernel", "xnuKernel");
-        if (!kernel.trim().isEmpty())
-            sb.append("Kernel       : ").append(kernel).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleCpuInfo(Object d) {
-
-        if (d == null) return "Chip : —\nCPU Cores : —\n";
-
-        String chip  = f(d, "chip", "soc", "processor");
-        String cores = f(d, "cpuCores", "cores");
-        String perf  = f(d, "performanceCores", "pCores");
-        String eff   = f(d, "efficiencyCores", "eCores");
-        String freq  = f(d, "cpuMaxGHz", "cpuGHz", "cpuFreq");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Chip         : ").append(orDash(chip)).append("\n");
-        sb.append("CPU Cores    : ").append(orDash(cores)).append("\n");
-
-        if (!perf.trim().isEmpty() || !eff.trim().isEmpty())
-            sb.append("P / E Cores  : ").append(orDash(perf)).append(" / ").append(orDash(eff)).append("\n");
-
-        if (!freq.trim().isEmpty())
-            sb.append("Max Clock    : ").append(freq).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleGpuInfo(Object d) {
-
-        if (d == null) return "GPU : —\n";
-
-        String gpu = f(d, "gpu", "gpuCores", "graphics");
-        String gcores = f(d, "gpuCores", "gpuCoreCount");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("GPU          : ").append(orDash(gpu)).append("\n");
-        if (!gcores.trim().isEmpty())
-            sb.append("GPU Cores    : ").append(gcores).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleThermalInfo(Object d) {
-
-        // Apple hardcoded: we keep section but show spec / notes
-        if (d == null) return "Thermal Design : —\n";
-
-        String thermal = f(d, "thermal", "thermalDesign", "cooling");
-        String notes   = f(d, "thermalNotes", "notesThermal");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Thermal Design : ").append(orDash(thermal)).append("\n");
-        if (!notes.trim().isEmpty())
-            sb.append("\nNotes:\n").append(notes).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleMetalInfo(Object d) {
-
-        // Vulkan section in XML -> we use it for Metal (Apple)
-        if (d == null) return "Graphics API : Metal\n";
-
-        String metal = f(d, "metal", "metalSupport", "graphicsApi");
-        String api   = (metal.trim().isEmpty()) ? "Metal" : metal;
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Graphics API : ").append(orDash(api)).append("\n");
-
-        String ver = f(d, "metalVersion", "apiVersion");
-        if (!ver.trim().isEmpty())
-            sb.append("API Version  : ").append(ver).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleRamInfo(Object d) {
-
-        if (d == null) return "RAM : —\n";
-
-        String ram = f(d, "ram", "memory", "memoryGb", "ramGb");
-        String type= f(d, "ramType", "memoryType");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("RAM          : ").append(orDash(ram)).append("\n");
-        if (!type.trim().isEmpty())
-            sb.append("RAM Type     : ").append(type).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleStorageInfo(Object d) {
-
-        if (d == null) return "Storage Options : —\n";
-
-        String storage = f(d, "storage", "storageOptions", "storageGb", "nand");
-        String base    = f(d, "baseStorage", "baseGb");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Storage Options : ").append(orDash(storage)).append("\n");
-        if (!base.trim().isEmpty())
-            sb.append("Base Storage    : ").append(base).append("\n");
-
-        return sb.toString();
-    }
-
-    private String buildAppleConnectivityInfo(Object d) {
-
-        if (d == null) return "Wi-Fi : —\nBluetooth : —\nModem : —\n";
-
-        String wifi  = f(d, "wifi", "wiFi");
-        String bt    = f(d, "bluetooth", "bt");
-        String modem = f(d, "modem", "cellular");
-        String nfc   = f(d, "nfc");
-        String gps   = f(d, "gps", "gnss");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Wi-Fi       : ").append(orDash(wifi)).append("\n");
-        sb.append("Bluetooth   : ").append(orDash(bt)).append("\n");
-        sb.append("Modem       : ").append(orDash(modem)).append("\n");
-        sb.append("NFC         : ").append(orDash(nfc)).append("\n");
-        sb.append("GPS / GNSS  : ").append(orDash(gps)).append("\n");
-
-        return sb.toString();
-    }
-
-    // ============================================================
-    // DIMEN (small helper if you need it later)
-    // ============================================================
-    private int dp(float v) {
-        return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                v,
-                getResources().getDisplayMetrics()
-        );
     }
 }

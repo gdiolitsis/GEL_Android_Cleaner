@@ -1,4 +1,4 @@
-package com.gel.cleaner.iphone.specs;
+package com.gel.cleaner.iphone;
 
 public class AppleDeviceSpec {
 

@@ -1,3 +1,7 @@
+package com.gel.cleaner.iphone;
+
+import com.gel.cleaner.iphone.AppleDeviceSpec;
+
 public class AppleSpecs {
 
     public static AppleDeviceSpec get(String model) {

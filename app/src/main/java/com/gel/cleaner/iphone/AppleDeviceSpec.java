@@ -173,6 +173,84 @@ public class AppleDeviceSpec {
         this.storageOptions = storageOptions;
     }
 
+// =========================================================
+// CONSTRUCTOR (LIGHT — 11 params, backward compatible)
+// =========================================================
+public AppleDeviceSpec(
+        String soc,
+        String cpu,
+        String ram,
+        String screen,
+        String camera,
+        String bluetooth,
+        String wifi,
+        String biometrics,
+        String port,
+        String charging,
+        String os
+) {
+    this(
+        // -------- internals --------
+        soc,
+        cpu,
+        ram,
+        screen,
+        wifi,
+        bluetooth,
+        biometrics,
+        port,
+        charging,
+        os,
+
+        // -------- camera --------
+        camera,          // main
+        "Unknown",       // ultra-wide
+        "Unknown",       // tele
+        "Unknown",       // front
+        "Unknown",       // video
+
+        // -------- modem --------
+        "Unknown",       // modem
+        false,           // 5G
+        true,            // LTE (λογικό default)
+        "1 SIM",         // simSlots
+        false,           // eSIM
+
+        // -------- connectivity --------
+        false,           // AirDrop
+        false,           // NFC
+
+        // -------- sensors --------
+        "Unknown",       // GPS
+        false,           // Compass
+        false,           // Gyro
+        false,           // Accel
+        false,           // Barometer
+
+        // -------- audio --------
+        "Unknown",       // speakers
+        false,           // Dolby
+        "Unknown",       // microphones
+        false,           // jack
+
+        // -------- ports --------
+        "Unknown",       // usbStandard
+        false,           // fastCharge
+        false,           // wirelessCharge
+
+        // -------- biometrics --------
+        biometrics.equalsIgnoreCase("Face ID"),   // hasFaceID
+        biometrics.equalsIgnoreCase("Touch ID"),  // hasTouchID
+
+        // -------- display --------
+        "Unknown",       // displayOut
+        false,           // AirPlay
+
+        // -------- storage --------
+        "Unknown"        // storageOptions
+    );
+}
+    
     // =========================================================
     // UNKNOWN
     // =========================================================

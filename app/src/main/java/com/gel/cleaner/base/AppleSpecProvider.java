@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // AppleSpecProvider.java — Apple Hardcoded Bridge (Reflection Safe)
-// NOTE: Δουλεύω ΠΑΝΩ στο τελευταίο αρχείο σου. Copy-paste whole file.
+// NOTE: Copy-paste whole file.
 
 package com.gel.cleaner.base;
 
@@ -15,6 +15,9 @@ public final class AppleSpecProvider {
 
     private AppleSpecProvider() {}
 
+    // =========================================================
+    // SELECTION
+    // =========================================================
     public static final class Selection {
         public final String type;   // "iphone" | "ipad"
         public final String model;  // "iPhone 13" etc
@@ -32,7 +35,6 @@ public final class AppleSpecProvider {
 
         SharedPreferences p = c.getSharedPreferences("gel_prefs", Context.MODE_PRIVATE);
 
-        // Πιθανά keys (για να μη σπάει αν αλλάξει όνομα)
         String type =
                 firstNonEmpty(
                         p.getString("apple_type", null),
@@ -68,18 +70,14 @@ public final class AppleSpecProvider {
     }
 
     // ------------------------------------------------------------
-    // GET AppleDeviceSpec from your hardcoded AppleSpecs
-    // (Reflection ώστε να μην κολλάμε σε signatures)
+    // GET AppleDeviceSpec from AppleSpecs (via reflection)
     // ------------------------------------------------------------
     public static Object getSpecOrNull(Context c) {
         try {
             Selection s = getSavedSelection(c);
 
-            // class com.gel.cleaner.iphone.AppleSpecs
             Class<?> cls = Class.forName("com.gel.cleaner.iphone.AppleSpecs");
 
-            // Try common method names:
-            // get(type, model) OR getSpec(type, model) OR find(type, model)
             Method m = null;
 
             try { m = cls.getDeclaredMethod("get", String.class, String.class); }
@@ -105,9 +103,25 @@ public final class AppleSpecProvider {
         }
     }
 
-    // ------------------------------------------------------------
-    // SAFE FIELD GETTERS (works with any AppleDeviceSpec layout)
-    // ------------------------------------------------------------
+    // =========================================================
+    // 🔥 DIRECT BRIDGE FOR ACTIVITIES
+    // =========================================================
+    public static com.gel.cleaner.iphone.AppleDeviceSpec getSelectedDevice(Context ctx) {
+        try {
+            Object spec = getSpecOrNull(ctx);
+
+            if (spec instanceof com.gel.cleaner.iphone.AppleDeviceSpec) {
+                return (com.gel.cleaner.iphone.AppleDeviceSpec) spec;
+            }
+        } catch (Throwable ignore) {}
+
+        // ποτέ null → δεν σκάει UI
+        return com.gel.cleaner.iphone.AppleDeviceSpec.unknown();
+    }
+
+    // =========================================================
+    // SAFE FIELD GETTERS
+    // =========================================================
     public static String getStr(Object spec, String... fieldNames) {
         if (spec == null) return null;
         for (String f : fieldNames) {
@@ -150,7 +164,9 @@ public final class AppleSpecProvider {
                 Object v = ff.get(spec);
                 if (v instanceof Number) return ((Number) v).doubleValue();
                 if (v != null) {
-                    String s = String.valueOf(v).replace(',', '.').replaceAll("[^0-9.]", "");
+                    String s = String.valueOf(v)
+                            .replace(',', '.')
+                            .replaceAll("[^0-9.]", "");
                     if (!s.isEmpty()) return Double.parseDouble(s);
                 }
             } catch (Throwable ignore) {}

@@ -494,7 +494,6 @@ okBtn.setOnClickListener(v -> {
     } catch (Throwable ignore) {}
     d.dismiss();
     showPlatformSelectPopup();
-});
     });
 }
 

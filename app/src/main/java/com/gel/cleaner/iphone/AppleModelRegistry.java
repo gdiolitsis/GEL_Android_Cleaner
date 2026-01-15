@@ -3,6 +3,8 @@ package com.gel.cleaner.iphone;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.gel.cleaner.iphone.specs.AppleDeviceSpec;   // 🔴 ΑΥΤΟ ΕΛΕΙΠΕ
+
 public final class AppleModelRegistry {
 
     private static final Map<String, AppleDeviceSpec> DB = new HashMap<>();

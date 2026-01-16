@@ -84,14 +84,14 @@ public class AppleDeviceSpec {
     public boolean hasDolby;
     public boolean hasJack;
 
-    // =========================================================
-    // CAMERA
-    // =========================================================
-    public String cameraMain;
-    public String cameraUltraWide;
-    public String cameraTele;
-    public String cameraFront;
-    public String cameraVideo;
+// =========================================================
+// CAMERA
+// =========================================================
+public String cameraMain;        // e.g. 12 MP Wide
+public String cameraUltraWide;   // e.g. 12 MP Ultra-Wide
+public String cameraTele;        // e.g. 12 MP Telephoto (or null)
+public String cameraFront;       // e.g. 12 MP TrueDepth
+public String cameraVideo;       // e.g. 4K@60fps HDR
 
     // =========================================================
     // BIOMETRICS / FEATURES

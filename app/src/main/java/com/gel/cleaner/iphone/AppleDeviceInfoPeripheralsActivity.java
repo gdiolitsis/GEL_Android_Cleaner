@@ -1,201 +1,249 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
-// AppleDeviceInfoPeripheralsActivity.java
-// CARBON INFO with Android Peripherals — HARDCODED Apple DATA
+// AppleDeviceInfoPeripheralsActivity — FINAL STABLE (WITH TOGGLES)
 // ============================================================
-
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.gel.cleaner.base.AppleSpecProvider;
-import com.gel.cleaner.iphone.AppleDeviceSpec;
+import com.gel.cleaner.R;
 
+/**
+ * Apple Peripherals — FINAL
+ * ------------------------------------------------------------
+ * • Κουμπιά (toggles) όπως στο Android Peripherals
+ * • Hardcoded δεδομένα από AppleSpecs → AppleDeviceSpec
+ * • Ό,τι δεν υπάρχει στο spec → δεν εμφανίζεται
+ */
 public class AppleDeviceInfoPeripheralsActivity extends Activity {
 
-    private LinearLayout root;
+    // =========================
+    // SECTIONS
+    // =========================
+    private LinearLayout secCamera;
+    private LinearLayout secModem;
+    private LinearLayout secConnectivity;
+    private LinearLayout secSensors;
+    private LinearLayout secAudio;
+    private LinearLayout secPorts;
+    private LinearLayout secBiometrics;
+    private LinearLayout secDisplayOut;
+    private LinearLayout secStorage;
 
+    // =========================
+    // OUTPUTS
+    // =========================
+    private TextView outCamera;
+    private TextView outModem;
+    private TextView outConnectivity;
+    private TextView outSensors;
+    private TextView outAudio;
+    private TextView outPorts;
+    private TextView outBiometrics;
+    private TextView outDisplayOut;
+    private TextView outStorage;
+
+    private AppleDeviceSpec d;
+
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_device_info_peripherals);
 
-        // ---------------- ROOT ----------------
-        ScrollView scroll = new ScrollView(this);
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16), dp(16), dp(16), dp(16));
-        scroll.addView(root);
-        setContentView(scroll);
+        // -------- bind views --------
+        bindViews();
 
-        // ---------------- LOAD SELECTED APPLE DEVICE ----------------
-        AppleDeviceSpec d = AppleSpecProvider.getSelectedDevice(this);
+        // -------- toggles --------
+        setupToggle(secCamera, outCamera);
+        setupToggle(secModem, outModem);
+        setupToggle(secConnectivity, outConnectivity);
+        setupToggle(secSensors, outSensors);
+        setupToggle(secAudio, outAudio);
+        setupToggle(secPorts, outPorts);
+        setupToggle(secBiometrics, outBiometrics);
+        setupToggle(secDisplayOut, outDisplayOut);
+        setupToggle(secStorage, outStorage);
+
+        // -------- load selected model --------
+        String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .getString("apple_device_model", "iPhone 13");
+
+        d = AppleSpecs.get(model);
+
+        // -------- fill UI --------
+        populateAll();
+    }
+
+    // ============================================================
+    // BIND
+    // ============================================================
+    private void bindViews() {
+
+        // sections
+        secCamera        = findViewById(R.id.headerCamera);
+        secModem         = findViewById(R.id.headerModem);
+        secConnectivity  = findViewById(R.id.headerConnectivity);
+        secSensors       = findViewById(R.id.headerSensors);
+        secAudio         = findViewById(R.id.headerAudio);
+        secPorts         = findViewById(R.id.headerPorts);
+        secBiometrics    = findViewById(R.id.headerBiometrics);
+        secDisplayOut    = findViewById(R.id.headerDisplayOut);
+        secStorage       = findViewById(R.id.headerStorageIO);
+
+        // outputs
+        outCamera        = findViewById(R.id.txtCameraContent);
+        outModem         = findViewById(R.id.txtModemContent);
+        outConnectivity  = findViewById(R.id.txtConnectivityContent);
+        outSensors       = findViewById(R.id.txtSensorsContent);
+        outAudio         = findViewById(R.id.txtAudioContent);
+        outPorts         = findViewById(R.id.txtPortsContent);
+        outBiometrics    = findViewById(R.id.txtBiometricsContent);
+        outDisplayOut    = findViewById(R.id.txtDisplayOutContent);
+        outStorage       = findViewById(R.id.txtStorageContent);
+    }
+
+    // ============================================================
+    // POPULATE
+    // ============================================================
+    private void populateAll() {
 
         if (d == null) {
-            addError("❌ No Apple device selected");
+            hideAll();
             return;
         }
 
-        // ============================================================
-        // PERIPHERALS — SECTIONS (CARBON INFO WITH ANDROID)
-        // ============================================================
-
-        // 1️⃣ CAMERA
-        section("📷 CAMERA",
-                info("Main Camera", d.cameraMain),
-                info("Ultra-Wide", d.cameraUltraWide),
-                info("Telephoto", d.cameraTele),
-                info("Front Camera", d.cameraFront),
-                info("Video", d.cameraVideo)
+        // ---------------- CAMERA ----------------
+        show(secCamera);
+        outCamera.setText(
+                logInfo("Main", d.cameraMain) +
+                logInfo("Ultra-Wide", d.cameraUltraWide) +
+                logInfo("Telephoto", d.cameraTele) +
+                logInfo("Front", d.cameraFront) +
+                logInfo("Video", d.cameraVideo)
         );
 
-        // 2️⃣ MODEM / CELLULAR
-        section("📡 MODEM & CELLULAR",
-                info("Modem", d.modem),
-                info("5G Support", yesNo(d.has5G)),
-                info("LTE", yesNo(d.hasLTE)),
-                info("SIM Slots", d.simSlots),
-                info("eSIM", yesNo(d.hasESim))
+        // ---------------- MODEM ----------------
+        show(secModem);
+        outModem.setText(
+                logInfo("Modem", d.modem) +
+                logInfo("5G", yesNo(d.has5G)) +
+                logInfo("LTE", yesNo(d.hasLTE)) +
+                logInfo("SIM Slots", d.simSlots) +
+                logInfo("eSIM", yesNo(d.hasESim))
         );
 
-        // 3️⃣ WIFI / BLUETOOTH
-        section("📶 CONNECTIVITY",
-                info("Wi-Fi", d.wifi),
-                info("Bluetooth", d.bluetooth),
-                info("AirDrop", yesNo(d.hasAirDrop)),
-                info("NFC", yesNo(d.hasNFC))
+        // ---------------- CONNECTIVITY ----------------
+        show(secConnectivity);
+        outConnectivity.setText(
+                logInfo("Wi-Fi", d.wifi) +
+                logInfo("Bluetooth", d.bluetooth) +
+                logInfo("AirDrop", yesNo(d.hasAirDrop)) +
+                logInfo("NFC", yesNo(d.hasNFC))
         );
 
-        // 4️⃣ GPS / SENSORS
-        section("🛰 GPS & SENSORS",
-                info("GPS", d.gps),
-                info("Compass", yesNo(d.hasCompass)),
-                info("Gyroscope", yesNo(d.hasGyro)),
-                info("Accelerometer", yesNo(d.hasAccel)),
-                info("Barometer", yesNo(d.hasBarometer))
+        // ---------------- SENSORS ----------------
+        show(secSensors);
+        outSensors.setText(
+                logInfo("GPS", d.gps) +
+                logInfo("Compass", yesNo(d.hasCompass)) +
+                logInfo("Gyroscope", yesNo(d.hasGyro)) +
+                logInfo("Accelerometer", yesNo(d.hasAccel)) +
+                logInfo("Barometer", yesNo(d.hasBarometer))
         );
 
-        // 5️⃣ AUDIO
-        section("🔊 AUDIO",
-                info("Speakers", d.speakers),
-                info("Dolby Audio", yesNo(d.hasDolby)),
-                info("Microphones", d.microphones),
-                info("Headphone Jack", yesNo(d.hasJack))
+        // ---------------- AUDIO ----------------
+        show(secAudio);
+        outAudio.setText(
+                logInfo("Speakers", d.speakers) +
+                logInfo("Dolby", yesNo(d.hasDolby)) +
+                logInfo("Microphones", d.microphones) +
+                logInfo("Headphone Jack", yesNo(d.hasJack))
         );
 
-        // 6️⃣ PORTS
-        section("🔌 PORTS",
-                info("Charging Port", d.port),
-                info("USB Standard", d.usbStandard),
-                info("Fast Charge", yesNo(d.hasFastCharge)),
-                info("Wireless Charge", yesNo(d.hasWirelessCharge))
+        // ---------------- PORTS ----------------
+        show(secPorts);
+        outPorts.setText(
+                logInfo("Charging Port", d.port) +
+                logInfo("USB Standard", d.usbStandard) +
+                logInfo("Fast Charge", yesNo(d.hasFastCharge)) +
+                logInfo("Wireless Charge", yesNo(d.hasWirelessCharge))
         );
 
-        // 7️⃣ BIOMETRICS
-        section("🔐 BIOMETRICS",
-                info("Face ID", yesNo(d.hasFaceID)),
-                info("Touch ID", yesNo(d.hasTouchID))
+        // ---------------- BIOMETRICS ----------------
+        show(secBiometrics);
+        outBiometrics.setText(
+                logInfo("Face ID", yesNo(d.hasFaceID)) +
+                logInfo("Touch ID", yesNo(d.hasTouchID))
         );
 
-        // 8️⃣ DISPLAY I/O
-        section("🖥 DISPLAY I/O",
-                info("Screen Output", d.displayOut),
-                info("AirPlay", yesNo(d.hasAirPlay))
+        // ---------------- DISPLAY OUT ----------------
+        show(secDisplayOut);
+        outDisplayOut.setText(
+                logInfo("Screen Output", d.displayOut) +
+                logInfo("AirPlay", yesNo(d.hasAirPlay))
         );
 
-        // 9️⃣ STORAGE I/O
-        section("💾 STORAGE I/O",
-                info("Internal Storage", d.storageOptions),
-                info("External SD", "❌ Not supported (Apple design)")
+        // ---------------- STORAGE ----------------
+        show(secStorage);
+        outStorage.setText(
+                logInfo("Internal Storage", d.storageOptions) +
+                logInfo("External SD", "Not supported (Apple design)")
         );
-
-        // 🔚 DONE
-        addFooter("GEL — Apple Peripherals (Hardcoded Specs)");
     }
 
     // ============================================================
-    // UI HELPERS — SAME FEEL AS ANDROID (LABEL WHITE / VALUE COLOR)
+    // TOGGLE
     // ============================================================
+    private void setupToggle(LinearLayout header, TextView content) {
+        if (header == null || content == null) return;
 
-    private void section(String title, TextView... rows) {
-        TextView t = new TextView(this);
-        t.setText(title);
-        t.setTextColor(Color.WHITE);
-        t.setTextSize(18f);
-        t.setPadding(0, dp(12), 0, dp(6));
-        t.setGravity(Gravity.START);
-        root.addView(t);
+        content.setVisibility(View.GONE);
 
-        for (TextView r : rows) {
-            root.addView(r);
-        }
-    }
-
-    private TextView info(String label, String value) {
-        TextView tv = new TextView(this);
-        tv.setText("• " + label + ": " + safe(value));
-        tv.setTextSize(15f);
-        tv.setPadding(dp(8), dp(4), dp(8), dp(4));
-        tv.setTextColor(colorForValue(value));
-        return tv;
-    }
-
-    private void addError(String msg) {
-        TextView t = new TextView(this);
-        t.setText(msg);
-        t.setTextColor(0xFFFF4444);
-        t.setTextSize(16f);
-        root.addView(t);
-    }
-
-    private void addFooter(String msg) {
-        TextView t = new TextView(this);
-        t.setText("\n" + msg);
-        t.setTextColor(0xFF888888);
-        t.setTextSize(12f);
-        t.setGravity(Gravity.CENTER);
-        root.addView(t);
+        header.setOnClickListener(v -> {
+            if (content.getVisibility() == View.VISIBLE) {
+                content.setVisibility(View.GONE);
+            } else {
+                content.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     // ============================================================
-    // VALUE HELPERS
+    // HELPERS
     // ============================================================
-
     private String yesNo(boolean b) {
         return b ? "Yes" : "No";
     }
 
-    private String safe(String s) {
-        return (s == null || s.trim().isEmpty()) ? "—" : s;
+    private String logInfo(String k, String v) {
+        if (v == null || v.trim().isEmpty()) return "";
+        return "• " + k + ": " + v + "\n";
     }
 
-    // ίδια λογική με logInfo / logOk / logWarn / logError
-    private int colorForValue(String v) {
-        if (v == null) return 0xFFAAAAAA;
-
-        String x = v.toLowerCase();
-
-        if (x.contains("no") || x.contains("not supported") || x.contains("❌"))
-            return 0xFFFF4444;      // logError
-
-        if (x.contains("yes") || x.contains("supported"))
-            return 0xFF4CAF50;      // logOk
-
-        if (x.contains("limited") || x.contains("partial"))
-            return 0xFFFFC107;      // logWarn
-
-        return 0xFFDDDDDD;          // logInfo
+    private void hideAll() {
+        hide(secCamera);
+        hide(secModem);
+        hide(secConnectivity);
+        hide(secSensors);
+        hide(secAudio);
+        hide(secPorts);
+        hide(secBiometrics);
+        hide(secDisplayOut);
+        hide(secStorage);
     }
 
-    // ============================================================
-    // DIMEN
-    // ============================================================
-    private int dp(float v) {
-        return (int) (v * getResources().getDisplayMetrics().density);
+    private void hide(View v) {
+        if (v != null) v.setVisibility(View.GONE);
+    }
+
+    private void show(View v) {
+        if (v != null) v.setVisibility(View.VISIBLE);
     }
 }

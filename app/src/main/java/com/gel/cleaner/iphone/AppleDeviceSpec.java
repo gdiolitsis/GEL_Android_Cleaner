@@ -1,5 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
+// ============================================================
 // AppleDeviceSpec.java — LOCKED KNOWLEDGE BASE (FINAL)
+// ============================================================
 
 package com.gel.cleaner.iphone;
 
@@ -23,14 +25,14 @@ public class AppleDeviceSpec {
     // =========================================================
     // SOC / CPU / GPU
     // =========================================================
-    public String soc;
-    public String chipset;
-    public String arch;
-    public String processNode;
-    public String cpu;
-    public int cpuCores;
-    public String gpu;
-    public int gpuCores;
+    public String soc;             // A15 Bionic
+    public String chipset;         // alias
+    public String arch;            // ARMv8
+    public String processNode;     // 5 nm
+    public String cpu;             // Apple CPU
+    public int    cpuCores;
+    public String gpu;             // Apple GPU
+    public int    gpuCores;
     public String metalFeatureSet;
 
     // =========================================================
@@ -55,14 +57,14 @@ public class AppleDeviceSpec {
     // =========================================================
     public boolean has5G;
     public boolean hasLTE;
-    public String cellular;
-    public String modem;
-    public String wifi;
-    public String bluetooth;
+    public String  cellular;
+    public String  modem;
+    public String  wifi;
+    public String  bluetooth;
     public boolean hasNFC;
     public boolean hasAirDrop;
     public boolean hasAirPlay;
-    public String gps;
+    public String  gps;
     public boolean hasCompass;
     public boolean hasGyro;
     public boolean hasAccel;
@@ -71,34 +73,34 @@ public class AppleDeviceSpec {
     // =========================================================
     // SIM / PORTS
     // =========================================================
-    public String simSlots;
+    public String  simSlots;
     public boolean hasESim;
-    public String port;
-    public String usbStandard;
+    public String  port;
+    public String  usbStandard;
 
     // =========================================================
     // AUDIO
     // =========================================================
-    public String speakers;
-    public String microphones;
+    public String  speakers;       // STRING by design
+    public String  microphones;    // STRING by design
     public boolean hasDolby;
     public boolean hasJack;
 
-// =========================================================
-// CAMERA
-// =========================================================
-public String cameraMain;        // e.g. 12 MP Wide
-public String cameraUltraWide;   // e.g. 12 MP Ultra-Wide
-public String cameraTele;        // e.g. 12 MP Telephoto (or null)
-public String cameraFront;       // e.g. 12 MP TrueDepth
-public String cameraVideo;       // e.g. 4K@60fps HDR
+    // =========================================================
+    // CAMERA
+    // =========================================================
+    public String cameraMain;        // e.g. 12 MP Wide
+    public String cameraUltraWide;   // e.g. 12 MP Ultra-Wide
+    public String cameraTele;        // e.g. Telephoto / null
+    public String cameraFront;       // e.g. 12 MP TrueDepth
+    public String cameraVideo;       // e.g. 4K@60fps HDR
 
     // =========================================================
     // BIOMETRICS / FEATURES
     // =========================================================
     public boolean hasFaceID;
     public boolean hasTouchID;
-    public String biometrics;
+    public String  biometrics;
 
     // =========================================================
     // POWER
@@ -113,16 +115,16 @@ public String cameraVideo;       // e.g. 4K@60fps HDR
     public String notes;
 
     // =========================================================
-    // CONSTRUCTORS
+    // CONSTRUCTORS (KEEP COMPATIBILITY)
     // =========================================================
     public AppleDeviceSpec() {}
 
     public AppleDeviceSpec(String type, String model) {
-        this.type = type;
+        this.type  = type;
         this.model = model;
     }
 
-    // Legacy compatibility (AppleModelRegistry)
+    // Legacy constructor — AppleModelRegistry compatibility
     public AppleDeviceSpec(
             String type,
             String model,
@@ -136,40 +138,42 @@ public String cameraVideo;       // e.g. 4K@60fps HDR
             String bluetooth,
             String charging
     ) {
-        this.type = type;
-        this.model = model;
-        this.soc = soc;
-        this.chipset = soc;
-        this.ram = ram;
+        this.type           = type;
+        this.model          = model;
+        this.soc            = soc;
+        this.chipset        = soc;
+        this.ram            = ram;
         this.storageOptions = storageOptions;
-        this.display = display;
-        this.modem = modem;
-        this.cellular = cellular;
-        this.wifi = wifi;
-        this.bluetooth = bluetooth;
-        this.charging = charging;
+        this.display        = display;
+        this.modem          = modem;
+        this.cellular       = cellular;
+        this.wifi           = wifi;
+        this.bluetooth      = bluetooth;
+        this.charging       = charging;
     }
 
     // =========================================================
-    // UNKNOWN FALLBACK
+    // UNKNOWN FALLBACK (MANDATORY)
     // =========================================================
     public static AppleDeviceSpec unknown() {
         AppleDeviceSpec d = new AppleDeviceSpec("unknown", "Unknown");
-        d.os = "Unknown";
-        d.soc = "Unknown";
-        d.cpu = "Unknown";
-        d.gpu = "Unknown";
-        d.ram = "Unknown";
-        d.storageOptions = "Unknown";
-        d.display = "Unknown";
-        d.modem = "Unknown";
-        d.wifi = "Unknown";
-        d.bluetooth = "Unknown";
-        d.speakers = "Unknown";
-        d.microphones = "Unknown";
-        d.port = "Unknown";
-        d.cameraMain = "Unknown";
-        d.cameraFront = "Unknown";
+
+        d.os              = "Unknown";
+        d.soc             = "Unknown";
+        d.cpu             = "Unknown";
+        d.gpu             = "Unknown";
+        d.ram             = "Unknown";
+        d.storageOptions  = "Unknown";
+        d.display         = "Unknown";
+        d.modem           = "Unknown";
+        d.wifi            = "Unknown";
+        d.bluetooth       = "Unknown";
+        d.speakers        = "Unknown";
+        d.microphones     = "Unknown";
+        d.port            = "Unknown";
+        d.cameraMain      = "Unknown";
+        d.cameraFront     = "Unknown";
+
         return d;
     }
 }

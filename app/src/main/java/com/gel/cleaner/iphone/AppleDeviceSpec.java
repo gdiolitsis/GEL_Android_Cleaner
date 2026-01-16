@@ -60,6 +60,48 @@ public String storageOptions;
 public String os;
 public String charging;
 
+// =========================================================
+// PERIPHERALS / CONNECTIVITY
+// =========================================================
+public String modem;
+public int simSlots;
+public boolean hasESim;
+
+public boolean hasAirDrop;
+public boolean hasNFC;
+
+public String gps;
+public boolean hasCompass;
+public boolean hasGyro;
+
+// =========================================================
+// AUDIO
+// =========================================================
+public int speakers;
+public int microphones;
+
+// =========================================================
+// SENSORS / MEDIA
+// =========================================================
+public boolean hasAccel;
+public boolean hasBarometer;
+public boolean hasDolby;
+public boolean hasJack;
+public boolean hasAirPlay;
+
+// =========================================================
+// I/O & STORAGE
+// =========================================================
+public String usbStandard;
+public String displayOut;
+public String storageOptions;
+
+// =========================================================
+// SYSTEM
+// =========================================================
+public String os;
+public String charging;
+
     // =========================
     // BIOMETRICS
     // =========================

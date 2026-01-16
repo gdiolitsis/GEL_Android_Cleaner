@@ -196,9 +196,3 @@ public class AppleDeviceSpec {
 
     public AppleDeviceSpec setNotes(String v){ this.notes = v; return this; }
 }
-
-/*
-REMINDER (per George rule):
-Always deliver the whole fixed file ready for copy-paste, without extra questions.
-*/
-```0

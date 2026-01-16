@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceSpec.java — STABLE KNOWLEDGE BASE (FIELDS COMPLETE)
+// AppleDeviceSpec.java — STABLE KNOWLEDGE BASE (FIELDS + COMPAT CONSTRUCTORS + unknown())
 // NOTE: From now on, Activities may request any field without "cannot find symbol".
 
 package com.gel.cleaner.iphone;
@@ -91,6 +91,61 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
+    // ---------------------------------------------------------
+    // COMPAT CONSTRUCTOR (keeps AppleModelRegistry old calls working)
+    // Signature required by build errors:
+    // new AppleDeviceSpec(String,String,String,String,String,String,String,String,String,String,String)
+    // ---------------------------------------------------------
+    public AppleDeviceSpec(
+            String type,
+            String model,
+            String chipset,
+            String ram,
+            String storageOptions,
+            String display,
+            String modem,
+            String cellular,
+            String wifi,
+            String bluetooth,
+            String charging
+    ) {
+        this.type = type;
+        this.model = model;
+        this.chipset = chipset;
+        this.ram = ram;
+        this.storageOptions = storageOptions;
+        this.display = display;
+        this.modem = modem;
+        this.cellular = cellular;
+        this.wifi = wifi;
+        this.bluetooth = bluetooth;
+        this.charging = charging;
+    }
+
+    // =========================================================
+    // UNKNOWN FALLBACK (required by AppleModelRegistry + AppleSpecProvider)
+    // =========================================================
+    public static AppleDeviceSpec unknown() {
+        AppleDeviceSpec s = new AppleDeviceSpec("unknown", "Unknown Model");
+        s.os = "Unknown";
+        s.charging = "Unknown";
+        s.chipset = "Unknown";
+        s.ram = "Unknown";
+        s.storageOptions = "Unknown";
+        s.display = "Unknown";
+        s.modem = "Unknown";
+        s.cellular = "Unknown";
+        s.wifi = "Unknown";
+        s.bluetooth = "Unknown";
+        s.usbStandard = "Unknown";
+        s.displayOut = "Unknown";
+        s.gps = "Unknown";
+        s.simSlots = "Unknown";
+        s.speakers = "Unknown";
+        s.microphones = "Unknown";
+        return s;
+    }
+
     // =========================================================
     // FLUENT SETTERS (OPTIONAL HELPERS)
     // =========================================================
@@ -141,3 +196,9 @@ public class AppleDeviceSpec {
 
     public AppleDeviceSpec setNotes(String v){ this.notes = v; return this; }
 }
+
+/*
+REMINDER (per George rule):
+Always deliver the whole fixed file ready for copy-paste, without extra questions.
+*/
+```0

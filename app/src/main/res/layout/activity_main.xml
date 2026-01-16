@@ -57,7 +57,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="🇬🇷"
+                    android:text="ðŸ‡¬ðŸ‡·"
                     android:textSize="24sp"
                     android:textColor="@color/gel_text_primary"
                     android:layout_marginBottom="6dp" />
@@ -67,7 +67,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="🇬🇧"
+                    android:text="ðŸ‡¬ðŸ‡§"
                     android:textSize="24sp"
                     android:textColor="@color/gel_text_primary" />
             </LinearLayout>
@@ -88,7 +88,7 @@
         <!-- TOP ACTIONS -->
         <!-- ================================================= -->
 
-        <!-- DONATE (ΠΡΩΤΟ) -->
+        <!-- DONATE (Î Î¡Î©Î¤ÎŸ) -->
         <Button
             android:id="@+id/btnDonate"
             android:layout_width="match_parent"
@@ -280,7 +280,7 @@
             android:paddingLeft="6dp"/>
 
         <!-- ================================================= -->
-        <!-- BOTTOM — DIAGNOSIS -->
+        <!-- BOTTOM â€” DIAGNOSIS -->
         <!-- ================================================= -->
         <Button
             android:id="@+id/btnDiagnostics"
@@ -298,6 +298,20 @@
             android:drawableLeft="@drawable/medical"
             android:drawablePadding="2dp"
             android:gravity="center"/>
+            
+            <!-- RETURN TO ANDROID MODE -->
+<Button
+    android:id="@+id/btnReturnAndroid"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:text=" RETURN TO ANDROID MODE"
+    android:textAllCaps="false"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:textColor="#00FF66"
+    android:background="@drawable/gel_btn_outline_selector"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="12dp"/>
 
         <!-- ================================================= -->
         <!-- LOGS -->

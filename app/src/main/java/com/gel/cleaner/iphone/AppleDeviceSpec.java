@@ -1,88 +1,107 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceSpec.java — STABLE KNOWLEDGE BASE (FIELDS + COMPAT CONSTRUCTORS + unknown())
-// NOTE: From now on, Activities may request any field without "cannot find symbol".
+// AppleDeviceSpec.java — LOCKED KNOWLEDGE BASE (FINAL)
 
 package com.gel.cleaner.iphone;
 
 public class AppleDeviceSpec {
 
     // =========================================================
-    // IDENTITY
+    // BASIC IDENTITY
     // =========================================================
-    public String type;          // "iphone" | "ipad"
-    public String model;         // "iPhone 15" etc
-    public String identifier;    // e.g. "iPhone15,4" (optional)
-    public String modelNumber;   // e.g. "A2846" (optional)
-    public String year;          // e.g. "2023" (optional)
+    public String type;            // iphone / ipad
+    public String model;           // iPhone 13
+    public String year;
+    public String identifier;
+    public String modelNumber;
 
     // =========================================================
-    // PLATFORM / OS
+    // OS / PLATFORM
     // =========================================================
-    public String os;            // e.g. "iOS 17+" / "iPadOS 17+"
-    public String charging;      // e.g. "USB-C / Lightning / MagSafe / Qi"
+    public String os;
+    public String charging;
 
     // =========================================================
-    // CPU / GPU / RAM / STORAGE
+    // SOC / CPU / GPU
     // =========================================================
-    public String chipset;       // e.g. "A16 Bionic"
-    public String cpu;           // optional detailed text
-    public String gpu;           // optional detailed text
-    public String neural;        // optional e.g. "16-core Neural Engine"
-    public String ram;           // e.g. "6 GB"
-    public String storageOptions;// e.g. "128/256/512 GB"
+    public String soc;             // A15 Bionic
+    public String chipset;         // alias
+    public String processNode;     // 5 nm
+    public int cpuCores;
+    public int gpuCores;
+    public String metalFeatureSet;
+
+    // =========================================================
+    // MEMORY / STORAGE
+    // =========================================================
+    public String ram;
+    public String ramType;
+    public String storageBase;
+    public String storageOptions;
 
     // =========================================================
     // DISPLAY
     // =========================================================
-    public String display;       // e.g. '6.1" OLED'
-    public String resolution;    // e.g. "2556x1179"
-    public String refreshRate;   // e.g. "60Hz/120Hz"
-    public String displayOut;    // e.g. "AirPlay / USB-C Alt Mode / HDMI via adapter"
+    public String screen;
+    public String display;
+    public String resolution;
+    public String refreshRate;
+    public String displayOut;
 
     // =========================================================
     // NETWORK / WIRELESS
     // =========================================================
-    public String modem;         // e.g. "Qualcomm / Apple" (text)
-    public String cellular;      // e.g. "5G / LTE"
-    public String wifi;          // e.g. "Wi-Fi 6 / 6E"
-    public String bluetooth;     // e.g. "5.3"
+    public boolean has5G;
+    public boolean hasLTE;
+    public String cellular;
+    public String modem;
+    public String wifi;
+    public String bluetooth;
     public boolean hasNFC;
     public boolean hasAirDrop;
     public boolean hasAirPlay;
-    public String usbStandard;   // e.g. "USB-C (USB 2)" / "Lightning (USB 2)"
-    public String gps;           // e.g. "GPS/GNSS" (text)
-    public String simSlots;      // e.g. "dual eSIM" / "nano-SIM + eSIM"
-    public boolean hasESim;
-
-    // =========================================================
-    // SENSORS / HW
-    // =========================================================
+    public String gps;
     public boolean hasCompass;
     public boolean hasGyro;
     public boolean hasAccel;
     public boolean hasBarometer;
 
     // =========================================================
-    // AUDIO / PORTS
+    // SIM / PORTS
     // =========================================================
-    public String speakers;      // keep as String (Activities logInfo expects String)
-    public String microphones;   // keep as String (Activities logInfo expects String)
+    public String simSlots;
+    public boolean hasESim;
+    public String port;
+    public String usbStandard;
+
+    // =========================================================
+    // AUDIO
+    // =========================================================
+    public String speakers;        // STRING by design
+    public String microphones;     // STRING by design
     public boolean hasDolby;
     public boolean hasJack;
 
     // =========================================================
-    // CAMERAS (optional)
+    // BIOMETRICS / FEATURES
     // =========================================================
-    public String cameraRear;
-    public String cameraFront;
+    public boolean hasFaceID;
+    public boolean hasTouchID;
+    public String biometrics;
 
     // =========================================================
-    // OTHER (optional)
+    // POWER
     // =========================================================
+    public boolean hasFastCharge;
+    public boolean hasWirelessCharge;
+
+    // =========================================================
+    // THERMAL / NOTES
+    // =========================================================
+    public String thermalNote;
     public String notes;
 
     // =========================================================
-    // CONSTRUCTORS
+    // CONSTRUCTORS (KEEP COMPATIBILITY)
     // =========================================================
     public AppleDeviceSpec() {}
 
@@ -91,15 +110,11 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
-    // ---------------------------------------------------------
-    // COMPAT CONSTRUCTOR (keeps AppleModelRegistry old calls working)
-    // Signature required by build errors:
-    // new AppleDeviceSpec(String,String,String,String,String,String,String,String,String,String,String)
-    // ---------------------------------------------------------
+    // Used by AppleModelRegistry (11 params)
     public AppleDeviceSpec(
             String type,
             String model,
-            String chipset,
+            String soc,
             String ram,
             String storageOptions,
             String display,
@@ -111,7 +126,8 @@ public class AppleDeviceSpec {
     ) {
         this.type = type;
         this.model = model;
-        this.chipset = chipset;
+        this.soc = soc;
+        this.chipset = soc;
         this.ram = ram;
         this.storageOptions = storageOptions;
         this.display = display;
@@ -123,76 +139,21 @@ public class AppleDeviceSpec {
     }
 
     // =========================================================
-    // UNKNOWN FALLBACK (required by AppleModelRegistry + AppleSpecProvider)
+    // UNKNOWN FALLBACK (MANDATORY)
     // =========================================================
     public static AppleDeviceSpec unknown() {
-        AppleDeviceSpec s = new AppleDeviceSpec("unknown", "Unknown Model");
-        s.os = "Unknown";
-        s.charging = "Unknown";
-        s.chipset = "Unknown";
-        s.ram = "Unknown";
-        s.storageOptions = "Unknown";
-        s.display = "Unknown";
-        s.modem = "Unknown";
-        s.cellular = "Unknown";
-        s.wifi = "Unknown";
-        s.bluetooth = "Unknown";
-        s.usbStandard = "Unknown";
-        s.displayOut = "Unknown";
-        s.gps = "Unknown";
-        s.simSlots = "Unknown";
-        s.speakers = "Unknown";
-        s.microphones = "Unknown";
-        return s;
+        AppleDeviceSpec d = new AppleDeviceSpec("unknown", "Unknown");
+        d.os = "Unknown";
+        d.soc = "Unknown";
+        d.ram = "Unknown";
+        d.storageOptions = "Unknown";
+        d.display = "Unknown";
+        d.modem = "Unknown";
+        d.wifi = "Unknown";
+        d.bluetooth = "Unknown";
+        d.speakers = "Unknown";
+        d.microphones = "Unknown";
+        d.port = "Unknown";
+        return d;
     }
-
-    // =========================================================
-    // FLUENT SETTERS (OPTIONAL HELPERS)
-    // =========================================================
-    public AppleDeviceSpec setIdentifier(String v){ this.identifier = v; return this; }
-    public AppleDeviceSpec setModelNumber(String v){ this.modelNumber = v; return this; }
-    public AppleDeviceSpec setYear(String v){ this.year = v; return this; }
-
-    public AppleDeviceSpec setOs(String v){ this.os = v; return this; }
-    public AppleDeviceSpec setCharging(String v){ this.charging = v; return this; }
-
-    public AppleDeviceSpec setChipset(String v){ this.chipset = v; return this; }
-    public AppleDeviceSpec setCpu(String v){ this.cpu = v; return this; }
-    public AppleDeviceSpec setGpu(String v){ this.gpu = v; return this; }
-    public AppleDeviceSpec setNeural(String v){ this.neural = v; return this; }
-    public AppleDeviceSpec setRam(String v){ this.ram = v; return this; }
-    public AppleDeviceSpec setStorageOptions(String v){ this.storageOptions = v; return this; }
-
-    public AppleDeviceSpec setDisplay(String v){ this.display = v; return this; }
-    public AppleDeviceSpec setResolution(String v){ this.resolution = v; return this; }
-    public AppleDeviceSpec setRefreshRate(String v){ this.refreshRate = v; return this; }
-    public AppleDeviceSpec setDisplayOut(String v){ this.displayOut = v; return this; }
-
-    public AppleDeviceSpec setModem(String v){ this.modem = v; return this; }
-    public AppleDeviceSpec setCellular(String v){ this.cellular = v; return this; }
-    public AppleDeviceSpec setWifi(String v){ this.wifi = v; return this; }
-    public AppleDeviceSpec setBluetooth(String v){ this.bluetooth = v; return this; }
-    public AppleDeviceSpec setUsbStandard(String v){ this.usbStandard = v; return this; }
-    public AppleDeviceSpec setGps(String v){ this.gps = v; return this; }
-    public AppleDeviceSpec setSimSlots(String v){ this.simSlots = v; return this; }
-
-    public AppleDeviceSpec setHasNfc(boolean v){ this.hasNFC = v; return this; }
-    public AppleDeviceSpec setHasAirDrop(boolean v){ this.hasAirDrop = v; return this; }
-    public AppleDeviceSpec setHasAirPlay(boolean v){ this.hasAirPlay = v; return this; }
-    public AppleDeviceSpec setHasEsim(boolean v){ this.hasESim = v; return this; }
-
-    public AppleDeviceSpec setHasCompass(boolean v){ this.hasCompass = v; return this; }
-    public AppleDeviceSpec setHasGyro(boolean v){ this.hasGyro = v; return this; }
-    public AppleDeviceSpec setHasAccel(boolean v){ this.hasAccel = v; return this; }
-    public AppleDeviceSpec setHasBarometer(boolean v){ this.hasBarometer = v; return this; }
-
-    public AppleDeviceSpec setSpeakers(String v){ this.speakers = v; return this; }
-    public AppleDeviceSpec setMicrophones(String v){ this.microphones = v; return this; }
-    public AppleDeviceSpec setHasDolby(boolean v){ this.hasDolby = v; return this; }
-    public AppleDeviceSpec setHasJack(boolean v){ this.hasJack = v; return this; }
-
-    public AppleDeviceSpec setCameraRear(String v){ this.cameraRear = v; return this; }
-    public AppleDeviceSpec setCameraFront(String v){ this.cameraFront = v; return this; }
-
-    public AppleDeviceSpec setNotes(String v){ this.notes = v; return this; }
 }

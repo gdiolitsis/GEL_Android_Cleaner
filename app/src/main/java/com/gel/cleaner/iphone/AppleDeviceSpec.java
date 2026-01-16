@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceSpec.java — SCHEMA LOCK (FINAL, NO MORE FIELDS EVER)
+// AppleDeviceSpec.java — LOCKED KNOWLEDGE BASE (FINAL)
 
 package com.gel.cleaner.iphone;
 
@@ -9,7 +9,7 @@ public class AppleDeviceSpec {
     // BASIC IDENTITY
     // =========================================================
     public String type;            // iphone / ipad
-    public String model;           // iPhone 13
+    public String model;
     public String year;
     public String identifier;
     public String modelNumber;
@@ -23,30 +23,29 @@ public class AppleDeviceSpec {
     // =========================================================
     // SOC / CPU / GPU
     // =========================================================
-    public String soc;             // A15 Bionic
-    public String chipset;         // alias of soc
-    public String arch;            // ARMv8 / ARMv9
-    public String processNode;     // 5 nm
-    public String cpu;             // generic cpu string
+    public String soc;
+    public String chipset;
+    public String arch;
+    public String processNode;
+    public String cpu;
     public int cpuCores;
-    public String gpu;             // Apple GPU
+    public String gpu;
     public int gpuCores;
     public String metalFeatureSet;
 
     // =========================================================
     // MEMORY / STORAGE
     // =========================================================
-    public String ram;             // 4 GB
-    public String ramType;         // LPDDR4X
-    public String storageBase;     // 128 GB
-    public String storageOptions;  // 128 / 256 / 512
-    public String storageType;
+    public String ram;
+    public String ramType;
+    public String storageBase;
+    public String storageOptions;
 
     // =========================================================
     // DISPLAY
     // =========================================================
-    public String screen;          // OLED / LCD
-    public String display;         // Super Retina XDR
+    public String screen;
+    public String display;
     public String resolution;
     public String refreshRate;
     public String displayOut;
@@ -80,10 +79,19 @@ public class AppleDeviceSpec {
     // =========================================================
     // AUDIO
     // =========================================================
-    public String speakers;        // STRING ONLY
-    public String microphones;     // STRING ONLY
+    public String speakers;
+    public String microphones;
     public boolean hasDolby;
     public boolean hasJack;
+
+    // =========================================================
+    // CAMERA
+    // =========================================================
+    public String cameraMain;
+    public String cameraUltraWide;
+    public String cameraTele;
+    public String cameraFront;
+    public String cameraVideo;
 
     // =========================================================
     // BIOMETRICS / FEATURES
@@ -105,7 +113,7 @@ public class AppleDeviceSpec {
     public String notes;
 
     // =========================================================
-    // CONSTRUCTORS (COMPATIBILITY LOCK)
+    // CONSTRUCTORS
     // =========================================================
     public AppleDeviceSpec() {}
 
@@ -114,7 +122,7 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
-    // Used by AppleModelRegistry (legacy 11 params)
+    // Legacy compatibility (AppleModelRegistry)
     public AppleDeviceSpec(
             String type,
             String model,
@@ -143,7 +151,7 @@ public class AppleDeviceSpec {
     }
 
     // =========================================================
-    // UNKNOWN FALLBACK (MANDATORY)
+    // UNKNOWN FALLBACK
     // =========================================================
     public static AppleDeviceSpec unknown() {
         AppleDeviceSpec d = new AppleDeviceSpec("unknown", "Unknown");
@@ -160,6 +168,8 @@ public class AppleDeviceSpec {
         d.speakers = "Unknown";
         d.microphones = "Unknown";
         d.port = "Unknown";
+        d.cameraMain = "Unknown";
+        d.cameraFront = "Unknown";
         return d;
     }
 }

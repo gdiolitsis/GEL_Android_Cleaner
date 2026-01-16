@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppleDeviceSpec.java — LOCKED KNOWLEDGE BASE (FINAL)
+// AppleDeviceSpec.java — SCHEMA LOCK (FINAL, NO MORE FIELDS EVER)
 
 package com.gel.cleaner.iphone;
 
@@ -24,25 +24,29 @@ public class AppleDeviceSpec {
     // SOC / CPU / GPU
     // =========================================================
     public String soc;             // A15 Bionic
-    public String chipset;         // alias
+    public String chipset;         // alias of soc
+    public String arch;            // ARMv8 / ARMv9
     public String processNode;     // 5 nm
+    public String cpu;             // generic cpu string
     public int cpuCores;
+    public String gpu;             // Apple GPU
     public int gpuCores;
     public String metalFeatureSet;
 
     // =========================================================
     // MEMORY / STORAGE
     // =========================================================
-    public String ram;
-    public String ramType;
-    public String storageBase;
-    public String storageOptions;
+    public String ram;             // 4 GB
+    public String ramType;         // LPDDR4X
+    public String storageBase;     // 128 GB
+    public String storageOptions;  // 128 / 256 / 512
+    public String storageType;
 
     // =========================================================
     // DISPLAY
     // =========================================================
-    public String screen;
-    public String display;
+    public String screen;          // OLED / LCD
+    public String display;         // Super Retina XDR
     public String resolution;
     public String refreshRate;
     public String displayOut;
@@ -76,8 +80,8 @@ public class AppleDeviceSpec {
     // =========================================================
     // AUDIO
     // =========================================================
-    public String speakers;        // STRING by design
-    public String microphones;     // STRING by design
+    public String speakers;        // STRING ONLY
+    public String microphones;     // STRING ONLY
     public boolean hasDolby;
     public boolean hasJack;
 
@@ -101,7 +105,7 @@ public class AppleDeviceSpec {
     public String notes;
 
     // =========================================================
-    // CONSTRUCTORS (KEEP COMPATIBILITY)
+    // CONSTRUCTORS (COMPATIBILITY LOCK)
     // =========================================================
     public AppleDeviceSpec() {}
 
@@ -110,7 +114,7 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
-    // Used by AppleModelRegistry (11 params)
+    // Used by AppleModelRegistry (legacy 11 params)
     public AppleDeviceSpec(
             String type,
             String model,
@@ -145,6 +149,8 @@ public class AppleDeviceSpec {
         AppleDeviceSpec d = new AppleDeviceSpec("unknown", "Unknown");
         d.os = "Unknown";
         d.soc = "Unknown";
+        d.cpu = "Unknown";
+        d.gpu = "Unknown";
         d.ram = "Unknown";
         d.storageOptions = "Unknown";
         d.display = "Unknown";

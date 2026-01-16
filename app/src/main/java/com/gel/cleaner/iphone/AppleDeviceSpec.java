@@ -1,23 +1,25 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// ============================================================
+// AppleDeviceSpec.java — FINAL STABLE EDITION
+// Scope: SoC/CPU/RAM/Screen, iOS support, Camera basics,
+//        Connectivity, Ports, Biometrics
+// ============================================================
+
 package com.gel.cleaner.iphone;
 
 public class AppleDeviceSpec {
 
     // =========================
-    // INTERNALS
+    // CORE
     // =========================
     public String soc;
     public String cpu;
     public String ram;
     public String screen;
-    public String wifi;
-    public String bluetooth;
-    public String biometrics;
-    public String port;
-    public String charging;
-    public String os;
+    public String osSupport;
 
     // =========================
-    // PERIPHERALS — CAMERA
+    // CAMERA (basics)
     // =========================
     public String cameraMain;
     public String cameraUltraWide;
@@ -26,247 +28,160 @@ public class AppleDeviceSpec {
     public String cameraVideo;
 
     // =========================
-    // PERIPHERALS — MODEM / CELLULAR
+    // CONNECTIVITY
     // =========================
-    public String modem;
+    public String wifi;
+    public String bluetooth;
     public boolean has5G;
     public boolean hasLTE;
-    public String simSlots;
-    public boolean hasESim;
 
     // =========================
-    // PERIPHERALS — CONNECTIVITY
+    // PORTS
     // =========================
-    public boolean hasAirDrop;
-    public boolean hasNFC;
-
-    // =========================
-    // PERIPHERALS — SENSORS
-    // =========================
-    public String gps;
-    public boolean hasCompass;
-    public boolean hasGyro;
-    public boolean hasAccel;
-    public boolean hasBarometer;
-
-    // =========================
-    // PERIPHERALS — AUDIO
-    // =========================
-    public String speakers;
-    public boolean hasDolby;
-    public String microphones;
-    public boolean hasJack;
-
-    // =========================
-    // PERIPHERALS — PORTS
-    // =========================
-    public String usbStandard;
+    public String port;
     public boolean hasFastCharge;
     public boolean hasWirelessCharge;
 
     // =========================
-    // PERIPHERALS — BIOMETRICS
+    // BIOMETRICS
     // =========================
+    public String biometrics; // "Face ID" | "Touch ID" | "None"
     public boolean hasFaceID;
     public boolean hasTouchID;
 
-    // =========================
-    // PERIPHERALS — DISPLAY I/O
-    // =========================
-    public String displayOut;
-    public boolean hasAirPlay;
-
-    // =========================
-    // PERIPHERALS — STORAGE
-    // =========================
-    public String storageOptions;
-
     // =========================================================
-    // CONSTRUCTOR (FULL)
+    // CONSTRUCTOR (FULL — STABLE)
     // =========================================================
     public AppleDeviceSpec(
-            String soc, String cpu, String ram, String screen,
-            String wifi, String bluetooth, String biometrics,
-            String port, String charging, String os,
+            String soc,
+            String cpu,
+            String ram,
+            String screen,
+            String osSupport,
 
-            String cameraMain, String cameraUltraWide,
-            String cameraTele, String cameraFront, String cameraVideo,
+            String cameraMain,
+            String cameraUltraWide,
+            String cameraTele,
+            String cameraFront,
+            String cameraVideo,
 
-            String modem, boolean has5G, boolean hasLTE,
-            String simSlots, boolean hasESim,
+            String wifi,
+            String bluetooth,
+            boolean has5G,
+            boolean hasLTE,
 
-            boolean hasAirDrop, boolean hasNFC,
-
-            String gps, boolean hasCompass, boolean hasGyro,
-            boolean hasAccel, boolean hasBarometer,
-
-            String speakers, boolean hasDolby,
-            String microphones, boolean hasJack,
-
-            String usbStandard, boolean hasFastCharge,
+            String port,
+            boolean hasFastCharge,
             boolean hasWirelessCharge,
 
-            boolean hasFaceID, boolean hasTouchID,
-
-            String displayOut, boolean hasAirPlay,
-
-            String storageOptions
+            String biometrics,
+            boolean hasFaceID,
+            boolean hasTouchID
     ) {
-
-        // ---- internals ----
         this.soc = soc;
         this.cpu = cpu;
         this.ram = ram;
         this.screen = screen;
-        this.wifi = wifi;
-        this.bluetooth = bluetooth;
-        this.biometrics = biometrics;
-        this.port = port;
-        this.charging = charging;
-        this.os = os;
+        this.osSupport = osSupport;
 
-        // ---- camera ----
         this.cameraMain = cameraMain;
         this.cameraUltraWide = cameraUltraWide;
         this.cameraTele = cameraTele;
         this.cameraFront = cameraFront;
         this.cameraVideo = cameraVideo;
 
-        // ---- modem ----
-        this.modem = modem;
+        this.wifi = wifi;
+        this.bluetooth = bluetooth;
         this.has5G = has5G;
         this.hasLTE = hasLTE;
-        this.simSlots = simSlots;
-        this.hasESim = hasESim;
 
-        // ---- connectivity ----
-        this.hasAirDrop = hasAirDrop;
-        this.hasNFC = hasNFC;
-
-        // ---- sensors ----
-        this.gps = gps;
-        this.hasCompass = hasCompass;
-        this.hasGyro = hasGyro;
-        this.hasAccel = hasAccel;
-        this.hasBarometer = hasBarometer;
-
-        // ---- audio ----
-        this.speakers = speakers;
-        this.hasDolby = hasDolby;
-        this.microphones = microphones;
-        this.hasJack = hasJack;
-
-        // ---- ports ----
-        this.usbStandard = usbStandard;
+        this.port = port;
         this.hasFastCharge = hasFastCharge;
         this.hasWirelessCharge = hasWirelessCharge;
 
-        // ---- biometrics ----
+        this.biometrics = biometrics;
         this.hasFaceID = hasFaceID;
         this.hasTouchID = hasTouchID;
-
-        // ---- display ----
-        this.displayOut = displayOut;
-        this.hasAirPlay = hasAirPlay;
-
-        // ---- storage ----
-        this.storageOptions = storageOptions;
     }
 
-// =========================================================
-// CONSTRUCTOR (LIGHT — 11 params, backward compatible)
-// =========================================================
-public AppleDeviceSpec(
-        String soc,
-        String cpu,
-        String ram,
-        String screen,
-        String camera,
-        String bluetooth,
-        String wifi,
-        String biometrics,
-        String port,
-        String charging,
-        String os
-) {
-    this(
-        // -------- internals --------
-        soc,
-        cpu,
-        ram,
-        screen,
-        wifi,
-        bluetooth,
-        biometrics,
-        port,
-        charging,
-        os,
+    // =========================================================
+    // CONSTRUCTOR (LIGHT — 11 params, backward compatible)
+    // =========================================================
+    public AppleDeviceSpec(
+            String soc,
+            String cpu,
+            String ram,
+            String screen,
+            String camera,     // main camera
+            String bluetooth,
+            String wifi,
+            String biometrics,
+            String port,
+            String charging,   // "Fast charge" / "MagSafe" / etc
+            String osSupport
+    ) {
+        this(
+                // ---- core ----
+                soc,
+                cpu,
+                ram,
+                screen,
+                osSupport,
 
-        // -------- camera --------
-        camera,          // main
-        "Unknown",       // ultra-wide
-        "Unknown",       // tele
-        "Unknown",       // front
-        "Unknown",       // video
+                // ---- camera ----
+                camera,        // main
+                "Unknown",     // ultra-wide
+                "Unknown",     // tele
+                "Unknown",     // front
+                "Unknown",     // video
 
-        // -------- modem --------
-        "Unknown",       // modem
-        false,           // 5G
-        true,            // LTE (λογικό default)
-        "1 SIM",         // simSlots
-        false,           // eSIM
+                // ---- connectivity ----
+                wifi,
+                bluetooth,
+                false,         // 5G default
+                true,          // LTE default
 
-        // -------- connectivity --------
-        false,           // AirDrop
-        false,           // NFC
+                // ---- ports ----
+                port,
+                charging != null && charging.toLowerCase().contains("fast"),
+                charging != null && charging.toLowerCase().contains("wireless"),
 
-        // -------- sensors --------
-        "Unknown",       // GPS
-        false,           // Compass
-        false,           // Gyro
-        false,           // Accel
-        false,           // Barometer
+                // ---- biometrics ----
+                biometrics,
+                biometrics != null && biometrics.equalsIgnoreCase("Face ID"),
+                biometrics != null && biometrics.equalsIgnoreCase("Touch ID")
+        );
+    }
 
-        // -------- audio --------
-        "Unknown",       // speakers
-        false,           // Dolby
-        "Unknown",       // microphones
-        false,           // jack
+    // =========================================================
+    // UNKNOWN (SAFE FALLBACK)
+    // =========================================================
+    public static AppleDeviceSpec unknown() {
+        return new AppleDeviceSpec(
+                "Unknown",
+                "Unknown",
+                "Unknown",
+                "Unknown",
+                "Unknown",
 
-        // -------- ports --------
-        "Unknown",       // usbStandard
-        false,           // fastCharge
-        false,           // wirelessCharge
+                "Unknown",
+                "Unknown",
+                "Unknown",
+                "Unknown",
+                "Unknown",
 
-        // -------- biometrics --------
-        biometrics.equalsIgnoreCase("Face ID"),   // hasFaceID
-        biometrics.equalsIgnoreCase("Touch ID"),  // hasTouchID
+                "Unknown",
+                "Unknown",
+                false,
+                false,
 
-        // -------- display --------
-        "Unknown",       // displayOut
-        false,           // AirPlay
+                "Unknown",
+                false,
+                false,
 
-        // -------- storage --------
-        "Unknown"        // storageOptions
-    );
-}
-    
-// =========================================================
-// UNKNOWN
-// =========================================================
-public static AppleDeviceSpec unknown() {
-    return new AppleDeviceSpec(
-            "Unknown",   // soc
-            "Unknown",   // cpu
-            "Unknown",   // ram
-            "Unknown",   // screen
-            "Unknown",   // camera
-            "Unknown",   // bluetooth
-            "Unknown",   // wifi
-            "Unknown",   // biometrics
-            "Unknown",   // port
-            "Unknown",   // charging
-            "Unknown"    // os
+                "None",
+                false,
+                false
         );
     }
 }

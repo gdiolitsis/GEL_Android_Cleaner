@@ -1,330 +1,1152 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollRoot"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@color/gel_bg">
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// MainActivity — STABLE FINAL
 
-    <!-- ROOT -->
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal">
+package com.gel.cleaner;
 
-        <!-- ================================================= -->
-        <!-- HEADER -->
-        <!-- ================================================= -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+import com.gel.cleaner.iphone.AppleDeviceInfoInternalActivity;
+import com.gel.cleaner.iphone.AppleDeviceInfoPeripheralsActivity;
+import com.gel.cleaner.base.*;
 
-            <ImageView
-                android:id="@+id/imgLogo"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/gel_logo"
-                android:contentDescription="@string/app_name"
-                android:layout_marginEnd="4dp" />
+import android.content.pm.ResolveInfo;
 
-            <TextView
-                android:id="@+id/txtTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="@string/app_name"
-                android:textColor="#00FFC8"
-                android:textStyle="bold"
-                android:textSize="22sp"
-                android:singleLine="true" />
+import java.util.LinkedHashMap;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.speech.tts.TextToSpeech;
 
-            <!-- LANG FLAGS -->
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:gravity="end">
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.view.View;
+import android.util.TypedValue;
+import android.widget.*;
+import android.view.Window;
 
-                <TextView
-                    android:id="@+id/btnLangGR"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:gravity="center"
-                    android:text="ðŸ‡¬ðŸ‡·"
-                    android:textSize="24sp"
-                    android:textColor="@color/gel_text_primary"
-                    android:layout_marginBottom="6dp" />
+import androidx.appcompat.app.AlertDialog;
 
-                <TextView
-                    android:id="@+id/btnLangEN"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:gravity="center"
-                    android:text="ðŸ‡¬ðŸ‡§"
-                    android:textSize="24sp"
-                    android:textColor="@color/gel_text_primary" />
-            </LinearLayout>
-        </LinearLayout>
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-        <!-- SUBTITLE -->
-        <TextView
-            android:id="@+id/txtSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/device_ready"
-            android:textColor="@color/gel_text_secondary"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:layout_marginBottom="16dp"/>
 
-        <!-- ================================================= -->
-        <!-- TOP ACTIONS -->
-        <!-- ================================================= -->
+public class MainActivity extends GELAutoActivityHook
+        implements GELCleaner.LogCallback {
+        	
+        private boolean skipWelcomePopupOnce = false;
+        	
+        private boolean welcomeShown = false;
 
-        <!-- DONATE (Î Î¡Î©Î¤ÎŸ) -->
-        <Button
-            android:id="@+id/btnDonate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/donate"
-            android:background="@drawable/gel_btn_danger_outline"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_marginBottom="14dp"
-            android:singleLine="true"/>
+    // ==========================
+    // STATE
+    // ==========================
+    private boolean startupFlowDone = false;
 
-        <!-- DEVICE DECLARATION -->
-        <Button
-            android:id="@+id/btnAppleDeviceDeclaration"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/apple_device_declaration"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:textColor="@color/gel_btn_text_white"
-            android:gravity="center"
-            android:maxLines="2"
-            android:padding="6dp"
-            android:layout_marginBottom="18dp"/>
+    private TextView txtLogs;
+    private ScrollView scroll;
 
-        <!-- ================================================= -->
-        <!-- SYSTEM -->
-        <!-- ================================================= -->
-        <TextView
-            android:id="@+id/section_system"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/system"
-            android:textColor="@color/gel_text_primary"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:paddingLeft="6dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"/>
+    // ==========================
+    // TTS
+    // ==========================
+    private final TextToSpeech[] tts = new TextToSpeech[1];
+    private final boolean[] ttsReady = new boolean[1];
 
-        <!-- PHONE INFO ROW -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+    // ==========================
+    // PREFS
+    // ==========================
+    private static final String PREFS = "gel_prefs";
+    private static final String KEY_PLATFORM = "platform_mode"; // android | apple
 
-            <Button
-                android:id="@+id/btnPhoneInfoInternal"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/phone_info_internal"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:gravity="center"
-                android:maxLines="2"
-                android:padding="6dp"
-                android:layout_marginEnd="6dp"/>
+    // =========================================================
+    // LOCALE
+    // =========================================================
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 
-            <Button
-                android:id="@+id/btnPhoneInfoPeripherals"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/phone_info_peripherals"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:gravity="center"
-                android:maxLines="2"
-                android:padding="6dp"/>
-        </LinearLayout>
+    // =========================================================
+    // ON CREATE
+    // =========================================================
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        if (!skipWelcomePopupOnce) {
+    showWelcomePopup();
+} else {
+    skipWelcomePopupOnce = false; // reset για επόμενο πραγματικό launch
+}
 
-        <!-- CPU/RAM LIVE -->
-        <Button
-            android:id="@+id/btnCpuRamLive"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/cpu_ram_live"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:textColor="@color/gel_btn_text_white"
-            android:layout_marginBottom="16dp"
-            android:singleLine="true"
-            android:ellipsize="end"/>
+        txtLogs = findViewById(R.id.txtLogs);
+        scroll  = findViewById(R.id.scrollRoot);
 
-        <!-- ================================================= -->
-        <!-- CLEANER -->
-        <!-- ================================================= -->
-        <TextView
-            android:id="@+id/section_clean"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cleaner"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:paddingLeft="6dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="6dp"/>
+        applySavedLanguage();
+        setupLangButtons();
+        setupDonate();
+        setupButtons();
 
-        <!-- CLEAN ALL -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+// ==========================
+// TTS INIT (ΠΡΩΤΑ!)
+// ==========================
+tts[0] = new TextToSpeech(this, status -> {
+    ttsReady[0] = (status == TextToSpeech.SUCCESS);
 
-            <LinearLayout
-                android:id="@+id/btnCleanAll"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:background="@drawable/gel_btn_danger_outline"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:layout_margin="4dp">
+    // Αν το welcome popup είναι ήδη ανοιχτό → μίλα ΤΩΡΑ
+    if (ttsReady[0] && welcomeShown) {
+        speakWelcomeTTS();
+    }
+});
 
-                <TextView
-                    android:text="@string/clean_all"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:textSize="17sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-            </LinearLayout>
-        </LinearLayout>
+        // 🔥 ALWAYS SHOW FLOW (once per launch)
+        if (!startupFlowDone) {
+            startupFlowDone = true;
+            startPlatformFlow();
+        }
 
-        <!-- ================================================= -->
-        <!-- JUNK -->
-        <!-- ================================================= -->
-        <TextView
-            android:id="@+id/section_junk"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/junk"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+        // 🍎 APPLE MODE FILTER
+        if (isAppleMode()) {
+            applyAppleModeUI();
+        }
 
-        <!-- CACHE BUTTONS -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+        log("📱 Device ready", false);
 
-            <Button
-                android:id="@+id/btnBrowserCache"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/browser_cache"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:gravity="center"
-                android:singleLine="false"
-                android:maxLines="2"
-                android:ellipsize="none"
-                android:padding="6dp"/>
+// =========================================================
+// FORCE PLATFORM PICKER (RETURN FROM APPLE MODE)
+// =========================================================
+boolean forcePicker =
+        getIntent() != null && getIntent().getBooleanExtra("force_platform_picker", false);
 
-            <Button
-                android:id="@+id/btnAppCache"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="60dp"
-                android:text="@string/app_cache_btn"
-                android:background="@drawable/gel_btn_outline_selector"
-                android:textColor="@color/gel_btn_text_white"
-                android:layout_margin="4dp"
-                android:gravity="center"
-                android:singleLine="false"
-                android:maxLines="2"
-                android:ellipsize="none"
-                android:padding="6dp"/>
-        </LinearLayout>
+if (forcePicker) {
+    showWelcomePopup();
+}
 
-        <!-- ================================================= -->
-        <!-- PERFORMANCE -->
-        <!-- ================================================= -->
-        <TextView
-            android:id="@+id/section_performance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/performance"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/gel_text_primary"
-            android:layout_marginTop="18dp"
-            android:paddingLeft="6dp"/>
+// =========================================================
+// RETURN TO ANDROID BUTTON
+// =========================================================
+Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
-        <!-- ================================================= -->
-        <!-- BOTTOM â€” DIAGNOSIS -->
-        <!-- ================================================= -->
-        <Button
-            android:id="@+id/btnDiagnostics"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/diagnostics"
-            android:background="@drawable/gel_btn_outline_selector"
-            android:textColor="#00FFBF"
-            android:textStyle="bold"
-            android:textSize="22sp"
-            android:layout_marginTop="28dp"
-            android:layout_marginBottom="20dp"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:drawableLeft="@drawable/medical"
-            android:drawablePadding="2dp"
-            android:gravity="center"/>
-            
-            <!-- RETURN TO ANDROID MODE -->
-<Button
-    android:id="@+id/btnReturnAndroid"
-    android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:text=" RETURN TO ANDROID MODE"
-    android:textAllCaps="false"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:textColor="#00FF66"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:layout_marginTop="10dp"
-    android:layout_marginBottom="12dp"/>
+if (btnReturnAndroid != null) {
+    btnReturnAndroid.setOnClickListener(v -> {
 
-        <!-- ================================================= -->
-        <!-- LOGS -->
-        <!-- ================================================= -->
-        <TextView
-            android:id="@+id/txtLogs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/gel_text_secondary"
-            android:textSize="13sp"
-            android:padding="12dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/gel_bg"/>
+        // γυρνάμε σε Android mode
+        getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .edit()
+                .putString("device_mode", "android")
+                .apply();
 
-    </LinearLayout>
-</ScrollView>
+        // πήγαινε στο MainActivity και ζήτα platform picker
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra("force_platform_picker", true);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
+
+        finish();
+    });
+}
+}
+
+    @Override
+    protected void onDestroy() {
+        try {
+            if (tts[0] != null) tts[0].shutdown();
+        } catch (Throwable ignore) {}
+        super.onDestroy();
+    }
+
+@Override
+public void onBackPressed() {
+
+    // 🔒 Σταμάτα TTS αν παίζει
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    // 🔁 Πήγαινε κατευθείαν στο PLATFORM SELECT popup
+    showPlatformSelectPopup();
+}
+
+// =========================================================
+// PLATFORM FLOW — ALWAYS SHOW WELCOME
+// =========================================================
+private void startPlatformFlow() {
+
+    // Κάθε φορά που ανοίγει η app → δείξε welcome
+    showWelcomePopup();
+}
+
+    private boolean isAppleMode() {
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    return "apple".equals(
+            prefs.getString("platform_mode", "none")
+    );
+}
+
+@Override
+protected void onResume() {
+    super.onResume();
+
+    String mode = getSavedPlatform();   // "android" | "apple" | "none"
+
+    if ("apple".equals(mode)) {
+        applyAppleModeUI();
+    } else {
+        applyAndroidModeUI();
+    }
+}
+
+private AlertDialog.Builder buildNeonDialog() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this);
+
+    AlertDialog d = b.create();
+
+    // -------- background drawable --------
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);          // μαύρο φόντο
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(3), 0xFFFFD700);  // χρυσό περίγραμμα
+
+    d.setOnShowListener(x -> {
+        Window w = d.getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(bg);
+        }
+    });
+
+    return b;
+}
+
+private ArrayAdapter<String> neonAdapter(String[] names) {
+    return new ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            names
+    ) {
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView tv = (TextView) super.getView(position, convertView, parent);
+
+            tv.setTextColor(0xFF39FF14);   // 💚 neon green
+            tv.setTextSize(16f);
+            tv.setPadding(dp(12), dp(10), dp(12), dp(10));
+
+            return tv;
+        }
+    };
+}
+
+// =========================================================
+// PLATFORM STORAGE
+// =========================================================
+private void savePlatform(String mode) {
+    getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .edit()
+            .putString("platform_mode", mode)
+            .apply();
+}
+
+private String getSavedPlatform() {
+    return getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .getString("platform_mode", "android"); // default = android
+}
+
+    // =========================================================
+    // TTS — WELCOME
+    // =========================================================
+    private void speakWelcomeTTS() {
+
+        if (welcomeMuted) return;
+
+        try {
+            if (tts[0] == null || !ttsReady[0]) return;
+
+            tts[0].stop();
+
+            if ("GR".equals(welcomeLang)) {
+                tts[0].setLanguage(new Locale("el", "GR"));
+                tts[0].speak(
+                        getWelcomeTextGR(),
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "WELCOME_GR"
+                );
+            } else {
+                tts[0].setLanguage(Locale.US);
+                tts[0].speak(
+                        getWelcomeTextEN(),
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "WELCOME_EN"
+                );
+            }
+
+        } catch (Throwable ignore) {}
+    }
+
+    // =========================================================
+    // WELCOME TEXT
+    // =========================================================
+    private String getWelcomeTextEN() {
+    return
+        "Although this is an Android application, " +
+        "it is the only tool at the market, that can also help you " +
+        "understand problems on Apple devices.\n\n" +
+        "By importing panic logs, from your iPhone or iPad, " +
+        "we analyze, what really happened inside your device.\n\n" +
+        "You will understand:\n" +
+        "• what your panic logs mean.\n" +
+        "• what caused the issue,\n" +
+        "• and how you can solve it.\n\n" +
+        "Choose what you want to explore:\n" +
+        "your Android device, or an other Apple device?.";
+}
+
+private String getWelcomeTextGR() {
+    return
+        "Παρότι αυτή είναι εφαρμογή Android, " +
+        "είναι το μοναδικό εργαλείο στην αγορά, που μπορεί να σε βοηθήσει " +
+        "να καταλάβεις προβλήματα, και σε συσκευές Apple.\n\n" +
+        "Με την εισαγωγή panic logs, από iPhone ή iPad, " +
+        "αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
+        "Θα καταλάβεις:\n" +
+        "• τι σημαίνουν τα panic logs.\n" +
+        "• τι προκάλεσε το πρόβλημα,\n" +
+        "• και πώς μπορείς να το λύσεις.\n\n" +
+        "Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
+        "τη συσκευή Android σου, ή μια άλλη συσκευή Apple?.";
+}
+
+    // =========================================================
+    // DIMEN
+    // =========================================================
+    private int dp(float v) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                v,
+                getResources().getDisplayMetrics()
+        );
+    }
+
+// ============================================================
+// WELCOME POPUP — LAB 28 STYLE (MUTE + LANG + TTS)  ✅FINAL
+// ============================================================
+
+private boolean welcomeMuted = false;
+private String  welcomeLang  = "EN";
+
+// ------------------------------------------------------------
+// SHOW POPUP
+// ------------------------------------------------------------
+private void showWelcomePopup() {
+
+        AlertDialog.Builder b =
+        new AlertDialog.Builder(MainActivity.this);
+        
+        b.setCancelable(true);
+
+        // ================= ROOT =================
+        LinearLayout box = new LinearLayout(MainActivity.this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        // ================= TITLE =================
+        TextView title = new TextView(MainActivity.this);
+        title.setText("WELCOME");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        box.addView(title);
+
+        // ================= MESSAGE =================
+        TextView msg = new TextView(MainActivity.this);
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.START);
+
+        // αρχική γλώσσα από σύστημα
+        String sys = LocaleHelper.getLang(MainActivity.this); // "el" | "en"
+        welcomeLang = ("el".equalsIgnoreCase(sys)) ? "GR" : "EN";
+        msg.setText("GR".equals(welcomeLang) ? getWelcomeTextGR() : getWelcomeTextEN());
+
+        msg.setPadding(0, 0, 0, dp(12));   // λίγο αέρα πριν τα controls
+box.addView(msg);
+
+        // ============================================================
+        // CONTROLS ROW — MUTE (LEFT) + LANG (RIGHT)
+        // ============================================================
+        LinearLayout controls = new LinearLayout(MainActivity.this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        controls.setPadding(0, dp(16), 0, dp(10));
+
+        // ==========================
+        // 🔕 MUTE BUTTON
+        // ==========================
+        Button muteBtn = new Button(MainActivity.this);
+muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
+muteBtn.setAllCaps(false);
+muteBtn.setTextColor(0xFFFFFFFF);
+muteBtn.setTextSize(16f);   // 👈 ΕΔΩ
+
+GradientDrawable muteBg = new GradientDrawable();
+muteBg.setColor(0xFF444444);
+muteBg.setCornerRadius(dp(12));
+muteBg.setStroke(dp(2), 0xFFFFD700);
+muteBtn.setBackground(muteBg);
+
+        LinearLayout.LayoutParams lpMute =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(48),   // 🔒 ΣΤΑΘΕΡΟ ΥΨΟΣ — ίδιο με OK & Language box
+                1f
+        );
+lpMute.setMargins(0, 0, dp(8), 0);
+muteBtn.setLayoutParams(lpMute);
+
+        muteBtn.setOnClickListener(v -> {
+            welcomeMuted = !welcomeMuted;
+            muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
+            try {
+                if (welcomeMuted && tts != null && tts[0] != null) tts[0].stop();
+            } catch (Throwable ignore) {}
+        });
+
+        // ==========================
+        // 🌐 LANGUAGE SPINNER
+        // ==========================
+        Spinner langSpinner = new Spinner(MainActivity.this);
+        
+        langSpinner.setMinimumHeight(dp(48));
+langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
+
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        MainActivity.this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        langSpinner.setAdapter(langAdapter);
+
+        // αρχική επιλογή
+        if ("GR".equals(welcomeLang)) {
+            langSpinner.setSelection(1);
+            msg.setText(getWelcomeTextGR());
+        } else {
+            langSpinner.setSelection(0);
+            msg.setText(getWelcomeTextEN());
+        }
+
+        langSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+
+                        welcomeLang = (pos == 0) ? "EN" : "GR";
+
+                        if ("GR".equals(welcomeLang)) {
+                            msg.setText(getWelcomeTextGR());
+                        } else {
+                            msg.setText(getWelcomeTextEN());
+                        }
+
+                        speakWelcomeTTS();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> p) { }
+                });
+
+        // ==========================
+        // 🌐 LANGUAGE BOX (RIGHT)
+        // ==========================
+        LinearLayout langBox = new LinearLayout(MainActivity.this);
+        langBox.setOrientation(LinearLayout.HORIZONTAL);
+        langBox.setGravity(Gravity.CENTER_VERTICAL);
+        langBox.setPadding(dp(10), 0, dp(10), 0);
+
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF1A1A1A);
+        langBg.setCornerRadius(dp(12));
+        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBox.setBackground(langBg);
+
+        LinearLayout.LayoutParams lpLangBox =
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(48),
+                        1f
+                );
+        lpLangBox.setMargins(dp(8), 0, 0, 0);
+        langBox.setLayoutParams(lpLangBox);
+
+        LinearLayout.LayoutParams lpSpin =
+        new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f
+        );
+langSpinner.setLayoutParams(lpSpin);
+
+        langBox.addView(langSpinner);
+
+        controls.addView(muteBtn);
+        controls.addView(langBox);
+        box.addView(controls);
+
+// ==========================
+// OK BUTTON
+// ==========================
+Button okBtn = new Button(MainActivity.this);
+okBtn.setText("OK");
+okBtn.setAllCaps(false);
+okBtn.setTextColor(0xFFFFFFFF);
+okBtn.setTextSize(18f);
+
+// 🔴 Η ΔΙΟΡΘΩΣΗ
+okBtn.setGravity(Gravity.CENTER);
+okBtn.setPadding(dp(12), 0, dp(12), 0);
+
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF0F8A3B);
+okBg.setCornerRadius(dp(14));
+okBg.setStroke(dp(3), 0xFFFFD700);
+okBtn.setBackground(okBg);
+
+LinearLayout.LayoutParams lpOk =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(56)
+        );
+lpOk.setMargins(0, dp(16), 0, 0);
+okBtn.setLayoutParams(lpOk);
+
+box.addView(okBtn);
+
+// ==========================
+// DIALOG
+// ==========================
+b.setView(box);
+final AlertDialog d = b.create();
+
+d.setOnDismissListener(dialog -> {
+    welcomeShown = false;
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT));
+}
+
+d.show();
+
+// 👇 το popup ΕΙΝΑΙ τώρα ορατό
+welcomeShown = true;
+
+// 🔒 φέρε το μπροστά
+if (d.getWindow() != null) {
+    d.getWindow().clearFlags(
+            android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+    );
+    d.getWindow().addFlags(
+            android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
+    );
+}
+
+// ▶️ προσπάθησε να μιλήσεις ΤΩΡΑ
+if (ttsReady[0]) {
+    speakWelcomeTTS();
+}
+
+okBtn.setOnClickListener(v -> {
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    d.dismiss();
+    showPlatformSelectPopup();
+    });
+}
+
+// =========================================================
+// PLATFORM SELECT — FINAL, CLEAN
+// =========================================================
+private void showPlatformSelectPopup() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    MainActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        // ---------------- TITLE ----------------
+        TextView t = new TextView(this);
+        t.setText("SELECT PLATFORM");
+        t.setTextColor(Color.WHITE);
+        t.setTextSize(18f);
+        t.setTypeface(null, Typeface.BOLD);
+        t.setGravity(Gravity.CENTER);
+        t.setPadding(0,0,0,dp(12));
+        box.addView(t);
+
+// =================================================
+// 🤖 ANDROID "BUTTON" (TextView)
+// =================================================
+TextView androidBtn = new TextView(this);
+androidBtn.setText("🤖  ANDROID DEVICE");
+androidBtn.setTextColor(Color.WHITE);
+androidBtn.setTextSize(16f);
+androidBtn.setTypeface(null, Typeface.BOLD);
+androidBtn.setGravity(Gravity.CENTER);
+androidBtn.setClickable(true);
+androidBtn.setFocusable(true);
+
+// 🔥 λιγότερο padding = πιο φαρδύ οπτικά
+androidBtn.setPadding(dp(10), dp(14), dp(10), dp(14));
+
+GradientDrawable bgAndroid = new GradientDrawable();
+bgAndroid.setColor(0xFF000000);
+bgAndroid.setCornerRadius(dp(14));
+bgAndroid.setStroke(dp(3), 0xFFFFD700);
+androidBtn.setBackground(bgAndroid);
+
+// 🔥 ίδιο ύψος, πιο “γεμάτο” πλάτος
+LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
+    lpBtn.setMargins(dp(4), dp(12), dp(4), 0);
+    androidBtn.setLayoutParams(lpBtn);
+
+// 🔒 μην κόβεται ποτέ το text
+androidBtn.setSingleLine(false);
+androidBtn.setMaxLines(2);
+androidBtn.setEllipsize(null);
+
+// =================================================
+// 🍎 APPLE "BUTTON" (TextView)
+// =================================================
+TextView appleBtn = new TextView(this);
+appleBtn.setText("🍎  APPLE DEVICE");
+appleBtn.setTextColor(Color.WHITE);
+appleBtn.setTextSize(16f);
+appleBtn.setTypeface(null, Typeface.BOLD);
+appleBtn.setGravity(Gravity.CENTER);
+appleBtn.setClickable(true);
+appleBtn.setFocusable(true);
+
+// 🔥 ίδιο padding με Android
+appleBtn.setPadding(dp(10), dp(14), dp(10), dp(14));
+
+GradientDrawable bgApple = new GradientDrawable();
+bgApple.setColor(0xFF000000);
+bgApple.setCornerRadius(dp(14));
+bgApple.setStroke(dp(3), 0xFFFFD700);
+appleBtn.setBackground(bgApple);
+
+LinearLayout.LayoutParams lpBtn2 =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
+    lpBtn2.setMargins(dp(4), dp(12), dp(4), 0);
+    appleBtn.setLayoutParams(lpBtn2);
+
+    // ---------------- ADD ----------------
+    box.addView(androidBtn);
+    box.addView(appleBtn);
+
+    b.setView(box);
+    final AlertDialog d = b.create();
+
+    if (d.getWindow()!=null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
+
+    d.show();
+
+// ---------------- ACTIONS ----------------
+    androidBtn.setOnClickListener(v -> {
+        savePlatform("android");
+        applyAndroidModeUI();   // μένουμε στην ίδια activity
+        d.dismiss();
+    });
+
+    appleBtn.setOnClickListener(v -> {
+        savePlatform("apple");
+        applyAppleModeUI();     // μένουμε στην ίδια activity
+        d.dismiss();
+    });
+}
+
+    // =========================================================
+    // 🍎 APPLE ENTRY POINT
+    // =========================================================
+    private void openAppleInternalPeripherals() {
+    // ΜΗΝ ξανανοίγεις MainActivity
+    applyAppleModeUI();
+}
+
+// =========================================================
+// ANDROID MODE UI FILTER
+// =========================================================
+private void applyAndroidModeUI() {
+
+    // ❌ Στο Android δεν θέλουμε το Device Declaration
+    hide(R.id.btnAppleDeviceDeclaration);
+
+    // ✅ Όλα τα άλλα Android κουμπιά μένουν κανονικά
+    show(R.id.section_system);
+    show(R.id.section_clean);
+    show(R.id.section_junk);
+    show(R.id.section_performance);
+
+    show(R.id.btnCpuRamLive);
+    show(R.id.btnCleanAll);
+    show(R.id.btnBrowserCache);
+    show(R.id.btnAppCache);
+
+    show(R.id.txtLogs);
+
+    show(R.id.btnDonate);
+    show(R.id.btnPhoneInfoInternal);
+    show(R.id.btnPhoneInfoPeripherals);
+    show(R.id.btnDiagnostics);
+}
+
+    // =========================================================
+    // APPLE MODE UI FILTER
+    // =========================================================
+    private void applyAppleModeUI() {
+
+        hide(R.id.section_system);
+        hide(R.id.section_clean);
+        hide(R.id.section_junk);
+        hide(R.id.section_performance);
+
+        hide(R.id.btnCpuRamLive);
+        hide(R.id.btnCleanAll);
+        hide(R.id.btnBrowserCache);
+        hide(R.id.btnAppCache);
+
+        hide(R.id.txtLogs);
+
+        show(R.id.btnDonate);
+        show(R.id.btnPhoneInfoInternal);
+        show(R.id.btnPhoneInfoPeripherals);
+        show(R.id.btnDiagnostics);
+        show(R.id.btnAppleDeviceDeclaration);
+    }
+
+    private void hide(int id){
+        View v = findViewById(id);
+        if(v!=null) v.setVisibility(View.GONE);
+    }
+
+    private void show(int id){
+        View v = findViewById(id);
+        if(v!=null) v.setVisibility(View.VISIBLE);
+    }
+
+    // =========================================================
+    // LANGUAGE SYSTEM
+    // =========================================================
+    private void setupLangButtons() {
+        View bGR = findViewById(R.id.btnLangGR);
+        View bEN = findViewById(R.id.btnLangEN);
+
+        if (bGR != null) bGR.setOnClickListener(v -> changeLang("el"));
+        if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
+    }
+
+    private void changeLang(String code) {
+    skipWelcomePopupOnce = true;   // ⛔ αυτό το recreate είναι μόνο για γλώσσα
+    LocaleHelper.set(this, code);
+    recreate();
+}
+
+    private void applySavedLanguage() {
+        String code = LocaleHelper.getLang(this);
+        LocaleHelper.set(this, code);
+    }
+
+    // =========================================================
+    // DONATE
+    // =========================================================
+    private void setupDonate() {
+        View b = findViewById(R.id.btnDonate);
+        if (b != null) {
+            b.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")));
+                } catch (Exception e) {
+                    Toast.makeText(this,"Cannot open browser",Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+// =========================================================
+// BUTTONS — PLATFORM AWARE
+// =========================================================
+private void setupButtons() {
+
+    bind(R.id.btnAppleDeviceDeclaration,
+            this::showAppleDeviceDeclarationPopup);
+
+    // ==========================
+    // 📱 INTERNAL INFO
+    // ==========================
+    bind(R.id.btnPhoneInfoInternal, () -> {
+        if (isAppleMode()) {
+            startActivity(new Intent(
+                    this,
+                    AppleDeviceInfoInternalActivity.class
+            ));
+        } else {
+            startActivity(new Intent(
+                    this,
+                    DeviceInfoInternalActivity.class
+            ));
+        }
+    });
+
+    // ==========================
+    // 🔌 PERIPHERALS INFO
+    // ==========================
+    bind(R.id.btnPhoneInfoPeripherals, () -> {
+        if (isAppleMode()) {
+            startActivity(new Intent(
+                    this,
+                    AppleDeviceInfoPeripheralsActivity.class
+            ));
+        } else {
+            startActivity(new Intent(
+                    this,
+                    DeviceInfoPeripheralsActivity.class
+            ));
+        }
+    });
+
+    // ==========================
+    // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
+    // ==========================
+    bind(R.id.btnCpuRamLive,
+            () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
+
+    bind(R.id.btnCleanAll,
+            () -> GELCleaner.deepClean(this,this));
+
+    bind(R.id.btnBrowserCache,
+            this::showBrowserPicker);
+
+    View appCache = findViewById(R.id.btnAppCache);
+    if(appCache!=null){
+        appCache.setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(this, AppListActivity.class));
+            } catch (Exception e) {
+                Toast.makeText(this,"Cannot open App List",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    bind(R.id.btnDiagnostics,
+            () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
+}
+
+// =========================================================
+// BIND HELPER
+// =========================================================
+private void bind(int id, Runnable fn){
+    View b = findViewById(id);
+    if(b!=null){
+        b.setOnClickListener(v -> {
+            try { fn.run(); }
+            catch(Throwable t){
+                Toast.makeText(this,
+                        "Action failed: "+t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}
+
+// =========================================================
+// 🍎 APPLE DEVICE DECLARATION
+// =========================================================
+private void showAppleDeviceDeclarationPopup() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this,
+                    android.R.style.Theme_Material_Dialog_Alert);
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("Select your Apple device");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(20f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(16));
+    box.addView(title);
+
+    // ==========================
+    // 📱 iPHONE BUTTON
+    // ==========================
+    Button iphoneBtn = new Button(this);
+    iphoneBtn.setText("📱  iPHONE");
+    iphoneBtn.setAllCaps(false);
+    iphoneBtn.setTextColor(Color.WHITE);
+    iphoneBtn.setTextSize(16f);
+
+    GradientDrawable iphoneBg = new GradientDrawable();
+    iphoneBg.setColor(0xFF0F8A3B);
+    iphoneBg.setCornerRadius(dp(14));
+    iphoneBg.setStroke(dp(3), 0xFFFFD700);
+    iphoneBtn.setBackground(iphoneBg);
+
+    LinearLayout.LayoutParams lpIphone =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpIphone.setMargins(0, dp(12), 0, 0);
+    iphoneBtn.setLayoutParams(lpIphone);
+
+    // ==========================
+    // 📲 iPAD BUTTON
+    // ==========================
+    Button ipadBtn = new Button(this);
+    ipadBtn.setText("📲  iPAD");
+    ipadBtn.setAllCaps(false);
+    ipadBtn.setTextColor(Color.WHITE);
+    ipadBtn.setTextSize(16f);
+
+    GradientDrawable ipadBg = new GradientDrawable();
+    ipadBg.setColor(0xFF444444);
+    ipadBg.setCornerRadius(dp(14));
+    ipadBg.setStroke(dp(3), 0xFFFFD700);
+    ipadBtn.setBackground(ipadBg);
+
+    LinearLayout.LayoutParams lpIpad =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpIpad.setMargins(0, dp(12), 0, 0);
+    ipadBtn.setLayoutParams(lpIpad);
+
+    // ==========================
+    // ADD TO BOX
+    // ==========================
+    box.addView(iphoneBtn);
+    box.addView(ipadBtn);
+
+    b.setView(box);
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
+
+    d.show();
+
+    // ==========================
+    // ACTIONS
+    // ==========================
+    iphoneBtn.setOnClickListener(v -> {
+        d.dismiss();
+        showAppleModelPicker("iphone");
+    });
+
+    ipadBtn.setOnClickListener(v -> {
+        d.dismiss();
+        showAppleModelPicker("ipad");
+    });
+}
+
+    private void showAppleModelPicker(String type) {
+
+    String[] models = "iphone".equals(type)
+            ? new String[]{"iPhone 8","iPhone X","iPhone XR","iPhone 11",
+                           "iPhone 12","iPhone 13","iPhone 14","iPhone 15"}
+            : new String[]{"iPad 7","iPad 8","iPad 9",
+                           "iPad Air 4","iPad Air 5",
+                           "iPad Pro 11","iPad Pro 12.9"};
+
+    new AlertDialog.Builder(this)
+            .setTitle("Select model")
+            .setItems(models, (d, which) -> {
+
+                // 1️⃣ Αποθήκευση
+                saveAppleDevice(type, models[which]);
+
+                // 2️⃣ Update κουμπιού
+                TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
+                if (btn != null) {
+                    btn.setText("🍎 " + type.toUpperCase(Locale.US)
+                                + " — " + models[which]);
+                }
+
+                // 3️⃣ Επιβεβαίωση
+                Toast.makeText(
+                        this,
+                        "Selected: " + models[which],
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                // 4️⃣ Κλείσε dialog
+                d.dismiss();
+            })
+            .show();
+}
+
+    private void saveAppleDevice(String type,String model){
+        SharedPreferences prefs =
+                getSharedPreferences(PREFS,MODE_PRIVATE);
+
+        prefs.edit()
+                .putString("apple_device_type",type)
+                .putString("apple_device_model",model)
+                .apply();
+    }
+
+// =========================================================
+// BROWSER PICKER — DYNAMIC (finds ALL browsers)
+// =========================================================
+private void showBrowserPicker() {
+
+    PackageManager pm = getPackageManager();
+
+    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
+    List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
+
+    if (infos == null || infos.isEmpty()) {
+        Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    // Map: label -> package
+    Map<String, String> apps = new LinkedHashMap<>();
+
+    for (ResolveInfo ri : infos) {
+        String pkg = ri.activityInfo.packageName;
+        CharSequence label = ri.loadLabel(pm);
+        if (label != null) {
+            apps.put(label.toString(), pkg);
+        }
+    }
+
+    if (apps.isEmpty()) {
+        Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    // Αν υπάρχει μόνο ένας
+    if (apps.size() == 1) {
+        openAppInfo(apps.values().iterator().next());
+        return;
+    }
+
+    String[] names = apps.keySet().toArray(new String[0]);
+
+    // -----------------------------------------------------
+    // DIALOG
+    // -----------------------------------------------------
+    AlertDialog.Builder builder = buildNeonDialog();
+
+    // ---- TITLE (κάτασπρο + bold) ----
+    TextView title = new TextView(this);
+    title.setText("Select Browser");
+    title.setTextColor(0xFFFFFFFF);   // κάτασπρο
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(dp(16), dp(14), dp(16), dp(10));
+
+    builder.setCustomTitle(title);
+
+    // ---- ITEMS (neon adapter) ----
+    builder.setAdapter(neonAdapter(names), (d, w) -> {
+        String pkg = apps.get(names[w]);
+        openAppInfo(pkg);
+    });
+
+    AlertDialog dialog = builder.create();
+    dialog.show();
+}
+
+    // =========================================================
+    // LOGGING
+    // =========================================================
+    @Override
+    public void log(String msg, boolean isError) {
+        runOnUiThread(() -> {
+            if (txtLogs == null) return;
+
+            String prev = txtLogs.getText()==null ? "" : txtLogs.getText().toString();
+            txtLogs.setText(prev.isEmpty()?msg:prev+"\n"+msg);
+
+            if (scroll != null)
+                scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        });
+    }
+    
+    // =========================================================
+// OPEN APP INFO (for Browser Picker)
+// =========================================================
+private void openAppInfo(String pkg){
+    try{
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.setData(Uri.parse("package:"+pkg));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(i);
+    }catch(Exception e){
+        Toast.makeText(this,"Cannot open App Info",Toast.LENGTH_SHORT).show();
+    }
+}
+    
+}

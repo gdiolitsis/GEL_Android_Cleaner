@@ -42,6 +42,24 @@ public class AppleDeviceSpec {
     public boolean hasFastCharge;
     public boolean hasWirelessCharge;
 
+// =========================================================
+// PERIPHERALS & FEATURES (REQUIRED BY ACTIVITIES)
+// =========================================================
+public boolean hasAccel;
+public boolean hasBarometer;
+public boolean hasDolby;
+public boolean hasJack;
+public boolean hasAirPlay;
+
+public int speakers;
+public int microphones;
+
+public String usbStandard;
+public String displayOut;
+public String storageOptions;
+public String os;
+public String charging;
+
     // =========================
     // BIOMETRICS
     // =========================

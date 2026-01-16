@@ -33,6 +33,8 @@ import java.util.Locale;
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
         	
+        private boolean skipWelcomePopupOnce = false;
+        	
         private boolean welcomeShown = false;
 
     // ==========================
@@ -70,6 +72,12 @@ public class MainActivity extends GELAutoActivityHook
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        if (!skipWelcomePopupOnce) {
+    showWelcomePopup();
+} else {
+    skipWelcomePopupOnce = false; // reset για επόμενο πραγματικό launch
+}
 
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
@@ -153,6 +161,48 @@ protected void onResume() {
     } else {
         applyAndroidModeUI();
     }
+}
+
+private AlertDialog.Builder buildNeonDialog() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this);
+
+    AlertDialog d = b.create();
+
+    // -------- background drawable --------
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);          // μαύρο φόντο
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(3), 0xFFFFD700);  // χρυσό περίγραμμα
+
+    d.setOnShowListener(x -> {
+        Window w = d.getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(bg);
+        }
+    });
+
+    return b;
+}
+
+private ArrayAdapter<String> neonAdapter(String[] names) {
+    return new ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            names
+    ) {
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView tv = (TextView) super.getView(position, convertView, parent);
+
+            tv.setTextColor(0xFF39FF14);   // 💚 neon green
+            tv.setTextSize(16f);
+            tv.setPadding(dp(12), dp(10), dp(12), dp(10));
+
+            return tv;
+        }
+    };
 }
 
 // =========================================================
@@ -702,9 +752,10 @@ private void applyAndroidModeUI() {
     }
 
     private void changeLang(String code) {
-        LocaleHelper.set(this, code);
-        recreate();
-    }
+    skipWelcomePopupOnce = true;   // ⛔ αυτό το recreate είναι μόνο για γλώσσα
+    LocaleHelper.set(this, code);
+    recreate();
+}
 
     private void applySavedLanguage() {
         String code = LocaleHelper.getLang(this);
@@ -962,55 +1013,69 @@ private void showAppleDeviceDeclarationPopup() {
                 .apply();
     }
 
-    // =========================================================
-    // BROWSER PICKER
-    // =========================================================
-    private void showBrowserPicker(){
+// =========================================================
+// BROWSER PICKER — DYNAMIC (finds ALL browsers)
+// =========================================================
+private void showBrowserPicker() {
 
-        PackageManager pm = getPackageManager();
+    PackageManager pm = getPackageManager();
 
-        String[] candidates = {
-                "com.android.chrome","org.mozilla.firefox",
-                "com.opera.browser","com.microsoft.emmx",
-                "com.brave.browser","com.vivaldi.browser",
-                "com.duckduckgo.mobile.android"
-        };
+    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
+    List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
 
-        List<String> installed = new ArrayList<>();
-
-        for(String pkg:candidates){
-            try{ pm.getPackageInfo(pkg,0); installed.add(pkg); }
-            catch(Exception ignored){}
-        }
-
-        if(installed.isEmpty()){
-            Toast.makeText(this,"No browsers installed.",Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if(installed.size()==1){
-            openAppInfo(installed.get(0));
-            return;
-        }
-
-        new AlertDialog.Builder(this,
-                android.R.style.Theme_Material_Dialog_Alert)
-                .setTitle("Select Browser")
-                .setItems(installed.toArray(new String[0]),
-                        (d,w)->openAppInfo(installed.get(w)))
-                .show();
+    if (infos == null || infos.isEmpty()) {
+        Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+        return;
     }
 
-    private void openAppInfo(String pkg){
-        try{
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.setData(Uri.parse("package:"+pkg));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(i);
-        }catch(Exception e){
-            Toast.makeText(this,"Cannot open App Info",Toast.LENGTH_SHORT).show();
+    // Map: label -> package
+    Map<String, String> apps = new LinkedHashMap<>();
+
+    for (ResolveInfo ri : infos) {
+        String pkg = ri.activityInfo.packageName;
+        CharSequence label = ri.loadLabel(pm);
+        if (label != null) {
+            apps.put(label.toString(), pkg);
         }
     }
+
+    if (apps.isEmpty()) {
+        Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    // Αν υπάρχει μόνο ένας
+    if (apps.size() == 1) {
+        openAppInfo(apps.values().iterator().next());
+        return;
+    }
+
+    String[] names = apps.keySet().toArray(new String[0]);
+
+    // -----------------------------------------------------
+    // DIALOG
+    // -----------------------------------------------------
+    AlertDialog.Builder builder = buildNeonDialog();
+
+    // ---- TITLE (κάτασπρο + bold) ----
+    TextView title = new TextView(this);
+    title.setText("Select Browser");
+    title.setTextColor(0xFFFFFFFF);   // κάτασπρο
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(dp(16), dp(14), dp(16), dp(10));
+
+    builder.setCustomTitle(title);
+
+    // ---- ITEMS (neon adapter) ----
+    builder.setAdapter(neonAdapter(names), (d, w) -> {
+        String pkg = apps.get(names[w]);
+        openAppInfo(pkg);
+    });
+
+    AlertDialog dialog = builder.create();
+    dialog.show();
+}
 
     // =========================================================
     // LOGGING

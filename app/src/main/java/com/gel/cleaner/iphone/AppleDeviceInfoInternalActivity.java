@@ -1,9 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
-// AppleDeviceInfoInternalActivity.java
-// CARBON INFO with Android Internals — HARDCODED Apple DATA
+// AppleDeviceInfoInternalActivity — FINAL STABLE
 // ============================================================
-
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
@@ -13,12 +11,19 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.gel.cleaner.R;
-import com.gel.cleaner.base.AppleSpecProvider;
-import com.gel.cleaner.iphone.AppleDeviceSpec;
 
+/**
+ * Apple Internals — FINAL
+ * ------------------------------------------------------------
+ * • ΚΑΡΜΠΟΝ σε sections με Android Internals
+ * • Παίρνει δεδομένα από AppleSpecs → AppleDeviceSpec
+ * • Ό,τι δεν υπάρχει στο spec → δεν εμφανίζεται
+ */
 public class AppleDeviceInfoInternalActivity extends Activity {
 
-    // -------- SECTIONS (ίδια λογική με Android Internal) --------
+    // =========================
+    // SECTIONS
+    // =========================
     private LinearLayout secSystem;
     private LinearLayout secOS;
     private LinearLayout secCPU;
@@ -26,7 +31,9 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     private LinearLayout secDisplay;
     private LinearLayout secConnectivity;
 
-    // -------- OUTPUT --------
+    // =========================
+    // OUTPUTS
+    // =========================
     private TextView outSystem;
     private TextView outOS;
     private TextView outCPU;
@@ -36,14 +43,32 @@ public class AppleDeviceInfoInternalActivity extends Activity {
 
     private AppleDeviceSpec d;
 
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_internal); // ίδιο layout
+        setContentView(R.layout.activity_device_info_internal);
 
+        // -------- bind views --------
         bindViews();
-        d = AppleSpecProvider.getSelectedDevice(this);
 
+        // -------- toggles --------
+        setupToggle(secSystem, outSystem);
+        setupToggle(secOS, outOS);
+        setupToggle(secCPU, outCPU);
+        setupToggle(secRAM, outRAM);
+        setupToggle(secDisplay, outDisplay);
+        setupToggle(secConnectivity, outConnectivity);
+
+        // -------- load selected model --------
+        String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .getString("apple_device_model", "iPhone 13");
+
+        d = AppleSpecs.get(model);
+
+        // -------- fill UI --------
         populateAll();
     }
 
@@ -52,14 +77,15 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     // ============================================================
     private void bindViews() {
 
-        // χρησιμοποιούμε Ο,ΤΙ υπάρχει ήδη στο XML
+        // sections (ίδια ids με Android layout)
         secSystem       = findViewById(R.id.headerSystem);
-        secOS           = findViewById(R.id.headerAndroid); // reuse → iOS
+        secOS           = findViewById(R.id.headerAndroid);   // reuse → iOS
         secCPU          = findViewById(R.id.headerCpu);
         secRAM          = findViewById(R.id.headerRam);
-        secDisplay      = findViewById(R.id.headerGpu);     // reuse → Display
-        secConnectivity = findViewById(R.id.headerStorage); // reuse → Connectivity
+        secDisplay      = findViewById(R.id.headerGpu);       // reuse → Display
+        secConnectivity = findViewById(R.id.headerStorage);   // reuse → Connectivity
 
+        // outputs
         outSystem       = findViewById(R.id.txtSystemContent);
         outOS           = findViewById(R.id.txtAndroidContent);
         outCPU          = findViewById(R.id.txtCpuContent);
@@ -69,7 +95,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     }
 
     // ============================================================
-    // POPULATE — ΚΑΡΜΠΟΝ ΠΛΗΡΟΦΟΡΙΩΝ
+    // POPULATE
     // ============================================================
     private void populateAll() {
 
@@ -78,38 +104,38 @@ public class AppleDeviceInfoInternalActivity extends Activity {
             return;
         }
 
-        // -------- 1) SYSTEM --------
+        // ---------------- SYSTEM ----------------
         show(secSystem);
         outSystem.setText(
                 logInfo("Manufacturer", "Apple") +
                 logInfo("SoC", d.soc)
         );
 
-        // -------- 2) OS --------
+        // ---------------- OS ----------------
         show(secOS);
         outOS.setText(
                 logInfo("Operating System", d.os)
         );
 
-        // -------- 3) CPU --------
+        // ---------------- CPU ----------------
         show(secCPU);
         outCPU.setText(
                 logInfo("CPU", d.cpu)
         );
 
-        // -------- 4) RAM --------
+        // ---------------- RAM ----------------
         show(secRAM);
         outRAM.setText(
                 logInfo("Memory", d.ram)
         );
 
-        // -------- 5) DISPLAY --------
+        // ---------------- DISPLAY ----------------
         show(secDisplay);
         outDisplay.setText(
                 logInfo("Screen", d.screen)
         );
 
-        // -------- 6) CONNECTIVITY --------
+        // ---------------- CONNECTIVITY ----------------
         show(secConnectivity);
         outConnectivity.setText(
                 logInfo("Wi-Fi", d.wifi) +
@@ -121,7 +147,24 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     }
 
     // ============================================================
-    // HELPERS — ίδια φιλοσοφία logs
+    // TOGGLE
+    // ============================================================
+    private void setupToggle(LinearLayout header, TextView content) {
+        if (header == null || content == null) return;
+
+        content.setVisibility(View.GONE);
+
+        header.setOnClickListener(v -> {
+            if (content.getVisibility() == View.VISIBLE) {
+                content.setVisibility(View.GONE);
+            } else {
+                content.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    // ============================================================
+    // HELPERS
     // ============================================================
     private String logInfo(String k, String v) {
         if (v == null || v.trim().isEmpty()) return "";

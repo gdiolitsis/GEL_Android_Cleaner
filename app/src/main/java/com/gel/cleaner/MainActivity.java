@@ -208,8 +208,11 @@ public void onBackPressed() {
 // =========================================================
 private void startPlatformFlow() {
 
-    // Κάθε φορά που ανοίγει η app → δείξε welcome
-    showWelcomePopup();
+    if (!skipWelcomePopupOnce) {
+        showWelcomePopup();
+    } else {
+        skipWelcomePopupOnce = false; // reset για επόμενο κανονικό launch
+    }
 }
 
 private boolean isAppleMode() {
@@ -1029,6 +1032,38 @@ private void showAppleDeviceDeclarationPopup() {
         dp(16),
         dp(14)
 );
+
+// ==========================
+// 🎵 iPOD BUTTON
+// ==========================
+Button ipodBtn = new Button(this);
+ipodBtn.setText("♬  iPOD Touch");
+ipodBtn.setAllCaps(false);
+ipodBtn.setTextColor(Color.WHITE);
+ipodBtn.setTextSize(16f);
+
+GradientDrawable ipodBg = new GradientDrawable();
+ipodBg.setColor(0xFF000000);          // 🖤 μαύρο
+ipodBg.setCornerRadius(dp(14));
+ipodBg.setStroke(dp(3), 0xFFFFD700);  // 🟡 χρυσό
+ipodBtn.setBackground(ipodBg);
+
+LinearLayout.LayoutParams lpIpod =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(64)
+        );
+lpIpod.setMargins(0, dp(12), 0, 0);
+ipodBtn.setLayoutParams(lpIpod);
+ipodBtn.setPadding(
+        dp(16),
+        dp(14),
+        dp(16),
+        dp(14)
+);
+
+// ADD
+box.addView(ipodBtn);
 
     // ==========================
     // ADD TO BOX

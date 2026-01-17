@@ -161,13 +161,6 @@ btnReturnAndroid.setOnClickListener(v -> {
         startPlatformFlow();
     }
 
-    // =====================================================
-    // APPLE MODE FILTER
-    // =====================================================
-    if (isAppleMode()) {
-        applyAppleModeUI();
-    }
-
     log("📱 Device ready", false);
 }
 

@@ -211,7 +211,7 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <string name="apple_device_category_title">Επιλογή κατηγορίας συσκευής</string>
     <string name="apple_device_cat_iphone">iPhone</string>
     <string name="apple_device_cat_ipad">iPad</string>
-    <string name="apple_device_cat_ipod">iPod</string>
+    <string name="apple_device_cat_ipod">iPod touch</string>
 
     <!-- APPLE SYSTEM -->
     <string name="apple_system">🛠 Σύστημα</string>

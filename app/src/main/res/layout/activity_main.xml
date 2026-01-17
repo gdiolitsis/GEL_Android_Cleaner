@@ -304,7 +304,7 @@
             android:textAllCaps="false"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#00FF66"
+            android:textColor="#FFFFFF"
             android:background="@drawable/gel_btn_outline_selector"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="12dp"/>

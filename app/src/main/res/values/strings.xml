@@ -207,7 +207,7 @@ and then export the report.
 <string name="platform_apple">🍎 APPLE</string>
 
 <!-- DEVICE DECLARATION -->
-<string name="apple_device_declaration">🧩 Device Declaration</string>
+<string name="apple_device_declaration">🍎 Apple Device Declaration</string>
 <string name="apple_device_category_title">Select device category</string>
 <string name="apple_device_cat_iphone">iPhone</string>
 <string name="apple_device_cat_ipad">iPad</string>

@@ -141,6 +141,7 @@ btnReturnAndroid.setOnClickListener(v -> {
     // 🔑 ΠΑΝΤΑ sync μετά την αλλαγή
     syncReturnButtonText();
 });
+}
 
     // =====================================================
     // TTS INIT

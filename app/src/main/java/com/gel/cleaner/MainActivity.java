@@ -124,23 +124,23 @@ if (btnReturnAndroid != null) {
     );
 
     // 3️⃣ ACTION
-    btnReturnAndroid.setOnClickListener(v -> {
+btnReturnAndroid.setOnClickListener(v -> {
 
-        String currentMode = getSavedPlatform();
+    String currentMode = getSavedPlatform();
 
-        if ("apple".equals(currentMode)) {
-            // 🍏 → 🤖
-            savePlatform("android");
-            applyAndroidModeUI();
-            btnReturnAndroid.setText("RETURN TO APPLE MODE");
-        } else {
-            // 🤖 → 🍏
-            savePlatform("apple");
-            applyAppleModeUI();
-            btnReturnAndroid.setText("RETURN TO ANDROID MODE");
-        }
-    });
-}
+    if ("apple".equals(currentMode)) {
+        // 🍏 → 🤖
+        savePlatform("android");
+        applyAndroidModeUI();
+    } else {
+        // 🤖 → 🍏
+        savePlatform("apple");
+        applyAppleModeUI();
+    }
+
+    // 🔑 ΠΑΝΤΑ sync μετά την αλλαγή
+    syncReturnButtonText();
+});
 
     // =====================================================
     // TTS INIT
@@ -174,16 +174,17 @@ if (btnReturnAndroid != null) {
 protected void onResume() {
     super.onResume();
 
-    // -------------------------------------------------
-    // 1️⃣ APPLY PLATFORM UI
-    // -------------------------------------------------
-    String mode = getSavedPlatform(); // "android" | "apple" | "none"
+    String mode = getSavedPlatform();
 
     if ("apple".equals(mode)) {
         applyAppleModeUI();
     } else {
         applyAndroidModeUI();
     }
+
+    // 🔑 ΕΔΩ
+    syncReturnButtonText();
+}
 
     // -------------------------------------------------
     // 2️⃣ SYNC RETURN BUTTON TEXT
@@ -205,6 +206,19 @@ protected void onResume() {
         } catch (Throwable ignore) {}
         super.onDestroy();
     }
+
+private void syncReturnButtonText() {
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    if (btnReturnAndroid == null) return;
+
+    String mode = getSavedPlatform(); // "android" | "apple"
+
+    btnReturnAndroid.setText(
+            "apple".equals(mode)
+                    ? "RETURN TO ANDROID MODE"
+                    : "RETURN TO APPLE MODE"
+    );
+}
 
 @Override
 public void onBackPressed() {

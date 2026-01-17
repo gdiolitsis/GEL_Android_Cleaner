@@ -129,17 +129,17 @@ if (btnReturnAndroid != null) {
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-    // 🔹 READ CURRENT MODE
+    // 1️⃣ READ CURRENT MODE
     String mode = prefs.getString("device_mode", "android");
 
-    // 🔹 SET TEXT
+    // 2️⃣ SET TEXT
     btnReturnAndroid.setText(
             "apple".equals(mode)
                     ? "RETURN TO ANDROID MODE"
                     : "RETURN TO APPLE MODE"
     );
 
-    // 🔹 SET ACTION (AFTER setupButtons)
+    // 3️⃣ SET ACTION
     btnReturnAndroid.setOnClickListener(v -> {
 
         String currentMode =

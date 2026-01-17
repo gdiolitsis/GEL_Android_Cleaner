@@ -105,7 +105,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupButtons();
 
 // =====================================================
-// RETURN BUTTON — TEXT + ACTION (LOCKED)
+// RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)
 // =====================================================
 Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
@@ -114,35 +114,32 @@ if (btnReturnAndroid != null) {
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-    // 1️⃣ READ CURRENT MODE
+    // αρχικό mode
     String mode = prefs.getString("device_mode", "android");
 
-    // 2️⃣ SET TEXT
+    // αρχικό text
     btnReturnAndroid.setText(
             "apple".equals(mode)
                     ? "RETURN TO ANDROID MODE"
                     : "RETURN TO APPLE MODE"
     );
 
-    // 3️⃣ SET ACTION
     btnReturnAndroid.setOnClickListener(v -> {
 
         String currentMode =
                 prefs.getString("device_mode", "android");
 
-        String newMode =
-                "apple".equals(currentMode)
-                        ? "android"
-                        : "apple";
-
-        prefs.edit()
-                .putString("device_mode", newMode)
-                .apply();
-
-        Intent i = new Intent(MainActivity.this, MainActivity.class);
-        i.putExtra("force_platform_picker", true);
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(i);
+        if ("apple".equals(currentMode)) {
+            // 🍏 → 🤖
+            savePlatform("android");
+            applyAndroidModeUI();
+            btnReturnAndroid.setText("RETURN TO APPLE MODE");
+        } else {
+            // 🤖 → 🍏
+            savePlatform("apple");
+            applyAppleModeUI();
+            btnReturnAndroid.setText("RETURN TO ANDROID MODE");
+        }
     });
 }
 
@@ -174,7 +171,24 @@ if (btnReturnAndroid != null) {
     log("📱 Device ready", false);
 }
 
-    @Override
+  @Override
+protected void onResume() {
+    super.onResume();
+
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    if (btnReturnAndroid == null) return;
+
+    String mode = getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .getString("device_mode", "android");
+
+    btnReturnAndroid.setText(
+            "apple".equals(mode)
+                    ? "RETURN TO ANDROID MODE"
+                    : "RETURN TO APPLE MODE"
+    );
+}
+ 
+   @Override
     protected void onDestroy() {
         try {
             if (tts[0] != null) tts[0].shutdown();
@@ -1075,41 +1089,56 @@ private void showAppleDeviceDeclarationPopup() {
     }
 
 // =========================================================
-// BROWSER PICKER — DYNAMIC (finds ALL browsers)
+// BROWSER PICKER — DYNAMIC (REAL BROWSERS ONLY)
 // =========================================================
 private void showBrowserPicker() {
 
     PackageManager pm = getPackageManager();
 
-    Intent intent = new Intent(Intent.ACTION_VIEW);
-    intent.setData(Uri.parse("http://www.example.com"));
-    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-
-    List<ResolveInfo> infos =
-        pm.queryIntentActivities(intent, 0);
-
-    if (infos == null || infos.isEmpty()) {
-        Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
-        return;
-    }
-
-    // Map: label -> package
+    // -----------------------------------------------------
+    // FIND REAL BROWSERS
+    // -----------------------------------------------------
     Map<String, String> apps = new LinkedHashMap<>();
 
-    for (ResolveInfo ri : infos) {
-        String pkg = ri.activityInfo.packageName;
-        CharSequence label = ri.loadLabel(pm);
-        if (label != null) {
+    Intent browserIntent = new Intent(Intent.ACTION_MAIN);
+    browserIntent.addCategory(Intent.CATEGORY_APP_BROWSER);
+
+    List<ResolveInfo> browsers =
+            pm.queryIntentActivities(browserIntent, 0);
+
+    if (browsers != null) {
+        for (ResolveInfo ri : browsers) {
+
+            if (ri.activityInfo == null) continue;
+
+            String pkg = ri.activityInfo.packageName;
+            CharSequence label = ri.loadLabel(pm);
+
+            if (pkg == null || label == null) continue;
+
+            // verify http support
+            Intent httpTest = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://www.example.com"));
+            httpTest.setPackage(pkg);
+
+            List<ResolveInfo> httpHandlers =
+                    pm.queryIntentActivities(httpTest, 0);
+
+            if (httpHandlers == null || httpHandlers.isEmpty())
+                continue;
+
             apps.put(label.toString(), pkg);
         }
     }
 
+    // -----------------------------------------------------
+    // HANDLE RESULTS
+    // -----------------------------------------------------
     if (apps.isEmpty()) {
         Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
         return;
     }
 
-    // Αν υπάρχει μόνο ένας
     if (apps.size() == 1) {
         openAppInfo(apps.values().iterator().next());
         return;
@@ -1118,11 +1147,10 @@ private void showBrowserPicker() {
     String[] names = apps.keySet().toArray(new String[0]);
 
     // -----------------------------------------------------
-    // DIALOG
+    // POPUP (ΔΕΝ ΤΟ ΠΕΙΡΑΖΟΥΜΕ)
     // -----------------------------------------------------
     AlertDialog.Builder builder = buildNeonDialog();
 
-    // ---- TITLE (κάτασπρο + bold) ----
     TextView title = new TextView(this);
     title.setText("Select Browser");
     title.setTextColor(0xFFFFFFFF);
@@ -1130,6 +1158,47 @@ private void showBrowserPicker() {
     title.setTypeface(null, Typeface.BOLD);
     title.setPadding(dp(16), dp(14), dp(16), dp(10));
     builder.setCustomTitle(title);
+
+    builder.setAdapter(neonAdapter(names), (d, w) -> {
+        String pkg = apps.get(names[w]);
+        openAppInfo(pkg);
+    });
+
+    AlertDialog dialog = builder.create();
+    dialog.show();
+
+    Window window = dialog.getWindow();
+    if (window != null) {
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        window.setBackgroundDrawable(bg);
+    }
+}
+
+    // -----------------------------------------------------
+    // DIALOG
+    // -----------------------------------------------------
+    AlertDialog.Builder builder = buildNeonDialog();
+
+    // ---- TITLE (centered, white + bold) ----
+TextView title = new TextView(this);
+title.setText("Select Browser");
+title.setTextColor(0xFFFFFFFF);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER); // ⬅️ ΚΕΝΤΡΟ
+title.setPadding(dp(16), dp(14), dp(16), dp(10));
+
+title.setLayoutParams(
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+);
+
+builder.setCustomTitle(title);
 
     // ---- ITEMS (neon adapter) ----
     builder.setAdapter(neonAdapter(names), (d, w) -> {

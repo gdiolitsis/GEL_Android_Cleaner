@@ -108,109 +108,80 @@ protected void onCreate(Bundle savedInstanceState) {
     // RETURN BUTTON — DYNAMIC TEXT (ANDROID / APPLE)
     // =====================================================
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-
     if (btnReturnAndroid != null) {
-
         String mode = getSharedPreferences("gel_prefs", MODE_PRIVATE)
                 .getString("device_mode", "android");
 
-        if ("apple".equals(mode)) {
-            // Είμαστε σε Apple → επιστροφή σε Android
-            btnReturnAndroid.setText("RETURN TO ANDROID MODE");
-        } else {
-            // Είμαστε σε Android → επιστροφή σε Apple
-            btnReturnAndroid.setText("RETURN TO APPLE MODE");
-        }
+        btnReturnAndroid.setText(
+                "apple".equals(mode)
+                        ? "RETURN TO ANDROID MODE"
+                        : "RETURN TO APPLE MODE"
+        );
     }
-}
 
-// ==========================
-// TTS INIT (ΠΡΩΤΑ!)
-// ==========================
-tts[0] = new TextToSpeech(this, status -> {
-    ttsReady[0] = (status == TextToSpeech.SUCCESS);
+    // =====================================================
+    // RETURN TO ANDROID BUTTON — ACTION
+    // =====================================================
+    if (btnReturnAndroid != null) {
+        btnReturnAndroid.setOnClickListener(v -> {
 
-    // Αν το welcome popup είναι ήδη ανοιχτό → μίλα ΤΩΡΑ
-    if (ttsReady[0] && welcomeShown) {
-        speakWelcomeTTS();
+            getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                    .edit()
+                    .putString("device_mode", "android")
+                    .apply();
+
+            Intent i = new Intent(this, MainActivity.class);
+            i.putExtra("force_platform_picker", true);
+            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+        });
     }
-});
 
-        // 🔥 ALWAYS SHOW FLOW (once per launch)
-        if (!startupFlowDone) {
-            startupFlowDone = true;
-            startPlatformFlow();
+    // =====================================================
+    // RETURN TO APPLE BUTTON — ACTION
+    // =====================================================
+    Button btnReturnApple = findViewById(R.id.btnReturnApple);
+    if (btnReturnApple != null) {
+        btnReturnApple.setOnClickListener(v -> {
+
+            getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                    .edit()
+                    .putString("device_mode", "apple")
+                    .apply();
+
+            Intent i = new Intent(this, MainActivity.class);
+            i.putExtra("force_platform_picker", true);
+            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+        });
+    }
+
+    // =====================================================
+    // TTS INIT
+    // =====================================================
+    tts[0] = new TextToSpeech(this, status -> {
+        ttsReady[0] = (status == TextToSpeech.SUCCESS);
+        if (ttsReady[0] && welcomeShown) {
+            speakWelcomeTTS();
         }
-
-        // 🍎 APPLE MODE FILTER
-        if (isAppleMode()) {
-            applyAppleModeUI();
-        }
-
-        log("📱 Device ready", false);
-
-// =========================================================
-// FORCE PLATFORM PICKER (RETURN FROM OTHER MODE)
-// =========================================================
-boolean forcePicker =
-        getIntent() != null && getIntent().getBooleanExtra("force_platform_picker", false);
-
-if (forcePicker) {
-    showWelcomePopup();
-    getIntent().removeExtra("force_platform_picker"); // 🔒 ΚΛΕΙΔΩΣΕ ΤΟ
-}
-
-    // 🔒 ΚΑΘΑΡΙΣΕ ΤΟ FLAG — ΜΙΑ ΦΟΡΑ ΜΟΝΟ
-    getIntent().removeExtra("force_platform_picker");
-}
-
-// =========================================================
-// RETURN TO ANDROID BUTTON — SAFE PLATFORM SWITCH
-// =========================================================
-Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-
-if (btnReturnAndroid != null) {
-    btnReturnAndroid.setOnClickListener(v -> {
-
-        // 1️⃣ Αλλάζουμε platform
-        getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                .edit()
-                .putString("device_mode", "android")
-                .apply();
-
-        // 2️⃣ Πηγαίνουμε στο MainActivity και ζητάμε picker
-        Intent i = new Intent(this, MainActivity.class);
-        i.putExtra("force_platform_picker", true);
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        startActivity(i);
-
-        // ❌ ΟΧΙ finish();
     });
-}
 
-// =========================================================
-// RETURN TO APPLE BUTTON — SAFE PLATFORM SWITCH
-// =========================================================
-Button btnReturnApple = findViewById(R.id.btnReturnApple);
+    // =====================================================
+    // STARTUP FLOW (ONCE)
+    // =====================================================
+    if (!startupFlowDone) {
+        startupFlowDone = true;
+        startPlatformFlow();
+    }
 
-if (btnReturnApple != null) {
-    btnReturnApple.setOnClickListener(v -> {
+    // =====================================================
+    // APPLE MODE FILTER
+    // =====================================================
+    if (isAppleMode()) {
+        applyAppleModeUI();
+    }
 
-        // 1️⃣ Γυρνάμε σε Apple mode
-        getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                .edit()
-                .putString("device_mode", "apple")   // ⬅️ ΕΔΩ
-                .apply();
-
-        // 2️⃣ Πηγαίνουμε στο MainActivity
-        Intent i = new Intent(this, MainActivity.class);
-        i.putExtra("force_platform_picker", true);
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        startActivity(i);
-        // ❌ ΟΧΙ finish();
-    });
+    log("📱 Device ready", false);
 }
 
     @Override

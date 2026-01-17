@@ -186,19 +186,6 @@ protected void onResume() {
     // 🔑 ΕΔΩ
     syncReturnButtonText();
 }
-
-    // -------------------------------------------------
-    // 2️⃣ SYNC RETURN BUTTON TEXT
-    // -------------------------------------------------
-    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-    if (btnReturnAndroid != null) {
-        btnReturnAndroid.setText(
-                "apple".equals(mode)
-                        ? "RETURN TO ANDROID MODE"
-                        : "RETURN TO APPLE MODE"
-        );
-    }
-}
  
    @Override
     protected void onDestroy() {

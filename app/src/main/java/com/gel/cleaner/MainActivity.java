@@ -111,23 +111,20 @@ Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
 if (btnReturnAndroid != null) {
 
-    SharedPreferences prefs =
-            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    // 1️⃣ ΔΙΑΒΑΖΟΥΜΕ ΑΠΟ ΕΝΑ ΣΗΜΕΙΟ
+    String mode = getSavedPlatform(); // "android" | "apple"
 
-    // αρχικό mode
-    String mode = prefs.getString("device_mode", "android");
-
-    // αρχικό text
+    // 2️⃣ ΑΡΧΙΚΟ TEXT
     btnReturnAndroid.setText(
             "apple".equals(mode)
                     ? "RETURN TO ANDROID MODE"
                     : "RETURN TO APPLE MODE"
     );
 
+    // 3️⃣ ACTION
     btnReturnAndroid.setOnClickListener(v -> {
 
-        String currentMode =
-                prefs.getString("device_mode", "android");
+        String currentMode = getSavedPlatform();
 
         if ("apple".equals(currentMode)) {
             // 🍏 → 🤖
@@ -593,6 +590,7 @@ if (d.getWindow() != null) {
             new ColorDrawable(Color.TRANSPARENT));
 }
 
+// ▶️ force TTS retry μόλις ανοίξει το dialog
 d.show();
 
 // 👇 το popup ΕΙΝΑΙ τώρα ορατό
@@ -608,10 +606,12 @@ if (d.getWindow() != null) {
     );
 }
 
-// ▶️ προσπάθησε να μιλήσεις ΤΩΡΑ
-if (ttsReady[0]) {
-    speakWelcomeTTS();
-}
+// ▶️ force TTS retry μόλις ανοίξει το dialog
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (!welcomeMuted && ttsReady[0] && welcomeShown) {
+        speakWelcomeTTS();
+    }
+}, 120);
 
 okBtn.setOnClickListener(v -> {
     try {
@@ -619,7 +619,7 @@ okBtn.setOnClickListener(v -> {
     } catch (Throwable ignore) {}
     d.dismiss();
     showPlatformSelectPopup();
-    });
+});
 }
 
 // =========================================================

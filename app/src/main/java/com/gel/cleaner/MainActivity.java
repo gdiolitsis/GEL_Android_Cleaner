@@ -113,16 +113,6 @@ Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
 if (btnReturnAndroid != null) {
 
-    // 1️⃣ ΔΙΑΒΑΖΟΥΜΕ ΑΠΟ ΕΝΑ ΣΗΜΕΙΟ
-    String mode = getSavedPlatform(); // "android" | "apple"
-
-    // 2️⃣ ΑΡΧΙΚΟ TEXT
-    btnReturnAndroid.setText(
-            "apple".equals(mode)
-                    ? "RETURN TO ANDROID MODE"
-                    : "RETURN TO APPLE MODE"
-    );
-
     // 3️⃣ ACTION
 btnReturnAndroid.setOnClickListener(v -> {
 
@@ -627,8 +617,15 @@ private void showPlatformSelectPopup() {
             );
 
     LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(24), dp(20), dp(24), dp(18));
+box.setOrientation(LinearLayout.VERTICAL);
+box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+box.setLayoutParams(
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
@@ -722,6 +719,22 @@ LinearLayout.LayoutParams lpBtn2 =
                 new ColorDrawable(Color.TRANSPARENT));
 
     d.show();
+    
+    Window w = d.getWindow();
+if (w != null) {
+    w.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    );
+
+    // ίδιο margin με τα μεγάλα κουμπιά
+    w.getDecorView().setPadding(
+            dp(16),  // left
+            0,
+            dp(16),  // right
+            0
+    );
+}
 
 // ---------------- ACTIONS ----------------
     androidBtn.setOnClickListener(v -> {
@@ -969,18 +982,24 @@ private void showAppleDeviceDeclarationPopup() {
     iphoneBtn.setTextSize(16f);
 
     GradientDrawable iphoneBg = new GradientDrawable();
-    iphoneBg.setColor(0xFF0F8A3B);
+    iphoneBg.setColor(0xFF000000);
     iphoneBg.setCornerRadius(dp(14));
     iphoneBg.setStroke(dp(3), 0xFFFFD700);
     iphoneBtn.setBackground(iphoneBg);
 
     LinearLayout.LayoutParams lpIphone =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(64)   // ⬅️ από 52 → 64
+        );
     lpIphone.setMargins(0, dp(12), 0, 0);
     iphoneBtn.setLayoutParams(lpIphone);
+    iphoneBtn.setPadding(
+        dp(16),  // left
+        dp(14),  // top
+        dp(16),  // right
+        dp(14)   // bottom
+);
 
     // ==========================
     // 📲 iPAD BUTTON
@@ -992,18 +1011,24 @@ private void showAppleDeviceDeclarationPopup() {
     ipadBtn.setTextSize(16f);
 
     GradientDrawable ipadBg = new GradientDrawable();
-    ipadBg.setColor(0xFF444444);
+    ipadBg.setColor(0xFF000000); // 🖤 μαύρο
     ipadBg.setCornerRadius(dp(14));
     ipadBg.setStroke(dp(3), 0xFFFFD700);
     ipadBtn.setBackground(ipadBg);
 
     LinearLayout.LayoutParams lpIpad =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(64)
+        );
     lpIpad.setMargins(0, dp(12), 0, 0);
     ipadBtn.setLayoutParams(lpIpad);
+    ipadBtn.setPadding(
+        dp(16),
+        dp(14),
+        dp(16),
+        dp(14)
+);
 
     // ==========================
     // ADD TO BOX

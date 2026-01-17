@@ -120,41 +120,31 @@ protected void onCreate(Bundle savedInstanceState) {
     }
 
     // =====================================================
-    // RETURN TO ANDROID BUTTON — ACTION
-    // =====================================================
-    if (btnReturnAndroid != null) {
-        btnReturnAndroid.setOnClickListener(v -> {
+// RETURN BUTTON — TOGGLE ANDROID / APPLE (SAFE)
+// =====================================================
+if (btnReturnAndroid != null) {
+    btnReturnAndroid.setOnClickListener(v -> {
 
-            getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                    .edit()
-                    .putString("device_mode", "android")
-                    .apply();
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-            Intent i = new Intent(this, MainActivity.class);
-            i.putExtra("force_platform_picker", true);
-            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(i);
-        });
-    }
+        String currentMode = prefs.getString("device_mode", "android");
 
-    // =====================================================
-    // RETURN TO APPLE BUTTON — ACTION
-    // =====================================================
-    Button btnReturnApple = findViewById(R.id.btnReturnApple);
-    if (btnReturnApple != null) {
-        btnReturnApple.setOnClickListener(v -> {
+        // toggle mode
+        String newMode = "apple".equals(currentMode)
+                ? "android"
+                : "apple";
 
-            getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                    .edit()
-                    .putString("device_mode", "apple")
-                    .apply();
+        prefs.edit()
+                .putString("device_mode", newMode)
+                .apply();
 
-            Intent i = new Intent(this, MainActivity.class);
-            i.putExtra("force_platform_picker", true);
-            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(i);
-        });
-    }
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra("force_platform_picker", true);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
+    });
+}
 
     // =====================================================
     // TTS INIT

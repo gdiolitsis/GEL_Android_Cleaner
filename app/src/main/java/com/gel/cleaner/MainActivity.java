@@ -73,27 +73,56 @@ public class MainActivity extends GELAutoActivityHook
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    // =========================================================
-    // ON CREATE
-    // =========================================================
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        
-        if (!skipWelcomePopupOnce) {
-    showWelcomePopup();
-} else {
-    skipWelcomePopupOnce = false; // reset για επόμενο πραγματικό launch
+// =========================================================
+// ON CREATE
+// =========================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    // =====================================================
+    // FORCE PLATFORM PICKER (ONE-SHOT, FROM INTENT)
+    // =====================================================
+    boolean forcePicker =
+            getIntent() != null &&
+            getIntent().getBooleanExtra("force_platform_picker", false);
+
+    if (forcePicker) {
+        showWelcomePopup();
+        getIntent().removeExtra("force_platform_picker"); // 🔒 μία φορά μόνο
+    }
+
+    // =====================================================
+    // BASIC BINDS
+    // =====================================================
+    txtLogs = findViewById(R.id.txtLogs);
+    scroll  = findViewById(R.id.scrollRoot);
+
+    applySavedLanguage();
+    setupLangButtons();
+    setupDonate();
+    setupButtons();
+
+    // =====================================================
+    // RETURN BUTTON — DYNAMIC TEXT (ANDROID / APPLE)
+    // =====================================================
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+
+    if (btnReturnAndroid != null) {
+
+        String mode = getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .getString("device_mode", "android");
+
+        if ("apple".equals(mode)) {
+            // Είμαστε σε Apple → επιστροφή σε Android
+            btnReturnAndroid.setText("RETURN TO ANDROID MODE");
+        } else {
+            // Είμαστε σε Android → επιστροφή σε Apple
+            btnReturnAndroid.setText("RETURN TO APPLE MODE");
+        }
+    }
 }
-
-        txtLogs = findViewById(R.id.txtLogs);
-        scroll  = findViewById(R.id.scrollRoot);
-
-        applySavedLanguage();
-        setupLangButtons();
-        setupDonate();
-        setupButtons();
 
 // ==========================
 // TTS INIT (ΠΡΩΤΑ!)
@@ -121,38 +150,67 @@ tts[0] = new TextToSpeech(this, status -> {
         log("📱 Device ready", false);
 
 // =========================================================
-// FORCE PLATFORM PICKER (RETURN FROM APPLE MODE)
+// FORCE PLATFORM PICKER (RETURN FROM OTHER MODE)
 // =========================================================
 boolean forcePicker =
         getIntent() != null && getIntent().getBooleanExtra("force_platform_picker", false);
 
 if (forcePicker) {
     showWelcomePopup();
+    getIntent().removeExtra("force_platform_picker"); // 🔒 ΚΛΕΙΔΩΣΕ ΤΟ
+}
+
+    // 🔒 ΚΑΘΑΡΙΣΕ ΤΟ FLAG — ΜΙΑ ΦΟΡΑ ΜΟΝΟ
+    getIntent().removeExtra("force_platform_picker");
 }
 
 // =========================================================
-// RETURN TO ANDROID BUTTON
+// RETURN TO ANDROID BUTTON — SAFE PLATFORM SWITCH
 // =========================================================
 Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
 if (btnReturnAndroid != null) {
     btnReturnAndroid.setOnClickListener(v -> {
 
-        // γυρνάμε σε Android mode
+        // 1️⃣ Αλλάζουμε platform
         getSharedPreferences("gel_prefs", MODE_PRIVATE)
                 .edit()
                 .putString("device_mode", "android")
                 .apply();
 
-        // πήγαινε στο MainActivity και ζήτα platform picker
+        // 2️⃣ Πηγαίνουμε στο MainActivity και ζητάμε picker
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra("force_platform_picker", true);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
         startActivity(i);
 
-        finish();
+        // ❌ ΟΧΙ finish();
     });
 }
+
+// =========================================================
+// RETURN TO APPLE BUTTON — SAFE PLATFORM SWITCH
+// =========================================================
+Button btnReturnApple = findViewById(R.id.btnReturnApple);
+
+if (btnReturnApple != null) {
+    btnReturnApple.setOnClickListener(v -> {
+
+        // 1️⃣ Γυρνάμε σε Apple mode
+        getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                .edit()
+                .putString("device_mode", "apple")   // ⬅️ ΕΔΩ
+                .apply();
+
+        // 2️⃣ Πηγαίνουμε στο MainActivity
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra("force_platform_picker", true);
+        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        startActivity(i);
+        // ❌ ΟΧΙ finish();
+    });
 }
 
     @Override
@@ -1062,8 +1120,12 @@ private void showBrowserPicker() {
 
     PackageManager pm = getPackageManager();
 
-    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
-    List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
+    Intent intent = new Intent(Intent.ACTION_VIEW);
+    intent.setData(Uri.parse("http://www.example.com"));
+    intent.addCategory(Intent.CATEGORY_BROWSABLE);
+
+    List<ResolveInfo> infos =
+            pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 
     if (infos == null || infos.isEmpty()) {
         Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
@@ -1102,11 +1164,10 @@ private void showBrowserPicker() {
     // ---- TITLE (κάτασπρο + bold) ----
     TextView title = new TextView(this);
     title.setText("Select Browser");
-    title.setTextColor(0xFFFFFFFF);   // κάτασπρο
+    title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);
     title.setPadding(dp(16), dp(14), dp(16), dp(10));
-
     builder.setCustomTitle(title);
 
     // ---- ITEMS (neon adapter) ----
@@ -1117,6 +1178,18 @@ private void showBrowserPicker() {
 
     AlertDialog dialog = builder.create();
     dialog.show();
+
+    // =====================================================
+    // STYLE — BLACK BG + GOLD BORDER (LOCKED)
+    // =====================================================
+    Window window = dialog.getWindow();
+    if (window != null) {
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);           // 🖤 Μαύρο φόντο
+        bg.setCornerRadius(dp(18));        // στρογγυλές γωνίες
+        bg.setStroke(dp(3), 0xFFFFD700);   // 🟡 Χρυσό περίγραμμα
+        window.setBackgroundDrawable(bg);
+    }
 }
 
     // =========================================================
@@ -1135,17 +1208,16 @@ private void showBrowserPicker() {
         });
     }
     
-    // =========================================================
+// =========================================================
 // OPEN APP INFO (for Browser Picker)
 // =========================================================
-private void openAppInfo(String pkg){
-    try{
+private void openAppInfo(String pkg) {
+    try {
         Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.setData(Uri.parse("package:"+pkg));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.setData(Uri.parse("package:" + pkg));
         startActivity(i);
-    }catch(Exception e){
-        Toast.makeText(this,"Cannot open App Info",Toast.LENGTH_SHORT).show();
+    } catch (Exception e) {
+        Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();
     }
 }
     

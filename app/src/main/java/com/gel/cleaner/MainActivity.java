@@ -229,12 +229,8 @@ private void startPlatformFlow() {
     showWelcomePopup();
 }
 
-    private boolean isAppleMode() {
-    SharedPreferences prefs =
-            getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    return "apple".equals(
-            prefs.getString("platform_mode", "none")
-    );
+private boolean isAppleMode() {
+    return "apple".equals(getSavedPlatform());
 }
 
 private AlertDialog.Builder buildNeonDialog() {
@@ -285,13 +281,13 @@ private ArrayAdapter<String> neonAdapter(String[] names) {
 private void savePlatform(String mode) {
     getSharedPreferences("gel_prefs", MODE_PRIVATE)
             .edit()
-            .putString("platform_mode", mode)
+            .putString("device_mode", mode) // 🔒 ΕΝΑ KEY
             .apply();
 }
 
 private String getSavedPlatform() {
     return getSharedPreferences("gel_prefs", MODE_PRIVATE)
-            .getString("platform_mode", "android"); // default = android
+            .getString("device_mode", "android");
 }
 
     // =========================================================

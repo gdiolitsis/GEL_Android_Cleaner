@@ -104,21 +104,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
 
-    // =====================================================
-    // RETURN BUTTON — DYNAMIC TEXT (ANDROID / APPLE)
-    // =====================================================
-    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-    if (btnReturnAndroid != null) {
-        String mode = getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                .getString("device_mode", "android");
-
-        btnReturnAndroid.setText(
-                "apple".equals(mode)
-                        ? "RETURN TO ANDROID MODE"
-                        : "RETURN TO APPLE MODE"
-        );
-    }
-
 // =====================================================
 // RETURN BUTTON — TEXT + ACTION (LOCKED)
 // =====================================================

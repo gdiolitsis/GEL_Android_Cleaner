@@ -207,7 +207,7 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     <string name="platform_apple">🍎 APPLE</string>
 
     <!-- DEVICE DECLARATION -->
-    <string name="apple_device_declaration">🧩 Δήλωση Συσκευής</string>
+    <string name="apple_device_declaration">🍎 Δήλωση Συσκευής Apple</string>
     <string name="apple_device_category_title">Επιλογή κατηγορίας συσκευής</string>
     <string name="apple_device_cat_iphone">iPhone</string>
     <string name="apple_device_cat_ipad">iPad</string>

@@ -132,9 +132,6 @@ if (btnReturnAndroid != null) {
     });
 }
 
-// 🔑 ΤΕΛΙΚΟ SYNC ΣΤΟ STARTUP
-syncReturnButtonText();
-
     // =====================================================
     // TTS INIT
     // =====================================================
@@ -210,11 +207,12 @@ public void onBackPressed() {
 // =========================================================
 private void startPlatformFlow() {
 
-    if (!skipWelcomePopupOnce) {
-        showWelcomePopup();
-    } else {
-        skipWelcomePopupOnce = false; // reset για επόμενο κανονικό launch
+    if (skipWelcomePopupOnce) {
+        skipWelcomePopupOnce = false; // 🔒 reset αμέσως
+        return; // ⛔ ΜΗΝ δείξεις welcome
     }
+
+    showWelcomePopup();
 }
 
 private boolean isAppleMode() {
@@ -1066,9 +1064,6 @@ ipodBtn.setPadding(
         dp(16),
         dp(14)
 );
-
-// ADD
-box.addView(ipodBtn);
 
     // ==========================
     // ADD TO BOX

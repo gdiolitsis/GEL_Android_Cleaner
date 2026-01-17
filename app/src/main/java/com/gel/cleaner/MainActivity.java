@@ -171,21 +171,32 @@ if (btnReturnAndroid != null) {
     log("📱 Device ready", false);
 }
 
-  @Override
+@Override
 protected void onResume() {
     super.onResume();
 
+    // -------------------------------------------------
+    // 1️⃣ APPLY PLATFORM UI
+    // -------------------------------------------------
+    String mode = getSavedPlatform(); // "android" | "apple" | "none"
+
+    if ("apple".equals(mode)) {
+        applyAppleModeUI();
+    } else {
+        applyAndroidModeUI();
+    }
+
+    // -------------------------------------------------
+    // 2️⃣ SYNC RETURN BUTTON TEXT
+    // -------------------------------------------------
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-    if (btnReturnAndroid == null) return;
-
-    String mode = getSharedPreferences("gel_prefs", MODE_PRIVATE)
-            .getString("device_mode", "android");
-
-    btnReturnAndroid.setText(
-            "apple".equals(mode)
-                    ? "RETURN TO ANDROID MODE"
-                    : "RETURN TO APPLE MODE"
-    );
+    if (btnReturnAndroid != null) {
+        btnReturnAndroid.setText(
+                "apple".equals(mode)
+                        ? "RETURN TO ANDROID MODE"
+                        : "RETURN TO APPLE MODE"
+        );
+    }
 }
  
    @Override
@@ -223,19 +234,6 @@ private void startPlatformFlow() {
     return "apple".equals(
             prefs.getString("platform_mode", "none")
     );
-}
-
-@Override
-protected void onResume() {
-    super.onResume();
-
-    String mode = getSavedPlatform();   // "android" | "apple" | "none"
-
-    if ("apple".equals(mode)) {
-        applyAppleModeUI();
-    } else {
-        applyAndroidModeUI();
-    }
 }
 
 private AlertDialog.Builder buildNeonDialog() {

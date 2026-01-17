@@ -119,27 +119,42 @@ protected void onCreate(Bundle savedInstanceState) {
         );
     }
 
-    // =====================================================
-// RETURN BUTTON — TOGGLE ANDROID / APPLE (SAFE)
 // =====================================================
+// RETURN BUTTON — TEXT + ACTION (LOCKED)
+// =====================================================
+Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+
 if (btnReturnAndroid != null) {
+
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+    // 🔹 READ CURRENT MODE
+    String mode = prefs.getString("device_mode", "android");
+
+    // 🔹 SET TEXT
+    btnReturnAndroid.setText(
+            "apple".equals(mode)
+                    ? "RETURN TO ANDROID MODE"
+                    : "RETURN TO APPLE MODE"
+    );
+
+    // 🔹 SET ACTION (AFTER setupButtons)
     btnReturnAndroid.setOnClickListener(v -> {
 
-        SharedPreferences prefs =
-                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+        String currentMode =
+                prefs.getString("device_mode", "android");
 
-        String currentMode = prefs.getString("device_mode", "android");
-
-        // toggle mode
-        String newMode = "apple".equals(currentMode)
-                ? "android"
-                : "apple";
+        String newMode =
+                "apple".equals(currentMode)
+                        ? "android"
+                        : "apple";
 
         prefs.edit()
                 .putString("device_mode", newMode)
                 .apply();
 
-        Intent i = new Intent(this, MainActivity.class);
+        Intent i = new Intent(MainActivity.this, MainActivity.class);
         i.putExtra("force_platform_picker", true);
         i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(i);
@@ -1086,7 +1101,7 @@ private void showBrowserPicker() {
     intent.addCategory(Intent.CATEGORY_BROWSABLE);
 
     List<ResolveInfo> infos =
-            pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        pm.queryIntentActivities(intent, 0);
 
     if (infos == null || infos.isEmpty()) {
         Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
@@ -1183,3 +1198,4 @@ private void openAppInfo(String pkg) {
 }
     
 }
+ 

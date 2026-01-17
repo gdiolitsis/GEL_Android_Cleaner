@@ -113,25 +113,27 @@ Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
 if (btnReturnAndroid != null) {
 
-    // 3️⃣ ACTION
-btnReturnAndroid.setOnClickListener(v -> {
+    btnReturnAndroid.setOnClickListener(v -> {
 
-    String currentMode = getSavedPlatform();
+        String currentMode = getSavedPlatform();
 
-    if ("apple".equals(currentMode)) {
-        // 🍏 → 🤖
-        savePlatform("android");
-        applyAndroidModeUI();
-    } else {
-        // 🤖 → 🍏
-        savePlatform("apple");
-        applyAppleModeUI();
-    }
+        if ("apple".equals(currentMode)) {
+            // 🍏 → 🤖
+            savePlatform("android");
+            applyAndroidModeUI();
+        } else {
+            // 🤖 → 🍏
+            savePlatform("apple");
+            applyAppleModeUI();
+        }
 
-    // 🔑 ΠΑΝΤΑ sync μετά την αλλαγή
-    syncReturnButtonText();
-});
+        // 🔑 ΠΑΝΤΑ sync μετά την αλλαγή
+        syncReturnButtonText();
+    });
 }
+
+// 🔑 ΤΕΛΙΚΟ SYNC ΣΤΟ STARTUP
+syncReturnButtonText();
 
     // =====================================================
     // TTS INIT
@@ -979,6 +981,7 @@ private void showAppleDeviceDeclarationPopup() {
     // 📱 iPHONE BUTTON
     // ==========================
     Button iphoneBtn = new Button(this);
+    iphoneBtn.setIncludeFontPadding(false);
     iphoneBtn.setText("📱  iPHONE");
     iphoneBtn.setAllCaps(false);
     iphoneBtn.setTextColor(Color.WHITE);
@@ -993,7 +996,7 @@ private void showAppleDeviceDeclarationPopup() {
     LinearLayout.LayoutParams lpIphone =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(64)   // ⬅️ από 52 → 64
+                dp(72)   // ⬅️ από 52 → 64
         );
     lpIphone.setMargins(0, dp(12), 0, 0);
     iphoneBtn.setLayoutParams(lpIphone);
@@ -1008,6 +1011,7 @@ private void showAppleDeviceDeclarationPopup() {
     // 📲 iPAD BUTTON
     // ==========================
     Button ipadBtn = new Button(this);
+    ipadBtn.setIncludeFontPadding(false);
     ipadBtn.setText("📲  iPAD");
     ipadBtn.setAllCaps(false);
     ipadBtn.setTextColor(Color.WHITE);
@@ -1022,7 +1026,7 @@ private void showAppleDeviceDeclarationPopup() {
     LinearLayout.LayoutParams lpIpad =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(64)
+                dp(72)
         );
     lpIpad.setMargins(0, dp(12), 0, 0);
     ipadBtn.setLayoutParams(lpIpad);
@@ -1037,7 +1041,8 @@ private void showAppleDeviceDeclarationPopup() {
 // 🎵 iPOD BUTTON
 // ==========================
 Button ipodBtn = new Button(this);
-ipodBtn.setText("♬  iPOD Touch");
+ipodBtn.setIncludeFontPadding(false);
+ipodBtn.setText("🎵  iPOD Touch");
 ipodBtn.setAllCaps(false);
 ipodBtn.setTextColor(Color.WHITE);
 ipodBtn.setTextSize(16f);
@@ -1051,7 +1056,7 @@ ipodBtn.setBackground(ipodBg);
 LinearLayout.LayoutParams lpIpod =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(64)
+                dp(72)
         );
 lpIpod.setMargins(0, dp(12), 0, 0);
 ipodBtn.setLayoutParams(lpIpod);
@@ -1070,6 +1075,7 @@ box.addView(ipodBtn);
     // ==========================
     box.addView(iphoneBtn);
     box.addView(ipadBtn);
+    box.addView(ipodBtn);
 
     b.setView(box);
     AlertDialog d = b.create();

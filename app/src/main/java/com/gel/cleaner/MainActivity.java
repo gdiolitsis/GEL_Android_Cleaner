@@ -1152,38 +1152,6 @@ private void showBrowserPicker() {
     AlertDialog.Builder builder = buildNeonDialog();
 
     TextView title = new TextView(this);
-    title.setText("Select Browser");
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setPadding(dp(16), dp(14), dp(16), dp(10));
-    builder.setCustomTitle(title);
-
-    builder.setAdapter(neonAdapter(names), (d, w) -> {
-        String pkg = apps.get(names[w]);
-        openAppInfo(pkg);
-    });
-
-    AlertDialog dialog = builder.create();
-    dialog.show();
-
-    Window window = dialog.getWindow();
-    if (window != null) {
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        window.setBackgroundDrawable(bg);
-    }
-}
-
-    // -----------------------------------------------------
-    // DIALOG
-    // -----------------------------------------------------
-    AlertDialog.Builder builder = buildNeonDialog();
-
-    // ---- TITLE (centered, white + bold) ----
-TextView title = new TextView(this);
 title.setText("Select Browser");
 title.setTextColor(0xFFFFFFFF);
 title.setTextSize(18f);
@@ -1200,7 +1168,6 @@ title.setLayoutParams(
 
 builder.setCustomTitle(title);
 
-    // ---- ITEMS (neon adapter) ----
     builder.setAdapter(neonAdapter(names), (d, w) -> {
         String pkg = apps.get(names[w]);
         openAppInfo(pkg);
@@ -1209,15 +1176,12 @@ builder.setCustomTitle(title);
     AlertDialog dialog = builder.create();
     dialog.show();
 
-    // =====================================================
-    // STYLE — BLACK BG + GOLD BORDER (LOCKED)
-    // =====================================================
     Window window = dialog.getWindow();
     if (window != null) {
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);           // 🖤 Μαύρο φόντο
-        bg.setCornerRadius(dp(18));        // στρογγυλές γωνίες
-        bg.setStroke(dp(3), 0xFFFFD700);   // 🟡 Χρυσό περίγραμμα
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
         window.setBackgroundDrawable(bg);
     }
 }

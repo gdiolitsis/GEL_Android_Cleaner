@@ -472,83 +472,295 @@ iphone14ProMax.notes          = "Largest Pro model with maximum battery";
 
 MAP.put("iphone 14 pro max", iphone14ProMax);
 
-// =====================================================
-// 📱 iPhone 13
-// =====================================================
-AppleDeviceSpec iphone13 = new AppleDeviceSpec("iphone", "iPhone 13");
-iphone13.year            = "2021";
-iphone13.identifier      = "iPhone14,5";
-iphone13.soc             = "A15 Bionic";
-iphone13.ram             = "4 GB";
-iphone13.storageOptions  = "128 / 256 / 512 GB";
-iphone13.display         = "6.1\" OLED Super Retina XDR";
-iphone13.refreshRate     = "60 Hz";
-iphone13.cameraMain      = "12 MP Wide";
-iphone13.cameraUltraWide = "12 MP Ultra-Wide";
-iphone13.biometrics      = "Face ID";
-iphone13.port            = "Lightning";
+// =========================================================
+// 📱 iPHONE 13 SERIES — FULL SPECS
+// =========================================================
 
-MAP.put("iphone 13", iphone13);
-
-
-// =====================================================
-// 📱 iPhone 13 mini
-// =====================================================
+// ---------------------------------------------------------
+// iPhone 13 mini
+// ---------------------------------------------------------
 AppleDeviceSpec iphone13Mini = new AppleDeviceSpec("iphone", "iPhone 13 mini");
 iphone13Mini.year            = "2021";
 iphone13Mini.identifier      = "iPhone14,4";
+iphone13Mini.os              = "iOS";
 iphone13Mini.soc             = "A15 Bionic";
+iphone13Mini.chipset         = "A15 Bionic";
+iphone13Mini.arch            = "ARMv8.5-A";
+iphone13Mini.processNode     = "5 nm";
+iphone13Mini.cpu             = "Apple CPU";
+iphone13Mini.cpuCores        = 6;
+iphone13Mini.gpu             = "Apple GPU";
+iphone13Mini.gpuCores        = 4;
+iphone13Mini.metalFeatureSet = "Metal 3";
+
 iphone13Mini.ram             = "4 GB";
+iphone13Mini.ramType         = "LPDDR4X";
+iphone13Mini.storageBase     = "128 GB";
 iphone13Mini.storageOptions  = "128 / 256 / 512 GB";
-iphone13Mini.display         = "5.4\" OLED";
+
+iphone13Mini.screen          = "5.4\"";
+iphone13Mini.display         = "OLED Super Retina XDR";
+iphone13Mini.resolution      = "2340 × 1080";
 iphone13Mini.refreshRate     = "60 Hz";
+iphone13Mini.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone13Mini.has5G           = true;
+iphone13Mini.hasLTE          = true;
+iphone13Mini.cellular        = "5G NR / LTE";
+iphone13Mini.modem           = "Qualcomm Snapdragon X60";
+iphone13Mini.wifi            = "Wi-Fi 6";
+iphone13Mini.bluetooth       = "Bluetooth 5.0";
+iphone13Mini.hasNFC          = true;
+iphone13Mini.hasAirDrop      = true;
+iphone13Mini.hasAirPlay      = true;
+iphone13Mini.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone13Mini.hasCompass      = true;
+iphone13Mini.hasGyro         = true;
+iphone13Mini.hasAccel        = true;
+iphone13Mini.hasBarometer    = true;
+
+iphone13Mini.simSlots        = "Nano-SIM + eSIM";
+iphone13Mini.hasESim         = true;
+iphone13Mini.port            = "Lightning";
+iphone13Mini.usbStandard     = "USB 2.0";
+
+iphone13Mini.speakers        = "Stereo";
+iphone13Mini.microphones     = "Multiple";
+iphone13Mini.hasDolby        = true;
+iphone13Mini.hasJack         = false;
+
+iphone13Mini.cameraMain      = "12 MP Wide (Sensor-shift OIS)";
+iphone13Mini.cameraUltraWide = "12 MP Ultra-Wide";
+iphone13Mini.cameraTele      = null;
+iphone13Mini.cameraFront     = "12 MP TrueDepth";
+iphone13Mini.cameraVideo     = "4K@60fps HDR";
+
+iphone13Mini.hasFaceID       = true;
+iphone13Mini.hasTouchID      = false;
 iphone13Mini.biometrics      = "Face ID";
+
+iphone13Mini.hasFastCharge       = true;
+iphone13Mini.hasWirelessCharge  = true;
+iphone13Mini.charging           = "Lightning / MagSafe";
+
+iphone13Mini.thermalNote    = "No public thermal sensor access (Apple restriction)";
+iphone13Mini.notes          = "Smallest iPhone with A15 Bionic";
 
 MAP.put("iphone 13 mini", iphone13Mini);
 
+// ---------------------------------------------------------
+// iPhone 13
+// ---------------------------------------------------------
+AppleDeviceSpec iphone13 = new AppleDeviceSpec("iphone", "iPhone 13");
+iphone13.year            = "2021";
+iphone13.identifier      = "iPhone14,5";
+iphone13.os              = "iOS";
+iphone13.soc             = "A15 Bionic";
+iphone13.chipset         = "A15 Bionic";
+iphone13.arch            = "ARMv8.5-A";
+iphone13.processNode     = "5 nm";
+iphone13.cpu             = "Apple CPU";
+iphone13.cpuCores        = 6;
+iphone13.gpu             = "Apple GPU";
+iphone13.gpuCores        = 4;
+iphone13.metalFeatureSet = "Metal 3";
 
-// =====================================================
-// 📱 iPhone 13 Pro
-// =====================================================
+iphone13.ram             = "4 GB";
+iphone13.ramType         = "LPDDR4X";
+iphone13.storageBase     = "128 GB";
+iphone13.storageOptions  = "128 / 256 / 512 GB";
+
+iphone13.screen          = "6.1\"";
+iphone13.display         = "OLED Super Retina XDR";
+iphone13.resolution      = "2532 × 1170";
+iphone13.refreshRate     = "60 Hz";
+iphone13.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone13.has5G           = true;
+iphone13.hasLTE          = true;
+iphone13.cellular        = "5G NR / LTE";
+iphone13.modem           = "Qualcomm Snapdragon X60";
+iphone13.wifi            = "Wi-Fi 6";
+iphone13.bluetooth       = "Bluetooth 5.0";
+iphone13.hasNFC          = true;
+iphone13.hasAirDrop      = true;
+iphone13.hasAirPlay      = true;
+iphone13.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone13.hasCompass      = true;
+iphone13.hasGyro         = true;
+iphone13.hasAccel        = true;
+iphone13.hasBarometer    = true;
+
+iphone13.simSlots        = "Nano-SIM + eSIM";
+iphone13.hasESim         = true;
+iphone13.port            = "Lightning";
+iphone13.usbStandard     = "USB 2.0";
+
+iphone13.speakers        = "Stereo";
+iphone13.microphones     = "Multiple";
+iphone13.hasDolby        = true;
+iphone13.hasJack         = false;
+
+iphone13.cameraMain      = "12 MP Wide (Sensor-shift OIS)";
+iphone13.cameraUltraWide = "12 MP Ultra-Wide";
+iphone13.cameraTele      = null;
+iphone13.cameraFront     = "12 MP TrueDepth";
+iphone13.cameraVideo     = "4K@60fps HDR";
+
+iphone13.hasFaceID       = true;
+iphone13.hasTouchID      = false;
+iphone13.biometrics      = "Face ID";
+
+iphone13.hasFastCharge       = true;
+iphone13.hasWirelessCharge  = true;
+iphone13.charging           = "Lightning / MagSafe";
+
+iphone13.thermalNote    = "No public thermal sensor access (Apple restriction)";
+iphone13.notes          = "Base model of iPhone 13 lineup";
+
+MAP.put("iphone 13", iphone13);
+
+// ---------------------------------------------------------
+// iPhone 13 Pro
+// ---------------------------------------------------------
 AppleDeviceSpec iphone13Pro = new AppleDeviceSpec("iphone", "iPhone 13 Pro");
 iphone13Pro.year            = "2021";
 iphone13Pro.identifier      = "iPhone14,2";
+iphone13Pro.os              = "iOS";
 iphone13Pro.soc             = "A15 Bionic";
+iphone13Pro.chipset         = "A15 Bionic";
+iphone13Pro.arch            = "ARMv8.5-A";
+iphone13Pro.processNode     = "5 nm";
+iphone13Pro.cpu             = "Apple CPU";
+iphone13Pro.cpuCores        = 6;
+iphone13Pro.gpu             = "Apple GPU";
 iphone13Pro.gpuCores        = 5;
+iphone13Pro.metalFeatureSet = "Metal 3";
+
 iphone13Pro.ram             = "6 GB";
+iphone13Pro.ramType         = "LPDDR4X";
+iphone13Pro.storageBase     = "128 GB";
 iphone13Pro.storageOptions  = "128 / 256 / 512 GB / 1 TB";
-iphone13Pro.display         = "6.1\" OLED ProMotion";
-iphone13Pro.refreshRate     = "120 Hz";
-iphone13Pro.cameraTele      = "12 MP Telephoto";
+
+iphone13Pro.screen          = "6.1\"";
+iphone13Pro.display         = "OLED Super Retina XDR (ProMotion)";
+iphone13Pro.resolution      = "2532 × 1170";
+iphone13Pro.refreshRate     = "10–120 Hz";
+iphone13Pro.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone13Pro.has5G           = true;
+iphone13Pro.hasLTE          = true;
+iphone13Pro.cellular        = "5G NR / LTE";
+iphone13Pro.modem           = "Qualcomm Snapdragon X60";
+iphone13Pro.wifi            = "Wi-Fi 6";
+iphone13Pro.bluetooth       = "Bluetooth 5.0";
+iphone13Pro.hasNFC          = true;
+iphone13Pro.hasAirDrop      = true;
+iphone13Pro.hasAirPlay      = true;
+iphone13Pro.gps             = "Dual-frequency GPS";
+iphone13Pro.hasCompass      = true;
+iphone13Pro.hasGyro         = true;
+iphone13Pro.hasAccel        = true;
+iphone13Pro.hasBarometer    = true;
+
+iphone13Pro.simSlots        = "Nano-SIM + eSIM";
+iphone13Pro.hasESim         = true;
+iphone13Pro.port            = "Lightning";
+iphone13Pro.usbStandard     = "USB 2.0";
+
+iphone13Pro.speakers        = "Stereo";
+iphone13Pro.microphones     = "Multiple";
+iphone13Pro.hasDolby        = true;
+iphone13Pro.hasJack         = false;
+
+iphone13Pro.cameraMain      = "12 MP Wide (Sensor-shift OIS)";
+iphone13Pro.cameraUltraWide = "12 MP Ultra-Wide";
+iphone13Pro.cameraTele      = "12 MP Telephoto (3×)";
+iphone13Pro.cameraFront     = "12 MP TrueDepth";
+iphone13Pro.cameraVideo     = "4K@60fps ProRes / HDR";
+
+iphone13Pro.hasFaceID       = true;
+iphone13Pro.hasTouchID      = false;
 iphone13Pro.biometrics      = "Face ID";
+
+iphone13Pro.hasFastCharge       = true;
+iphone13Pro.hasWirelessCharge  = true;
+iphone13Pro.charging           = "Lightning / MagSafe";
+
+iphone13Pro.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone13Pro.notes          = "First Pro iPhone with ProMotion display";
 
 MAP.put("iphone 13 pro", iphone13Pro);
 
-
-// =====================================================
-// 📱 iPhone 13 Pro Max
-// =====================================================
+// ---------------------------------------------------------
+// iPhone 13 Pro Max
+// ---------------------------------------------------------
 AppleDeviceSpec iphone13ProMax = new AppleDeviceSpec("iphone", "iPhone 13 Pro Max");
 iphone13ProMax.year            = "2021";
 iphone13ProMax.identifier      = "iPhone14,3";
+iphone13ProMax.os              = "iOS";
 iphone13ProMax.soc             = "A15 Bionic";
+iphone13ProMax.chipset         = "A15 Bionic";
+iphone13ProMax.arch            = "ARMv8.5-A";
+iphone13ProMax.processNode     = "5 nm";
+iphone13ProMax.cpu             = "Apple CPU";
+iphone13ProMax.cpuCores        = 6;
+iphone13ProMax.gpu             = "Apple GPU";
 iphone13ProMax.gpuCores        = 5;
+iphone13ProMax.metalFeatureSet = "Metal 3";
+
 iphone13ProMax.ram             = "6 GB";
+iphone13ProMax.ramType         = "LPDDR4X";
+iphone13ProMax.storageBase     = "128 GB";
 iphone13ProMax.storageOptions  = "128 / 256 / 512 GB / 1 TB";
-iphone13ProMax.display         = "6.7\" OLED ProMotion";
-iphone13ProMax.refreshRate     = "120 Hz";
+
+iphone13ProMax.screen          = "6.7\"";
+iphone13ProMax.display         = "OLED Super Retina XDR (ProMotion)";
+iphone13ProMax.resolution      = "2778 × 1284";
+iphone13ProMax.refreshRate     = "10–120 Hz";
+iphone13ProMax.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone13ProMax.has5G           = true;
+iphone13ProMax.hasLTE          = true;
+iphone13ProMax.cellular        = "5G NR / LTE";
+iphone13ProMax.modem           = "Qualcomm Snapdragon X60";
+iphone13ProMax.wifi            = "Wi-Fi 6";
+iphone13ProMax.bluetooth       = "Bluetooth 5.0";
+iphone13ProMax.hasNFC          = true;
+iphone13ProMax.hasAirDrop      = true;
+iphone13ProMax.hasAirPlay      = true;
+iphone13ProMax.gps             = "Dual-frequency GPS";
+iphone13ProMax.hasCompass      = true;
+iphone13ProMax.hasGyro         = true;
+iphone13ProMax.hasAccel        = true;
+iphone13ProMax.hasBarometer    = true;
+
+iphone13ProMax.simSlots        = "Nano-SIM + eSIM";
+iphone13ProMax.hasESim         = true;
+iphone13ProMax.port            = "Lightning";
+iphone13ProMax.usbStandard     = "USB 2.0";
+
+iphone13ProMax.speakers        = "Stereo";
+iphone13ProMax.microphones     = "Multiple";
+iphone13ProMax.hasDolby        = true;
+iphone13ProMax.hasJack         = false;
+
+iphone13ProMax.cameraMain      = "12 MP Wide (Sensor-shift OIS)";
+iphone13ProMax.cameraUltraWide = "12 MP Ultra-Wide";
+iphone13ProMax.cameraTele      = "12 MP Telephoto (3×)";
+iphone13ProMax.cameraFront     = "12 MP TrueDepth";
+iphone13ProMax.cameraVideo     = "4K@60fps ProRes / HDR";
+
+iphone13ProMax.hasFaceID       = true;
+iphone13ProMax.hasTouchID      = false;
 iphone13ProMax.biometrics      = "Face ID";
 
-MAP.put("iphone 13 pro max", iphone13ProMax);
-    
-    // =====================================================
-    // PUBLIC ACCESS
-    // =====================================================
-    public static AppleDeviceSpec get(String modelName) {
-        if (modelName == null) return AppleDeviceSpec.unknown();
-        AppleDeviceSpec d = MAP.get(modelName.toLowerCase());
-        return d != null ? d : AppleDeviceSpec.unknown();
-    }
+iphone13ProMax.hasFastCharge       = true;
+iphone13ProMax.hasWirelessCharge  = true;
+iphone13ProMax.charging           = "Lightning / MagSafe";
 
-    private iPhoneSpecs() {}
-}
+iphone13ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone13ProMax.notes          = "Largest iPhone 13 with maximum battery";
+
+MAP.put("iphone 13 pro max", iphone13ProMax);
+

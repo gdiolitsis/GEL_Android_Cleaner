@@ -65,6 +65,24 @@ private static final String PREFS = "gel_prefs";
 private static final String KEY_PLATFORM = "device_mode";  
 private static final String KEY_PLATFORM_LEGACY = "platform_mode"; 
 
+// ==========================
+// WELCOME SKIP (ONE SHOT)
+// ==========================
+
+private void setSkipWelcomeOnce(boolean v) {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("skip_welcome_once", v)
+            .apply();
+}
+
+private boolean consumeSkipWelcomeOnce() {
+    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+    boolean v = sp.getBoolean("skip_welcome_once", false);
+    if (v) sp.edit().remove("skip_welcome_once").apply();
+    return v;
+}
+
 private boolean isWelcomeDisabled() {
     return getSharedPreferences(PREFS, MODE_PRIVATE)
             .getBoolean("welcome_disabled", false);
@@ -156,7 +174,9 @@ if ("apple".equals(mode)) {
 
 syncReturnButtonText();
 
-if (!isWelcomeDisabled()) {
+boolean skipWelcome = consumeSkipWelcomeOnce();
+
+if (!skipWelcome && !isWelcomeDisabled()) {
     showWelcomePopup();
 }
 
@@ -756,12 +776,14 @@ if (w != null) {
 // ---------------- ACTIONS ----------------
 androidBtn.setOnClickListener(v -> {
     savePlatform("android");
+    setSkipWelcomeOnce(true);
     d.dismiss();
     recreate();
 });
 
 appleBtn.setOnClickListener(v -> {
     savePlatform("apple");
+    setSkipWelcomeOnce(true);
     d.dismiss();
     recreate();
 });
@@ -847,9 +869,10 @@ private void applyAndroidModeUI() {
         if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
     }
 
-    private void changeLang(String code) {
-LocaleHelper.set(this, code);
-recreate();
+private void changeLang(String code) {
+    setSkipWelcomeOnce(true);
+    LocaleHelper.set(this, code);
+    recreate();
 }
 
     private void applySavedLanguage() {

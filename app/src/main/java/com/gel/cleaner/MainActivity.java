@@ -42,9 +42,7 @@ import java.util.Map;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
-        	
-        private boolean skipWelcomePopupOnce = false;
-        	
+                	
         private boolean welcomeShown = false;
 
     // ==========================
@@ -66,6 +64,23 @@ public class MainActivity extends GELAutoActivityHook
     // ==========================
     private static final String PREFS = "gel_prefs";
     private static final String KEY_PLATFORM = "platform_mode"; // android | apple
+
+// =========================================================
+// WELCOME SKIP — ONE SHOT (RECREATE SAFE)
+// =========================================================
+private void setSkipWelcomeOnce(boolean v) {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("skip_welcome_once", v)
+            .apply();
+}
+
+private boolean consumeSkipWelcomeOnce() {
+    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+    boolean v = sp.getBoolean("skip_welcome_once", false);
+    if (v) sp.edit().remove("skip_welcome_once").apply();
+    return v;
+}
 
     // =========================================================
     // LOCALE
@@ -204,12 +219,7 @@ public void onBackPressed() {
 // PLATFORM FLOW — ALWAYS SHOW WELCOME
 // =========================================================
 private void startPlatformFlow() {
-
-    if (skipWelcomePopupOnce) {
-        skipWelcomePopupOnce = false; // 🔒 reset αμέσως
-        return; // ⛔ ΜΗΝ δείξεις welcome
-    }
-
+    if (consumeSkipWelcomeOnce()) return;
     showWelcomePopup();
 }
 
@@ -832,9 +842,9 @@ private void applyAndroidModeUI() {
     }
 
     private void changeLang(String code) {
-    skipWelcomePopupOnce = true;   // ⛔ αυτό το recreate είναι μόνο για γλώσσα
-    LocaleHelper.set(this, code);
-    recreate();
+    setSkipWelcomeOnce(true);   // 🔒 survive recreate
+LocaleHelper.set(this, code);
+recreate();
 }
 
     private void applySavedLanguage() {

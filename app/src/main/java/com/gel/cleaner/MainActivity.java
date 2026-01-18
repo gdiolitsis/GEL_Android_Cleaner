@@ -157,15 +157,25 @@ if (forcePicker) {
         }
     });
 
-    // =====================================================
-    // STARTUP FLOW (ONCE)
-    // =====================================================
- if (!skipWelcome) {
-    startPlatformFlow();
+// =====================================================
+// APPLY SAVED PLATFORM UI + RETURN TEXT (FIRST DRAW)
+// =====================================================
+String mode = getSavedPlatform();
+
+if ("apple".equals(mode)) {
+    applyAppleModeUI();
+} else {
+    applyAndroidModeUI();
 }
 
-// 🔒 RETURN BUTTON — FIRST DRAW SYNC
 syncReturnButtonText();
+
+// =====================================================
+// STARTUP FLOW
+// =====================================================
+if (!skipWelcome) {
+    startPlatformFlow();
+}
 
     log("📱 Device ready", false);
 }

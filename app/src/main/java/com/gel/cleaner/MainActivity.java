@@ -163,6 +163,9 @@ if (forcePicker) {
     startPlatformFlow();
 }
 
+// 🔒 RETURN BUTTON — FIRST DRAW SYNC
+syncReturnButtonText();
+
     log("📱 Device ready", false);
 }
 

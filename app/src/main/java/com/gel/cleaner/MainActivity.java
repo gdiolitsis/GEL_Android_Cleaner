@@ -787,6 +787,7 @@ appleBtn.setOnClickListener(v -> {
     d.dismiss();
     recreate();
 });
+}
 
     // =========================================================
     // 🍎 APPLE ENTRY POINT

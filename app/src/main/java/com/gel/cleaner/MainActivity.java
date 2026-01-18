@@ -439,14 +439,15 @@ box.addView(msg);
         controls.setGravity(Gravity.CENTER_VERTICAL);
         controls.setPadding(0, dp(16), 0, dp(10));
 
-        // ==========================
-        // 🔕 MUTE BUTTON
-        // ==========================
-        Button muteBtn = new Button(MainActivity.this);
+// ==========================
+// 🔕 MUTE BUTTON
+// ==========================
+Button muteBtn = new Button(MainActivity.this);
 muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
 muteBtn.setAllCaps(false);
 muteBtn.setTextColor(0xFFFFFFFF);
-muteBtn.setTextSize(16f);   // 👈 ΕΔΩ
+muteBtn.setTextSize(15f);          // ⬅️ ελαφρώς μικρότερο, πιο “κουμπί”
+muteBtn.setGravity(Gravity.CENTER);
 
 GradientDrawable muteBg = new GradientDrawable();
 muteBg.setColor(0xFF444444);
@@ -454,10 +455,10 @@ muteBg.setCornerRadius(dp(12));
 muteBg.setStroke(dp(2), 0xFFFFD700);
 muteBtn.setBackground(muteBg);
 
-        LinearLayout.LayoutParams lpMute =
+LinearLayout.LayoutParams lpMute =
         new LinearLayout.LayoutParams(
                 0,
-                dp(48),   // 🔒 ΣΤΑΘΕΡΟ ΥΨΟΣ — ίδιο με OK & Language box
+                dp(50),          // 🔒 ΚΛΕΙΔΩΜΕΝΟ ΥΨΟΣ
                 1f
         );
 lpMute.setMargins(0, 0, dp(8), 0);
@@ -519,35 +520,36 @@ langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
                 });
 
         // ==========================
-        // 🌐 LANGUAGE BOX (RIGHT)
-        // ==========================
-        LinearLayout langBox = new LinearLayout(MainActivity.this);
-        langBox.setOrientation(LinearLayout.HORIZONTAL);
-        langBox.setGravity(Gravity.CENTER_VERTICAL);
-        langBox.setPadding(dp(10), 0, dp(10), 0);
+// 🌐 LANGUAGE BOX
+// ==========================
+LinearLayout langBox = new LinearLayout(MainActivity.this);
+langBox.setOrientation(LinearLayout.HORIZONTAL);
+langBox.setGravity(Gravity.CENTER);
+langBox.setPadding(dp(12), 0, dp(12), 0);
 
-        GradientDrawable langBg = new GradientDrawable();
-        langBg.setColor(0xFF1A1A1A);
-        langBg.setCornerRadius(dp(12));
-        langBg.setStroke(dp(2), 0xFFFFD700);
-        langBox.setBackground(langBg);
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF1A1A1A);
+langBg.setCornerRadius(dp(12));
+langBg.setStroke(dp(2), 0xFFFFD700);
+langBox.setBackground(langBg);
 
-        LinearLayout.LayoutParams lpLangBox =
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(48),
-                        1f
-                );
-        lpLangBox.setMargins(dp(8), 0, 0, 0);
-        langBox.setLayoutParams(lpLangBox);
-
-        LinearLayout.LayoutParams lpSpin =
+LinearLayout.LayoutParams lpLangBox =
         new LinearLayout.LayoutParams(
                 0,
-                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(50),          // 🔒 ΙΔΙΟ ΥΨΟΣ ΜΕ MUTE
                 1f
         );
+lpLangBox.setMargins(dp(8), 0, 0, 0);
+langBox.setLayoutParams(lpLangBox);
+
+// spinner μέσα
+LinearLayout.LayoutParams lpSpin =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+        );
 langSpinner.setLayoutParams(lpSpin);
+langSpinner.setGravity(Gravity.CENTER);
 
         langBox.addView(langSpinner);
 
@@ -569,10 +571,7 @@ okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
 okBtn.setTextSize(18f);
-
-// 🔴 Η ΔΙΟΡΘΩΣΗ
 okBtn.setGravity(Gravity.CENTER);
-okBtn.setPadding(dp(12), 0, dp(12), 0);
 
 GradientDrawable okBg = new GradientDrawable();
 okBg.setColor(0xFF0F8A3B);
@@ -583,9 +582,9 @@ okBtn.setBackground(okBg);
 LinearLayout.LayoutParams lpOk =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(56)
+                dp(56)           // ⬅️ ΛΙΓΟ ΠΙΟ ΜΕΓΑΛΟ = primary action
         );
-lpOk.setMargins(0, dp(16), 0, 0);
+lpOk.setMargins(0, dp(18), 0, 0);
 okBtn.setLayoutParams(lpOk);
 
 box.addView(okBtn);
@@ -671,14 +670,19 @@ box.setLayoutParams(
         box.setBackground(bg);
 
         // ---------------- TITLE ----------------
-        TextView t = new TextView(this);
-        t.setText("SELECT PLATFORM");
-        t.setTextColor(Color.WHITE);
-        t.setTextSize(18f);
-        t.setTypeface(null, Typeface.BOLD);
-        t.setGravity(Gravity.CENTER);
-        t.setPadding(0,0,0,dp(12));
-        box.addView(t);
+TextView t = new TextView(this);
+t.setText("SELECT PLATFORM");
+t.setTextColor(Color.WHITE);
+t.setTextSize(18f);
+t.setTypeface(null, Typeface.BOLD);
+t.setGravity(Gravity.CENTER);
+t.setPadding(
+        0,
+        dp(4),    // top
+        0,
+        dp(16)    // bottom
+);
+box.addView(t);
 
 // =================================================
 // 🤖 ANDROID "BUTTON" (TextView)
@@ -705,9 +709,9 @@ androidBtn.setBackground(bgAndroid);
 LinearLayout.LayoutParams lpBtn =
             new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(72)
+                    dp(84)
             );
-    lpBtn.setMargins(dp(4), dp(12), dp(4), 0);
+    lpBtn.setMargins(dp(6), dp(14), dp(6), 0);
     androidBtn.setLayoutParams(lpBtn);
 
 // 🔒 μην κόβεται ποτέ το text
@@ -739,9 +743,9 @@ appleBtn.setBackground(bgApple);
 LinearLayout.LayoutParams lpBtn2 =
             new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(72)
+                    dp(84)
             );
-    lpBtn2.setMargins(dp(4), dp(12), dp(4), 0);
+    lpBtn2.setMargins(dp(6), dp(14), dp(6), 0);
     appleBtn.setLayoutParams(lpBtn2);
 
     // ---------------- ADD ----------------

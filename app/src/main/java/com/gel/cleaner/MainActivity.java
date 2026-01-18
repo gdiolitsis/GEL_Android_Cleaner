@@ -101,16 +101,17 @@ protected void onCreate(Bundle savedInstanceState) {
     // =====================================================
     // FORCE PLATFORM PICKER (ONE-SHOT, FROM INTENT)
     // =====================================================
-    boolean forcePicker =
-            !skipWelcomePopupOnce &&
-            getIntent() != null &&
-            getIntent().getBooleanExtra("force_platform_picker", false);
+    boolean skipWelcome = consumeSkipWelcomeOnce();
 
-    if (forcePicker) {
-        showWelcomePopup();
-        getIntent().removeExtra("force_platform_picker");
-        skipWelcomePopupOnce = true;
-    }
+boolean forcePicker =
+        !skipWelcome &&
+        getIntent() != null &&
+        getIntent().getBooleanExtra("force_platform_picker", false);
+
+if (forcePicker) {
+    showWelcomePopup();
+    getIntent().removeExtra("force_platform_picker");
+}
 
     // =====================================================
     // BASIC BINDS

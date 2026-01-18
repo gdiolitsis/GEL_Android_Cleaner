@@ -130,10 +130,7 @@ if (forcePicker) {
     // =====================================================
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
     
-    if (btnReturnAndroid != null) {
-    log("🔎 RETURN FOUND (onCreate) | viewId=" + btnReturnAndroid.getId()
-            + " | hash=" + System.identityHashCode(btnReturnAndroid)
-            + " | xmlText=" + String.valueOf(btnReturnAndroid.getText()), false);
+    if (btnReturnAndroid != null) {    
 }
     
     if (btnReturnAndroid != null) {
@@ -188,22 +185,6 @@ if (!skipWelcome) {
 }
 
     log("📱 Device ready", false);
-}
-
-@Override
-protected void onResume() {
-    super.onResume();
-
-    String mode = getSavedPlatform();
-
-    if ("apple".equals(mode)) {
-        applyAppleModeUI();
-    } else {
-        applyAndroidModeUI();
-    }
-
-    // 🔑 ΕΔΩ
-    syncReturnButtonText();
 }
  
    @Override
@@ -795,18 +776,17 @@ if (w != null) {
 }
 
 // ---------------- ACTIONS ----------------
-    androidBtn.setOnClickListener(v -> {
-        savePlatform("android");
-        applyAndroidModeUI();   // μένουμε στην ίδια activity
-        d.dismiss();
-    });
+androidBtn.setOnClickListener(v -> {
+    savePlatform("android");
+    d.dismiss();
+    recreate();
+});
 
-    appleBtn.setOnClickListener(v -> {
-        savePlatform("apple");
-        applyAppleModeUI();     // μένουμε στην ίδια activity
-        d.dismiss();
-    });
-}
+appleBtn.setOnClickListener(v -> {
+    savePlatform("apple");
+    d.dismiss();
+    recreate();
+});
 
     // =========================================================
     // 🍎 APPLE ENTRY POINT

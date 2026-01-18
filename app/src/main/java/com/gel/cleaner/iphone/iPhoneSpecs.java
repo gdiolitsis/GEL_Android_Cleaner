@@ -764,3 +764,515 @@ iphone13ProMax.notes          = "Largest iPhone 13 with maximum battery";
 
 MAP.put("iphone 13 pro max", iphone13ProMax);
 
+// =========================================================
+// 📱 iPHONE 12 SERIES — FULL SPECS
+// =========================================================
+
+// ---------------------------------------------------------
+// iPhone 12 mini
+// ---------------------------------------------------------
+AppleDeviceSpec iphone12Mini = new AppleDeviceSpec("iphone", "iPhone 12 mini");
+iphone12Mini.year            = "2020";
+iphone12Mini.identifier      = "iPhone13,1";
+iphone12Mini.os              = "iOS";
+iphone12Mini.soc             = "A14 Bionic";
+iphone12Mini.chipset         = "A14 Bionic";
+iphone12Mini.arch            = "ARMv8.5-A";
+iphone12Mini.processNode     = "5 nm";
+iphone12Mini.cpu             = "Apple CPU";
+iphone12Mini.cpuCores        = 6;
+iphone12Mini.gpu             = "Apple GPU";
+iphone12Mini.gpuCores        = 4;
+iphone12Mini.metalFeatureSet = "Metal 3";
+
+iphone12Mini.ram             = "4 GB";
+iphone12Mini.ramType         = "LPDDR4X";
+iphone12Mini.storageBase     = "64 GB";
+iphone12Mini.storageOptions  = "64 / 128 / 256 GB";
+
+iphone12Mini.screen          = "5.4\"";
+iphone12Mini.display         = "OLED Super Retina XDR";
+iphone12Mini.resolution      = "2340 × 1080";
+iphone12Mini.refreshRate     = "60 Hz";
+iphone12Mini.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone12Mini.has5G           = true;
+iphone12Mini.hasLTE          = true;
+iphone12Mini.cellular        = "5G NR / LTE";
+iphone12Mini.modem           = "Qualcomm Snapdragon X55";
+iphone12Mini.wifi            = "Wi-Fi 6";
+iphone12Mini.bluetooth       = "Bluetooth 5.0";
+iphone12Mini.hasNFC          = true;
+iphone12Mini.hasAirDrop      = true;
+iphone12Mini.hasAirPlay      = true;
+iphone12Mini.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone12Mini.hasCompass      = true;
+iphone12Mini.hasGyro         = true;
+iphone12Mini.hasAccel        = true;
+iphone12Mini.hasBarometer    = true;
+
+iphone12Mini.simSlots        = "Nano-SIM + eSIM";
+iphone12Mini.hasESim         = true;
+iphone12Mini.port            = "Lightning";
+iphone12Mini.usbStandard     = "USB 2.0";
+
+iphone12Mini.speakers        = "Stereo";
+iphone12Mini.microphones     = "Multiple";
+iphone12Mini.hasDolby        = true;
+iphone12Mini.hasJack         = false;
+
+iphone12Mini.cameraMain      = "12 MP Wide (OIS)";
+iphone12Mini.cameraUltraWide = "12 MP Ultra-Wide";
+iphone12Mini.cameraTele      = null;
+iphone12Mini.cameraFront     = "12 MP TrueDepth";
+iphone12Mini.cameraVideo     = "4K@60fps HDR";
+
+iphone12Mini.hasFaceID       = true;
+iphone12Mini.hasTouchID      = false;
+iphone12Mini.biometrics      = "Face ID";
+
+iphone12Mini.hasFastCharge       = true;
+iphone12Mini.hasWirelessCharge  = true;
+iphone12Mini.charging           = "Lightning / MagSafe";
+
+iphone12Mini.thermalNote    = "No public thermal sensor access (Apple restriction)";
+iphone12Mini.notes          = "First mini iPhone with 5G";
+
+MAP.put("iphone 12 mini", iphone12Mini);
+
+// ---------------------------------------------------------
+// iPhone 12
+// ---------------------------------------------------------
+AppleDeviceSpec iphone12 = new AppleDeviceSpec("iphone", "iPhone 12");
+iphone12.year            = "2020";
+iphone12.identifier      = "iPhone13,2";
+iphone12.os              = "iOS";
+iphone12.soc             = "A14 Bionic";
+iphone12.chipset         = "A14 Bionic";
+iphone12.arch            = "ARMv8.5-A";
+iphone12.processNode     = "5 nm";
+iphone12.cpu             = "Apple CPU";
+iphone12.cpuCores        = 6;
+iphone12.gpu             = "Apple GPU";
+iphone12.gpuCores        = 4;
+iphone12.metalFeatureSet = "Metal 3";
+
+iphone12.ram             = "4 GB";
+iphone12.ramType         = "LPDDR4X";
+iphone12.storageBase     = "64 GB";
+iphone12.storageOptions  = "64 / 128 / 256 GB";
+
+iphone12.screen          = "6.1\"";
+iphone12.display         = "OLED Super Retina XDR";
+iphone12.resolution      = "2532 × 1170";
+iphone12.refreshRate     = "60 Hz";
+iphone12.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone12.has5G           = true;
+iphone12.hasLTE          = true;
+iphone12.cellular        = "5G NR / LTE";
+iphone12.modem           = "Qualcomm Snapdragon X55";
+iphone12.wifi            = "Wi-Fi 6";
+iphone12.bluetooth       = "Bluetooth 5.0";
+iphone12.hasNFC          = true;
+iphone12.hasAirDrop      = true;
+iphone12.hasAirPlay      = true;
+iphone12.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone12.hasCompass      = true;
+iphone12.hasGyro         = true;
+iphone12.hasAccel        = true;
+iphone12.hasBarometer    = true;
+
+iphone12.simSlots        = "Nano-SIM + eSIM";
+iphone12.hasESim         = true;
+iphone12.port            = "Lightning";
+iphone12.usbStandard     = "USB 2.0";
+
+iphone12.speakers        = "Stereo";
+iphone12.microphones     = "Multiple";
+iphone12.hasDolby        = true;
+iphone12.hasJack         = false;
+
+iphone12.cameraMain      = "12 MP Wide (OIS)";
+iphone12.cameraUltraWide = "12 MP Ultra-Wide";
+iphone12.cameraTele      = null;
+iphone12.cameraFront     = "12 MP TrueDepth";
+iphone12.cameraVideo     = "4K@60fps HDR";
+
+iphone12.hasFaceID       = true;
+iphone12.hasTouchID      = false;
+iphone12.biometrics      = "Face ID";
+
+iphone12.hasFastCharge       = true;
+iphone12.hasWirelessCharge  = true;
+iphone12.charging           = "Lightning / MagSafe";
+
+iphone12.thermalNote    = "Thermal data not exposed by iOS";
+iphone12.notes          = "First iPhone with A14 and OLED across lineup";
+
+MAP.put("iphone 12", iphone12);
+
+// ---------------------------------------------------------
+// iPhone 12 Pro
+// ---------------------------------------------------------
+AppleDeviceSpec iphone12Pro = new AppleDeviceSpec("iphone", "iPhone 12 Pro");
+iphone12Pro.year            = "2020";
+iphone12Pro.identifier      = "iPhone13,3";
+iphone12Pro.os              = "iOS";
+iphone12Pro.soc             = "A14 Bionic";
+iphone12Pro.chipset         = "A14 Bionic";
+iphone12Pro.arch            = "ARMv8.5-A";
+iphone12Pro.processNode     = "5 nm";
+iphone12Pro.cpu             = "Apple CPU";
+iphone12Pro.cpuCores        = 6;
+iphone12Pro.gpu             = "Apple GPU";
+iphone12Pro.gpuCores        = 4;
+iphone12Pro.metalFeatureSet = "Metal 3";
+
+iphone12Pro.ram             = "6 GB";
+iphone12Pro.ramType         = "LPDDR4X";
+iphone12Pro.storageBase     = "128 GB";
+iphone12Pro.storageOptions  = "128 / 256 / 512 GB";
+
+iphone12Pro.screen          = "6.1\"";
+iphone12Pro.display         = "OLED Super Retina XDR";
+iphone12Pro.resolution      = "2532 × 1170";
+iphone12Pro.refreshRate     = "60 Hz";
+iphone12Pro.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone12Pro.has5G           = true;
+iphone12Pro.hasLTE          = true;
+iphone12Pro.cellular        = "5G NR / LTE";
+iphone12Pro.modem           = "Qualcomm Snapdragon X55";
+iphone12Pro.wifi            = "Wi-Fi 6";
+iphone12Pro.bluetooth       = "Bluetooth 5.0";
+iphone12Pro.hasNFC          = true;
+iphone12Pro.hasAirDrop      = true;
+iphone12Pro.hasAirPlay      = true;
+iphone12Pro.gps             = "Dual-frequency GPS";
+iphone12Pro.hasCompass      = true;
+iphone12Pro.hasGyro         = true;
+iphone12Pro.hasAccel        = true;
+iphone12Pro.hasBarometer    = true;
+
+iphone12Pro.simSlots        = "Nano-SIM + eSIM";
+iphone12Pro.hasESim         = true;
+iphone12Pro.port            = "Lightning";
+iphone12Pro.usbStandard     = "USB 2.0";
+
+iphone12Pro.speakers        = "Stereo";
+iphone12Pro.microphones     = "Multiple";
+iphone12Pro.hasDolby        = true;
+iphone12Pro.hasJack         = false;
+
+iphone12Pro.cameraMain      = "12 MP Wide (OIS)";
+iphone12Pro.cameraUltraWide = "12 MP Ultra-Wide";
+iphone12Pro.cameraTele      = "12 MP Telephoto (2×)";
+iphone12Pro.cameraFront     = "12 MP TrueDepth";
+iphone12Pro.cameraVideo     = "4K@60fps HDR + Dolby Vision";
+
+iphone12Pro.hasFaceID       = true;
+iphone12Pro.hasTouchID      = false;
+iphone12Pro.biometrics      = "Face ID";
+
+iphone12Pro.hasFastCharge       = true;
+iphone12Pro.hasWirelessCharge  = true;
+iphone12Pro.charging           = "Lightning / MagSafe";
+
+iphone12Pro.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone12Pro.notes          = "Introduced LiDAR scanner";
+
+MAP.put("iphone 12 pro", iphone12Pro);
+
+// ---------------------------------------------------------
+// iPhone 12 Pro Max
+// ---------------------------------------------------------
+AppleDeviceSpec iphone12ProMax = new AppleDeviceSpec("iphone", "iPhone 12 Pro Max");
+iphone12ProMax.year            = "2020";
+iphone12ProMax.identifier      = "iPhone13,4";
+iphone12ProMax.os              = "iOS";
+iphone12ProMax.soc             = "A14 Bionic";
+iphone12ProMax.chipset         = "A14 Bionic";
+iphone12ProMax.arch            = "ARMv8.5-A";
+iphone12ProMax.processNode     = "5 nm";
+iphone12ProMax.cpu             = "Apple CPU";
+iphone12ProMax.cpuCores        = 6;
+iphone12ProMax.gpu             = "Apple GPU";
+iphone12ProMax.gpuCores        = 4;
+iphone12ProMax.metalFeatureSet = "Metal 3";
+
+iphone12ProMax.ram             = "6 GB";
+iphone12ProMax.ramType         = "LPDDR4X";
+iphone12ProMax.storageBase     = "128 GB";
+iphone12ProMax.storageOptions  = "128 / 256 / 512 GB";
+
+iphone12ProMax.screen          = "6.7\"";
+iphone12ProMax.display         = "OLED Super Retina XDR";
+iphone12ProMax.resolution      = "2778 × 1284";
+iphone12ProMax.refreshRate     = "60 Hz";
+iphone12ProMax.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone12ProMax.has5G           = true;
+iphone12ProMax.hasLTE          = true;
+iphone12ProMax.cellular        = "5G NR / LTE";
+iphone12ProMax.modem           = "Qualcomm Snapdragon X55";
+iphone12ProMax.wifi            = "Wi-Fi 6";
+iphone12ProMax.bluetooth       = "Bluetooth 5.0";
+iphone12ProMax.hasNFC          = true;
+iphone12ProMax.hasAirDrop      = true;
+iphone12ProMax.hasAirPlay      = true;
+iphone12ProMax.gps             = "Dual-frequency GPS";
+iphone12ProMax.hasCompass      = true;
+iphone12ProMax.hasGyro         = true;
+iphone12ProMax.hasAccel        = true;
+iphone12ProMax.hasBarometer    = true;
+
+iphone12ProMax.simSlots        = "Nano-SIM + eSIM";
+iphone12ProMax.hasESim         = true;
+iphone12ProMax.port            = "Lightning";
+iphone12ProMax.usbStandard     = "USB 2.0";
+
+iphone12ProMax.speakers        = "Stereo";
+iphone12ProMax.microphones     = "Multiple";
+iphone12ProMax.hasDolby        = true;
+iphone12ProMax.hasJack         = false;
+
+iphone12ProMax.cameraMain      = "12 MP Wide (Sensor-shift OIS)";
+iphone12ProMax.cameraUltraWide = "12 MP Ultra-Wide";
+iphone12ProMax.cameraTele      = "12 MP Telephoto (2.5×)";
+iphone12ProMax.cameraFront     = "12 MP TrueDepth";
+iphone12ProMax.cameraVideo     = "4K@60fps HDR + Dolby Vision";
+
+iphone12ProMax.hasFaceID       = true;
+iphone12ProMax.hasTouchID      = false;
+iphone12ProMax.biometrics      = "Face ID";
+
+iphone12ProMax.hasFastCharge       = true;
+iphone12ProMax.hasWirelessCharge  = true;
+iphone12ProMax.charging           = "Lightning / MagSafe";
+
+iphone12ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone12ProMax.notes          = "Largest iPhone 12 with enhanced camera";
+
+MAP.put("iphone 12 pro max", iphone12ProMax);
+
+// =========================================================
+// 📱 iPHONE 11 SERIES — FULL SPECS
+// =========================================================
+
+// ---------------------------------------------------------
+// iPhone 11
+// ---------------------------------------------------------
+AppleDeviceSpec iphone11 = new AppleDeviceSpec("iphone", "iPhone 11");
+iphone11.year            = "2019";
+iphone11.identifier      = "iPhone12,1";
+iphone11.os              = "iOS";
+iphone11.soc             = "A13 Bionic";
+iphone11.chipset         = "A13 Bionic";
+iphone11.arch            = "ARMv8.4-A";
+iphone11.processNode     = "7 nm+";
+iphone11.cpu             = "Apple CPU";
+iphone11.cpuCores        = 6;
+iphone11.gpu             = "Apple GPU";
+iphone11.gpuCores        = 4;
+iphone11.metalFeatureSet = "Metal 3";
+
+iphone11.ram             = "4 GB";
+iphone11.ramType         = "LPDDR4X";
+iphone11.storageBase     = "64 GB";
+iphone11.storageOptions  = "64 / 128 / 256 GB";
+
+iphone11.screen          = "6.1\"";
+iphone11.display         = "Liquid Retina IPS LCD";
+iphone11.resolution      = "1792 × 828";
+iphone11.refreshRate     = "60 Hz";
+iphone11.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone11.has5G           = false;
+iphone11.hasLTE          = true;
+iphone11.cellular        = "LTE";
+iphone11.modem           = "Intel LTE modem";
+iphone11.wifi            = "Wi-Fi 6";
+iphone11.bluetooth       = "Bluetooth 5.0";
+iphone11.hasNFC          = true;
+iphone11.hasAirDrop      = true;
+iphone11.hasAirPlay      = true;
+iphone11.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone11.hasCompass      = true;
+iphone11.hasGyro         = true;
+iphone11.hasAccel        = true;
+iphone11.hasBarometer    = true;
+
+iphone11.simSlots        = "Nano-SIM + eSIM";
+iphone11.hasESim         = true;
+iphone11.port            = "Lightning";
+iphone11.usbStandard     = "USB 2.0";
+
+iphone11.speakers        = "Stereo";
+iphone11.microphones     = "Multiple";
+iphone11.hasDolby        = true;
+iphone11.hasJack         = false;
+
+iphone11.cameraMain      = "12 MP Wide (OIS)";
+iphone11.cameraUltraWide = "12 MP Ultra-Wide";
+iphone11.cameraTele      = null;
+iphone11.cameraFront     = "12 MP TrueDepth";
+iphone11.cameraVideo     = "4K@60fps HDR";
+
+iphone11.hasFaceID       = true;
+iphone11.hasTouchID      = false;
+iphone11.biometrics      = "Face ID";
+
+iphone11.hasFastCharge       = true;
+iphone11.hasWirelessCharge  = true;
+iphone11.charging           = "Lightning / Qi wireless";
+
+iphone11.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone11.notes          = "First base iPhone with dual camera and Night Mode";
+
+MAP.put("iphone 11", iphone11);
+
+// ---------------------------------------------------------
+// iPhone 11 Pro
+// ---------------------------------------------------------
+AppleDeviceSpec iphone11Pro = new AppleDeviceSpec("iphone", "iPhone 11 Pro");
+iphone11Pro.year            = "2019";
+iphone11Pro.identifier      = "iPhone12,3";
+iphone11Pro.os              = "iOS";
+iphone11Pro.soc             = "A13 Bionic";
+iphone11Pro.chipset         = "A13 Bionic";
+iphone11Pro.arch            = "ARMv8.4-A";
+iphone11Pro.processNode     = "7 nm+";
+iphone11Pro.cpu             = "Apple CPU";
+iphone11Pro.cpuCores        = 6;
+iphone11Pro.gpu             = "Apple GPU";
+iphone11Pro.gpuCores        = 4;
+iphone11Pro.metalFeatureSet = "Metal 3";
+
+iphone11Pro.ram             = "4 GB";
+iphone11Pro.ramType         = "LPDDR4X";
+iphone11Pro.storageBase     = "64 GB";
+iphone11Pro.storageOptions  = "64 / 256 / 512 GB";
+
+iphone11Pro.screen          = "5.8\"";
+iphone11Pro.display         = "OLED Super Retina XDR";
+iphone11Pro.resolution      = "2436 × 1125";
+iphone11Pro.refreshRate     = "60 Hz";
+iphone11Pro.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone11Pro.has5G           = false;
+iphone11Pro.hasLTE          = true;
+iphone11Pro.cellular        = "LTE";
+iphone11Pro.modem           = "Intel LTE modem";
+iphone11Pro.wifi            = "Wi-Fi 6";
+iphone11Pro.bluetooth       = "Bluetooth 5.0";
+iphone11Pro.hasNFC          = true;
+iphone11Pro.hasAirDrop      = true;
+iphone11Pro.hasAirPlay      = true;
+iphone11Pro.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone11Pro.hasCompass      = true;
+iphone11Pro.hasGyro         = true;
+iphone11Pro.hasAccel        = true;
+iphone11Pro.hasBarometer    = true;
+
+iphone11Pro.simSlots        = "Nano-SIM + eSIM";
+iphone11Pro.hasESim         = true;
+iphone11Pro.port            = "Lightning";
+iphone11Pro.usbStandard     = "USB 2.0";
+
+iphone11Pro.speakers        = "Stereo";
+iphone11Pro.microphones     = "Multiple";
+iphone11Pro.hasDolby        = true;
+iphone11Pro.hasJack         = false;
+
+iphone11Pro.cameraMain      = "12 MP Wide (OIS)";
+iphone11Pro.cameraUltraWide = "12 MP Ultra-Wide";
+iphone11Pro.cameraTele      = "12 MP Telephoto (2×)";
+iphone11Pro.cameraFront     = "12 MP TrueDepth";
+iphone11Pro.cameraVideo     = "4K@60fps HDR";
+
+iphone11Pro.hasFaceID       = true;
+iphone11Pro.hasTouchID      = false;
+iphone11Pro.biometrics      = "Face ID";
+
+iphone11Pro.hasFastCharge       = true;
+iphone11Pro.hasWirelessCharge  = true;
+iphone11Pro.charging           = "Lightning / Qi wireless";
+
+iphone11Pro.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone11Pro.notes          = "First triple-camera iPhone";
+
+MAP.put("iphone 11 pro", iphone11Pro);
+
+// ---------------------------------------------------------
+// iPhone 11 Pro Max
+// ---------------------------------------------------------
+AppleDeviceSpec iphone11ProMax = new AppleDeviceSpec("iphone", "iPhone 11 Pro Max");
+iphone11ProMax.year            = "2019";
+iphone11ProMax.identifier      = "iPhone12,5";
+iphone11ProMax.os              = "iOS";
+iphone11ProMax.soc             = "A13 Bionic";
+iphone11ProMax.chipset         = "A13 Bionic";
+iphone11ProMax.arch            = "ARMv8.4-A";
+iphone11ProMax.processNode     = "7 nm+";
+iphone11ProMax.cpu             = "Apple CPU";
+iphone11ProMax.cpuCores        = 6;
+iphone11ProMax.gpu             = "Apple GPU";
+iphone11ProMax.gpuCores        = 4;
+iphone11ProMax.metalFeatureSet = "Metal 3";
+
+iphone11ProMax.ram             = "4 GB";
+iphone11ProMax.ramType         = "LPDDR4X";
+iphone11ProMax.storageBase     = "64 GB";
+iphone11ProMax.storageOptions  = "64 / 256 / 512 GB";
+
+iphone11ProMax.screen          = "6.5\"";
+iphone11ProMax.display         = "OLED Super Retina XDR";
+iphone11ProMax.resolution      = "2688 × 1242";
+iphone11ProMax.refreshRate     = "60 Hz";
+iphone11ProMax.displayOut      = "Lightning Digital AV (adapter)";
+
+iphone11ProMax.has5G           = false;
+iphone11ProMax.hasLTE          = true;
+iphone11ProMax.cellular        = "LTE";
+iphone11ProMax.modem           = "Intel LTE modem";
+iphone11ProMax.wifi            = "Wi-Fi 6";
+iphone11ProMax.bluetooth       = "Bluetooth 5.0";
+iphone11ProMax.hasNFC          = true;
+iphone11ProMax.hasAirDrop      = true;
+iphone11ProMax.hasAirPlay      = true;
+iphone11ProMax.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone11ProMax.hasCompass      = true;
+iphone11ProMax.hasGyro         = true;
+iphone11ProMax.hasAccel        = true;
+iphone11ProMax.hasBarometer    = true;
+
+iphone11ProMax.simSlots        = "Nano-SIM + eSIM";
+iphone11ProMax.hasESim         = true;
+iphone11ProMax.port            = "Lightning";
+iphone11ProMax.usbStandard     = "USB 2.0";
+
+iphone11ProMax.speakers        = "Stereo";
+iphone11ProMax.microphones     = "Multiple";
+iphone11ProMax.hasDolby        = true;
+iphone11ProMax.hasJack         = false;
+
+iphone11ProMax.cameraMain      = "12 MP Wide (OIS)";
+iphone11ProMax.cameraUltraWide = "12 MP Ultra-Wide";
+iphone11ProMax.cameraTele      = "12 MP Telephoto (2×)";
+iphone11ProMax.cameraFront     = "12 MP TrueDepth";
+iphone11ProMax.cameraVideo     = "4K@60fps HDR";
+
+iphone11ProMax.hasFaceID       = true;
+iphone11ProMax.hasTouchID      = false;
+iphone11ProMax.biometrics      = "Face ID";
+
+iphone11ProMax.hasFastCharge       = true;
+iphone11ProMax.hasWirelessCharge  = true;
+iphone11ProMax.charging           = "Lightning / Qi wireless";
+
+iphone11ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
+iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the series";
+
+MAP.put("iphone 11 pro max", iphone11ProMax);
+

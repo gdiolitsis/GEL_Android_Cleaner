@@ -129,6 +129,10 @@ if (forcePicker) {
     // RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)
     // =====================================================
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    
+    if (btnReturnAndroid != null) {
+    btnReturnAndroid.setSaveEnabled(false);   // 🔒 ΜΗΝ αποθηκεύεις/επαναφέρεις text state
+}
 
     if (btnReturnAndroid != null) {
         btnReturnAndroid.setOnClickListener(v -> {

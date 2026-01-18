@@ -215,7 +215,7 @@ private void syncReturnButtonText() {
             + " | hash=" + System.identityHashCode(btnReturnAndroid), false);
 }
 
-@@Override
+@Override
 public void onBackPressed() {
     try {
         if (tts[0] != null) tts[0].stop();

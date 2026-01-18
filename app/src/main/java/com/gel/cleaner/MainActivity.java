@@ -87,12 +87,14 @@ protected void onCreate(Bundle savedInstanceState) {
     // FORCE PLATFORM PICKER (ONE-SHOT, FROM INTENT)
     // =====================================================
     boolean forcePicker =
+            !skipWelcomePopupOnce &&     // 🔒 ΜΠΛΟΚΑΡΕ αν είναι recreate για γλώσσα
             getIntent() != null &&
             getIntent().getBooleanExtra("force_platform_picker", false);
 
     if (forcePicker) {
         showWelcomePopup();
         getIntent().removeExtra("force_platform_picker"); // 🔒 μία φορά μόνο
+        skipWelcomePopupOnce = true; // 🔒 μην ξαναδείξεις από startPlatformFlow
     }
 
     // =====================================================
@@ -105,6 +107,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupLangButtons();
     setupDonate();
     setupButtons();
+}
 
 // =====================================================
 // RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)

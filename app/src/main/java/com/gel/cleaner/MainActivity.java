@@ -159,10 +159,14 @@ if (forcePicker) {
     // =====================================================
     // STARTUP FLOW (ONCE)
     // =====================================================
-    if (!startupFlowDone) {
-        startupFlowDone = true;
+ boolean skipWelcome = consumeSkipWelcomeOnce();
+
+if (!startupFlowDone) {
+    startupFlowDone = true;
+    if (!skipWelcome) {
         startPlatformFlow();
     }
+}
 
     log("📱 Device ready", false);
 }

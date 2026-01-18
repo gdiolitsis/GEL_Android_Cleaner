@@ -87,14 +87,14 @@ protected void onCreate(Bundle savedInstanceState) {
     // FORCE PLATFORM PICKER (ONE-SHOT, FROM INTENT)
     // =====================================================
     boolean forcePicker =
-            !skipWelcomePopupOnce &&     // 🔒 ΜΠΛΟΚΑΡΕ αν είναι recreate για γλώσσα
+            !skipWelcomePopupOnce &&
             getIntent() != null &&
             getIntent().getBooleanExtra("force_platform_picker", false);
 
     if (forcePicker) {
         showWelcomePopup();
-        getIntent().removeExtra("force_platform_picker"); // 🔒 μία φορά μόνο
-        skipWelcomePopupOnce = true; // 🔒 μην ξαναδείξεις από startPlatformFlow
+        getIntent().removeExtra("force_platform_picker");
+        skipWelcomePopupOnce = true;
     }
 
     // =====================================================
@@ -107,33 +107,28 @@ protected void onCreate(Bundle savedInstanceState) {
     setupLangButtons();
     setupDonate();
     setupButtons();
-}
 
-// =====================================================
-// RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)
-// =====================================================
-Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    // =====================================================
+    // RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)
+    // =====================================================
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
 
-if (btnReturnAndroid != null) {
+    if (btnReturnAndroid != null) {
+        btnReturnAndroid.setOnClickListener(v -> {
 
-    btnReturnAndroid.setOnClickListener(v -> {
+            String currentMode = getSavedPlatform();
 
-        String currentMode = getSavedPlatform();
+            if ("apple".equals(currentMode)) {
+                savePlatform("android");
+                applyAndroidModeUI();
+            } else {
+                savePlatform("apple");
+                applyAppleModeUI();
+            }
 
-        if ("apple".equals(currentMode)) {
-            // 🍏 → 🤖
-            savePlatform("android");
-            applyAndroidModeUI();
-        } else {
-            // 🤖 → 🍏
-            savePlatform("apple");
-            applyAppleModeUI();
-        }
-
-        // 🔑 ΠΑΝΤΑ sync μετά την αλλαγή
-        syncReturnButtonText();
-    });
-}
+            syncReturnButtonText();
+        });
+    }
 
     // =====================================================
     // TTS INIT

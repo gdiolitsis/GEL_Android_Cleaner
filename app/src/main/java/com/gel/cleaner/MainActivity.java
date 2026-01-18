@@ -42,6 +42,8 @@ import java.util.Map;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
+        	
+        private boolean welcomeShown = false;
                 
     // ==========================
     // STATE
@@ -846,7 +848,6 @@ private void applyAndroidModeUI() {
     }
 
     private void changeLang(String code) {
-    setSkipWelcomeOnce(true);   // 🔒 survive recreate
 LocaleHelper.set(this, code);
 recreate();
 }

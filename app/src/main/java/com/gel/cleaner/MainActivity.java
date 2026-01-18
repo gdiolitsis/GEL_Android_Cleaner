@@ -42,13 +42,10 @@ import java.util.Map;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
-                	
-        private boolean welcomeShown = false;
-
+                
     // ==========================
     // STATE
     // ==========================
-    private boolean startupFlowDone = false;
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -59,28 +56,23 @@ public class MainActivity extends GELAutoActivityHook
     private final TextToSpeech[] tts = new TextToSpeech[1];
     private final boolean[] ttsReady = new boolean[1];
 
-    // ==========================
+// ==========================
 // PREFS
 // ==========================
 private static final String PREFS = "gel_prefs";
-private static final String KEY_PLATFORM = "device_mode";          // ✅ NEW
-private static final String KEY_PLATFORM_LEGACY = "platform_mode"; // ⚠️ OLD (migration)
+private static final String KEY_PLATFORM = "device_mode";  
+private static final String KEY_PLATFORM_LEGACY = "platform_mode"; 
 
-// =========================================================
-// WELCOME SKIP — ONE SHOT (RECREATE SAFE)
-// =========================================================
-private void setSkipWelcomeOnce(boolean v) {
-    getSharedPreferences(PREFS, MODE_PRIVATE)
-            .edit()
-            .putBoolean("skip_welcome_once", v)
-            .apply();
+private boolean isWelcomeDisabled() {
+    return getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean("welcome_disabled", false);
 }
 
-private boolean consumeSkipWelcomeOnce() {
-    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-    boolean v = sp.getBoolean("skip_welcome_once", false);
-    if (v) sp.edit().remove("skip_welcome_once").apply();
-    return v;
+private void disableWelcomeForever() {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("welcome_disabled", true)
+            .apply();
 }
 
     // =========================================================
@@ -98,21 +90,6 @@ private boolean consumeSkipWelcomeOnce() {
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
-    // =====================================================
-    // FORCE PLATFORM PICKER (ONE-SHOT, FROM INTENT)
-    // =====================================================
-    boolean skipWelcome = consumeSkipWelcomeOnce();
-
-boolean forcePicker =
-        !skipWelcome &&
-        getIntent() != null &&
-        getIntent().getBooleanExtra("force_platform_picker", false);
-
-if (forcePicker) {
-    showWelcomePopup();
-    getIntent().removeExtra("force_platform_picker");
-}
 
     // =====================================================
     // BASIC BINDS
@@ -176,6 +153,10 @@ if ("apple".equals(mode)) {
 }
 
 syncReturnButtonText();
+
+if (!isWelcomeDisabled()) {
+    showWelcomePopup();
+}
 
     log("📱 Device ready", false);
 }
@@ -551,6 +532,12 @@ langSpinner.setLayoutParams(lpSpin);
         controls.addView(muteBtn);
         controls.addView(langBox);
         box.addView(controls);
+        
+CheckBox cb = new CheckBox(this);
+cb.setText("Να μην εμφανιστεί ξανά");
+cb.setTextColor(Color.WHITE);
+cb.setPadding(0, dp(8), 0, dp(8));
+box.addView(cb);
 
 // ==========================
 // OK BUTTON
@@ -623,9 +610,10 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 }, 120);
 
 okBtn.setOnClickListener(v -> {
-    try {
-        if (tts != null && tts[0] != null) tts[0].stop();
-    } catch (Throwable ignore) {}
+
+    if (cb.isChecked()) {
+        disableWelcomeForever();
+    }
 
     d.dismiss();
     showPlatformSelectPopup();

@@ -60,10 +60,11 @@ public class MainActivity extends GELAutoActivityHook
     private final boolean[] ttsReady = new boolean[1];
 
     // ==========================
-    // PREFS
-    // ==========================
-    private static final String PREFS = "gel_prefs";
-    private static final String KEY_PLATFORM = "platform_mode"; // android | apple
+// PREFS
+// ==========================
+private static final String PREFS = "gel_prefs";
+private static final String KEY_PLATFORM = "device_mode";          // ✅ NEW
+private static final String KEY_PLATFORM_LEGACY = "platform_mode"; // ⚠️ OLD (migration)
 
 // =========================================================
 // WELCOME SKIP — ONE SHOT (RECREATE SAFE)
@@ -275,15 +276,32 @@ private ArrayAdapter<String> neonAdapter(String[] names) {
 // PLATFORM STORAGE
 // =========================================================
 private void savePlatform(String mode) {
-    getSharedPreferences("gel_prefs", MODE_PRIVATE)
+    getSharedPreferences(PREFS, MODE_PRIVATE)
             .edit()
-            .putString("device_mode", mode) // 🔒 ΕΝΑ KEY
+            .putString(KEY_PLATFORM, mode)          // ✅ νέο key: device_mode
+            .remove(KEY_PLATFORM_LEGACY)            // 🧹 καθάρισε legacy
             .apply();
 }
 
 private String getSavedPlatform() {
-    return getSharedPreferences("gel_prefs", MODE_PRIVATE)
-            .getString("device_mode", "android");
+    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+
+    // 1️⃣ ΝΕΟ KEY (device_mode)
+    String mode = sp.getString(KEY_PLATFORM, null);
+    if (mode != null) return mode;
+
+    // 2️⃣ LEGACY KEY (platform_mode) → MIGRATE
+    String legacy = sp.getString(KEY_PLATFORM_LEGACY, null);
+    if (legacy != null) {
+        sp.edit()
+          .putString(KEY_PLATFORM, legacy)
+          .remove(KEY_PLATFORM_LEGACY)
+          .apply();
+        return legacy;
+    }
+
+    // 3️⃣ DEFAULT
+    return "android";
 }
 
     // =========================================================

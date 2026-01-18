@@ -1276,3 +1276,13 @@ iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the
 
 MAP.put("iphone 11 pro max", iphone11ProMax);
 
+// =====================================================
+// PUBLIC ACCESS
+// =====================================================
+public static AppleDeviceSpec get(String modelName) {
+    if (modelName == null) return AppleDeviceSpec.unknown();
+    AppleDeviceSpec d = MAP.get(modelName.toLowerCase());
+    return d != null ? d : AppleDeviceSpec.unknown();
+}
+
+private iPhoneSpecs() {}

@@ -131,6 +131,12 @@ if (forcePicker) {
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
     
     if (btnReturnAndroid != null) {
+    log("🔎 RETURN FOUND (onCreate) | viewId=" + btnReturnAndroid.getId()
+            + " | hash=" + System.identityHashCode(btnReturnAndroid)
+            + " | xmlText=" + String.valueOf(btnReturnAndroid.getText()), false);
+}
+    
+    if (btnReturnAndroid != null) {
     btnReturnAndroid.setSaveEnabled(false);   // 🔒 ΜΗΝ αποθηκεύεις/επαναφέρεις text state
 }
 
@@ -210,15 +216,22 @@ protected void onResume() {
 
 private void syncReturnButtonText() {
     Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-    if (btnReturnAndroid == null) return;
+    if (btnReturnAndroid == null) {
+        log("❌ btnReturnAndroid = NULL", true);
+        return;
+    }
 
     String mode = getSavedPlatform(); // "android" | "apple"
+    String txt = "apple".equals(mode)
+            ? "RETURN TO ANDROID MODE"
+            : "RETURN TO APPLE MODE";
 
-    btnReturnAndroid.setText(
-            "apple".equals(mode)
-                    ? "RETURN TO ANDROID MODE"
-                    : "RETURN TO APPLE MODE"
-    );
+    btnReturnAndroid.setText(txt);
+
+    // ✅ DEBUG
+    log("🔎 RETURN SYNC | mode=" + mode + " | setText=" + txt
+            + " | viewId=" + btnReturnAndroid.getId()
+            + " | hash=" + System.identityHashCode(btnReturnAndroid), false);
 }
 
 @Override

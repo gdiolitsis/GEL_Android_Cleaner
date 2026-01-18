@@ -440,14 +440,28 @@ box.addView(msg);
         controls.setPadding(0, dp(16), 0, dp(10));
 
 // ==========================
-// 🔕 MUTE BUTTON
+// 🔕 MUTE BUTTON — FINAL
 // ==========================
 Button muteBtn = new Button(MainActivity.this);
 muteBtn.setText(welcomeMuted ? "Unmute" : "Mute");
 muteBtn.setAllCaps(false);
 muteBtn.setTextColor(0xFFFFFFFF);
-muteBtn.setTextSize(15f);          // ⬅️ ελαφρώς μικρότερο, πιο “κουμπί”
+muteBtn.setTextSize(15f);
 muteBtn.setGravity(Gravity.CENTER);
+
+// 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS (ΑΥΤΟ ΕΛΕΙΠΕ)
+muteBtn.setMinHeight(0);
+muteBtn.setMinimumHeight(0);
+muteBtn.setMinWidth(0);
+muteBtn.setMinimumWidth(0);
+
+// ✅ ΤΟ ΥΨΟΣ ΤΟ ΔΙΝΕΙ ΤΟ PADDING
+muteBtn.setPadding(
+        dp(16),   // left
+        dp(14),   // top  ⬅️ ΑΥΤΟ ΤΟ ΜΕΓΑΛΩΝΕΙ
+        dp(16),   // right
+        dp(14)    // bottom
+);
 
 GradientDrawable muteBg = new GradientDrawable();
 muteBg.setColor(0xFF444444);
@@ -455,10 +469,11 @@ muteBg.setCornerRadius(dp(12));
 muteBg.setStroke(dp(2), 0xFFFFD700);
 muteBtn.setBackground(muteBg);
 
+// ✅ ΤΩΡΑ ΤΟ HEIGHT ΠΙΑΝΕΙ
 LinearLayout.LayoutParams lpMute =
         new LinearLayout.LayoutParams(
                 0,
-                dp(50),          // 🔒 ΚΛΕΙΔΩΜΕΝΟ ΥΨΟΣ
+                dp(56),   // ⬅️ ΙΔΙΟ ΥΨΟΣ ΜΕ OK / LANG
                 1f
         );
 lpMute.setMargins(0, 0, dp(8), 0);
@@ -519,13 +534,26 @@ langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
                     public void onNothingSelected(AdapterView<?> p) { }
                 });
 
-        // ==========================
-// 🌐 LANGUAGE BOX
+// ==========================
+// 🌐 LANGUAGE BOX — FINAL
 // ==========================
 LinearLayout langBox = new LinearLayout(MainActivity.this);
 langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER);
-langBox.setPadding(dp(12), 0, dp(12), 0);
+langBox.setGravity(Gravity.CENTER_VERTICAL);
+
+// 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS
+langBox.setMinimumHeight(0);
+langBox.setMinHeight(0);
+langBox.setMinimumWidth(0);
+langBox.setMinWidth(0);
+
+// ✅ ΤΟ ΥΨΟΣ ΤΟ ΔΙΝΕΙ ΤΟ PADDING
+langBox.setPadding(
+        dp(16),   // left
+        dp(14),   // top  ⬅️ ΚΡΙΣΙΜΟ
+        dp(16),   // right
+        dp(14)    // bottom
+);
 
 GradientDrawable langBg = new GradientDrawable();
 langBg.setColor(0xFF1A1A1A);
@@ -533,10 +561,11 @@ langBg.setCornerRadius(dp(12));
 langBg.setStroke(dp(2), 0xFFFFD700);
 langBox.setBackground(langBg);
 
+// ✅ ΙΔΙΟ ΥΨΟΣ ΜΕ MUTE & OK
 LinearLayout.LayoutParams lpLangBox =
         new LinearLayout.LayoutParams(
                 0,
-                dp(50),          // 🔒 ΙΔΙΟ ΥΨΟΣ ΜΕ MUTE
+                dp(56),
                 1f
         );
 lpLangBox.setMargins(dp(8), 0, 0, 0);
@@ -564,7 +593,7 @@ cb.setPadding(0, dp(8), 0, dp(8));
 box.addView(cb);
 
 // ==========================
-// OK BUTTON
+// OK BUTTON — FINAL
 // ==========================
 Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
@@ -573,16 +602,31 @@ okBtn.setTextColor(0xFFFFFFFF);
 okBtn.setTextSize(18f);
 okBtn.setGravity(Gravity.CENTER);
 
+// 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS
+okBtn.setMinimumHeight(0);
+okBtn.setMinHeight(0);
+okBtn.setMinimumWidth(0);
+okBtn.setMinWidth(0);
+
+// ✅ ΟΠΤΙΚΟ ΥΨΟΣ ΑΠΟ PADDING (όχι από text)
+okBtn.setPadding(
+        dp(16),   // left
+        dp(14),   // top
+        dp(16),   // right
+        dp(14)    // bottom
+);
+
 GradientDrawable okBg = new GradientDrawable();
 okBg.setColor(0xFF0F8A3B);
 okBg.setCornerRadius(dp(14));
 okBg.setStroke(dp(3), 0xFFFFD700);
 okBtn.setBackground(okBg);
 
+// ✅ PRIMARY ACTION HEIGHT
 LinearLayout.LayoutParams lpOk =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(56)           // ⬅️ ΛΙΓΟ ΠΙΟ ΜΕΓΑΛΟ = primary action
+                dp(60)        // ⬅️ ΠΙΟ ΑΝΕΤΟ, ΣΤΑΘΕΡΟ
         );
 lpOk.setMargins(0, dp(18), 0, 0);
 okBtn.setLayoutParams(lpOk);

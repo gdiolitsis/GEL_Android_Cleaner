@@ -159,13 +159,8 @@ if (forcePicker) {
     // =====================================================
     // STARTUP FLOW (ONCE)
     // =====================================================
- boolean skipWelcome = consumeSkipWelcomeOnce();
-
-if (!startupFlowDone) {
-    startupFlowDone = true;
-    if (!skipWelcome) {
-        startPlatformFlow();
-    }
+ if (!skipWelcome) {
+    startPlatformFlow();
 }
 
     log("📱 Device ready", false);
@@ -224,7 +219,6 @@ public void onBackPressed() {
 // PLATFORM FLOW — ALWAYS SHOW WELCOME
 // =========================================================
 private void startPlatformFlow() {
-    if (consumeSkipWelcomeOnce()) return;
     showWelcomePopup();
 }
 

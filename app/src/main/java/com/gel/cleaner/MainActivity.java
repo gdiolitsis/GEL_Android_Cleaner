@@ -177,13 +177,6 @@ if ("apple".equals(mode)) {
 
 syncReturnButtonText();
 
-// =====================================================
-// STARTUP FLOW
-// =====================================================
-if (!skipWelcome) {
-    startPlatformFlow();
-}
-
     log("📱 Device ready", false);
 }
  

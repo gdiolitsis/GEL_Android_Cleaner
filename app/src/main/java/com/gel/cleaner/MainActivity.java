@@ -539,21 +539,8 @@ langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
 // ==========================
 LinearLayout langBox = new LinearLayout(MainActivity.this);
 langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER_VERTICAL);
-
-// 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS
-langBox.setMinimumHeight(0);
-langBox.setMinHeight(0);
-langBox.setMinimumWidth(0);
-langBox.setMinWidth(0);
-
-// ✅ ΤΟ ΥΨΟΣ ΤΟ ΔΙΝΕΙ ΤΟ PADDING
-langBox.setPadding(
-        dp(16),   // left
-        dp(14),   // top  ⬅️ ΚΡΙΣΙΜΟ
-        dp(16),   // right
-        dp(14)    // bottom
-);
+langBox.setGravity(Gravity.CENTER);
+langBox.setPadding(dp(12), 0, dp(12), 0);
 
 GradientDrawable langBg = new GradientDrawable();
 langBg.setColor(0xFF1A1A1A);
@@ -561,11 +548,10 @@ langBg.setCornerRadius(dp(12));
 langBg.setStroke(dp(2), 0xFFFFD700);
 langBox.setBackground(langBg);
 
-// ✅ ΙΔΙΟ ΥΨΟΣ ΜΕ MUTE & OK
 LinearLayout.LayoutParams lpLangBox =
         new LinearLayout.LayoutParams(
                 0,
-                dp(56),
+                dp(50),   // 🔒 ΚΛΕΙΔΩΜΕΝΟ ΥΨΟΣ
                 1f
         );
 lpLangBox.setMargins(dp(8), 0, 0, 0);

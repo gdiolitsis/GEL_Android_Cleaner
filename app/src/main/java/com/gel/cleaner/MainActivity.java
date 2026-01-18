@@ -215,24 +215,18 @@ private void syncReturnButtonText() {
             + " | hash=" + System.identityHashCode(btnReturnAndroid), false);
 }
 
-@Override
+@@Override
 public void onBackPressed() {
-
-    // 🔒 Σταμάτα TTS αν παίζει
     try {
         if (tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
 
-    // 🔁 Πήγαινε κατευθείαν στο PLATFORM SELECT popup
     showPlatformSelectPopup();
 }
 
 // =========================================================
 // PLATFORM FLOW — ALWAYS SHOW WELCOME
 // =========================================================
-private void startPlatformFlow() {
-    showWelcomePopup();
-}
 
 private boolean isAppleMode() {
     return "apple".equals(getSavedPlatform());
@@ -639,6 +633,7 @@ okBtn.setOnClickListener(v -> {
     try {
         if (tts != null && tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
+
     d.dismiss();
     showPlatformSelectPopup();
 });

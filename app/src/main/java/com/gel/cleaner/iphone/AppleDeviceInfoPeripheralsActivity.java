@@ -328,42 +328,10 @@ private String log(String label, String value) {
 // HELPERS — FINAL (PERIPHERALS ENGINE)
 // ============================================================
 
-/**
- * Core section handler
- * • Αν δεν υπάρχει περιεχόμενο → κρύβει section
- * • Αν υπάρχει → δείχνει header + content
- */
-private void section(LinearLayout header, TextView content, String text) {
-
-    if (header == null || content == null)
-        return;
-
-    if (text == null || text.trim().isEmpty()) {
-        header.setVisibility(View.GONE);
-        content.setVisibility(View.GONE);
-        return;
-    }
-
     header.setVisibility(View.VISIBLE);
     content.setText(text.trim());
 }
 
-private String log(String key, String value) {
-
-    if (value == null)
-        return "";
-
-    String v = value.trim();
-    if (v.isEmpty())
-        return "";
-
-    return "• " + key + ": " + v + "\n";
-}
-
-
-/**
- * Pro tier detector
- */
 private boolean isPro() {
     return d != null
             && d.model != null
@@ -404,13 +372,31 @@ private boolean isProMax() {
         );
     }
 
+private void hideAll() {
+    if (txtScreen != null) txtScreen.setVisibility(View.GONE);
+    if (txtCamera != null) txtCamera.setVisibility(View.GONE);
+    if (txtConnectivity != null) txtConnectivity.setVisibility(View.GONE);
+    if (txtLocation != null) txtLocation.setVisibility(View.GONE);
+    if (txtThermal != null) txtThermal.setVisibility(View.GONE);
+    if (txtModem != null) txtModem.setVisibility(View.GONE);
+    if (txtWifiAdvanced != null) txtWifiAdvanced.setVisibility(View.GONE);
+    if (txtAudio != null) txtAudio.setVisibility(View.GONE);
+    if (txtSensors != null) txtSensors.setVisibility(View.GONE);
+    if (txtBiometrics != null) txtBiometrics.setVisibility(View.GONE);
+    if (txtNfc != null) txtNfc.setVisibility(View.GONE);
+    if (txtGnss != null) txtGnss.setVisibility(View.GONE);
+    if (txtUwb != null) txtUwb.setVisibility(View.GONE);
+    if (txtUsb != null) txtUsb.setVisibility(View.GONE);
+    if (txtHaptics != null) txtHaptics.setVisibility(View.GONE);
+    if (txtSystemFeatures != null) txtSystemFeatures.setVisibility(View.GONE);
+    if (txtSecurityFlags != null) txtSecurityFlags.setVisibility(View.GONE);
+    if (txtRoot != null) txtRoot.setVisibility(View.GONE);
+    if (txtOther != null) txtOther.setVisibility(View.GONE);
+}
+
 // ============================================================
 // HELPERS
 // ============================================================
-private String log(String k, String v) {
-    if (v == null || v.trim().isEmpty()) return "";
-    return "• " + k + ": " + v + "\n";
-}
 
 private String yes(boolean value) {
     return value ? "Yes" : null;

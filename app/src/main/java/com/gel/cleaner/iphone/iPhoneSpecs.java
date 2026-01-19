@@ -1275,6 +1275,41 @@ iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the
 
 MAP.put("iphone 11 pro max", iphone11ProMax);       
 }
+
+// =========================================================
+// 📱 iPhoneSpecs — SERIES NORMALIZATION (FINAL)
+// =========================================================
+public static AppleDeviceSpec get(String modelName) {
+
+    if (modelName == null)
+        return AppleDeviceSpec.unknown();
+
+    String m = modelName.toLowerCase().trim();
+
+    // -------------------------------------------------
+    // SERIES NORMALIZATION (LOCKED)
+    // -------------------------------------------------
+    if (m.contains("iphone 15"))
+        return MAP.getOrDefault("iphone 15", AppleDeviceSpec.unknown());
+
+    if (m.contains("iphone 14"))
+        return MAP.getOrDefault("iphone 14", AppleDeviceSpec.unknown());
+
+    if (m.contains("iphone 13"))
+        return MAP.getOrDefault("iphone 13", AppleDeviceSpec.unknown());
+
+    if (m.contains("iphone 12"))
+        return MAP.getOrDefault("iphone 12", AppleDeviceSpec.unknown());
+
+    if (m.contains("iphone 11"))
+        return MAP.getOrDefault("iphone 11", AppleDeviceSpec.unknown());
+
+    // -------------------------------------------------
+    // FALLBACK (exact match)
+    // -------------------------------------------------
+    AppleDeviceSpec d = MAP.get(m);
+    return d != null ? d : AppleDeviceSpec.unknown();
+}
     
 // =====================================================
 // PUBLIC ACCESS

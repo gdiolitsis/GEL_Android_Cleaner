@@ -1286,3 +1286,4 @@ public static AppleDeviceSpec get(String modelName) {
 }
 
 private iPhoneSpecs() {}
+}

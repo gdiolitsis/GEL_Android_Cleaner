@@ -587,7 +587,8 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(20f);              // ⬆️ λίγο μεγαλύτερο για balance
+okBtn.setTextSize(20f);              
+okBtn.setIncludeFontPadding(false); 
 okBtn.setGravity(Gravity.CENTER);
 
 // 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS

@@ -8,6 +8,7 @@ package com.gel.cleaner.iphone;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -324,14 +325,6 @@ private String log(String label, String value) {
            "<font color=\"#00FF7F\">" + value + "</font><br>";
 }
 
-// ============================================================
-// HELPERS — FINAL (PERIPHERALS ENGINE)
-// ============================================================
-
-    header.setVisibility(View.VISIBLE);
-    content.setText(text.trim());
-}
-
 private boolean isPro() {
     return d != null
             && d.model != null
@@ -357,8 +350,8 @@ private void section(LinearLayout h, TextView t, String content) {
         return;
     }
 
-    t.setText(content);
-    t.setVisibility(View.GONE);
+    t.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+t.setVisibility(View.GONE);
 
     h.setOnClickListener(v ->
             t.setVisibility(
@@ -400,3 +393,5 @@ private void hideAll() {
 private String yes(boolean value) {
     return value ? "Yes" : null;
 }
+
+} // ⬅️ ΜΟΝΑΔΙΚΟ κλείσιμο κλάσης

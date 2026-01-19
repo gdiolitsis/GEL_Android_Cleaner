@@ -1143,7 +1143,8 @@ private void showAppleModelPicker(String type) {
                     "iPad Pro 11 (M2)",
                     "iPad Pro 11 (M1)",
                     "iPad Pro 12.9 (M1)",
-                    "iPad Air (M2)",
+                    "iPad Air 11 (M2)",
+                    "iPad Air 13 (M2)",
                     "iPad Air (M1)",
                     "iPad mini 6"
             };

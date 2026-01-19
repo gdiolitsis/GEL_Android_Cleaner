@@ -14,6 +14,9 @@ public final class iPhoneSpecs {
 
     static {
 
+        public final boolean isPro;
+        public final boolean isProMax;
+
         // =====================================================
         // 📱 iPhone 15
         // =====================================================

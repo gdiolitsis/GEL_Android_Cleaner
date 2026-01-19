@@ -13,10 +13,7 @@ public final class iPhoneSpecs {
     private static final Map<String, AppleDeviceSpec> MAP = new HashMap<>();
 
     static {
-
-        public final boolean isPro;
-        public final boolean isProMax;
-
+        
         // =====================================================
         // 📱 iPhone 15
         // =====================================================

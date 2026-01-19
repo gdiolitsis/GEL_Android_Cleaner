@@ -8,7 +8,6 @@ package com.gel.cleaner.iphone;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.text.Html;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -269,11 +268,7 @@ private String yes(boolean v) {
     // ============================================================
     // HELPERS
     // ============================================================
-    private String log(String key, String value) {
-        if (value == null || value.trim().isEmpty()) return "";
-        return "• " + key + ": " + value + "\n";
-    }
-
+    
     private void hideAll() {
         hide(secSystem);
         hide(secAndroid);

@@ -44,23 +44,30 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     private AppleDeviceSpec d;
 
     // ============================================================
-    // LIFECYCLE
-    // ============================================================
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_internal);
+// LIFECYCLE
+// ============================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_device_info_internal);
 
-        bindViews();
-        setupToggles();
+    bindViews();
+    setupToggles();
 
-        String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                .getString("apple_device_model", "iPhone 13");
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-        d = AppleSpecs.get(model);
+    String model = prefs.getString("apple_model", null);
 
-        populateAll();
+    if (model == null) {
+        showAppleDeviceDeclarationPopup();
+        return;
     }
+
+    d = AppleSpecs.get(model);
+
+    populateAll();
+}
 
     // ============================================================
     // BIND VIEWS (XML IS KING)

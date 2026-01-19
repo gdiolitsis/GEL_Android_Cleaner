@@ -1132,21 +1132,21 @@ private void showAppleDeviceDeclarationPopup() {
 private void showAppleModelPicker(String type) {
 
     String[] models = "iphone".equals(type)
-            ? new String[]{
-                    "iPhone 11",
-                    "iPhone 12",
-                    "iPhone 13",
-                    "iPhone 14",
-                    "iPhone 15"
-            }
-            : new String[]{
-                    "iPad Pro 11 (M2)",
-                    "iPad Pro 11 (M1)",
-                    "iPad Pro 12.9 (M1)",
-                    "iPad Air (M2)",
-                    "iPad Air (M1)",
-                    "iPad mini 6"
-            };
+        ? new String[]{
+                "iPhone 11 Series",
+                "iPhone 12 Series",
+                "iPhone 13 Series",
+                "iPhone 14 Series",
+                "iPhone 15 Series"
+        }
+        : new String[]{
+                "iPad Pro 11 (M2)",
+                "iPad Pro 11 (M1)",
+                "iPad Pro 12.9 (M1)",
+                "iPad Air (M2)",
+                "iPad Air (M1)",
+                "iPad mini 6"
+        };
 
     new AlertDialog.Builder(this)
             .setTitle("Select model")

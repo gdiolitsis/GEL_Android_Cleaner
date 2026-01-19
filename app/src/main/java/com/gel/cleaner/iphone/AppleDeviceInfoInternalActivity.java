@@ -1,7 +1,9 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
-// AppleDeviceInfoInternalActivity — FINAL STABLE
+// AppleDeviceInfoInternalActivity — FINAL FULLY ENRICHED
+// STRICT MODE: NO SECTION / ORDER CHANGES
 // ============================================================
+
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
@@ -15,14 +17,14 @@ import com.gel.cleaner.R;
 /**
  * Apple Internals — FINAL
  * ------------------------------------------------------------
- * • ΚΑΡΜΠΟΝ σε sections με Android Internals
- * • Παίρνει δεδομένα από AppleSpecs → AppleDeviceSpec
- * • Ό,τι δεν υπάρχει στο spec → δεν εμφανίζεται
+ * • Sections & order LOCKED
+ * • Fully enriched with AppleDeviceSpec data
+ * • If a field is missing → not shown
  */
 public class AppleDeviceInfoInternalActivity extends Activity {
 
     // =========================
-    // SECTIONS
+    // SECTIONS (LOCKED)
     // =========================
     private LinearLayout secSystem;
     private LinearLayout secOS;
@@ -51,10 +53,8 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);
 
-        // -------- bind views --------
         bindViews();
 
-        // -------- toggles --------
         setupToggle(secSystem, outSystem);
         setupToggle(secOS, outOS);
         setupToggle(secCPU, outCPU);
@@ -62,13 +62,11 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         setupToggle(secDisplay, outDisplay);
         setupToggle(secConnectivity, outConnectivity);
 
-        // -------- load selected model --------
         String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
                 .getString("apple_device_model", "iPhone 13");
 
         d = AppleSpecs.get(model);
 
-        // -------- fill UI --------
         populateAll();
     }
 
@@ -77,15 +75,13 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     // ============================================================
     private void bindViews() {
 
-        // sections (ίδια ids με Android layout)
         secSystem       = findViewById(R.id.headerSystem);
-        secOS           = findViewById(R.id.headerAndroid);   // reuse → iOS
+        secOS           = findViewById(R.id.headerAndroid);   // reused → iOS
         secCPU          = findViewById(R.id.headerCpu);
         secRAM          = findViewById(R.id.headerRam);
-        secDisplay      = findViewById(R.id.headerGpu);       // reuse → Display
-        secConnectivity = findViewById(R.id.headerStorage);   // reuse → Connectivity
+        secDisplay      = findViewById(R.id.headerGpu);       // reused → Display
+        secConnectivity = findViewById(R.id.headerStorage);   // reused → Connectivity
 
-        // outputs
         outSystem       = findViewById(R.id.txtSystemContent);
         outOS           = findViewById(R.id.txtAndroidContent);
         outCPU          = findViewById(R.id.txtCpuContent);
@@ -95,7 +91,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     }
 
     // ============================================================
-    // POPULATE
+    // POPULATE — FULL
     // ============================================================
     private void populateAll() {
 
@@ -107,42 +103,65 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         // ---------------- SYSTEM ----------------
         show(secSystem);
         outSystem.setText(
-                logInfo("Manufacturer", "Apple") +
-                logInfo("SoC", d.soc)
+                log("Manufacturer", "Apple") +
+                log("Model", d.model) +
+                log("Year", d.year) +
+                log("Identifier", d.identifier) +
+                log("Model Number", d.modelNumber) +
+                log("SoC", d.soc) +
+                log("Chipset", d.chipset)
         );
 
         // ---------------- OS ----------------
         show(secOS);
         outOS.setText(
-                logInfo("Operating System", d.os)
+                log("Operating System", d.os) +
+                log("Charging Standard", d.charging) +
+                log("Notes", d.notes)
         );
 
         // ---------------- CPU ----------------
         show(secCPU);
         outCPU.setText(
-                logInfo("CPU", d.cpu)
+                log("SoC", d.soc) +
+                log("CPU", d.cpu) +
+                log("Architecture", d.arch) +
+                log("CPU Cores", d.cpuCores > 0 ? String.valueOf(d.cpuCores) : null) +
+                log("Process Node", d.processNode) +
+                log("GPU", d.gpu) +
+                log("GPU Cores", d.gpuCores > 0 ? String.valueOf(d.gpuCores) : null) +
+                log("Metal Feature Set", d.metalFeatureSet)
         );
 
         // ---------------- RAM ----------------
         show(secRAM);
         outRAM.setText(
-                logInfo("Memory", d.ram)
+                log("Memory", d.ram) +
+                log("Memory Type", d.ramType)
         );
 
         // ---------------- DISPLAY ----------------
         show(secDisplay);
         outDisplay.setText(
-                logInfo("Screen", d.screen)
+                log("Screen Size", d.screen) +
+                log("Display", d.display) +
+                log("Resolution", d.resolution) +
+                log("Refresh Rate", d.refreshRate) +
+                log("External Display", d.displayOut)
         );
 
         // ---------------- CONNECTIVITY ----------------
         show(secConnectivity);
         outConnectivity.setText(
-                logInfo("Wi-Fi", d.wifi) +
-                logInfo("Bluetooth", d.bluetooth) +
-                logInfo("Biometrics", d.biometrics) +
-                logInfo("Port", d.port) +
-                logInfo("Charging", d.charging)
+                log("Wi-Fi", d.wifi) +
+                log("Bluetooth", d.bluetooth) +
+                log("Cellular", d.cellular) +
+                log("5G Support", d.has5G ? "Yes" : null) +
+                log("LTE Support", d.hasLTE ? "Yes" : null) +
+                log("Biometrics", d.biometrics) +
+                log("Port", d.port) +
+                log("USB Standard", d.usbStandard) +
+                log("Charging", d.charging)
         );
     }
 
@@ -155,20 +174,20 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         content.setVisibility(View.GONE);
 
         header.setOnClickListener(v -> {
-            if (content.getVisibility() == View.VISIBLE) {
-                content.setVisibility(View.GONE);
-            } else {
-                content.setVisibility(View.VISIBLE);
-            }
+            content.setVisibility(
+                    content.getVisibility() == View.VISIBLE
+                            ? View.GONE
+                            : View.VISIBLE
+            );
         });
     }
 
     // ============================================================
     // HELPERS
     // ============================================================
-    private String logInfo(String k, String v) {
-        if (v == null || v.trim().isEmpty()) return "";
-        return "• " + k + ": " + v + "\n";
+    private String log(String key, String value) {
+        if (value == null || value.trim().isEmpty()) return "";
+        return "• " + key + ": " + value + "\n";
     }
 
     private void hideAll() {

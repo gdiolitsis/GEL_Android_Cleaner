@@ -587,7 +587,7 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(20f);              
+okBtn.setTextSize(18f);              
 okBtn.setIncludeFontPadding(false); 
 okBtn.setGravity(Gravity.CENTER);
 
@@ -600,9 +600,9 @@ okBtn.setMinWidth(0);
 // ✅ ΟΠΤΙΚΟ ΥΨΟΣ ΑΠΟ PADDING (ΔΙΠΛΑΣΙΟ)
 okBtn.setPadding(
         dp(24),   // left
-        dp(28),   // top   ⬆️ ΔΙΠΛΑΣΙΟ
+        dp(38),   // top   ⬆️ ΔΙΠΛΑΣΙΟ
         dp(24),   // right
-        dp(28)    // bottom ⬆️ ΔΙΠΛΑΣΙΟ
+        dp(38)    // bottom ⬆️ ΔΙΠΛΑΣΙΟ
 );
 
 GradientDrawable okBg = new GradientDrawable();
@@ -1127,48 +1127,115 @@ private void showAppleDeviceDeclarationPopup() {
 }
 
 // =========================================================
-// 🍎 MODEL PICKER
+// 🍎 MODEL PICKER — GEL STYLE
 // =========================================================
 private void showAppleModelPicker(String type) {
 
     String[] models = "iphone".equals(type)
-        ? new String[]{
-                "iPhone 11 Series",
-                "iPhone 12 Series",
-                "iPhone 13 Series",
-                "iPhone 14 Series",
-                "iPhone 15 Series"
-        }
-        : new String[]{
-                "iPad Pro 11 (M2)",
-                "iPad Pro 11 (M1)",
-                "iPad Pro 12.9 (M1)",
-                "iPad Air (M2)",
-                "iPad Air (M1)",
-                "iPad mini 6"
-        };
+            ? new String[]{
+                    "iPhone 11 Series",
+                    "iPhone 12 Series",
+                    "iPhone 13 Series",
+                    "iPhone 14 Series",
+                    "iPhone 15 Series"
+            }
+            : new String[]{
+                    "iPad Pro 11 (M2)",
+                    "iPad Pro 11 (M1)",
+                    "iPad Pro 12.9 (M1)",
+                    "iPad Air (M2)",
+                    "iPad Air (M1)",
+                    "iPad mini 6"
+            };
 
-    new AlertDialog.Builder(this)
-            .setTitle("Select model")
-            .setItems(models, (dialog, which) -> {
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this,
+                    android.R.style.Theme_Material_Dialog_Alert);
 
-                saveAppleDevice(type, models[which]);
+    // =========================
+    // ROOT CONTAINER
+    // =========================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(18), dp(18), dp(18), dp(18));
 
-                TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
-                if (btn != null) {
-                    btn.setText("🍎 " + type.toUpperCase(Locale.US)
-                            + " — " + models[which]);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);           // 🖤 black
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);   // 🟡 gold
+    root.setBackground(bg);
+
+    // =========================
+    // TITLE
+    // =========================
+    TextView title = new TextView(this);
+    title.setText("Select Apple Model");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
+
+    // =========================
+    // LIST
+    // =========================
+    ListView list = new ListView(this);
+    list.setDivider(null);
+    list.setDividerHeight(0);
+
+    ArrayAdapter<String> adapter =
+            new ArrayAdapter<String>(
+                    this,
+                    android.R.layout.simple_list_item_1,
+                    models
+            ) {
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    TextView tv = (TextView) super.getView(position, convertView, parent);
+                    tv.setTextColor(0xFF00FF9C);   // 🟢 neon green
+                    tv.setTextSize(16f);
+                    tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+                    tv.setPadding(dp(14), dp(14), dp(14), dp(14));
+                    tv.setBackground(null);
+                    return tv;
                 }
+            };
 
-                Toast.makeText(
-                        this,
-                        "Selected: " + models[which],
-                        Toast.LENGTH_SHORT
-                ).show();
+    list.setAdapter(adapter);
 
-                dialog.dismiss();
-            })
-            .show();
+    root.addView(list);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
+
+    d.show();
+
+    // =========================
+    // ACTION
+    // =========================
+    list.setOnItemClickListener((parent, view, position, id) -> {
+
+        saveAppleDevice(type, models[position]);
+
+        TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
+        if (btn != null) {
+            btn.setText("🍎 " + type.toUpperCase(Locale.US)
+                    + " — " + models[position]);
+        }
+
+        Toast.makeText(
+                this,
+                "Selected: " + models[position],
+                Toast.LENGTH_SHORT
+        ).show();
+
+        d.dismiss();
+    });
 }
 
 // =========================================================

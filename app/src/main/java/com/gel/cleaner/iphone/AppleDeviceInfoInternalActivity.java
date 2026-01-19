@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
-// AppleDeviceInfoInternalActivity — FINAL FULLY ENRICHED
-// STRICT MODE: NO SECTION / ORDER CHANGES
+// AppleDeviceInfoInternalActivity — FINAL STABLE
+// XML-DRIVEN | SAME LOGIC AS PERIPHERALS
 // ============================================================
 
 package com.gel.cleaner.iphone;
@@ -14,34 +14,31 @@ import android.widget.TextView;
 
 import com.gel.cleaner.R;
 
-/**
- * Apple Internals — FINAL
- * ------------------------------------------------------------
- * • Sections & order LOCKED
- * • Fully enriched with AppleDeviceSpec data
- * • If a field is missing → not shown
- */
 public class AppleDeviceInfoInternalActivity extends Activity {
 
     // =========================
-    // SECTIONS (LOCKED)
+    // SECTIONS (FROM XML)
     // =========================
     private LinearLayout secSystem;
-    private LinearLayout secOS;
-    private LinearLayout secCPU;
-    private LinearLayout secRAM;
-    private LinearLayout secDisplay;
-    private LinearLayout secConnectivity;
+    private LinearLayout secAndroid;
+    private LinearLayout secCpu;
+    private LinearLayout secGpu;
+    private LinearLayout secThermal;
+    private LinearLayout secVulkan;
+    private LinearLayout secRam;
+    private LinearLayout secStorage;
 
     // =========================
-    // OUTPUTS
+    // CONTENT
     // =========================
     private TextView outSystem;
-    private TextView outOS;
-    private TextView outCPU;
-    private TextView outRAM;
-    private TextView outDisplay;
-    private TextView outConnectivity;
+    private TextView outAndroid;
+    private TextView outCpu;
+    private TextView outGpu;
+    private TextView outThermal;
+    private TextView outVulkan;
+    private TextView outRam;
+    private TextView outStorage;
 
     private AppleDeviceSpec d;
 
@@ -54,13 +51,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         setContentView(R.layout.activity_device_info_internal);
 
         bindViews();
-
-        setupToggle(secSystem, outSystem);
-        setupToggle(secOS, outOS);
-        setupToggle(secCPU, outCPU);
-        setupToggle(secRAM, outRAM);
-        setupToggle(secDisplay, outDisplay);
-        setupToggle(secConnectivity, outConnectivity);
+        setupToggles();
 
         String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
                 .getString("apple_device_model", "iPhone 13");
@@ -71,27 +62,60 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     }
 
     // ============================================================
-    // BIND
+    // BIND VIEWS (XML IS KING)
     // ============================================================
     private void bindViews() {
 
-        secSystem       = findViewById(R.id.headerSystem);
-        secOS           = findViewById(R.id.headerAndroid);   // reused → iOS
-        secCPU          = findViewById(R.id.headerCpu);
-        secRAM          = findViewById(R.id.headerRam);
-        secDisplay      = findViewById(R.id.headerGpu);       // reused → Display
-        secConnectivity = findViewById(R.id.headerStorage);   // reused → Connectivity
+        secSystem   = findViewById(R.id.headerSystem);
+        secAndroid  = findViewById(R.id.headerAndroid);
+        secCpu      = findViewById(R.id.headerCpu);
+        secGpu      = findViewById(R.id.headerGpu);
+        secThermal  = findViewById(R.id.headerThermal);
+        secVulkan   = findViewById(R.id.headerVulkan);
+        secRam      = findViewById(R.id.headerRam);
+        secStorage  = findViewById(R.id.headerStorage);
 
-        outSystem       = findViewById(R.id.txtSystemContent);
-        outOS           = findViewById(R.id.txtAndroidContent);
-        outCPU          = findViewById(R.id.txtCpuContent);
-        outRAM          = findViewById(R.id.txtRamContent);
-        outDisplay      = findViewById(R.id.txtGpuContent);
-        outConnectivity = findViewById(R.id.txtStorageContent);
+        outSystem   = findViewById(R.id.txtSystemContent);
+        outAndroid  = findViewById(R.id.txtAndroidContent);
+        outCpu      = findViewById(R.id.txtCpuContent);
+        outGpu      = findViewById(R.id.txtGpuContent);
+        outThermal  = findViewById(R.id.txtThermalContent);
+        outVulkan   = findViewById(R.id.txtVulkanContent);
+        outRam      = findViewById(R.id.txtRamContent);
+        outStorage  = findViewById(R.id.txtStorageContent);
     }
 
     // ============================================================
-    // POPULATE — FULL
+    // TOGGLES (SAME AS PERIPHERALS)
+    // ============================================================
+    private void setupToggles() {
+
+        setupToggle(secSystem,  outSystem);
+        setupToggle(secAndroid, outAndroid);
+        setupToggle(secCpu,     outCpu);
+        setupToggle(secGpu,     outGpu);
+        setupToggle(secThermal, outThermal);
+        setupToggle(secVulkan,  outVulkan);
+        setupToggle(secRam,     outRam);
+        setupToggle(secStorage, outStorage);
+    }
+
+    private void setupToggle(LinearLayout header, TextView content) {
+        if (header == null || content == null) return;
+
+        content.setVisibility(View.GONE);
+
+        header.setOnClickListener(v ->
+                content.setVisibility(
+                        content.getVisibility() == View.VISIBLE
+                                ? View.GONE
+                                : View.VISIBLE
+                )
+        );
+    }
+
+    // ============================================================
+    // POPULATE
     // ============================================================
     private void populateAll() {
 
@@ -105,81 +129,62 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         outSystem.setText(
                 log("Manufacturer", "Apple") +
                 log("Model", d.model) +
-                log("Year", d.year) +
                 log("Identifier", d.identifier) +
                 log("Model Number", d.modelNumber) +
-                log("SoC", d.soc) +
-                log("Chipset", d.chipset)
+                log("Year", d.year)
         );
 
-        // ---------------- OS ----------------
-        show(secOS);
-        outOS.setText(
+        // ---------------- ANDROID / iOS ----------------
+        show(secAndroid);
+        outAndroid.setText(
                 log("Operating System", d.os) +
-                log("Charging Standard", d.charging) +
                 log("Notes", d.notes)
         );
 
         // ---------------- CPU ----------------
-        show(secCPU);
-        outCPU.setText(
+        show(secCpu);
+        outCpu.setText(
                 log("SoC", d.soc) +
                 log("CPU", d.cpu) +
                 log("Architecture", d.arch) +
                 log("CPU Cores", d.cpuCores > 0 ? String.valueOf(d.cpuCores) : null) +
-                log("Process Node", d.processNode) +
+                log("Process Node", d.processNode)
+        );
+
+        // ---------------- GPU ----------------
+        show(secGpu);
+        outGpu.setText(
                 log("GPU", d.gpu) +
                 log("GPU Cores", d.gpuCores > 0 ? String.valueOf(d.gpuCores) : null) +
                 log("Metal Feature Set", d.metalFeatureSet)
         );
 
+        // ---------------- THERMAL ----------------
+        show(secThermal);
+        outThermal.setText(
+                log("Thermal Notes", d.thermalNote)
+        );
+
+        // ---------------- VULKAN ----------------
+        show(secVulkan);
+        outVulkan.setText(
+                log("Graphics API", "Metal") +
+                log("Vulkan", "Not supported on iOS")
+        );
+
         // ---------------- RAM ----------------
-        show(secRAM);
-        outRAM.setText(
+        show(secRam);
+        outRam.setText(
                 log("Memory", d.ram) +
                 log("Memory Type", d.ramType)
         );
 
-        // ---------------- DISPLAY ----------------
-        show(secDisplay);
-        outDisplay.setText(
-                log("Screen Size", d.screen) +
-                log("Display", d.display) +
-                log("Resolution", d.resolution) +
-                log("Refresh Rate", d.refreshRate) +
-                log("External Display", d.displayOut)
+        // ---------------- STORAGE ----------------
+        show(secStorage);
+        outStorage.setText(
+                log("Storage Options", d.storageOptions) +
+                log("Base Storage", d.storageBase)
         );
-
-        // ---------------- CONNECTIVITY ----------------
-        show(secConnectivity);
-        outConnectivity.setText(
-                log("Wi-Fi", d.wifi) +
-                log("Bluetooth", d.bluetooth) +
-                log("Cellular", d.cellular) +
-                log("5G Support", d.has5G ? "Yes" : null) +
-                log("LTE Support", d.hasLTE ? "Yes" : null) +
-                log("Biometrics", d.biometrics) +
-                log("Port", d.port) +
-                log("USB Standard", d.usbStandard) +
-                log("Charging", d.charging)
-        );
-    }
-
-    // ============================================================
-    // TOGGLE
-    // ============================================================
-    private void setupToggle(LinearLayout header, TextView content) {
-        if (header == null || content == null) return;
-
-        content.setVisibility(View.GONE);
-
-        header.setOnClickListener(v -> {
-            content.setVisibility(
-                    content.getVisibility() == View.VISIBLE
-                            ? View.GONE
-                            : View.VISIBLE
-            );
-        });
     }
 
     // ============================================================
@@ -192,11 +197,13 @@ public class AppleDeviceInfoInternalActivity extends Activity {
 
     private void hideAll() {
         hide(secSystem);
-        hide(secOS);
-        hide(secCPU);
-        hide(secRAM);
-        hide(secDisplay);
-        hide(secConnectivity);
+        hide(secAndroid);
+        hide(secCpu);
+        hide(secGpu);
+        hide(secThermal);
+        hide(secVulkan);
+        hide(secRam);
+        hide(secStorage);
     }
 
     private void hide(View v) {

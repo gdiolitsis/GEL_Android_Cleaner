@@ -72,7 +72,7 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     // BIND VIEWS (XML IS KING)
     // ============================================================
-    private void bindViews() {
+    private void bind() {
 
         secSystem   = findViewById(R.id.headerSystem);
         secAndroid  = findViewById(R.id.headerAndroid);

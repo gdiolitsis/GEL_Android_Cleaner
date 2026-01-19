@@ -530,7 +530,7 @@ ipadAir13M2.hasDolby = true;
 ipadAir13M2.hasJack = false;
 
 // CAMERA
-ipadAir13M2.cameraMain = "12 MP Wide";
+ipadAir13M2.cameraMain  = "12 MP Wide";
 ipadAir13M2.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
 ipadAir13M2.cameraVideo = "4K@60fps";
 

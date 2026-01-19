@@ -52,22 +52,44 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_internal);
 
-    bind();   // ✔ σωστό όνομα
-    setupToggles(); 
+    bind();   // 1️⃣ ΠΡΩΤΑ bind
 
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
     String model = prefs.getString("apple_model", null);
-
     if (model == null) {
-        finish();   // ⛔ εδώ ΔΕΝ δείχνουμε popup
+        finish();
         return;
     }
 
     d = AppleSpecs.get(model);
 
-    populate();   // ✔ σωστό method
+    setupInternalToggles();   // 2️⃣ 🔥 ΑΥΤΟ ΕΛΕΙΠΕ
+    populate();               // 3️⃣ μετά γεμίζουμε
+}
+
+private void setupInternalToggles() {
+
+    TextView[] all = {
+            outSystem,
+            outAndroid,
+            outCpu,
+            outGpu,
+            outThermal,
+            outVulkan,
+            outRam,
+            outStorage
+    };
+
+    setupToggle(secSystem,  outSystem,  all);
+    setupToggle(secAndroid, outAndroid, all);
+    setupToggle(secCpu,     outCpu,     all);
+    setupToggle(secGpu,     outGpu,     all);
+    setupToggle(secThermal, outThermal, all);
+    setupToggle(secVulkan,  outVulkan,  all);
+    setupToggle(secRam,     outRam,     all);
+    setupToggle(secStorage, outStorage, all);
 }
 
     // ============================================================
@@ -93,17 +115,6 @@ protected void onCreate(Bundle savedInstanceState) {
         outRam      = findViewById(R.id.txtRamContent);
         outStorage  = findViewById(R.id.txtStorageContent);
     }
-
-TextView[] allInternalContents = new TextView[] {
-        outSystem,
-        outAndroid,
-        outCpu,
-        outGpu,
-        outThermal,
-        outVulkan,
-        outRam,
-        outStorage
-};
 
 private void setupToggle(LinearLayout header, TextView content, TextView[] all) {
     if (header == null || content == null) return;

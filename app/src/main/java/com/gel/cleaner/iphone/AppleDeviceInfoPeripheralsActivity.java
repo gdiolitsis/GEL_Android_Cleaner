@@ -21,6 +21,8 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // ============================================================
     // HEADERS (AS IN XML)
     // ============================================================
+
+    private LinearLayout headerBattery;
     private LinearLayout headerScreen;
     private LinearLayout headerCamera;
     private LinearLayout headerConnectivity;
@@ -44,6 +46,8 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // ============================================================
     // CONTENT
     // ============================================================
+
+    private TextView txtBattery;
     private TextView txtScreen;
     private TextView txtCamera;
     private TextView txtConnectivity;
@@ -74,21 +78,44 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_peripherals);
 
-    bind();   // ✔ σωστό όνομα
-    
+    bind();
+
+    allContents = new TextView[] {
+            txtBattery,
+            txtScreen,
+            txtCamera,
+            txtConnectivity,
+            txtLocation,
+            txtThermal,
+            txtModem,
+            txtWifiAdvanced,
+            txtAudio,
+            txtSensors,
+            txtBiometrics,
+            txtNfc,
+            txtGnss,
+            txtUwb,
+            txtUsb,
+            txtHaptics,
+            txtSystemFeatures,
+            txtSecurityFlags,
+            txtRoot,
+            txtOther
+    };
+
+    setupPeripheralsToggles();
+
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
     String model = prefs.getString("apple_model", null);
-
     if (model == null) {
-        finish();   // ⛔ εδώ ΔΕΝ δείχνουμε popup
+        finish();
         return;
     }
 
     d = AppleSpecs.get(model);
-
-    populate();   // ✔ σωστό method
+    populate();
 }
 
     // ============================================================
@@ -139,28 +166,29 @@ protected void onCreate(Bundle savedInstanceState) {
         txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
     }
 
-TextView[] allContents = new TextView[] {
-        txtBattery,
-        txtScreen,
-        txtCamera,
-        txtConnectivity,
-        txtLocation,
-        txtThermal,
-        txtModem,
-        txtWifiAdvanced,
-        txtAudio,
-        txtSensors,
-        txtBiometrics,
-        txtNfc,
-        txtGnss,
-        txtUwb,
-        txtUsb,
-        txtHaptics,
-        txtSystemFeatures,
-        txtSecurityFlags,
-        txtRoot,
-        txtOther
-};
+private void setupPeripheralsToggles() {
+
+    setupToggle(headerBattery,         txtBattery,        allContents);
+    setupToggle(headerScreen,          txtScreen,         allContents);
+    setupToggle(headerCamera,          txtCamera,         allContents);
+    setupToggle(headerConnectivity,    txtConnectivity,   allContents);
+    setupToggle(headerLocation,        txtLocation,       allContents);
+    setupToggle(headerThermal,         txtThermal,        allContents);
+    setupToggle(headerModem,           txtModem,          allContents);
+    setupToggle(headerWifiAdvanced,    txtWifiAdvanced,   allContents);
+    setupToggle(headerAudioUnified,    txtAudio,          allContents);
+    setupToggle(headerSensors,         txtSensors,        allContents);
+    setupToggle(headerBiometrics,      txtBiometrics,     allContents);
+    setupToggle(headerNfc,             txtNfc,            allContents);
+    setupToggle(headerGnss,            txtGnss,           allContents);
+    setupToggle(headerUwb,             txtUwb,            allContents);
+    setupToggle(headerUsb,             txtUsb,            allContents);
+    setupToggle(headerHaptics,         txtHaptics,        allContents);
+    setupToggle(headerSystemFeatures,  txtSystemFeatures, allContents);
+    setupToggle(headerSecurityFlags,   txtSecurityFlags,  allContents);
+    setupToggle(headerRoot,            txtRoot,           allContents);
+    setupToggle(headerOtherPeripherals,txtOther,          allContents);
+}
 
 // ============================================================
 // TOGGLE ENGINE — SHARED

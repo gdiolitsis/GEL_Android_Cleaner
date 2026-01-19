@@ -416,9 +416,9 @@ ipadAirM2.ramType = "Unified Memory";
 ipadAirM2.storageBase = "128 GB";
 ipadAirM2.storageOptions = "128 / 256 / 512 GB / 1 TB";
 
-ipadAirM2.screen = "11\" or 13\"";
+ipadAirM2.screen     = "11\"";
 ipadAirM2.display = "Liquid Retina (IPS)";
-ipadAirM2.resolution = "2360 × 1640 (11\") / 2732 × 2048 (13\")";
+ipadAirM2.resolution = "2360 × 1640";
 ipadAirM2.refreshRate = "60 Hz";
 ipadAirM2.displayOut = "USB-C DisplayPort";
 

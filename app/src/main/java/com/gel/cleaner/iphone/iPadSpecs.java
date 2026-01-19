@@ -269,7 +269,7 @@ ipadPro129M1.storageBase = "128 GB";
 ipadPro129M1.storageOptions = "128 / 256 / 512 GB / 1 TB / 2 TB";
 
 ipadPro129M1.screen = "12.9\"";
-ipadPro129M1.display = "Liquid Retina XDR (Mini-LED)";
+ipadPro129M1.display = "Liquid Retina XDR (mini-LED)";
 ipadPro129M1.resolution = "2732 × 2048";
 ipadPro129M1.refreshRate = "ProMotion 120 Hz";
 ipadPro129M1.displayOut = "USB-C DisplayPort";

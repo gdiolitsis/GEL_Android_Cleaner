@@ -339,10 +339,6 @@ private boolean isPro() {
             && !isProMax();
 }
 
-
-/**
- * Pro Max tier detector
- */
 private boolean isProMax() {
     return d != null
             && d.model != null
@@ -350,28 +346,32 @@ private boolean isProMax() {
                 || d.model.toLowerCase().endsWith("max"));
 }
 
-    // ============================================================
-    // SECTION HELPER
-    // ============================================================
-    private void section(LinearLayout h, TextView t, String content) {
-        if (content.trim().isEmpty()) {
-            h.setVisibility(View.GONE);
-            t.setVisibility(View.GONE);
-            return;
-        }
+// ============================================================
+// SECTION HELPER
+// ============================================================
+private void section(LinearLayout h, TextView t, String content) {
 
-        t.setText(content);
+    if (content == null || content.trim().isEmpty()) {
+        h.setVisibility(View.GONE);
         t.setVisibility(View.GONE);
-
-        h.setOnClickListener(v ->
-                t.setVisibility(
-                        t.getVisibility() == View.VISIBLE
-                                ? View.GONE
-                                : View.VISIBLE
-                )
-        );
+        return;
     }
 
+    t.setText(content);
+    t.setVisibility(View.GONE);
+
+    h.setOnClickListener(v ->
+            t.setVisibility(
+                    t.getVisibility() == View.VISIBLE
+                            ? View.GONE
+                            : View.VISIBLE
+            )
+    );
+}
+
+// ============================================================
+// HIDE ALL
+// ============================================================
 private void hideAll() {
     if (txtScreen != null) txtScreen.setVisibility(View.GONE);
     if (txtCamera != null) txtCamera.setVisibility(View.GONE);
@@ -397,8 +397,6 @@ private void hideAll() {
 // ============================================================
 // HELPERS
 // ============================================================
-
 private String yes(boolean value) {
     return value ? "Yes" : null;
-}
 }

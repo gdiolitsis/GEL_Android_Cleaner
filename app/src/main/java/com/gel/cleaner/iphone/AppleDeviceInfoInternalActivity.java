@@ -114,77 +114,155 @@ public class AppleDeviceInfoInternalActivity extends Activity {
         );
     }
 
-    // ============================================================
-    // POPULATE
-    // ============================================================
-    private void populateAll() {
+// ============================================================
+// POPULATE — FINAL (SERIES + PRO / PRO MAX AWARE)
+// ============================================================
+private void populateAll() {
 
-        if (d == null) {
-            hideAll();
-            return;
-        }
+    if (d == null) {
+        hideAll();
+        return;
+    }
 
-        // ---------------- SYSTEM ----------------
-        show(secSystem);
-        outSystem.setText(
-                log("Manufacturer", "Apple") +
-                log("Model", d.model) +
-                log("Identifier", d.identifier) +
-                log("Model Number", d.modelNumber) +
-                log("Year", d.year)
-        );
+    // ---------------- SYSTEM ----------------
+    show(secSystem);
+    outSystem.setText(
+            Html.fromHtml(
+                    log("Manufacturer", "Apple") +
+                    log("Model", d.model) +
+                    log("Identifier", d.identifier) +
+                    log("Model Number", d.modelNumber) +
+                    log("Year", d.year),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- ANDROID / iOS ----------------
-        show(secAndroid);
-        outAndroid.setText(
-                log("Operating System", d.os) +
-                log("Notes", d.notes)
-        );
+    // ---------------- OS / PLATFORM ----------------
+    show(secAndroid);
+    outAndroid.setText(
+            Html.fromHtml(
+                    log("Operating System", d.os) +
+                    log("Platform Tier",
+                            isProMax() ? "Pro Max — highest bin"
+                          : isPro()    ? "Pro — enhanced configuration"
+                                       : "Standard"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- CPU ----------------
-        show(secCpu);
-        outCpu.setText(
-                log("SoC", d.soc) +
-                log("CPU", d.cpu) +
-                log("Architecture", d.arch) +
-                log("CPU Cores", d.cpuCores > 0 ? String.valueOf(d.cpuCores) : null) +
-                log("Process Node", d.processNode)
-        );
+    // ---------------- CPU ----------------
+    show(secCpu);
+    outCpu.setText(
+            Html.fromHtml(
+                    log("SoC", d.soc) +
+                    log("CPU", d.cpu) +
+                    log("Architecture", d.arch) +
+                    log("CPU Cores",
+                            d.cpuCores > 0 ? String.valueOf(d.cpuCores) : null) +
+                    log("Process Node", d.processNode) +
+                    log("CPU Tier",
+                            isProMax() ? "High (best silicon bin)"
+                          : isPro()    ? "Enhanced"
+                                       : "Standard"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- GPU ----------------
-        show(secGpu);
-        outGpu.setText(
-                log("GPU", d.gpu) +
-                log("GPU Cores", d.gpuCores > 0 ? String.valueOf(d.gpuCores) : null) +
-                log("Metal Feature Set", d.metalFeatureSet)
-        );
+    // ---------------- GPU ----------------
+    show(secGpu);
+    outGpu.setText(
+            Html.fromHtml(
+                    log("GPU", d.gpu) +
+                    log("GPU Cores",
+                            d.gpuCores > 0 ? String.valueOf(d.gpuCores) : null) +
+                    log("Metal Feature Set", d.metalFeatureSet) +
+                    log("GPU Tier",
+                            isProMax() ? "Max GPU configuration"
+                          : isPro()    ? "Pro GPU configuration"
+                                       : "Standard GPU"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- THERMAL ----------------
-        show(secThermal);
-        outThermal.setText(
-                log("Thermal Notes", d.thermalNote)
-        );
+    // ---------------- THERMAL ----------------
+    show(secThermal);
+    outThermal.setText(
+            Html.fromHtml(
+                    log("Thermal Design",
+                            isProMax() ? "Improved heat dissipation (larger chassis)"
+                          : isPro()    ? "Enhanced thermal envelope"
+                                       : "Standard thermal design") +
+                    log("Thermal Notes", d.thermalNote),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- VULKAN ----------------
-        show(secVulkan);
-        outVulkan.setText(
-                log("Graphics API", "Metal") +
-                log("Vulkan", "Not supported on iOS")
-        );
+    // ---------------- GRAPHICS API ----------------
+    show(secVulkan);
+    outVulkan.setText(
+            Html.fromHtml(
+                    log("Primary Graphics API", "Metal") +
+                    log("Vulkan", "Not supported on iOS"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- RAM ----------------
-        show(secRam);
-        outRam.setText(
-                log("Memory", d.ram) +
-                log("Memory Type", d.ramType)
-        );
+    // ---------------- RAM ----------------
+    show(secRam);
+    outRam.setText(
+            Html.fromHtml(
+                    log("Memory", d.ram) +
+                    log("Memory Type", d.ramType) +
+                    log("Memory Tier",
+                            isProMax() ? "Higher RAM capacity"
+                          : isPro()    ? "Mid-High RAM capacity"
+                                       : "Base RAM capacity"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
 
-        // ---------------- STORAGE ----------------
-        show(secStorage);
-        outStorage.setText(
-                log("Storage Options", d.storageOptions) +
-                log("Base Storage", d.storageBase)
-        );
+    // ---------------- STORAGE ----------------
+    show(secStorage);
+    outStorage.setText(
+            Html.fromHtml(
+                    log("Storage Options", d.storageOptions) +
+                    log("Base Storage", d.storageBase) +
+                    log("Storage Tier",
+                            isProMax() ? "Higher maximum capacity available"
+                          : isPro()    ? "Expanded capacity options"
+                                       : "Standard capacity range"),
+                    Html.FROM_HTML_MODE_LEGACY
+            )
+    );
+}
+
+// ============================================================
+// COLOR HELPERS — INTERNALS (HTML SAFE)
+// ============================================================
+
+private String log(String label, String value) {
+    if (value == null || value.trim().isEmpty()) return "";
+    return "<font color=\"#FFFFFF\"><b>• " + label + ":</b></font> " +
+           "<font color=\"#00FF7F\">" + value + "</font><br>";
+}
+
+private String yes(boolean v) {
+    return v ? "Yes" : null;
+}
+
+    // ============================
+    // SERIES HELPERS (LOCKED)
+    // ============================
+    private boolean isPro() {
+    return d != null && d.model != null &&
+           d.model.toLowerCase().contains("pro")
+           && !isProMax();
+}
+
+    private boolean isProMax() {
+        return d != null && d.model != null &&
+               (d.model.toLowerCase().contains("pro max")
+                || d.model.toLowerCase().contains("max"));
     }
 
     // ============================================================

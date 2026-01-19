@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
-// AppleDeviceInfoPeripheralsActivity — FINAL FULLY ENRICHED
-// STRICT MODE: SAME SECTIONS / SAME ORDER / NO UI CHANGES
+// AppleDeviceInfoPeripheralsActivity — FINAL UNIFIED
+// STRICT MODE: XML IS SOURCE OF TRUTH
 // ============================================================
 
 package com.gel.cleaner.iphone;
@@ -14,40 +14,53 @@ import android.widget.TextView;
 
 import com.gel.cleaner.R;
 
-/**
- * Apple Peripherals — FINAL
- * ------------------------------------------------------------
- * • Sections & order LOCKED
- * • Fully enriched with AppleDeviceSpec (iPhone + iPad)
- * • Missing data → not shown
- */
 public class AppleDeviceInfoPeripheralsActivity extends Activity {
 
-    // =========================
-    // SECTIONS (LOCKED)
-    // =========================
-    private LinearLayout secCamera;
-    private LinearLayout secModem;
-    private LinearLayout secConnectivity;
-    private LinearLayout secSensors;
-    private LinearLayout secAudio;
-    private LinearLayout secPorts;
-    private LinearLayout secBiometrics;
-    private LinearLayout secDisplayOut;
-    private LinearLayout secStorage;
+    // ============================================================
+    // HEADERS (AS IN XML)
+    // ============================================================
+    private LinearLayout headerScreen;
+    private LinearLayout headerCamera;
+    private LinearLayout headerConnectivity;
+    private LinearLayout headerLocation;
+    private LinearLayout headerThermal;
+    private LinearLayout headerModem;
+    private LinearLayout headerWifiAdvanced;
+    private LinearLayout headerAudioUnified;
+    private LinearLayout headerSensors;
+    private LinearLayout headerBiometrics;
+    private LinearLayout headerNfc;
+    private LinearLayout headerGnss;
+    private LinearLayout headerUwb;
+    private LinearLayout headerUsb;
+    private LinearLayout headerHaptics;
+    private LinearLayout headerSystemFeatures;
+    private LinearLayout headerSecurityFlags;
+    private LinearLayout headerRoot;
+    private LinearLayout headerOtherPeripherals;
 
-    // =========================
-    // OUTPUTS
-    // =========================
-    private TextView outCamera;
-    private TextView outModem;
-    private TextView outConnectivity;
-    private TextView outSensors;
-    private TextView outAudio;
-    private TextView outPorts;
-    private TextView outBiometrics;
-    private TextView outDisplayOut;
-    private TextView outStorage;
+    // ============================================================
+    // CONTENT
+    // ============================================================
+    private TextView txtScreen;
+    private TextView txtCamera;
+    private TextView txtConnectivity;
+    private TextView txtLocation;
+    private TextView txtThermal;
+    private TextView txtModem;
+    private TextView txtWifiAdvanced;
+    private TextView txtAudio;
+    private TextView txtSensors;
+    private TextView txtBiometrics;
+    private TextView txtNfc;
+    private TextView txtGnss;
+    private TextView txtUwb;
+    private TextView txtUsb;
+    private TextView txtHaptics;
+    private TextView txtSystemFeatures;
+    private TextView txtSecurityFlags;
+    private TextView txtRoot;
+    private TextView txtOther;
 
     private AppleDeviceSpec d;
 
@@ -55,159 +68,182 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // LIFECYCLE
     // ============================================================
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_device_info_peripherals);
 
-        bindViews();
+        bind();
 
-        setupToggle(secCamera, outCamera);
-        setupToggle(secModem, outModem);
-        setupToggle(secConnectivity, outConnectivity);
-        setupToggle(secSensors, outSensors);
-        setupToggle(secAudio, outAudio);
-        setupToggle(secPorts, outPorts);
-        setupToggle(secBiometrics, outBiometrics);
-        setupToggle(secDisplayOut, outDisplayOut);
-        setupToggle(secStorage, outStorage);
+        d = AppleSpecs.get(
+                getSharedPreferences("gel_prefs", MODE_PRIVATE)
+                        .getString("apple_device_model", "iPhone 13")
+        );
 
-        String model = getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                .getString("apple_device_model", "iPhone 13");
-
-        d = AppleSpecs.get(model);
-
-        populateAll();
+        populate();
     }
 
     // ============================================================
     // BIND
     // ============================================================
-    private void bindViews() {
+    private void bind() {
 
-        secCamera        = findViewById(R.id.headerCamera);
-        secModem         = findViewById(R.id.headerModem);
-        secConnectivity  = findViewById(R.id.headerConnectivity);
-        secSensors       = findViewById(R.id.headerSensors);
-        secAudio         = findViewById(R.id.headerAudio);
-        secPorts         = findViewById(R.id.headerPorts);
-        secBiometrics    = findViewById(R.id.headerBiometrics);
-        secDisplayOut    = findViewById(R.id.headerDisplayOut);
-        secStorage       = findViewById(R.id.headerStorageIO);
+        headerScreen          = findViewById(R.id.headerScreen);
+        headerCamera          = findViewById(R.id.headerCamera);
+        headerConnectivity    = findViewById(R.id.headerConnectivity);
+        headerLocation        = findViewById(R.id.headerLocation);
+        headerThermal         = findViewById(R.id.headerThermal);
+        headerModem           = findViewById(R.id.headerModem);
+        headerWifiAdvanced    = findViewById(R.id.headerWifiAdvanced);
+        headerAudioUnified    = findViewById(R.id.headerAudioUnified);
+        headerSensors         = findViewById(R.id.headerSensors);
+        headerBiometrics      = findViewById(R.id.headerBiometrics);
+        headerNfc             = findViewById(R.id.headerNfc);
+        headerGnss            = findViewById(R.id.headerGnss);
+        headerUwb             = findViewById(R.id.headerUwb);
+        headerUsb             = findViewById(R.id.headerUsb);
+        headerHaptics         = findViewById(R.id.headerHaptics);
+        headerSystemFeatures  = findViewById(R.id.headerSystemFeatures);
+        headerSecurityFlags   = findViewById(R.id.headerSecurityFlags);
+        headerRoot            = findViewById(R.id.headerRoot);
+        headerOtherPeripherals= findViewById(R.id.headerOtherPeripherals);
 
-        outCamera        = findViewById(R.id.txtCameraContent);
-        outModem         = findViewById(R.id.txtModemContent);
-        outConnectivity  = findViewById(R.id.txtConnectivityContent);
-        outSensors       = findViewById(R.id.txtSensorsContent);
-        outAudio         = findViewById(R.id.txtAudioContent);
-        outPorts         = findViewById(R.id.txtPortsContent);
-        outBiometrics    = findViewById(R.id.txtBiometricsContent);
-        outDisplayOut    = findViewById(R.id.txtDisplayOutContent);
-        outStorage       = findViewById(R.id.txtStorageContent);
+        txtScreen         = findViewById(R.id.txtScreenContent);
+        txtCamera         = findViewById(R.id.txtCameraContent);
+        txtConnectivity   = findViewById(R.id.txtConnectivityContent);
+        txtLocation       = findViewById(R.id.txtLocationContent);
+        txtThermal        = findViewById(R.id.txtThermalContent);
+        txtModem          = findViewById(R.id.txtModemContent);
+        txtWifiAdvanced   = findViewById(R.id.txtWifiAdvancedContent);
+        txtAudio          = findViewById(R.id.txtAudioUnifiedContent);
+        txtSensors        = findViewById(R.id.txtSensorsContent);
+        txtBiometrics     = findViewById(R.id.txtBiometricsContent);
+        txtNfc            = findViewById(R.id.txtNfcContent);
+        txtGnss           = findViewById(R.id.txtGnssContent);
+        txtUwb            = findViewById(R.id.txtUwbContent);
+        txtUsb            = findViewById(R.id.txtUsbContent);
+        txtHaptics        = findViewById(R.id.txtHapticsContent);
+        txtSystemFeatures = findViewById(R.id.txtSystemFeaturesContent);
+        txtSecurityFlags  = findViewById(R.id.txtSecurityFlagsContent);
+        txtRoot           = findViewById(R.id.txtRootContent);
+        txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
     }
 
     // ============================================================
-    // POPULATE — FULL
+    // POPULATE
     // ============================================================
-    private void populateAll() {
+    private void populate() {
 
-        if (d == null) {
-            hideAll();
-            return;
-        }
-
-        // ---------------- CAMERA ----------------
-        show(secCamera);
-        outCamera.setText(
-                log("Main Camera", d.cameraMain) +
-                log("Ultra-Wide Camera", d.cameraUltraWide) +
-                log("Telephoto Camera", d.cameraTele) +
-                log("Front Camera", d.cameraFront) +
-                log("Video Recording", d.cameraVideo)
+        section(headerScreen, txtScreen,
+                log("Display", d.display) +
+                log("Resolution", d.resolution) +
+                log("Refresh Rate", d.refreshRate)
         );
 
-        // ---------------- MODEM ----------------
-        show(secModem);
-        outModem.setText(
-                log("Modem", d.modem) +
-                log("5G Support", yesNo(d.has5G)) +
-                log("LTE Support", yesNo(d.hasLTE)) +
-                log("SIM Slots", d.simSlots) +
-                log("eSIM", yesNo(d.hasESim))
+        section(headerCamera, txtCamera,
+                log("Main", d.cameraMain) +
+                log("Ultra-Wide", d.cameraUltraWide) +
+                log("Telephoto", d.cameraTele) +
+                log("Front", d.cameraFront) +
+                log("Video", d.cameraVideo)
         );
 
-        // ---------------- CONNECTIVITY ----------------
-        show(secConnectivity);
-        outConnectivity.setText(
+        section(headerConnectivity, txtConnectivity,
                 log("Wi-Fi", d.wifi) +
                 log("Bluetooth", d.bluetooth) +
-                log("AirDrop", yesNo(d.hasAirDrop)) +
-                log("AirPlay", yesNo(d.hasAirPlay)) +
-                log("NFC", yesNo(d.hasNFC))
+                log("AirDrop", yes(d.hasAirDrop)) +
+                log("AirPlay", yes(d.hasAirPlay))
         );
 
-        // ---------------- SENSORS ----------------
-        show(secSensors);
-        outSensors.setText(
-                log("GPS", d.gps) +
-                log("Compass", yesNo(d.hasCompass)) +
-                log("Gyroscope", yesNo(d.hasGyro)) +
-                log("Accelerometer", yesNo(d.hasAccel)) +
-                log("Barometer", yesNo(d.hasBarometer)) +
+        section(headerLocation, txtLocation,
+                log("GPS", d.gps)
+        );
+
+        section(headerThermal, txtThermal,
                 log("Thermal", d.thermalNote)
         );
 
-        // ---------------- AUDIO ----------------
-        show(secAudio);
-        outAudio.setText(
+        section(headerModem, txtModem,
+                log("Modem", d.modem) +
+                log("5G", yes(d.has5G)) +
+                log("LTE", yes(d.hasLTE)) +
+                log("SIM", d.simSlots)
+        );
+
+        section(headerWifiAdvanced, txtWifiAdvanced,
+                log("Wi-Fi", d.wifi)
+        );
+
+        section(headerAudioUnified, txtAudio,
                 log("Speakers", d.speakers) +
                 log("Microphones", d.microphones) +
-                log("Dolby Audio", yesNo(d.hasDolby)) +
-                log("Headphone Jack", yesNo(d.hasJack))
+                log("Dolby", yes(d.hasDolby))
         );
 
-        // ---------------- PORTS ----------------
-        show(secPorts);
-        outPorts.setText(
+        section(headerSensors, txtSensors,
+                log("Gyroscope", yes(d.hasGyro)) +
+                log("Accelerometer", yes(d.hasAccel)) +
+                log("Barometer", yes(d.hasBarometer))
+        );
+
+        section(headerBiometrics, txtBiometrics,
+                log("Biometrics", d.biometrics)
+        );
+
+        section(headerNfc, txtNfc,
+                log("NFC", yes(d.hasNFC))
+        );
+
+        section(headerGnss, txtGnss,
+                log("GNSS", d.gps)
+        );
+
+        section(headerUwb, txtUwb,
+                log("Ultra-Wideband", "Supported on select models")
+        );
+
+        section(headerUsb, txtUsb,
                 log("Port", d.port) +
-                log("USB Standard", d.usbStandard) +
-                log("Fast Charging", yesNo(d.hasFastCharge)) +
-                log("Wireless Charging", yesNo(d.hasWirelessCharge))
+                log("USB", d.usbStandard)
         );
 
-        // ---------------- BIOMETRICS ----------------
-        show(secBiometrics);
-        outBiometrics.setText(
-                log("Biometrics", d.biometrics) +
-                log("Face ID", yesNo(d.hasFaceID)) +
-                log("Touch ID", yesNo(d.hasTouchID))
+        section(headerHaptics, txtHaptics,
+                log("Haptics", "Taptic Engine")
         );
 
-        // ---------------- DISPLAY OUT ----------------
-        show(secDisplayOut);
-        outDisplayOut.setText(
-                log("External Display", d.displayOut)
+        section(headerSystemFeatures, txtSystemFeatures,
+                log("SoC", d.soc) +
+                log("Secure Enclave", "Yes")
         );
 
-        // ---------------- STORAGE ----------------
-        show(secStorage);
-        outStorage.setText(
-                log("Internal Storage", d.storageOptions) +
-                log("Base Storage", d.storageBase) +
-                log("Expansion", "Not supported (Apple design)")
+        section(headerSecurityFlags, txtSecurityFlags,
+                log("Encrypted Storage", "Yes")
+        );
+
+        section(headerRoot, txtRoot,
+                log("Root", "Not applicable (iOS)")
+        );
+
+        section(headerOtherPeripherals, txtOther,
+                log("Notes", d.notes)
         );
     }
 
     // ============================================================
-    // TOGGLE
+    // SECTION HELPER
     // ============================================================
-    private void setupToggle(LinearLayout header, TextView content) {
-        if (header == null || content == null) return;
+    private void section(LinearLayout h, TextView t, String content) {
+        if (content.trim().isEmpty()) {
+            h.setVisibility(View.GONE);
+            t.setVisibility(View.GONE);
+            return;
+        }
 
-        content.setVisibility(View.GONE);
+        t.setText(content);
+        t.setVisibility(View.GONE);
 
-        header.setOnClickListener(v ->
-                content.setVisibility(
-                        content.getVisibility() == View.VISIBLE
+        h.setOnClickListener(v ->
+                t.setVisibility(
+                        t.getVisibility() == View.VISIBLE
                                 ? View.GONE
                                 : View.VISIBLE
                 )
@@ -217,32 +253,12 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // ============================================================
     // HELPERS
     // ============================================================
-    private String yesNo(boolean b) {
+    private String log(String k, String v) {
+        if (v == null || v.trim().isEmpty()) return "";
+        return "• " + k + ": " + v + "\n";
+    }
+
+    private String yes(boolean b) {
         return b ? "Yes" : null;
-    }
-
-    private String log(String key, String value) {
-        if (value == null || value.trim().isEmpty()) return "";
-        return "• " + key + ": " + value + "\n";
-    }
-
-    private void hideAll() {
-        hide(secCamera);
-        hide(secModem);
-        hide(secConnectivity);
-        hide(secSensors);
-        hide(secAudio);
-        hide(secPorts);
-        hide(secBiometrics);
-        hide(secDisplayOut);
-        hide(secStorage);
-    }
-
-    private void hide(View v) {
-        if (v != null) v.setVisibility(View.GONE);
-    }
-
-    private void show(View v) {
-        if (v != null) v.setVisibility(View.VISIBLE);
     }
 }

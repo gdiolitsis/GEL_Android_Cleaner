@@ -12,24 +12,21 @@ public class AppleDeviceSpec {
     // BASIC IDENTITY
     // =========================================================
     public String type;            // iphone / ipad
-    public String model;           // e.g. "iPhone 15 Series"
+    public String model;           // e.g. "iPhone 15 Pro Max"
     public String year;
     public String identifier;
     public String modelNumber;
 
     // =========================================================
-    // SERIES / VARIANTS (CRITICAL)
+    // SERIES / VARIANTS (CRITICAL — LOCKED FLAGS)
     // =========================================================
-    /**
-     * Human-readable breakdown:
-     * - Base
-     * - Pro
-     * - Pro Max
-     * - Plus
-     * - Mini
-     * etc.
-     */
-    public String seriesVariants;   // textual list of variants
+    public boolean isPro;
+    public boolean isProMax;
+    public boolean isPlus;
+    public boolean isMini;
+
+    // Human-readable info (UI only)
+    public String seriesVariants;   // e.g. "Base / Pro / Pro Max"
 
     // =========================================================
     // OS / PLATFORM
@@ -40,18 +37,17 @@ public class AppleDeviceSpec {
     // =========================================================
     // SOC / CPU / GPU
     // =========================================================
-    public String soc;             // A15 / A16 / A17
-    public String chipset;         // alias
-    public String arch;            // ARMv8 / ARMv9
-    public String processNode;     // 5 nm / 3 nm
+    public String soc;
+    public String chipset;
+    public String arch;
+    public String processNode;
     public String cpu;
     public int    cpuCores;
     public String gpu;
     public int    gpuCores;
     public String metalFeatureSet;
 
-    // Series-aware performance notes
-    public String performanceVariants; // Pro vs base differences
+    public String performanceVariants; // Pro vs base notes
 
     // =========================================================
     // MEMORY / STORAGE
@@ -60,19 +56,17 @@ public class AppleDeviceSpec {
     public String ramType;
     public String storageBase;
     public String storageOptions;
-    public String storageVariants;     // Pro models etc.
+    public String storageVariants;
 
     // =========================================================
     // DISPLAY
     // =========================================================
-    public String screen;          // generic
+    public String screen;
     public String display;
     public String resolution;
     public String refreshRate;
     public String displayOut;
-
-    // Series-aware display differences
-    public String displayVariants; // 60Hz vs 120Hz, sizes
+    public String displayVariants;
 
     // =========================================================
     // NETWORK / WIRELESS
@@ -116,9 +110,7 @@ public class AppleDeviceSpec {
     public String cameraTele;
     public String cameraFront;
     public String cameraVideo;
-
-    // Series-aware camera matrix
-    public String cameraVariants;   // Pro vs base lenses / sensors
+    public String cameraVariants;
 
     // =========================================================
     // BIOMETRICS / FEATURES
@@ -132,7 +124,7 @@ public class AppleDeviceSpec {
     // =========================================================
     public boolean hasFastCharge;
     public boolean hasWirelessCharge;
-    public String  batteryVariants;   // capacity differences
+    public String  batteryVariants;
 
     // =========================================================
     // THERMAL / NOTES
@@ -141,7 +133,7 @@ public class AppleDeviceSpec {
     public String notes;
 
     // =========================================================
-    // CONSTRUCTORS (DO NOT BREAK COMPATIBILITY)
+    // CONSTRUCTORS
     // =========================================================
     public AppleDeviceSpec() {}
 
@@ -150,7 +142,7 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
-    // Legacy constructor — KEEP
+    // Legacy constructor — KEEP (do not break old code)
     public AppleDeviceSpec(
             String type,
             String model,
@@ -179,29 +171,36 @@ public class AppleDeviceSpec {
     }
 
     // =========================================================
-    // UNKNOWN FALLBACK (MANDATORY, UI-SAFE)
+    // SAFE HELPERS (UI USE ONLY)
+    // =========================================================
+    public boolean isAnyPro() {
+        return isPro || isProMax;
+    }
+
+    // =========================================================
+    // UNKNOWN FALLBACK (MANDATORY)
     // =========================================================
     public static AppleDeviceSpec unknown() {
         AppleDeviceSpec d = new AppleDeviceSpec("unknown", "Unknown");
 
-        d.os                 = "Unknown";
-        d.soc                = "Unknown";
-        d.cpu                = "Unknown";
-        d.gpu                = "Unknown";
-        d.ram                = "Unknown";
-        d.storageOptions     = "Unknown";
-        d.display            = "Unknown";
-        d.modem              = "Unknown";
-        d.wifi               = "Unknown";
-        d.bluetooth          = "Unknown";
-        d.speakers           = "Unknown";
-        d.microphones        = "Unknown";
-        d.port               = "Unknown";
-        d.cameraMain         = "Unknown";
-        d.cameraFront        = "Unknown";
-        d.seriesVariants     = "Unknown";
-        d.displayVariants    = "Unknown";
-        d.cameraVariants     = "Unknown";
+        d.os              = "Unknown";
+        d.soc             = "Unknown";
+        d.cpu             = "Unknown";
+        d.gpu             = "Unknown";
+        d.ram             = "Unknown";
+        d.storageOptions  = "Unknown";
+        d.display         = "Unknown";
+        d.modem           = "Unknown";
+        d.wifi            = "Unknown";
+        d.bluetooth       = "Unknown";
+        d.speakers        = "Unknown";
+        d.microphones     = "Unknown";
+        d.port            = "Unknown";
+        d.cameraMain      = "Unknown";
+        d.cameraFront     = "Unknown";
+        d.seriesVariants  = "Unknown";
+        d.displayVariants = "Unknown";
+        d.cameraVariants  = "Unknown";
 
         return d;
     }

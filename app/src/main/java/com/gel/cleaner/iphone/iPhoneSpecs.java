@@ -1276,13 +1276,21 @@ iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the
 MAP.put("iphone 11 pro max", iphone11ProMax);       
 }
 
+public static AppleDeviceSpec get(String modelName) {
+
+    if (modelName == null) {
+        return AppleDeviceSpec.unknown();
+    }
+
+    String m = modelName.trim().toLowerCase();
+
     // =====================================================
     // SERIES NORMALIZATION
     // =====================================================
     if (m.contains("iphone 15")) {
         if (m.contains("pro max")) return MAP.get("iphone 15 pro max");
         if (m.contains("pro"))     return MAP.get("iphone 15 pro");
-        return MAP.get("iphone 15");   // base
+        return MAP.get("iphone 15");
     }
 
     if (m.contains("iphone 14")) {
@@ -1313,20 +1321,8 @@ MAP.put("iphone 11 pro max", iphone11ProMax);
     }
 
     // =====================================================
-    // FALLBACK — direct map lookup
+    // FALLBACK
     // =====================================================
     AppleDeviceSpec d = MAP.get(m);
     return d != null ? d : AppleDeviceSpec.unknown();
-}
-    
-// =====================================================
-// PUBLIC ACCESS
-// =====================================================
-public static AppleDeviceSpec get(String modelName) {
-    if (modelName == null) return AppleDeviceSpec.unknown();
-    AppleDeviceSpec d = MAP.get(modelName.toLowerCase());
-    return d != null ? d : AppleDeviceSpec.unknown();
-}
-
-private iPhoneSpecs() {}
 }

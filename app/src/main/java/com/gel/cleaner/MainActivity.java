@@ -1065,18 +1065,13 @@ private void showAppleDeviceDeclarationPopup() {
     iphoneBtn.setBackground(iphoneBg);
 
     LinearLayout.LayoutParams lpIphone =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)   // ⬅️ από 52 → 64
-        );
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
     lpIphone.setMargins(0, dp(12), 0, 0);
     iphoneBtn.setLayoutParams(lpIphone);
-    iphoneBtn.setPadding(
-        dp(16),  // left
-        dp(14),  // top
-        dp(16),  // right
-        dp(14)   // bottom
-);
+    iphoneBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
 
     // ==========================
     // 📲 iPAD BUTTON
@@ -1089,61 +1084,25 @@ private void showAppleDeviceDeclarationPopup() {
     ipadBtn.setTextSize(16f);
 
     GradientDrawable ipadBg = new GradientDrawable();
-    ipadBg.setColor(0xFF000000); // 🖤 μαύρο
+    ipadBg.setColor(0xFF000000);
     ipadBg.setCornerRadius(dp(14));
     ipadBg.setStroke(dp(3), 0xFFFFD700);
     ipadBtn.setBackground(ipadBg);
 
     LinearLayout.LayoutParams lpIpad =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)
-        );
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
     lpIpad.setMargins(0, dp(12), 0, 0);
     ipadBtn.setLayoutParams(lpIpad);
-    ipadBtn.setPadding(
-        dp(16),
-        dp(14),
-        dp(16),
-        dp(14)
-);
-
-// ==========================
-// 🎵 iPOD BUTTON
-// ==========================
-Button ipodBtn = new Button(this);
-ipodBtn.setIncludeFontPadding(false);
-ipodBtn.setText("🎵  iPOD Touch");
-ipodBtn.setAllCaps(false);
-ipodBtn.setTextColor(Color.WHITE);
-ipodBtn.setTextSize(16f);
-
-GradientDrawable ipodBg = new GradientDrawable();
-ipodBg.setColor(0xFF000000);          // 🖤 μαύρο
-ipodBg.setCornerRadius(dp(14));
-ipodBg.setStroke(dp(3), 0xFFFFD700);  // 🟡 χρυσό
-ipodBtn.setBackground(ipodBg);
-
-LinearLayout.LayoutParams lpIpod =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)
-        );
-lpIpod.setMargins(0, dp(12), 0, 0);
-ipodBtn.setLayoutParams(lpIpod);
-ipodBtn.setPadding(
-        dp(16),
-        dp(14),
-        dp(16),
-        dp(14)
-);
+    ipadBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
 
     // ==========================
     // ADD TO BOX
     // ==========================
     box.addView(iphoneBtn);
     box.addView(ipadBtn);
-    box.addView(ipodBtn);
 
     b.setView(box);
     AlertDialog d = b.create();
@@ -1167,51 +1126,62 @@ ipodBtn.setPadding(
     });
 }
 
-    private void showAppleModelPicker(String type) {
+// =========================================================
+// 🍎 MODEL PICKER
+// =========================================================
+private void showAppleModelPicker(String type) {
 
     String[] models = "iphone".equals(type)
-            ? new String[]{"iPhone 8","iPhone X","iPhone XR","iPhone 11",
-                           "iPhone 12","iPhone 13","iPhone 14","iPhone 15"}
-            : new String[]{"iPad 7","iPad 8","iPad 9",
-                           "iPad Air 4","iPad Air 5",
-                           "iPad Pro 11","iPad Pro 12.9"};
+            ? new String[]{
+                    "iPhone 11",
+                    "iPhone 12",
+                    "iPhone 13",
+                    "iPhone 14",
+                    "iPhone 15"
+            }
+            : new String[]{
+                    "iPad Pro 11 (M2)",
+                    "iPad Pro 11 (M1)",
+                    "iPad Pro 12.9 (M1)",
+                    "iPad Air (M2)",
+                    "iPad Air (M1)",
+                    "iPad mini 6"
+            };
 
     new AlertDialog.Builder(this)
             .setTitle("Select model")
-            .setItems(models, (d, which) -> {
+            .setItems(models, (dialog, which) -> {
 
-                // 1️⃣ Αποθήκευση
                 saveAppleDevice(type, models[which]);
 
-                // 2️⃣ Update κουμπιού
                 TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
                 if (btn != null) {
                     btn.setText("🍎 " + type.toUpperCase(Locale.US)
-                                + " — " + models[which]);
+                            + " — " + models[which]);
                 }
 
-                // 3️⃣ Επιβεβαίωση
                 Toast.makeText(
                         this,
                         "Selected: " + models[which],
                         Toast.LENGTH_SHORT
                 ).show();
 
-                // 4️⃣ Κλείσε dialog
-                d.dismiss();
+                dialog.dismiss();
             })
             .show();
 }
 
-    private void saveAppleDevice(String type,String model){
-        SharedPreferences prefs =
-                getSharedPreferences(PREFS,MODE_PRIVATE);
+// =========================================================
+// SAVE SELECTION (LOCKED KEYS)
+// =========================================================
+private void saveAppleDevice(String type, String model) {
 
-        prefs.edit()
-                .putString("apple_device_type",type)
-                .putString("apple_device_model",model)
-                .apply();
-    }
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putString("apple_type", type)     // 🔒 canonical
+            .putString("apple_model", model)   // 🔒 canonical
+            .apply();
+}
 
 // =========================================================
 // BROWSER PICKER — DYNAMIC (REAL BROWSERS ONLY)

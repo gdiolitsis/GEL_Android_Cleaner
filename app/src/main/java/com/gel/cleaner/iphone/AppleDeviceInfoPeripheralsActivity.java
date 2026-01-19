@@ -75,7 +75,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setContentView(R.layout.activity_device_info_peripherals);
 
     bind();   // ✔ σωστό όνομα
-
+    
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
@@ -96,6 +96,7 @@ protected void onCreate(Bundle savedInstanceState) {
     // ============================================================
     private void bind() {
 
+        headerBattery         = findViewById(R.id.headerBattery);
         headerScreen          = findViewById(R.id.headerScreen);
         headerCamera          = findViewById(R.id.headerCamera);
         headerConnectivity    = findViewById(R.id.headerConnectivity);
@@ -116,6 +117,7 @@ protected void onCreate(Bundle savedInstanceState) {
         headerRoot            = findViewById(R.id.headerRoot);
         headerOtherPeripherals= findViewById(R.id.headerOtherPeripherals);
 
+        txtBattery        = findViewById(R.id.txtBatteryContent);
         txtScreen         = findViewById(R.id.txtScreenContent);
         txtCamera         = findViewById(R.id.txtCameraContent);
         txtConnectivity   = findViewById(R.id.txtConnectivityContent);
@@ -136,6 +138,53 @@ protected void onCreate(Bundle savedInstanceState) {
         txtRoot           = findViewById(R.id.txtRootContent);
         txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
     }
+
+TextView[] allContents = new TextView[] {
+        txtBattery,
+        txtScreen,
+        txtCamera,
+        txtConnectivity,
+        txtLocation,
+        txtThermal,
+        txtModem,
+        txtWifiAdvanced,
+        txtAudio,
+        txtSensors,
+        txtBiometrics,
+        txtNfc,
+        txtGnss,
+        txtUwb,
+        txtUsb,
+        txtHaptics,
+        txtSystemFeatures,
+        txtSecurityFlags,
+        txtRoot,
+        txtOther
+};
+
+// ============================================================
+// TOGGLE ENGINE — SHARED
+// ============================================================
+private void setupToggle(LinearLayout header, TextView content, TextView[] all) {
+    if (header == null || content == null) return;
+
+    content.setVisibility(View.GONE);
+
+    header.setOnClickListener(v -> {
+
+        boolean willOpen = content.getVisibility() != View.VISIBLE;
+
+        // 🔒 κλείσε ΟΛΑ
+        for (TextView tv : all) {
+            if (tv != null) tv.setVisibility(View.GONE);
+        }
+
+        // ✅ άνοιξε μόνο αυτό αν πρέπει
+        if (willOpen) {
+            content.setVisibility(View.VISIBLE);
+        }
+    });
+}
 
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX DIFFERENTIATION)

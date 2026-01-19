@@ -587,7 +587,7 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(18f);              
+okBtn.setTextSize(20f);              
 okBtn.setIncludeFontPadding(false); 
 okBtn.setGravity(Gravity.CENTER);
 
@@ -600,9 +600,9 @@ okBtn.setMinWidth(0);
 // ✅ ΟΠΤΙΚΟ ΥΨΟΣ ΑΠΟ PADDING (ΔΙΠΛΑΣΙΟ)
 okBtn.setPadding(
         dp(24),   // left
-        dp(38),   // top   ⬆️ ΔΙΠΛΑΣΙΟ
+        dp(18),   // top   ⬆️ ΔΙΠΛΑΣΙΟ
         dp(24),   // right
-        dp(38)    // bottom ⬆️ ΔΙΠΛΑΣΙΟ
+        dp(18)    // bottom ⬆️ ΔΙΠΛΑΣΙΟ
 );
 
 GradientDrawable okBg = new GradientDrawable();

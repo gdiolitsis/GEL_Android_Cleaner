@@ -455,7 +455,7 @@ ipadAir11M2.hasFaceID = false;
 ipadAir11M2.hasTouchID = true;
 ipadAir11M2.biometrics = "Touch ID (Top Button)";
 
-ipadAir11M2.hasFastCharge = true;
+ipadAir11M2.charging = "USB-C fast charge";
 ipadAir11M2.hasWirelessCharge = false;
 
 ipadAir11M2.thermalNote =
@@ -540,7 +540,7 @@ ipadAir13M2.hasTouchID = true;
 ipadAir13M2.biometrics = "Touch ID (Top Button)";
 
 // POWER
-ipadAir13M2.hasFastCharge = true;
+ipadAir13M2.charging = "USB-C fast charge";
 ipadAir13M2.hasWirelessCharge = false;
 
 // THERMAL / NOTES

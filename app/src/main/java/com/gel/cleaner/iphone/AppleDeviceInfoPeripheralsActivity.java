@@ -66,22 +66,30 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     private AppleDeviceSpec d;
 
     // ============================================================
-    // LIFECYCLE
-    // ============================================================
-    @Override
-    protected void onCreate(Bundle b) {
-        super.onCreate(b);
-        setContentView(R.layout.activity_device_info_peripherals);
+// LIFECYCLE
+// ============================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_device_info_internal);
 
-        bind();
+    bindViews();
+    setupToggles();
 
-        d = AppleSpecs.get(
-                getSharedPreferences("gel_prefs", MODE_PRIVATE)
-                        .getString("apple_device_model", "iPhone 13")
-        );
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-        populate();
+    String model = prefs.getString("apple_model", null);
+
+    if (model == null) {
+        showAppleDeviceDeclarationPopup();
+        return;
     }
+
+    d = AppleSpecs.get(model);
+
+    populateAll();
+}
 
     // ============================================================
     // BIND

@@ -128,105 +128,277 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
         txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
     }
 
-    // ============================================================
-    // POPULATE
-    // ============================================================
-    private void populate() {
+// ============================================================
+// POPULATE — FINAL (SERIES + PRO / PRO MAX DIFFERENTIATION)
+// ============================================================
+private void populate() {
 
-        section(headerScreen, txtScreen,
-                log("Display", d.display) +
-                log("Resolution", d.resolution) +
-                log("Refresh Rate", d.refreshRate)
-        );
-
-        section(headerCamera, txtCamera,
-                log("Main", d.cameraMain) +
-                log("Ultra-Wide", d.cameraUltraWide) +
-                log("Telephoto", d.cameraTele) +
-                log("Front", d.cameraFront) +
-                log("Video", d.cameraVideo)
-        );
-
-        section(headerConnectivity, txtConnectivity,
-                log("Wi-Fi", d.wifi) +
-                log("Bluetooth", d.bluetooth) +
-                log("AirDrop", yes(d.hasAirDrop)) +
-                log("AirPlay", yes(d.hasAirPlay))
-        );
-
-        section(headerLocation, txtLocation,
-                log("GPS", d.gps)
-        );
-
-        section(headerThermal, txtThermal,
-                log("Thermal", d.thermalNote)
-        );
-
-        section(headerModem, txtModem,
-                log("Modem", d.modem) +
-                log("5G", yes(d.has5G)) +
-                log("LTE", yes(d.hasLTE)) +
-                log("SIM", d.simSlots)
-        );
-
-        section(headerWifiAdvanced, txtWifiAdvanced,
-                log("Wi-Fi", d.wifi)
-        );
-
-        section(headerAudioUnified, txtAudio,
-                log("Speakers", d.speakers) +
-                log("Microphones", d.microphones) +
-                log("Dolby", yes(d.hasDolby))
-        );
-
-        section(headerSensors, txtSensors,
-                log("Gyroscope", yes(d.hasGyro)) +
-                log("Accelerometer", yes(d.hasAccel)) +
-                log("Barometer", yes(d.hasBarometer))
-        );
-
-        section(headerBiometrics, txtBiometrics,
-                log("Biometrics", d.biometrics)
-        );
-
-        section(headerNfc, txtNfc,
-                log("NFC", yes(d.hasNFC))
-        );
-
-        section(headerGnss, txtGnss,
-                log("GNSS", d.gps)
-        );
-
-        section(headerUwb, txtUwb,
-                log("Ultra-Wideband", "Supported on select models")
-        );
-
-        section(headerUsb, txtUsb,
-                log("Port", d.port) +
-                log("USB", d.usbStandard)
-        );
-
-        section(headerHaptics, txtHaptics,
-                log("Haptics", "Taptic Engine")
-        );
-
-        section(headerSystemFeatures, txtSystemFeatures,
-                log("SoC", d.soc) +
-                log("Secure Enclave", "Yes")
-        );
-
-        section(headerSecurityFlags, txtSecurityFlags,
-                log("Encrypted Storage", "Yes")
-        );
-
-        section(headerRoot, txtRoot,
-                log("Root", "Not applicable (iOS)")
-        );
-
-        section(headerOtherPeripherals, txtOther,
-                log("Notes", d.notes)
-        );
+    if (d == null) {
+        hideAll();
+        return;
     }
+
+    // ------------------------------------------------------------
+    // SCREEN / DISPLAY
+    // ------------------------------------------------------------
+    section(headerScreen, txtScreen,
+            log("Display Type", d.display) +
+            log("Resolution", d.resolution) +
+            log("Refresh Rate",
+                    (isPro() || isProMax())
+                            ? "Up to 120 Hz (ProMotion)"
+                            : (d.refreshRate != null ? d.refreshRate : "60 Hz"))
+    );
+
+    // ------------------------------------------------------------
+    // CAMERA SYSTEM
+    // ------------------------------------------------------------
+    section(headerCamera, txtCamera,
+            log("Main Camera", d.cameraMain) +
+            log("Ultra-Wide Camera", d.cameraUltraWide) +
+            log("Telephoto Camera",
+                    (isPro() || isProMax())
+                            ? (d.cameraTele != null ? d.cameraTele : "Present")
+                            : "Not available") +
+            log("Front Camera", d.cameraFront) +
+            log("Video Recording", d.cameraVideo)
+    );
+
+    // ------------------------------------------------------------
+    // CONNECTIVITY
+    // ------------------------------------------------------------
+    section(headerConnectivity, txtConnectivity,
+            log("Wi-Fi", d.wifi) +
+            log("Bluetooth", d.bluetooth) +
+            log("AirDrop", yes(d.hasAirDrop)) +
+            log("AirPlay", yes(d.hasAirPlay))
+    );
+
+    // ------------------------------------------------------------
+    // LOCATION
+    // ------------------------------------------------------------
+    section(headerLocation, txtLocation,
+            log("GNSS", d.gps)
+    );
+
+    // ------------------------------------------------------------
+    // THERMAL / SUSTAINED PERFORMANCE
+    // ------------------------------------------------------------
+    section(headerThermal, txtThermal,
+            log("Thermal Design",
+                    isProMax()
+                            ? "Enhanced heat dissipation (larger chassis)"
+                            : isPro()
+                                ? "Improved sustained performance"
+                                : (d.thermalNote != null
+                                        ? d.thermalNote
+                                        : "Standard thermal profile"))
+    );
+
+    // ------------------------------------------------------------
+    // MODEM / TELEPHONY
+    // ------------------------------------------------------------
+    section(headerModem, txtModem,
+            log("Modem", d.modem) +
+            log("Cellular", d.cellular) +
+            log("5G", yes(d.has5G)) +
+            log("LTE", yes(d.hasLTE)) +
+            log("SIM", d.simSlots)
+    );
+
+    // ------------------------------------------------------------
+    // Wi-Fi ADVANCED
+    // ------------------------------------------------------------
+    section(headerWifiAdvanced, txtWifiAdvanced,
+            log("Wi-Fi Standard", d.wifi)
+    );
+
+    // ------------------------------------------------------------
+    // AUDIO (UNIFIED)
+    // ------------------------------------------------------------
+    section(headerAudioUnified, txtAudio,
+            log("Speakers",
+                    (isPro() || isProMax())
+                            ? (d.speakers != null
+                                ? d.speakers + " (higher output tuning)"
+                                : "Enhanced stereo speakers")
+                            : d.speakers) +
+            log("Microphones", d.microphones) +
+            log("Dolby Audio", yes(d.hasDolby))
+    );
+
+    // ------------------------------------------------------------
+    // SENSORS
+    // ------------------------------------------------------------
+    section(headerSensors, txtSensors,
+            log("Gyroscope", yes(d.hasGyro)) +
+            log("Accelerometer", yes(d.hasAccel)) +
+            log("Barometer", yes(d.hasBarometer)) +
+            log("Compass", yes(d.hasCompass))
+    );
+
+    // ------------------------------------------------------------
+    // BIOMETRICS
+    // ------------------------------------------------------------
+    section(headerBiometrics, txtBiometrics,
+            log("Biometric System", d.biometrics)
+    );
+
+    // ------------------------------------------------------------
+    // NFC
+    // ------------------------------------------------------------
+    section(headerNfc, txtNfc,
+            log("NFC", yes(d.hasNFC))
+    );
+
+    // ------------------------------------------------------------
+    // GNSS (DETAIL)
+    // ------------------------------------------------------------
+    section(headerGnss, txtGnss,
+            log("Supported Constellations", d.gps)
+    );
+
+    // ------------------------------------------------------------
+    // UWB
+    // ------------------------------------------------------------
+    section(headerUwb, txtUwb,
+            log("Ultra-Wideband",
+                    (isPro() || isProMax())
+                            ? "Supported (precision ranging)"
+                            : "Not supported")
+    );
+
+    // ------------------------------------------------------------
+    // USB / PORT
+    // ------------------------------------------------------------
+    section(headerUsb, txtUsb,
+            log("Port", d.port) +
+            log("USB Standard", d.usbStandard)
+    );
+
+    // ------------------------------------------------------------
+    // HAPTICS
+    // ------------------------------------------------------------
+    section(headerHaptics, txtHaptics,
+            log("Haptics Engine", "Taptic Engine")
+    );
+
+    // ------------------------------------------------------------
+    // SYSTEM FEATURES
+    // ------------------------------------------------------------
+    section(headerSystemFeatures, txtSystemFeatures,
+            log("SoC", d.soc) +
+            log("Secure Enclave", "Yes")
+    );
+
+    // ------------------------------------------------------------
+    // SECURITY FLAGS
+    // ------------------------------------------------------------
+    section(headerSecurityFlags, txtSecurityFlags,
+            log("Encrypted Storage", "Yes") +
+            log("Biometric Protection", yes(d.hasFaceID || d.hasTouchID))
+    );
+
+    // ------------------------------------------------------------
+    // ROOT
+    // ------------------------------------------------------------
+    section(headerRoot, txtRoot,
+            log("Root Access", "Not applicable (iOS)")
+    );
+
+    // ------------------------------------------------------------
+    // OTHER PERIPHERALS / NOTES
+    // ------------------------------------------------------------
+    section(headerOtherPeripherals, txtOther,
+            log("Notes", d.notes)
+    );
+}
+   
+// ============================================================
+// COLOR HELPERS — PERIPHERALS (HTML SAFE)
+// ============================================================
+
+private String log(String label, String value) {
+    if (value == null || value.trim().isEmpty()) return "";
+    return "<font color=\"#FFFFFF\"><b>• " + label + ":</b></font> " +
+           "<font color=\"#00FF7F\">" + value + "</font><br>";
+}
+
+private String yes(boolean v) {
+    return v ? "Yes" : null;
+}
+ 
+// ============================================================
+// HELPERS — FINAL (PERIPHERALS ENGINE)
+// ============================================================
+
+/**
+ * Core section handler
+ * • Αν δεν υπάρχει περιεχόμενο → κρύβει section
+ * • Αν υπάρχει → δείχνει header + content
+ */
+private void section(LinearLayout header, TextView content, String text) {
+
+    if (header == null || content == null)
+        return;
+
+    if (text == null || text.trim().isEmpty()) {
+        header.setVisibility(View.GONE);
+        content.setVisibility(View.GONE);
+        return;
+    }
+
+    header.setVisibility(View.VISIBLE);
+    content.setText(text.trim());
+}
+
+
+/**
+ * Boolean → "Yes" ή null (ώστε να κόβεται από log)
+ */
+private String yes(boolean value) {
+    return value ? "Yes" : null;
+}
+
+
+/**
+ * Unified logger
+ * • Αν value == null ή κενό → δεν γράφει τίποτα
+ * • Σταθερό format για όλο το app
+ */
+private String log(String key, String value) {
+
+    if (value == null)
+        return "";
+
+    String v = value.trim();
+    if (v.isEmpty())
+        return "";
+
+    return "• " + key + ": " + v + "\n";
+}
+
+
+/**
+ * Pro tier detector
+ */
+private boolean isPro() {
+    return d != null
+            && d.model != null
+            && d.model.toLowerCase().contains("pro")
+            && !isProMax();
+}
+
+
+/**
+ * Pro Max tier detector
+ */
+private boolean isProMax() {
+    return d != null
+            && d.model != null
+            && (d.model.toLowerCase().contains("pro max")
+                || d.model.toLowerCase().endsWith("max"));
+}
 
     // ============================================================
     // SECTION HELPER

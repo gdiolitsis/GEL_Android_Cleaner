@@ -35,7 +35,8 @@ public final class iPhoneSpecs {
         iphone15.ramType        = "LPDDR5";
         iphone15.storageBase    = "128 GB";
         iphone15.storageOptions = "128 / 256 / 512 GB";
-        iphone15.display        = "6.1\" OLED Super Retina XDR";
+        iphone15.screen  = "6.1\"";
+        iphone15.display = "OLED Super Retina XDR";
         iphone15.resolution     = "2556 × 1179";
         iphone15.refreshRate   = "60 Hz";
         iphone15.displayOut     = "DisplayPort (USB-C)";
@@ -102,7 +103,8 @@ public final class iPhoneSpecs {
 
         iphone15Plus.ram             = "6 GB";
         iphone15Plus.storageOptions  = "128 / 256 / 512 GB";
-        iphone15Plus.display         = "6.7\" OLED Super Retina XDR";
+        iphone15Plus.screen  = "6.7\"";
+        iphone15Plus.display = "OLED Super Retina XDR";
         iphone15Plus.refreshRate     = "60 Hz";
         iphone15Plus.port            = "USB-C";
         iphone15Plus.usbStandard     = "USB 2";
@@ -135,7 +137,8 @@ public final class iPhoneSpecs {
 
         iphone15Pro.ram             = "8 GB";
         iphone15Pro.storageOptions  = "128 / 256 / 512 GB / 1 TB";
-        iphone15Pro.display         = "6.1\" OLED ProMotion";
+        iphone15Pro.screen  = "6.1\"";
+        iphone15Pro.display = "OLED Super Retina XDR (ProMotion)";
         iphone15Pro.refreshRate     = "120 Hz";
         iphone15Pro.port            = "USB-C";
         iphone15Pro.usbStandard     = "USB 3";
@@ -164,10 +167,12 @@ public final class iPhoneSpecs {
         iphone15ProMax.processNode     = "3 nm";
         iphone15ProMax.cpuCores        = 6;
         iphone15ProMax.gpuCores        = 6;
+        iphone15ProMax.metalFeatureSet = "Metal 3 (Ray Tracing)";
 
         iphone15ProMax.ram             = "8 GB";
         iphone15ProMax.storageOptions  = "256 / 512 GB / 1 TB";
-        iphone15ProMax.display         = "6.7\" OLED ProMotion";
+        iphone15ProMax.screen  = "6.7\"";
+        iphone15ProMax.display = "OLED Super Retina XDR (ProMotion)";
         iphone15ProMax.refreshRate     = "120 Hz";
         iphone15ProMax.cameraTele      = "12 MP Telephoto (5×)";
         iphone15ProMax.port            = "USB-C";

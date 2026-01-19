@@ -53,6 +53,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setContentView(R.layout.activity_device_info_peripherals);
 
     bind();   // ✔ σωστό όνομα
+    setupToggles(); 
 
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
@@ -286,6 +287,11 @@ private String yes(boolean v) {
         hide(secVulkan);
         hide(secRam);
         hide(secStorage);
+    }
+
+private void safeSet(TextView tv, String v) {
+        if (tv == null || v == null) return;
+        tv.setText(v);
     }
 
     private void hide(View v) {

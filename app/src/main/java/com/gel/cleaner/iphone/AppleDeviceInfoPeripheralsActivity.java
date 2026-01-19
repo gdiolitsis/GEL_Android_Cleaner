@@ -22,6 +22,7 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // HEADERS (AS IN XML)
     // ============================================================
 
+    private TextView[] allContents;
     private LinearLayout headerBattery;
     private LinearLayout headerScreen;
     private LinearLayout headerCamera;

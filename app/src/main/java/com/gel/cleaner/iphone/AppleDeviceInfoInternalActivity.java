@@ -7,6 +7,7 @@
 package com.gel.cleaner.iphone;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
@@ -43,16 +44,15 @@ public class AppleDeviceInfoInternalActivity extends Activity {
 
     private AppleDeviceSpec d;
 
-    // ============================================================
+// ============================================================
 // LIFECYCLE
 // ============================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_device_info_internal);
+    setContentView(R.layout.activity_device_info_peripherals);
 
-    bindViews();
-    setupToggles();
+    bind();   // ✔ σωστό όνομα
 
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
@@ -60,13 +60,13 @@ protected void onCreate(Bundle savedInstanceState) {
     String model = prefs.getString("apple_model", null);
 
     if (model == null) {
-        showAppleDeviceDeclarationPopup();
+        finish();   // ⛔ εδώ ΔΕΝ δείχνουμε popup
         return;
     }
 
     d = AppleSpecs.get(model);
 
-    populateAll();
+    populate();   // ✔ σωστό method
 }
 
     // ============================================================
@@ -125,7 +125,7 @@ protected void onCreate(Bundle savedInstanceState) {
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX AWARE)
 // ============================================================
-private void populateAll() {
+private void populate() {
 
     if (d == null) {
         hideAll();

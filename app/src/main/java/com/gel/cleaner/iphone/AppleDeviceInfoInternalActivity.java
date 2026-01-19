@@ -50,7 +50,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
 @Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_device_info_peripherals);
+    setContentView(R.layout.activity_device_info_internal);
 
     bind();   // ✔ σωστό όνομα
     setupToggles(); 
@@ -94,34 +94,37 @@ protected void onCreate(Bundle savedInstanceState) {
         outStorage  = findViewById(R.id.txtStorageContent);
     }
 
-    // ============================================================
-    // TOGGLES (SAME AS PERIPHERALS)
-    // ============================================================
-    private void setupToggles() {
+TextView[] allInternalContents = new TextView[] {
+        outSystem,
+        outAndroid,
+        outCpu,
+        outGpu,
+        outThermal,
+        outVulkan,
+        outRam,
+        outStorage
+};
 
-        setupToggle(secSystem,  outSystem);
-        setupToggle(secAndroid, outAndroid);
-        setupToggle(secCpu,     outCpu);
-        setupToggle(secGpu,     outGpu);
-        setupToggle(secThermal, outThermal);
-        setupToggle(secVulkan,  outVulkan);
-        setupToggle(secRam,     outRam);
-        setupToggle(secStorage, outStorage);
-    }
+private void setupToggle(LinearLayout header, TextView content, TextView[] all) {
+    if (header == null || content == null) return;
 
-    private void setupToggle(LinearLayout header, TextView content) {
-        if (header == null || content == null) return;
+    content.setVisibility(View.GONE);
 
-        content.setVisibility(View.GONE);
+    header.setOnClickListener(v -> {
 
-        header.setOnClickListener(v ->
-                content.setVisibility(
-                        content.getVisibility() == View.VISIBLE
-                                ? View.GONE
-                                : View.VISIBLE
-                )
-        );
-    }
+        boolean willOpen = content.getVisibility() != View.VISIBLE;
+
+        // 🔒 κλείσε ΟΛΑ
+        for (TextView tv : all) {
+            if (tv != null) tv.setVisibility(View.GONE);
+        }
+
+        // ✅ άνοιξε μόνο αυτό αν πρέπει
+        if (willOpen) {
+            content.setVisibility(View.VISIBLE);
+        }
+    });
+}
 
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX AWARE)

@@ -75,7 +75,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setContentView(R.layout.activity_device_info_peripherals);
 
     bind();   // ✔ σωστό όνομα
-    setupToggles(); 
 
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);

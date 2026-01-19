@@ -8,7 +8,6 @@ package com.gel.cleaner.iphone;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.text.Html;   
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -325,10 +324,6 @@ private String log(String label, String value) {
            "<font color=\"#00FF7F\">" + value + "</font><br>";
 }
 
-private String yes(boolean v) {
-    return v ? "Yes" : null;
-}
- 
 // ============================================================
 // HELPERS — FINAL (PERIPHERALS ENGINE)
 // ============================================================
@@ -353,20 +348,6 @@ private void section(LinearLayout header, TextView content, String text) {
     content.setText(text.trim());
 }
 
-
-/**
- * Boolean → "Yes" ή null (ώστε να κόβεται από log)
- */
-private String yes(boolean value) {
-    return value ? "Yes" : null;
-}
-
-
-/**
- * Unified logger
- * • Αν value == null ή κενό → δεν γράφει τίποτα
- * • Σταθερό format για όλο το app
- */
 private String log(String key, String value) {
 
     if (value == null)
@@ -423,15 +404,15 @@ private boolean isProMax() {
         );
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
-    private String log(String k, String v) {
-        if (v == null || v.trim().isEmpty()) return "";
-        return "• " + k + ": " + v + "\n";
-    }
+// ============================================================
+// HELPERS
+// ============================================================
+private String log(String k, String v) {
+    if (v == null || v.trim().isEmpty()) return "";
+    return "• " + k + ": " + v + "\n";
+}
 
-    private String yes(boolean b) {
-        return b ? "Yes" : null;
-    }
+private String yes(boolean value) {
+    return value ? "Yes" : null;
+}
 }

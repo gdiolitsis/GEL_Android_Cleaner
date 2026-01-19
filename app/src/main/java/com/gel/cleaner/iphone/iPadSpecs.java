@@ -392,7 +392,7 @@ ipadAirM1.notes =
 MAP.put("ipad air m1", ipadAirM1);
 
 // -----------------------------------------------------
-// iPad Air (M2)
+// iPad Air 11 (M2)
 // -----------------------------------------------------
 AppleDeviceSpec ipadAirM2 = new AppleDeviceSpec();
 ipadAirM2.type = "ipad";
@@ -464,6 +464,92 @@ ipadAirM2.notes =
         "M2 performance class without ProMotion or LiDAR; iPadOS limits pro workflows";
 
 MAP.put("ipad air m2", ipadAirM2);
+
+// -----------------------------------------------------
+// iPad Air 13 (M2)
+// -----------------------------------------------------
+AppleDeviceSpec ipadAir13M2 = new AppleDeviceSpec();
+ipadAir13M2.type = "ipad";
+ipadAir13M2.model = "iPad Air 13 (M2)";
+ipadAir13M2.year = "2024";
+ipadAir13M2.identifier = "iPad14,10 / iPad14,11";
+ipadAir13M2.modelNumber = "A2904 / A2905";
+
+// OS / PLATFORM
+ipadAir13M2.os = "iPadOS";
+
+// SOC / CPU / GPU
+ipadAir13M2.soc = "Apple M2";
+ipadAir13M2.chipset = "M2";
+ipadAir13M2.processNode = "5 nm";
+ipadAir13M2.cpu = "Apple CPU";
+ipadAir13M2.cpuCores = 8;
+ipadAir13M2.gpu = "Apple GPU";
+ipadAir13M2.gpuCores = 9;
+ipadAir13M2.metalFeatureSet = "Metal 3";
+
+// MEMORY / STORAGE
+ipadAir13M2.ram = "8 GB";
+ipadAir13M2.ramType = "Unified Memory";
+ipadAir13M2.storageBase = "128 GB";
+ipadAir13M2.storageOptions = "128 / 256 / 512 GB / 1 TB";
+
+// DISPLAY
+ipadAir13M2.screen = "13\"";
+ipadAir13M2.display = "Liquid Retina (IPS)";
+ipadAir13M2.resolution = "2732 × 2048";
+ipadAir13M2.refreshRate = "60 Hz";
+ipadAir13M2.displayOut = "USB-C DisplayPort";
+
+// NETWORK / WIRELESS
+ipadAir13M2.has5G = true;
+ipadAir13M2.hasLTE = true;
+ipadAir13M2.cellular = "5G / LTE";
+ipadAir13M2.modem = "Qualcomm Snapdragon X65";
+ipadAir13M2.wifi = "Wi-Fi 6E";
+ipadAir13M2.bluetooth = "Bluetooth 5.3";
+ipadAir13M2.hasNFC = false;
+ipadAir13M2.hasAirDrop = true;
+ipadAir13M2.hasAirPlay = true;
+ipadAir13M2.gps = "GPS / GNSS (Cellular models)";
+ipadAir13M2.hasCompass = true;
+ipadAir13M2.hasGyro = true;
+ipadAir13M2.hasAccel = true;
+ipadAir13M2.hasBarometer = true;
+
+// SIM / PORTS
+ipadAir13M2.simSlots = "eSIM only";
+ipadAir13M2.hasESim = true;
+ipadAir13M2.port = "USB-C";
+ipadAir13M2.usbStandard = "USB 3.1 Gen 2";
+
+// AUDIO
+ipadAir13M2.speakers = "Stereo speakers";
+ipadAir13M2.microphones = "Dual microphones";
+ipadAir13M2.hasDolby = true;
+ipadAir13M2.hasJack = false;
+
+// CAMERA
+ipadAir13M2.cameraMain = "12 MP Wide";
+ipadAir13M2.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
+ipadAir13M2.cameraVideo = "4K@60fps";
+
+// BIOMETRICS
+ipadAir13M2.hasFaceID = false;
+ipadAir13M2.hasTouchID = true;
+ipadAir13M2.biometrics = "Touch ID (Top Button)";
+
+// POWER
+ipadAir13M2.hasFastCharge = true;
+ipadAir13M2.hasWirelessCharge = false;
+
+// THERMAL / NOTES
+ipadAir13M2.thermalNote =
+        "Thermal sensors not accessible to applications (Apple restriction)";
+ipadAir13M2.notes =
+        "13-inch Air fills the gap between Air and Pro; large display without ProMotion";
+
+MAP.put("ipad air 13 m2", ipadAir13M2);
 
 // ============================================================
 // iPad mini (6th generation) — 2021

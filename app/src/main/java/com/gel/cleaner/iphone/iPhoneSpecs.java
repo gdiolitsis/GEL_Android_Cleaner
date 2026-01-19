@@ -178,7 +178,6 @@ public final class iPhoneSpecs {
                 "Exclusive 5× telephoto lens. Highest factory configuration.";
 
         MAP.put("iphone 15 pro max", iphone15ProMax);
-    }
 
 // =========================================================
 // 📱 iPHONE 14 SERIES — FULL SPECS
@@ -1274,8 +1273,9 @@ iphone11ProMax.charging           = "Lightning / Qi wireless";
 iphone11ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
 iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the series";
 
-MAP.put("iphone 11 pro max", iphone11ProMax);
-
+MAP.put("iphone 11 pro max", iphone11ProMax);       
+}
+    
 // =====================================================
 // PUBLIC ACCESS
 // =====================================================

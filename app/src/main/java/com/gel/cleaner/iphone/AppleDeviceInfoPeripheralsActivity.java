@@ -436,24 +436,10 @@ private boolean isProMax() {
 // ============================================================
 // SECTION HELPER
 // ============================================================
-private void section(LinearLayout h, TextView t, String content) {
+private void section(View header, TextView content, String text) {
+    if (header == null || content == null) return;
 
-    if (content == null || content.trim().isEmpty()) {
-        h.setVisibility(View.GONE);
-        t.setVisibility(View.GONE);
-        return;
-    }
-
-    t.setText(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
-t.setVisibility(View.GONE);
-
-    h.setOnClickListener(v ->
-            t.setVisibility(
-                    t.getVisibility() == View.VISIBLE
-                            ? View.GONE
-                            : View.VISIBLE
-            )
-    );
+    content.setText(text);
 }
 
 // ============================================================

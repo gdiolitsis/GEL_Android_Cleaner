@@ -82,26 +82,26 @@ protected void onCreate(Bundle savedInstanceState) {
     bind();
 
     allContents = new View[] {
-            batteryContainer,   // 🔴 ΚΡΙΣΙΜΟ
-            txtScreen,
-            txtCamera,
-            txtConnectivity,
-            txtLocation,
-            txtThermal,
-            txtModem,
-            txtWifiAdvanced,
-            txtAudio,
-            txtSensors,
-            txtBiometrics,
-            txtNfc,
-            txtGnss,
-            txtUwb,
-            txtUsb,
-            txtHaptics,
-            txtSystemFeatures,
-            txtSecurityFlags,
-            txtRoot,
-            txtOther
+        txtBattery,
+        txtScreen,
+        txtCamera,
+        txtConnectivity,
+        txtLocation,
+        txtThermal,
+        txtModem,
+        txtWifiAdvanced,
+        txtAudio,
+        txtSensors,
+        txtBiometrics,
+        txtNfc,
+        txtGnss,
+        txtUwb,
+        txtUsb,
+        txtHaptics,
+        txtSystemFeatures,
+        txtSecurityFlags,
+        txtRoot,
+        txtOther
     };
 
     setupPeripheralsToggles();
@@ -116,25 +116,6 @@ protected void onCreate(Bundle savedInstanceState) {
     }
 
     d = AppleSpecs.get(model);
-
-    // ===============================
-    // PLATFORM RULES — BATTERY
-    // ===============================
-    boolean isApple =
-            d != null && ("ipad".equals(d.type) || "iphone".equals(d.type));
-
-    if (isApple) {
-        // 🍎 Apple → ΟΧΙ set model capacity, ΟΧΙ popup
-        txtBatteryModelCapacity.setVisibility(View.GONE);
-        txtBatteryModelCapacity.setOnClickListener(null);
-    } else {
-        // 🤖 Android → ΝΑΙ set model capacity + popup
-        txtBatteryModelCapacity.setVisibility(View.VISIBLE);
-        txtBatteryModelCapacity.setOnClickListener(v ->
-                showBatteryModelCapacityPopup()
-        );
-    }
-
     populate();
 }
 
@@ -194,7 +175,7 @@ private void bind() {
 // ============================================================
 private void setupPeripheralsToggles() {
 
-    setupToggle(headerBattery,          batteryContainer,   allContents);
+    setupToggle(headerBattery,          txtBattery, allContents);
     setupToggle(headerScreen,           txtScreen,          allContents);
     setupToggle(headerCamera,           txtCamera,          allContents);
     setupToggle(headerConnectivity,     txtConnectivity,    allContents);
@@ -228,12 +209,12 @@ private void setupToggle(LinearLayout header, View content, View[] all) {
 
         boolean willOpen = content.getVisibility() != View.VISIBLE;
 
-        // 🔒 κλείσε ΟΛΑ
+        // κλείσε όλα
         for (View vw : all) {
             if (vw != null) vw.setVisibility(View.GONE);
         }
 
-        // ✅ άνοιξε μόνο αυτό
+        // άνοιξε μόνο αυτό
         if (willOpen) {
             content.setVisibility(View.VISIBLE);
         }

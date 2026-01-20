@@ -17,6 +17,8 @@ import android.widget.TextView;
 import com.gel.cleaner.R;
 
 public class AppleDeviceInfoPeripheralsActivity extends Activity {
+	
+	private View currentlyOpen = null;
 
     // ============================================================
     // HEADERS (AS IN XML)
@@ -172,49 +174,52 @@ private void bind() {
 // ============================================================
 private void setupPeripheralsToggles() {
 
-    setupToggle(headerBattery,          txtBattery,          allContents);
-    setupToggle(headerScreen,           txtScreen,          allContents);
-    setupToggle(headerCamera,           txtCamera,          allContents);
-    setupToggle(headerConnectivity,     txtConnectivity,    allContents);
-    setupToggle(headerLocation,         txtLocation,        allContents);
-    setupToggle(headerThermal,          txtThermal,         allContents);
-    setupToggle(headerModem,            txtModem,           allContents);
-    setupToggle(headerWifiAdvanced,     txtWifiAdvanced,    allContents);
-    setupToggle(headerAudioUnified,     txtAudio,           allContents);
-    setupToggle(headerSensors,          txtSensors,         allContents);
-    setupToggle(headerBiometrics,       txtBiometrics,      allContents);
-    setupToggle(headerNfc,              txtNfc,             allContents);
-    setupToggle(headerGnss,             txtGnss,            allContents);
-    setupToggle(headerUwb,              txtUwb,             allContents);
-    setupToggle(headerUsb,              txtUsb,             allContents);
-    setupToggle(headerHaptics,          txtHaptics,         allContents);
-    setupToggle(headerSystemFeatures,   txtSystemFeatures,  allContents);
-    setupToggle(headerSecurityFlags,    txtSecurityFlags,   allContents);
-    setupToggle(headerRoot,             txtRoot,            allContents);
-    setupToggle(headerOtherPeripherals, txtOther,           allContents);
+setupToggle(headerScreen, txtScreen);
+setupToggle(headerCamera, txtCamera);
+setupToggle(headerConnectivity, txtConnectivity);
+setupToggle(headerLocation, txtLocation);
+setupToggle(headerThermal, txtThermal);
+setupToggle(headerModem, txtModem);
+setupToggle(headerWifiAdvanced, txtWifiAdvanced);
+setupToggle(headerAudioUnified, txtAudio);
+setupToggle(headerSensors, txtSensors);
+setupToggle(headerBiometrics, txtBiometrics);
+setupToggle(headerNfc, txtNfc);
+setupToggle(headerGnss, txtGnss);
+setupToggle(headerUwb, txtUwb);
+setupToggle(headerUsb, txtUsb);
+setupToggle(headerHaptics, txtHaptics);
+setupToggle(headerSystemFeatures, txtSystemFeatures);
+setupToggle(headerSecurityFlags, txtSecurityFlags);
+setupToggle(headerRoot, txtRoot);
+setupToggle(headerOtherPeripherals, txtOther);
 }
 
 // ============================================================
 // TOGGLE ENGINE — SHARED
 // ============================================================
-private void setupToggle(LinearLayout header, View content, View[] all) {
+private void setupToggle(LinearLayout header, View content) {
     if (header == null || content == null) return;
 
     content.setVisibility(View.GONE);
 
     header.setOnClickListener(v -> {
 
-        boolean willOpen = content.getVisibility() != View.VISIBLE;
-
-        // κλείσε όλα
-        for (View vw : all) {
-            if (vw != null) vw.setVisibility(View.GONE);
+        // Αν είναι ήδη ανοιχτό → κλείσε το
+        if (currentlyOpen == content) {
+            content.setVisibility(View.GONE);
+            currentlyOpen = null;
+            return;
         }
 
-        // άνοιξε μόνο αυτό
-        if (willOpen) {
-            content.setVisibility(View.VISIBLE);
+        // Κλείσε ό,τι άλλο είναι ανοιχτό
+        if (currentlyOpen != null) {
+            currentlyOpen.setVisibility(View.GONE);
         }
+
+        // Άνοιξε αυτό
+        content.setVisibility(View.VISIBLE);
+        currentlyOpen = content;
     });
 }
 

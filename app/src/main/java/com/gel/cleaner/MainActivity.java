@@ -1127,7 +1127,7 @@ private void showAppleDeviceDeclarationPopup() {
 }
 
 // =========================================================
-// 🍎 MODEL PICKER — GEL STYLE
+// 🍎 MODEL PICKER — GEL STYLE (FINAL)
 // =========================================================
 private void showAppleModelPicker(String type) {
 
@@ -1168,22 +1168,16 @@ private void showAppleModelPicker(String type) {
             new AlertDialog.Builder(this,
                     android.R.style.Theme_Material_Dialog_Alert);
 
-    // =========================
-    // ROOT CONTAINER
-    // =========================
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(18), dp(18), dp(18), dp(18));
 
     GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);           // 🖤 black
+    bg.setColor(0xFF000000);
     bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);   // 🟡 gold
+    bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
-    // =========================
-    // TITLE
-    // =========================
     TextView title = new TextView(this);
     title.setText("Select Apple Model");
     title.setTextColor(0xFFFFFFFF);
@@ -1193,9 +1187,6 @@ private void showAppleModelPicker(String type) {
     title.setPadding(0, 0, 0, dp(12));
     root.addView(title);
 
-    // =========================
-    // LIST
-    // =========================
     ListView list = new ListView(this);
     list.setDivider(null);
     list.setDividerHeight(0);
@@ -1209,7 +1200,7 @@ private void showAppleModelPicker(String type) {
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
                     TextView tv = (TextView) super.getView(position, convertView, parent);
-                    tv.setTextColor(0xFF00FF9C);   // 🟢 neon green
+                    tv.setTextColor(0xFF00FF9C);
                     tv.setTextSize(16f);
                     tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
                     tv.setPadding(dp(14), dp(14), dp(14), dp(14));
@@ -1219,9 +1210,7 @@ private void showAppleModelPicker(String type) {
             };
 
     list.setAdapter(adapter);
-
     root.addView(list);
-
     b.setView(root);
 
     AlertDialog d = b.create();
@@ -1236,22 +1225,52 @@ private void showAppleModelPicker(String type) {
     // =========================
     list.setOnItemClickListener((parent, view, position, id) -> {
 
-        saveAppleDevice(type, models[position]);
+        String rawModel = models[position];
+        String normalizedModel = normalizeAppleModel(rawModel);
+
+        saveAppleDevice(type, normalizedModel);
 
         TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
         if (btn != null) {
             btn.setText("🍎 " + type.toUpperCase(Locale.US)
-                    + " — " + models[position]);
+                    + " — " + rawModel);
         }
 
         Toast.makeText(
                 this,
-                "Selected: " + models[position],
+                "Selected: " + rawModel,
                 Toast.LENGTH_SHORT
         ).show();
 
         d.dismiss();
     });
+}
+
+// =========================================================
+// NORMALIZE APPLE MODEL — MATCH iPadSpecs / AppleSpecs
+// =========================================================
+private String normalizeAppleModel(String raw) {
+
+    if (raw == null) return null;
+
+    String m = raw.trim();
+
+    // iPad Pro
+    if (m.equals("iPad Pro 11 (M2)"))    return "iPad Pro 11 M2";
+    if (m.equals("iPad Pro 12.9 (M2)"))  return "iPad Pro 12.9 M2";
+    if (m.equals("iPad Pro 11 (M1)"))    return "iPad Pro 11 M1";
+    if (m.equals("iPad Pro 12.9 (M1)"))  return "iPad Pro 12.9 M1";
+
+    // iPad Air
+    if (m.equals("iPad Air 11 (M2)"))    return "iPad Air 11 M2";
+    if (m.equals("iPad Air 13 (M2)"))    return "iPad Air 13 M2";
+    if (m.equals("iPad Air (M1)"))       return "iPad Air M1";
+
+    // iPad mini
+    if (m.equals("iPad mini 6"))         return "iPad mini 6";
+
+    // iPhones are already correct
+    return m;
 }
 
 // =========================================================
@@ -1261,8 +1280,8 @@ private void saveAppleDevice(String type, String model) {
 
     getSharedPreferences(PREFS, MODE_PRIVATE)
             .edit()
-            .putString("apple_type", type)     // 🔒 canonical
-            .putString("apple_model", model)   // 🔒 canonical
+            .putString("apple_type", type)
+            .putString("apple_model", model)
             .apply();
 }
 
@@ -1379,6 +1398,19 @@ builder.setCustomTitle(title);
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });
     }
+    
+// =========================================================
+// 🍎 MODEL NAME NORMALIZER — iPad / iPhone SAFE
+// =========================================================
+private String normalizeAppleModel(String model) {
+    if (model == null) return null;
+
+    return model
+            .replace("(M2)", "M2")
+            .replace("(M1)", "M1")
+            .replaceAll("\\s+", " ")
+            .trim();
+}
     
 // =========================================================
 // OPEN APP INFO (for Browser Picker)

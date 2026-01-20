@@ -1,7 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // ============================================================
 // AppleSpecProvider.java — Apple Hardcoded Bridge (Reflection Safe)
-// FINAL • LOCKED • COPY-PASTE
+// FINAL • LOCKED • PRODUCTION SAFE
 // ============================================================
 
 package com.gel.cleaner.base;
@@ -20,30 +20,11 @@ public final class AppleSpecProvider {
     private AppleSpecProvider() {}
 
     // =========================================================
-    // SUPPORTED MODELS — OFFICIAL GEL LIST (LOCKED)
-    // =========================================================
-    private static final String[] SUPPORTED_IPHONES = {
-            "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", "iPhone 15 Pro Max",
-            "iPhone 14", "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max",
-            "iPhone 13", "iPhone 13 mini", "iPhone 13 Pro", "iPhone 13 Pro Max",
-            "iPhone 12", "iPhone 12 mini", "iPhone 12 Pro", "iPhone 12 Pro Max",
-            "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max"
-    };
-
-    private static final String[] SUPPORTED_IPADS = {
-            "iPad Pro M2 11", "iPad Pro M2 12.9",
-            "iPad Pro M1",
-            "iPad Air M2",
-            "iPad Air M1",
-            "iPad mini 6"
-    };
-
-    // =========================================================
     // SELECTION DTO
     // =========================================================
     public static final class Selection {
         public final String type;   // "iphone" | "ipad"
-        public final String model;  // e.g. "iPhone 13"
+        public final String model;  // may be null
 
         public Selection(String type, String model) {
             this.type = type;
@@ -52,7 +33,7 @@ public final class AppleSpecProvider {
     }
 
     // =========================================================
-    // READ SAVED SELECTION (MULTI-KEY + LEGACY SAFE)
+    // READ SAVED SELECTION (NO FAKE FALLBACKS)
     // =========================================================
     public static Selection getSavedSelection(Context c) {
 
@@ -77,60 +58,31 @@ public final class AppleSpecProvider {
                         p.getString("selected_device_model", null)
                 );
 
-        if (type == null) type = "iphone";
-        if (model == null) model = "iPhone 13";
+        if (type == null) return new Selection("iphone", null);
 
         type = type.toLowerCase(Locale.US).contains("ipad")
                 ? "ipad"
                 : "iphone";
 
-        // 🔒 HARD FILTER — IPHONE ONLY
-if ("iphone".equals(type) && !isSupported(type, model)) {
-    model = "iPhone 13";
-}
-
-        return new Selection(type, model);
-    }
-
-    // =========================================================
-    // SUPPORT CHECK
-    // =========================================================
-    private static boolean isSupported(String type, String model) {
-        if (model == null) return false;
-
-        String[] list =
-                "ipad".equals(type)
-                        ? SUPPORTED_IPADS
-                        : SUPPORTED_IPHONES;
-
-        for (String s : list) {
-            if (s.equalsIgnoreCase(model.trim())) {
-                return true;
-            }
+        // 🔒 NO SILENT FALLBACKS
+        if (model == null || model.trim().isEmpty()) {
+            return new Selection(type, null);
         }
-        return false;
-    }
 
-    private static String firstNonEmpty(String... vals) {
-        if (vals == null) return null;
-        for (String v : vals) {
-            if (v != null && !v.trim().isEmpty())
-                return v.trim();
-        }
-        return null;
+        return new Selection(type, model.trim());
     }
 
     // =========================================================
-    // REFLECTION BRIDGE → AppleSpecs (LOCKED API)
+    // REFLECTION BRIDGE → AppleSpecs / iPadSpecs
     // =========================================================
     public static Object getSpecOrNull(Context c) {
         try {
             Selection s = getSavedSelection(c);
+            if (s.model == null) return null;
 
             Class<?> cls =
                     Class.forName("com.gel.cleaner.iphone.AppleSpecs");
 
-            // 🔒 AppleSpecs exposes ONLY: get(String model)
             Method m = cls.getDeclaredMethod("get", String.class);
             m.setAccessible(true);
 
@@ -145,17 +97,26 @@ if ("iphone".equals(type) && !isSupported(type, model)) {
     // DIRECT SAFE ACCESS FOR ACTIVITIES
     // =========================================================
     public static AppleDeviceSpec getSelectedDevice(Context ctx) {
-        try {
-            Object spec = getSpecOrNull(ctx);
-            if (spec instanceof AppleDeviceSpec)
-                return (AppleDeviceSpec) spec;
-        } catch (Throwable ignore) {}
-
-        return AppleDeviceSpec.unknown();
+        Object spec = getSpecOrNull(ctx);
+        return spec instanceof AppleDeviceSpec
+                ? (AppleDeviceSpec) spec
+                : AppleDeviceSpec.unknown();
     }
 
     // =========================================================
-    // SAFE FIELD ACCESSORS (NO CRASH)
+    // HELPERS
+    // =========================================================
+    private static String firstNonEmpty(String... vals) {
+        if (vals == null) return null;
+        for (String v : vals) {
+            if (v != null && !v.trim().isEmpty())
+                return v.trim();
+        }
+        return null;
+    }
+
+    // =========================================================
+    // SAFE FIELD ACCESSORS
     // =========================================================
     public static String getStr(Object spec, String... fieldNames) {
         if (spec == null) return null;
@@ -182,12 +143,6 @@ if ("iphone".equals(type) && !isSupported(type, model)) {
                 Object v = ff.get(spec);
                 if (v instanceof Number)
                     return ((Number) v).intValue();
-                if (v != null) {
-                    String s =
-                            String.valueOf(v).replaceAll("[^0-9]", "");
-                    if (!s.isEmpty())
-                        return Integer.parseInt(s);
-                }
             } catch (Throwable ignore) {}
         }
         return -1;
@@ -202,13 +157,6 @@ if ("iphone".equals(type) && !isSupported(type, model)) {
                 Object v = ff.get(spec);
                 if (v instanceof Number)
                     return ((Number) v).doubleValue();
-                if (v != null) {
-                    String s = String.valueOf(v)
-                            .replace(',', '.')
-                            .replaceAll("[^0-9.]", "");
-                    if (!s.isEmpty())
-                        return Double.parseDouble(s);
-                }
             } catch (Throwable ignore) {}
         }
         return -1;

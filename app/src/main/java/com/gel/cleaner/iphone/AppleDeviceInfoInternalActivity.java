@@ -92,39 +92,49 @@ private void setupInternalToggles() {
     setupUnifiedSection(secStorage, outStorage, iconStorage);
 }
 
-    // ============================================================
-    // BIND VIEWS (XML IS KING)
-    // ============================================================
-    private void bind() {
+// ============================================================
+// BIND VIEWS (XML IS KING)
+// ============================================================
+private void bind() {
 
-        secSystem   = findViewById(R.id.headerSystem);
-        secAndroid  = findViewById(R.id.headerAndroid);
-        secCpu      = findViewById(R.id.headerCpu);
-        secGpu      = findViewById(R.id.headerGpu);
-        secThermal  = findViewById(R.id.headerThermal);
-        secVulkan   = findViewById(R.id.headerVulkan);
-        secRam      = findViewById(R.id.headerRam);
-        secStorage  = findViewById(R.id.headerStorage);
+    secSystem   = findViewById(R.id.headerSystem);
+    secAndroid  = findViewById(R.id.headerAndroid);
+    secCpu      = findViewById(R.id.headerCpu);
+    secGpu      = findViewById(R.id.headerGpu);
+    secThermal  = findViewById(R.id.headerThermal);
+    secVulkan   = findViewById(R.id.headerVulkan);
+    secRam      = findViewById(R.id.headerRam);
+    secStorage  = findViewById(R.id.headerStorage);
 
-        outSystem   = findViewById(R.id.txtSystemContent);
-        outAndroid  = findViewById(R.id.txtAndroidContent);
-        outCpu      = findViewById(R.id.txtCpuContent);
-        outGpu      = findViewById(R.id.txtGpuContent);
-        outThermal  = findViewById(R.id.txtThermalContent);
-        outVulkan   = findViewById(R.id.txtVulkanContent);
-        outRam      = findViewById(R.id.txtRamContent);
-        outStorage  = findViewById(R.id.txtStorageContent);
-        
-iconSystem  = findViewById(R.id.iconSystemToggle);
-iconAndroid = findViewById(R.id.iconAndroidToggle);
-iconCpu     = findViewById(R.id.iconCpuToggle);
-iconGpu     = findViewById(R.id.iconGpuToggle);
-iconThermal = findViewById(R.id.iconThermalToggle);
-iconVulkan  = findViewById(R.id.iconVulkanToggle);
-iconRam     = findViewById(R.id.iconRamToggle);
-iconStorage = findViewById(R.id.iconStorageToggle);
-        
+    outSystem   = findViewById(R.id.txtSystemContent);
+    outAndroid  = findViewById(R.id.txtAndroidContent);
+    outCpu      = findViewById(R.id.txtCpuContent);
+    outGpu      = findViewById(R.id.txtGpuContent);
+    outThermal  = findViewById(R.id.txtThermalContent);
+    outVulkan   = findViewById(R.id.txtVulkanContent);
+    outRam      = findViewById(R.id.txtRamContent);
+    outStorage  = findViewById(R.id.txtStorageContent);
+
+    iconSystem  = findViewById(R.id.iconSystemToggle);
+    iconAndroid = findViewById(R.id.iconAndroidToggle);
+    iconCpu     = findViewById(R.id.iconCpuToggle);
+    iconGpu     = findViewById(R.id.iconGpuToggle);
+    iconThermal = findViewById(R.id.iconThermalToggle);
+    iconVulkan  = findViewById(R.id.iconVulkanToggle);
+    iconRam     = findViewById(R.id.iconRamToggle);
+    iconStorage = findViewById(R.id.iconStorageToggle);
+
+    // ========================================================
+    // 🔥 APPLE-ONLY LABEL FIX (NO XML CHANGE)
+    // ========================================================
+    if (secAndroid != null) {
+        TextView label =
+                (TextView) ((LinearLayout) secAndroid).getChildAt(0);
+        if (label != null) {
+            label.setText("OS Build");
+        }
     }
+}
 
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX AWARE)

@@ -144,7 +144,17 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
         txtSecurityFlags = findViewById(R.id.txtSecurityFlagsContent);
         txtRoot = findViewById(R.id.txtRootContent);
         txtOther = findViewById(R.id.txtOtherPeripheralsContent);
+        
+    // --------------------------------------------
+    // APPLE ONLY — HIDE "SET MODEL CAPACITY"
+    // --------------------------------------------
+    TextView btnSetModelCapacity =
+            findViewById(R.id.txtBatteryModelCapacity);
+
+    if (btnSetModelCapacity != null) {
+        btnSetModelCapacity.setVisibility(View.GONE);
     }
+}
 
     // ============================================================
     // TOGGLES SETUP - UNIFIED (LOCKED)

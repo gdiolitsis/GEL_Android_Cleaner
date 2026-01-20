@@ -81,8 +81,8 @@ protected void onCreate(Bundle savedInstanceState) {
 
     bind();
 
-    allContents = new TextView[] {
-            txtBattery,
+    allContents = new View[] {
+            batteryContainer,   // 🔴 ΚΡΙΣΙΜΟ
             txtScreen,
             txtCamera,
             txtConnectivity,
@@ -116,85 +116,110 @@ protected void onCreate(Bundle savedInstanceState) {
     }
 
     d = AppleSpecs.get(model);
+
+    // ===============================
+    // PLATFORM RULES — BATTERY
+    // ===============================
+    boolean isApple =
+            d != null && ("ipad".equals(d.type) || "iphone".equals(d.type));
+
+    if (isApple) {
+        // 🍎 Apple → ΟΧΙ set model capacity, ΟΧΙ popup
+        txtBatteryModelCapacity.setVisibility(View.GONE);
+        txtBatteryModelCapacity.setOnClickListener(null);
+    } else {
+        // 🤖 Android → ΝΑΙ set model capacity + popup
+        txtBatteryModelCapacity.setVisibility(View.VISIBLE);
+        txtBatteryModelCapacity.setOnClickListener(v ->
+                showBatteryModelCapacityPopup()
+        );
+    }
+
     populate();
 }
 
-    // ============================================================
-    // BIND
-    // ============================================================
-    private void bind() {
+// ============================================================
+// BIND
+// ============================================================
+private void bind() {
 
-        headerBattery         = findViewById(R.id.headerBattery);
-        headerScreen          = findViewById(R.id.headerScreen);
-        headerCamera          = findViewById(R.id.headerCamera);
-        headerConnectivity    = findViewById(R.id.headerConnectivity);
-        headerLocation        = findViewById(R.id.headerLocation);
-        headerThermal         = findViewById(R.id.headerThermal);
-        headerModem           = findViewById(R.id.headerModem);
-        headerWifiAdvanced    = findViewById(R.id.headerWifiAdvanced);
-        headerAudioUnified    = findViewById(R.id.headerAudioUnified);
-        headerSensors         = findViewById(R.id.headerSensors);
-        headerBiometrics      = findViewById(R.id.headerBiometrics);
-        headerNfc             = findViewById(R.id.headerNfc);
-        headerGnss            = findViewById(R.id.headerGnss);
-        headerUwb             = findViewById(R.id.headerUwb);
-        headerUsb             = findViewById(R.id.headerUsb);
-        headerHaptics         = findViewById(R.id.headerHaptics);
-        headerSystemFeatures  = findViewById(R.id.headerSystemFeatures);
-        headerSecurityFlags   = findViewById(R.id.headerSecurityFlags);
-        headerRoot            = findViewById(R.id.headerRoot);
-        headerOtherPeripherals= findViewById(R.id.headerOtherPeripherals);
+    headerBattery          = findViewById(R.id.headerBattery);
+    headerScreen           = findViewById(R.id.headerScreen);
+    headerCamera           = findViewById(R.id.headerCamera);
+    headerConnectivity     = findViewById(R.id.headerConnectivity);
+    headerLocation         = findViewById(R.id.headerLocation);
+    headerThermal          = findViewById(R.id.headerThermal);
+    headerModem            = findViewById(R.id.headerModem);
+    headerWifiAdvanced     = findViewById(R.id.headerWifiAdvanced);
+    headerAudioUnified     = findViewById(R.id.headerAudioUnified);
+    headerSensors          = findViewById(R.id.headerSensors);
+    headerBiometrics       = findViewById(R.id.headerBiometrics);
+    headerNfc              = findViewById(R.id.headerNfc);
+    headerGnss             = findViewById(R.id.headerGnss);
+    headerUwb              = findViewById(R.id.headerUwb);
+    headerUsb              = findViewById(R.id.headerUsb);
+    headerHaptics          = findViewById(R.id.headerHaptics);
+    headerSystemFeatures   = findViewById(R.id.headerSystemFeatures);
+    headerSecurityFlags    = findViewById(R.id.headerSecurityFlags);
+    headerRoot             = findViewById(R.id.headerRoot);
+    headerOtherPeripherals = findViewById(R.id.headerOtherPeripherals);
 
-        txtBattery        = findViewById(R.id.txtBatteryContent);
-        txtScreen         = findViewById(R.id.txtScreenContent);
-        txtCamera         = findViewById(R.id.txtCameraContent);
-        txtConnectivity   = findViewById(R.id.txtConnectivityContent);
-        txtLocation       = findViewById(R.id.txtLocationContent);
-        txtThermal        = findViewById(R.id.txtThermalContent);
-        txtModem          = findViewById(R.id.txtModemContent);
-        txtWifiAdvanced   = findViewById(R.id.txtWifiAdvancedContent);
-        txtAudio          = findViewById(R.id.txtAudioUnifiedContent);
-        txtSensors        = findViewById(R.id.txtSensorsContent);
-        txtBiometrics     = findViewById(R.id.txtBiometricsContent);
-        txtNfc            = findViewById(R.id.txtNfcContent);
-        txtGnss           = findViewById(R.id.txtGnssContent);
-        txtUwb            = findViewById(R.id.txtUwbContent);
-        txtUsb            = findViewById(R.id.txtUsbContent);
-        txtHaptics        = findViewById(R.id.txtHapticsContent);
-        txtSystemFeatures = findViewById(R.id.txtSystemFeaturesContent);
-        txtSecurityFlags  = findViewById(R.id.txtSecurityFlagsContent);
-        txtRoot           = findViewById(R.id.txtRootContent);
-        txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
-    }
+    batteryContainer       = findViewById(R.id.batteryContainer);
+    txtBatteryModelCapacity= findViewById(R.id.txtBatteryModelCapacity);
 
+    txtBattery        = findViewById(R.id.txtBatteryContent);
+    txtScreen         = findViewById(R.id.txtScreenContent);
+    txtCamera         = findViewById(R.id.txtCameraContent);
+    txtConnectivity   = findViewById(R.id.txtConnectivityContent);
+    txtLocation       = findViewById(R.id.txtLocationContent);
+    txtThermal        = findViewById(R.id.txtThermalContent);
+    txtModem          = findViewById(R.id.txtModemContent);
+    txtWifiAdvanced   = findViewById(R.id.txtWifiAdvancedContent);
+    txtAudio          = findViewById(R.id.txtAudioUnifiedContent);
+    txtSensors        = findViewById(R.id.txtSensorsContent);
+    txtBiometrics     = findViewById(R.id.txtBiometricsContent);
+    txtNfc            = findViewById(R.id.txtNfcContent);
+    txtGnss           = findViewById(R.id.txtGnssContent);
+    txtUwb            = findViewById(R.id.txtUwbContent);
+    txtUsb            = findViewById(R.id.txtUsbContent);
+    txtHaptics        = findViewById(R.id.txtHapticsContent);
+    txtSystemFeatures = findViewById(R.id.txtSystemFeaturesContent);
+    txtSecurityFlags  = findViewById(R.id.txtSecurityFlagsContent);
+    txtRoot           = findViewById(R.id.txtRootContent);
+    txtOther          = findViewById(R.id.txtOtherPeripheralsContent);
+}
+
+// ============================================================
+// TOGGLES SETUP
+// ============================================================
 private void setupPeripheralsToggles() {
 
-    setupToggle(headerBattery,         txtBattery,        allContents);
-    setupToggle(headerScreen,          txtScreen,         allContents);
-    setupToggle(headerCamera,          txtCamera,         allContents);
-    setupToggle(headerConnectivity,    txtConnectivity,   allContents);
-    setupToggle(headerLocation,        txtLocation,       allContents);
-    setupToggle(headerThermal,         txtThermal,        allContents);
-    setupToggle(headerModem,           txtModem,          allContents);
-    setupToggle(headerWifiAdvanced,    txtWifiAdvanced,   allContents);
-    setupToggle(headerAudioUnified,    txtAudio,          allContents);
-    setupToggle(headerSensors,         txtSensors,        allContents);
-    setupToggle(headerBiometrics,      txtBiometrics,     allContents);
-    setupToggle(headerNfc,             txtNfc,            allContents);
-    setupToggle(headerGnss,            txtGnss,           allContents);
-    setupToggle(headerUwb,             txtUwb,            allContents);
-    setupToggle(headerUsb,             txtUsb,            allContents);
-    setupToggle(headerHaptics,         txtHaptics,        allContents);
-    setupToggle(headerSystemFeatures,  txtSystemFeatures, allContents);
-    setupToggle(headerSecurityFlags,   txtSecurityFlags,  allContents);
-    setupToggle(headerRoot,            txtRoot,           allContents);
-    setupToggle(headerOtherPeripherals,txtOther,          allContents);
+    setupToggle(headerBattery,          batteryContainer,   allContents);
+    setupToggle(headerScreen,           txtScreen,          allContents);
+    setupToggle(headerCamera,           txtCamera,          allContents);
+    setupToggle(headerConnectivity,     txtConnectivity,    allContents);
+    setupToggle(headerLocation,         txtLocation,        allContents);
+    setupToggle(headerThermal,          txtThermal,         allContents);
+    setupToggle(headerModem,            txtModem,           allContents);
+    setupToggle(headerWifiAdvanced,     txtWifiAdvanced,    allContents);
+    setupToggle(headerAudioUnified,     txtAudio,           allContents);
+    setupToggle(headerSensors,          txtSensors,         allContents);
+    setupToggle(headerBiometrics,       txtBiometrics,      allContents);
+    setupToggle(headerNfc,              txtNfc,             allContents);
+    setupToggle(headerGnss,             txtGnss,            allContents);
+    setupToggle(headerUwb,              txtUwb,             allContents);
+    setupToggle(headerUsb,              txtUsb,             allContents);
+    setupToggle(headerHaptics,          txtHaptics,         allContents);
+    setupToggle(headerSystemFeatures,   txtSystemFeatures,  allContents);
+    setupToggle(headerSecurityFlags,    txtSecurityFlags,   allContents);
+    setupToggle(headerRoot,             txtRoot,            allContents);
+    setupToggle(headerOtherPeripherals, txtOther,           allContents);
 }
 
 // ============================================================
 // TOGGLE ENGINE — SHARED
 // ============================================================
-private void setupToggle(LinearLayout header, TextView content, TextView[] all) {
+private void setupToggle(LinearLayout header, View content, View[] all) {
     if (header == null || content == null) return;
 
     content.setVisibility(View.GONE);
@@ -204,11 +229,11 @@ private void setupToggle(LinearLayout header, TextView content, TextView[] all) 
         boolean willOpen = content.getVisibility() != View.VISIBLE;
 
         // 🔒 κλείσε ΟΛΑ
-        for (TextView tv : all) {
-            if (tv != null) tv.setVisibility(View.GONE);
+        for (View vw : all) {
+            if (vw != null) vw.setVisibility(View.GONE);
         }
 
-        // ✅ άνοιξε μόνο αυτό αν πρέπει
+        // ✅ άνοιξε μόνο αυτό
         if (willOpen) {
             content.setVisibility(View.VISIBLE);
         }

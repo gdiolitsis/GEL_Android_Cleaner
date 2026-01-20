@@ -21,7 +21,7 @@ public final class iPadSpecs {
     // =========================================================
     static {
 
-        // -----------------------------------------------------
+// -----------------------------------------------------
 // 📱 iPad Pro 12.9" (M2)
 // -----------------------------------------------------
 AppleDeviceSpec ipadPro129M2 = new AppleDeviceSpec();
@@ -825,19 +825,25 @@ ipadAir11M2.notes =
 MAP.put("ipad air 11 m2", ipadAir11M2);
 
 // -----------------------------------------------------
-// iPad Air 13 (M2)
+// 📱 iPad Air 13" (M2)
 // -----------------------------------------------------
 AppleDeviceSpec ipadAir13M2 = new AppleDeviceSpec();
 ipadAir13M2.type = "ipad";
 ipadAir13M2.model = "iPad Air 13 (M2)";
 ipadAir13M2.year = "2024";
-ipadAir13M2.identifier = "iPad14,10 / iPad14,11";
-ipadAir13M2.modelNumber = "A2904 / A2905";
+ipadAir13M2.identifier =
+        "iPad14,10 / iPad14,11";
+ipadAir13M2.modelNumber =
+        "A2904 / A2905";
 
+// =====================================================
 // OS / PLATFORM
+// =====================================================
 ipadAir13M2.os = "iPadOS";
 
+// =====================================================
 // SOC / CPU / GPU
+// =====================================================
 ipadAir13M2.soc = "Apple M2";
 ipadAir13M2.chipset = "M2";
 ipadAir13M2.processNode = "5 nm";
@@ -847,84 +853,130 @@ ipadAir13M2.gpu = "Apple GPU";
 ipadAir13M2.gpuCores = 9;
 ipadAir13M2.metalFeatureSet = "Metal 3";
 
+// =====================================================
 // MEMORY / STORAGE
+// =====================================================
 ipadAir13M2.ram = "8 GB";
 ipadAir13M2.ramType = "Unified Memory";
 ipadAir13M2.storageBase = "128 GB";
-ipadAir13M2.storageOptions = "128 / 256 / 512 GB / 1 TB";
+ipadAir13M2.storageOptions =
+        "128 / 256 / 512 GB / 1 TB";
+ipadAir13M2.storageVariants =
+        "Single RAM tier across all storage configurations";
 
+// =====================================================
 // DISPLAY
+// =====================================================
 ipadAir13M2.screen = "13\"";
 ipadAir13M2.display = "Liquid Retina (IPS)";
 ipadAir13M2.resolution = "2732 × 2048";
 ipadAir13M2.refreshRate = "60 Hz";
 ipadAir13M2.displayOut = "USB-C DisplayPort";
+ipadAir13M2.displayVariants =
+        "Large IPS panel; non-ProMotion, laminated display with P3 color";
 
+// =====================================================
 // NETWORK / WIRELESS
+// =====================================================
 ipadAir13M2.has5G = true;
 ipadAir13M2.hasLTE = true;
-ipadAir13M2.cellular = "5G / LTE";
+ipadAir13M2.cellular = "5G / LTE (cellular models)";
 ipadAir13M2.modem = "Qualcomm Snapdragon X65";
 ipadAir13M2.wifi = "Wi-Fi 6E";
 ipadAir13M2.bluetooth = "Bluetooth 5.3";
 ipadAir13M2.hasNFC = false;
 ipadAir13M2.hasAirDrop = true;
 ipadAir13M2.hasAirPlay = true;
-ipadAir13M2.gps = "GPS / GNSS (Cellular models)";
+ipadAir13M2.gps = "GPS / GNSS (cellular models)";
 ipadAir13M2.hasCompass = true;
 ipadAir13M2.hasGyro = true;
 ipadAir13M2.hasAccel = true;
 ipadAir13M2.hasBarometer = true;
 
+// =====================================================
 // SIM / PORTS
-ipadAir13M2.simSlots = "eSIM only";
+// =====================================================
+ipadAir13M2.simSlots = "eSIM only (cellular models)";
 ipadAir13M2.hasESim = true;
 ipadAir13M2.port = "USB-C";
 ipadAir13M2.usbStandard = "USB 3.1 Gen 2";
 
+// =====================================================
 // AUDIO
-ipadAir13M2.speakers = "Stereo speakers";
+// =====================================================
+ipadAir13M2.speakers = "Stereo speakers (landscape)";
 ipadAir13M2.microphones = "Dual microphones";
 ipadAir13M2.hasDolby = true;
 ipadAir13M2.hasJack = false;
 
+// =====================================================
 // CAMERA
-ipadAir13M2.cameraMain  = "12 MP Wide";
-ipadAir13M2.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
+// =====================================================
+ipadAir13M2.cameraMain = "12 MP Wide";
+ipadAir13M2.cameraFront =
+        "12 MP Landscape Ultra-Wide (Center Stage)";
 ipadAir13M2.cameraVideo = "4K@60fps";
+ipadAir13M2.cameraVariants =
+        "Landscape front camera optimized for video conferencing";
 
+// =====================================================
 // BIOMETRICS
+// =====================================================
 ipadAir13M2.hasFaceID = false;
 ipadAir13M2.hasTouchID = true;
-ipadAir13M2.biometrics = "Touch ID (Top Button)";
+ipadAir13M2.biometrics =
+        "Touch ID (Top Button)";
 
+// =====================================================
 // POWER
-ipadAir13M2.charging = "USB-C fast charge";
+// =====================================================
+ipadAir13M2.charging = "USB-C fast charging";
 ipadAir13M2.hasWirelessCharge = false;
 
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+ipadAir13M2.batteryMah          = 9705;   // ≈ 36.6 Wh
+ipadAir13M2.batteryVoltage      = 3.77f;
+ipadAir13M2.batteryWh           =
+        (ipadAir13M2.batteryMah * ipadAir13M2.batteryVoltage) / 1000f;
+ipadAir13M2.batteryChemistry    = "Lithium-Polymer";
+ipadAir13M2.batteryDesignCycles = 1000;
+ipadAir13M2.batteryCharging     =
+        "USB-C fast charging";
+ipadAir13M2.batteryNotes        =
+        "Larger battery to support 13-inch display; Apple rates up to 10 hours usage";
+
+// =====================================================
 // THERMAL / NOTES
+// =====================================================
 ipadAir13M2.thermalNote =
         "Thermal sensors not accessible to applications (Apple restriction)";
 ipadAir13M2.notes =
-        "13-inch Air fills the gap between Air and Pro; large display without ProMotion";
+        "13-inch Air bridges Air and Pro; large display without ProMotion or LiDAR, OS-limited sustained workloads";
 
 MAP.put("ipad air 13 m2", ipadAir13M2);
-
-// ============================================================
-// iPad mini (6th generation) — 2021
-// ============================================================
-
+        
+// -----------------------------------------------------
+// 📱 iPad mini (6th generation)
+// -----------------------------------------------------
 AppleDeviceSpec ipadMini6 = new AppleDeviceSpec("ipad", "iPad mini 6");
 
-ipadMini6.year          = "2021";
-ipadMini6.identifier    = "iPad14,1 / iPad14,2";
-ipadMini6.modelNumber   = "A2567 / A2568 / A2569";
+ipadMini6.year        = "2021";
+ipadMini6.identifier  =
+        "iPad14,1 / iPad14,2";
+ipadMini6.modelNumber =
+        "A2567 / A2568 / A2569";
 
+// =====================================================
 // OS / PLATFORM
-ipadMini6.os            = "iPadOS";
-ipadMini6.charging      = "USB-C (20W fast charge)";
+// =====================================================
+ipadMini6.os       = "iPadOS";
+ipadMini6.charging = "USB-C (20W fast charge)";
 
+// =====================================================
 // SOC / CPU / GPU
+// =====================================================
 ipadMini6.soc           = "A15 Bionic";
 ipadMini6.chipset       = "A15 Bionic";
 ipadMini6.arch          = "ARMv8.5-A";
@@ -935,66 +987,113 @@ ipadMini6.gpu           = "Apple GPU";
 ipadMini6.gpuCores      = 5;
 ipadMini6.metalFeatureSet = "Metal 3";
 
+// =====================================================
 // MEMORY / STORAGE
-ipadMini6.ram           = "4 GB";
-ipadMini6.ramType       = "LPDDR4X";
-ipadMini6.storageBase   = "64 GB";
-ipadMini6.storageOptions= "64 GB / 256 GB";
+// =====================================================
+ipadMini6.ram            = "4 GB";
+ipadMini6.ramType        = "LPDDR4X";
+ipadMini6.storageBase    = "64 GB";
+ipadMini6.storageOptions = "64 / 256 GB";
+ipadMini6.storageVariants =
+        "Single RAM tier across all storage configurations";
 
+// =====================================================
 // DISPLAY
-ipadMini6.screen        = "8.3\"";
-ipadMini6.display       = "Liquid Retina (IPS LCD)";
-ipadMini6.resolution    = "2266 × 1488";
-ipadMini6.refreshRate   = "60 Hz";
-ipadMini6.displayOut    = "USB-C DisplayPort";
+// =====================================================
+ipadMini6.screen      = "8.3\"";
+ipadMini6.display     = "Liquid Retina (IPS LCD)";
+ipadMini6.resolution  = "2266 × 1488";
+ipadMini6.refreshRate = "60 Hz";
+ipadMini6.displayOut  = "USB-C DisplayPort";
+ipadMini6.displayVariants =
+        "Compact laminated IPS panel with P3 color; no ProMotion";
 
+// =====================================================
 // NETWORK / WIRELESS
-ipadMini6.has5G         = true;
-ipadMini6.hasLTE        = true;
-ipadMini6.cellular      = "5G (sub-6 GHz), LTE";
-ipadMini6.modem         = "Qualcomm Snapdragon X60";
-ipadMini6.wifi          = "Wi-Fi 6 (802.11ax)";
-ipadMini6.bluetooth     = "Bluetooth 5.0";
-ipadMini6.hasNFC        = false;
-ipadMini6.hasAirDrop    = true;
-ipadMini6.hasAirPlay    = true;
-ipadMini6.gps           = "GPS / GNSS";
-ipadMini6.hasCompass    = true;
-ipadMini6.hasGyro       = true;
-ipadMini6.hasAccel      = true;
-ipadMini6.hasBarometer  = true;
+// =====================================================
+ipadMini6.has5G      = true;
+ipadMini6.hasLTE     = true;
+ipadMini6.cellular   = "5G (sub-6 GHz), LTE";
+ipadMini6.modem      = "Qualcomm Snapdragon X60";
+ipadMini6.wifi       = "Wi-Fi 6 (802.11ax)";
+ipadMini6.bluetooth  = "Bluetooth 5.0";
+ipadMini6.hasNFC     = false;
+ipadMini6.hasAirDrop = true;
+ipadMini6.hasAirPlay = true;
+ipadMini6.gps        = "GPS / GNSS (cellular models)";
+ipadMini6.hasCompass = true;
+ipadMini6.hasGyro    = true;
+ipadMini6.hasAccel   = true;
+ipadMini6.hasBarometer = true;
 
+// =====================================================
 // SIM / PORTS
-ipadMini6.simSlots      = "Single SIM";
-ipadMini6.hasESim       = true;
-ipadMini6.port          = "USB-C";
-ipadMini6.usbStandard   = "USB-C 3.1 Gen 1";
+// =====================================================
+ipadMini6.simSlots =
+        "eSIM only (cellular models)";
+ipadMini6.hasESim    = true;
+ipadMini6.port       = "USB-C";
+ipadMini6.usbStandard =
+        "USB-C 3.1 Gen 1";
 
+// =====================================================
 // AUDIO
-ipadMini6.speakers      = "Stereo speakers";
-ipadMini6.microphones   = "Dual microphones";
-ipadMini6.hasDolby      = true;
-ipadMini6.hasJack       = false;
+// =====================================================
+ipadMini6.speakers    = "Stereo speakers (landscape)";
+ipadMini6.microphones = "Dual microphones";
+ipadMini6.hasDolby    = true;
+ipadMini6.hasJack     = false;
 
+// =====================================================
 // CAMERA
-ipadMini6.cameraMain    = "12 MP Wide";
+// =====================================================
+ipadMini6.cameraMain  = "12 MP Wide";
 ipadMini6.cameraUltraWide = null;
-ipadMini6.cameraTele    = null;
-ipadMini6.cameraFront   = "12 MP Ultra-Wide (Center Stage)";
-ipadMini6.cameraVideo   = "4K@60fps HDR";
+ipadMini6.cameraTele  = null;
+ipadMini6.cameraFront =
+        "12 MP Ultra-Wide (Center Stage)";
+ipadMini6.cameraVideo =
+        "4K@60fps HDR";
+ipadMini6.cameraVariants =
+        "Single rear camera; Center Stage front camera";
 
-// BIOMETRICS / FEATURES
-ipadMini6.hasFaceID     = false;
-ipadMini6.hasTouchID    = true;
-ipadMini6.biometrics    = "Touch ID (Power button)";
+// =====================================================
+// BIOMETRICS
+// =====================================================
+ipadMini6.hasFaceID  = false;
+ipadMini6.hasTouchID = true;
+ipadMini6.biometrics =
+        "Touch ID (Power button)";
 
+// =====================================================
 // POWER
-ipadMini6.hasFastCharge     = true;
-ipadMini6.hasWirelessCharge= false;
+// =====================================================
+ipadMini6.hasFastCharge      = true;
+ipadMini6.hasWirelessCharge = false;
 
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+ipadMini6.batteryMah          = 5124;   // ≈ 19.3 Wh
+ipadMini6.batteryVoltage      = 3.77f;
+ipadMini6.batteryWh           =
+        (ipadMini6.batteryMah * ipadMini6.batteryVoltage) / 1000f;
+ipadMini6.batteryChemistry    = "Lithium-Polymer";
+ipadMini6.batteryDesignCycles = 1000;
+ipadMini6.batteryCharging     =
+        "USB-C fast charging (20W)";
+ipadMini6.batteryNotes        =
+        "Apple rates up to 10 hours web/video usage";
+
+// =====================================================
 // THERMAL / NOTES
-ipadMini6.thermalNote  = "No public thermal sensors (Apple restriction)";
-ipadMini6.notes        = "Apple Pencil 2 support, flat-edge design";
+// =====================================================
+ipadMini6.thermalNote =
+        "No public thermal sensors (Apple restriction)";
+ipadMini6.notes =
+        "First modern iPad mini with flat-edge design, USB-C, and Apple Pencil 2 support";
+
+MAP.put("ipad mini 6", ipadMini6);
     }
 
 public static AppleDeviceSpec get(String modelName) {

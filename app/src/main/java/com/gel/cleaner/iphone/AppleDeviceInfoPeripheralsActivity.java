@@ -22,7 +22,7 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // HEADERS (AS IN XML)
     // ============================================================
 
-    private TextView[] allContents;
+    private View[] allContents;
     private LinearLayout headerBattery;
     private LinearLayout headerScreen;
     private LinearLayout headerCamera;
@@ -144,9 +144,6 @@ private void bind() {
     headerSecurityFlags    = findViewById(R.id.headerSecurityFlags);
     headerRoot             = findViewById(R.id.headerRoot);
     headerOtherPeripherals = findViewById(R.id.headerOtherPeripherals);
-
-    batteryContainer       = findViewById(R.id.batteryContainer);
-    txtBatteryModelCapacity= findViewById(R.id.txtBatteryModelCapacity);
 
     txtBattery        = findViewById(R.id.txtBatteryContent);
     txtScreen         = findViewById(R.id.txtScreenContent);

@@ -727,7 +727,7 @@ MAP.put("iphone 14 pro max", iphone14ProMax);
 // =========================================================
 
 // ---------------------------------------------------------
-// iPhone 13 mini
+// 📱 iPhone 13 mini
 // ---------------------------------------------------------
 AppleDeviceSpec iphone13Mini = new AppleDeviceSpec("iphone", "iPhone 13 mini");
 iphone13Mini.year            = "2021";
@@ -753,12 +753,13 @@ iphone13Mini.display         = "OLED Super Retina XDR";
 iphone13Mini.resolution      = "2340 × 1080";
 iphone13Mini.refreshRate     = "60 Hz";
 iphone13Mini.displayOut      = "Lightning Digital AV (adapter)";
+iphone13Mini.displayVariants = "Compact display, standard 60 Hz (no ProMotion)";
 
 iphone13Mini.has5G           = true;
 iphone13Mini.hasLTE          = true;
 iphone13Mini.cellular        = "5G NR / LTE";
 iphone13Mini.modem           = "Qualcomm Snapdragon X60";
-iphone13Mini.wifi            = "Wi-Fi 6";
+iphone13Mini.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone13Mini.bluetooth       = "Bluetooth 5.0";
 iphone13Mini.hasNFC          = true;
 iphone13Mini.hasAirDrop      = true;
@@ -774,8 +775,8 @@ iphone13Mini.hasESim         = true;
 iphone13Mini.port            = "Lightning";
 iphone13Mini.usbStandard     = "USB 2.0";
 
-iphone13Mini.speakers        = "Stereo";
-iphone13Mini.microphones     = "Multiple";
+iphone13Mini.speakers        = "Stereo speakers";
+iphone13Mini.microphones    = "Multiple microphones";
 iphone13Mini.hasDolby        = true;
 iphone13Mini.hasJack         = false;
 
@@ -784,22 +785,41 @@ iphone13Mini.cameraUltraWide = "12 MP Ultra-Wide";
 iphone13Mini.cameraTele      = null;
 iphone13Mini.cameraFront     = "12 MP TrueDepth";
 iphone13Mini.cameraVideo     = "4K@60fps HDR";
+iphone13Mini.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone13Mini.hasFaceID       = true;
 iphone13Mini.hasTouchID      = false;
 iphone13Mini.biometrics      = "Face ID";
 
-iphone13Mini.hasFastCharge       = true;
-iphone13Mini.hasWirelessCharge  = true;
-iphone13Mini.charging           = "Lightning / MagSafe";
+iphone13Mini.hasFastCharge      = true;
+iphone13Mini.hasWirelessCharge = true;
+iphone13Mini.charging          = "Lightning / MagSafe";
 
-iphone13Mini.thermalNote    = "No public thermal sensor access (Apple restriction)";
-iphone13Mini.notes          = "Smallest iPhone with A15 Bionic";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone13Mini.batteryMah          = 2406;   // model-based reference
+iphone13Mini.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone13Mini.batteryWh           =
+        (iphone13Mini.batteryMah * iphone13Mini.batteryVoltage) / 1000f;
+iphone13Mini.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone13Mini.batteryDesignCycles = 500;
+iphone13Mini.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone13Mini.batteryNotes        =
+        "Smallest capacity in the lineup; efficiency-focused A15 mitigates size constraints";
+
+iphone13Mini.thermalNote =
+        "No public thermal sensor access (Apple restriction)";
+iphone13Mini.notes =
+        "Smallest iPhone with A15 Bionic; prioritizes compact size over endurance.";
 
 MAP.put("iphone 13 mini", iphone13Mini);
 
 // ---------------------------------------------------------
-// iPhone 13
+// 📱 iPhone 13
 // ---------------------------------------------------------
 AppleDeviceSpec iphone13 = new AppleDeviceSpec("iphone", "iPhone 13");
 iphone13.year            = "2021";
@@ -825,12 +845,13 @@ iphone13.display         = "OLED Super Retina XDR";
 iphone13.resolution      = "2532 × 1170";
 iphone13.refreshRate     = "60 Hz";
 iphone13.displayOut      = "Lightning Digital AV (adapter)";
+iphone13.displayVariants = "Standard 60 Hz (no ProMotion)";
 
 iphone13.has5G           = true;
 iphone13.hasLTE          = true;
 iphone13.cellular        = "5G NR / LTE";
 iphone13.modem           = "Qualcomm Snapdragon X60";
-iphone13.wifi            = "Wi-Fi 6";
+iphone13.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone13.bluetooth       = "Bluetooth 5.0";
 iphone13.hasNFC          = true;
 iphone13.hasAirDrop      = true;
@@ -846,8 +867,8 @@ iphone13.hasESim         = true;
 iphone13.port            = "Lightning";
 iphone13.usbStandard     = "USB 2.0";
 
-iphone13.speakers        = "Stereo";
-iphone13.microphones     = "Multiple";
+iphone13.speakers        = "Stereo speakers";
+iphone13.microphones    = "Multiple microphones";
 iphone13.hasDolby        = true;
 iphone13.hasJack         = false;
 
@@ -856,22 +877,42 @@ iphone13.cameraUltraWide = "12 MP Ultra-Wide";
 iphone13.cameraTele      = null;
 iphone13.cameraFront     = "12 MP TrueDepth";
 iphone13.cameraVideo     = "4K@60fps HDR";
+iphone13.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone13.hasFaceID       = true;
 iphone13.hasTouchID      = false;
 iphone13.biometrics      = "Face ID";
 
-iphone13.hasFastCharge       = true;
-iphone13.hasWirelessCharge  = true;
-iphone13.charging           = "Lightning / MagSafe";
+iphone13.hasFastCharge      = true;
+iphone13.hasWirelessCharge = true;
+iphone13.charging          = "Lightning / MagSafe";
 
-iphone13.thermalNote    = "No public thermal sensor access (Apple restriction)";
-iphone13.notes          = "Base model of iPhone 13 lineup";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone13.batteryMah          = 3240;   // model-based reference
+iphone13.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone13.batteryWh           =
+        (iphone13.batteryMah * iphone13.batteryVoltage) / 1000f;
+iphone13.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone13.batteryDesignCycles = 500;
+iphone13.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone13.batteryNotes        =
+        "Balanced capacity; noticeably better endurance than iPhone 12";
+
+iphone13.thermalNote =
+        "No public thermal sensor access (Apple restriction)";
+iphone13.notes =
+        "Base model of iPhone 13 lineup; improved battery life over predecessor.";
 
 MAP.put("iphone 13", iphone13);
 
 // ---------------------------------------------------------
-// iPhone 13 Pro
+// ---------------------------------------------------------
+// 📱 iPhone 13 Pro
 // ---------------------------------------------------------
 AppleDeviceSpec iphone13Pro = new AppleDeviceSpec("iphone", "iPhone 13 Pro");
 iphone13Pro.year            = "2021";
@@ -897,17 +938,18 @@ iphone13Pro.display         = "OLED Super Retina XDR (ProMotion)";
 iphone13Pro.resolution      = "2532 × 1170";
 iphone13Pro.refreshRate     = "10–120 Hz";
 iphone13Pro.displayOut      = "Lightning Digital AV (adapter)";
+iphone13Pro.displayVariants = "ProMotion with adaptive refresh (10–120 Hz)";
 
 iphone13Pro.has5G           = true;
 iphone13Pro.hasLTE          = true;
 iphone13Pro.cellular        = "5G NR / LTE";
 iphone13Pro.modem           = "Qualcomm Snapdragon X60";
-iphone13Pro.wifi            = "Wi-Fi 6";
+iphone13Pro.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone13Pro.bluetooth       = "Bluetooth 5.0";
 iphone13Pro.hasNFC          = true;
 iphone13Pro.hasAirDrop      = true;
 iphone13Pro.hasAirPlay      = true;
-iphone13Pro.gps             = "Dual-frequency GPS";
+iphone13Pro.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone13Pro.hasCompass      = true;
 iphone13Pro.hasGyro         = true;
 iphone13Pro.hasAccel        = true;
@@ -918,8 +960,8 @@ iphone13Pro.hasESim         = true;
 iphone13Pro.port            = "Lightning";
 iphone13Pro.usbStandard     = "USB 2.0";
 
-iphone13Pro.speakers        = "Stereo";
-iphone13Pro.microphones     = "Multiple";
+iphone13Pro.speakers        = "Stereo speakers";
+iphone13Pro.microphones    = "Multiple microphones";
 iphone13Pro.hasDolby        = true;
 iphone13Pro.hasJack         = false;
 
@@ -928,22 +970,41 @@ iphone13Pro.cameraUltraWide = "12 MP Ultra-Wide";
 iphone13Pro.cameraTele      = "12 MP Telephoto (3×)";
 iphone13Pro.cameraFront     = "12 MP TrueDepth";
 iphone13Pro.cameraVideo     = "4K@60fps ProRes / HDR";
+iphone13Pro.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone13Pro.hasFaceID       = true;
 iphone13Pro.hasTouchID      = false;
 iphone13Pro.biometrics      = "Face ID";
 
-iphone13Pro.hasFastCharge       = true;
-iphone13Pro.hasWirelessCharge  = true;
-iphone13Pro.charging           = "Lightning / MagSafe";
+iphone13Pro.hasFastCharge      = true;
+iphone13Pro.hasWirelessCharge = true;
+iphone13Pro.charging          = "Lightning / MagSafe";
 
-iphone13Pro.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone13Pro.notes          = "First Pro iPhone with ProMotion display";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone13Pro.batteryMah          = 3095;   // model-based reference
+iphone13Pro.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone13Pro.batteryWh           =
+        (iphone13Pro.batteryMah * iphone13Pro.batteryVoltage) / 1000f;
+iphone13Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone13Pro.batteryDesignCycles = 500;
+iphone13Pro.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone13Pro.batteryNotes        =
+        "ProMotion display increases power demand; efficiency gains offset usage";
+
+iphone13Pro.thermalNote =
+        "Thermal sensors not accessible via iOS; stainless steel frame";
+iphone13Pro.notes =
+        "First Pro iPhone with ProMotion display and enhanced camera system.";
 
 MAP.put("iphone 13 pro", iphone13Pro);
 
 // ---------------------------------------------------------
-// iPhone 13 Pro Max
+// 📱 iPhone 13 Pro Max
 // ---------------------------------------------------------
 AppleDeviceSpec iphone13ProMax = new AppleDeviceSpec("iphone", "iPhone 13 Pro Max");
 iphone13ProMax.year            = "2021";
@@ -969,17 +1030,18 @@ iphone13ProMax.display         = "OLED Super Retina XDR (ProMotion)";
 iphone13ProMax.resolution      = "2778 × 1284";
 iphone13ProMax.refreshRate     = "10–120 Hz";
 iphone13ProMax.displayOut      = "Lightning Digital AV (adapter)";
+iphone13ProMax.displayVariants = "ProMotion with adaptive refresh (10–120 Hz)";
 
 iphone13ProMax.has5G           = true;
 iphone13ProMax.hasLTE          = true;
 iphone13ProMax.cellular        = "5G NR / LTE";
 iphone13ProMax.modem           = "Qualcomm Snapdragon X60";
-iphone13ProMax.wifi            = "Wi-Fi 6";
+iphone13ProMax.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone13ProMax.bluetooth       = "Bluetooth 5.0";
 iphone13ProMax.hasNFC          = true;
 iphone13ProMax.hasAirDrop      = true;
 iphone13ProMax.hasAirPlay      = true;
-iphone13ProMax.gps             = "Dual-frequency GPS";
+iphone13ProMax.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone13ProMax.hasCompass      = true;
 iphone13ProMax.hasGyro         = true;
 iphone13ProMax.hasAccel        = true;
@@ -990,8 +1052,8 @@ iphone13ProMax.hasESim         = true;
 iphone13ProMax.port            = "Lightning";
 iphone13ProMax.usbStandard     = "USB 2.0";
 
-iphone13ProMax.speakers        = "Stereo";
-iphone13ProMax.microphones     = "Multiple";
+iphone13ProMax.speakers        = "Stereo speakers";
+iphone13ProMax.microphones    = "Multiple microphones";
 iphone13ProMax.hasDolby        = true;
 iphone13ProMax.hasJack         = false;
 
@@ -1000,26 +1062,45 @@ iphone13ProMax.cameraUltraWide = "12 MP Ultra-Wide";
 iphone13ProMax.cameraTele      = "12 MP Telephoto (3×)";
 iphone13ProMax.cameraFront     = "12 MP TrueDepth";
 iphone13ProMax.cameraVideo     = "4K@60fps ProRes / HDR";
+iphone13ProMax.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone13ProMax.hasFaceID       = true;
 iphone13ProMax.hasTouchID      = false;
 iphone13ProMax.biometrics      = "Face ID";
 
-iphone13ProMax.hasFastCharge       = true;
-iphone13ProMax.hasWirelessCharge  = true;
-iphone13ProMax.charging           = "Lightning / MagSafe";
+iphone13ProMax.hasFastCharge      = true;
+iphone13ProMax.hasWirelessCharge = true;
+iphone13ProMax.charging          = "Lightning / MagSafe";
 
-iphone13ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone13ProMax.notes          = "Largest iPhone 13 with maximum battery";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone13ProMax.batteryMah          = 4352;   // model-based reference
+iphone13ProMax.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone13ProMax.batteryWh           =
+        (iphone13ProMax.batteryMah * iphone13ProMax.batteryVoltage) / 1000f;
+iphone13ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone13ProMax.batteryDesignCycles = 500;
+iphone13ProMax.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone13ProMax.batteryNotes        =
+        "Largest battery in iPhone 13 lineup; excellent endurance even with ProMotion";
+
+iphone13ProMax.thermalNote =
+        "Thermal sensors not accessible via iOS; larger chassis aids passive dissipation";
+iphone13ProMax.notes =
+        "Largest iPhone 13 model; maximum battery life and sustained Pro performance.";
 
 MAP.put("iphone 13 pro max", iphone13ProMax);
-
+        
 // =========================================================
 // 📱 iPHONE 12 SERIES — FULL SPECS
 // =========================================================
 
 // ---------------------------------------------------------
-// iPhone 12 mini
+// 📱 iPhone 12 mini
 // ---------------------------------------------------------
 AppleDeviceSpec iphone12Mini = new AppleDeviceSpec("iphone", "iPhone 12 mini");
 iphone12Mini.year            = "2020";
@@ -1045,12 +1126,13 @@ iphone12Mini.display         = "OLED Super Retina XDR";
 iphone12Mini.resolution      = "2340 × 1080";
 iphone12Mini.refreshRate     = "60 Hz";
 iphone12Mini.displayOut      = "Lightning Digital AV (adapter)";
+iphone12Mini.displayVariants = "Compact display, standard 60 Hz (no ProMotion)";
 
 iphone12Mini.has5G           = true;
 iphone12Mini.hasLTE          = true;
 iphone12Mini.cellular        = "5G NR / LTE";
 iphone12Mini.modem           = "Qualcomm Snapdragon X55";
-iphone12Mini.wifi            = "Wi-Fi 6";
+iphone12Mini.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone12Mini.bluetooth       = "Bluetooth 5.0";
 iphone12Mini.hasNFC          = true;
 iphone12Mini.hasAirDrop      = true;
@@ -1066,8 +1148,8 @@ iphone12Mini.hasESim         = true;
 iphone12Mini.port            = "Lightning";
 iphone12Mini.usbStandard     = "USB 2.0";
 
-iphone12Mini.speakers        = "Stereo";
-iphone12Mini.microphones     = "Multiple";
+iphone12Mini.speakers        = "Stereo speakers";
+iphone12Mini.microphones    = "Multiple microphones";
 iphone12Mini.hasDolby        = true;
 iphone12Mini.hasJack         = false;
 
@@ -1076,22 +1158,41 @@ iphone12Mini.cameraUltraWide = "12 MP Ultra-Wide";
 iphone12Mini.cameraTele      = null;
 iphone12Mini.cameraFront     = "12 MP TrueDepth";
 iphone12Mini.cameraVideo     = "4K@60fps HDR";
+iphone12Mini.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone12Mini.hasFaceID       = true;
 iphone12Mini.hasTouchID      = false;
 iphone12Mini.biometrics      = "Face ID";
 
-iphone12Mini.hasFastCharge       = true;
-iphone12Mini.hasWirelessCharge  = true;
-iphone12Mini.charging           = "Lightning / MagSafe";
+iphone12Mini.hasFastCharge      = true;
+iphone12Mini.hasWirelessCharge = true;
+iphone12Mini.charging          = "Lightning / MagSafe";
 
-iphone12Mini.thermalNote    = "No public thermal sensor access (Apple restriction)";
-iphone12Mini.notes          = "First mini iPhone with 5G";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone12Mini.batteryMah          = 2227;   // model-based reference
+iphone12Mini.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone12Mini.batteryWh           =
+        (iphone12Mini.batteryMah * iphone12Mini.batteryVoltage) / 1000f;
+iphone12Mini.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone12Mini.batteryDesignCycles = 500;
+iphone12Mini.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone12Mini.batteryNotes        =
+        "Smallest capacity in the lineup; first mini with 5G impacts endurance";
+
+iphone12Mini.thermalNote =
+        "No public thermal sensor access (Apple restriction)";
+iphone12Mini.notes =
+        "First mini iPhone with 5G; compact form factor prioritizes size over battery life.";
 
 MAP.put("iphone 12 mini", iphone12Mini);
 
 // ---------------------------------------------------------
-// iPhone 12
+// 📱 iPhone 12
 // ---------------------------------------------------------
 AppleDeviceSpec iphone12 = new AppleDeviceSpec("iphone", "iPhone 12");
 iphone12.year            = "2020";
@@ -1117,12 +1218,13 @@ iphone12.display         = "OLED Super Retina XDR";
 iphone12.resolution      = "2532 × 1170";
 iphone12.refreshRate     = "60 Hz";
 iphone12.displayOut      = "Lightning Digital AV (adapter)";
+iphone12.displayVariants = "Standard 60 Hz (no ProMotion)";
 
 iphone12.has5G           = true;
 iphone12.hasLTE          = true;
 iphone12.cellular        = "5G NR / LTE";
 iphone12.modem           = "Qualcomm Snapdragon X55";
-iphone12.wifi            = "Wi-Fi 6";
+iphone12.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone12.bluetooth       = "Bluetooth 5.0";
 iphone12.hasNFC          = true;
 iphone12.hasAirDrop      = true;
@@ -1138,8 +1240,8 @@ iphone12.hasESim         = true;
 iphone12.port            = "Lightning";
 iphone12.usbStandard     = "USB 2.0";
 
-iphone12.speakers        = "Stereo";
-iphone12.microphones     = "Multiple";
+iphone12.speakers        = "Stereo speakers";
+iphone12.microphones    = "Multiple microphones";
 iphone12.hasDolby        = true;
 iphone12.hasJack         = false;
 
@@ -1148,22 +1250,42 @@ iphone12.cameraUltraWide = "12 MP Ultra-Wide";
 iphone12.cameraTele      = null;
 iphone12.cameraFront     = "12 MP TrueDepth";
 iphone12.cameraVideo     = "4K@60fps HDR";
+iphone12.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone12.hasFaceID       = true;
 iphone12.hasTouchID      = false;
 iphone12.biometrics      = "Face ID";
 
-iphone12.hasFastCharge       = true;
-iphone12.hasWirelessCharge  = true;
-iphone12.charging           = "Lightning / MagSafe";
+iphone12.hasFastCharge      = true;
+iphone12.hasWirelessCharge = true;
+iphone12.charging          = "Lightning / MagSafe";
 
-iphone12.thermalNote    = "Thermal data not exposed by iOS";
-iphone12.notes          = "First iPhone with A14 and OLED across lineup";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone12.batteryMah          = 2815;   // model-based reference
+iphone12.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone12.batteryWh           =
+        (iphone12.batteryMah * iphone12.batteryVoltage) / 1000f;
+iphone12.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone12.batteryDesignCycles = 500;
+iphone12.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone12.batteryNotes        =
+        "Moderate capacity; first 5G generation impacts endurance vs 11 series";
+
+iphone12.thermalNote =
+        "Thermal data not exposed by iOS; aluminum frame aids passive dissipation";
+iphone12.notes =
+        "First iPhone with A14 and OLED across the lineup; introduces 5G support.";
 
 MAP.put("iphone 12", iphone12);
-
+        
 // ---------------------------------------------------------
-// iPhone 12 Pro
+// ---------------------------------------------------------
+// 📱 iPhone 12 Pro
 // ---------------------------------------------------------
 AppleDeviceSpec iphone12Pro = new AppleDeviceSpec("iphone", "iPhone 12 Pro");
 iphone12Pro.year            = "2020";
@@ -1189,17 +1311,18 @@ iphone12Pro.display         = "OLED Super Retina XDR";
 iphone12Pro.resolution      = "2532 × 1170";
 iphone12Pro.refreshRate     = "60 Hz";
 iphone12Pro.displayOut      = "Lightning Digital AV (adapter)";
+iphone12Pro.displayVariants = "Standard 60 Hz (no ProMotion)";
 
 iphone12Pro.has5G           = true;
 iphone12Pro.hasLTE          = true;
 iphone12Pro.cellular        = "5G NR / LTE";
 iphone12Pro.modem           = "Qualcomm Snapdragon X55";
-iphone12Pro.wifi            = "Wi-Fi 6";
+iphone12Pro.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone12Pro.bluetooth       = "Bluetooth 5.0";
 iphone12Pro.hasNFC          = true;
 iphone12Pro.hasAirDrop      = true;
 iphone12Pro.hasAirPlay      = true;
-iphone12Pro.gps             = "Dual-frequency GPS";
+iphone12Pro.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone12Pro.hasCompass      = true;
 iphone12Pro.hasGyro         = true;
 iphone12Pro.hasAccel        = true;
@@ -1210,8 +1333,8 @@ iphone12Pro.hasESim         = true;
 iphone12Pro.port            = "Lightning";
 iphone12Pro.usbStandard     = "USB 2.0";
 
-iphone12Pro.speakers        = "Stereo";
-iphone12Pro.microphones     = "Multiple";
+iphone12Pro.speakers        = "Stereo speakers";
+iphone12Pro.microphones    = "Multiple microphones";
 iphone12Pro.hasDolby        = true;
 iphone12Pro.hasJack         = false;
 
@@ -1220,22 +1343,41 @@ iphone12Pro.cameraUltraWide = "12 MP Ultra-Wide";
 iphone12Pro.cameraTele      = "12 MP Telephoto (2×)";
 iphone12Pro.cameraFront     = "12 MP TrueDepth";
 iphone12Pro.cameraVideo     = "4K@60fps HDR + Dolby Vision";
+iphone12Pro.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto) + LiDAR";
 
 iphone12Pro.hasFaceID       = true;
 iphone12Pro.hasTouchID      = false;
 iphone12Pro.biometrics      = "Face ID";
 
-iphone12Pro.hasFastCharge       = true;
-iphone12Pro.hasWirelessCharge  = true;
-iphone12Pro.charging           = "Lightning / MagSafe";
+iphone12Pro.hasFastCharge      = true;
+iphone12Pro.hasWirelessCharge = true;
+iphone12Pro.charging          = "Lightning / MagSafe";
 
-iphone12Pro.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone12Pro.notes          = "Introduced LiDAR scanner";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone12Pro.batteryMah          = 2815;   // model-based reference
+iphone12Pro.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone12Pro.batteryWh           =
+        (iphone12Pro.batteryMah * iphone12Pro.batteryVoltage) / 1000f;
+iphone12Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone12Pro.batteryDesignCycles = 500;
+iphone12Pro.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone12Pro.batteryNotes        =
+        "Similar capacity to iPhone 12; Pro features increase power demand";
+
+iphone12Pro.thermalNote =
+        "Thermal sensors not accessible via iOS; stainless steel frame aids heat spreading";
+iphone12Pro.notes =
+        "Introduced LiDAR scanner; Pro camera system with Dolby Vision recording.";
 
 MAP.put("iphone 12 pro", iphone12Pro);
 
 // ---------------------------------------------------------
-// iPhone 12 Pro Max
+// 📱 iPhone 12 Pro Max
 // ---------------------------------------------------------
 AppleDeviceSpec iphone12ProMax = new AppleDeviceSpec("iphone", "iPhone 12 Pro Max");
 iphone12ProMax.year            = "2020";
@@ -1261,17 +1403,18 @@ iphone12ProMax.display         = "OLED Super Retina XDR";
 iphone12ProMax.resolution      = "2778 × 1284";
 iphone12ProMax.refreshRate     = "60 Hz";
 iphone12ProMax.displayOut      = "Lightning Digital AV (adapter)";
+iphone12ProMax.displayVariants = "Largest display in the series; standard 60 Hz (no ProMotion)";
 
 iphone12ProMax.has5G           = true;
 iphone12ProMax.hasLTE          = true;
 iphone12ProMax.cellular        = "5G NR / LTE";
 iphone12ProMax.modem           = "Qualcomm Snapdragon X55";
-iphone12ProMax.wifi            = "Wi-Fi 6";
+iphone12ProMax.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone12ProMax.bluetooth       = "Bluetooth 5.0";
 iphone12ProMax.hasNFC          = true;
 iphone12ProMax.hasAirDrop      = true;
 iphone12ProMax.hasAirPlay      = true;
-iphone12ProMax.gps             = "Dual-frequency GPS";
+iphone12ProMax.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone12ProMax.hasCompass      = true;
 iphone12ProMax.hasGyro         = true;
 iphone12ProMax.hasAccel        = true;
@@ -1282,8 +1425,8 @@ iphone12ProMax.hasESim         = true;
 iphone12ProMax.port            = "Lightning";
 iphone12ProMax.usbStandard     = "USB 2.0";
 
-iphone12ProMax.speakers        = "Stereo";
-iphone12ProMax.microphones     = "Multiple";
+iphone12ProMax.speakers        = "Stereo speakers";
+iphone12ProMax.microphones    = "Multiple microphones";
 iphone12ProMax.hasDolby        = true;
 iphone12ProMax.hasJack         = false;
 
@@ -1292,17 +1435,36 @@ iphone12ProMax.cameraUltraWide = "12 MP Ultra-Wide";
 iphone12ProMax.cameraTele      = "12 MP Telephoto (2.5×)";
 iphone12ProMax.cameraFront     = "12 MP TrueDepth";
 iphone12ProMax.cameraVideo     = "4K@60fps HDR + Dolby Vision";
+iphone12ProMax.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto) + LiDAR";
 
 iphone12ProMax.hasFaceID       = true;
 iphone12ProMax.hasTouchID      = false;
 iphone12ProMax.biometrics      = "Face ID";
 
-iphone12ProMax.hasFastCharge       = true;
-iphone12ProMax.hasWirelessCharge  = true;
-iphone12ProMax.charging           = "Lightning / MagSafe";
+iphone12ProMax.hasFastCharge      = true;
+iphone12ProMax.hasWirelessCharge = true;
+iphone12ProMax.charging          = "Lightning / MagSafe";
 
-iphone12ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone12ProMax.notes          = "Largest iPhone 12 with enhanced camera";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone12ProMax.batteryMah          = 3687;   // model-based reference
+iphone12ProMax.batteryVoltage      = 3.83f;  // Apple nominal (generation-specific)
+iphone12ProMax.batteryWh           =
+        (iphone12ProMax.batteryMah * iphone12ProMax.batteryVoltage) / 1000f;
+iphone12ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone12ProMax.batteryDesignCycles = 500;
+iphone12ProMax.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone12ProMax.batteryNotes        =
+        "Largest battery in the iPhone 12 lineup; improved endurance over 12 / 12 Pro";
+
+iphone12ProMax.thermalNote =
+        "Thermal sensors not accessible via iOS; larger chassis aids passive heat dissipation";
+iphone12ProMax.notes =
+        "Largest iPhone 12 with enhanced camera system and LiDAR scanner.";
 
 MAP.put("iphone 12 pro max", iphone12ProMax);
 

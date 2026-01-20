@@ -1332,3 +1332,4 @@ public static AppleDeviceSpec get(String modelName) {
     AppleDeviceSpec d = MAP.get(m);
     return d != null ? d : AppleDeviceSpec.unknown();
 }
+}

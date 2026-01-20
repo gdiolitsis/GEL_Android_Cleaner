@@ -122,24 +122,26 @@ public final class AppleSpecProvider {
     }
 
     // =========================================================
-    // REFLECTION BRIDGE → AppleSpecs
+    // REFLECTION BRIDGE → AppleSpecs (LOCKED API)
     // =========================================================
     public static Object getSpecOrNull(Context c) {
-    try {
-        Selection s = getSavedSelection(c);
+        try {
+            Selection s = getSavedSelection(c);
 
-        Class<?> cls =
-                Class.forName("com.gel.cleaner.iphone.AppleSpecs");
+            Class<?> cls =
+                    Class.forName("com.gel.cleaner.iphone.AppleSpecs");
 
-        Method m = cls.getDeclaredMethod("get", String.class);
-        m.setAccessible(true);
+            // 🔒 AppleSpecs exposes ONLY: get(String model)
+            Method m = cls.getDeclaredMethod("get", String.class);
+            m.setAccessible(true);
 
-        return m.invoke(null, s.model);
+            return m.invoke(null, s.model);
 
-    } catch (Throwable ignore) {
-        return null;
+        } catch (Throwable ignore) {
+            return null;
+        }
     }
-}
+
     // =========================================================
     // DIRECT SAFE ACCESS FOR ACTIVITIES
     // =========================================================
